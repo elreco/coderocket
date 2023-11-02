@@ -4,7 +4,7 @@ import {
   getUserDetails,
   getSubscription
 } from '@/app/supabase-server';
-import Button from '@/components/ui/Button';
+import { Button } from '@/components/ui/Button';
 import { Database } from '@/types_db';
 import { createServerActionClient } from '@supabase/auth-helpers-nextjs';
 import { revalidatePath } from 'next/cache';
@@ -44,7 +44,7 @@ export default async function Account() {
     const { error } = await supabase
       .from('users')
       .update({ full_name: newName })
-      .eq('id', user?.id);
+      .eq('id', user?.id || '');
     if (error) {
       console.log(error);
     }
@@ -100,7 +100,7 @@ export default async function Account() {
             <div className="flex flex-col items-start justify-between sm:flex-row sm:items-center">
               <p className="pb-4 sm:pb-0">64 characters maximum</p>
               <Button
-                variant="slim"
+                variant="outline"
                 type="submit"
                 form="nameForm"
                 disabled={true}
@@ -133,7 +133,7 @@ export default async function Account() {
                 We will email you to verify the change.
               </p>
               <Button
-                variant="slim"
+                variant="outline"
                 type="submit"
                 form="emailForm"
                 disabled={true}
