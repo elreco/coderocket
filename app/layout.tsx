@@ -1,10 +1,11 @@
 import SupabaseProvider from './supabase-provider';
-import Footer from '@/components/Footer';
-import Navbar from '@/components/navbar/Navbar';
+import {Footer} from '@/components/footer';
+import {Navbar} from '@/components/navbar/navbar';
 import clsx from 'clsx';
 import { PropsWithChildren } from 'react';
 import 'styles/main.css';
 import { Inter } from 'next/font/google'
+import { SandPackCSS } from "@/components/sandpack-styles";
 
 const inter = Inter({
   subsets: ['latin'],
@@ -53,12 +54,15 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={clsx('h-full bg-gray-50 antialiased', inter.variable)}
+      className={clsx('h-full bg-white/95 antialiased', inter.variable)}
     >
-      <body className="flex h-full flex-col">
+      <head>
+        <SandPackCSS />
+      </head>
+      <body>
         <SupabaseProvider>
           <Navbar />
-            <main className="flex min-h-full flex-col">{children}</main>
+            <main>{children}</main>
           <Footer />
         </SupabaseProvider>
         </body>

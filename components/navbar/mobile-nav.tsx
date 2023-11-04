@@ -1,6 +1,6 @@
 'use client';
 
-import { Button } from '../ui/Button';
+import { Button } from '../ui/button';
 import { useSupabase } from '@/app/supabase-provider';
 import { Popover } from '@headlessui/react';
 import { ChevronUpIcon } from '@heroicons/react/20/solid';
@@ -41,7 +41,7 @@ interface Props {
   user: User | null;
 }
 
-export default function MobileNav({ user }: Props) {
+export function MobileNav({ user }: Props) {
   const router = useRouter();
   const { supabase } = useSupabase();
   const handleSignOut = async () => {
@@ -87,7 +87,7 @@ export default function MobileNav({ user }: Props) {
                       y: -32,
                       transition: { duration: 0.2 }
                     }}
-                    className="absolute inset-x-0 top-0 z-0 origin-top rounded-b-2xl bg-gray-50 px-6 pb-6 pt-32 shadow-2xl shadow-gray-900/20"
+                    className="absolute inset-x-0 top-0 z-0 origin-top rounded-b-2xl bg-white/95 backdrop-blur px-6 pb-6 pt-32 shadow-2xl shadow-gray-900/20"
                   >
                     <div className="space-y-4">
                       <MobileNavLink href="/#features">Features</MobileNavLink>

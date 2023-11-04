@@ -1,9 +1,9 @@
 import Link from 'next/link';
 
-import Logo from '@/components/icons/Logo';
+import Logo from '@/components/icons/logo';
 import GitHub from '@/components/icons/GitHub';
 
-export default function Footer() {
+export function Footer() {
   return (
     <footer className="mx-auto max-w-[1920px] px-6 bg-zinc-900">
 

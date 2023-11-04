@@ -1,19 +1,18 @@
-import { Container } from '../Container';
-import { NavLinks } from '../NavLinks';
-import MobileNav from './MobileNav';
+import { Container } from '../container';
+import { NavLinks } from './nav-links';
+import {MobileNav} from './mobile-nav';
 import { createServerSupabaseClient } from '@/app/supabase-server';
-import Logo from '@/components/icons/Logo';
+import Logo from '@/components/icons/logo';
 import Link from 'next/link';
 
-export default async function Navbar() {
+export async function Navbar() {
   const supabase = createServerSupabaseClient();
   const {
     data: { user }
   } = await supabase.auth.getUser();
   return (
-    <header className="fixed w-full">
-      <nav>
-        <Container className="relative z-50 flex justify-between py-8">
+    <header className="fixed w-full z-50 bg-white/95 backdrop-blur bg-clip-padding backdrop-filter bg-opacity-95">
+      <Container className="relative z-50 flex justify-between py-4">
           <div className="relative z-10 flex items-center gap-16">
             <Link href="/" aria-label="Home">
               <Logo className="h-10 w-auto" />
@@ -26,7 +25,6 @@ export default async function Navbar() {
             <MobileNav user={user} />
           </div>
         </Container>
-      </nav>
     </header>
   );
 }
