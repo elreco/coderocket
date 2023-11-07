@@ -16,7 +16,7 @@ export async function POST(req: Request) {
     });
   }
 
-  try {
+  // try {
     const supabase = createRouteHandlerClient<Database>({ cookies });
     const {
       data: { user }
@@ -24,8 +24,16 @@ export async function POST(req: Request) {
 
     if (!user) throw Error('Could not get user');
 
-    const { messages, id } = await req.json();
-
+    const { prompt, id } = await req.json();
+    const { data } = await supabase.from('chats').select().eq('id', id);
+    const messagesFromDatabase = data?.length ? data[0].messages : []
+    const messages = [
+      ...messagesFromDatabase,
+      {
+        content: prompt,
+        role: 'user'
+      }
+    ]
     const response = await openai.chat.completions.create({
       messages,
       model: 'ft:gpt-3.5-turbo-0613:personal::8G78hB68',
@@ -44,17 +52,16 @@ export async function POST(req: Request) {
             }
           ]
         };
-        console.log(payload)
         await supabase.from('chats').update(payload).eq('id', id);
       }
     });
     return new StreamingTextResponse(stream);
-  } catch (err: any) {
-    return new Response(
-      JSON.stringify({ error: { statusCode: 500, message: err.message } }),
-      {
-        status: 500
-      }
-    );
-  }
+  // } catch (err: any) {
+  //   return new Response(
+  //     JSON.stringify({ error: { statusCode: 500, message: err.message } }),
+  //     {
+  //       status: 500
+  //     }
+  //   );
+  // }
 }

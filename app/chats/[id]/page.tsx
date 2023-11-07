@@ -11,7 +11,8 @@ import {
   SandpackProvider
 } from '@codesandbox/sandpack-react';
 import { githubLight } from '@codesandbox/sandpack-themes';
-import { useChat } from 'ai/react';
+import { Message } from 'ai';
+import { useCompletion } from 'ai/react';
 import beautify from 'js-beautify';
 import { useEffect, useMemo, useState } from 'react';
 
@@ -22,78 +23,68 @@ const beautifyOptions: beautify.HTMLBeautifyOptions = {
   indent_size: 4
 };
 
-const fetchMessages = async (id: string) => {
+const fetchMessages = async (id: string): Promise<Message[]> => {
   const response = await fetch(`/api/chats/${id}`);
   if (!response.ok) {
     console.log('Failed:', response.status, response.statusText);
-    return '';
+    return [];
   }
   const data = await response.json();
-  return data[0];
+  return data[0].messages;
 };
 
 export default function Generations({ params }: { params: { id: string } }) {
-  const [hasReloaded, setHasReloaded] = useState(false);
-  const [selectedVersion, setSelectedVersion] = useState<string | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [selectedVersion, setSelectedVersion] = useState<number | null>(null);
   const {
-    messages,
+    completion,
     isLoading,
     input,
     handleInputChange,
     handleSubmit,
-    setMessages,
-    setInput,
-    reload
-  } = useChat({
+    setCompletion,
+    complete,
+    setInput
+  } = useCompletion({
     api: `/api/completions`,
-    body: { id: params.id }
+    body: { id: params.id },
+    onFinish: () => {
+      fetchMessages(params.id).then((fetchedMessages) => setMessages(fetchedMessages));
+      setInput('')
+    }
   });
 
   useEffect(() => {
-    let isSubscribed = true;
-
-    fetchMessages(params.id).then((data) => {
-      if (data && isSubscribed) {
-        setMessages(
-          data.messages.map((m) => ({
-            ...m,
-            content: m.content
-          }))
-        );
-        const lastUserMessage = data.messages
-          .slice()
-          .reverse()
-          .find((message) => message.role === 'user');
-
-        setInput(lastUserMessage?.content || '');
-      }
-    });
-
-    return () => {
-      isSubscribed = false;
-    };
-  }, [params.id, setMessages, setInput]);
+    fetchMessages(params.id).then((fetchedMessages) => setMessages(fetchedMessages));
+  }, [params.id]);
 
   useEffect(() => {
-    if (input && !hasReloaded && messages.length === 2) {
-      reload();
-      setHasReloaded(true);
+    if (messages.length === 2) {
+      const defaultMessage = messages?.find(m => m.role === 'user')?.content || ''
+      setInput(defaultMessage)
+      complete(defaultMessage);
     }
-  }, [input]);
-
-  const beautifiedContent = useMemo(() => {
-    const lastAssistantMessage = messages
+    const lastCompletionMessage = messages
       .slice()
       .reverse()
       .find((message) => message.role === 'assistant');
-    return beautify.html(lastAssistantMessage?.content || '', beautifyOptions);
-  }, [messages]);
+    if (lastCompletionMessage) {
+      setCompletion(lastCompletionMessage.content);
+    }
+  }, [messages.length]);
 
-  const handleVersionSelect = (versionId: string) => {
-    setSelectedVersion(versionId);
 
-    setMessages(messages.filter(m => m.id === versionId));
+  const beautifiedContent = useMemo(() => {
+    return beautify.html(completion, beautifyOptions);
+  }, [completion]);
+
+  const handleVersionSelect = (index: number) => {
+    setSelectedVersion(index);
+    setCompletion(assistantMessages.find((m, i) => index === i)?.content || '');
   };
+
+  const assistantMessages = useMemo(() => messages
+  .filter((m) => m.role === 'assistant'), [messages])
 
   return (
     <>
@@ -133,11 +124,10 @@ export default function Generations({ params }: { params: { id: string } }) {
             </Button>
           </form>
         </div>
-        <div className="w-full md:w-1/6 h-screen">
-          {messages
-            .filter((m) => m.role === 'assistant')
+        <div className="w-full md:w-1/6">
+          {assistantMessages
             .map((m, index) => (
-              <div className="mb-4 border rounded-md" key={m.id}>
+              <div className="mb-4 border rounded-md cursor-pointer" key={m.id}>
                 <SandpackProvider
                   theme={githubLight}
                   options={{
@@ -152,10 +142,10 @@ export default function Generations({ params }: { params: { id: string } }) {
                   }}
                 >
                   <SandpackLayout>
-                    <SandpackPreview className='!h-44  cursor-pointer' />
+                    <SandpackPreview className='!h-44' />
                     <div
-                      className="absolute z-10 top-0 left-0 right-0 bottom-0 bg-black/25 hover:bg-black/20 flex justify-center items-center"
-                      onClick={() => handleVersionSelect(m.id)}
+                      className="absolute cursor-pointer z-10 top-0 left-0 right-0 bottom-0 bg-black/25 hover:bg-black/20 flex justify-center items-center"
+                      onClick={() => handleVersionSelect(index)}
                     >
                       <Badge className='absolute bottom-0 right-0 m-4' variant="default">v{index}</Badge>
                     </div>

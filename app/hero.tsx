@@ -3,7 +3,7 @@ import { Container } from '../components/container';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import beautify from 'js-beautify';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation'
 
 const beautifyOptions: beautify.HTMLBeautifyOptions = {
