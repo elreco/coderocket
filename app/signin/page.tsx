@@ -1,19 +1,20 @@
-import { getSession } from '@/app/supabase-server';
-import AuthUI from './AuthUI';
+import { redirect } from "next/navigation";
 
-import { redirect } from 'next/navigation';
-import Logo from '@/components/icons/logo';
+import { getSession } from "@/app/supabase-server";
+import Logo from "@/components/icons/logo";
+
+import AuthUI from "./AuthUI";
 
 export default async function SignIn() {
   const session = await getSession();
 
   if (session) {
-    return redirect('/account');
+    return redirect("/account");
   }
 
   return (
-    <div className="flex justify-center height-screen-helper">
-      <div className="flex flex-col justify-between max-w-lg p-3 m-auto w-80 ">
+    <div className="height-screen-helper flex justify-center">
+      <div className="m-auto flex w-80 max-w-lg flex-col justify-between p-3 ">
         <div className="flex justify-center pb-12 ">
           <Logo width="64px" height="64px" />
         </div>

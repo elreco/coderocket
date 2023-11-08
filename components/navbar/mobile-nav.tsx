@@ -1,15 +1,17 @@
-'use client';
+"use client";
 
-import { Button } from '../ui/button';
-import { useSupabase } from '@/app/supabase-provider';
-import { Popover } from '@headlessui/react';
-import { ChevronUpIcon } from '@heroicons/react/20/solid';
-import { User } from '@supabase/supabase-js';
-import { AnimatePresence, motion } from 'framer-motion';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { Popover } from "@headlessui/react";
+import { ChevronUpIcon } from "@heroicons/react/20/solid";
+import { User } from "@supabase/supabase-js";
+import { AnimatePresence, motion } from "framer-motion";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
-function MenuIcon(props: React.ComponentPropsWithoutRef<'svg'>) {
+import { useSupabase } from "@/app/supabase-provider";
+
+import { Button } from "../ui/button";
+
+function MenuIcon(props: React.ComponentPropsWithoutRef<"svg">) {
   return (
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" {...props}>
       <path
@@ -25,8 +27,8 @@ function MenuIcon(props: React.ComponentPropsWithoutRef<'svg'>) {
 function MobileNavLink(
   props: Omit<
     React.ComponentPropsWithoutRef<typeof Popover.Button<typeof Link>>,
-    'as' | 'className'
-  >
+    "as" | "className"
+  >,
 ) {
   return (
     <Popover.Button
@@ -48,7 +50,7 @@ export function MobileNav({ user }: Props) {
     await supabase.auth.signOut();
     router.refresh();
   };
-  console.log(user)
+  console.log(user);
   return (
     <div className="flex items-center gap-6">
       <Popover className="lg:hidden">
@@ -85,9 +87,9 @@ export function MobileNav({ user }: Props) {
                     exit={{
                       opacity: 0,
                       y: -32,
-                      transition: { duration: 0.2 }
+                      transition: { duration: 0.2 },
                     }}
-                    className="absolute inset-x-0 top-0 z-0 origin-top rounded-b-2xl bg-white/95 backdrop-blur px-6 pb-6 pt-32 shadow-2xl shadow-gray-900/20"
+                    className="absolute inset-x-0 top-0 z-0 origin-top rounded-b-2xl bg-slate-50 px-6 pb-6 pt-32 shadow-2xl shadow-gray-900/20 backdrop-blur"
                   >
                     <div className="space-y-4">
                       <MobileNavLink href="/#features">Features</MobileNavLink>
@@ -96,19 +98,15 @@ export function MobileNav({ user }: Props) {
                       <MobileNavLink href="/#faqs">FAQs</MobileNavLink>
                     </div>
                     <div className="mt-8 flex flex-col gap-4">
-                    {!user ? (
-                      <Button
-                        href="/signin"
-                        variant="outline"
-                      >
-                        Log in
-                      </Button>
-                    ) : (
-                      <Button
-                      onClick={handleSignOut} variant="outline">
-                        Sign Out
-                      </Button>
-                    )}
+                      {!user ? (
+                        <Button href="/signin" variant="outline">
+                          Log in
+                        </Button>
+                      ) : (
+                        <Button onClick={handleSignOut} variant="outline">
+                          Sign Out
+                        </Button>
+                      )}
                     </div>
                   </Popover.Panel>
                 </>
@@ -119,16 +117,15 @@ export function MobileNav({ user }: Props) {
       </Popover>
 
       {!user ? (
-        <Button
-          href="/signin"
-          variant="outline"
-          className="hidden lg:block"
-        >
+        <Button href="/signin" variant="outline" className="hidden lg:block">
           Log in
         </Button>
       ) : (
         <Button
-        onClick={handleSignOut} variant="outline" className="hidden lg:block">
+          onClick={handleSignOut}
+          variant="outline"
+          className="hidden lg:block"
+        >
           Sign Out
         </Button>
       )}

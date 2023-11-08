@@ -1,9 +1,10 @@
-'use client';
+"use client";
 
-import { useSupabase } from '@/app/supabase-provider';
-import { getURL } from '@/utils/helpers';
-import { Auth } from '@supabase/auth-ui-react';
-import { ThemeSupa } from '@supabase/auth-ui-shared';
+import { Auth } from "@supabase/auth-ui-react";
+import { ThemeSupa } from "@supabase/auth-ui-shared";
+
+import { useSupabase } from "@/app/supabase-provider";
+import { getURL } from "@/utils/helpers";
 
 export default function AuthUI() {
   const { supabase } = useSupabase();
@@ -11,7 +12,7 @@ export default function AuthUI() {
     <div className="flex flex-col space-y-4">
       <Auth
         supabaseClient={supabase}
-        providers={['github']}
+        providers={["github"]}
         redirectTo={`${getURL()}/auth/callback`}
         magicLink={true}
         appearance={{
@@ -19,11 +20,11 @@ export default function AuthUI() {
           variables: {
             default: {
               colors: {
-                brand: '#404040',
-                brandAccent: '#52525b'
-              }
-            }
-          }
+                brand: "#404040",
+                brandAccent: "#52525b",
+              },
+            },
+          },
         }}
         theme="dark"
       />

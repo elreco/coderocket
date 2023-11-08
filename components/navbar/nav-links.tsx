@@ -1,30 +1,28 @@
-'use client'
+"use client";
 
-import { useRef, useState } from 'react'
-import Link from 'next/link'
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, motion } from "framer-motion";
+import Link from "next/link";
+import { useRef, useState } from "react";
 
 export function NavLinks() {
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
-  const timeoutRef = useRef<number | null>(null)
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const timeoutRef = useRef<number | null>(null);
 
-  return [
-    ['Generate', '/'],
-  ].map(([label, href], index) => (
+  return [["Generate", "/"]].map(([label, href], index) => (
     <Link
       key={label}
       href={href}
       className="relative -mx-3 -my-2 rounded-lg px-3 py-2 text-sm text-gray-700 transition-colors delay-150 hover:text-gray-900 hover:delay-0"
       onMouseEnter={() => {
         if (timeoutRef.current) {
-          window.clearTimeout(timeoutRef.current)
+          window.clearTimeout(timeoutRef.current);
         }
-        setHoveredIndex(index)
+        setHoveredIndex(index);
       }}
       onMouseLeave={() => {
         timeoutRef.current = window.setTimeout(() => {
-          setHoveredIndex(null)
-        }, 200)
+          setHoveredIndex(null);
+        }, 200);
       }}
     >
       <AnimatePresence>
@@ -43,5 +41,5 @@ export function NavLinks() {
       </AnimatePresence>
       <span className="relative z-10">{label}</span>
     </Link>
-  ))
+  ));
 }

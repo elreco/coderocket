@@ -1,12 +1,8 @@
-import Link from 'next/link';
+import Link from "next/link";
 
-import Logo from '@/components/icons/logo';
-import GitHub from '@/components/icons/GitHub';
+import GitHub from "@/components/icons/GitHub";
+import Logo from "@/components/icons/logo";
 
 export function Footer() {
-  return (
-    <footer className="mx-auto max-w-[1920px] px-6 bg-zinc-900">
-
-    </footer>
-  );
+  return <footer className="mx-auto max-w-[1920px] bg-zinc-900 px-6"></footer>;
 }

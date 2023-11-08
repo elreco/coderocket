@@ -1,26 +1,29 @@
-import SupabaseProvider from './supabase-provider';
-import {Footer} from '@/components/footer';
-import {Navbar} from '@/components/navbar/navbar';
-import clsx from 'clsx';
-import { PropsWithChildren } from 'react';
-import 'styles/main.css';
-import { Inter } from 'next/font/google'
+import SupabaseProvider from "./supabase-provider";
+
+import { Footer } from "@/components/footer";
+import { Navbar } from "@/components/navbar/navbar";
+
+import clsx from "clsx";
+import { PropsWithChildren } from "react";
+import "styles/main.css";
+import { Inter } from "next/font/google";
+
 import { SandPackCSS } from "@/components/sandpack-styles";
 
 const inter = Inter({
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-inter',
-})
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-inter",
+});
 
 const meta = {
-  title: 'Next.js Subscription Starter',
-  description: 'Brought to you by Vercel, Stripe, and Supabase.',
-  cardImage: '/og.png',
-  robots: 'follow, index',
-  favicon: '/favicon.ico',
-  url: 'https://subscription-starter.vercel.app',
-  type: 'website'
+  title: "Tailwind AI",
+  description: "Create tailwind components using AI.",
+  cardImage: "/og.png",
+  robots: "follow, index",
+  favicon: "/favicon.ico",
+  url: "https://subscription-starter.vercel.app",
+  type: "website",
 };
 
 export const metadata = {
@@ -37,24 +40,22 @@ export const metadata = {
     description: meta.description,
     cardImage: meta.cardImage,
     type: meta.type,
-    site_name: meta.title
+    site_name: meta.title,
   },
   twitter: {
-    card: 'summary_large_image',
-    site: '@vercel',
+    card: "summary_large_image",
+    site: "@vercel",
     title: meta.title,
     description: meta.description,
-    cardImage: meta.cardImage
-  }
+    cardImage: meta.cardImage,
+  },
 };
 
-export default function RootLayout({
-  children
-}: PropsWithChildren) {
+export default function RootLayout({ children }: PropsWithChildren) {
   return (
     <html
       lang="en"
-      className={clsx('h-full bg-white/95 antialiased', inter.variable)}
+      className={clsx("h-full bg-slate-50 antialiased", inter.variable)}
     >
       <head>
         <SandPackCSS />
@@ -62,10 +63,10 @@ export default function RootLayout({
       <body>
         <SupabaseProvider>
           <Navbar />
-            <main>{children}</main>
+          <main>{children}</main>
           <Footer />
         </SupabaseProvider>
-        </body>
+      </body>
     </html>
   );
 }
