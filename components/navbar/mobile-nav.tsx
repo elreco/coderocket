@@ -2,7 +2,7 @@
 
 import { Popover } from "@headlessui/react";
 import { ChevronUpIcon } from "@heroicons/react/20/solid";
-import { User } from "@supabase/supabase-js";
+import { Session, User } from "@supabase/supabase-js";
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -40,17 +40,16 @@ function MobileNavLink(
 }
 
 interface Props {
-  user: User | null;
+  session: Session | null;
 }
 
-export function MobileNav({ user }: Props) {
+export function MobileNav({ session }: Props) {
   const router = useRouter();
   const { supabase } = useSupabase();
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     router.refresh();
   };
-  console.log(user);
   return (
     <div className="flex items-center gap-6">
       <Popover className="lg:hidden">
@@ -98,7 +97,7 @@ export function MobileNav({ user }: Props) {
                       <MobileNavLink href="/#faqs">FAQs</MobileNavLink>
                     </div>
                     <div className="mt-8 flex flex-col gap-4">
-                      {!user ? (
+                      {!session ? (
                         <Button href="/signin" variant="outline">
                           Log in
                         </Button>
@@ -116,7 +115,7 @@ export function MobileNav({ user }: Props) {
         )}
       </Popover>
 
-      {!user ? (
+      {!session ? (
         <Button href="/signin" variant="outline" className="hidden lg:block">
           Log in
         </Button>

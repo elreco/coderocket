@@ -6,13 +6,13 @@ import { useState } from "react";
 import { Container } from "../components/container";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
+import { redirect } from "next/navigation";
+import { Session } from "@supabase/supabase-js";
+import { useToast } from "@/components/ui/toaster/use-toast";
 
-const beautifyOptions: beautify.HTMLBeautifyOptions = {
-  indent_inner_html: true,
-  indent_body_inner_html: true,
-  wrap_attributes: "preserve",
-  indent_size: 4,
-};
+interface Props {
+  session: Session | null;
+}
 
 async function createGeneration(prompt: string): Promise<any> {
   try {
@@ -36,12 +36,20 @@ async function createGeneration(prompt: string): Promise<any> {
   }
 }
 
-export default function Hero() {
+export default function Hero({ session }: Props) {
   const router = useRouter();
+  const { toast } = useToast()
   const [prompt, setPrompt] = useState("A beautiful table");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!session) {
+      toast({
+        title: "Scheduled: Catch up",
+        description: "Friday, February 10, 2023 at 5:57 PM",
+      })
+      return router.push("/signin");
+    }
     const data = await createGeneration(prompt);
     router.push(`/chats/${data.id}`);
   };

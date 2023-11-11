@@ -9,6 +9,7 @@ import "styles/main.css";
 import { Inter } from "next/font/google";
 
 import { SandPackCSS } from "@/components/sandpack-styles";
+import { Toaster } from "@/components/ui/toaster";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -66,6 +67,7 @@ export default function RootLayout({ children }: PropsWithChildren) {
           <main>{children}</main>
           <Footer />
         </SupabaseProvider>
+        <Toaster />
       </body>
     </html>
   );
