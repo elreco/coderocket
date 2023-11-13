@@ -1,4 +1,5 @@
 "use client";
+import { ArrowPathIcon } from "@heroicons/react/20/solid";
 import clsx from "clsx";
 import Link from "next/link";
 
@@ -31,6 +32,7 @@ type ButtonProps<
 > = {
   variant?: Variant;
   color?: Color;
+  loading?: boolean;
 } & (
   | Omit<React.ComponentPropsWithoutRef<typeof Link>, "color">
   | (Omit<React.ComponentPropsWithoutRef<"button">, "color"> & {
@@ -41,7 +43,13 @@ type ButtonProps<
 export function Button<
   Color extends ColorKey<Variant>,
   Variant extends VariantKey = "solid",
->({ variant, color, className, ...props }: ButtonProps<Variant, Color>) {
+>({
+  variant,
+  color,
+  loading,
+  className,
+  ...props
+}: ButtonProps<Variant, Color>) {
   variant = variant ?? ("solid" as Variant);
   color = color ?? ("gray" as Color);
 
@@ -50,6 +58,23 @@ export function Button<
     variantStyles[variant][color],
     className,
   );
+
+  // Modify rendering logic to handle the loading state
+  if (loading) {
+    return (
+      <button
+        className={clsx(
+          "flex items-center justify-center bg-gray-700 hover:bg-gray-700 active:bg-gray-700 text-white",
+          className,
+        )}
+        disabled={true}
+        {...props}
+      >
+        <ArrowPathIcon className="h-4 w-4 mr-2 animate-spin" />{" "}
+        <div className="whitespace-nowrap">Please wait</div>
+      </button>
+    );
+  }
 
   return typeof props.href === "undefined" ? (
     <button className={className} {...props} />

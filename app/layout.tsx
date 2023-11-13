@@ -56,7 +56,7 @@ export default function RootLayout({ children }: PropsWithChildren) {
   return (
     <html
       lang="en"
-      className={clsx("h-full bg-slate-50 antialiased", inter.variable)}
+      className={clsx("h-full bg-gray-50 antialiased", inter.variable)}
     >
       <head>
         <SandPackCSS />
@@ -64,7 +64,7 @@ export default function RootLayout({ children }: PropsWithChildren) {
       <body>
         <SupabaseProvider>
           <Navbar />
-          <main>{children}</main>
+          <main className="min-h-screen">{children}</main>
           <Footer />
         </SupabaseProvider>
         <Toaster />

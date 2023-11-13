@@ -24,7 +24,7 @@ export async function POST(req: Request) {
     const { prompt } = await req.json();
 
     if (!prompt) throw Error("Could not get prompt");
-    console.log(prompt);
+
     const payload = {
       user_id: user.id,
       messages: [
@@ -40,12 +40,8 @@ export async function POST(req: Request) {
       ],
     };
 
-    const { data, error } = await supabase
-      .from("chats")
-      .insert([payload])
-      .select();
-    console.log("data", data);
-    console.log("error", error);
+    const { data } = await supabase.from("chats").insert([payload]).select();
+
     return Response.json(data);
   } catch (err: any) {
     return new Response(

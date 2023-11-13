@@ -17,16 +17,29 @@ export default function AuthUI() {
         magicLink={true}
         appearance={{
           theme: ThemeSupa,
+          style: {
+            container: { fontFamily: "inter" },
+            input: { fontFamily: "inter", background: "white" },
+            label: { fontFamily: "inter" },
+            loader: { fontFamily: "inter" },
+            message: { fontFamily: "inter" },
+            anchor: { fontFamily: "inter" },
+            button: {
+              color: "white",
+              background: "#262626",
+              fontFamily: "inter",
+            },
+          },
           variables: {
             default: {
               colors: {
-                brand: "#404040",
-                brandAccent: "#52525b",
+                brand: "#262626",
+                brandAccent: "#171717",
               },
             },
           },
         }}
-        theme="dark"
+        theme="light"
       />
     </div>
   );

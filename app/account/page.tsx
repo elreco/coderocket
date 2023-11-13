@@ -11,6 +11,7 @@ import {
   getSubscription,
 } from "@/app/supabase-server";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Database } from "@/types_db";
 
 import ManageSubscriptionButton from "./ManageSubscriptionButton";
@@ -38,7 +39,6 @@ export default async function Account() {
 
   const updateName = async (formData: FormData) => {
     "use server";
-
     const newName = formData.get("name") as string;
     const supabase = createServerActionClient<Database>({ cookies });
     const session = await getSession();
@@ -66,14 +66,14 @@ export default async function Account() {
   };
 
   return (
-    <section className="mb-32 bg-black">
+    <section className="mb-32">
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:pt-24 lg:px-8">
         <div className="sm:align-center sm:flex sm:flex-col">
-          <h1 className="text-4xl font-extrabold text-white sm:text-center sm:text-6xl">
+          <h1 className="text-4xl font-bold text-gray-700 sm:text-center sm:text-6xl">
             Account
           </h1>
-          <p className="m-auto mt-5 max-w-2xl text-xl text-zinc-200 sm:text-center sm:text-2xl">
-            We partnered with Stripe for a simplified billing.
+          <p className="m-auto mt-5 max-w-2xl text-xl text-gray-700 sm:text-center sm:text-2xl">
+            Manage your account and billing.
           </p>
         </div>
       </div>
@@ -87,7 +87,7 @@ export default async function Account() {
           }
           footer={<ManageSubscriptionButton session={session} />}
         >
-          <div className="mb-4 mt-8 text-xl font-semibold">
+          <div className="mb-4 mt-8 text-xl font-semibold text-gray-700 hover:text-gray-900">
             {subscription ? (
               `${subscriptionPrice}/${subscription?.prices?.interval}`
             ) : (
@@ -101,24 +101,17 @@ export default async function Account() {
           footer={
             <div className="flex flex-col items-start justify-between sm:flex-row sm:items-center">
               <p className="pb-4 sm:pb-0">64 characters maximum</p>
-              <Button
-                variant="outline"
-                type="submit"
-                form="nameForm"
-                disabled={true}
-              >
-                {/* WARNING - In Next.js 13.4.x server actions are in alpha and should not be used in production code! */}
+              <Button type="submit" form="nameForm">
                 Update Name
               </Button>
             </div>
           }
         >
-          <div className="mb-4 mt-8 text-xl font-semibold">
+          <div className="mb-4 mt-8 text-xl">
             <form id="nameForm" action={updateName}>
-              <input
+              <Input
                 type="text"
                 name="name"
-                className="w-1/2 rounded-md bg-zinc-800 p-3"
                 defaultValue={userDetails?.full_name ?? ""}
                 placeholder="Your name"
                 maxLength={64}
@@ -134,24 +127,17 @@ export default async function Account() {
               <p className="pb-4 sm:pb-0">
                 We will email you to verify the change.
               </p>
-              <Button
-                variant="outline"
-                type="submit"
-                form="emailForm"
-                disabled={true}
-              >
-                {/* WARNING - In Next.js 13.4.x server actions are in alpha and should not be used in production code! */}
+              <Button type="submit" form="emailForm">
                 Update Email
               </Button>
             </div>
           }
         >
-          <div className="mb-4 mt-8 text-xl font-semibold">
+          <div className="mb-4 mt-8 text-xl">
             <form id="emailForm" action={updateEmail}>
-              <input
+              <Input
                 type="text"
                 name="email"
-                className="w-1/2 rounded-md bg-zinc-800 p-3"
                 defaultValue={user ? user.email : ""}
                 placeholder="Your email"
                 maxLength={64}
@@ -173,13 +159,13 @@ interface Props {
 
 function Card({ title, description, footer, children }: Props) {
   return (
-    <div className="p m-auto my-8 w-full max-w-3xl rounded-md border border-zinc-700">
-      <div className="px-5 py-4">
-        <h3 className="mb-1 text-2xl font-medium">{title}</h3>
-        <p className="text-zinc-300">{description}</p>
+    <div className="p m-auto my-8 w-full max-w-3xl rounded-md border bg-white">
+      <div className="px-5 py-4 ">
+        <h3 className="mb-1 text-2xl font-medium text-gray-700">{title}</h3>
+        <p className="text-gray-700">{description}</p>
         {children}
       </div>
-      <div className="rounded-b-md border-t border-zinc-700 bg-zinc-900 p-4 text-zinc-500">
+      <div className="rounded-b-md border-t bg-white p-4 text-gray-700">
         {footer}
       </div>
     </div>

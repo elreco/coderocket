@@ -4,11 +4,13 @@ import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { useRef, useState } from "react";
 
+import { links } from "@/utils/links";
+
 export function NavLinks() {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const timeoutRef = useRef<number | null>(null);
 
-  return [["Generate", "/"]].map(([label, href], index) => (
+  return links.map(([label, href], index) => (
     <Link
       key={label}
       href={href}

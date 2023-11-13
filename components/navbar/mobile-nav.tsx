@@ -8,6 +8,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { useSupabase } from "@/app/supabase-provider";
+import { links } from "@/utils/links";
 
 import { Button } from "../ui/button";
 
@@ -88,13 +89,14 @@ export function MobileNav({ session }: Props) {
                       y: -32,
                       transition: { duration: 0.2 },
                     }}
-                    className="absolute inset-x-0 top-0 z-0 origin-top rounded-b-2xl bg-slate-50 px-6 pb-6 pt-32 shadow-2xl shadow-gray-900/20 backdrop-blur"
+                    className="absolute inset-x-0 top-0 z-0 origin-top rounded-b-2xl bg-gray-50 px-6 pb-6 pt-32 shadow-2xl shadow-gray-900/20 backdrop-blur"
                   >
                     <div className="space-y-4">
-                      <MobileNavLink href="/#features">Features</MobileNavLink>
-                      <MobileNavLink href="/#reviews">Reviews</MobileNavLink>
-                      <MobileNavLink href="/#pricing">Pricing</MobileNavLink>
-                      <MobileNavLink href="/#faqs">FAQs</MobileNavLink>
+                      {links.map(([label, href], index) => (
+                        <MobileNavLink key={index} href={href}>
+                          {label}
+                        </MobileNavLink>
+                      ))}
                     </div>
                     <div className="mt-8 flex flex-col gap-4">
                       {!session ? (

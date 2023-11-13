@@ -7,15 +7,21 @@ import {
 } from "@/app/supabase-server";
 
 export default async function PricingPage() {
-  const [session, products, subscription] = await Promise.all([
+  const [session, subscription, products] = await Promise.all([
     getSession(),
-    getActiveProductsWithPrices(),
     getSubscription(),
+    getActiveProductsWithPrices(),
   ]);
 
   return (
     <>
-      <Hero />
+      <Hero session={session} />
+      <Pricing
+        session={session}
+        user={session?.user}
+        subscription={subscription}
+        products={products}
+      />
     </>
   );
 }

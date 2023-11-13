@@ -76,7 +76,7 @@ export default function Pricing({
 
   if (!products.length)
     return (
-      <section className="bg-black">
+      <section className="bg-gray-900">
         <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-24 lg:px-8">
           <div className="sm:align-center sm:flex sm:flex-col"></div>
           <p className="text-4xl font-extrabold text-white sm:text-center sm:text-6xl">
@@ -100,16 +100,16 @@ export default function Pricing({
       <section>
         <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-24 lg:px-8">
           <div className="sm:align-center sm:flex sm:flex-col">
-            <h1 className="text-4xl font-extrabold text-white sm:text-center sm:text-6xl">
+            <h1 className="text-4xl font-extrabold text-gray-700 sm:text-center sm:text-6xl">
               Pricing Plans
             </h1>
-            <p className="m-auto mt-5 max-w-2xl text-xl text-zinc-200 sm:text-center sm:text-2xl">
+            <p className="m-auto mt-5 max-w-2xl text-xl text-gray-400 sm:text-center sm:text-2xl">
               Start building for free, then add a site plan to go live. Account
               plans unlock additional features.
             </p>
-            <div className="relative mt-12 flex self-center rounded-lg border border-zinc-800 bg-zinc-900">
-              <div className="divide-y divide-zinc-600 rounded-lg border border-pink-500 border-opacity-50 bg-zinc-900 shadow-sm">
-                <div className="m-1 whitespace-nowrap rounded-md border-zinc-800 p-6 py-2 text-2xl font-medium text-white shadow-sm focus:z-10 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-opacity-50 sm:w-auto sm:px-8">
+            <div className="relative mt-12 flex self-center rounded-lg">
+              <div className="divide-y rounded-lg border bg-zinc-900 shadow-sm">
+                <div className="m-1 whitespace-nowrap rounded-md border-zinc-800 p-6 py-2 text-2xl font-medium text-white shadow-sm focus:z-10 focus:outline-none focus:ring-2 focus:ring-opacity-50 sm:w-auto sm:px-8">
                   {products[0].name}
                 </div>
               </div>
@@ -127,25 +127,25 @@ export default function Pricing({
                 return (
                   <div
                     key={price.interval}
-                    className="divide-y divide-zinc-600 rounded-lg bg-zinc-900 shadow-sm"
+                    className="divide-y divide-zinc-600 rounded-lg bg-white border"
                   >
                     <div className="p-6">
                       <p>
-                        <span className="white text-5xl font-extrabold">
+                        <span className="white text-5xl font-bold">
                           {priceString}
                         </span>
-                        <span className="text-base font-medium text-zinc-100">
+                        <span className="text-base font-medium text-gray-700">
                           /{price.interval}
                         </span>
                       </p>
-                      <p className="mt-4 text-zinc-300">{price.description}</p>
+                      <p className="mt-4 text-gray-700">{price.description}</p>
                       <Button
                         variant="solid"
                         type="button"
                         disabled={false}
                         loading={priceIdLoading === price.id}
                         onClick={() => handleCheckout(price)}
-                        className="mt-12 block w-full rounded-md py-2 text-center text-sm font-semibold text-white hover:bg-zinc-900 "
+                        className="mt-12 block w-full rounded-md py-2 text-center text-sm font-semibold text-white hover:bg-gray-900 "
                       >
                         {products[0].name ===
                         subscription?.prices?.products?.name

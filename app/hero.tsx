@@ -1,14 +1,13 @@
 "use client";
-import beautify from "js-beautify";
+import { Session } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+
+import { useToast } from "@/components/ui/toaster/use-toast";
 
 import { Container } from "../components/container";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
-import { redirect } from "next/navigation";
-import { Session } from "@supabase/supabase-js";
-import { useToast } from "@/components/ui/toaster/use-toast";
 
 interface Props {
   session: Session | null;
@@ -38,20 +37,25 @@ async function createGeneration(prompt: string): Promise<any> {
 
 export default function Hero({ session }: Props) {
   const router = useRouter();
-  const { toast } = useToast()
-  const [prompt, setPrompt] = useState("A beautiful table");
+  const { toast } = useToast();
+  const [prompt, setPrompt] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
     if (!session) {
+      setLoading(false);
       toast({
-        title: "Scheduled: Catch up",
-        description: "Friday, February 10, 2023 at 5:57 PM",
-      })
+        variant: "destructive",
+        title: "You must Log In",
+        description: "Log in to your account to start generate components",
+      });
       return router.push("/signin");
     }
     const data = await createGeneration(prompt);
     router.push(`/chats/${data.id}`);
+    setLoading(false);
   };
 
   return (
@@ -63,10 +67,14 @@ export default function Hero({ session }: Props) {
         >
           <Input
             placeholder="Start generate a beautiful Tailwind component"
+            autoFocus
+            required
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
           />
-          <Button type="submit">Generate</Button>
+          <Button type="submit" loading={loading}>
+            Generate
+          </Button>
         </form>
       </Container>
     </>

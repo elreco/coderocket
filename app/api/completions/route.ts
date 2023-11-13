@@ -30,11 +30,16 @@ export async function POST(req: Request) {
   const messagesFromDatabase = data?.length ? data[0].messages : [];
   const messages = [
     ...messagesFromDatabase,
-    {
-      content: prompt,
-      role: "user",
-    },
+    ...(messagesFromDatabase.length > 2
+      ? [
+          {
+            content: prompt,
+            role: "user",
+          },
+        ]
+      : []),
   ];
+  console.log(messages.map((m) => m.content.slice(0, 100)));
   const response = await openai.chat.completions.create({
     messages,
     model: "ft:gpt-3.5-turbo-0613:personal::8G78hB68",
