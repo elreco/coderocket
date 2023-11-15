@@ -16,12 +16,12 @@ export default async function PricingPage() {
   return (
     <>
       <Hero session={session} />
-      <Pricing
+      {/* <Pricing
         session={session}
         user={session?.user}
         subscription={subscription}
         products={products}
-      />
+      /> */}
     </>
   );
 }

@@ -33,6 +33,7 @@ export default async function Account() {
     subscription &&
     new Intl.NumberFormat("en-US", {
       style: "currency",
+      // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
       currency: subscription?.prices?.currency!,
       minimumFractionDigits: 0,
     }).format((subscription?.prices?.unit_amount || 0) / 100);

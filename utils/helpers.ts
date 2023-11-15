@@ -56,3 +56,20 @@ export const capitalizeFirstLetter = (string: string) => {
   if (!string) return "";
   return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
 };
+
+export const convertHtmlToJsx = (html: string) => {
+  return html
+    .replace(/class=/g, "className=")
+    .replace(/for=/g, "htmlFor=")
+    .replace(/<input(.*?)>/g, "<input$1/>")
+    .replace(/<img(.*?)>/g, "<img$1/>")
+    .replace(/<br(.*?)>/g, "<br$1/>")
+    .replace(/<hr(.*?)>/g, "<hr$1/>")
+    .replace(/<meta(.*?)>/g, "<meta$1/>")
+    .replace(/<link(.*?)>/g, "<link$1/>")
+    .replace(/<\s*script[^>]*>([\s\S]*?)<\s*\/\s*script>/gi, "")
+    .replace(
+      /on([a-z]+)=/g,
+      (match, p1) => `on${p1.charAt(0).toUpperCase() + p1.slice(1)}=`,
+    );
+};

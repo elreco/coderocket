@@ -1,3 +1,5 @@
+import OpenAI from "openai";
+
 export type Json =
   | string
   | number
@@ -204,6 +206,35 @@ export interface Database {
           {
             foreignKeyName: "users_id_fkey";
             columns: ["id"];
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      chats: {
+        Row: {
+          created_at: string | null;
+          id: string;
+          messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[];
+          user_id: string | null;
+        };
+        Insert: {
+          created_at?: string | null;
+          id?: string;
+          messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[];
+          user_id?: string | null;
+        };
+        Update: {
+          created_at?: string | null;
+          id?: string;
+          messages?: OpenAI.Chat.Completions.ChatCompletionMessageParam[];
+          user_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "chats_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
             referencedRelation: "users";
             referencedColumns: ["id"];
           },

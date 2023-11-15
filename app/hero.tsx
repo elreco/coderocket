@@ -9,30 +9,10 @@ import { Container } from "../components/container";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 
+import { createChat } from "./chats/actions";
+
 interface Props {
   session: Session | null;
-}
-
-async function createGeneration(prompt: string): Promise<any> {
-  try {
-    const response = await fetch("/api/chats", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ prompt }),
-    });
-
-    if (!response.ok) {
-      console.log("Failed:", response.status, response.statusText);
-      return "";
-    }
-    const data = await response.json();
-    return data[0];
-  } catch (error) {
-    console.error("There was an error!", error);
-    return "";
-  }
 }
 
 export default function Hero({ session }: Props) {
@@ -53,8 +33,7 @@ export default function Hero({ session }: Props) {
       });
       return router.push("/signin");
     }
-    const data = await createGeneration(prompt);
-    router.push(`/chats/${data.id}`);
+    await createChat(prompt);
     setLoading(false);
   };
 
@@ -62,9 +41,10 @@ export default function Hero({ session }: Props) {
     <>
       <Container className="flex h-screen items-center justify-center">
         <form
-          className="mt-2 flex w-full flex-col items-center justify-center space-x-0 space-y-5 px-5 text-center sm:flex-row sm:space-x-3 sm:space-y-0 lg:w-1/2"
+          className="group relative z-10 p-3 border focus-within:shadow-2xl hover:shadow-2xl hover:shadow-zinc-200 focus-within:shadow-zinc-200 transition-all duration-300 bg-gradient-to-r from-white to-gray-50 backdrop-filter backdrop-blur-xl rounded-md flex w-full flex-col items-center justify-center gap-x-0 space-y-5 text-center sm:flex-row sm:gap-x-3 sm:space-y-0 lg:w-1/2 xl:w-1/3"
           onSubmit={handleSubmit}
         >
+          <div className="-z-10 absolute right-0 top-0 left-0 bottom-0 bg-hero"></div>
           <Input
             placeholder="Start generate a beautiful Tailwind component"
             autoFocus

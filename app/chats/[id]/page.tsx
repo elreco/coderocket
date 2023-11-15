@@ -8,57 +8,40 @@ import {
 } from "@codesandbox/sandpack-react";
 import { githubLight } from "@codesandbox/sandpack-themes";
 import { ArrowPathIcon } from "@heroicons/react/20/solid";
-import { Message } from "ai";
 import { useCompletion } from "ai/react";
 import clsx from "clsx";
-import { Parser } from "html-to-react";
 import beautify from "js-beautify";
 import { useEffect, useMemo, useState } from "react";
 
+import { useSupabase } from "@/app/supabase-provider";
 import { Container } from "@/components/container";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { capitalizeFirstLetter } from "@/utils/helpers";
 
+import { fetchChat } from "../actions";
+import { ChatMessage } from "../types";
+
 const beautifyOptions: beautify.HTMLBeautifyOptions = {
-  indent_inner_html: true,
-  indent_body_inner_html: true,
-  wrap_attributes: "preserve",
   indent_size: 4,
+  indent_char: " ",
+  inline: [],
 };
 
-const fetchMessages = async (id: string): Promise<Message[]> => {
-  const response = await fetch(`/api/chats/${id}`);
-  if (!response.ok) {
-    console.log("Failed:", response.status, response.statusText);
-    return [];
-  }
-  const data = await response.json();
-  const messages = data[0].messages as Message[];
-
-  let assistantVersion = -1;
-  return messages.map((m, index) => {
-    if (m.role === "assistant") {
-      return {
-        ...m,
-        id: `message-${index}`,
-        version: ++assistantVersion,
-      };
-    } else {
-      return {
-        ...m,
-        id: `message-${index}`,
-      };
-    }
-  });
-};
+const externalResources = [
+  "https://unpkg.com/@tailwindcss/ui/dist/tailwind-ui.min.css",
+  "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css",
+];
 
 export default function Generations({ params }: { params: { id: string } }) {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const { supabase } = useSupabase();
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [selectedVersion, setSelectedVersion] = useState<string | null>(null);
   const [title, setTitle] = useState<string>("");
   const [loadingMessages, setLoadingMessages] = useState(true);
+  const [authorized, setAuthorized] = useState(false);
+  const [userId, setUserId] = useState("");
   const {
     completion,
     isLoading,
@@ -69,12 +52,12 @@ export default function Generations({ params }: { params: { id: string } }) {
     complete,
     setInput,
   } = useCompletion({
-    api: `/api/completions`,
+    api: "/api/completion",
     body: { id: params.id },
     onFinish: () => {
       setLoadingMessages(true);
-      fetchMessages(params.id).then((fetchedMessages) => {
-        setMessages(fetchedMessages);
+      fetchChat(params.id).then((fetchedChat) => {
+        setMessages(fetchedChat?.messages || []);
         setLoadingMessages(false);
       });
       setInput("");
@@ -82,9 +65,24 @@ export default function Generations({ params }: { params: { id: string } }) {
   });
 
   useEffect(() => {
-    fetchMessages(params.id).then((fetchedMessages) => {
-      setMessages(fetchedMessages);
+    supabase.auth.getSession().then(({ data }) => {
+      const userIdFromSession = data.session?.user.id;
+      setAuthorized(userIdFromSession === userId);
+    });
+  }, [userId]);
+
+  supabase.auth.onAuthStateChange((event, session) => {
+    if (event === "SIGNED_IN" || event === "SIGNED_OUT") {
+      const userIdFromSession = session?.user.id;
+      setAuthorized(userIdFromSession === userId);
+    }
+  });
+
+  useEffect(() => {
+    fetchChat(params.id).then((fetchedChat) => {
+      setMessages(fetchedChat?.messages || []);
       setLoadingMessages(false);
+      setUserId(fetchedChat?.user_id || "");
     });
   }, [params.id]);
 
@@ -100,21 +98,22 @@ export default function Generations({ params }: { params: { id: string } }) {
       .reverse()
       .find((message) => message.role === "assistant");
     if (lastCompletionMessage) {
-      setCompletion(lastCompletionMessage.content);
+      setCompletion(lastCompletionMessage.content ?? "");
       handleVersionSelect(lastCompletionMessage.id);
     }
   }, [messages.length]);
 
   const beautifiedContent = useMemo(() => {
-    return beautify.html(completion, beautifyOptions);
+    const content = beautify.html(completion, beautifyOptions);
+    return content;
   }, [completion]);
 
   const handleVersionSelect = (id: string) => {
     const selectedMessageIndex = messages.findIndex((m) => m.id === id);
     if (selectedMessageIndex > -1) {
       setSelectedVersion(id);
-      setTitle(messages[selectedMessageIndex - 1].content);
-      setCompletion(messages[selectedMessageIndex].content);
+      setTitle(messages[selectedMessageIndex - 1].content ?? "");
+      setCompletion(messages[selectedMessageIndex].content ?? "");
     }
   };
 
@@ -130,22 +129,13 @@ export default function Generations({ params }: { params: { id: string } }) {
 
     if (selectedIndex === 0) {
       return assistantMessagesOnly.filter((_, index) => {
-        return index >= 0 && index <= 3;
+        return index <= 2;
       });
     }
 
     if (selectedIndex === lastAssistantMessageIndex) {
       return assistantMessagesOnly.filter((_, index) => {
-        return (
-          index >= lastAssistantMessageIndex - 3 &&
-          index <= lastAssistantMessageIndex
-        );
-      });
-    }
-
-    if (selectedIndex === 1) {
-      return assistantMessagesOnly.filter((_, index) => {
-        return index >= selectedIndex - 1 && index <= selectedIndex + 2;
+        return index >= lastAssistantMessageIndex - 2;
       });
     }
 
@@ -153,7 +143,6 @@ export default function Generations({ params }: { params: { id: string } }) {
       return (
         index === selectedIndex ||
         index === selectedIndex - 1 ||
-        index === selectedIndex - 2 ||
         index === selectedIndex + 1
       );
     });
@@ -180,10 +169,7 @@ export default function Generations({ params }: { params: { id: string } }) {
               options={{
                 initMode: "immediate",
                 recompileMode: "immediate",
-                externalResources: [
-                  "https://unpkg.com/@tailwindcss/ui/dist/tailwind-ui.min.css",
-                  "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css",
-                ],
+                externalResources,
                 editorHeight: 600,
                 showReadOnly: false,
                 showConsoleButton: false,
@@ -195,64 +181,67 @@ export default function Generations({ params }: { params: { id: string } }) {
                 "/index.html": beautifiedContent,
               }}
             />
-            <form className="flex space-x-4" onSubmit={handleSubmit}>
-              <Input
-                autoFocus
-                disabled={isLoading}
-                value={input}
-                onChange={handleInputChange}
-                placeholder="Make it modern UI"
-              />
-              <Button loading={isLoading} type="submit">
-                Generate
-              </Button>
-            </form>
+            {authorized && (
+              <form className="flex justify-center" onSubmit={handleSubmit}>
+                <div className="w-1/2 flex space-x-4">
+                  <Input
+                    autoFocus
+                    disabled={isLoading}
+                    value={input}
+                    onChange={handleInputChange}
+                    placeholder="Make it modern UI"
+                  />
+                  <Button loading={isLoading} type="submit">
+                    Generate
+                  </Button>
+                </div>
+              </form>
+            )}
           </div>
-          <div className="h-full w-full md:w-1/6">
+          <div className="h-full w-full md:w-1/6 space-y-3">
             {assistantMessages.map((m) => (
-              <div className="mb-4" key={m.id}>
-                <SandpackProvider
-                  theme={githubLight}
-                  options={{
-                    externalResources: [
-                      "https://unpkg.com/@tailwindcss/ui/dist/tailwind-ui.min.css",
-                      "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css",
-                    ],
-                  }}
-                  template="static"
-                  files={{
-                    "/index.html": beautify.html(m?.content || ""),
-                  }}
+              <SandpackProvider
+                key={m.id}
+                theme={githubLight}
+                options={{
+                  externalResources,
+                }}
+                template="static"
+                files={{
+                  "/index.html": m?.content ?? "",
+                }}
+              >
+                <div
+                  className={clsx(
+                    "bg-transparent rounded-md",
+                    selectedVersion === m.id &&
+                      "shadow-xl shadow-indigo-500/40",
+                  )}
                 >
                   <SandpackLayout>
                     <SandpackPreview className="!h-44" />
                     <div
-                      className={clsx(
-                        "absolute inset-0 z-10 flex cursor-pointer select-none items-center justify-center  ",
-                        selectedVersion === m.id
-                          ? "bg-black/25 hover:bg-black/20"
-                          : "bg-black/25 hover:bg-black/20",
-                      )}
+                      className="absolute inset-0 z-10 bg-black/25 hover:bg-black/20  flex cursor-pointer select-none items-center justify-center  "
                       onClick={() => handleVersionSelect(m.id)}
                     >
                       <Badge
                         className="absolute bottom-0 right-0 m-4"
-                        variant="default"
+                        variant="secondary"
                       >
                         v{m.version}
                       </Badge>
                       {selectedVersion === m.id && (
                         <Badge
-                          className="absolute bottom-0 left-0 m-4"
-                          variant="secondary"
+                          className="absolute bottom-0 left-0 m-4 text-indigo-500"
+                          variant="default"
                         >
                           Selected
                         </Badge>
                       )}
                     </div>
                   </SandpackLayout>
-                </SandpackProvider>
-              </div>
+                </div>
+              </SandpackProvider>
             ))}
           </div>
         </div>
