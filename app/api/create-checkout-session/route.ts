@@ -1,5 +1,5 @@
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
-import { cookies, headers } from "next/headers";
+import { cookies } from "next/headers";
 
 import { Database } from "@/types_db";
 import { getURL } from "@/utils/helpers";
@@ -82,6 +82,7 @@ export async function POST(req: Request) {
           { status: 500 },
         );
       }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.log(err);
       return new Response(JSON.stringify(err), { status: 500 });

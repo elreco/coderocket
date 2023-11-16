@@ -2,7 +2,7 @@
 
 import { Popover } from "@headlessui/react";
 import { ChevronUpIcon } from "@heroicons/react/20/solid";
-import { Session, User } from "@supabase/supabase-js";
+import { Session } from "@supabase/supabase-js";
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";

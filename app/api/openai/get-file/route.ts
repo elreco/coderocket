@@ -1,11 +1,6 @@
 import fs from "fs";
 
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
-import { OpenAIStream, StreamingTextResponse } from "ai";
-import { cookies } from "next/headers";
 import OpenAI from "openai";
-
-import { Database } from "@/types_db";
 
 const openai = new OpenAI({
   apiKey: process.env.OPEN_AI || "",

@@ -55,7 +55,7 @@ export function Button<
 
   className = clsx(
     baseStyles[variant],
-    variantStyles[variant][color],
+    variantStyles[variant][color] || "",
     className,
   );
 
@@ -68,7 +68,6 @@ export function Button<
           className,
         )}
         disabled={true}
-        {...props}
       >
         <ArrowPathIcon className="h-4 w-4 mr-2 animate-spin" />{" "}
         <div className="whitespace-nowrap">Please wait</div>

@@ -1,10 +1,13 @@
+/* eslint-disable import/order */
+import { PropsWithChildren } from "react";
+
 import SupabaseProvider from "./supabase-provider";
 
 import { Footer } from "@/components/footer";
 import { Navbar } from "@/components/navbar/navbar";
 
 import clsx from "clsx";
-import { PropsWithChildren } from "react";
+
 import "styles/main.css";
 import { Inter } from "next/font/google";
 

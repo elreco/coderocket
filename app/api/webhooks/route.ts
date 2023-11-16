@@ -27,6 +27,7 @@ export async function POST(req: Request) {
   try {
     if (!sig || !webhookSecret) return;
     event = stripe.webhooks.constructEvent(body, sig, webhookSecret);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (err: any) {
     console.log(`❌ Error message: ${err.message}`);
     return new Response(`Webhook Error: ${err.message}`, { status: 400 });
@@ -46,6 +47,7 @@ export async function POST(req: Request) {
         case "customer.subscription.created":
         case "customer.subscription.updated":
         case "customer.subscription.deleted":
+          // eslint-disable-next-line no-case-declarations
           const subscription = event.data.object as Stripe.Subscription;
           await manageSubscriptionStatusChange(
             subscription.id,
@@ -54,6 +56,7 @@ export async function POST(req: Request) {
           );
           break;
         case "checkout.session.completed":
+          // eslint-disable-next-line no-case-declarations
           const checkoutSession = event.data.object as Stripe.Checkout.Session;
           if (checkoutSession.mode === "subscription") {
             const subscriptionId = checkoutSession.subscription;

@@ -81,6 +81,6 @@ export async function POST(req: Request) {
     });
     return new StreamingTextResponse(stream);
   } catch (e) {
-    console.log(e.message);
+    return Response.json({ code: 500, error: "server error" });
   }
 }

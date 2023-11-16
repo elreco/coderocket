@@ -1,5 +1,4 @@
 import Hero from "@/app/hero";
-import Pricing from "@/app/pricing";
 import {
   getSession,
   getSubscription,
@@ -7,7 +6,7 @@ import {
 } from "@/app/supabase-server";
 
 export default async function PricingPage() {
-  const [session, subscription, products] = await Promise.all([
+  const [session] = await Promise.all([
     getSession(),
     getSubscription(),
     getActiveProductsWithPrices(),
@@ -16,12 +15,6 @@ export default async function PricingPage() {
   return (
     <>
       <Hero session={session} />
-      {/* <Pricing
-        session={session}
-        user={session?.user}
-        subscription={subscription}
-        products={products}
-      /> */}
     </>
   );
 }

@@ -28,6 +28,7 @@ export async function POST(req: Request) {
       return new Response(JSON.stringify({ url }), {
         status: 200,
       });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.log(err);
       return new Response(
