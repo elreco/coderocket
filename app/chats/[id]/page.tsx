@@ -101,7 +101,7 @@ export default function Generations({ params }: { params: { id: string } }) {
       setCompletion(lastCompletionMessage.content ?? "");
       handleVersionSelect(lastCompletionMessage.id);
     }
-  }, [messages.length]);
+  }, [messages]);
 
   const beautifiedContent = useMemo(() => {
     const content = beautify.html(completion, beautifyOptions);
@@ -167,8 +167,7 @@ export default function Generations({ params }: { params: { id: string } }) {
             <Sandpack
               theme={githubLight}
               options={{
-                initMode: "immediate",
-                recompileMode: "immediate",
+                recompileMode: "delayed",
                 externalResources,
                 editorHeight: 600,
                 showReadOnly: false,
