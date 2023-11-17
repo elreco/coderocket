@@ -22,12 +22,19 @@ const inter = Inter({
 
 const meta = {
   title: "Tailwind AI",
+  metadataBase: new URL("https://www.tailwindai.dev"),
   description: "Create tailwind components using AI.",
-  cardImage: "/og.png",
+  cardImage: "https://www.tailwindai.dev/og.png",
   robots: "follow, index",
   favicon: "/favicon.ico",
-  url: "https://subscription-starter.vercel.app",
+  url: "https://www.tailwindai.dev",
   type: "website",
+  twitter: {
+    card: "summary_large_image",
+    title: "Tailwind AI",
+    description: "Create tailwind components using AI.",
+    images: ["https://www.tailwindai.dev/og.png"],
+  },
 };
 
 export const metadata = {

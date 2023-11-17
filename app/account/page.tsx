@@ -3,7 +3,7 @@ import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ReactNode } from "react";
+import { ReactNode, Suspense } from "react";
 
 import {
   getSession,
@@ -14,6 +14,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Database } from "@/types_db";
 
+import { getUserChats } from "../chats/actions";
+
+import Chats from "./Chats";
 import ManageSubscriptionButton from "./ManageSubscriptionButton";
 
 export default async function Account() {
@@ -66,6 +69,7 @@ export default async function Account() {
     revalidatePath("/account");
   };
 
+  const chats = await getUserChats();
   return (
     <section className="mb-32">
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:pt-24 lg:px-8">
@@ -102,9 +106,11 @@ export default async function Account() {
           footer={
             <div className="flex flex-col items-start justify-between sm:flex-row sm:items-center">
               <p className="pb-4 sm:pb-0">64 characters maximum</p>
-              <Button type="submit" form="nameForm">
-                Update Name
-              </Button>
+              <Suspense fallback={<Button loading></Button>}>
+                <Button type="submit" form="nameForm">
+                  Update Name
+                </Button>
+              </Suspense>
             </div>
           }
         >
@@ -144,6 +150,21 @@ export default async function Account() {
                 maxLength={64}
               />
             </form>
+          </div>
+        </Card>
+        <Card
+          title="My components"
+          description="Your generated components"
+          footer={
+            <div className="flex items-center justify-between">
+              <Button variant="outline" href="/">Generate component</Button>
+              <Button href="/chats">View featured components</Button>
+
+            </div>
+          }
+        >
+          <div className="mb-4 mt-8">
+            {chats?.length && <Chats chats={chats} />}
           </div>
         </Card>
       </div>

@@ -1,6 +1,5 @@
 "use client";
 import {
-  Sandpack,
   SandpackLayout,
   SandpackPreview,
   SandpackProvider,
@@ -29,7 +28,7 @@ const externalResources = [
   "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css",
 ];
 const page = 1;
-const pageSize = 9;
+const pageSize = 12;
 
 export default function Featured() {
   const [chats, setChats] = useState<Chat[]>([]);
@@ -53,7 +52,7 @@ export default function Featured() {
         <h1 className="mb-10 text-4xl font-bold text-gray-700 sm:text-center sm:text-6xl">
           Featured Components
         </h1>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid 2xl:grid-cols-4 lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-3">
           {chats?.map((c) => (
             <SandpackProvider
               key={c.chat_id}
@@ -77,7 +76,7 @@ export default function Featured() {
                       className="absolute bottom-0 right-0 m-4"
                       variant="secondary"
                     >
-                      {c.last_user_message.content}
+                      {c.last_user_message.content?.slice(0, 100)}
                     </Badge>
                     <Badge
                       className="absolute top-0 left-0 m-4 text-indigo-500"

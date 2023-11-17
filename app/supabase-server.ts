@@ -24,9 +24,14 @@ export async function getSession() {
 export async function getUserDetails() {
   const supabase = createServerSupabaseClient();
   try {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (!session?.user.id) return null;
     const { data: userDetails } = await supabase
       .from("users")
       .select("*")
+      .eq("id", session?.user.id)
       .single();
     return userDetails;
   } catch (error) {
@@ -38,10 +43,15 @@ export async function getUserDetails() {
 export async function getSubscription() {
   const supabase = createServerSupabaseClient();
   try {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (!session?.user.id) return null;
     const { data: subscription } = await supabase
       .from("subscriptions")
       .select("*, prices(*, products(*))")
       .in("status", ["trialing", "active"])
+      .eq("user_id", session?.user.id)
       .maybeSingle()
       .throwOnError();
     return subscription;

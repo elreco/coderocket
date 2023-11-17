@@ -212,9 +212,9 @@ export default function Chats({ params }: { params: { id: string } }) {
               >
                 <div
                   className={clsx(
-                    "bg-transparent rounded-md",
+                    "bg-transparent border rounded-md",
                     selectedVersion === m.id &&
-                      "shadow-xl shadow-indigo-500/40",
+                      "border-indigo-600 border transition-colors shadow-2xl shadow-indigo-500/20",
                   )}
                 >
                   <SandpackLayout>

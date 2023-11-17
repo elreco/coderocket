@@ -41,7 +41,7 @@ export default function Hero({ session }: Props) {
     <>
       <Container className="flex h-screen items-center justify-center">
         <form
-          className="group relative z-10 p-3 border focus-within:shadow-2xl hover:shadow-2xl hover:shadow-zinc-200 focus-within:shadow-zinc-200 transition-all duration-300 bg-gradient-to-r from-white to-gray-50 backdrop-filter backdrop-blur-xl rounded-md flex w-full flex-col items-center justify-center gap-x-0 space-y-5 text-center sm:flex-row sm:gap-x-3 sm:space-y-0 lg:w-1/2 xl:w-1/3"
+          className="group border-indigo-500/20 shadow-2xl shadow-indigo-500/20 relative z-10 p-3 border  transition-all duration-300 bg-gradient-to-r from-white to-gray-50 backdrop-filter backdrop-blur-xl rounded-md flex w-full flex-col items-center justify-center gap-x-0 space-y-5 text-center sm:flex-row sm:gap-x-3 sm:space-y-0 lg:w-1/2 xl:w-1/3"
           onSubmit={handleSubmit}
         >
           <div className="-z-10 absolute right-0 top-0 left-0 bottom-0 bg-hero"></div>
