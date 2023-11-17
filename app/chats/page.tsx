@@ -1,0 +1,97 @@
+"use client";
+import {
+  Sandpack,
+  SandpackLayout,
+  SandpackPreview,
+  SandpackProvider,
+} from "@codesandbox/sandpack-react";
+import { githubLight } from "@codesandbox/sandpack-themes";
+import clsx from "clsx";
+import Link from "next/link";
+import { ChatCompletionMessageParam } from "openai/resources";
+import { useEffect, useState } from "react";
+
+import { Container } from "@/components/container";
+import { Badge } from "@/components/ui/badge";
+
+import { useSupabase } from "../supabase-provider";
+
+interface Chat {
+  chat_id: string;
+  user_id: string;
+  user_full_name: string;
+  last_user_message: ChatCompletionMessageParam;
+  last_assistant_message: ChatCompletionMessageParam;
+}
+
+const externalResources = [
+  "https://unpkg.com/@tailwindcss/ui/dist/tailwind-ui.min.css",
+  "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css",
+];
+const page = 1;
+const pageSize = 9;
+
+export default function Featured() {
+  const [chats, setChats] = useState<Chat[]>([]);
+  const { supabase } = useSupabase();
+
+  useEffect(() => {
+    const getData = async () => {
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+
+      const { data } = await supabase.rpc("get_chats").range(from, to);
+      if (data?.length) {
+        setChats(data);
+      }
+    };
+    getData();
+  }, []);
+  return (
+    <>
+      <Container className="pt-24">
+        <h1 className="mb-10 text-4xl font-bold text-gray-700 sm:text-center sm:text-6xl">
+          Featured Components
+        </h1>
+        <div className="grid grid-cols-3 gap-3">
+          {chats?.map((c) => (
+            <SandpackProvider
+              key={c.chat_id}
+              theme={githubLight}
+              options={{
+                externalResources,
+              }}
+              template="static"
+              files={{
+                "/index.html": c.last_assistant_message?.content || "",
+              }}
+            >
+              <div className={clsx("bg-transparent rounded-md")}>
+                <SandpackLayout>
+                  <SandpackPreview className="!h-58" />
+                  <Link
+                    href={`/chats/${c.chat_id}`}
+                    className="absolute inset-0 z-10 bg-black/25 hover:bg-black/20  flex cursor-pointer select-none items-center justify-center  "
+                  >
+                    <Badge
+                      className="absolute bottom-0 right-0 m-4"
+                      variant="secondary"
+                    >
+                      {c.last_user_message.content}
+                    </Badge>
+                    <Badge
+                      className="absolute top-0 left-0 m-4 text-indigo-500"
+                      variant="default"
+                    >
+                      {c.user_full_name}
+                    </Badge>
+                  </Link>
+                </SandpackLayout>
+              </div>
+            </SandpackProvider>
+          ))}
+        </div>
+      </Container>
+    </>
+  );
+}

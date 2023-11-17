@@ -18,16 +18,16 @@ export default function AuthUI() {
         appearance={{
           theme: ThemeSupa,
           style: {
-            container: { fontFamily: "inter" },
-            input: { fontFamily: "inter", background: "white" },
-            label: { fontFamily: "inter" },
-            loader: { fontFamily: "inter" },
-            message: { fontFamily: "inter" },
-            anchor: { fontFamily: "inter" },
+            container: { fontFamily: "var(--font-inter)" },
+            input: { fontFamily: "var(--font-inter)", background: "white" },
+            label: { fontFamily: "var(--font-inter)" },
+            loader: { fontFamily: "var(--font-inter)" },
+            message: { fontFamily: "var(--font-inter)" },
+            anchor: { fontFamily: "var(--font-inter)" },
             button: {
               color: "white",
               background: "#262626",
-              fontFamily: "inter",
+              fontFamily: "var(--font-inter)",
             },
           },
           variables: {

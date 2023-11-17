@@ -1,5 +1,5 @@
 export const links = [
   ["Generate", "/"],
-  ["Featured components", "/featured"],
+  ["Featured components", "/chats"],
   ["My account", "/account"],
 ];

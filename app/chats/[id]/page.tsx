@@ -34,7 +34,7 @@ const externalResources = [
   "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css",
 ];
 
-export default function Generations({ params }: { params: { id: string } }) {
+export default function Chats({ params }: { params: { id: string } }) {
   const { supabase } = useSupabase();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [selectedVersion, setSelectedVersion] = useState<string | null>(null);

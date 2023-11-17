@@ -245,7 +245,16 @@ export interface Database {
       [_ in never]: never;
     };
     Functions: {
-      [_ in never]: never;
+      get_chats: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          chat_id: string;
+          user_id: string;
+          user_full_name: string;
+          last_user_message: OpenAI.Chat.Completions.ChatCompletionMessageParam;
+          last_assistant_message: OpenAI.Chat.Completions.ChatCompletionMessageParam;
+        }[];
+      };
     };
     Enums: {
       pricing_plan_interval: "day" | "week" | "month" | "year";
