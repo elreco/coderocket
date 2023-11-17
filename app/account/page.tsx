@@ -83,23 +83,25 @@ export default async function Account() {
         </div>
       </div>
       <div className="p-4">
-        <Card
-          title="Your Plan"
-          description={
-            subscription
-              ? `You are currently on the ${subscription?.prices?.products?.name} plan.`
-              : "You are not currently subscribed to any plan."
-          }
-          footer={<ManageSubscriptionButton session={session} />}
-        >
-          <div className="mb-4 mt-8 text-xl font-semibold text-gray-700 hover:text-gray-900">
-            {subscription ? (
-              `${subscriptionPrice}/${subscription?.prices?.interval}`
-            ) : (
-              <Link href="/">Choose your plan</Link>
-            )}
-          </div>
-        </Card>
+        <div className="hidden">
+          <Card
+            title="Your Plan"
+            description={
+              subscription
+                ? `You are currently on the ${subscription?.prices?.products?.name} plan.`
+                : "You are not currently subscribed to any plan."
+            }
+            footer={<ManageSubscriptionButton session={session} />}
+          >
+            <div className="mb-4 mt-8 text-xl font-semibold text-gray-700 hover:text-gray-900">
+              {subscription ? (
+                `${subscriptionPrice}/${subscription?.prices?.interval}`
+              ) : (
+                <Link href="/">Choose your plan</Link>
+              )}
+            </div>
+          </Card>
+        </div>
         <Card
           title="Your Name"
           description="Please enter your full name, or a display name you are comfortable with."
@@ -153,13 +155,14 @@ export default async function Account() {
           </div>
         </Card>
         <Card
-          title="My components"
+          title="Your Components"
           description="Your generated components"
           footer={
             <div className="flex items-center justify-between">
-              <Button variant="outline" href="/">Generate component</Button>
+              <Button variant="outline" href="/">
+                Generate component
+              </Button>
               <Button href="/chats">View featured components</Button>
-
             </div>
           }
         >

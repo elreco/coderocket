@@ -8,16 +8,25 @@ import {
 } from "@codesandbox/sandpack-react";
 import { githubLight } from "@codesandbox/sandpack-themes";
 import { ArrowPathIcon } from "@heroicons/react/20/solid";
+import { ClipboardIcon } from "@heroicons/react/24/outline";
 import { useCompletion } from "ai/react";
 import clsx from "clsx";
 import beautify from "js-beautify";
 import { useEffect, useMemo, useState } from "react";
+import { useCopyToClipboard } from "usehooks-ts";
 
 import { useSupabase } from "@/app/supabase-provider";
 import { Container } from "@/components/container";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useToast } from "@/components/ui/toaster/use-toast";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { capitalizeFirstLetter } from "@/utils/helpers";
 
 import { fetchChat } from "../actions";
@@ -36,6 +45,8 @@ const externalResources = [
 
 export default function Chats({ params }: { params: { id: string } }) {
   const { supabase } = useSupabase();
+  const [, copy] = useCopyToClipboard();
+  const { toast } = useToast();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [selectedVersion, setSelectedVersion] = useState<string | null>(null);
   const [title, setTitle] = useState<string>("");
@@ -54,12 +65,10 @@ export default function Chats({ params }: { params: { id: string } }) {
   } = useCompletion({
     api: "/api/completion",
     body: { id: params.id },
-    onFinish: () => {
-      setLoadingMessages(true);
-      fetchChat(params.id).then((fetchedChat) => {
-        setMessages(fetchedChat?.messages || []);
-        setLoadingMessages(false);
-      });
+    onFinish: async () => {
+      const fetchedChat = await fetchChat(params.id);
+      setMessages(fetchedChat?.messages || []);
+      setLoadingMessages(false);
       setInput("");
     },
   });
@@ -79,11 +88,18 @@ export default function Chats({ params }: { params: { id: string } }) {
   });
 
   useEffect(() => {
-    fetchChat(params.id).then((fetchedChat) => {
-      setMessages(fetchedChat?.messages || []);
-      setLoadingMessages(false);
-      setUserId(fetchedChat?.user_id || "");
-    });
+    setLoadingMessages(true);
+    const getData = async () => {
+      try {
+        const fetchedChat = await fetchChat(params.id);
+        setMessages(fetchedChat?.messages || []);
+        setLoadingMessages(false);
+        setUserId(fetchedChat?.user_id || "");
+      } catch (e) {
+        console.log(e);
+      }
+    };
+    getData();
   }, [params.id]);
 
   useEffect(() => {
@@ -101,7 +117,7 @@ export default function Chats({ params }: { params: { id: string } }) {
       setCompletion(lastCompletionMessage.content ?? "");
       handleVersionSelect(lastCompletionMessage.id);
     }
-  }, [messages]);
+  }, [messages.length]);
 
   const beautifiedContent = useMemo(() => {
     const content = beautify.html(completion, beautifyOptions);
@@ -148,18 +164,43 @@ export default function Chats({ params }: { params: { id: string } }) {
     });
   }, [messages, selectedVersion]);
 
+  const copyRawHTML = () => {
+    copy(beautifiedContent);
+    toast({
+      variant: "default",
+      title: "Successfully copied",
+      description:
+        "Your component has been successfully saved to your clipboard",
+    });
+  };
+
   return (
     <>
       <Container className="pt-24">
         <div className="md:w-5/6 w-full mb-3">
-          <div className="font-semibold text-gray-700">
-            {loadingMessages ? (
-              <span className="flex items-center">
-                <ArrowPathIcon className="h-4 w-4 mr-2 animate-spin" /> Loading
-              </span>
-            ) : (
-              capitalizeFirstLetter(title)
-            )}
+          <div className="flex items-center justify-between">
+            <div className="font-semibold text-gray-700">
+              {loadingMessages || !title ? (
+                <span className="flex items-center">
+                  <ArrowPathIcon className="h-4 w-4 mr-2 animate-spin" />{" "}
+                  Loading
+                </span>
+              ) : (
+                capitalizeFirstLetter(title)
+              )}
+            </div>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger onClick={copyRawHTML}>
+                  <Button variant="outline">
+                    <ClipboardIcon className="w-5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Copy raw HTML</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
         </div>
         <div className="flex w-full flex-col items-stretch justify-center space-x-0 md:flex-row md:space-x-3">
@@ -168,6 +209,7 @@ export default function Chats({ params }: { params: { id: string } }) {
               theme={githubLight}
               options={{
                 recompileMode: "delayed",
+                recompileDelay: 800,
                 externalResources,
                 editorHeight: 600,
                 showReadOnly: false,
@@ -182,7 +224,7 @@ export default function Chats({ params }: { params: { id: string } }) {
             />
             {authorized && (
               <form className="flex justify-center" onSubmit={handleSubmit}>
-                <div className="w-1/2 flex space-x-4">
+                <div className="w-full sm:w-1/2 flex space-x-4">
                   <Input
                     autoFocus
                     disabled={isLoading}

@@ -19,7 +19,7 @@ interface Chat {
   chat_id: string;
   user_id: string;
   user_full_name: string;
-  last_user_message: ChatCompletionMessageParam;
+  first_user_message: ChatCompletionMessageParam;
   last_assistant_message: ChatCompletionMessageParam;
 }
 
@@ -62,7 +62,8 @@ export default function Featured() {
               }}
               template="static"
               files={{
-                "/index.html": c.last_assistant_message?.content || "",
+                "/index.html":
+                  (c.last_assistant_message?.content as string) || "",
               }}
             >
               <div className={clsx("bg-transparent rounded-md")}>
@@ -76,7 +77,7 @@ export default function Featured() {
                       className="absolute bottom-0 right-0 m-4"
                       variant="secondary"
                     >
-                      {c.last_user_message.content?.slice(0, 100)}
+                      {c.first_user_message.content?.slice(0, 100) as string}
                     </Badge>
                     <Badge
                       className="absolute top-0 left-0 m-4 text-indigo-500"

@@ -251,7 +251,7 @@ export interface Database {
           chat_id: string;
           user_id: string;
           user_full_name: string;
-          last_user_message: OpenAI.Chat.Completions.ChatCompletionMessageParam;
+          first_user_message: OpenAI.Chat.Completions.ChatCompletionMessageParam;
           last_assistant_message: OpenAI.Chat.Completions.ChatCompletionMessageParam;
         }[];
       };

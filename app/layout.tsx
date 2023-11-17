@@ -5,7 +5,7 @@ import SupabaseProvider from "./supabase-provider";
 
 import { Footer } from "@/components/footer";
 import { Navbar } from "@/components/navbar/navbar";
-
+import { Analytics } from "@vercel/analytics/react";
 import clsx from "clsx";
 
 import "styles/main.css";
@@ -78,6 +78,7 @@ export default function RootLayout({ children }: PropsWithChildren) {
           <Footer />
         </SupabaseProvider>
         <Toaster />
+        <Analytics />
       </body>
     </html>
   );
