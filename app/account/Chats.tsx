@@ -22,7 +22,9 @@ interface Props {
   }[];
 }
 
-const externalResources = ["https://cdn.tailwindcss.com"];
+const externalResources = [
+  "https://unpkg.com/tailwindcss-cdn@3.3.4/tailwindcss-with-all-plugins.js",
+];
 
 export default function Chats({ chats }: Props) {
   return (

@@ -23,7 +23,9 @@ interface Chat {
   last_assistant_message: ChatCompletionMessageParam;
 }
 
-const externalResources = ["https://cdn.tailwindcss.com"];
+const externalResources = [
+  "https://unpkg.com/tailwindcss-cdn@3.3.4/tailwindcss-with-all-plugins.js",
+];
 const page = 1;
 const pageSize = 12;
 
