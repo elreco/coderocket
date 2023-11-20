@@ -245,7 +245,7 @@ export interface Database {
       [_ in never]: never;
     };
     Functions: {
-      get_chats: {
+      get_all_chats: {
         Args: Record<PropertyKey, never>;
         Returns: {
           chat_id: string;

@@ -39,7 +39,7 @@ export default function Featured() {
       const from = (page - 1) * pageSize;
       const to = from + pageSize - 1;
 
-      const { data } = await supabase.rpc("get_chats").range(from, to);
+      const { data } = await supabase.rpc("get_all_chats").range(from, to);
       if (data?.length) {
         setChats(data);
       }
