@@ -21,6 +21,7 @@ export async function POST(req: Request) {
     prompt: string;
     id: string;
   };
+
   const { data } = await supabase.from("chats").select().eq("id", id);
 
   if (!data?.length) throw Error("Could not get chat");
@@ -30,6 +31,7 @@ export async function POST(req: Request) {
   }
 
   const messagesFromDatabase = chat.messages;
+
   const messagesToOpenAi: OpenAI.Chat.Completions.ChatCompletionMessageParam[] =
     [];
 

@@ -100,13 +100,21 @@ export function MobileNav({ session }: Props) {
                     </div>
                     <div className="mt-8 flex flex-col gap-4">
                       {!session ? (
-                        <Button href="/signin" variant="outline">
+                        <Popover.Button
+                          as={Button}
+                          href="/signin"
+                          variant="outline"
+                        >
                           Log in
-                        </Button>
+                        </Popover.Button>
                       ) : (
-                        <Button onClick={handleSignOut} variant="outline">
+                        <Popover.Button
+                          as={Button}
+                          onClick={handleSignOut}
+                          variant="outline"
+                        >
                           Sign Out
-                        </Button>
+                        </Popover.Button>
                       )}
                     </div>
                   </Popover.Panel>

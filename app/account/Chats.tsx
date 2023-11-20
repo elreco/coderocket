@@ -54,12 +54,14 @@ export default function Chats({ chats }: Props) {
                 >
                   {c.first_user_message.content?.slice(0, 100) as string}
                 </Badge>
-                <Badge
-                  className="absolute top-0 left-0 m-4 text-indigo-500"
-                  variant="default"
-                >
-                  {c.user_full_name}
-                </Badge>
+                {c.user_full_name && (
+                  <Badge
+                    className="absolute top-0 left-0 m-4 text-indigo-500"
+                    variant="default"
+                  >
+                    {c.user_full_name}
+                  </Badge>
+                )}
               </Link>
             </SandpackLayout>
           </div>

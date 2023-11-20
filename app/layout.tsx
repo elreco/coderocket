@@ -21,9 +21,10 @@ const inter = Inter({
 });
 
 const meta = {
-  title: "Tailwind AI",
+  title: "Tailwind AI - Effortless AI-Driven Tailwind Component Design",
   metadataBase: new URL("https://www.tailwindai.dev"),
-  description: "Create tailwind components using AI.",
+  description:
+    "Elevate your web design with Tailwind AI. Harness the power of AI to generate custom, high-quality Tailwind components with ease.",
   cardImage: "https://www.tailwindai.dev/og.png",
   robots: "follow, index",
   favicon: "/favicon.ico",
@@ -31,8 +32,9 @@ const meta = {
   type: "website",
   twitter: {
     card: "summary_large_image",
-    title: "Tailwind AI",
-    description: "Create tailwind components using AI.",
+    title: "Tailwind AI - AI-Driven Tailwind Design",
+    description:
+      "Revolutionize your web development with Tailwind AI. Create unique, AI-optimized Tailwind components for standout web designs.",
     images: ["https://www.tailwindai.dev/og.png"],
   },
 };

@@ -72,7 +72,7 @@ export default async function Account() {
   const chats = await getUserChats();
   return (
     <section className="mb-32">
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:pt-24 lg:px-8">
+      <div className="mx-auto max-w-6xl pt-24 px-4 sm:px-6 lg:px-8">
         <div className="sm:align-center sm:flex sm:flex-col">
           <h1 className="text-4xl font-bold text-gray-700 sm:text-center sm:text-6xl">
             Account
@@ -83,25 +83,23 @@ export default async function Account() {
         </div>
       </div>
       <div className="p-4">
-        <div className="hidden">
-          <Card
-            title="Your Plan"
-            description={
-              subscription
-                ? `You are currently on the ${subscription?.prices?.products?.name} plan.`
-                : "You are not currently subscribed to any plan."
-            }
-            footer={<ManageSubscriptionButton session={session} />}
-          >
-            <div className="mb-4 mt-8 text-xl font-semibold text-gray-700 hover:text-gray-900">
-              {subscription ? (
-                `${subscriptionPrice}/${subscription?.prices?.interval}`
-              ) : (
-                <Link href="/">Choose your plan</Link>
-              )}
-            </div>
-          </Card>
-        </div>
+        <Card
+          title="Your Plan"
+          description={
+            subscription
+              ? `You are currently on the ${subscription?.prices?.products?.name} plan.`
+              : "You are not currently subscribed to any plan."
+          }
+          footer={<ManageSubscriptionButton session={session} />}
+        >
+          <div className="mb-4 mt-8 text-xl font-semibold text-gray-700 hover:text-gray-900">
+            {subscription ? (
+              `${subscriptionPrice}/${subscription?.prices?.interval}`
+            ) : (
+              <Link href="/pricing">Choose your plan</Link>
+            )}
+          </div>
+        </Card>
         <Card
           title="Your Name"
           description="Please enter your full name, or a display name you are comfortable with."

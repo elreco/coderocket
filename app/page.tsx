@@ -1,16 +1,8 @@
 import Hero from "@/app/hero";
-import {
-  getSession,
-  getSubscription,
-  getActiveProductsWithPrices,
-} from "@/app/supabase-server";
+import { getSession } from "@/app/supabase-server";
 
-export default async function PricingPage() {
-  const [session] = await Promise.all([
-    getSession(),
-    getSubscription(),
-    getActiveProductsWithPrices(),
-  ]);
+export default async function Home() {
+  const session = await getSession();
 
   return (
     <>

@@ -2,7 +2,11 @@
 
 import { redirect } from "next/navigation";
 
-import { createServerSupabaseClient, getSession } from "@/app/supabase-server";
+import {
+  createServerSupabaseClient,
+  getSession,
+  getSubscription,
+} from "@/app/supabase-server";
 
 import { ChatMessage, ChatProps } from "./types";
 
@@ -49,6 +53,16 @@ export const createChat = async (prompt: string) => {
   const user = session?.user;
 
   if (!user) throw Error("Could not get user");
+
+  const subscription = await getSubscription();
+  const { data: existingChats } = await supabase
+    .from("chats")
+    .select()
+    .eq("user_id", user.id);
+
+  if (!subscription && existingChats && existingChats?.length > 0) {
+    return redirect("pricing?paymentRequired=true");
+  }
 
   const { data } = await supabase
     .from("chats")

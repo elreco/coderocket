@@ -2,14 +2,15 @@
 
 import { Session, User } from "@supabase/supabase-js";
 import cn from "classnames";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 
+import { useToast } from "@/components/ui/toaster/use-toast";
 import { Database } from "@/types_db";
 import { postData } from "@/utils/helpers";
 import { getStripe } from "@/utils/stripe-client";
 
-import { Button } from "../components/ui/button";
+import { Button } from "../../components/ui/button";
 
 type Subscription = Database["public"]["Tables"]["subscriptions"]["Row"];
 type Product = Database["public"]["Tables"]["products"]["Row"];
@@ -47,6 +48,21 @@ export default function Pricing({
     ),
   );
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const { toast } = useToast();
+  const paymentRequired = searchParams.get("paymentRequired");
+
+  useEffect(() => {
+    if (paymentRequired === "true") {
+      toast({
+        variant: "destructive",
+        title: "You must subscribe",
+        description:
+          "With your free account you can only generate one component",
+      });
+    }
+  }, [paymentRequired]);
+
   const [billingInterval, setBillingInterval] =
     useState<BillingInterval>("month");
   const [priceIdLoading, setPriceIdLoading] = useState<string>();
@@ -98,7 +114,7 @@ export default function Pricing({
   if (products.length === 1)
     return (
       <section>
-        <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-24 lg:px-8">
+        <div className="mx-auto max-w-6xl pt-24 px-4 sm:px-6 lg:px-8">
           <div className="sm:align-center sm:flex sm:flex-col">
             <h1 className="text-4xl font-extrabold text-gray-700 sm:text-center sm:text-6xl">
               Pricing Plans
