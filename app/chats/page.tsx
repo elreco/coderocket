@@ -23,10 +23,7 @@ interface Chat {
   last_assistant_message: ChatCompletionMessageParam;
 }
 
-const externalResources = [
-  "https://unpkg.com/@tailwindcss/ui/dist/tailwind-ui.min.css",
-  "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css",
-];
+const externalResources = ["https://cdn.tailwindcss.com"];
 const page = 1;
 const pageSize = 12;
 

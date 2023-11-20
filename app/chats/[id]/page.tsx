@@ -38,10 +38,7 @@ const beautifyOptions: beautify.HTMLBeautifyOptions = {
   inline: [],
 };
 
-const externalResources = [
-  "https://unpkg.com/@tailwindcss/ui/dist/tailwind-ui.min.css",
-  "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css",
-];
+const externalResources = ["https://cdn.tailwindcss.com"];
 
 export default function Chats({ params }: { params: { id: string } }) {
   const { supabase } = useSupabase();
