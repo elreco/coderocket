@@ -1,11 +1,6 @@
 "use client";
-import {
-  SandpackLayout,
-  SandpackPreview,
-  SandpackProvider,
-} from "@codesandbox/sandpack-react";
-import { githubLight } from "@codesandbox/sandpack-themes";
-import clsx from "clsx";
+
+import Image from "next/image";
 import Link from "next/link";
 import { ChatCompletionMessageParam } from "openai/resources";
 import { useEffect, useState } from "react";
@@ -17,6 +12,7 @@ import { useSupabase } from "../supabase-provider";
 
 interface Chat {
   chat_id: string;
+  image_url: string;
   user_id: string;
   user_full_name: string;
   first_user_message: ChatCompletionMessageParam;
@@ -38,7 +34,10 @@ export default function Featured() {
       const from = (page - 1) * pageSize;
       const to = from + pageSize - 1;
 
-      const { data } = await supabase.rpc("get_all_chats").range(from, to);
+      const { data } = await supabase
+        .rpc("get_all_chats")
+        .not("image_url", "is", null)
+        .range(from, to);
       if (data?.length) {
         setChats(data);
       }
@@ -53,43 +52,33 @@ export default function Featured() {
         </h1>
         <div className="grid 2xl:grid-cols-4 lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-3">
           {chats?.map((c) => (
-            <SandpackProvider
-              key={c.chat_id}
-              theme={githubLight}
-              options={{
-                externalResources,
-              }}
-              template="static"
-              files={{
-                "/index.html":
-                  (c.last_assistant_message?.content as string) || "",
-              }}
-            >
-              <div className={clsx("bg-transparent rounded-md")}>
-                <SandpackLayout>
-                  <SandpackPreview className="!h-58" />
-                  <Link
-                    href={`/chats/${c.chat_id}`}
-                    className="absolute inset-0 z-10 bg-black/25 hover:bg-black/20  flex cursor-pointer select-none items-center justify-center  "
+            <div key={c.chat_id} className="relative w-full aspect-video">
+              <Image
+                src={c.image_url}
+                fill
+                className="w-full rounded-md border shadow-md object-contain"
+                alt=""
+              />
+              <Link
+                href={`/chats/${c.chat_id}`}
+                className="absolute rounded-md inset-0 z-10 bg-black/25 hover:bg-black/20  flex cursor-pointer select-none items-center justify-center  "
+              >
+                <Badge
+                  className="absolute bottom-0 right-0 m-4"
+                  variant="secondary"
+                >
+                  {c.first_user_message.content?.slice(0, 100) as string}
+                </Badge>
+                {c.user_full_name && (
+                  <Badge
+                    className="absolute top-0 left-0 m-4 text-indigo-500"
+                    variant="default"
                   >
-                    <Badge
-                      className="absolute bottom-0 right-0 m-4"
-                      variant="secondary"
-                    >
-                      {c.first_user_message.content?.slice(0, 100) as string}
-                    </Badge>
-                    {c.user_full_name && (
-                      <Badge
-                        className="absolute top-0 left-0 m-4 text-indigo-500"
-                        variant="default"
-                      >
-                        {c.user_full_name}
-                      </Badge>
-                    )}
-                  </Link>
-                </SandpackLayout>
-              </div>
-            </SandpackProvider>
+                    {c.user_full_name}
+                  </Badge>
+                )}
+              </Link>
+            </div>
           ))}
         </div>
       </Container>
