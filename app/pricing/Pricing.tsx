@@ -58,7 +58,7 @@ export default function Pricing({
         variant: "destructive",
         title: "You must subscribe",
         description:
-          "With your free account you can only generate one component",
+          "With your free account you can only generate 1 component with 5 versions",
       });
     }
   }, [paymentRequired]);

@@ -3,6 +3,7 @@ import { OpenAIStream, StreamingTextResponse } from "ai";
 import { cookies } from "next/headers";
 import OpenAI from "openai";
 
+import { getSubscription } from "@/app/supabase-server";
 import { Database } from "@/types_db";
 
 const openai = new OpenAI({
@@ -31,6 +32,15 @@ export async function POST(req: Request) {
   }
 
   const messagesFromDatabase = chat.messages;
+  const subscription = await getSubscription();
+
+  if (
+    !subscription &&
+    messagesFromDatabase &&
+    messagesFromDatabase?.length > 11
+  ) {
+    throw new Error("payment required");
+  }
 
   const messagesToOpenAi: OpenAI.Chat.Completions.ChatCompletionMessageParam[] =
     [];
@@ -63,20 +73,28 @@ export async function POST(req: Request) {
     // https://github.com/vercel-labs/ai-chatbot
     const stream = OpenAIStream(response, {
       onCompletion: async (completion: string) => {
+        const messages = messagesFromDatabase;
+        if (messagesFromDatabase.length > 2) {
+          messages.push(
+            {
+              content: prompt,
+              role: "user",
+            },
+            {
+              content: completion,
+              role: "assistant",
+            },
+          );
+        } else {
+          messages.push({
+            content: completion,
+            role: "assistant",
+          });
+        }
         await supabase
           .from("chats")
           .update({
-            messages: [
-              ...messagesFromDatabase,
-              {
-                content: prompt,
-                role: "user",
-              },
-              {
-                content: completion,
-                role: "assistant",
-              },
-            ],
+            messages,
           })
           .eq("id", id);
       },

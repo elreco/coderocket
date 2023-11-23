@@ -12,6 +12,7 @@ import { ClipboardIcon } from "@heroicons/react/24/outline";
 import { useCompletion } from "ai/react";
 import clsx from "clsx";
 import beautify from "js-beautify";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useCopyToClipboard } from "usehooks-ts";
 
@@ -46,6 +47,7 @@ export default function Chats({ params }: { params: { id: string } }) {
   const { supabase } = useSupabase();
   const [, copy] = useCopyToClipboard();
   const { toast } = useToast();
+  const router = useRouter();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [selectedVersion, setSelectedVersion] = useState<string | null>(null);
   const [title, setTitle] = useState<string>("");
@@ -64,6 +66,10 @@ export default function Chats({ params }: { params: { id: string } }) {
   } = useCompletion({
     api: "/api/completion",
     body: { id: params.id },
+    onError: async () => {
+      router.push("/pricing?paymentRequired=true");
+      return;
+    },
     onFinish: async () => {
       const fetchedChat = await fetchChat(params.id);
       setMessages(fetchedChat?.messages || []);

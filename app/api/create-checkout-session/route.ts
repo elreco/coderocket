@@ -46,8 +46,8 @@ export async function POST(req: Request) {
             trial_from_plan: true,
             metadata,
           },
-          success_url: `${getURL()}/account`,
-          cancel_url: `${getURL()}/`,
+          success_url: `https://www.tailwindai.dev/account`,
+          cancel_url: `https://www.tailwindai.dev/`,
         });
       } else if (price.type === "one_time") {
         session = await stripe.checkout.sessions.create({
