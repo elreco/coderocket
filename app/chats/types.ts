@@ -15,5 +15,7 @@ export interface ChatProps {
   created_at: string | null;
   id: string;
   messages: ChatMessage[];
-  user_id: string | null;
+  image_url?: string | null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  user_id: any;
 }

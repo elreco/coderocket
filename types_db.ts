@@ -215,17 +215,20 @@ export interface Database {
         Row: {
           created_at: string | null;
           id: string;
+          image_url: string | null;
           messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[];
           user_id: string | null;
         };
         Insert: {
           created_at?: string | null;
+          image_url?: string | null;
           id?: string;
           messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[];
           user_id?: string | null;
         };
         Update: {
           created_at?: string | null;
+          image_url?: string | null;
           id?: string;
           messages?: OpenAI.Chat.Completions.ChatCompletionMessageParam[];
           user_id?: string | null;

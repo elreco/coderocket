@@ -18,6 +18,7 @@ import { useCopyToClipboard } from "usehooks-ts";
 
 import { useSupabase } from "@/app/supabase-provider";
 import { Container } from "@/components/container";
+import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -54,6 +55,8 @@ export default function Chats({ params }: { params: { id: string } }) {
   const [loadingMessages, setLoadingMessages] = useState(true);
   const [authorized, setAuthorized] = useState(false);
   const [userId, setUserId] = useState("");
+  const [userFullName, setUserFullName] = useState("");
+  const [userAvatar, setUserAvatar] = useState("");
   const {
     completion,
     isLoading,
@@ -99,7 +102,11 @@ export default function Chats({ params }: { params: { id: string } }) {
         const fetchedChat = await fetchChat(params.id);
         setMessages(fetchedChat?.messages || []);
         setLoadingMessages(false);
-        setUserId(fetchedChat?.user_id || "");
+        setUserId(fetchedChat?.user_id?.id || "");
+        setUserFullName(fetchedChat?.user_id?.full_name || "");
+        setUserAvatar(fetchedChat?.user_id?.avatar_url || "");
+        console.log(fetchedChat?.user_id?.full_name || "");
+        console.log(fetchedChat?.user_id?.full_name);
       } catch (e) {
         console.log(e);
       }
@@ -185,13 +192,25 @@ export default function Chats({ params }: { params: { id: string } }) {
         <div className="md:w-5/6 w-full mb-3">
           <div className="flex items-center justify-between">
             <div className="font-semibold text-gray-700">
-              {loadingMessages || !title ? (
-                <span className="flex items-center">
-                  <ArrowPathIcon className="h-4 w-4 mr-2 animate-spin" />{" "}
-                  Loading
-                </span>
-              ) : (
-                capitalizeFirstLetter(title)
+              {loadingMessages ||
+                (!title && (
+                  <span className="flex items-center">
+                    <ArrowPathIcon className="h-4 w-4 mr-2 animate-spin" />{" "}
+                    Loading
+                  </span>
+                ))}
+              {!loadingMessages && (
+                <div className="flex items-center space-x-2">
+                  {userAvatar && (
+                    <Avatar>
+                      <AvatarImage src={userAvatar} />
+                    </Avatar>
+                  )}
+                  {userFullName && (
+                    <Badge variant="default">{userFullName}</Badge>
+                  )}
+                  <h1>{capitalizeFirstLetter(title)}</h1>
+                </div>
               )}
             </div>
             <TooltipProvider>

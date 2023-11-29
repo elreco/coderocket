@@ -13,7 +13,22 @@ import { ChatMessage, ChatProps } from "./types";
 export const fetchChat = async (id: string): Promise<ChatProps | null> => {
   const supabase = createServerSupabaseClient();
 
-  const { data } = await supabase.from("chats").select().eq("id", id);
+  const { data } = await supabase
+    .from("chats")
+    .select(
+      `
+  id,
+  image_url,
+  created_at,
+  messages,
+  user_id (
+    id,
+    full_name,
+    avatar_url
+  )
+`,
+    )
+    .eq("id", id);
 
   if (!data?.length) {
     return null;

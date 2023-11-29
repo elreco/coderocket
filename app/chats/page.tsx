@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 
 import { Container } from "@/components/container";
 import { Badge } from "@/components/ui/badge";
+import { capitalizeFirstLetter } from "@/utils/helpers";
 
 import { useSupabase } from "../supabase-provider";
 
@@ -64,11 +65,13 @@ export default function Featured() {
                   className="absolute bottom-0 right-0 m-4"
                   variant="secondary"
                 >
-                  {c.first_user_message.content?.slice(0, 100) as string}
+                  {capitalizeFirstLetter(
+                    c.first_user_message.content?.slice(0, 100) as string,
+                  )}
                 </Badge>
                 {c.user_full_name && (
                   <Badge
-                    className="absolute top-0 left-0 m-4 text-indigo-500"
+                    className="absolute top-0 left-0 m-4 border-transparent"
                     variant="default"
                   >
                     {c.user_full_name}
