@@ -2,7 +2,6 @@ import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 
 import { Database } from "@/types_db";
-import { getURL } from "@/utils/helpers";
 import { stripe } from "@/utils/stripe";
 import { createOrRetrieveCustomer } from "@/utils/supabase-admin";
 
@@ -65,8 +64,8 @@ export async function POST(req: Request) {
           ],
           mode: "payment",
           allow_promotion_codes: true,
-          success_url: `${getURL()}/account`,
-          cancel_url: `${getURL()}/`,
+          success_url: `https://www.tailwindai.dev/account`,
+          cancel_url: `https://www.tailwindai.dev/`,
         });
       }
 

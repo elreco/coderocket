@@ -4,7 +4,6 @@ import { Auth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
 
 import { useSupabase } from "@/app/supabase-provider";
-import { getURL } from "@/utils/helpers";
 
 export default function AuthUI() {
   const { supabase } = useSupabase();
@@ -13,7 +12,7 @@ export default function AuthUI() {
       <Auth
         supabaseClient={supabase}
         providers={["github"]}
-        redirectTo={`${getURL()}/auth/callback`}
+        redirectTo={`https://www.tailwindai.dev/auth/callback`}
         magicLink={true}
         appearance={{
           theme: ThemeSupa,
