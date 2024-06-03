@@ -6,7 +6,7 @@ import {
   SandpackPreview,
   SandpackProvider,
 } from "@codesandbox/sandpack-react";
-import { githubLight } from "@codesandbox/sandpack-themes";
+import { aquaBlue } from "@codesandbox/sandpack-themes";
 import { ArrowPathIcon } from "@heroicons/react/20/solid";
 import { ClipboardIcon } from "@heroicons/react/24/outline";
 import { useCompletion } from "ai/react";
@@ -119,14 +119,6 @@ export default function Chats({ params }: { params: { id: string } }) {
     }
   }, [messages.length]);
 
-  const cleanContent = (content: string) => {
-    return content.replace(/```html/g, "").replace(/```/g, "");
-  };
-
-  const beautifiedContent = useMemo(() => {
-    return cleanContent(completion);
-  }, [completion]);
-
   const handleVersionSelect = (id: string) => {
     const selectedMessageIndex = messages.findIndex((m) => m.id === id);
     if (selectedMessageIndex > -1) {
@@ -168,7 +160,7 @@ export default function Chats({ params }: { params: { id: string } }) {
   }, [messages, selectedVersion]);
 
   const copyRawHTML = () => {
-    copy(beautifiedContent);
+    copy(completion);
     toast({
       variant: "default",
       title: "Successfully copied",
@@ -176,6 +168,28 @@ export default function Chats({ params }: { params: { id: string } }) {
         "Your component has been successfully saved to your clipboard",
     });
   };
+
+  const MemoizedSandpack = useMemo(() => {
+    return (
+      <Sandpack
+        theme={aquaBlue}
+        options={{
+          recompileMode: "delayed",
+          recompileDelay: 800,
+          externalResources,
+          editorHeight: 600,
+          showReadOnly: false,
+          showConsoleButton: false,
+          showConsole: false,
+          readOnly: true,
+        }}
+        template="static"
+        files={{
+          "/index.html": completion,
+        }}
+      />
+    );
+  }, [completion]);
 
   return (
     <>
@@ -220,23 +234,7 @@ export default function Chats({ params }: { params: { id: string } }) {
         </div>
         <div className="flex w-full flex-col items-stretch justify-center space-x-0 md:flex-row md:space-x-3">
           <div className="mb-3 w-full space-y-3 md:mb-0 md:w-5/6">
-            <Sandpack
-              theme={githubLight}
-              options={{
-                recompileMode: "delayed",
-                recompileDelay: 800,
-                externalResources,
-                editorHeight: 600,
-                showReadOnly: false,
-                showConsoleButton: false,
-                showConsole: false,
-                readOnly: true,
-              }}
-              template="static"
-              files={{
-                "/index.html": beautifiedContent,
-              }}
-            />
+            {MemoizedSandpack}
             {authorized && (
               <form className="flex justify-start" onSubmit={handleSubmit}>
                 <div className="flex w-full space-x-4 rounded-md bg-gray-900 p-2 sm:w-1/2">
@@ -258,7 +256,7 @@ export default function Chats({ params }: { params: { id: string } }) {
             {assistantMessages.map((m) => (
               <SandpackProvider
                 key={m.id}
-                theme={githubLight}
+                theme="light"
                 options={{
                   externalResources,
                 }}

@@ -5,7 +5,6 @@ import {
   SandpackPreview,
   SandpackProvider,
 } from "@codesandbox/sandpack-react";
-import { githubLight } from "@codesandbox/sandpack-themes";
 import clsx from "clsx";
 import Link from "next/link";
 import { ChatCompletionMessageParam } from "openai/resources";
@@ -34,7 +33,7 @@ export default function Chats({ chats }: Props) {
       {chats?.map((c) => (
         <SandpackProvider
           key={c.chat_id}
-          theme={githubLight}
+          theme="light"
           options={{
             externalResources,
           }}
