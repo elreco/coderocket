@@ -1,5 +1,7 @@
 "use server";
 
+import { promises as fs } from "fs";
+
 import { redirect } from "next/navigation";
 
 import {
@@ -62,7 +64,7 @@ export const fetchChat = async (id: string): Promise<ChatProps | null> => {
   };
 };
 
-export const createChat = async (prompt: string) => {
+export const createChat = async (prompt: string, formData: FormData) => {
   const session = await getSession();
   const supabase = createServerSupabaseClient();
   const user = session?.user;
@@ -75,20 +77,41 @@ export const createChat = async (prompt: string) => {
     .select()
     .eq("user_id", user.id);
 
-  if (!subscription && existingChats && existingChats?.length > 0) {
+  if (
+    (!subscription || subscription.status !== "active") &&
+    existingChats &&
+    existingChats?.length > 0
+  ) {
     return redirect("pricing?paymentRequired=true");
   }
 
+  const contentMd = await fs.readFile(
+    process.cwd() + "/app/chats/html-gen.md",
+    "utf8",
+  );
+  let imageUrl = null;
+  const image = formData.get("file") as File;
+  if (image) {
+    const { data: imageData, error: imageError } = await supabase.storage
+      .from("images")
+      .upload(`${Date.now()}-${image.name}`, image);
+    if (imageError) {
+      throw Error("Failed to upload image");
+    }
+
+    imageUrl = imageData?.path;
+  }
+  console.log("prompt", prompt);
   const { data } = await supabase
     .from("chats")
     .insert([
       {
         user_id: user.id,
+        ...(imageUrl && { prompt_image: imageUrl }),
         messages: [
           {
             role: "system",
-            content:
-              'As a Tailwind CSS v3 component generator, adhere to these guidelines: Provide only the raw component code, omitting head tags, doctype, and HTML. Avoid adding explanations, placeholders, or comments. For any imagery or video, default to Lorem Picsum. For icons or SVGs, exclusively use Icons8 (https://icons8.com/) or Heroicons (https://heroicons.com/) icons. Obtain SVGs from this GitHub repository: https://github.com/tailwindlabs/heroicons/tree/master/src/24/solid and integrate them as follows: <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"> <path stroke-linecap="round" stroke-linejoin="round" d="M4.26 10.147a60.436 60.436 0 00-.491 6.347A48.627 48.627 0 0112 20.904a48.627 48.627 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.57 50.57 0 00-2.658-.813A59.905 59.905 0 0112 3.493a59.902 59.902 0 0110.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.697 50.697 0 0112 13.489a50.702 50.702 0 017.74-3.342M6.75 15a.75.75 0 100-1.5.75.75 0 000 1.5zm0 0v-3.675A55.378 55.378 0 0112 8.443m-7.007 11.55A5.981 5.981 0 006.75 15.75v-1.5" /> </svg> or that <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"> <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 13.5L12 21m0 0l-7.5-7.5M12 21V3" /> </svg>. Do not include other SVGs or icon formats. Provide comprehensive code for each component. If a prompt does not relate to Tailwind component generation, or is ambiguous, generate a Tailwind card component with the following structure:<div class="flex mx-10 items-center justify-center h-screen"><div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative shadow-lg"><div class="flex items-center"><div class="flex-shrink-0"><span class="text-red-500"><i class="fas fa-exclamation-circle"></i></span></div><div class="ml-3"><strong class="font-bold">Error:</strong><span class="block sm:inline"> I\'m sorry, but I cannot assist with [TOPIC]. My purpose is to generate Tailwind components. If you have any coding-related prompts, feel free to ask.</span></div></div></div></div>',
+            content: contentMd,
           },
           {
             role: "user",

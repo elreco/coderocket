@@ -24,12 +24,13 @@ interface Props {
 }
 
 const externalResources = [
-  "https://unpkg.com/tailwindcss-cdn@3.3.4/tailwindcss-with-all-plugins.js",
+  "https://unpkg.com/tailwindcss-cdn@3.4.3/tailwindcss-with-all-plugins.js",
+  "https://cdn.jsdelivr.net/gh/iconoir-icons/iconoir@main/css/iconoir.css",
 ];
 
 export default function Chats({ chats }: Props) {
   return (
-    <div className="grid sm:grid-cols-2 grid-cols-1 gap-3">
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
       {chats?.map((c) => (
         <SandpackProvider
           key={c.chat_id}
@@ -42,12 +43,12 @@ export default function Chats({ chats }: Props) {
             "/index.html": (c.last_assistant_message?.content as string) || "",
           }}
         >
-          <div className={clsx("bg-transparent rounded-md")}>
+          <div className={clsx("rounded-md bg-transparent")}>
             <SandpackLayout>
               <SandpackPreview className="!h-58" />
               <Link
                 href={`/chats/${c.chat_id}`}
-                className="absolute inset-0 z-10 bg-black/25 hover:bg-black/20  flex cursor-pointer select-none items-center justify-center  "
+                className="absolute inset-0 z-10 flex cursor-pointer  select-none items-center justify-center bg-black/25 hover:bg-black/20  "
               >
                 <Badge
                   className="absolute bottom-0 right-0 m-4"
@@ -57,7 +58,7 @@ export default function Chats({ chats }: Props) {
                 </Badge>
                 {c.user_full_name && (
                   <Badge
-                    className="absolute top-0 left-0 m-4 text-indigo-500"
+                    className="absolute left-0 top-0 m-4 text-indigo-500"
                     variant="default"
                   >
                     {c.user_full_name}

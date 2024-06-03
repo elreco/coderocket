@@ -216,12 +216,14 @@ export interface Database {
           created_at: string | null;
           id: string;
           image_url: string | null;
+          prompt_image?: string | null;
           messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[];
           user_id: string | null;
         };
         Insert: {
           created_at?: string | null;
           image_url?: string | null;
+          prompt_image?: string | null;
           id?: string;
           messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[];
           user_id?: string | null;
@@ -229,6 +231,7 @@ export interface Database {
         Update: {
           created_at?: string | null;
           image_url?: string | null;
+          prompt_image?: string | null;
           id?: string;
           messages?: OpenAI.Chat.Completions.ChatCompletionMessageParam[];
           user_id?: string | null;

@@ -11,7 +11,6 @@ import { ArrowPathIcon } from "@heroicons/react/20/solid";
 import { ClipboardIcon } from "@heroicons/react/24/outline";
 import { useCompletion } from "ai/react";
 import clsx from "clsx";
-import beautify from "js-beautify";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useCopyToClipboard } from "usehooks-ts";
@@ -34,14 +33,9 @@ import { capitalizeFirstLetter } from "@/utils/helpers";
 import { fetchChat } from "../actions";
 import { ChatMessage } from "../types";
 
-const beautifyOptions: beautify.HTMLBeautifyOptions = {
-  indent_size: 4,
-  indent_char: " ",
-  inline: [],
-};
-
 const externalResources = [
-  "https://unpkg.com/tailwindcss-cdn@3.3.4/tailwindcss-with-all-plugins.js",
+  "https://unpkg.com/tailwindcss-cdn@3.4.3/tailwindcss-with-all-plugins.js",
+  "https://cdn.jsdelivr.net/gh/iconoir-icons/iconoir@main/css/iconoir.css",
 ];
 
 export default function Chats({ params }: { params: { id: string } }) {
@@ -105,8 +99,6 @@ export default function Chats({ params }: { params: { id: string } }) {
         setUserId(fetchedChat?.user_id?.id || "");
         setUserFullName(fetchedChat?.user_id?.full_name || "");
         setUserAvatar(fetchedChat?.user_id?.avatar_url || "");
-        console.log(fetchedChat?.user_id?.full_name || "");
-        console.log(fetchedChat?.user_id?.full_name);
       } catch (e) {
         console.log(e);
       }
@@ -131,9 +123,12 @@ export default function Chats({ params }: { params: { id: string } }) {
     }
   }, [messages.length]);
 
+  const cleanContent = (content: string) => {
+    return content.replace(/```html/g, "").replace(/```/g, "");
+  };
+
   const beautifiedContent = useMemo(() => {
-    const content = beautify.html(completion, beautifyOptions);
-    return content;
+    return cleanContent(completion);
   }, [completion]);
 
   const handleVersionSelect = (id: string) => {
@@ -189,13 +184,13 @@ export default function Chats({ params }: { params: { id: string } }) {
   return (
     <>
       <Container className="pt-24">
-        <div className="md:w-5/6 w-full mb-3">
+        <div className="mb-3 w-full md:w-5/6">
           <div className="flex items-center justify-between">
             <div className="font-semibold text-gray-700">
               {loadingMessages ||
                 (!title && (
                   <span className="flex items-center">
-                    <ArrowPathIcon className="h-4 w-4 mr-2 animate-spin" />{" "}
+                    <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />{" "}
                     Loading
                   </span>
                 ))}
@@ -247,23 +242,23 @@ export default function Chats({ params }: { params: { id: string } }) {
               }}
             />
             {authorized && (
-              <form className="flex justify-center" onSubmit={handleSubmit}>
-                <div className="w-full sm:w-1/2 flex space-x-4">
+              <form className="flex justify-start" onSubmit={handleSubmit}>
+                <div className="flex w-full space-x-4 rounded-md bg-gray-900 p-2 sm:w-1/2">
                   <Input
                     autoFocus
                     disabled={isLoading}
                     value={input}
                     onChange={handleInputChange}
-                    placeholder="Make it modern UI"
+                    placeholder="Add a button, modify a color..."
                   />
                   <Button loading={isLoading} type="submit">
-                    Generate
+                    Iterate
                   </Button>
                 </div>
               </form>
             )}
           </div>
-          <div className="h-full w-full md:w-1/6 space-y-3">
+          <div className="h-full w-full space-y-3 md:w-1/6">
             {assistantMessages.map((m) => (
               <SandpackProvider
                 key={m.id}
@@ -278,15 +273,15 @@ export default function Chats({ params }: { params: { id: string } }) {
               >
                 <div
                   className={clsx(
-                    "bg-transparent border rounded-md",
+                    "rounded-md border bg-transparent",
                     selectedVersion === m.id &&
-                      "border-indigo-600 border transition-colors shadow-2xl shadow-indigo-500/20",
+                      "border border-indigo-600 shadow-2xl shadow-indigo-500/20 transition-colors",
                   )}
                 >
                   <SandpackLayout>
                     <SandpackPreview className="!h-44" />
                     <div
-                      className="absolute inset-0 z-10 bg-black/25 hover:bg-black/20  flex cursor-pointer select-none items-center justify-center  "
+                      className="absolute inset-0 z-10 flex cursor-pointer  select-none items-center justify-center bg-black/25 hover:bg-black/20  "
                       onClick={() => handleVersionSelect(m.id)}
                     >
                       <Badge

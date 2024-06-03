@@ -1,8 +1,11 @@
 "use client";
+import { PhotoIcon } from "@heroicons/react/24/solid";
 import { Session } from "@supabase/supabase-js";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/toaster/use-toast";
 
 import { Container } from "../components/container";
@@ -15,11 +18,40 @@ interface Props {
   session: Session | null;
 }
 
+const previewButtons = [
+  {
+    text: "Product categories",
+    input: "A list of product categories with image, name and description.",
+  },
+  {
+    text: "Hero section",
+    input:
+      "A landing page hero section with a heading, leading text and an opt-in form.",
+  },
+  {
+    text: "Contact form",
+    input:
+      "A contact form with first name, last name, email, and message fields. Put the form in a card with a submit button.",
+  },
+  {
+    text: "Ecommerce dashboard",
+    input:
+      "An ecommerce dashboard with a sidebar navigation and a table of recent orders.",
+  },
+];
+
 export default function Hero({ session }: Props) {
   const router = useRouter();
   const { toast } = useToast();
   const [prompt, setPrompt] = useState("");
   const [loading, setLoading] = useState(false);
+  const [image, setImage] = useState<File | null>(null); // Nouvelle variable d'état pour l'image
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setImage(e.target.files[0]);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,29 +65,99 @@ export default function Hero({ session }: Props) {
       });
       return router.push("/signin");
     }
-    await createChat(prompt);
+    const formData = new FormData();
+    if (image) {
+      formData.append("file", image as File);
+    }
+    try {
+      await createChat(prompt, formData);
+    } catch {
+      toast({
+        variant: "destructive",
+        title: "Can't create your component",
+        description: "Please upload a different image or try another prompt",
+      });
+    }
+
     setLoading(false);
+  };
+
+  const handleBadgeClick = (input: string) => {
+    setPrompt(input);
   };
 
   return (
     <>
-      <Container className="flex h-screen items-center justify-center">
+      <Container className="bg-hero flex h-screen flex-col items-center justify-center space-y-4">
+        <div className="flex w-full flex-col items-center space-y-1.5">
+          <h2
+            className="text-4xl font-semibold tracking-tighter sm:text-5xl"
+            data-testid="home-h2"
+          >
+            Create. Refine. Deliver.
+          </h2>
+          <p>Design UI with Tailwind from basic text prompts and images.</p>
+        </div>
         <form
-          className="group relative shadow-sm z-10 p-3 border transition-all duration-300 bg-gradient-to-r from-white to-gray-50 backdrop-filter backdrop-blur-xl rounded-md flex w-full flex-col items-center justify-center gap-x-0 space-y-5 text-center sm:flex-row sm:gap-x-3 sm:space-y-0 lg:w-1/2 xl:w-1/3"
+          className="group relative z-10 flex w-full flex-col items-center justify-center gap-x-0 space-y-5 rounded-md border bg-gray-900 p-3 text-center shadow-sm backdrop-blur-xl transition-all duration-300 sm:gap-x-3 sm:space-y-0 xl:w-1/2"
           onSubmit={handleSubmit}
         >
-          <div className="-z-10 absolute right-0 top-0 left-0 bottom-0 bg-hero"></div>
-          <Input
-            placeholder="Start generate a beautiful Tailwind component"
-            autoFocus
-            required
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-          />
-          <Button type="submit" loading={loading}>
-            Generate
-          </Button>
+          <div className="mb-1 flex w-full">
+            <Input
+              placeholder="Start generate a beautiful Tailwind component"
+              autoFocus
+              required
+              color="dark"
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+            />
+          </div>
+          <div className="flex w-full flex-1 items-center justify-between">
+            <div className="h-12 w-12">
+              {image && (
+                <Image
+                  src={URL.createObjectURL(image)}
+                  alt="Uploaded"
+                  width={12}
+                  height={12}
+                  className="h-12 w-12 rounded-md object-cover"
+                />
+              )}
+            </div>
+            <div className="flex items-center space-x-2">
+              <button type="button">
+                <label
+                  className="focus-visible:ring-ring flex h-9 shrink-0 cursor-pointer select-none items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-gray-700 p-2 text-sm font-medium text-white/70 transition-colors focus-within:bg-gray-700 hover:bg-gray-800 hover:text-white focus-visible:bg-gray-800 focus-visible:outline-none focus-visible:ring-0 disabled:pointer-events-none disabled:opacity-50 sm:px-3"
+                  data-id="prompt-form-image-upload"
+                >
+                  <PhotoIcon className="h-4 w-4 " />
+                  <span className="hidden sm:block">Image</span>
+                  <input
+                    className="sr-only"
+                    type="file"
+                    onChange={handleImageChange}
+                  />
+                </label>
+              </button>
+
+              <Button type="submit" loading={loading}>
+                Generate
+              </Button>
+            </div>
+          </div>
         </form>
+        <div className="flex items-center justify-center space-x-2">
+          {previewButtons.map((button, index) => (
+            <Badge
+              key={index}
+              variant="secondary"
+              onClick={() => handleBadgeClick(button.input)}
+              className="cursor-pointer hover:bg-gray-700"
+            >
+              {button.text}
+            </Badge>
+          ))}
+        </div>
       </Container>
     </>
   );

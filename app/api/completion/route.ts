@@ -2,6 +2,7 @@ import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { OpenAIStream, StreamingTextResponse } from "ai";
 import { cookies } from "next/headers";
 import OpenAI from "openai";
+import { ChatCompletionMessageParam } from "openai/resources";
 
 import { getSubscription } from "@/app/supabase-server";
 import { Database } from "@/types_db";
@@ -31,21 +32,27 @@ export async function POST(req: Request) {
     throw Error("User is not authorized to modify chat");
   }
 
-  const messagesFromDatabase = chat.messages;
-  const subscription = await getSubscription();
+  const imageUrl = chat.prompt_image;
 
+  const messagesFromDatabase = [...chat.messages];
+  const messages = [...chat.messages];
+
+  const subscription = await getSubscription();
   if (
-    !subscription &&
+    (!subscription || subscription.status !== "active") &&
     messagesFromDatabase &&
     messagesFromDatabase?.length > 11
   ) {
     throw new Error("payment required");
   }
 
-  const messagesToOpenAi: OpenAI.Chat.Completions.ChatCompletionMessageParam[] =
-    [];
+  let messagesToOpenAi = chat.messages.map((message) => ({
+    role: message.role,
+    content: message.content,
+  }));
 
   if (messagesFromDatabase.length > 2) {
+    messagesToOpenAi = [];
     messagesToOpenAi.push(messagesFromDatabase[0]); // system
     messagesToOpenAi.push(messagesFromDatabase[1]); // user
     const lastAssistantMessage = messagesFromDatabase
@@ -56,25 +63,37 @@ export async function POST(req: Request) {
       messagesToOpenAi.push(lastAssistantMessage);
     }
     messagesToOpenAi.push({
-      content: prompt,
+      content: `Previously you already implemented this code, use it as a reference and meet my new requirements: ${prompt}`,
       role: "user",
     });
   } else {
-    messagesToOpenAi.push(...messagesFromDatabase);
+    if (imageUrl) {
+      messagesToOpenAi[1].content = [
+        {
+          type: "text",
+          text: messagesFromDatabase[1].content as string,
+        },
+        {
+          type: "image_url",
+          image_url: {
+            url: `https://jojdwiugelqhcajbccxn.supabase.co/storage/v1/object/public/images/${imageUrl}`,
+          },
+        },
+      ];
+    }
   }
-
   try {
     const response = await openai.chat.completions.create({
       messages: messagesToOpenAi,
-      model: "ft:gpt-3.5-turbo-1106:personal::8LBkKNVC",
+      model: "gpt-4o",
+      temperature: 0,
       stream: true,
-      temperature: 0.5,
+      max_tokens: 3000,
     });
-    // https://github.com/vercel-labs/ai-chatbot
     const stream = OpenAIStream(response, {
       onCompletion: async (completion: string) => {
-        const messages = messagesFromDatabase;
-        if (messagesFromDatabase.length > 2) {
+        console.log("messages 2", messages[1]);
+        if (messages.length > 2) {
           messages.push(
             {
               content: prompt,
@@ -91,6 +110,8 @@ export async function POST(req: Request) {
             role: "assistant",
           });
         }
+        console.log("messages", messages);
+        console.log("messages", prompt);
         await supabase
           .from("chats")
           .update({
@@ -99,8 +120,10 @@ export async function POST(req: Request) {
           .eq("id", id);
       },
     });
+
     return new StreamingTextResponse(stream);
   } catch (e) {
+    console.log(e);
     return Response.json({ code: 500, error: "server error" });
   }
 }

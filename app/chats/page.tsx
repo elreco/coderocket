@@ -48,18 +48,18 @@ export default function Featured() {
         <h1 className="mb-10 text-4xl font-bold text-gray-700 sm:text-center sm:text-6xl">
           Featured Components
         </h1>
-        <div className="grid 2xl:grid-cols-4 lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-3">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
           {chats?.map((c) => (
-            <div key={c.chat_id} className="relative w-full aspect-video">
+            <div key={c.chat_id} className="relative aspect-video w-full">
               <Image
                 src={c.image_url}
                 fill
-                className="w-full rounded-md border shadow-md object-contain"
+                className="w-full rounded-md border object-contain shadow-md"
                 alt=""
               />
               <Link
                 href={`/chats/${c.chat_id}`}
-                className="absolute rounded-md inset-0 z-10 bg-black/25 hover:bg-black/20  flex cursor-pointer select-none items-center justify-center  "
+                className="absolute inset-0 z-10 flex cursor-pointer select-none  items-center justify-center rounded-md bg-black/25 hover:bg-black/20  "
               >
                 <Badge
                   className="absolute bottom-0 right-0 m-4"
@@ -71,7 +71,7 @@ export default function Featured() {
                 </Badge>
                 {c.user_full_name && (
                   <Badge
-                    className="absolute top-0 left-0 m-4 border-transparent"
+                    className="absolute left-0 top-0 m-4 border-transparent"
                     variant="default"
                   >
                     {c.user_full_name}
