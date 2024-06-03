@@ -5,9 +5,9 @@ import Link from "next/link";
 
 const baseStyles = {
   solid:
-    "inline-flex justify-center rounded-lg py-1.5 px-3 text-sm font-semibold outline-2 outline-offset-2 transition-colors",
+    "inline-flex items-center justify-center rounded-lg py-1.5 px-3 text-sm font-semibold outline-2 outline-offset-2 transition-colors",
   outline:
-    "inline-flex justify-center rounded-lg border py-[calc(theme(spacing.2)-1px)] px-[calc(theme(spacing.3)-1px)] text-sm outline-2 outline-offset-2 transition-colors",
+    "inline-flex items-center justify-center rounded-lg border py-[calc(theme(spacing.2)-1px)] px-[calc(theme(spacing.3)-1px)] text-sm outline-2 outline-offset-2 transition-colors",
 };
 
 const variantStyles = {

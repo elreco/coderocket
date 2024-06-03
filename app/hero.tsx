@@ -3,7 +3,7 @@ import { PhotoIcon } from "@heroicons/react/24/solid";
 import { Session } from "@supabase/supabase-js";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/toaster/use-toast";
@@ -45,7 +45,8 @@ export default function Hero({ session }: Props) {
   const { toast } = useToast();
   const [prompt, setPrompt] = useState("");
   const [loading, setLoading] = useState(false);
-  const [image, setImage] = useState<File | null>(null); // Nouvelle variable d'état pour l'image
+  const [image, setImage] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -84,6 +85,12 @@ export default function Hero({ session }: Props) {
 
   const handleBadgeClick = (input: string) => {
     setPrompt(input);
+  };
+
+  const handleButtonClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
   };
 
   return (
@@ -125,20 +132,16 @@ export default function Hero({ session }: Props) {
               )}
             </div>
             <div className="flex items-center space-x-2">
-              <button type="button">
-                <label
-                  className="focus-visible:ring-ring flex h-9 shrink-0 cursor-pointer select-none items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-gray-700 p-2 text-sm font-medium text-white/70 transition-colors focus-within:bg-gray-700 hover:bg-gray-800 hover:text-white focus-visible:bg-gray-800 focus-visible:outline-none focus-visible:ring-0 disabled:pointer-events-none disabled:opacity-50 sm:px-3"
-                  data-id="prompt-form-image-upload"
-                >
-                  <PhotoIcon className="h-4 w-4 " />
-                  <span className="hidden sm:block">Image</span>
-                  <input
-                    className="sr-only"
-                    type="file"
-                    onChange={handleImageChange}
-                  />
-                </label>
-              </button>
+              <Button type="button" onClick={handleButtonClick}>
+                <PhotoIcon className="mr-2 h-4 w-4 " />
+                <span className="hidden sm:block">Image</span>
+              </Button>
+              <input
+                ref={fileInputRef}
+                className="sr-only"
+                type="file"
+                onChange={handleImageChange}
+              />
 
               <Button type="submit" loading={loading}>
                 Generate

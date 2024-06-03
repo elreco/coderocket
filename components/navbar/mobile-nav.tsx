@@ -144,7 +144,7 @@ export function MobileNav({ session }: Props) {
         <img
           src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=426541&theme=dark"
           alt="Tailwind&#0032;AI - AI&#0045;Powered&#0032;Tailwind&#0032;Component&#0032;Generation | Product Hunt"
-          className="w-[180px] h-[40px]"
+          className="h-[40px] w-[180px]"
         />
       </a>
       {!session ? (

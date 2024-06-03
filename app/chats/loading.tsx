@@ -4,7 +4,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function Loading() {
   return (
     <Container className="pt-24">
-      <Skeleton className="w-[100px] h-[20px] rounded-full" />
+      <Skeleton className="h-[20px] w-[100px] rounded-full" />
     </Container>
   );
 }

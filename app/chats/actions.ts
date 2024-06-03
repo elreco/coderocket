@@ -101,7 +101,6 @@ export const createChat = async (prompt: string, formData: FormData) => {
 
     imageUrl = imageData?.path;
   }
-  console.log("prompt", prompt);
   const { data } = await supabase
     .from("chats")
     .insert([

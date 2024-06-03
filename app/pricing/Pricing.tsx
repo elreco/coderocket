@@ -114,7 +114,7 @@ export default function Pricing({
   if (products.length === 1)
     return (
       <section>
-        <div className="mx-auto max-w-6xl pt-24 px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-6xl px-4 pt-24 sm:px-6 lg:px-8">
           <div className="sm:align-center sm:flex sm:flex-col">
             <h1 className="text-4xl font-extrabold text-gray-700 sm:text-center sm:text-6xl">
               Pricing Plans
@@ -143,7 +143,7 @@ export default function Pricing({
                 return (
                   <div
                     key={price.interval}
-                    className="divide-y divide-zinc-600 rounded-lg bg-white border"
+                    className="divide-y divide-zinc-600 rounded-lg border bg-white"
                   >
                     <div className="p-6">
                       <p>

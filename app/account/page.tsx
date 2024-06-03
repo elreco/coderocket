@@ -72,7 +72,7 @@ export default async function Account() {
   const chats = await getUserChats();
   return (
     <section className="mb-32">
-      <div className="mx-auto max-w-6xl pt-24 px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-6xl px-4 pt-24 sm:px-6 lg:px-8">
         <div className="sm:align-center sm:flex sm:flex-col">
           <h1 className="text-4xl font-bold text-gray-700 sm:text-center sm:text-6xl">
             Account

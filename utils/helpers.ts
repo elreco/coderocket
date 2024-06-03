@@ -54,7 +54,6 @@ export const nanoid = customAlphabet(
 
 export const capitalizeFirstLetter = (string: string) => {
   if (!string) return "";
-  console.log(string);
   return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
 };
 

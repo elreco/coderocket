@@ -2,7 +2,6 @@ import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { OpenAIStream, StreamingTextResponse } from "ai";
 import { cookies } from "next/headers";
 import OpenAI from "openai";
-import { ChatCompletionMessageParam } from "openai/resources";
 
 import { getSubscription } from "@/app/supabase-server";
 import { Database } from "@/types_db";
@@ -49,7 +48,8 @@ export async function POST(req: Request) {
   let messagesToOpenAi = chat.messages.map((message) => ({
     role: message.role,
     content: message.content,
-  }));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  })) as any;
 
   if (messagesFromDatabase.length > 2) {
     messagesToOpenAi = [];
@@ -92,7 +92,6 @@ export async function POST(req: Request) {
     });
     const stream = OpenAIStream(response, {
       onCompletion: async (completion: string) => {
-        console.log("messages 2", messages[1]);
         if (messages.length > 2) {
           messages.push(
             {
@@ -110,8 +109,6 @@ export async function POST(req: Request) {
             role: "assistant",
           });
         }
-        console.log("messages", messages);
-        console.log("messages", prompt);
         await supabase
           .from("chats")
           .update({
