@@ -46,7 +46,6 @@ export default function Chats({ params }: { params: { id: string } }) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [selectedVersion, setSelectedVersion] = useState<string | null>(null);
   const [title, setTitle] = useState<string>("");
-  const [loadingMessages, setLoadingMessages] = useState(true);
   const [authorized, setAuthorized] = useState(false);
   const [userId, setUserId] = useState("");
   const [userFullName, setUserFullName] = useState("");
@@ -70,7 +69,6 @@ export default function Chats({ params }: { params: { id: string } }) {
     onFinish: async () => {
       const fetchedChat = await fetchChat(params.id);
       setMessages(fetchedChat?.messages || []);
-      setLoadingMessages(false);
       setInput("");
     },
   });
@@ -90,12 +88,10 @@ export default function Chats({ params }: { params: { id: string } }) {
   });
 
   useEffect(() => {
-    setLoadingMessages(true);
     const getData = async () => {
       try {
         const fetchedChat = await fetchChat(params.id);
         setMessages(fetchedChat?.messages || []);
-        setLoadingMessages(false);
         setUserId(fetchedChat?.user_id?.id || "");
         setUserFullName(fetchedChat?.user_id?.full_name || "");
         setUserAvatar(fetchedChat?.user_id?.avatar_url || "");
@@ -187,26 +183,26 @@ export default function Chats({ params }: { params: { id: string } }) {
         <div className="mb-3 w-full md:w-5/6">
           <div className="flex items-center justify-between">
             <div className="font-semibold text-gray-700">
-              {loadingMessages ||
-                (!title && (
-                  <span className="flex items-center">
-                    <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />{" "}
-                    Loading
-                  </span>
-                ))}
-              {!loadingMessages && (
-                <div className="flex items-center space-x-2">
-                  {userAvatar && (
-                    <Avatar>
-                      <AvatarImage src={userAvatar} />
-                    </Avatar>
+              <div className="flex items-center space-x-2">
+                {userAvatar && (
+                  <Avatar>
+                    <AvatarImage src={userAvatar} />
+                  </Avatar>
+                )}
+                {userFullName && (
+                  <Badge variant="default">{userFullName}</Badge>
+                )}
+                <h1>
+                  {isLoading ? (
+                    <span className="flex items-center">
+                      <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />{" "}
+                      Loading
+                    </span>
+                  ) : (
+                    capitalizeFirstLetter(title)
                   )}
-                  {userFullName && (
-                    <Badge variant="default">{userFullName}</Badge>
-                  )}
-                  <h1>{capitalizeFirstLetter(title)}</h1>
-                </div>
-              )}
+                </h1>
+              </div>
             </div>
             <TooltipProvider>
               <Tooltip>
