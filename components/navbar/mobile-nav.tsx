@@ -53,7 +53,17 @@ export function MobileNav({ session }: Props) {
   };
   return (
     <div className="flex items-center gap-6">
-      <Popover className="lg:hidden">
+      <a
+        href="https://www.producthunt.com/posts/tailwind-ai?utm_source=badge-featured&utm_medium=badge&utm_souce=badge-tailwind&#0045;ai"
+        target="_blank"
+      >
+        <img
+          src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=426541&theme=dark"
+          alt="Tailwind&#0032;AI - AI&#0045;Powered&#0032;Tailwind&#0032;Component&#0032;Generation | Product Hunt"
+          className="h-[40px] w-[180px]"
+        />
+      </a>
+      <Popover className="flex items-center lg:hidden">
         {({ open }) => (
           <>
             <Popover.Button
@@ -89,7 +99,7 @@ export function MobileNav({ session }: Props) {
                       y: -32,
                       transition: { duration: 0.2 },
                     }}
-                    className="absolute inset-x-0 top-0 z-0 origin-top rounded-b-2xl bg-gray-50 px-6 pb-6 pt-32 shadow-2xl shadow-gray-900/20 backdrop-blur"
+                    className="absolute inset-x-0 top-0 z-0 origin-top items-center rounded-b-2xl bg-gray-50 px-6 pb-6 pt-32 shadow-2xl shadow-gray-900/20 backdrop-blur"
                   >
                     <div className="space-y-4">
                       {links.map(([label, href], index) => (
@@ -137,16 +147,7 @@ export function MobileNav({ session }: Props) {
           </>
         )}
       </Popover>
-      <a
-        href="https://www.producthunt.com/posts/tailwind-ai?utm_source=badge-featured&utm_medium=badge&utm_souce=badge-tailwind&#0045;ai"
-        target="_blank"
-      >
-        <img
-          src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=426541&theme=dark"
-          alt="Tailwind&#0032;AI - AI&#0045;Powered&#0032;Tailwind&#0032;Component&#0032;Generation | Product Hunt"
-          className="h-[40px] w-[180px]"
-        />
-      </a>
+
       {!session ? (
         <Button href="/signin" variant="outline" className="hidden lg:block">
           Log in

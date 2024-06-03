@@ -106,7 +106,7 @@ export default function Hero({ session }: Props) {
           <p>Design UI with Tailwind from basic text prompts and images.</p>
         </div>
         <form
-          className="group relative z-10 flex w-full flex-col items-center justify-center gap-x-0 space-y-5 rounded-md border bg-gray-900 p-3 text-center shadow-sm backdrop-blur-xl transition-all duration-300 sm:gap-x-3 sm:space-y-0 xl:w-1/2"
+          className="group relative z-10 flex w-full flex-col items-center justify-center gap-x-0 space-y-5 rounded-lg bg-gray-900 p-3 text-center shadow-lg shadow-black/40 backdrop-blur-xl transition-all duration-300 sm:gap-x-3 sm:space-y-0 xl:w-1/2"
           onSubmit={handleSubmit}
         >
           <div className="mb-1 flex w-full">
@@ -134,7 +134,7 @@ export default function Hero({ session }: Props) {
             <div className="flex items-center space-x-2">
               <Button type="button" onClick={handleButtonClick}>
                 <PhotoIcon className="mr-2 h-4 w-4 " />
-                <span className="hidden sm:block">Image</span>
+                <span>Image</span>
               </Button>
               <input
                 ref={fileInputRef}
@@ -149,13 +149,13 @@ export default function Hero({ session }: Props) {
             </div>
           </div>
         </form>
-        <div className="flex items-center justify-center space-x-2">
+        <div className="flex flex-wrap items-center justify-center gap-2">
           {previewButtons.map((button, index) => (
             <Badge
               key={index}
               variant="secondary"
               onClick={() => handleBadgeClick(button.input)}
-              className="cursor-pointer hover:bg-gray-700"
+              className="cursor-pointer whitespace-nowrap hover:bg-gray-700"
             >
               {button.text}
             </Badge>
