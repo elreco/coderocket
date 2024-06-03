@@ -42,7 +42,7 @@ export async function POST(req: Request) {
     messagesFromDatabase &&
     messagesFromDatabase?.length > 11
   ) {
-    throw new Error("payment required");
+    //throw new Error("payment required");
   }
 
   let messagesToOpenAi = chat.messages.map((message) => ({
