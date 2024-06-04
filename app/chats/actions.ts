@@ -1,7 +1,5 @@
 "use server";
 
-import { promises as fs } from "fs";
-
 import { redirect } from "next/navigation";
 
 import {
