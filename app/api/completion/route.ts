@@ -88,7 +88,6 @@ export async function POST(req: Request) {
       model: "gpt-4o",
       temperature: 0,
       stream: true,
-      max_tokens: 3000,
     });
     const stream = OpenAIStream(response, {
       onCompletion: async (completion: string) => {
