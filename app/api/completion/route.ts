@@ -1,3 +1,4 @@
+export const maxDuration = 300;
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { OpenAIStream, StreamingTextResponse } from "ai";
 import { cookies } from "next/headers";
