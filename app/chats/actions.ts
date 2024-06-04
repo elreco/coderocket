@@ -86,7 +86,7 @@ export const createChat = async (prompt: string, formData: FormData) => {
   }
 
   const contentMd = await fs.readFile(
-    process.cwd() + "/app/chats/html-gen.md",
+    process.cwd() + "/app/html-gen.md",
     "utf8",
   );
   let imageUrl = null;
