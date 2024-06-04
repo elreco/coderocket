@@ -80,7 +80,7 @@ export const createChat = async (prompt: string, formData: FormData) => {
     existingChats &&
     existingChats?.length > 0
   ) {
-    // return redirect("pricing?paymentRequired=true");
+    return redirect("pricing?paymentRequired=true");
   }
   const { data: blobContent, error } = await supabase.storage
     .from("featured")
