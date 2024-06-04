@@ -84,11 +84,13 @@ export const createChat = async (prompt: string, formData: FormData) => {
   ) {
     // return redirect("pricing?paymentRequired=true");
   }
+  const { data: blobContent, error } = await supabase.storage
+    .from("featured")
+    .download("html-gen.md");
 
-  const contentMd = await fs.readFile(
-    process.cwd() + "/app/html-gen.md",
-    "utf8",
-  );
+  if (error) throw Error("Could not get html file");
+  const contentMd = await blobContent.text();
+
   let imageUrl = null;
   const image = formData.get("file") as File;
   if (image) {
