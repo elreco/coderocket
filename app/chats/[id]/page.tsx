@@ -103,7 +103,7 @@ export default function Chats({ params }: { params: { id: string } }) {
   }, [params.id]);
 
   useEffect(() => {
-    if (messages.length === 2) {
+    if (messages.length === 1) {
       const defaultMessage =
         messages?.find((m) => m.role === "user")?.content || "";
       setInput(defaultMessage);
@@ -220,7 +220,7 @@ export default function Chats({ params }: { params: { id: string } }) {
             </div>
             <TooltipProvider>
               <Tooltip>
-                <TooltipTrigger onClick={copyRawHTML}>
+                <TooltipTrigger onClick={copyRawHTML} asChild>
                   <Button variant="outline">
                     <ClipboardIcon className="w-5" />
                   </Button>

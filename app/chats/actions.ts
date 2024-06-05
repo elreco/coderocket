@@ -82,12 +82,6 @@ export const createChat = async (prompt: string, formData: FormData) => {
   ) {
     return redirect("pricing?paymentRequired=true");
   }
-  const { data: blobContent, error } = await supabase.storage
-    .from("featured")
-    .download("html-gen.md");
-
-  if (error) throw Error("Could not get html file");
-  const contentMd = await blobContent.text();
 
   let imageUrl = null;
   const image = formData.get("file") as File;
@@ -108,10 +102,6 @@ export const createChat = async (prompt: string, formData: FormData) => {
         user_id: user.id,
         ...(imageUrl && { prompt_image: imageUrl }),
         messages: [
-          {
-            role: "system",
-            content: contentMd,
-          },
           {
             role: "user",
             content: prompt,
