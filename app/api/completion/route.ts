@@ -130,7 +130,7 @@ const buildMessagesToOpenAi = async (
     messagesToOpenAI[1].content = [
       {
         type: "text",
-        text: messages[1].content as string,
+        text: messages[0].content as string,
       },
       {
         type: "image_url",
