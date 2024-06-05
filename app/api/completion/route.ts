@@ -37,7 +37,6 @@ export async function POST(req: Request) {
 
   const imageUrl = chat.prompt_image;
   const messagesFromDatabase = [...chat.messages];
-
   // Check subscription
   const subscription = await getSubscription();
   if (
@@ -75,16 +74,26 @@ export async function POST(req: Request) {
     // Stream response and update chat messages
     const stream = OpenAIStream(response, {
       onCompletion: async (completion: string) => {
-        const messages = [...chat.messages];
-        if (messages.length > 1) {
-          messages.push(
-            { content: prompt, role: "user" },
-            { content: completion, role: "assistant" },
-          );
-        } else {
-          messages.push({ content: completion, role: "assistant" });
+        const { data: chatData } = await supabase
+          .from("chats")
+          .select()
+          .eq("id", id);
+
+        if (chatData) {
+          const newMessages = [...chatData[0].messages];
+          if (chatData[0].messages.length > 1) {
+            newMessages.push(
+              { content: prompt, role: "user" },
+              { content: completion, role: "assistant" },
+            );
+          } else {
+            newMessages.push({ content: completion, role: "assistant" });
+          }
+          await supabase
+            .from("chats")
+            .update({ messages: newMessages })
+            .eq("id", id);
         }
-        await supabase.from("chats").update({ messages }).eq("id", id);
       },
     });
 
@@ -98,7 +107,7 @@ export async function POST(req: Request) {
 const buildMessagesToOpenAi = async (
   contentMd: string,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  messages: any[],
+  messages: readonly any[],
   prompt: string,
   imageUrl?: string | null | undefined,
 ) => {
