@@ -5,12 +5,11 @@ import cn from "classnames";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toaster/use-toast";
 import { Database } from "@/types_db";
 import { postData } from "@/utils/helpers";
 import { getStripe } from "@/utils/stripe-client";
-
-import { Button } from "../../components/ui/button";
 
 type Subscription = Database["public"]["Tables"]["subscriptions"]["Row"];
 type Product = Database["public"]["Tables"]["products"]["Row"];

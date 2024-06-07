@@ -1,7 +1,7 @@
 /* eslint-disable import/order */
 import { PropsWithChildren } from "react";
 
-import SupabaseProvider from "./supabase-provider";
+import SupabaseProvider from "@/app/supabase-provider";
 
 import { Footer } from "@/components/footer";
 import { Navbar } from "@/components/navbar/navbar";

@@ -5,6 +5,7 @@ export interface ChatMessage {
   createdAt?: Date;
   version?: number;
   content: string | null;
+  screenshot: string | null;
   ui?: string | JSX.Element | JSX.Element[] | null | undefined;
   role: "system" | "user" | "assistant" | "function";
   name?: string;

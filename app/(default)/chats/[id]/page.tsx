@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  Sandpack,
-  SandpackLayout,
-  SandpackPreview,
-  SandpackProvider,
-} from "@codesandbox/sandpack-react";
-import { aquaBlue } from "@codesandbox/sandpack-themes";
+import { Sandpack } from "@codesandbox/sandpack-react";
 import { ArrowPathIcon } from "@heroicons/react/20/solid";
 import { ClipboardIcon } from "@heroicons/react/24/outline";
 import { useCompletion } from "ai/react";
@@ -32,11 +26,6 @@ import { capitalizeFirstLetter } from "@/utils/helpers";
 
 import { fetchChat } from "../actions";
 import { ChatMessage } from "../types";
-
-const externalResources = [
-  "https://unpkg.com/tailwindcss-cdn@3.4.3/tailwindcss-with-all-plugins.js",
-  "https://cdn.jsdelivr.net/gh/iconoir-icons/iconoir@main/css/iconoir.css",
-];
 
 export default function Chats({ params }: { params: { id: string } }) {
   const { supabase } = useSupabase();
@@ -132,32 +121,8 @@ export default function Chats({ params }: { params: { id: string } }) {
     const assistantMessagesOnly = messages.filter(
       (m) => m.role === "assistant",
     );
-    const selectedIndex = assistantMessagesOnly.findIndex(
-      (m) => m.id === selectedVersion,
-    );
-
-    const lastAssistantMessageIndex = assistantMessagesOnly.length - 1;
-
-    if (selectedIndex === 0) {
-      return assistantMessagesOnly.filter((_, index) => {
-        return index <= 2;
-      });
-    }
-
-    if (selectedIndex === lastAssistantMessageIndex) {
-      return assistantMessagesOnly.filter((_, index) => {
-        return index >= lastAssistantMessageIndex - 2;
-      });
-    }
-
-    return assistantMessagesOnly.filter((_, index) => {
-      return (
-        index === selectedIndex ||
-        index === selectedIndex - 1 ||
-        index === selectedIndex + 1
-      );
-    });
-  }, [messages, selectedVersion]);
+    return assistantMessagesOnly.slice(-30);
+  }, [messages]);
 
   const copyRawHTML = () => {
     copy(completion);
@@ -169,32 +134,61 @@ export default function Chats({ params }: { params: { id: string } }) {
     });
   };
 
+  const getUserMessage = (assistantMessageId: string) => {
+    const assistantIndex = messages.findIndex(
+      (m) => m.id === assistantMessageId,
+    );
+    if (assistantIndex > 0) {
+      for (let i = assistantIndex - 1; i >= 0; i--) {
+        if (messages[i].role === "user") {
+          return messages[i].content;
+        }
+      }
+    }
+    return "No user message found.";
+  };
+
   const MemoizedSandpack = useMemo(() => {
     return (
       <Sandpack
-        theme={aquaBlue}
         options={{
           recompileMode: "delayed",
           recompileDelay: 800,
-          externalResources,
-          editorHeight: 600,
-          showReadOnly: false,
+          editorHeight: 675,
+          showReadOnly: true,
           showConsoleButton: false,
           showConsole: false,
-          readOnly: true,
+          readOnly: false,
         }}
         template="static"
         files={{
-          "/index.html": completion,
+          "/index.html": completion
+            ? `<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="tailwindai.css" rel="stylesheet">
+</head>
+${completion}
+</html>`
+            : "",
+          "/tailwindai.css": {
+            code: `@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+body {
+  font-family: 'Inter', sans-serif!important;
+}`,
+            hidden: true,
+          },
         }}
       />
     );
   }, [completion]);
 
   return (
-    <>
-      <Container className="pt-24">
-        <div className="mb-3 w-full md:w-5/6">
+    <Container className="pt-24">
+      <div className="flex w-full flex-col items-stretch justify-center space-x-0 lg:flex-row lg:space-x-3">
+        <div className="mb-3 w-full space-y-3 md:mb-0 lg:w-11/12">
           <div className="flex items-center justify-between">
             <div className="font-semibold text-gray-700">
               <div className="flex items-center space-x-2">
@@ -220,86 +214,90 @@ export default function Chats({ params }: { params: { id: string } }) {
             </div>
             <TooltipProvider>
               <Tooltip>
-                <TooltipTrigger onClick={copyRawHTML} asChild>
-                  <Button variant="outline">
+                <TooltipTrigger>
+                  <Button variant="outline" onClick={copyRawHTML}>
                     <ClipboardIcon className="w-5" />
                   </Button>
                 </TooltipTrigger>
+
                 <TooltipContent>
                   <p>Copy raw HTML</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
           </div>
-        </div>
-        <div className="flex w-full flex-col items-stretch justify-center space-x-0 md:flex-row md:space-x-3">
-          <div className="mb-3 w-full space-y-3 md:mb-0 md:w-5/6">
+          <div className="rounded-lg bg-white transition-all duration-200">
             {MemoizedSandpack}
-            {authorized && (
-              <form className="flex justify-start" onSubmit={handleSubmit}>
-                <div className="flex w-full space-x-4 rounded-md bg-gray-900 p-2 sm:w-1/2">
-                  <Input
-                    autoFocus
-                    disabled={isLoading}
-                    value={input}
-                    onChange={handleInputChange}
-                    placeholder="Add a button, modify a color..."
-                  />
-                  <Button loading={isLoading} type="submit">
-                    Iterate
-                  </Button>
-                </div>
-              </form>
-            )}
           </div>
-          <div className="h-full w-full space-y-3 md:w-1/6">
-            {assistantMessages.map((m) => (
-              <SandpackProvider
-                key={m.id}
-                theme="light"
-                options={{
-                  externalResources,
-                }}
-                template="static"
-                files={{
-                  "/index.html": m?.content ?? "",
-                }}
-              >
-                <div
-                  className={clsx(
-                    "rounded-md border bg-transparent",
-                    selectedVersion === m.id &&
-                      "border border-indigo-600 shadow-2xl shadow-indigo-500/20 transition-colors",
-                  )}
-                >
-                  <SandpackLayout>
-                    <SandpackPreview className="!h-44" />
-                    <div
-                      className="absolute inset-0 z-10 flex cursor-pointer  select-none items-center justify-center bg-black/25 hover:bg-black/20  "
-                      onClick={() => handleVersionSelect(m.id)}
-                    >
-                      <Badge
-                        className="absolute bottom-0 right-0 m-4"
-                        variant="secondary"
-                      >
-                        v{m.version}
-                      </Badge>
-                      {selectedVersion === m.id && (
-                        <Badge
-                          className="absolute bottom-0 left-0 m-4 text-indigo-500"
-                          variant="default"
-                        >
-                          Selected
-                        </Badge>
-                      )}
-                    </div>
-                  </SandpackLayout>
-                </div>
-              </SandpackProvider>
-            ))}
-          </div>
+
+          {authorized && (
+            <form
+              className="flex justify-center lg:justify-start"
+              onSubmit={handleSubmit}
+            >
+              <div className="mb-3 flex w-full  space-x-4 rounded-md bg-gray-900 p-2 sm:w-1/2">
+                <Input
+                  autoFocus
+                  disabled={isLoading}
+                  value={input}
+                  onChange={handleInputChange}
+                  minLength={2}
+                  maxLength={1000}
+                  placeholder="Add a button, modify a color..."
+                />
+                <Button loading={isLoading} type="submit">
+                  Iterate
+                </Button>
+              </div>
+            </form>
+          )}
         </div>
-      </Container>
-    </>
+        <div className="h-full w-full space-y-3 lg:w-1/12">
+          {assistantMessages.map((m) => (
+            <div key={m.id} className="relative w-full">
+              <img
+                alt=""
+                src={m?.screenshot || ""}
+                className={clsx(
+                  "aspect-video w-full rounded-md border object-cover",
+                  selectedVersion === m.id
+                    ? "border-gray-900"
+                    : "border-gray-200",
+                )}
+              />
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger
+                    className={clsx(
+                      "absolute inset-0 z-10 flex cursor-pointer select-none items-center justify-center rounded-md",
+                      selectedVersion === m.id
+                        ? "bg-transparent"
+                        : "bg-black/25 hover:bg-black/20",
+                    )}
+                    onClick={() => handleVersionSelect(m.id)}
+                  >
+                    <Badge
+                      className="absolute bottom-0 right-0 m-2"
+                      variant="secondary"
+                    >
+                      v{m.version}
+                    </Badge>
+                  </TooltipTrigger>
+
+                  <TooltipContent side="left" className="w-64">
+                    <img
+                      alt=""
+                      src={m?.screenshot || ""}
+                      className="my-1.5 w-full rounded object-cover"
+                    />
+                    <p className="py-2">{getUserMessage(m.id)}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+          ))}
+        </div>
+      </div>
+    </Container>
   );
 }

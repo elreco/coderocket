@@ -1,5 +1,6 @@
-import Hero from "@/app/hero";
-import { getSession } from "@/app/supabase-server";
+import { getSession } from "../supabase-server";
+
+import Hero from "./hero";
 
 export default async function Home() {
   const session = await getSession();

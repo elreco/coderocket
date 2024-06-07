@@ -5,12 +5,11 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 
+import { Container } from "@/components/container";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/toaster/use-toast";
-
-import { Container } from "../components/container";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
 
 import { createChat } from "./chats/actions";
 
@@ -116,6 +115,8 @@ export default function Hero({ session }: Props) {
               required
               color="dark"
               value={prompt}
+              minLength={2}
+              maxLength={1000}
               onChange={(e) => setPrompt(e.target.value)}
             />
           </div>

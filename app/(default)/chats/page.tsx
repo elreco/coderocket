@@ -5,11 +5,10 @@ import Link from "next/link";
 import { ChatCompletionMessageParam } from "openai/resources";
 import { useEffect, useState } from "react";
 
+import { useSupabase } from "@/app/supabase-provider";
 import { Container } from "@/components/container";
 import { Badge } from "@/components/ui/badge";
 import { capitalizeFirstLetter } from "@/utils/helpers";
-
-import { useSupabase } from "../supabase-provider";
 
 interface Chat {
   chat_id: string;
@@ -67,6 +66,7 @@ export default function Featured() {
                 >
                   {capitalizeFirstLetter(
                     c.first_user_message.content?.slice(0, 100) as string,
+                    20,
                   )}
                 </Badge>
                 {c.user_full_name && (

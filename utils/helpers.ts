@@ -52,9 +52,17 @@ export const nanoid = customAlphabet(
   7,
 );
 
-export const capitalizeFirstLetter = (string: string) => {
+export const capitalizeFirstLetter = (
+  string: string,
+  maxLength: number = 150,
+) => {
   if (!string) return "";
-  return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
+  let formattedString =
+    string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
+  if (formattedString.length > maxLength) {
+    formattedString = formattedString.substring(0, maxLength) + "...";
+  }
+  return formattedString;
 };
 
 export const convertHtmlToJsx = (html: string) => {

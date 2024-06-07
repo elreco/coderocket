@@ -1,4 +1,4 @@
-import OpenAI from "openai";
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 export type Json =
   | string
@@ -217,7 +217,7 @@ export interface Database {
           id: string;
           image_url: string | null;
           prompt_image?: string | null;
-          messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[];
+          messages: any[];
           user_id: string | null;
         };
         Insert: {
@@ -225,7 +225,7 @@ export interface Database {
           image_url?: string | null;
           prompt_image?: string | null;
           id?: string;
-          messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[];
+          messages: any[];
           user_id?: string | null;
         };
         Update: {
@@ -233,7 +233,7 @@ export interface Database {
           image_url?: string | null;
           prompt_image?: string | null;
           id?: string;
-          messages?: OpenAI.Chat.Completions.ChatCompletionMessageParam[];
+          messages?: any[];
           user_id?: string | null;
         };
         Relationships: [
@@ -258,8 +258,8 @@ export interface Database {
           image_url: string;
           user_id: string;
           user_full_name: string;
-          first_user_message: OpenAI.Chat.Completions.ChatCompletionMessageParam;
-          last_assistant_message: OpenAI.Chat.Completions.ChatCompletionMessageParam;
+          first_user_message: any;
+          last_assistant_message: any;
         }[];
       };
     };

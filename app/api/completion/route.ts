@@ -7,6 +7,9 @@ import OpenAI from "openai";
 
 import { getSubscription } from "@/app/supabase-server";
 import { Database } from "@/types_db";
+import { captureScreenshot } from "@/utils/capture-screenshot";
+import { storageUrl } from "@/utils/config";
+import { getURL } from "@/utils/helpers";
 
 const openai = new OpenAI({
   apiKey: process.env.OPEN_AI || "",
@@ -42,9 +45,13 @@ export async function POST(req: Request) {
   if (
     (!subscription || subscription.status !== "active") &&
     messagesFromDatabase &&
-    messagesFromDatabase.length > 10
+    messagesFromDatabase.find((m) => m.role === "assistant")?.length > 3
   ) {
-    throw new Error("payment required");
+    throw new Error("payment-required");
+  }
+
+  if (messagesFromDatabase.find((m) => m.role === "assistant")?.length > 30) {
+    throw new Error("too-much-versions");
   }
 
   // Fetch HTML content
@@ -81,18 +88,52 @@ export async function POST(req: Request) {
 
         if (chatData) {
           const newMessages = [...chatData[0].messages];
-          if (chatData[0].messages.length > 1) {
+          if (newMessages.length > 1) {
             newMessages.push(
               { content: prompt, role: "user" },
-              { content: completion, role: "assistant" },
+              {
+                content: completion,
+                role: "assistant",
+              },
             );
           } else {
-            newMessages.push({ content: completion, role: "assistant" });
+            newMessages.push({
+              content: completion,
+              role: "assistant",
+            });
           }
+
           await supabase
             .from("chats")
             .update({ messages: newMessages })
             .eq("id", id);
+
+          const screenshot = await captureScreenshot(
+            `${getURL()}/content/${id}`,
+          );
+          const { error, data } = await supabase.storage
+            .from("chat-images")
+            .upload(`${id}/${Date.now()}`, screenshot, {
+              contentType: "image/png",
+              cacheControl: "3600",
+              upsert: false,
+            });
+          if (!error) {
+            const { data: imageData } = supabase.storage
+              .from("chat-images")
+              .getPublicUrl(data.path);
+
+            newMessages[newMessages.length - 1].screenshot =
+              imageData.publicUrl;
+            await supabase
+              .from("chats")
+              .update({ messages: newMessages })
+              .eq("id", id);
+          } else {
+            console.error(
+              "Failed to upload image to Supabase: " + error.message,
+            );
+          }
         }
       },
     });
@@ -144,7 +185,7 @@ const buildMessagesToOpenAi = async (
       {
         type: "image_url",
         image_url: {
-          url: `https://jojdwiugelqhcajbccxn.supabase.co/storage/v1/object/public/images/${imageUrl}`,
+          url: `${storageUrl}/${imageUrl}`,
         },
       },
     ];

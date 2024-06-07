@@ -70,7 +70,7 @@ export function Button<
         disabled={true}
       >
         <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />{" "}
-        <div className="whitespace-nowrap">Please wait</div>
+        <div className="whitespace-nowrap">Loading</div>
       </button>
     );
   }
