@@ -269,10 +269,10 @@ body {
                 <Tooltip>
                   <TooltipTrigger
                     className={clsx(
-                      "absolute inset-0 z-10 flex cursor-pointer select-none items-center justify-center rounded-md",
+                      "absolute inset-0 z-10 flex cursor-pointer select-none items-center justify-center rounded-md transition-all duration-300",
                       selectedVersion === m.id
                         ? "bg-transparent"
-                        : "bg-black/25 hover:bg-black/20",
+                        : "bg-black/25 hover:bg-transparent",
                     )}
                     onClick={() => handleVersionSelect(m.id)}
                   >

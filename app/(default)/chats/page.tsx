@@ -58,7 +58,7 @@ export default function Featured() {
               />
               <Link
                 href={`/chats/${c.chat_id}`}
-                className="absolute inset-0 z-10 flex cursor-pointer select-none  items-center justify-center rounded-md bg-black/25 hover:bg-black/20  "
+                className="absolute inset-0 z-10 flex cursor-pointer select-none items-center justify-center rounded-md bg-black/25 transition-all duration-300 hover:bg-transparent"
               >
                 <Badge
                   className="absolute bottom-0 right-0 m-4"
