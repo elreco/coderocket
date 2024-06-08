@@ -15,7 +15,7 @@ const inter = Inter({
 
 export default function RootLayout({ children }: PropsWithChildren) {
   return (
-    <html lang="en" className={clsx("m-10 h-full antialiased", inter.variable)}>
+    <html lang="en" className={clsx("antialiased", inter.variable)}>
       <body>
         <SupabaseProvider>{children}</SupabaseProvider>
       </body>
