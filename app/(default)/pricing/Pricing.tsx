@@ -1,7 +1,7 @@
 "use client";
 
 import { Session, User } from "@supabase/supabase-js";
-import cn from "classnames";
+import clsx from "clsx";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -231,8 +231,8 @@ export default function Pricing({
             return (
               <div
                 key={product.id}
-                className={cn(
-                  "rounded-lg shadow-sm divide-y divide-zinc-600 bg-zinc-900",
+                className={clsx(
+                  "divide-y divide-zinc-600 rounded-lg bg-zinc-900 shadow-sm",
                   {
                     "border border-pink-500": subscription
                       ? product.name === subscription?.prices?.products?.name
