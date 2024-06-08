@@ -111,6 +111,8 @@ export async function POST(req: Request) {
           const screenshot = await captureScreenshot(
             `${getURL()}/content/${id}`,
           );
+          console.error("url", `${getURL()}/content/${id}`);
+          console.error("screenshot", screenshot);
           const { error, data } = await supabase.storage
             .from("chat-images")
             .upload(`${id}/${Date.now()}`, screenshot, {
