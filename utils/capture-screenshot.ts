@@ -1,10 +1,18 @@
-import playwright from "playwright";
+import webstackScreenshot from "webstack-screenshot";
 
 export async function captureScreenshot(url: string) {
-  const browser = await playwright.chromium.launch();
-  const page = await browser.newPage();
-  await page.goto(url);
-  const screen = await page.screenshot();
-  await browser.close();
-  return screen;
+  const options = {
+    url: url,
+    width: 1920,
+    height: 1080,
+    fullPage: true,
+  };
+
+  try {
+    const buffer = await webstackScreenshot(options);
+    return buffer;
+  } catch (error) {
+    console.error("Error taking screenshot:", error);
+    throw error;
+  }
 }
