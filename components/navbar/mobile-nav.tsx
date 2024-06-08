@@ -72,9 +72,9 @@ export function MobileNav({ session }: Props) {
             >
               {({ open }) =>
                 open ? (
-                  <ChevronUpIcon className="h-6 w-6" />
+                  <ChevronUpIcon className="size-6" />
                 ) : (
-                  <MenuIcon className="h-6 w-6" />
+                  <MenuIcon className="size-6" />
                 )
               }
             </Popover.Button>

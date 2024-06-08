@@ -128,29 +128,29 @@ export default function Hero({ session }: Props) {
             />
           </div>
           <div className="flex w-full flex-1 items-center justify-between">
-            <div className="h-12 w-12">
+            <div className="size-12">
               {image && (
-                <div className="relative h-12 w-12">
+                <div className="relative size-12">
                   <Image
                     src={URL.createObjectURL(image)}
                     alt="Uploaded"
                     width={12}
                     height={12}
-                    className="h-12 w-12 rounded-md object-cover"
+                    className="size-12 rounded-md object-cover"
                   />
                   <button
                     type="button"
                     className="absolute right-0 top-0 cursor-pointer rounded-full bg-black/50 p-1"
                     onClick={handleImageRemove}
                   >
-                    <XMarkIcon className="h-4 w-4 text-white" />
+                    <XMarkIcon className="size-4 text-white" />
                   </button>
                 </div>
               )}
             </div>
             <div className="flex items-center space-x-2">
               <Button type="button" onClick={handleButtonClick}>
-                <PhotoIcon className="mr-2 h-4 w-4 " />
+                <PhotoIcon className="mr-2 size-4 " />
                 <span>Image</span>
               </Button>
               <input

@@ -203,7 +203,7 @@ body {
                 <h1>
                   {isLoading ? (
                     <span className="flex items-center">
-                      <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />{" "}
+                      <ArrowPathIcon className="mr-2 size-4 animate-spin" />{" "}
                       Loading
                     </span>
                   ) : (
@@ -252,7 +252,7 @@ body {
             </form>
           )}
         </div>
-        <div className="h-full w-full space-y-3 lg:w-1/12">
+        <div className="size-full space-y-3 lg:w-1/12">
           {assistantMessages.map((m) => (
             <div key={m.id} className="relative w-full">
               <img
