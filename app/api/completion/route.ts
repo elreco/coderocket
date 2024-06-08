@@ -109,7 +109,7 @@ export async function POST(req: Request) {
             .eq("id", id);
 
           const screenshot = await captureScreenshot(
-            `${getURL()}/content/${id}`,
+            `${getURL()}content/${id}`,
           );
           console.error("url", `${getURL()}/content/${id}`);
           console.error("screenshot", screenshot);
