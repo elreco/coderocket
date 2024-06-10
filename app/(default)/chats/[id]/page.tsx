@@ -178,7 +178,7 @@ export default function Chats({ params }: { params: { id: string } }) {
         options={{
           recompileMode: "delayed",
           recompileDelay: 800,
-          editorHeight: 675,
+          editorHeight: 650,
           showReadOnly: true,
           showConsoleButton: false,
           showConsole: false,
@@ -212,8 +212,8 @@ body {
 
   return (
     <Container>
-      <div className="flex w-full flex-col items-stretch justify-center space-x-0 lg:flex-row lg:space-x-3">
-        <div className="mb-3 w-full space-y-3 md:mb-0 lg:w-11/12">
+      <div className="flex min-h-[calc(100vh-129px)] w-full flex-col justify-center space-x-0 xl:max-h-screen xl:flex-row xl:space-x-3">
+        <div className="mb-3 size-full space-y-3 md:mb-0 xl:w-11/12">
           <div className="flex items-center justify-between">
             <div className="font-medium text-gray-700">
               <div className="flex items-center space-x-2">
@@ -234,7 +234,7 @@ body {
                   ) : (
                     <TooltipProvider>
                       <Tooltip>
-                        <TooltipTrigger>
+                        <TooltipTrigger className="text-left">
                           <span onClick={() => copyPrompt(title)}>
                             {capitalizeFirstLetter(title)}
                           </span>
@@ -269,7 +269,7 @@ body {
 
           {authorized && (
             <form
-              className="flex justify-center lg:justify-start"
+              className="flex justify-center xl:justify-start"
               onSubmit={handleSubmit}
             >
               <div className="mb-3 flex w-full  space-x-4 rounded-md bg-gray-900 p-2 sm:w-1/2">
@@ -289,24 +289,34 @@ body {
             </form>
           )}
         </div>
-        <div className="size-full space-y-3 lg:w-1/12">
+        <div
+          className="mt-5 size-full max-h-[calc(100vh-129px)] space-y-3 overflow-auto pb-2 xl:mt-0 xl:w-1/12"
+          style={{ scrollbarWidth: "none" }}
+        >
           {assistantMessages.map((m) => (
             <div key={m.id} className="relative w-full">
               <img
                 alt=""
                 src={m?.screenshot || ""}
                 className={clsx(
-                  "aspect-video w-full rounded-md border object-cover",
+                  "hidden aspect-video w-full rounded-md border object-cover xl:block",
                   selectedVersion === m.id
                     ? "border-gray-900"
                     : "border-gray-200",
                 )}
               />
+              <Badge
+                onClick={() => handleVersionSelect(m.id)}
+                className="m-2 block cursor-pointer xl:hidden"
+                variant="secondary"
+              >
+                v{m.version}
+              </Badge>
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger
                     className={clsx(
-                      "absolute inset-0 z-10 flex cursor-pointer select-none items-center justify-center rounded-md transition-all duration-300",
+                      "absolute inset-0 z-10 hidden cursor-pointer select-none items-center justify-center rounded-md transition-all duration-300 xl:flex",
                       selectedVersion === m.id
                         ? "bg-transparent"
                         : "bg-black/25 hover:bg-transparent",

@@ -73,7 +73,7 @@ export default function RootLayout({ children }: PropsWithChildren) {
       </head>
       <body>
         <Navbar />
-        <main className="min-h-screen">{children}</main>
+        <main className="size-full">{children}</main>
         <Footer />
         <Toaster />
         <Analytics />
