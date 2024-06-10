@@ -1,16 +1,11 @@
 "use client";
 
-import { Session } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { postData } from "@/utils/helpers";
 
-interface Props {
-  session: Session;
-}
-
-export default function ManageSubscriptionButton({ session }: Props) {
+export default function ManageSubscriptionButton() {
   const router = useRouter();
   const redirectToCustomerPortal = async () => {
     try {
@@ -26,11 +21,7 @@ export default function ManageSubscriptionButton({ session }: Props) {
   return (
     <div className="flex flex-col items-start justify-between sm:flex-row sm:items-center">
       <p className="pb-4 sm:pb-0">Manage your subscription on Stripe.</p>
-      <Button
-        variant="outline"
-        disabled={!session}
-        onClick={redirectToCustomerPortal}
-      >
+      <Button variant="outline" onClick={redirectToCustomerPortal}>
         Open customer portal
       </Button>
     </div>

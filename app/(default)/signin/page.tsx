@@ -1,14 +1,15 @@
 import { redirect } from "next/navigation";
 
-import { getSession } from "@/app/supabase-server";
 import Logo from "@/components/icons/logo";
+import { createClient } from "@/utils/supabase/server";
 
 import AuthUI from "./AuthUI";
 
 export default async function SignIn() {
-  const session = await getSession();
+  const supabase = createClient();
+  const { data: userData } = await supabase.auth.getUser();
 
-  if (session) {
+  if (userData.user?.id) {
     return redirect("/account");
   }
 

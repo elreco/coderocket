@@ -1,23 +1,21 @@
 /* eslint-disable import/order */
 import { PropsWithChildren } from "react";
 
-import SupabaseProvider from "@/app/supabase-provider";
-
 import { Footer } from "@/components/footer";
 import { Navbar } from "@/components/navbar/navbar";
 import { Analytics } from "@vercel/analytics/react";
 import clsx from "clsx";
 
 import "styles/main.css";
-import { Inter } from "next/font/google";
+import { Rubik } from "next/font/google";
 
 import { SandPackCSS } from "@/components/sandpack-styles";
 import { Toaster } from "@/components/ui/toaster";
 
-const inter = Inter({
+const rubik = Rubik({
   subsets: ["latin"],
   display: "swap",
-  variable: "--font-inter",
+  variable: "--font-rubik",
 });
 
 const meta = {
@@ -68,17 +66,15 @@ export default function RootLayout({ children }: PropsWithChildren) {
   return (
     <html
       lang="en"
-      className={clsx("h-full bg-gray-50 antialiased", inter.variable)}
+      className={clsx("h-full bg-gray-50 antialiased", rubik.variable)}
     >
       <head>
         <SandPackCSS />
       </head>
       <body>
-        <SupabaseProvider>
-          <Navbar />
-          <main className="min-h-screen">{children}</main>
-          <Footer />
-        </SupabaseProvider>
+        <Navbar />
+        <main className="min-h-screen">{children}</main>
+        <Footer />
         <Toaster />
         <Analytics />
       </body>

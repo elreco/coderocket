@@ -1,18 +1,12 @@
-import { createServerActionClient } from "@supabase/auth-helpers-nextjs";
 import { revalidatePath } from "next/cache";
-import { cookies } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ReactNode, Suspense } from "react";
 
-import {
-  getSession,
-  getUserDetails,
-  getSubscription,
-} from "@/app/supabase-server";
+import { getUserDetails, getSubscription } from "@/app/supabase-server";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Database } from "@/types_db";
+import { createClient } from "@/utils/supabase/server";
 
 import { getUserChats } from "../chats/actions";
 
@@ -20,15 +14,16 @@ import Chats from "./Chats";
 import ManageSubscriptionButton from "./ManageSubscriptionButton";
 
 export default async function Account() {
-  const [session, userDetails, subscription] = await Promise.all([
-    getSession(),
+  const supabase = createClient();
+  const [userData, userDetails, subscription] = await Promise.all([
+    supabase.auth.getUser(),
     getUserDetails(),
     getSubscription(),
   ]);
 
-  const user = session?.user;
+  const user = userData.data.user;
 
-  if (!session) {
+  if (!user) {
     return redirect("/signin");
   }
 
@@ -44,9 +39,8 @@ export default async function Account() {
   const updateName = async (formData: FormData) => {
     "use server";
     const newName = formData.get("name") as string;
-    const supabase = createServerActionClient<Database>({ cookies });
-    const session = await getSession();
-    const user = session?.user;
+    const { data: userData } = await supabase.auth.getUser();
+    const user = userData.user;
     const { error } = await supabase
       .from("users")
       .update({ full_name: newName })
@@ -61,7 +55,7 @@ export default async function Account() {
     "use server";
 
     const newEmail = formData.get("email") as string;
-    const supabase = createServerActionClient<Database>({ cookies });
+    const supabase = createClient();
     const { error } = await supabase.auth.updateUser({ email: newEmail });
     if (error) {
       console.log(error);
@@ -73,7 +67,7 @@ export default async function Account() {
   return (
     <section className="mb-32">
       <div className="mx-auto max-w-6xl px-4 pt-24 sm:px-6 lg:px-8">
-        <div className="sm:align-center sm:flex sm:flex-col">
+        <div className="sm:flex sm:flex-col sm:items-center">
           <h1 className="text-4xl font-bold text-gray-700 sm:text-center sm:text-6xl">
             Account
           </h1>
@@ -90,9 +84,9 @@ export default async function Account() {
               ? `You are currently on the ${subscription?.prices?.products?.name} plan.`
               : "You are not currently subscribed to any plan."
           }
-          footer={<ManageSubscriptionButton session={session} />}
+          footer={<ManageSubscriptionButton />}
         >
-          <div className="mb-4 mt-8 text-xl font-semibold text-gray-700 hover:text-gray-900">
+          <div className="mb-4 mt-8 text-xl font-medium text-gray-700 hover:text-gray-900">
             {subscription ? (
               `${subscriptionPrice}/${subscription?.prices?.interval}`
             ) : (
@@ -182,7 +176,7 @@ interface Props {
 
 function Card({ title, description, footer, children }: Props) {
   return (
-    <div className="p m-auto my-8 w-full max-w-3xl rounded-md border bg-white">
+    <div className="m-auto my-8 w-full max-w-3xl rounded-md border bg-white">
       <div className="px-5 py-4 ">
         <h3 className="mb-1 text-2xl font-medium text-gray-700">{title}</h3>
         <p className="text-gray-700">{description}</p>

@@ -1,6 +1,6 @@
 "use client";
 
-import { Session, User } from "@supabase/supabase-js";
+import { User } from "@supabase/supabase-js";
 import clsx from "clsx";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -25,7 +25,6 @@ interface SubscriptionWithProduct extends Subscription {
 }
 
 interface Props {
-  session: Session | null;
   user: User | null | undefined;
   products: ProductWithPrices[];
   subscription: SubscriptionWithProduct | null;
@@ -33,12 +32,7 @@ interface Props {
 
 type BillingInterval = "lifetime" | "year" | "month";
 
-export default function Pricing({
-  session,
-  user,
-  products,
-  subscription,
-}: Props) {
+export default function Pricing({ user, products, subscription }: Props) {
   const intervals = Array.from(
     new Set(
       products.flatMap(
@@ -91,9 +85,9 @@ export default function Pricing({
 
   if (!products.length)
     return (
-      <section className="bg-gray-900">
+      <section className="min-h-screen bg-gray-900">
         <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-24 lg:px-8">
-          <div className="sm:align-center sm:flex sm:flex-col"></div>
+          <div className="sm:flex sm:flex-col sm:items-center"></div>
           <p className="text-4xl font-extrabold text-white sm:text-center sm:text-6xl">
             No subscription pricing plans found. Create them in your{" "}
             <a
@@ -112,13 +106,13 @@ export default function Pricing({
 
   if (products.length === 1)
     return (
-      <section>
+      <section className="min-h-screen">
         <div className="mx-auto max-w-6xl px-4 pt-24 sm:px-6 lg:px-8">
-          <div className="sm:align-center sm:flex sm:flex-col">
-            <h1 className="text-4xl font-extrabold text-gray-700 sm:text-center sm:text-6xl">
+          <div className="sm:flex sm:flex-col sm:items-center">
+            <h1 className="text-xl font-extrabold text-gray-900 sm:text-center sm:text-4xl">
               Pricing Plans
             </h1>
-            <p className="m-auto mt-5 max-w-2xl text-xl text-gray-400 sm:text-center sm:text-2xl">
+            <p className="m-auto mt-5 max-w-2xl text-xl text-gray-700 sm:text-center sm:text-2xl">
               Start building for free, then add a site plan to go live. Account
               plans unlock additional features.
             </p>
@@ -160,7 +154,7 @@ export default function Pricing({
                         disabled={false}
                         loading={priceIdLoading === price.id}
                         onClick={() => handleCheckout(price)}
-                        className="mt-12 block w-full rounded-md py-2 text-center text-sm font-semibold text-white hover:bg-gray-900 "
+                        className="mt-12 block w-full rounded-md py-2 text-center text-sm font-medium text-white hover:bg-gray-900 "
                       >
                         {products[0].name ===
                         subscription?.prices?.products?.name
@@ -180,8 +174,8 @@ export default function Pricing({
   return (
     <section className="bg-black">
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-24 lg:px-8">
-        <div className="sm:align-center sm:flex sm:flex-col">
-          <h1 className="text-4xl font-extrabold text-white sm:text-center sm:text-6xl">
+        <div className="sm:flex sm:flex-col sm:items-center">
+          <h1 className="text-xl font-extrabold text-white sm:text-center sm:text-6xl">
             Pricing Plans
           </h1>
           <p className="m-auto mt-5 max-w-2xl text-xl text-zinc-200 sm:text-center sm:text-2xl">
@@ -241,12 +235,12 @@ export default function Pricing({
                 )}
               >
                 <div className="p-6">
-                  <h2 className="text-2xl font-semibold leading-6 text-white">
+                  <h2 className="text-2xl font-medium leading-6 text-white">
                     {product.name}
                   </h2>
                   <p className="mt-4 text-zinc-300">{product.description}</p>
                   <p className="mt-8">
-                    <span className="white text-5xl font-extrabold">
+                    <span className="text-5xl font-extrabold">
                       {priceString}
                     </span>
                     <span className="text-base font-medium text-zinc-100">
@@ -256,10 +250,10 @@ export default function Pricing({
                   <Button
                     variant="solid"
                     type="button"
-                    disabled={!session}
+                    disabled={!user}
                     loading={priceIdLoading === price.id}
                     onClick={() => handleCheckout(price)}
-                    className="mt-8 block w-full rounded-md py-2 text-center text-sm font-semibold text-white hover:bg-zinc-900"
+                    className="mt-8 block w-full rounded-md py-2 text-center text-sm font-medium text-white hover:bg-zinc-900"
                   >
                     {subscription ? "Manage" : "Subscribe"}
                   </Button>

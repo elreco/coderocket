@@ -6,7 +6,7 @@ export function Footer() {
       <Logo />
       <p className="text-xs text-gray-700">
         Copyright {new Date().getFullYear()} -{" "}
-        <span className="font-semibold">tailwindai.dev</span>
+        <span className="font-medium">tailwindai.dev</span>
       </p>
     </footer>
   );

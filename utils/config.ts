@@ -3,3 +3,7 @@ export const storageUrl =
 
 export const screenshotApiUrl =
   "https://websitescreenshot.vercel.app/api/screenshot";
+
+export const maxPromptLength = 1000;
+
+export const openAIModel = "gpt-4o";

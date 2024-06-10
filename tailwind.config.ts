@@ -42,7 +42,7 @@ export default {
         gray: colors.neutral,
       }),
       fontFamily: {
-        sans: "var(--font-inter)",
+        sans: "var(--font-rubik)",
       },
       keyframes: {
         "fade-in": {

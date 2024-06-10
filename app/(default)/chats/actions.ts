@@ -2,16 +2,13 @@
 
 import { redirect } from "next/navigation";
 
-import {
-  createServerSupabaseClient,
-  getSession,
-  getSubscription,
-} from "@/app/supabase-server";
+import { getSubscription } from "@/app/supabase-server";
+import { createClient } from "@/utils/supabase/server";
 
 import { ChatMessage, ChatProps } from "./types";
 
 export const fetchChat = async (id: string): Promise<ChatProps | null> => {
-  const supabase = createServerSupabaseClient();
+  const supabase = createClient();
 
   const { data } = await supabase
     .from("chats")
@@ -63,17 +60,17 @@ export const fetchChat = async (id: string): Promise<ChatProps | null> => {
 };
 
 export const createChat = async (prompt: string, formData: FormData) => {
-  const session = await getSession();
-  const supabase = createServerSupabaseClient();
-  const user = session?.user;
+  const supabase = createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  const user = userData.user;
 
-  if (!user) throw Error("Could not get user");
+  if (!user?.id) throw Error("Could not get user");
 
   const subscription = await getSubscription();
   const { data: existingChats } = await supabase
     .from("chats")
     .select()
-    .eq("user_id", user.id);
+    .eq("user_id", user?.id);
 
   if (
     (!subscription || subscription.status !== "active") &&
@@ -81,6 +78,10 @@ export const createChat = async (prompt: string, formData: FormData) => {
     existingChats?.length > 0
   ) {
     return redirect("pricing?paymentRequired=true");
+  }
+
+  if (prompt.length > 1000) {
+    throw Error("Prompt length is too long");
   }
 
   let imageUrl = null;
@@ -118,9 +119,9 @@ export const createChat = async (prompt: string, formData: FormData) => {
 };
 
 export const getUserChats = async () => {
-  const session = await getSession();
-  const supabase = createServerSupabaseClient();
-  const user = session?.user;
+  const supabase = createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  const user = userData.user;
 
   if (!user) throw Error("Could not get user");
 

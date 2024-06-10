@@ -1,6 +1,5 @@
 "use client";
 import { PhotoIcon, XMarkIcon } from "@heroicons/react/24/solid";
-import { Session } from "@supabase/supabase-js";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
@@ -10,12 +9,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/toaster/use-toast";
+import { maxPromptLength } from "@/utils/config";
+import { createClient } from "@/utils/supabase/client";
 
 import { createChat } from "./chats/actions";
-
-interface Props {
-  session: Session | null;
-}
 
 const previewButtons = [
   {
@@ -39,7 +36,9 @@ const previewButtons = [
   },
 ];
 
-export default function Hero({ session }: Props) {
+export default function Hero() {
+  const supabase = createClient();
+
   const router = useRouter();
   const { toast } = useToast();
   const [prompt, setPrompt] = useState("");
@@ -56,7 +55,8 @@ export default function Hero({ session }: Props) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    if (!session) {
+    const { data: userData } = await supabase.auth.getUser();
+    if (!userData.user?.id) {
       setLoading(false);
       toast({
         variant: "destructive",
@@ -71,7 +71,8 @@ export default function Hero({ session }: Props) {
     }
     try {
       await createChat(prompt, formData);
-    } catch {
+    } catch (e) {
+      console.log(e);
       toast({
         variant: "destructive",
         title: "Can't create your component",
@@ -100,85 +101,83 @@ export default function Hero({ session }: Props) {
   };
 
   return (
-    <>
-      <Container className="bg-hero flex h-screen flex-col items-center justify-center space-y-4">
-        <div className="flex w-full flex-col items-center space-y-1.5">
-          <h2
-            className="text-4xl font-semibold tracking-tighter sm:text-5xl"
-            data-testid="home-h2"
-          >
-            Create. Refine. Deliver.
-          </h2>
-          <p>Design UI with Tailwind from basic text prompts and images.</p>
-        </div>
-        <form
-          className="group relative z-10 flex w-full flex-col items-center justify-center gap-x-0 space-y-5 rounded-lg bg-gray-900 p-3 text-center shadow-lg shadow-black/40 backdrop-blur-xl transition-all duration-300 sm:gap-x-3 sm:space-y-0 xl:w-1/2"
-          onSubmit={handleSubmit}
+    <Container className="bg-hero flex min-h-screen flex-col items-center justify-center space-y-4 !pt-0">
+      <div className="flex w-full flex-col items-center space-y-1.5">
+        <h2
+          className="text-4xl font-medium tracking-tighter sm:text-5xl"
+          data-testid="home-h2"
         >
-          <div className="mb-1 flex w-full">
-            <Input
-              placeholder="Start generate a beautiful Tailwind component"
-              autoFocus
-              required
-              color="dark"
-              value={prompt}
-              minLength={2}
-              maxLength={1000}
-              onChange={(e) => setPrompt(e.target.value)}
-            />
-          </div>
-          <div className="flex w-full flex-1 items-center justify-between">
-            <div className="size-12">
-              {image && (
-                <div className="relative size-12">
-                  <Image
-                    src={URL.createObjectURL(image)}
-                    alt="Uploaded"
-                    width={12}
-                    height={12}
-                    className="size-12 rounded-md object-cover"
-                  />
-                  <button
-                    type="button"
-                    className="absolute right-0 top-0 cursor-pointer rounded-full bg-black/50 p-1"
-                    onClick={handleImageRemove}
-                  >
-                    <XMarkIcon className="size-4 text-white" />
-                  </button>
-                </div>
-              )}
-            </div>
-            <div className="flex items-center space-x-2">
-              <Button type="button" onClick={handleButtonClick}>
-                <PhotoIcon className="mr-2 size-4 " />
-                <span>Image</span>
-              </Button>
-              <input
-                ref={fileInputRef}
-                className="sr-only"
-                type="file"
-                onChange={handleImageChange}
-              />
-
-              <Button type="submit" loading={loading}>
-                Generate
-              </Button>
-            </div>
-          </div>
-        </form>
-        <div className="flex flex-wrap items-center justify-center gap-2">
-          {previewButtons.map((button, index) => (
-            <Badge
-              key={index}
-              variant="secondary"
-              onClick={() => handleBadgeClick(button.input)}
-              className="cursor-pointer whitespace-nowrap hover:bg-gray-700"
-            >
-              {button.text}
-            </Badge>
-          ))}
+          Create. Refine. Deliver.
+        </h2>
+        <p>Design UI with Tailwind from basic text prompts and images.</p>
+      </div>
+      <form
+        className="group relative z-10 flex w-full flex-col items-center justify-center gap-x-0 space-y-5 rounded-lg bg-gray-900 p-3 text-center shadow-lg shadow-black/40 backdrop-blur-xl transition-all duration-300 sm:gap-x-3 sm:space-y-0 xl:w-1/2"
+        onSubmit={handleSubmit}
+      >
+        <div className="mb-1 flex w-full">
+          <Input
+            placeholder="Start generate a beautiful Tailwind component"
+            autoFocus
+            required
+            color="dark"
+            value={prompt}
+            minLength={2}
+            maxLength={maxPromptLength}
+            onChange={(e) => setPrompt(e.target.value)}
+          />
         </div>
-      </Container>
-    </>
+        <div className="flex w-full flex-1 items-center justify-between">
+          <div className="size-12">
+            {image && (
+              <div className="relative size-12">
+                <Image
+                  src={URL.createObjectURL(image)}
+                  alt="Uploaded"
+                  width={12}
+                  height={12}
+                  className="size-12 rounded-md object-cover"
+                />
+                <button
+                  type="button"
+                  className="absolute right-0 top-0 cursor-pointer rounded-full bg-black/50 p-1"
+                  onClick={handleImageRemove}
+                >
+                  <XMarkIcon className="size-4 text-white" />
+                </button>
+              </div>
+            )}
+          </div>
+          <div className="flex items-center space-x-2">
+            <Button type="button" onClick={handleButtonClick}>
+              <PhotoIcon className="mr-2 size-4 " />
+              <span>Image</span>
+            </Button>
+            <input
+              ref={fileInputRef}
+              className="sr-only"
+              type="file"
+              onChange={handleImageChange}
+            />
+
+            <Button type="submit" loading={loading}>
+              Generate
+            </Button>
+          </div>
+        </div>
+      </form>
+      <div className="flex flex-wrap items-center justify-center gap-2">
+        {previewButtons.map((button, index) => (
+          <Badge
+            key={index}
+            variant="secondary"
+            onClick={() => handleBadgeClick(button.input)}
+            className="cursor-pointer whitespace-nowrap hover:bg-gray-700"
+          >
+            {button.text}
+          </Badge>
+        ))}
+      </div>
+    </Container>
   );
 }

@@ -20,10 +20,10 @@
     "@radix-ui/react-toast": "^1.1.5",
     "@radix-ui/react-tooltip": "^1.0.7",
     "@stripe/stripe-js": "^1.53.0",
-    "@supabase/auth-helpers-nextjs": "^0.8.5",
-    "@supabase/auth-ui-react": "^0.4.6",
+    "@supabase/auth-ui-react": "^0.4.7",
     "@supabase/auth-ui-shared": "^0.1.8",
-    "@supabase/supabase-js": "^2.38.4",
+    "@supabase/ssr": "^0.3.0",
+    "@supabase/supabase-js": "^2.43.4",
     "@tailwindcss/forms": "^0.5.6",
     "@vercel/analytics": "^1.1.1",
     "ai": "^2.2.20",
@@ -58,7 +58,7 @@
     "eslint-plugin-tailwindcss": "^3.13.0",
     "postcss": "^8.4.23",
     "prettier": "^3.1.0",
-    "supabase": "^1.110.1",
+    "supabase": "^1.172.2",
     "typescript": "^5.0.4"
   }
 }

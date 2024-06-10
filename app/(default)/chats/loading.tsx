@@ -3,7 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Loading() {
   return (
-    <Container className="pt-24">
+    <Container>
       <Skeleton className="h-[20px] w-[100px] rounded-full" />
     </Container>
   );

@@ -15,7 +15,7 @@ export function NavLinks() {
       href={href}
       className={clsx(
         pathname === href && "bg-gray-900 !text-gray-50 hover:!bg-gray-700",
-        "relative -mx-3 -my-2 rounded-lg px-3 py-2 text-sm text-gray-900 transition-all duration-300 hover:text-gray-700",
+        "relative -mx-3 -my-2 rounded-full px-3 py-0.5 text-sm text-gray-900 transition-all duration-300 hover:text-gray-700",
       )}
     >
       <span className="relative z-10">{label}</span>

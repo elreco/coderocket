@@ -1,20 +1,10 @@
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
-import { cache } from "react";
-
-import { Database } from "@/types_db";
-
-export const createServerSupabaseClient = cache(() =>
-  createServerComponentClient<Database>({ cookies }),
-);
+import { createClient } from "@/utils/supabase/server";
 
 export async function getSession() {
-  const supabase = createServerSupabaseClient();
+  const supabase = createClient();
   try {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    return session;
+    const { data } = await supabase.auth.getUser();
+    return data;
   } catch (error) {
     console.error("Error:", error);
     return null;
@@ -22,16 +12,14 @@ export async function getSession() {
 }
 
 export async function getUserDetails() {
-  const supabase = createServerSupabaseClient();
+  const supabase = createClient();
   try {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    if (!session?.user.id) return null;
+    const { data } = await supabase.auth.getUser();
+    if (!data.user?.id) return null;
     const { data: userDetails } = await supabase
       .from("users")
       .select("*")
-      .eq("id", session?.user.id)
+      .eq("id", data.user.id)
       .single();
     return userDetails;
   } catch (error) {
@@ -41,17 +29,15 @@ export async function getUserDetails() {
 }
 
 export async function getSubscription() {
-  const supabase = createServerSupabaseClient();
+  const supabase = createClient();
   try {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    if (!session?.user.id) return null;
+    const { data } = await supabase.auth.getUser();
+    if (!data.user?.id) return null;
     const { data: subscription } = await supabase
       .from("subscriptions")
       .select("*, prices(*, products(*))")
       .in("status", ["trialing", "active"])
-      .eq("user_id", session?.user.id)
+      .eq("user_id", data.user.id)
       .maybeSingle()
       .throwOnError();
     return subscription;
@@ -62,7 +48,7 @@ export async function getSubscription() {
 }
 
 export const getActiveProductsWithPrices = async () => {
-  const supabase = createServerSupabaseClient();
+  const supabase = createClient();
   const { data, error } = await supabase
     .from("products")
     .select("*, prices(*)")

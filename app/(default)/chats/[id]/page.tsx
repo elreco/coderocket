@@ -9,7 +9,6 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useCopyToClipboard } from "usehooks-ts";
 
-import { useSupabase } from "@/app/supabase-provider";
 import { Container } from "@/components/container";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -22,13 +21,15 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { maxPromptLength } from "@/utils/config";
 import { capitalizeFirstLetter } from "@/utils/helpers";
+import { createClient } from "@/utils/supabase/client";
 
 import { fetchChat } from "../actions";
 import { ChatMessage } from "../types";
 
 export default function Chats({ params }: { params: { id: string } }) {
-  const { supabase } = useSupabase();
+  const supabase = createClient();
   const [, copy] = useCopyToClipboard();
   const { toast } = useToast();
   const router = useRouter();
@@ -51,8 +52,17 @@ export default function Chats({ params }: { params: { id: string } }) {
   } = useCompletion({
     api: "/api/completion",
     body: { id: params.id },
-    onError: async () => {
-      router.push("/pricing?paymentRequired=true");
+    onError: async (error) => {
+      if (error.message === "payment-required") {
+        router.push("/pricing?paymentRequired=true");
+      }
+      if (error.message) {
+        toast({
+          variant: "destructive",
+          title: "Something went wrong",
+          description: error.message,
+        });
+      }
       return;
     },
     onFinish: async () => {
@@ -63,15 +73,16 @@ export default function Chats({ params }: { params: { id: string } }) {
   });
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      const userIdFromSession = data.session?.user.id;
+    supabase.auth.getUser().then(({ data }) => {
+      const userIdFromSession = data.user?.id;
       setAuthorized(userIdFromSession === userId);
     });
-  }, [userId]);
+  }, [userId, supabase.auth]);
 
-  supabase.auth.onAuthStateChange((event, session) => {
+  supabase.auth.onAuthStateChange(async (event) => {
     if (event === "SIGNED_IN" || event === "SIGNED_OUT") {
-      const userIdFromSession = session?.user.id;
+      const { data } = await supabase.auth.getUser();
+      const userIdFromSession = data.user?.id;
       setAuthorized(userIdFromSession === userId);
     }
   });
@@ -85,7 +96,11 @@ export default function Chats({ params }: { params: { id: string } }) {
         setUserFullName(fetchedChat?.user_id?.full_name || "");
         setUserAvatar(fetchedChat?.user_id?.avatar_url || "");
       } catch (e) {
-        console.log(e);
+        toast({
+          variant: "destructive",
+          title: "Something went wrong",
+          description: "Can't retrieve chat data, try to refresh.",
+        });
       }
     };
     getData();
@@ -131,6 +146,15 @@ export default function Chats({ params }: { params: { id: string } }) {
       title: "Successfully copied",
       description:
         "Your component has been successfully saved to your clipboard",
+    });
+  };
+
+  const copyPrompt = (prompt: string) => {
+    copy(prompt);
+    toast({
+      variant: "default",
+      title: "Successfully copied",
+      description: "The prompt has been successfully saved to your clipboard",
     });
   };
 
@@ -187,11 +211,11 @@ body {
   }, [completion]);
 
   return (
-    <Container className="pt-24">
+    <Container>
       <div className="flex w-full flex-col items-stretch justify-center space-x-0 lg:flex-row lg:space-x-3">
         <div className="mb-3 w-full space-y-3 md:mb-0 lg:w-11/12">
           <div className="flex items-center justify-between">
-            <div className="font-semibold text-gray-700">
+            <div className="font-medium text-gray-700">
               <div className="flex items-center space-x-2">
                 {userAvatar && (
                   <Avatar>
@@ -208,7 +232,19 @@ body {
                       Loading
                     </span>
                   ) : (
-                    capitalizeFirstLetter(title)
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <span onClick={() => copyPrompt(title)}>
+                            {capitalizeFirstLetter(title)}
+                          </span>
+                        </TooltipTrigger>
+
+                        <TooltipContent>
+                          <p>Copy Prompt</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   )}
                 </h1>
               </div>
@@ -243,7 +279,7 @@ body {
                   value={input}
                   onChange={handleInputChange}
                   minLength={2}
-                  maxLength={1000}
+                  maxLength={maxPromptLength}
                   placeholder="Add a button, modify a color..."
                 />
                 <Button loading={isLoading} type="submit">

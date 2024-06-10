@@ -2,13 +2,13 @@
 
 import { Popover } from "@headlessui/react";
 import { ChevronUpIcon } from "@heroicons/react/20/solid";
-import { Session } from "@supabase/supabase-js";
+import { User } from "@supabase/supabase-js";
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-import { useSupabase } from "@/app/supabase-provider";
 import { links } from "@/utils/links";
+import { createClient } from "@/utils/supabase/client";
 
 import { Button } from "../ui/button";
 
@@ -41,12 +41,12 @@ function MobileNavLink(
 }
 
 interface Props {
-  session: Session | null;
+  user: User | null;
 }
 
-export function MobileNav({ session }: Props) {
+export function MobileNav({ user }: Props) {
   const router = useRouter();
-  const { supabase } = useSupabase();
+  const supabase = createClient();
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     router.refresh();
@@ -122,7 +122,7 @@ export function MobileNav({ session }: Props) {
                       />
                     </a>
                     <div className="mt-8 flex flex-col gap-4">
-                      {!session ? (
+                      {!user ? (
                         <Popover.Button
                           as={Button}
                           href="/signin"
@@ -148,7 +148,7 @@ export function MobileNav({ session }: Props) {
         )}
       </Popover>
 
-      {!session ? (
+      {!user ? (
         <Button href="/signin" variant="outline" className="hidden lg:block">
           Log in
         </Button>

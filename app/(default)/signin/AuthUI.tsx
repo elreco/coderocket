@@ -3,10 +3,10 @@
 import { Auth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
 
-import { useSupabase } from "@/app/supabase-provider";
+import { createClient } from "@/utils/supabase/client";
 
 export default function AuthUI() {
-  const { supabase } = useSupabase();
+  const supabase = createClient();
   return (
     <div className="flex flex-col space-y-4">
       <Auth
@@ -17,16 +17,16 @@ export default function AuthUI() {
         appearance={{
           theme: ThemeSupa,
           style: {
-            container: { fontFamily: "var(--font-inter)" },
-            input: { fontFamily: "var(--font-inter)", background: "white" },
-            label: { fontFamily: "var(--font-inter)" },
-            loader: { fontFamily: "var(--font-inter)" },
-            message: { fontFamily: "var(--font-inter)" },
-            anchor: { fontFamily: "var(--font-inter)" },
+            container: { fontFamily: "var(--font-rubik)" },
+            input: { fontFamily: "var(--font-rubik)", background: "white" },
+            label: { fontFamily: "var(--font-rubik)" },
+            loader: { fontFamily: "var(--font-rubik)" },
+            message: { fontFamily: "var(--font-rubik)" },
+            anchor: { fontFamily: "var(--font-rubik)" },
             button: {
               color: "white",
               background: "#262626",
-              fontFamily: "var(--font-inter)",
+              fontFamily: "var(--font-rubik)",
             },
           },
           variables: {
