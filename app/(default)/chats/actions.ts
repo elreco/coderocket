@@ -7,9 +7,8 @@ import { createClient } from "@/utils/supabase/server";
 
 import { Chat, ChatMessage, ChatProps } from "./types";
 
-const supabase = createClient();
-
 export const fetchChat = async (id: string): Promise<ChatProps | null> => {
+  const supabase = createClient();
   const { data } = await supabase
     .from("chats")
     .select(
@@ -60,6 +59,7 @@ export const fetchChat = async (id: string): Promise<ChatProps | null> => {
 };
 
 export const createChat = async (prompt: string, formData: FormData) => {
+  const supabase = createClient();
   const { data: userData } = await supabase.auth.getUser();
   const user = userData.user;
 
@@ -135,6 +135,7 @@ const page = 1;
 const pageSize = 12;
 
 export const getFeaturedChats = async (): Promise<Chat[]> => {
+  const supabase = createClient();
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
 
