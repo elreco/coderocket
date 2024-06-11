@@ -1,6 +1,6 @@
 "use server";
-import { revalidatePath } from "next/cache";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 import Logo from "@/components/icons/logo";
 import { createClient } from "@/utils/supabase/server";
@@ -17,7 +17,7 @@ export async function Navbar() {
     "use server";
     const supabase = createClient();
     await supabase.auth.signOut();
-    revalidatePath("/chats/[id]");
+    redirect("/");
   }
 
   return (
