@@ -269,10 +269,10 @@ body {
 
           {authorized && (
             <form
-              className="flex justify-center xl:justify-start"
+              className="flex w-full xl:justify-start"
               onSubmit={handleSubmit}
             >
-              <div className="mb-3 flex w-full  space-x-4 rounded-md bg-gray-900 p-2 sm:w-1/2">
+              <div className="mb-3 flex w-full space-x-4 rounded-md bg-gray-900 p-2 xl:w-1/2">
                 <Input
                   autoFocus
                   disabled={isLoading}
