@@ -1,4 +1,6 @@
+"use server";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 import Logo from "@/components/icons/logo";
 import { createClient } from "@/utils/supabase/server";
@@ -11,6 +13,14 @@ import { NavLinks } from "./nav-links";
 export async function Navbar() {
   const supabase = createClient();
   const { data: userData } = await supabase.auth.getUser();
+
+  async function logout() {
+    "use server";
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    redirect("/");
+  }
+
   return (
     <header className="fixed z-50 w-full bg-gray-50/75 bg-clip-padding backdrop-blur">
       <Container className="relative z-50 flex justify-between !py-4">
@@ -23,7 +33,7 @@ export async function Navbar() {
           </div>
         </div>
         <div className="flex items-center gap-6">
-          <MobileNav user={userData.user} />
+          <MobileNav user={userData.user} handleSignOut={logout} />
         </div>
       </Container>
     </header>

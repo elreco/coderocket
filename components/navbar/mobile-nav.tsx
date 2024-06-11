@@ -6,6 +6,7 @@ import { User } from "@supabase/supabase-js";
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 import { links } from "@/utils/links";
 import { createClient } from "@/utils/supabase/client";
@@ -42,15 +43,10 @@ function MobileNavLink(
 
 interface Props {
   user: User | null;
+  handleSignOut: () => Promise<void>;
 }
 
-export function MobileNav({ user }: Props) {
-  const router = useRouter();
-  const supabase = createClient();
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    router.refresh();
-  };
+export function MobileNav({ user, handleSignOut }: Props) {
   return (
     <div className="flex items-center gap-6">
       <a
@@ -126,7 +122,7 @@ export function MobileNav({ user }: Props) {
                         <Popover.Button
                           as={Button}
                           href="/signin"
-                          variant="outline"
+                          variant="solid"
                         >
                           Log in
                         </Popover.Button>
@@ -134,7 +130,7 @@ export function MobileNav({ user }: Props) {
                         <Popover.Button
                           as={Button}
                           onClick={handleSignOut}
-                          variant="outline"
+                          variant="solid"
                         >
                           Sign Out
                         </Popover.Button>
@@ -149,13 +145,16 @@ export function MobileNav({ user }: Props) {
       </Popover>
 
       {!user ? (
-        <Button href="/signin" variant="outline" className="hidden lg:block">
+        <Button href="/signin" variant="solid" className="hidden lg:block">
           Log in
         </Button>
       ) : (
         <Button
-          onClick={handleSignOut}
-          variant="outline"
+          onClick={async () => {
+            await handleSignOut();
+          }}
+          variant="solid"
+          color="white"
           className="hidden lg:block"
         >
           Sign Out
