@@ -6,7 +6,7 @@ import { ClipboardIcon } from "@heroicons/react/24/outline";
 import { useCompletion } from "ai/react";
 import clsx from "clsx";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useCopyToClipboard } from "usehooks-ts";
 
 import { Container } from "@/components/container";
@@ -40,6 +40,8 @@ export default function Chats({ params }: { params: { id: string } }) {
   const [userId, setUserId] = useState("");
   const [userFullName, setUserFullName] = useState("");
   const [userAvatar, setUserAvatar] = useState("");
+  const scrollRef = useRef<HTMLDivElement>(null);
+
   const {
     completion,
     isLoading,
@@ -210,6 +212,12 @@ body {
     );
   }, [completion]);
 
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages]);
+
   return (
     <Container className="pb-12">
       <div className="flex flex-col justify-center space-x-0 xl:size-full xl:max-h-screen xl:flex-row xl:space-x-3">
@@ -290,6 +298,7 @@ body {
           )}
         </div>
         <div
+          ref={scrollRef}
           className="mt-5 space-y-3 overflow-auto pb-2 xl:mt-0 xl:w-1/12"
           style={{ scrollbarWidth: "none" }}
         >
@@ -319,7 +328,7 @@ body {
                       "absolute inset-0 z-10 hidden cursor-pointer select-none items-center justify-center rounded-md transition-all duration-300 xl:flex",
                       selectedVersion === m.id
                         ? "bg-transparent"
-                        : "bg-black/25 hover:bg-transparent",
+                        : "bg-black/40 hover:bg-transparent",
                     )}
                     onClick={() => handleVersionSelect(m.id)}
                   >
