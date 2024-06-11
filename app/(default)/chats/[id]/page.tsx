@@ -212,7 +212,7 @@ body {
 
   return (
     <Container className="pb-12">
-      <div className="flex size-full flex-col justify-center space-x-0 xl:max-h-screen xl:flex-row xl:space-x-3">
+      <div className="flex flex-col justify-center space-x-0 xl:size-full xl:max-h-screen xl:flex-row xl:space-x-3">
         <div className="mb-3 space-y-3 md:mb-0 xl:w-11/12">
           <div className="flex items-center justify-between">
             <div className="font-medium text-gray-700">
