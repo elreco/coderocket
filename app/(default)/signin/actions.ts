@@ -70,7 +70,6 @@ export async function signInWithGithub() {
   if (error) {
     redirect("/error");
   }
-  console.log(data);
   if (data.url) {
     redirect(data.url);
   }

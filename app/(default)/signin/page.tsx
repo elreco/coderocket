@@ -17,7 +17,6 @@ export default async function SignIn({
   if (userData.user?.id) {
     return redirect("/account");
   }
-  console.log(searchParams);
   return (
     <div className="flex h-screen justify-center">
       <div className="m-auto flex w-80 max-w-lg flex-col justify-between p-3 ">

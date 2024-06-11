@@ -72,15 +72,14 @@ export default function Hero() {
     try {
       await createChat(prompt, formData);
     } catch (e) {
-      console.log(e);
       toast({
         variant: "destructive",
         title: "Can't create your component",
         description: "Please upload a different image or try another prompt",
       });
-    }
 
-    setLoading(false);
+      setLoading(false);
+    }
   };
 
   const handleBadgeClick = (input: string) => {

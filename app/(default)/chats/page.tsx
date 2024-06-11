@@ -9,7 +9,6 @@ import { getFeaturedChats } from "./actions";
 
 export default async function Featured() {
   const chats = await getFeaturedChats();
-  console.log(chats);
   return (
     <Container>
       <h1 className="mb-1 text-lg font-medium text-gray-700 sm:text-left sm:text-2xl">
