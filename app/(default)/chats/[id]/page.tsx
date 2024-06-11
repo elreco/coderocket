@@ -220,8 +220,8 @@ body {
 
   return (
     <Container className="pb-12">
-      <div className="flex flex-col justify-center space-x-0 xl:size-full xl:max-h-screen xl:flex-row xl:space-x-3">
-        <div className="mb-3 space-y-3 md:mb-0 xl:w-11/12">
+      <div className="flex flex-col justify-center space-x-0 overflow-auto xl:size-full xl:max-h-full xl:flex-row xl:space-x-3">
+        <div className="h-full space-y-3 xl:w-11/12">
           <div className="flex items-center justify-between">
             <div className="font-medium text-gray-700">
               <div className="flex items-center space-x-2">
@@ -299,7 +299,7 @@ body {
         </div>
         <div
           ref={scrollRef}
-          className="mt-5 space-y-3 overflow-auto pb-2 xl:mt-0 xl:w-1/12"
+          className="mt-5 h-full space-y-3 overflow-auto pb-2 xl:mt-0 xl:w-1/12"
           style={{ scrollbarWidth: "none" }}
         >
           {assistantMessages.map((m) => (
