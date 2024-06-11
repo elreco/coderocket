@@ -5,11 +5,11 @@ import { redirect } from "next/navigation";
 import { getSubscription } from "@/app/supabase-server";
 import { createClient } from "@/utils/supabase/server";
 
-import { ChatMessage, ChatProps } from "./types";
+import { Chat, ChatMessage, ChatProps } from "./types";
+
+const supabase = createClient();
 
 export const fetchChat = async (id: string): Promise<ChatProps | null> => {
-  const supabase = createClient();
-
   const { data } = await supabase
     .from("chats")
     .select(
@@ -60,7 +60,6 @@ export const fetchChat = async (id: string): Promise<ChatProps | null> => {
 };
 
 export const createChat = async (prompt: string, formData: FormData) => {
-  const supabase = createClient();
   const { data: userData } = await supabase.auth.getUser();
   const user = userData.user;
 
@@ -130,4 +129,21 @@ export const getUserChats = async () => {
     return null;
   }
   return data;
+};
+
+const page = 1;
+const pageSize = 12;
+
+export const getFeaturedChats = async (): Promise<Chat[]> => {
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+
+  const { data } = await supabase
+    .rpc("get_all_chats")
+    .not("image_url", "is", null)
+    .range(from, to);
+  if (data?.length) {
+    return data;
+  }
+  return [];
 };

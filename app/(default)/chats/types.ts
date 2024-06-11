@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { FunctionCall } from "ai";
 
 export interface ChatMessage {
@@ -17,6 +18,14 @@ export interface ChatProps {
   id: string;
   messages: ChatMessage[];
   image_url?: string | null;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   user_id: any;
+}
+
+export interface Chat {
+  chat_id: string;
+  image_url: string;
+  user_id: string;
+  user_full_name: string;
+  first_user_message: any;
+  last_assistant_message: any;
 }

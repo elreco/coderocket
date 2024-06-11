@@ -71,7 +71,7 @@ export default function RootLayout({ children }: PropsWithChildren) {
       <head>
         <SandPackCSS />
       </head>
-      <body>
+      <body className="size-full">
         <Navbar />
         <main className="size-full">{children}</main>
         <Footer />

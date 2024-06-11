@@ -1,61 +1,30 @@
-"use client";
-
 import Image from "next/image";
 import Link from "next/link";
-import { ChatCompletionMessageParam } from "openai/resources";
-import { useEffect, useState } from "react";
 
 import { Container } from "@/components/container";
 import { Badge } from "@/components/ui/badge";
 import { capitalizeFirstLetter } from "@/utils/helpers";
-import { createClient } from "@/utils/supabase/client";
 
-interface Chat {
-  chat_id: string;
-  image_url: string;
-  user_id: string;
-  user_full_name: string;
-  first_user_message: ChatCompletionMessageParam;
-  last_assistant_message: ChatCompletionMessageParam;
-}
+import { getFeaturedChats } from "./actions";
 
-const page = 1;
-const pageSize = 12;
-
-export default function Featured() {
-  const [chats, setChats] = useState<Chat[]>([]);
-  const supabase = createClient();
-
-  useEffect(() => {
-    const getData = async () => {
-      const from = (page - 1) * pageSize;
-      const to = from + pageSize - 1;
-
-      const { data } = await supabase
-        .rpc("get_all_chats")
-        .not("image_url", "is", null)
-        .range(from, to);
-      if (data?.length) {
-        setChats(data);
-      }
-    };
-    getData();
-  }, []);
+export default async function Featured() {
+  const chats = await getFeaturedChats();
+  console.log(chats);
   return (
     <Container>
       <h1 className="mb-1 text-lg font-medium text-gray-700 sm:text-left sm:text-2xl">
         Featured Components
       </h1>
-      <h2 className="mb-10 text-lg text-gray-700 sm:text-left sm:text-xl">
+      <h2 className="mb-8 text-lg text-gray-700 sm:text-left sm:text-xl">
         Handpicked components for your projects
       </h2>
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-3 pb-20 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
         {chats?.map((c) => (
           <div key={c.chat_id} className="relative aspect-video w-full">
             <Image
               src={c.image_url}
               fill
-              className="w-full rounded-md border object-contain shadow-md"
+              className="w-full rounded-md border object-cover shadow-md"
               alt=""
             />
             <Link

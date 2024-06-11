@@ -101,7 +101,7 @@ export default function Hero() {
   };
 
   return (
-    <Container className="bg-hero flex min-h-[calc(100vh-49px)] flex-col items-center justify-center space-y-4 !pt-0">
+    <Container className="bg-hero flex min-h-full flex-col items-center justify-center space-y-4 !pt-0">
       <div className="flex w-full flex-col items-center space-y-1.5">
         <h2
           className="text-4xl font-medium tracking-tighter sm:text-5xl"
