@@ -75,19 +75,13 @@ export default function Chats({ params }: { params: { id: string } }) {
   });
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      const userIdFromSession = data.user?.id;
-      setAuthorized(userIdFromSession === userId);
-    });
-  }, [userId, supabase.auth]);
-
-  supabase.auth.onAuthStateChange(async (event) => {
-    if (event === "SIGNED_IN" || event === "SIGNED_OUT") {
+    const getUser = async () => {
       const { data } = await supabase.auth.getUser();
       const userIdFromSession = data.user?.id;
       setAuthorized(userIdFromSession === userId);
-    }
-  });
+    };
+    getUser();
+  }, [userId, supabase.auth]);
 
   useEffect(() => {
     const getData = async () => {
