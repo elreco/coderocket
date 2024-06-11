@@ -5,11 +5,8 @@ import { ChevronUpIcon } from "@heroicons/react/20/solid";
 import { User } from "@supabase/supabase-js";
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
 
 import { links } from "@/utils/links";
-import { createClient } from "@/utils/supabase/client";
 
 import { Button } from "../ui/button";
 
@@ -153,8 +150,7 @@ export function MobileNav({ user, handleSignOut }: Props) {
           onClick={async () => {
             await handleSignOut();
           }}
-          variant="solid"
-          color="white"
+          variant="outline"
           className="hidden lg:block"
         >
           Sign Out
