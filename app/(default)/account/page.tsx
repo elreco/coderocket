@@ -68,10 +68,10 @@ export default async function Account() {
     <section className="mb-32">
       <div className="mx-auto max-w-6xl px-4 pt-24 sm:px-6 lg:px-8">
         <div className="sm:flex sm:flex-col sm:items-center">
-          <h1 className="text-4xl font-bold text-gray-700 sm:text-center sm:text-6xl">
-            Account
+          <h1 className="text-xl font-bold text-gray-900 sm:text-center sm:text-4xl">
+            My Account
           </h1>
-          <p className="m-auto mt-5 max-w-2xl text-xl text-gray-700 sm:text-center sm:text-2xl">
+          <p className="m-auto mt-5 max-w-2xl text-lg text-gray-700 sm:text-center sm:text-xl">
             Manage your account and billing.
           </p>
         </div>
