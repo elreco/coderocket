@@ -56,7 +56,7 @@ export default function Chats({ params }: { params: { id: string } }) {
     body: { id: params.id },
     onError: async (error) => {
       if (error.message === "payment-required") {
-        router.push("/pricing?paymentRequired=true");
+        return router.push("/pricing?paymentRequired=true");
       }
       if (error.message) {
         toast({
