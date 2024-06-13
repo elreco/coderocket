@@ -184,7 +184,7 @@ export default function Chats({ params }: { params: { id: string } }) {
     <Container>
       <div className="flex size-full flex-col justify-center space-x-0 xl:max-h-full xl:flex-row xl:space-x-3">
         <div className="flex h-full flex-col space-y-2 xl:w-11/12">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col items-center justify-start space-y-2 lg:flex-row lg:justify-between lg:space-y-0">
             <div className="font-medium text-gray-700">
               <div className="flex items-center space-x-2">
                 {userAvatar && (
@@ -281,7 +281,7 @@ export default function Chats({ params }: { params: { id: string } }) {
               </TooltipProvider>
             </div>
           </div>
-          <div className="flex flex-1 flex-col space-y-2 rounded-lg bg-white pb-2 transition-all duration-200">
+          <div className="flex flex-1 flex-col space-y-2 rounded-lg pb-2 transition-all duration-200">
             {completion ? (
               <SandpackProvider
                 style={{ height: "100%" }}
