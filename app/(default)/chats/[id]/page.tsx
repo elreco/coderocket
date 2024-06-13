@@ -237,7 +237,7 @@ export default function Chats({ params }: { params: { id: string } }) {
               </TooltipProvider>
             </div>
           </div>
-          <div className="flex flex-1 flex-col rounded-lg bg-white transition-all duration-200">
+          <div className="flex flex-1 flex-col space-y-2 rounded-lg bg-white pb-3 transition-all duration-200">
             {completion ? (
               <SandpackProvider
                 style={{ height: "100%" }}
@@ -307,7 +307,7 @@ body {
             )}
             {authorized && (
               <form
-                className="flex w-full flex-1 items-center py-3 xl:justify-start"
+                className="flex w-full flex-1 items-center xl:justify-start"
                 onSubmit={handleSubmit}
               >
                 <div className="mr-2 flex w-full space-x-4 rounded-md bg-gray-900 p-2 xl:w-1/2">
