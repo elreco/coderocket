@@ -7,11 +7,16 @@ import {
   SandpackProvider,
 } from "@codesandbox/sandpack-react";
 import { ArrowPathIcon } from "@heroicons/react/20/solid";
-import { ClipboardIcon } from "@heroicons/react/24/outline";
+import {
+  ClipboardIcon,
+  CodeBracketIcon,
+  TvIcon,
+} from "@heroicons/react/24/outline";
 import { useCompletion } from "ai/react";
+import clsx from "clsx";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { useCopyToClipboard } from "usehooks-ts";
+import { useCopyToClipboard, useMediaQuery } from "usehooks-ts";
 
 import { Container } from "@/components/container";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
@@ -45,9 +50,11 @@ export default function Chats({ params }: { params: { id: string } }) {
   const [selectedVersion, setSelectedVersion] = useState<string | null>(null);
   const [title, setTitle] = useState<string>("");
   const [authorized, setAuthorized] = useState(false);
+  const [isCanvas, setCanvas] = useState(false);
   const [userId, setUserId] = useState("");
   const [userFullName, setUserFullName] = useState("");
   const [userAvatar, setUserAvatar] = useState("");
+  const isXlScreen = useMediaQuery("(min-width: 1280px)");
 
   const {
     completion,
@@ -200,7 +207,18 @@ export default function Chats({ params }: { params: { id: string } }) {
                 </h1>
               </div>
             </div>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-1">
+              <Button onClick={() => setCanvas(!isCanvas)}>
+                {isCanvas ? (
+                  <>
+                    <CodeBracketIcon className="mr-1 w-5" /> Code
+                  </>
+                ) : (
+                  <>
+                    <TvIcon className="mr-1 w-5" /> Canvas
+                  </>
+                )}
+              </Button>
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger>
@@ -267,7 +285,13 @@ body {
                 }}
               >
                 <div className="flex size-full flex-col gap-3 xl:flex-row">
-                  <div className="size-full xl:w-1/2">
+                  <div
+                    className={clsx(
+                      "size-full transition-all",
+                      isCanvas ? "xl:block xl:w-1/2" : "xl:block  xl:w-full",
+                      isCanvas ? "hidden" : "block",
+                    )}
+                  >
                     <SandpackLayout
                       style={{
                         flex: 1,
@@ -277,10 +301,20 @@ body {
                         width: "100%",
                       }}
                     >
-                      <SandpackCodeEditor />
+                      <SandpackCodeEditor
+                        showRunButton={false}
+                        readOnly
+                        showReadOnly={false}
+                      />
                     </SandpackLayout>
                   </div>
-                  <div className="hidden size-full xl:block xl:w-1/2">
+                  <div
+                    className={clsx(
+                      "h-full transition-all xl:w-1/2",
+                      isCanvas ? "xl:block" : "xl:hidden",
+                      isCanvas ? "block" : "hidden",
+                    )}
+                  >
                     <SandpackLayout
                       style={{
                         flex: 1,
