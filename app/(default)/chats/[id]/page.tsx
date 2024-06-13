@@ -10,11 +10,12 @@ import { ArrowPathIcon } from "@heroicons/react/20/solid";
 import {
   ClipboardIcon,
   CodeBracketIcon,
+  ShareIcon,
   TvIcon,
 } from "@heroicons/react/24/outline";
 import { useCompletion } from "ai/react";
 import clsx from "clsx";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useCopyToClipboard } from "usehooks-ts";
 
@@ -46,6 +47,7 @@ export default function Chats({ params }: { params: { id: string } }) {
   const [, copy] = useCopyToClipboard();
   const { toast } = useToast();
   const router = useRouter();
+  const pathname = usePathname();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [selectedVersion, setSelectedVersion] = useState<string | null>(null);
   const [title, setTitle] = useState<string>("");
@@ -167,6 +169,17 @@ export default function Chats({ params }: { params: { id: string } }) {
     });
   };
 
+  const share = () => {
+    const protocol = window.location.protocol;
+    const host = window.location.host;
+    copy(`${protocol}//${host}${pathname}`);
+    toast({
+      variant: "default",
+      title: "Successfully copied",
+      description: "The url has been successfully saved to your clipboard",
+    });
+  };
+
   return (
     <Container>
       <div className="flex size-full flex-col justify-center space-x-0 xl:max-h-full xl:flex-row xl:space-x-3">
@@ -206,8 +219,8 @@ export default function Chats({ params }: { params: { id: string } }) {
                 </h1>
               </div>
             </div>
-            <div className="flex items-center space-x-1">
-              <Button onClick={() => setCanvas(!isCanvas)}>
+            <div className="flex items-center">
+              <Button onClick={() => setCanvas(!isCanvas)} className="mr-1">
                 {isCanvas ? (
                   <>
                     <CodeBracketIcon className="mr-1 w-5" /> Code
@@ -242,6 +255,7 @@ export default function Chats({ params }: { params: { id: string } }) {
                       disabled={isLoading}
                       variant="outline"
                       onClick={copyRawHTML}
+                      className="mr-1"
                     >
                       <ClipboardIcon className="w-5" />
                     </Button>
@@ -249,6 +263,19 @@ export default function Chats({ params }: { params: { id: string } }) {
 
                   <TooltipContent>
                     <p>Copy raw HTML</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <Button variant="outline" onClick={share}>
+                      <ShareIcon className="w-5" />
+                    </Button>
+                  </TooltipTrigger>
+
+                  <TooltipContent>
+                    <p>Share Component</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>

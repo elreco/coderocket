@@ -35,7 +35,7 @@ export default function ChatSidebar({
     <div className="block xl:hidden">
       <Drawer>
         <DrawerTrigger disabled={isLoading}>
-          <Button disabled={isLoading} variant="outline">
+          <Button disabled={isLoading} variant="outline" className="mr-1">
             <Square3Stack3DIcon className="w-5" />
           </Button>
         </DrawerTrigger>
