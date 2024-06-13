@@ -16,7 +16,7 @@ import { useCompletion } from "ai/react";
 import clsx from "clsx";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { useCopyToClipboard, useMediaQuery } from "usehooks-ts";
+import { useCopyToClipboard } from "usehooks-ts";
 
 import { Container } from "@/components/container";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
@@ -54,7 +54,6 @@ export default function Chats({ params }: { params: { id: string } }) {
   const [userId, setUserId] = useState("");
   const [userFullName, setUserFullName] = useState("");
   const [userAvatar, setUserAvatar] = useState("");
-  const isXlScreen = useMediaQuery("(min-width: 1280px)");
 
   const {
     completion,
