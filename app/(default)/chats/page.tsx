@@ -11,7 +11,7 @@ export default async function Featured() {
   const chats = await getFeaturedChats();
   return (
     <Container>
-      <h1 className="mb-1 text-lg font-medium text-gray-700 sm:text-left sm:text-2xl">
+      <h1 className="mb-1 text-lg font-medium text-gray-900 sm:text-left sm:text-2xl">
         Featured Components
       </h1>
       <h2 className="mb-8 text-lg text-gray-700 sm:text-left sm:text-xl">
