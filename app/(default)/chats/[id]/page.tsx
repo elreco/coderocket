@@ -254,7 +254,7 @@ export default function Chats({ params }: { params: { id: string } }) {
               </TooltipProvider>
             </div>
           </div>
-          <div className="flex flex-1 flex-col space-y-2 rounded-lg bg-white pb-3 transition-all duration-200">
+          <div className="flex flex-1 flex-col space-y-2 rounded-lg bg-white pb-2 transition-all duration-200">
             {completion ? (
               <SandpackProvider
                 style={{ height: "100%" }}
