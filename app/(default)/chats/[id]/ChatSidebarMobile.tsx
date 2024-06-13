@@ -39,7 +39,7 @@ export default function ChatSidebar({
             <Square3Stack3DIcon className="w-5" />
           </Button>
         </DrawerTrigger>
-        <DrawerContent className="flex h-[650px] items-center space-y-3 overflow-auto p-8">
+        <DrawerContent className="flex items-center space-y-3 overflow-auto p-8">
           {assistantMessages.map((m) => (
             <div key={m.id} className="relative">
               <img
