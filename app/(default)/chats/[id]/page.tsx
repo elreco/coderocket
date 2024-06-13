@@ -343,7 +343,7 @@ body {
                 className="flex w-full flex-1 items-center xl:justify-start"
                 onSubmit={handleSubmit}
               >
-                <div className="mr-2 flex w-full space-x-4 rounded-md bg-gray-900 p-2 xl:w-1/2">
+                <div className="mr-0 flex w-full space-x-4 rounded-md bg-gray-900 p-2 xl:mr-2 xl:w-1/2">
                   <Input
                     autoFocus
                     disabled={isLoading}
