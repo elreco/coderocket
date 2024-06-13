@@ -57,10 +57,7 @@ export default function ChatSidebar({
           <img
             alt=""
             src={m?.screenshot || ""}
-            className={clsx(
-              "aspect-video w-full rounded-md border object-cover",
-              selectedVersion === m.id ? "border-gray-900" : "border-gray-200",
-            )}
+            className="aspect-video w-full rounded-md border border-gray-300 object-cover"
           />
           <TooltipProvider>
             <Tooltip>
