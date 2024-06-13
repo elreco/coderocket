@@ -1,12 +1,16 @@
 "use client";
 
-import { Sandpack } from "@codesandbox/sandpack-react";
+import {
+  SandpackCodeEditor,
+  SandpackLayout,
+  SandpackPreview,
+  SandpackProvider,
+} from "@codesandbox/sandpack-react";
 import { ArrowPathIcon } from "@heroicons/react/20/solid";
 import { ClipboardIcon } from "@heroicons/react/24/outline";
 import { useCompletion } from "ai/react";
-import clsx from "clsx";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useCopyToClipboard } from "usehooks-ts";
 
 import { Container } from "@/components/container";
@@ -14,6 +18,7 @@ import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/toaster/use-toast";
 import {
   Tooltip,
@@ -28,6 +33,9 @@ import { createClient } from "@/utils/supabase/client";
 import { fetchChat } from "../actions";
 import { ChatMessage } from "../types";
 
+import ChatSidebar from "./ChatSidebar";
+import ChatSidebarMobile from "./ChatSidebarMobile";
+
 export default function Chats({ params }: { params: { id: string } }) {
   const supabase = createClient();
   const [, copy] = useCopyToClipboard();
@@ -40,7 +48,6 @@ export default function Chats({ params }: { params: { id: string } }) {
   const [userId, setUserId] = useState("");
   const [userFullName, setUserFullName] = useState("");
   const [userAvatar, setUserAvatar] = useState("");
-  const scrollRef = useRef<HTMLDivElement>(null);
 
   const {
     completion,
@@ -154,68 +161,10 @@ export default function Chats({ params }: { params: { id: string } }) {
     });
   };
 
-  const getUserMessage = (assistantMessageId: string) => {
-    const assistantIndex = messages.findIndex(
-      (m) => m.id === assistantMessageId,
-    );
-    if (assistantIndex > 0) {
-      for (let i = assistantIndex - 1; i >= 0; i--) {
-        if (messages[i].role === "user") {
-          return messages[i].content;
-        }
-      }
-    }
-    return "No user message found.";
-  };
-
-  const MemoizedSandpack = useMemo(() => {
-    return (
-      <Sandpack
-        options={{
-          recompileMode: "delayed",
-          recompileDelay: 800,
-          editorHeight: 650,
-          showReadOnly: true,
-          showConsoleButton: false,
-          showConsole: false,
-          readOnly: false,
-        }}
-        template="static"
-        files={{
-          "/index.html": completion
-            ? `<html>
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://cdn.jsdelivr.net/gh/iconoir-icons/iconoir@main/css/iconoir.css" rel="stylesheet" />
-  <link href="tailwindai.css" rel="stylesheet">
-</head>
-${completion}
-</html>`
-            : "",
-          "/tailwindai.css": {
-            code: `@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
-body {
-  font-family: 'Inter', sans-serif!important;
-}`,
-            hidden: true,
-          },
-        }}
-      />
-    );
-  }, [completion]);
-
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [messages]);
-
   return (
-    <Container className="pb-12">
-      <div className="flex flex-col justify-center space-x-0 overflow-auto xl:size-full xl:max-h-full xl:flex-row xl:space-x-3">
-        <div className="h-full space-y-3 xl:w-11/12">
+    <Container>
+      <div className="flex size-full flex-col justify-center space-x-0 xl:max-h-full xl:flex-row xl:space-x-3">
+        <div className="flex h-full flex-col space-y-2 xl:w-11/12">
           <div className="flex items-center justify-between">
             <div className="font-medium text-gray-700">
               <div className="flex items-center space-x-2">
@@ -228,7 +177,7 @@ body {
                   <Badge variant="default">{userFullName}</Badge>
                 )}
                 <h1>
-                  {isLoading ? (
+                  {isLoading || !title ? (
                     <span className="flex items-center">
                       <ArrowPathIcon className="mr-2 size-4 animate-spin" />{" "}
                       Loading
@@ -251,102 +200,140 @@ body {
                 </h1>
               </div>
             </div>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger>
-                  <Button variant="outline" onClick={copyRawHTML}>
-                    <ClipboardIcon className="w-5" />
-                  </Button>
-                </TooltipTrigger>
-
-                <TooltipContent>
-                  <p>Copy raw HTML</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
-          <div className="rounded-lg bg-white transition-all duration-200">
-            {MemoizedSandpack}
-          </div>
-
-          {authorized && (
-            <form
-              className="flex w-full xl:justify-start"
-              onSubmit={handleSubmit}
-            >
-              <div className="mb-3 flex w-full space-x-4 rounded-md bg-gray-900 p-2 xl:w-1/2">
-                <Input
-                  autoFocus
-                  disabled={isLoading}
-                  value={input}
-                  onChange={handleInputChange}
-                  minLength={2}
-                  maxLength={maxPromptLength}
-                  placeholder="Add a button, modify a color..."
-                />
-                <Button loading={isLoading} type="submit">
-                  Iterate
-                </Button>
-              </div>
-            </form>
-          )}
-        </div>
-        <div
-          ref={scrollRef}
-          className="mt-5 h-full space-y-3 overflow-auto pb-2 xl:mt-0 xl:w-1/12"
-          style={{ scrollbarWidth: "none" }}
-        >
-          {assistantMessages.map((m) => (
-            <div key={m.id} className="relative w-full">
-              <img
-                alt=""
-                src={m?.screenshot || ""}
-                className={clsx(
-                  "hidden aspect-video w-full rounded-md border object-cover xl:block",
-                  selectedVersion === m.id
-                    ? "border-gray-900"
-                    : "border-gray-200",
-                )}
-              />
-              <Badge
-                onClick={() => handleVersionSelect(m.id)}
-                className="m-2 block cursor-pointer xl:hidden"
-                variant="secondary"
-              >
-                v{m.version}
-              </Badge>
+            <div className="flex items-center space-x-2">
               <TooltipProvider>
                 <Tooltip>
-                  <TooltipTrigger
-                    className={clsx(
-                      "absolute inset-0 z-10 hidden cursor-pointer select-none items-center justify-center rounded-md transition-all duration-300 xl:flex",
-                      selectedVersion === m.id
-                        ? "bg-transparent"
-                        : "bg-black/40 hover:bg-transparent",
-                    )}
-                    onClick={() => handleVersionSelect(m.id)}
-                  >
-                    <Badge
-                      className="absolute bottom-0 right-0 m-2"
-                      variant="secondary"
-                    >
-                      v{m.version}
-                    </Badge>
+                  <TooltipTrigger>
+                    <ChatSidebarMobile
+                      isLoading={isLoading}
+                      assistantMessages={assistantMessages}
+                      selectedVersion={selectedVersion}
+                      messages={messages}
+                      handleVersionSelect={handleVersionSelect}
+                    />
                   </TooltipTrigger>
 
-                  <TooltipContent side="left" className="w-64">
-                    <img
-                      alt=""
-                      src={m?.screenshot || ""}
-                      className="my-1.5 w-full rounded object-cover"
-                    />
-                    <p className="py-2">{getUserMessage(m.id)}</p>
+                  <TooltipContent>
+                    <p>Versions</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <Button
+                      disabled={isLoading}
+                      variant="outline"
+                      onClick={copyRawHTML}
+                    >
+                      <ClipboardIcon className="w-5" />
+                    </Button>
+                  </TooltipTrigger>
+
+                  <TooltipContent>
+                    <p>Copy raw HTML</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
             </div>
-          ))}
+          </div>
+          <div className="flex flex-1 flex-col rounded-lg bg-white transition-all duration-200">
+            {completion ? (
+              <SandpackProvider
+                style={{ height: "100%" }}
+                options={{
+                  recompileMode: "delayed",
+                  recompileDelay: 800,
+                }}
+                template="static"
+                files={{
+                  "/index.html": `<html class="size-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/gh/iconoir-icons/iconoir@main/css/iconoir.css" rel="stylesheet" />
+  <link href="tailwindai.css" rel="stylesheet">
+</head>
+${completion}
+</html>`,
+                  "/tailwindai.css": {
+                    code: `@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+body {
+  font-family: 'Inter', sans-serif!important;
+}`,
+                    hidden: true,
+                  },
+                }}
+              >
+                <div className="flex size-full flex-col gap-3 xl:flex-row">
+                  <div className="size-full xl:w-1/2">
+                    <SandpackLayout
+                      style={{
+                        flex: 1,
+                        display: "flex",
+                        flexDirection: "column",
+                        height: "100%",
+                        width: "100%",
+                      }}
+                    >
+                      <SandpackCodeEditor />
+                    </SandpackLayout>
+                  </div>
+                  <div className="hidden size-full xl:block xl:w-1/2">
+                    <SandpackLayout
+                      style={{
+                        flex: 1,
+                        display: "flex",
+                        flexDirection: "column",
+                        height: "100%",
+                        width: "100%",
+                      }}
+                    >
+                      <SandpackPreview />
+                    </SandpackLayout>
+                  </div>
+                </div>
+              </SandpackProvider>
+            ) : (
+              <div className="flex size-full flex-col space-y-3 rounded-lg border bg-white">
+                <Skeleton className="m-5 h-1/2 rounded-lg" />
+                <div className="m-5 space-y-2">
+                  <Skeleton className="h-4 w-1/2" />
+                  <Skeleton className="h-4 w-[27%]" />
+                  <Skeleton className="h-4 w-[34%]" />
+                </div>
+              </div>
+            )}
+            {authorized && (
+              <form
+                className="flex w-full flex-1 items-center py-3 xl:justify-start"
+                onSubmit={handleSubmit}
+              >
+                <div className="mr-2 flex w-full space-x-4 rounded-md bg-gray-900 p-2 xl:w-1/2">
+                  <Input
+                    autoFocus
+                    disabled={isLoading}
+                    value={input}
+                    onChange={handleInputChange}
+                    minLength={2}
+                    maxLength={maxPromptLength}
+                    placeholder="Add a button, modify a color..."
+                  />
+                  <Button loading={isLoading} type="submit">
+                    Iterate
+                  </Button>
+                </div>
+              </form>
+            )}
+          </div>
         </div>
+        <ChatSidebar
+          assistantMessages={assistantMessages}
+          selectedVersion={selectedVersion}
+          messages={messages}
+          handleVersionSelect={handleVersionSelect}
+        />
       </div>
     </Container>
   );

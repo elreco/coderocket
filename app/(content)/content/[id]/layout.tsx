@@ -14,8 +14,8 @@ const inter = Inter({
 
 export default function RootLayout({ children }: PropsWithChildren) {
   return (
-    <html lang="en" className={clsx("antialiased", inter.variable)}>
-      <body>{children}</body>
+    <html lang="en" className={clsx("size-full antialiased", inter.variable)}>
+      {children}
     </html>
   );
 }

@@ -5,8 +5,6 @@ import { redirect } from "next/navigation";
 import Logo from "@/components/icons/logo";
 import { createClient } from "@/utils/supabase/server";
 
-import { Container } from "../container";
-
 import { MobileNav } from "./mobile-nav";
 import { NavLinks } from "./nav-links";
 
@@ -21,8 +19,8 @@ export async function Navbar() {
   }
 
   return (
-    <header className="fixed z-50 w-full bg-gray-50/75 bg-clip-padding backdrop-blur">
-      <Container className="relative z-50 flex justify-between !py-4">
+    <header className="fixed top-0 z-50 w-full bg-gray-50/75 bg-clip-padding backdrop-blur">
+      <div className="relative z-50 flex size-full max-h-full min-h-full justify-between p-4 font-normal sm:px-6 lg:px-8">
         <div className="relative z-10 flex items-center gap-16">
           <Link href="/" aria-label="Home">
             <Logo className="h-10 w-auto" />
@@ -34,7 +32,7 @@ export async function Navbar() {
         <div className="flex items-center gap-6">
           <MobileNav user={userData.user} handleSignOut={logout} />
         </div>
-      </Container>
+      </div>
     </header>
   );
 }
