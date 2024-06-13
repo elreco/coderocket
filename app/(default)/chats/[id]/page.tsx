@@ -52,7 +52,7 @@ export default function Chats({ params }: { params: { id: string } }) {
   const [selectedVersion, setSelectedVersion] = useState<string | null>(null);
   const [title, setTitle] = useState<string>("");
   const [authorized, setAuthorized] = useState(false);
-  const [isCanvas, setCanvas] = useState(false);
+  const [isCanvas, setCanvas] = useState(true);
   const [userId, setUserId] = useState("");
   const [userFullName, setUserFullName] = useState("");
   const [userAvatar, setUserAvatar] = useState("");
