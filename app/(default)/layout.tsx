@@ -52,13 +52,14 @@ export const metadata = {
     cardImage: meta.cardImage,
     type: meta.type,
     site_name: meta.title,
+    images: meta.twitter.images,
   },
   twitter: {
     card: "summary_large_image",
     site: "@vercel",
     title: meta.title,
     description: meta.description,
-    cardImage: meta.cardImage,
+    images: meta.twitter.images,
   },
 };
 
