@@ -4,11 +4,11 @@ import { type Config } from "tailwindcss";
 
 export default {
   content: ["app/**/**/*.{ts,tsx}"],
-  safelist: [
+  /* safelist: [
     {
       pattern: /./,
     },
-  ],
+  ], */
   theme: {
     extend: {},
   },

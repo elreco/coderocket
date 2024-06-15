@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 interface Props {
   chats: {
     chat_id: string;
-    image_url: string;
+    is_featured: boolean;
     user_id: string;
     user_full_name: string;
     first_user_message: ChatCompletionMessageParam;

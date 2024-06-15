@@ -21,7 +21,7 @@ export default async function Featured() {
         {chats?.map((c) => (
           <div key={c.chat_id} className="relative aspect-video w-full">
             <Image
-              src={c.image_url}
+              src={c.last_assistant_message.screenshot}
               fill
               className="w-full rounded-md border object-cover shadow-md"
               alt=""

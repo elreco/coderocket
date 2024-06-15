@@ -215,14 +215,14 @@ export interface Database {
         Row: {
           created_at: string | null;
           id: string;
-          image_url: string | null;
+          is_featured: boolean | null;
           prompt_image?: string | null;
           messages: any[];
           user_id: string | null;
         };
         Insert: {
           created_at?: string | null;
-          image_url?: string | null;
+          is_featured?: boolean | null;
           prompt_image?: string | null;
           id?: string;
           messages: any[];
@@ -255,7 +255,7 @@ export interface Database {
         Args: Record<PropertyKey, never>;
         Returns: {
           chat_id: string;
-          image_url: string;
+          is_featured: boolean;
           user_id: string;
           user_full_name: string;
           first_user_message: any;

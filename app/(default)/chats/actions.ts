@@ -14,7 +14,6 @@ export const fetchChat = async (id: string): Promise<ChatProps | null> => {
     .select(
       `
   id,
-  image_url,
   created_at,
   messages,
   user_id (
@@ -140,8 +139,8 @@ export const getFeaturedChats = async (): Promise<Chat[]> => {
   const to = from + pageSize - 1;
 
   const { data } = await supabase
-    .rpc("get_all_chats")
-    .not("image_url", "is", null)
+    .rpc("get_all_screenshot_chats")
+    .not("is_featured", "is", false)
     .range(from, to);
   if (data?.length) {
     return data;
