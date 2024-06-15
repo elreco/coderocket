@@ -123,7 +123,9 @@ export const getUserChats = async () => {
 
   if (!user) throw Error("Could not get user");
 
-  const { data } = await supabase.rpc("get_all_chats").eq("user_id", user.id);
+  const { data } = await supabase
+    .rpc("get_all_screenshot_chats")
+    .eq("user_id", user.id);
   if (!data?.length) {
     return null;
   }
