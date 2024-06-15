@@ -6,7 +6,6 @@ import { getSubscription } from "@/app/supabase-server";
 import { createClient } from "@/utils/supabase/server";
 
 import { Chat, ChatMessage, ChatProps } from "./types";
-
 export const fetchChat = async (id: string): Promise<ChatProps | null> => {
   const supabase = createClient();
   const { data } = await supabase
@@ -116,18 +115,17 @@ export const createChat = async (prompt: string, formData: FormData) => {
   return redirect(`/chats/${chat.id}`);
 };
 
-export const getUserChats = async () => {
+export const getUserChats = async (): Promise<Chat[]> => {
   const supabase = createClient();
   const { data: userData } = await supabase.auth.getUser();
   const user = userData.user;
 
   if (!user) throw Error("Could not get user");
 
-  const { data } = await supabase
-    .rpc("get_all_screenshot_chats")
-    .eq("user_id", user.id);
+  const { data } = await supabase.rpc("get_chats").eq("user_id", user.id);
+
   if (!data?.length) {
-    return null;
+    return [];
   }
   return data;
 };
@@ -141,7 +139,7 @@ export const getFeaturedChats = async (): Promise<Chat[]> => {
   const to = from + pageSize - 1;
 
   const { data } = await supabase
-    .rpc("get_all_screenshot_chats")
+    .rpc("get_chats")
     .not("is_featured", "is", false)
     .range(from, to);
   if (data?.length) {

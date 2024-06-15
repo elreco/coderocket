@@ -39,8 +39,8 @@ import { createClient } from "@/utils/supabase/client";
 import { fetchChat } from "../actions";
 import { ChatMessage } from "../types";
 
-import ChatSidebar from "./ChatSidebar";
-import ChatSidebarMobile from "./ChatSidebarMobile";
+import ChatSidebar from "./chat-sidebar";
+import ChatSidebarMobile from "./chat-sidebar-mobile";
 
 export default function Chats({ params }: { params: { id: string } }) {
   const supabase = createClient();

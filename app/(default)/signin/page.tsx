@@ -4,7 +4,7 @@ import Logo from "@/components/icons/logo";
 import { Alert } from "@/components/ui/alert";
 import { createClient } from "@/utils/supabase/server";
 
-import AuthUI from "./AuthUI";
+import AuthUI from "./auth-ui";
 
 export default async function SignIn({
   searchParams,

@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import Logo from "@/components/icons/logo";
 import { createClient } from "@/utils/supabase/server";
 
-import AuthUIMagicLink from "./AuthUIMagicLink";
+import AuthUIMagicLink from "./auth-ui-magic-link";
 
 export default async function MagicLink() {
   const supabase = createClient();

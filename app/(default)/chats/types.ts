@@ -24,6 +24,7 @@ export interface ChatProps {
 export interface Chat {
   chat_id: string;
   is_featured: boolean;
+  created_at: Date;
   user_id: string;
   user_full_name: string;
   first_user_message: any;

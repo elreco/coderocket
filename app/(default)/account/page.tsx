@@ -1,22 +1,23 @@
-import { revalidatePath } from "next/cache";
+"use server";
+
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ReactNode, Suspense } from "react";
 
 import { getUserDetails, getSubscription } from "@/app/supabase-server";
+import ChatCard from "@/components/chat-card";
+import { Container } from "@/components/container";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { createClient } from "@/utils/supabase/server";
 
 import { getUserChats } from "../chats/actions";
 
-import Chats from "./Chats";
-import ManageSubscriptionButton from "./ManageSubscriptionButton";
+import { getUser, updateEmail, updateName } from "./actions";
+import ManageSubscriptionButton from "./manage-subscription-button";
 
 export default async function Account() {
-  const supabase = createClient();
   const [userData, userDetails, subscription] = await Promise.all([
-    supabase.auth.getUser(),
+    getUser(),
     getUserDetails(),
     getSubscription(),
   ]);
@@ -36,47 +37,17 @@ export default async function Account() {
       minimumFractionDigits: 0,
     }).format((subscription?.prices?.unit_amount || 0) / 100);
 
-  const updateName = async (formData: FormData) => {
-    "use server";
-    const newName = formData.get("name") as string;
-    const { data: userData } = await supabase.auth.getUser();
-    const user = userData.user;
-    const { error } = await supabase
-      .from("users")
-      .update({ full_name: newName })
-      .eq("id", user?.id || "");
-    if (error) {
-      console.log(error);
-    }
-    revalidatePath("/account");
-  };
-
-  const updateEmail = async (formData: FormData) => {
-    "use server";
-
-    const newEmail = formData.get("email") as string;
-    const supabase = createClient();
-    const { error } = await supabase.auth.updateUser({ email: newEmail });
-    if (error) {
-      console.log(error);
-    }
-    revalidatePath("/account");
-  };
-
   const chats = await getUserChats();
+
   return (
-    <section className="mb-32">
-      <div className="mx-auto max-w-6xl px-4 pt-24 sm:px-6 lg:px-8">
-        <div className="sm:flex sm:flex-col sm:items-center">
-          <h1 className="text-xl font-bold text-gray-900 sm:text-center sm:text-4xl">
-            My Account
-          </h1>
-          <p className="m-auto mt-5 max-w-2xl text-lg text-gray-700 sm:text-center sm:text-xl">
-            Manage your account and billing.
-          </p>
-        </div>
-      </div>
-      <div className="p-4">
+    <Container>
+      <h1 className="mb-1 text-lg font-medium text-gray-900 sm:text-left sm:text-2xl">
+        My Account
+      </h1>
+      <h2 className="mb-8 text-lg text-gray-700 sm:text-left sm:text-xl">
+        Manage your account and billing.
+      </h2>
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
         <Card
           title="Your Plan"
           description={
@@ -146,6 +117,8 @@ export default async function Account() {
             </form>
           </div>
         </Card>
+      </div>
+      <div className="mt-3 pb-20">
         <Card
           title="Your Components"
           description="Your generated components"
@@ -158,12 +131,12 @@ export default async function Account() {
             </div>
           }
         >
-          <div className="mb-4 mt-8">
-            {chats?.length && <Chats chats={chats} />}
+          <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+            {chats?.map((chat) => <ChatCard key={chat.chat_id} chat={chat} />)}
           </div>
         </Card>
       </div>
-    </section>
+    </Container>
   );
 }
 
@@ -176,7 +149,7 @@ interface Props {
 
 function Card({ title, description, footer, children }: Props) {
   return (
-    <div className="m-auto my-8 w-full max-w-3xl rounded-md border bg-white">
+    <div className="w-full rounded-md border bg-white">
       <div className="px-5 py-4 ">
         <h3 className="mb-1 text-2xl font-medium text-gray-700">{title}</h3>
         <p className="text-gray-700">{description}</p>
