@@ -34,7 +34,7 @@ export default function ChatCard({ chat }: { chat: Chat }) {
           )}
           {chat.created_at && (
             <Badge
-              className="absolute right-0 top-0 m-4 text-gray-500"
+              className="absolute right-0 top-0 m-4 !text-gray-500"
               variant="default"
             >
               {getRelativeDate(chat.created_at)}
