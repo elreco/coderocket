@@ -123,63 +123,65 @@ export default function Pricing({ user, products, subscription }: Props) {
             </div>
           </div>
         </div> */}
-        <div className="mt-6 h-2/3 items-center space-y-4 sm:mt-12 sm:grid sm:grid-cols-2 sm:gap-6 sm:space-y-0 lg:mx-auto lg:max-w-4xl xl:mx-0 xl:max-w-none xl:grid-cols-3">
-          {products[0].prices?.map((price) => {
-            const priceString =
-              price.unit_amount &&
-              new Intl.NumberFormat("en-US", {
-                style: "currency",
-                currency: price.currency!,
-                minimumFractionDigits: 0,
-              }).format(price.unit_amount / 100);
+        <div className="flex w-full items-center justify-between pb-20">
+          <div className="mt-6 w-full space-y-4 sm:mt-12 sm:grid sm:grid-cols-2 sm:gap-6 sm:space-y-0 lg:mx-auto lg:max-w-4xl xl:mx-0 xl:max-w-none xl:grid-cols-3">
+            {products[0].prices?.map((price) => {
+              const priceString =
+                price.unit_amount &&
+                new Intl.NumberFormat("en-US", {
+                  style: "currency",
+                  currency: price.currency!,
+                  minimumFractionDigits: 0,
+                }).format(price.unit_amount / 100);
 
-            return (
-              <div
-                key={price.interval}
-                className="divide-y divide-zinc-600 rounded-lg border bg-white"
-              >
-                <div className="p-6">
-                  <p>
-                    <span className="white text-5xl font-bold">
-                      {priceString}
-                    </span>
-                    <span className="text-base font-medium text-gray-700">
-                      /{price.interval}
-                    </span>
-                  </p>
-                  <p className="mt-4 text-gray-700">{price.description}</p>
-                  <p className="mt-4 flex items-center text-sm font-medium text-gray-700">
-                    <CheckIcon className="mr-2 size-4 text-emerald-500" />{" "}
-                    Unlinimited credits
-                  </p>
-                  <p className="mt-4 flex items-center text-sm font-medium text-gray-700">
-                    <CheckIcon className="mr-2 size-4 text-emerald-500" />{" "}
-                    Unlinimited versions
-                  </p>
-                  <p className="mt-4 flex items-center text-sm font-medium text-gray-700">
-                    <CheckIcon className="mr-2 size-4 text-emerald-500" />{" "}
-                    Unlinimited components with image
-                  </p>
-                  <p className="mt-4 flex items-center text-sm font-medium text-gray-700">
-                    <CheckIcon className="mr-2 size-4 text-emerald-500" /> Fast
-                    generation
-                  </p>
-                  <Button
-                    variant="solid"
-                    type="button"
-                    disabled={false}
-                    loading={priceIdLoading === price.id}
-                    onClick={() => handleCheckout(price)}
-                    className="mt-12 block w-full rounded-md py-2 text-center text-sm font-medium text-white hover:bg-gray-900 "
-                  >
-                    {products[0].name === subscription?.prices?.products?.name
-                      ? "Manage"
-                      : "Subscribe"}
-                  </Button>
+              return (
+                <div
+                  key={price.interval}
+                  className="divide-y divide-zinc-600 rounded-lg border bg-white"
+                >
+                  <div className="p-6">
+                    <p>
+                      <span className="white text-5xl font-bold">
+                        {priceString}
+                      </span>
+                      <span className="text-base font-medium text-gray-700">
+                        /{price.interval}
+                      </span>
+                    </p>
+                    <p className="mt-4 text-gray-700">{price.description}</p>
+                    <p className="mt-4 flex items-center text-sm font-medium text-gray-700">
+                      <CheckIcon className="mr-2 size-4 text-emerald-500" />{" "}
+                      Unlinimited credits
+                    </p>
+                    <p className="mt-4 flex items-center text-sm font-medium text-gray-700">
+                      <CheckIcon className="mr-2 size-4 text-emerald-500" />{" "}
+                      Unlinimited versions
+                    </p>
+                    <p className="mt-4 flex items-center text-sm font-medium text-gray-700">
+                      <CheckIcon className="mr-2 size-4 text-emerald-500" />{" "}
+                      Unlinimited components with image
+                    </p>
+                    <p className="mt-4 flex items-center text-sm font-medium text-gray-700">
+                      <CheckIcon className="mr-2 size-4 text-emerald-500" />{" "}
+                      Fast generation
+                    </p>
+                    <Button
+                      variant="solid"
+                      type="button"
+                      disabled={false}
+                      loading={priceIdLoading === price.id}
+                      onClick={() => handleCheckout(price)}
+                      className="mt-12 block w-full rounded-md py-2 text-center text-sm font-medium text-white hover:bg-gray-900 "
+                    >
+                      {products[0].name === subscription?.prices?.products?.name
+                        ? "Manage"
+                        : "Subscribe"}
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       </Container>
     );
