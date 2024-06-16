@@ -31,8 +31,10 @@
     "clsx": "^2.0.0",
     "date-fns": "^3.6.0",
     "encoding": "^0.1.13",
+    "file-saver": "^2.0.5",
     "framer-motion": "^10.16.4",
     "html-react-parser": "^5.1.10",
+    "jszip": "^3.10.1",
     "nanoid": "^5.0.2",
     "next": "^14",
     "openai": "^4.47.3",
@@ -46,6 +48,7 @@
   },
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.13",
+    "@types/file-saver": "^2.0.7",
     "@types/node": "^20.2.3",
     "@types/react": "^18.2.7",
     "@typescript-eslint/eslint-plugin": "^6.10.0",

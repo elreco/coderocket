@@ -8,6 +8,7 @@ import {
 } from "@codesandbox/sandpack-react";
 import { ArrowPathIcon } from "@heroicons/react/20/solid";
 import {
+  ArrowDownTrayIcon,
   ClipboardIcon,
   CodeBracketIcon,
   ShareIcon,
@@ -15,6 +16,8 @@ import {
 } from "@heroicons/react/24/outline";
 import { useCompletion } from "ai/react";
 import clsx from "clsx";
+import { saveAs } from "file-saver";
+import JSZip from "jszip";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useCopyToClipboard } from "usehooks-ts";
@@ -133,6 +136,36 @@ export default function Chats({ params }: { params: { id: string } }) {
       handleVersionSelect(lastCompletionMessage.id);
     }
   }, [messages.length]);
+
+  function downloadCode() {
+    const htmlContent = `
+      <html class="size-full">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <script src="https://cdn.tailwindcss.com"></script>
+          <link href="https://cdn.jsdelivr.net/gh/iconoir-icons/iconoir@main/css/iconoir.css" rel="stylesheet" />
+          <link href="tailwindai.css" rel="stylesheet">
+        </head>
+        ${completion}
+      </html>
+    `;
+
+    const cssContent = `
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+      body {
+        font-family: 'Inter', sans-serif!important;
+      }
+    `;
+
+    const zip = new JSZip();
+    zip.file("index.html", htmlContent);
+    zip.file("tailwindai.css", cssContent);
+
+    zip.generateAsync({ type: "blob" }).then(function (content) {
+      saveAs(content, "tailwindai-dev.zip");
+    });
+  }
 
   const handleVersionSelect = (id: string) => {
     const selectedMessageIndex = messages.findIndex((m) => m.id === id);
@@ -263,6 +296,24 @@ export default function Chats({ params }: { params: { id: string } }) {
 
                   <TooltipContent>
                     <p>Copy raw HTML</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <Button
+                      disabled={isLoading}
+                      variant="outline"
+                      onClick={downloadCode}
+                      className="mr-1"
+                    >
+                      <ArrowDownTrayIcon className="w-5" />
+                    </Button>
+                  </TooltipTrigger>
+
+                  <TooltipContent>
+                    <p>Download code</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
