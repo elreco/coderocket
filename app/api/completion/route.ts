@@ -138,6 +138,12 @@ const validateRequest = async (id: string, prompt: string) => {
     throw new Error("payment-required");
   }
 
+  const imageUrl = chat.prompt_image;
+
+  if ((!subscription || subscription.status !== "active") && imageUrl) {
+    throw new Error("payment-required");
+  }
+
   if (messagesFromDatabase.filter((m) => m.role === "assistant")?.length > 30) {
     throw new Error("You can't have more than 30 versions");
   }
@@ -153,8 +159,6 @@ const validateRequest = async (id: string, prompt: string) => {
     .download("html-gen.md");
   if (error) throw new Error("Could not get AI Model file. Please try again");
   const contentMd = await blobContent.text();
-
-  const imageUrl = chat.prompt_image;
 
   return {
     messagesFromDatabase,
