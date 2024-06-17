@@ -6,7 +6,6 @@ import clsx from "clsx";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
-import { Container } from "@/components/container";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toaster/use-toast";
 import { Database } from "@/types_db";
@@ -108,7 +107,7 @@ export default function Pricing({ user, products, subscription }: Props) {
 
   if (products.length === 1)
     return (
-      <Container>
+      <div className="flex h-full flex-col items-start justify-center">
         <h1 className="mb-1 text-lg font-medium text-gray-900 sm:text-left sm:text-2xl">
           Pricing Plans
         </h1>
@@ -116,14 +115,7 @@ export default function Pricing({ user, products, subscription }: Props) {
           Start building for free, then add a site plan to go live. Account
           plans unlock additional features.
         </h2>
-        {/* <div className="relative mt-12 flex self-center rounded-lg">
-          <div className="divide-y rounded-lg border bg-zinc-900 shadow-sm">
-            <div className="m-1 whitespace-nowrap rounded-md border-zinc-800 p-6 py-2 text-2xl font-medium text-white shadow-sm focus:z-10 focus:outline-none focus:ring-2 focus:ring-opacity-50 sm:w-auto sm:px-8">
-              {products[0].name}
-            </div>
-          </div>
-        </div> */}
-        <div className="flex w-full items-center justify-between pb-20">
+        <div className="flex w-full flex-1 items-center justify-between pb-20">
           <div className="mt-6 w-full space-y-4 sm:mt-12 sm:grid sm:grid-cols-2 sm:gap-6 sm:space-y-0 lg:mx-auto lg:max-w-4xl xl:mx-0 xl:max-w-none xl:grid-cols-3">
             {products[0].prices?.map((price) => {
               const priceString =
@@ -183,7 +175,7 @@ export default function Pricing({ user, products, subscription }: Props) {
             })}
           </div>
         </div>
-      </Container>
+      </div>
     );
 
   return (

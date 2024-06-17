@@ -160,7 +160,6 @@ export const getAllPublicChats = async (): Promise<Chat[]> => {
     .rpc("get_chats")
     .not("is_private", "is", true)
     .range(from, to);
-  console.log(data);
   if (data?.length) {
     return data;
   }

@@ -2,10 +2,9 @@ import ChatCard from "@/components/chat-card";
 import { Container } from "@/components/container";
 
 import { getAllPublicChats } from "./actions";
-export const revalidate = 1;
+
 export default async function Featured() {
   const chats = await getAllPublicChats();
-  console.log(chats);
   return (
     <Container>
       <h1 className="mb-1 text-lg font-medium text-gray-900 sm:text-left sm:text-2xl">

@@ -38,7 +38,6 @@ export default async function Account() {
     }).format((subscription?.prices?.unit_amount || 0) / 100);
 
   const chats = await getUserChats();
-  console.log(chats);
   return (
     <Container>
       <h1 className="mb-1 text-lg font-medium text-gray-900 sm:text-left sm:text-2xl">
