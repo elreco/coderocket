@@ -143,7 +143,7 @@ export default function ChatCompletion({
       }
     };
     getData();
-  });
+  }, [fetchedChat.id]);
 
   useEffect(() => {
     if (messages.length === 1) {
