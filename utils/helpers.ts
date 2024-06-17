@@ -1,5 +1,3 @@
-import { customAlphabet } from "nanoid";
-
 import { Database } from "@/types_db";
 
 type Price = Database["public"]["Tables"]["prices"]["Row"];
@@ -42,15 +40,10 @@ export const postData = async ({
 };
 
 export const toDateTime = (secs: number) => {
-  const t = new Date("1970-01-01T00:30:00Z"); // Unix epoch start.
+  const t = new Date("1970-01-01T00:30:00Z");
   t.setSeconds(secs);
   return t;
 };
-
-export const nanoid = customAlphabet(
-  "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
-  7,
-);
 
 export const capitalizeFirstLetter = (
   string: string,
@@ -63,21 +56,4 @@ export const capitalizeFirstLetter = (
     formattedString = formattedString.substring(0, maxLength) + "...";
   }
   return formattedString;
-};
-
-export const convertHtmlToJsx = (html: string) => {
-  return html
-    .replace(/class=/g, "className=")
-    .replace(/for=/g, "htmlFor=")
-    .replace(/<input(.*?)>/g, "<input$1/>")
-    .replace(/<img(.*?)>/g, "<img$1/>")
-    .replace(/<br(.*?)>/g, "<br$1/>")
-    .replace(/<hr(.*?)>/g, "<hr$1/>")
-    .replace(/<meta(.*?)>/g, "<meta$1/>")
-    .replace(/<link(.*?)>/g, "<link$1/>")
-    .replace(/<\s*script[^>]*>([\s\S]*?)<\s*\/\s*script>/gi, "")
-    .replace(
-      /on([a-z]+)=/g,
-      (match, p1) => `on${p1.charAt(0).toUpperCase() + p1.slice(1)}=`,
-    );
 };
