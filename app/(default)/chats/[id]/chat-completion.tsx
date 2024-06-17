@@ -16,6 +16,7 @@ import {
   TvIcon,
 } from "@heroicons/react/24/outline";
 import { LockClosedIcon, LockOpenIcon } from "@heroicons/react/24/solid";
+import { User } from "@supabase/supabase-js";
 import { useCompletion } from "ai/react";
 import clsx from "clsx";
 import { saveAs } from "file-saver";
@@ -40,7 +41,6 @@ import {
 import { openInCodeSandbox } from "@/utils/codesandbox";
 import { maxPromptLength } from "@/utils/config";
 import { capitalizeFirstLetter } from "@/utils/helpers";
-import { createClient } from "@/utils/supabase/client";
 
 import { fetchChat } from "../actions";
 import { ChatMessage, ChatProps } from "../types";
@@ -58,24 +58,27 @@ body {
 
 export default function ChatCompletion({
   fetchedChat,
+  user,
 }: {
   fetchedChat: ChatProps;
+  user: User | null;
 }) {
-  const supabase = createClient();
   const [, copy] = useCopyToClipboard();
   const { toast } = useToast();
   const router = useRouter();
   const pathname = usePathname();
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>(
+    fetchedChat?.messages || [],
+  );
   const [selectedVersion, setSelectedVersion] = useState<string | null>(null);
   const [title, setTitle] = useState<string>("");
-  const [authorized, setAuthorized] = useState(false);
+  const authorized = user?.id === fetchedChat?.user_id?.id;
   const [isCanvas, setCanvas] = useState(true);
-  const [userId, setUserId] = useState("");
-  const [userFullName, setUserFullName] = useState("");
-  const [userAvatar, setUserAvatar] = useState("");
-  const [isVisible, setVisible] = useState(false);
-  const [isNotFound, setNotFound] = useState(false);
+  const userFullName = fetchedChat?.user_id?.full_name || "";
+  const userAvatar = fetchedChat?.user_id?.avatar_url || "";
+  const [isVisible, setVisible] = useState(!fetchedChat?.is_private);
+  const isNotFound =
+    fetchedChat?.is_private && fetchedChat?.user_id?.id !== user?.id;
 
   const {
     completion,
@@ -110,42 +113,6 @@ export default function ChatCompletion({
   });
 
   useEffect(() => {
-    const getUser = async () => {
-      const { data } = await supabase.auth.getUser();
-      const userIdFromSession = data.user?.id;
-      setAuthorized(userIdFromSession === userId);
-    };
-    getUser();
-  }, [userId, supabase.auth]);
-
-  useEffect(() => {
-    const getData = async () => {
-      try {
-        const { data } = await supabase.auth.getUser();
-        const userIdFromSession = data.user?.id;
-        setMessages(fetchedChat?.messages || []);
-        setUserId(fetchedChat?.user_id?.id || "");
-        setUserFullName(fetchedChat?.user_id?.full_name || "");
-        setUserAvatar(fetchedChat?.user_id?.avatar_url || "");
-        setVisible(!fetchedChat?.is_private);
-        if (
-          fetchedChat?.is_private &&
-          fetchedChat?.user_id?.id !== userIdFromSession
-        ) {
-          setNotFound(true);
-        }
-      } catch (e) {
-        toast({
-          variant: "destructive",
-          title: "Something went wrong",
-          description: "Can't retrieve chat data, try to refresh.",
-        });
-      }
-    };
-    getData();
-  }, [fetchedChat.id]);
-
-  useEffect(() => {
     if (messages.length === 1) {
       const defaultMessage =
         messages?.find((m) => m.role === "user")?.content || "";
@@ -162,7 +129,7 @@ export default function ChatCompletion({
     }
   }, [messages.length]);
 
-  function downloadCode() {
+  const downloadCode = () => {
     const htmlContent = `
       <html class="size-full">
         <head>
@@ -183,7 +150,7 @@ export default function ChatCompletion({
     zip.generateAsync({ type: "blob" }).then(function (content) {
       saveAs(content, "tailwindai-dev.zip");
     });
-  }
+  };
 
   const handleVersionSelect = (id: string) => {
     const selectedMessageIndex = messages.findIndex((m) => m.id === id);

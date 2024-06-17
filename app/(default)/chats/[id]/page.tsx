@@ -2,6 +2,8 @@
 
 import { notFound } from "next/navigation";
 
+import { createClient } from "@/utils/supabase/server";
+
 import { fetchChat } from "../actions";
 
 import ChatCompletion from "./chat-completion";
@@ -11,5 +13,7 @@ export default async function Chats({ params }: { params: { id: string } }) {
   if (!chat) {
     return notFound();
   }
-  return <ChatCompletion fetchedChat={chat} />;
+  const supabase = createClient();
+  const user = await supabase.auth.getUser();
+  return <ChatCompletion fetchedChat={chat} user={user.data.user} />;
 }
