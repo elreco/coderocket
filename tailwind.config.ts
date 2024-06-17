@@ -1,6 +1,12 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-var-requires */
 import headlessuiPlugin from "@headlessui/tailwindcss";
 import formsPlugin from "@tailwindcss/forms";
 import { type Config } from "tailwindcss";
+
+const {
+  default: flattenColorPalette,
+} = require("tailwindcss/lib/util/flattenColorPalette");
 
 export default {
   content: [
@@ -26,6 +32,8 @@ export default {
     },
     extend: {
       animation: {
+        scroll:
+          "scroll var(--animation-duration, 40s) var(--animation-direction, forwards) linear infinite",
         "fade-in": "fade-in 0.5s linear forwards",
         marquee: "marquee var(--marquee-duration) linear infinite",
         "spin-slow": "spin 4s linear infinite",
@@ -33,6 +41,8 @@ export default {
         "spin-reverse": "spin-reverse 1s linear infinite",
         "spin-reverse-slow": "spin-reverse 4s linear infinite",
         "spin-reverse-slower": "spin-reverse 6s linear infinite",
+        "accordion-down": "accordion-down 0.2s ease-out",
+        "accordion-up": "accordion-up 0.2s ease-out",
       },
       borderRadius: {
         "4xl": "2rem",
@@ -45,6 +55,14 @@ export default {
         sans: "var(--font-rubik)",
       },
       keyframes: {
+        "accordion-down": {
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
+        },
+        "accordion-up": {
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
+        },
         "fade-in": {
           from: {
             opacity: "0",
@@ -63,11 +81,27 @@ export default {
             transform: "rotate(-360deg)",
           },
         },
+        scroll: {
+          to: {
+            transform: "translate(calc(-50% - 0.5rem))",
+          },
+        },
       },
       maxWidth: {
         "2xl": "40rem",
       },
     },
   },
-  plugins: [formsPlugin, headlessuiPlugin],
+  plugins: [formsPlugin, headlessuiPlugin, addVariablesForColors],
 } satisfies Config;
+
+function addVariablesForColors({ addBase, theme }: any) {
+  const allColors = flattenColorPalette(theme("colors"));
+  const newVars = Object.fromEntries(
+    Object.entries(allColors).map(([key, val]) => [`--${key}`, val]),
+  );
+
+  addBase({
+    ":root": newVars,
+  });
+}
