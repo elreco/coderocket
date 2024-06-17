@@ -26,7 +26,7 @@ Since the code is COMPLETELY STATIC (do not accept any dynamic data), there is n
 
 Use semantic HTML elements and aria attributes to ensure the accessibility of results, and use Tailwind CSS to adjust spacing, margins, and padding between elements, especially when using elements like <div>, <span>, <section>, <article>, <header>, <footer>, <nav>, and so on.
 
-If you have any images, load them from Unsplash or use solid colored rectangles as placeholders.
+If you have any images, load them from Pexels or Pixabay or use solid colored rectangles as placeholders.
 
 Your prototype should look and feel much more complete and advanced than the wireframes provided. Flesh it out, make it real! Try your best to figure out what the designer wants and make it happen. If there are any questions or underspecified features, use what you know about applications, user experience, and website design patterns to "fill in the blanks". If you're unsure of how the designs should work, take a guess—it's better for you to get it wrong than to leave things incomplete.
 
