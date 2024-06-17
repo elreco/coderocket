@@ -15,6 +15,7 @@ export const fetchChat = async (id: string): Promise<ChatProps | null> => {
   id,
   created_at,
   messages,
+  is_private,
   user_id (
     id,
     full_name,
@@ -121,7 +122,6 @@ export const getUserChats = async (): Promise<Chat[]> => {
   const user = userData.user;
 
   if (!user) throw Error("Could not get user");
-
   const { data } = await supabase.rpc("get_chats").eq("user_id", user.id);
 
   if (!data?.length) {
@@ -131,7 +131,7 @@ export const getUserChats = async (): Promise<Chat[]> => {
 };
 
 const page = 1;
-const pageSize = 12;
+const pageSize = 23;
 
 export const getFeaturedChats = async (): Promise<Chat[]> => {
   const supabase = createClient();
@@ -145,5 +145,22 @@ export const getFeaturedChats = async (): Promise<Chat[]> => {
   if (data?.length) {
     return data;
   }
+  return [];
+};
+
+export const getAllPublicChats = async (): Promise<Chat[]> => {
+  const supabase = createClient();
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+
+  const { data } = await supabase
+    .rpc("get_chats")
+    .not("is_private", "is", true)
+    .range(from, to);
+  console.log(data);
+  if (data?.length) {
+    return data;
+  }
+
   return [];
 };

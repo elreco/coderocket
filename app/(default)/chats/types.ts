@@ -17,6 +17,7 @@ export interface ChatProps {
   created_at: string | null;
   id: string;
   messages: ChatMessage[];
+  is_private: boolean;
   image_url?: string | null;
   user_id: any;
 }

@@ -216,6 +216,7 @@ export interface Database {
           created_at: string | null;
           id: string;
           is_featured: boolean | null;
+          is_private: boolean | null;
           prompt_image?: string | null;
           messages: any[];
           user_id: string | null;
@@ -223,6 +224,7 @@ export interface Database {
         Insert: {
           created_at?: string | null;
           is_featured?: boolean | null;
+          is_private: boolean | null;
           prompt_image?: string | null;
           id?: string;
           messages: any[];
@@ -256,6 +258,7 @@ export interface Database {
         Returns: {
           chat_id: string;
           is_featured: boolean;
+          is_private: boolean;
           user_id: string;
           user_full_name: string;
           first_user_message: any;

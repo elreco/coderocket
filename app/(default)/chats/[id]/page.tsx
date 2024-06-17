@@ -15,11 +15,13 @@ import {
   ShareIcon,
   TvIcon,
 } from "@heroicons/react/24/outline";
+import { LockClosedIcon, LockOpenIcon } from "@heroicons/react/24/solid";
 import { useCompletion } from "ai/react";
 import clsx from "clsx";
 import { saveAs } from "file-saver";
 import JSZip from "jszip";
 import { usePathname, useRouter } from "next/navigation";
+import { notFound } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useCopyToClipboard } from "usehooks-ts";
 
@@ -33,7 +35,6 @@ import { useToast } from "@/components/ui/toaster/use-toast";
 import {
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { openInCodeSandbox } from "@/utils/codesandbox";
@@ -44,8 +45,16 @@ import { createClient } from "@/utils/supabase/client";
 import { fetchChat } from "../actions";
 import { ChatMessage } from "../types";
 
+import { changeVisiblity } from "./actions";
 import ChatSidebar from "./chat-sidebar";
 import ChatSidebarMobile from "./chat-sidebar-mobile";
+
+const cssContent = `
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+body {
+  font-family: 'Inter', sans-serif!important;
+}
+`;
 
 export default function Chats({ params }: { params: { id: string } }) {
   const supabase = createClient();
@@ -61,6 +70,8 @@ export default function Chats({ params }: { params: { id: string } }) {
   const [userId, setUserId] = useState("");
   const [userFullName, setUserFullName] = useState("");
   const [userAvatar, setUserAvatar] = useState("");
+  const [isVisible, setVisible] = useState(false);
+  const [isNotFound, setNotFound] = useState(false);
 
   const {
     completion,
@@ -107,10 +118,19 @@ export default function Chats({ params }: { params: { id: string } }) {
     const getData = async () => {
       try {
         const fetchedChat = await fetchChat(params.id);
+        const { data } = await supabase.auth.getUser();
+        const userIdFromSession = data.user?.id;
         setMessages(fetchedChat?.messages || []);
         setUserId(fetchedChat?.user_id?.id || "");
         setUserFullName(fetchedChat?.user_id?.full_name || "");
         setUserAvatar(fetchedChat?.user_id?.avatar_url || "");
+        setVisible(!fetchedChat?.is_private);
+        if (
+          fetchedChat?.is_private &&
+          fetchedChat?.user_id?.id !== userIdFromSession
+        ) {
+          setNotFound(true);
+        }
       } catch (e) {
         toast({
           variant: "destructive",
@@ -151,13 +171,6 @@ export default function Chats({ params }: { params: { id: string } }) {
         </head>
         ${completion}
       </html>
-    `;
-
-    const cssContent = `
-      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
-      body {
-        font-family: 'Inter', sans-serif!important;
-      }
     `;
 
     const zip = new JSZip();
@@ -215,6 +228,23 @@ export default function Chats({ params }: { params: { id: string } }) {
     });
   };
 
+  const handleVisibility = async () => {
+    setVisible(!isVisible);
+    try {
+      await changeVisiblity(!isVisible, params.id);
+    } catch {
+      toast({
+        variant: "default",
+        title: "Can't change visibility",
+        description: "The visiblity can not be changed. Please try again.",
+      });
+    }
+  };
+
+  if (isNotFound) {
+    return notFound();
+  }
+
   return (
     <Container>
       <div className="flex size-full flex-col justify-center space-x-0 xl:max-h-full xl:flex-row xl:space-x-3">
@@ -222,6 +252,32 @@ export default function Chats({ params }: { params: { id: string } }) {
           <div className="flex flex-col items-center justify-start space-y-2 lg:flex-row lg:justify-between lg:space-y-0">
             <div className="font-medium text-gray-700">
               <div className="flex items-center space-x-2">
+                {!isLoading && title && authorized && (
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <Button
+                        onClick={handleVisibility}
+                        className="flex items-center"
+                      >
+                        {isVisible ? (
+                          <>
+                            <LockOpenIcon className="mr-1 w-5" />
+                            <span>Public</span>
+                          </>
+                        ) : (
+                          <>
+                            <LockClosedIcon className="mr-1 w-5" />{" "}
+                            <span>Private</span>
+                          </>
+                        )}
+                      </Button>
+                    </TooltipTrigger>
+
+                    <TooltipContent side="right">
+                      <p>{isVisible ? "Set private" : "Set public"}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                )}
                 {userAvatar && (
                   <Avatar>
                     <AvatarImage src={userAvatar} />
@@ -237,119 +293,119 @@ export default function Chats({ params }: { params: { id: string } }) {
                       Loading
                     </span>
                   ) : (
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger className="text-left">
-                          <span onClick={() => copyPrompt(title)}>
-                            {capitalizeFirstLetter(title)}
-                          </span>
-                        </TooltipTrigger>
+                    <Tooltip>
+                      <TooltipTrigger className="text-left">
+                        <span onClick={() => copyPrompt(title)}>
+                          {capitalizeFirstLetter(title)}
+                        </span>
+                      </TooltipTrigger>
 
-                        <TooltipContent>
-                          <p>Copy Prompt</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
+                      <TooltipContent>
+                        <p>Copy Prompt</p>
+                      </TooltipContent>
+                    </Tooltip>
                   )}
                 </h1>
               </div>
             </div>
             <div className="flex items-center">
-              <Button onClick={() => setCanvas(!isCanvas)} className="mr-1">
-                {isCanvas ? (
-                  <>
-                    <CodeBracketIcon className="mr-1 w-5" /> Code
-                  </>
-                ) : (
-                  <>
-                    <TvIcon className="mr-1 w-5" /> Canvas
-                  </>
-                )}
-              </Button>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger>
-                    <ChatSidebarMobile
-                      isLoading={isLoading}
-                      assistantMessages={assistantMessages}
-                      selectedVersion={selectedVersion}
-                      messages={messages}
-                      handleVersionSelect={handleVersionSelect}
-                    />
-                  </TooltipTrigger>
+              <Tooltip>
+                <TooltipTrigger>
+                  <Button
+                    onClick={() => setCanvas(!isCanvas)}
+                    className="mr-1 flex items-center"
+                  >
+                    {isCanvas ? (
+                      <>
+                        <CodeBracketIcon className="mr-1 w-5" />{" "}
+                        <span>Code</span>
+                      </>
+                    ) : (
+                      <>
+                        <TvIcon className="mr-1 w-5" /> <span>Canvas</span>
+                      </>
+                    )}
+                  </Button>
+                </TooltipTrigger>
 
-                  <TooltipContent>
-                    <p>Versions</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger>
-                    <Button
-                      disabled={isLoading}
-                      variant="outline"
-                      onClick={copyRawHTML}
-                      className="mr-1"
-                    >
-                      <ClipboardIcon className="w-5" />
-                    </Button>
-                  </TooltipTrigger>
+                <TooltipContent>
+                  <p>{isCanvas ? "Hide canva" : "Display canvas"}</p>
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger>
+                  <ChatSidebarMobile
+                    isLoading={isLoading}
+                    assistantMessages={assistantMessages}
+                    selectedVersion={selectedVersion}
+                    messages={messages}
+                    handleVersionSelect={handleVersionSelect}
+                  />
+                </TooltipTrigger>
 
-                  <TooltipContent>
-                    <p>Copy raw HTML</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger>
-                    <Button
-                      disabled={isLoading}
-                      variant="outline"
-                      onClick={() => openInCodeSandbox(completion)}
-                      className="mr-1"
-                    >
-                      <ArrowTopRightOnSquareIcon className="w-5" />
-                    </Button>
-                  </TooltipTrigger>
+                <TooltipContent>
+                  <p>Versions</p>
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger>
+                  <Button
+                    disabled={isLoading}
+                    variant="outline"
+                    onClick={copyRawHTML}
+                    className="mr-1"
+                  >
+                    <ClipboardIcon className="w-5" />
+                  </Button>
+                </TooltipTrigger>
 
-                  <TooltipContent>
-                    <p>Open Sandbox</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger>
-                    <Button
-                      disabled={isLoading}
-                      variant="outline"
-                      onClick={downloadCode}
-                      className="mr-1"
-                    >
-                      <ArrowDownTrayIcon className="w-5" />
-                    </Button>
-                  </TooltipTrigger>
+                <TooltipContent>
+                  <p>Copy raw HTML</p>
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger>
+                  <Button
+                    disabled={isLoading}
+                    variant="outline"
+                    onClick={() => openInCodeSandbox(completion)}
+                    className="mr-1"
+                  >
+                    <ArrowTopRightOnSquareIcon className="w-5" />
+                  </Button>
+                </TooltipTrigger>
 
-                  <TooltipContent>
-                    <p>Download code</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger>
-                    <Button variant="outline" onClick={share}>
-                      <ShareIcon className="w-5" />
-                    </Button>
-                  </TooltipTrigger>
+                <TooltipContent>
+                  <p>Open Sandbox</p>
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger>
+                  <Button
+                    disabled={isLoading}
+                    variant="outline"
+                    onClick={downloadCode}
+                    className="mr-1"
+                  >
+                    <ArrowDownTrayIcon className="w-5" />
+                  </Button>
+                </TooltipTrigger>
 
-                  <TooltipContent>
-                    <p>Share Component</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+                <TooltipContent>
+                  <p>Download code</p>
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger>
+                  <Button variant="outline" onClick={share}>
+                    <ShareIcon className="w-5" />
+                  </Button>
+                </TooltipTrigger>
+
+                <TooltipContent>
+                  <p>Share Component</p>
+                </TooltipContent>
+              </Tooltip>
             </div>
           </div>
           <div className="flex flex-1 flex-col space-y-2 rounded-lg pb-2 transition-all duration-200">
@@ -384,10 +440,7 @@ ${completion}
 </html>`,
                   },
                   "/tailwindai.css": {
-                    code: `@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
-body {
-font-family: 'Inter', sans-serif!important;
-}`,
+                    code: cssContent,
                   },
                 }}
               >

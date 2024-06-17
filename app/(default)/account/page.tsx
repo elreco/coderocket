@@ -38,7 +38,7 @@ export default async function Account() {
     }).format((subscription?.prices?.unit_amount || 0) / 100);
 
   const chats = await getUserChats();
-
+  console.log(chats);
   return (
     <Container>
       <h1 className="mb-1 text-lg font-medium text-gray-900 sm:text-left sm:text-2xl">
@@ -132,7 +132,9 @@ export default async function Account() {
           }
         >
           <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
-            {chats?.map((chat) => <ChatCard key={chat.chat_id} chat={chat} />)}
+            {chats.map((chat) => (
+              <ChatCard key={chat.chat_id} chat={chat} />
+            ))}
           </div>
         </Card>
       </div>

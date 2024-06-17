@@ -11,6 +11,7 @@ import { Rubik } from "next/font/google";
 
 import { SandPackCSS } from "@/components/sandpack-styles";
 import { Toaster } from "@/components/ui/toaster";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 const rubik = Rubik({
   subsets: ["latin"],
@@ -51,12 +52,11 @@ export const metadata = {
     description: meta.description,
     cardImage: meta.cardImage,
     type: meta.type,
-    site_name: meta.title,
+    siteName: "Tailwind AI",
     images: meta.twitter.images,
   },
   twitter: {
     card: "summary_large_image",
-    site: "@vercel",
     title: meta.title,
     description: meta.description,
     images: meta.twitter.images,
@@ -72,13 +72,15 @@ export default function RootLayout({ children }: PropsWithChildren) {
       <head>
         <SandPackCSS />
       </head>
-      <body className="size-full">
-        <Navbar />
-        <main className="size-full">{children}</main>
-        <Footer />
-        <Toaster />
-        <Analytics />
-      </body>
+      <TooltipProvider>
+        <body className="size-full">
+          <Navbar />
+          <main className="size-full">{children}</main>
+          <Footer />
+          <Toaster />
+          <Analytics />
+        </body>
+      </TooltipProvider>
     </html>
   );
 }
