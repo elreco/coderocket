@@ -9,6 +9,7 @@ import {
 import { ArrowPathIcon } from "@heroicons/react/20/solid";
 import {
   ArrowDownTrayIcon,
+  ArrowTopRightOnSquareIcon,
   ClipboardIcon,
   CodeBracketIcon,
   ShareIcon,
@@ -35,6 +36,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { openInCodeSandbox } from "@/utils/codesandbox";
 import { maxPromptLength } from "@/utils/config";
 import { capitalizeFirstLetter } from "@/utils/helpers";
 import { createClient } from "@/utils/supabase/client";
@@ -305,6 +307,24 @@ export default function Chats({ params }: { params: { id: string } }) {
                     <Button
                       disabled={isLoading}
                       variant="outline"
+                      onClick={() => openInCodeSandbox(completion)}
+                      className="mr-1"
+                    >
+                      <ArrowTopRightOnSquareIcon className="w-5" />
+                    </Button>
+                  </TooltipTrigger>
+
+                  <TooltipContent>
+                    <p>Open Sandbox</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <Button
+                      disabled={isLoading}
+                      variant="outline"
                       onClick={downloadCode}
                       className="mr-1"
                     >
@@ -337,27 +357,37 @@ export default function Chats({ params }: { params: { id: string } }) {
               <SandpackProvider
                 style={{ height: "100%" }}
                 options={{
-                  recompileMode: "delayed",
+                  autoReload: true,
+                  recompileMode: "immediate",
                   recompileDelay: 800,
+                  visibleFiles: ["/index.html", "/tailwind.css"],
+                  activeFile: "/completion.html",
                 }}
                 template="static"
+                customSetup={{
+                  entry: "/index.html",
+                }}
                 files={{
-                  "/index.html": `<html class="size-full">
+                  "/completion.html": {
+                    code: completion,
+                  },
+                  "/index.html": {
+                    code: `<html class="size-full">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://cdn.jsdelivr.net/gh/iconoir-icons/iconoir@main/css/iconoir.css" rel="stylesheet" />
-  <link href="tailwindai.css" rel="stylesheet">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://cdn.jsdelivr.net/gh/iconoir-icons/iconoir@main/css/iconoir.css" rel="stylesheet" />
+<link href="tailwindai.css" rel="stylesheet">
 </head>
 ${completion}
 </html>`,
+                  },
                   "/tailwindai.css": {
                     code: `@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
 body {
-  font-family: 'Inter', sans-serif!important;
+font-family: 'Inter', sans-serif!important;
 }`,
-                    hidden: true,
                   },
                 }}
               >
@@ -380,8 +410,9 @@ body {
                     >
                       <SandpackCodeEditor
                         showRunButton={false}
-                        readOnly
                         showReadOnly={false}
+                        showTabs={false}
+                        readOnly
                       />
                     </SandpackLayout>
                   </div>
@@ -401,7 +432,10 @@ body {
                         width: "100%",
                       }}
                     >
-                      <SandpackPreview />
+                      <SandpackPreview
+                        showOpenInCodeSandbox={false}
+                        showRefreshButton={false}
+                      />
                     </SandpackLayout>
                   </div>
                 </div>

@@ -29,6 +29,7 @@
     "buffer": "^6.0.3",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.0.0",
+    "codesandbox": "^2.2.3",
     "date-fns": "^3.6.0",
     "encoding": "^0.1.13",
     "file-saver": "^2.0.5",
