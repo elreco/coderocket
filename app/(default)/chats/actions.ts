@@ -133,18 +133,13 @@ export const getUserChats = async (): Promise<Chat[]> => {
   return data;
 };
 
-const page = 1;
-const pageSize = 23;
-
 export const getFeaturedChats = async (): Promise<Chat[]> => {
   const supabase = createClient();
-  const from = (page - 1) * pageSize;
-  const to = from + pageSize - 1;
 
   const { data } = await supabase
     .rpc("get_chats")
-    .not("is_featured", "is", false)
-    .range(from, to);
+    .is("is_featured", true)
+    .limit(50);
   if (data?.length) {
     return data;
   }
@@ -153,13 +148,11 @@ export const getFeaturedChats = async (): Promise<Chat[]> => {
 
 export const getAllPublicChats = async (): Promise<Chat[]> => {
   const supabase = createClient();
-  const from = (page - 1) * pageSize;
-  const to = from + pageSize - 1;
 
   const { data } = await supabase
     .rpc("get_chats")
-    .not("is_private", "is", true)
-    .range(from, to);
+    .is("is_private", false)
+    .limit(24);
   if (data?.length) {
     return data;
   }

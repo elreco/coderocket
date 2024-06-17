@@ -3,7 +3,8 @@ import { Buffer } from "buffer";
 import { screenshotApiUrl } from "./config";
 
 export async function captureScreenshot(url: string) {
-  const apiUrl = `${screenshotApiUrl}?url=${encodeURIComponent(url)}`;
+  const apiUrl = `${screenshotApiUrl}${encodeURIComponent(url)}`;
+  console.log(apiUrl);
   try {
     const response = await fetch(apiUrl);
     if (!response.ok) {
