@@ -122,7 +122,10 @@ export const getUserChats = async (): Promise<Chat[]> => {
   const user = userData.user;
 
   if (!user) throw Error("Could not get user");
-  const { data } = await supabase.rpc("get_chats").eq("user_id", user.id);
+  const { data } = await supabase
+    .rpc("get_chats")
+    .eq("user_id", user.id)
+    .limit(100);
 
   if (!data?.length) {
     return [];
