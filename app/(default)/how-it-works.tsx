@@ -11,8 +11,8 @@ import {
 
 export default function Video() {
   return (
-    <div className="bg-hero flex h-screen w-full items-center justify-between px-4 pb-40">
-      <div className="mx-auto w-1/2 pl-10 text-center">
+    <div className="bg-hero flex h-screen w-full flex-col items-center px-4 py-40 lg:flex-row lg:justify-between">
+      <div className="w-full text-center lg:mx-auto lg:w-1/2 lg:pl-10">
         <motion.h1
           initial={{
             opacity: 0,
@@ -26,7 +26,7 @@ export default function Video() {
             duration: 0.5,
             ease: [0.4, 0.0, 0.2, 1],
           }}
-          className="text-left text-2xl font-bold  leading-relaxed text-gray-900 md:text-4xl lg:text-5xl lg:leading-snug"
+          className="text-left text-2xl font-bold text-gray-900 md:text-4xl lg:text-5xl"
         >
           How it works?
         </motion.h1>
@@ -117,7 +117,7 @@ export default function Video() {
           duration: 0.5,
           ease: [0.4, 0.0, 0.2, 1],
         }}
-        className="mx-20 w-1/2 bg-transparent"
+        className="mt-10 w-full bg-transparent pb-20 lg:mx-20 lg:mt-0 lg:w-1/2 lg:pb-0"
       >
         <div className="rounded-lg bg-white">
           <video
@@ -126,6 +126,7 @@ export default function Video() {
             preload="none"
             autoPlay
             muted
+            loop
           >
             <source src="/demo.mp4" type="video/mp4" />
             Your browser does not support the video tag.
