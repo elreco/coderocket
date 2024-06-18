@@ -31,7 +31,6 @@ import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/toaster/use-toast";
 import {
   Tooltip,
@@ -199,14 +198,15 @@ export default function ChatCompletion({
   };
 
   const handleVisibility = async () => {
-    setVisible(!isVisible);
     try {
       await changeVisiblity(!isVisible, fetchedChat.id);
+      setVisible(!isVisible);
     } catch {
       toast({
-        variant: "default",
-        title: "Can't change visibility",
-        description: "The visiblity can not be changed. Please try again.",
+        variant: "destructive",
+        title: "Premium account required",
+        description:
+          "You are not premium, the visiblity can not be changed. Please upgrade to premium and try again.",
       });
     }
   };
@@ -299,7 +299,7 @@ export default function ChatCompletion({
                 </TooltipTrigger>
 
                 <TooltipContent>
-                  <p>{isCanvas ? "Hide canva" : "Display canvas"}</p>
+                  <p>{isCanvas ? "Display code" : "Hide code"}</p>
                 </TooltipContent>
               </Tooltip>
               <Tooltip>
@@ -317,22 +317,7 @@ export default function ChatCompletion({
                   <p>Versions</p>
                 </TooltipContent>
               </Tooltip>
-              <Tooltip>
-                <TooltipTrigger>
-                  <Button
-                    disabled={isLoading}
-                    variant="outline"
-                    onClick={copyRawHTML}
-                    className="mr-1"
-                  >
-                    <ClipboardIcon className="w-5" />
-                  </Button>
-                </TooltipTrigger>
 
-                <TooltipContent>
-                  <p>Copy raw HTML</p>
-                </TooltipContent>
-              </Tooltip>
               <Tooltip>
                 <TooltipTrigger>
                   <Button
@@ -351,22 +336,6 @@ export default function ChatCompletion({
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger>
-                  <Button
-                    disabled={isLoading}
-                    variant="outline"
-                    onClick={downloadCode}
-                    className="mr-1"
-                  >
-                    <ArrowDownTrayIcon className="w-5" />
-                  </Button>
-                </TooltipTrigger>
-
-                <TooltipContent>
-                  <p>Download code</p>
-                </TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger>
                   <Button variant="outline" onClick={share}>
                     <ShareIcon className="w-5" />
                   </Button>
@@ -379,26 +348,24 @@ export default function ChatCompletion({
             </div>
           </div>
           <div className="flex flex-1 flex-col space-y-2 rounded-lg pb-2 transition-all duration-200">
-            {completion ? (
-              <SandpackProvider
-                style={{ height: "100%" }}
-                options={{
-                  autoReload: true,
-                  recompileMode: "immediate",
-                  recompileDelay: 800,
-                  visibleFiles: ["/index.html", "/tailwind.css"],
-                  activeFile: "/completion.html",
-                }}
-                template="static"
-                customSetup={{
-                  entry: "/index.html",
-                }}
-                files={{
-                  "/completion.html": {
-                    code: completion,
-                  },
-                  "/index.html": {
-                    code: `<html class="size-full">
+            <SandpackProvider
+              style={{ height: "100%" }}
+              options={{
+                autoReload: true,
+                recompileMode: "immediate",
+                visibleFiles: ["/index.html", "/tailwind.css"],
+                activeFile: "/completion.html",
+              }}
+              template="static"
+              customSetup={{
+                entry: "/index.html",
+              }}
+              files={{
+                "/completion.html": {
+                  code: completion,
+                },
+                "/index.html": {
+                  code: `<html class="size-full">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -408,71 +375,88 @@ export default function ChatCompletion({
 </head>
 ${completion}
 </html>`,
-                  },
-                  "/tailwindai.css": {
-                    code: cssContent,
-                  },
-                }}
-              >
-                <div className="flex size-full flex-col gap-3 xl:flex-row">
-                  <div
-                    className={clsx(
-                      "size-full transition-all",
-                      isCanvas ? "xl:block xl:w-1/2" : "xl:block  xl:w-full",
-                      isCanvas ? "hidden" : "block",
-                    )}
+                },
+                "/tailwindai.css": {
+                  code: cssContent,
+                },
+              }}
+            >
+              <div className="flex size-full flex-col gap-3 xl:flex-row">
+                <div
+                  className={clsx(
+                    "size-full transition-all xl:block",
+                    !isCanvas ? "xl:w-1/2" : "xl:w-full",
+                    !isCanvas ? "hidden" : "block",
+                  )}
+                >
+                  <SandpackLayout
+                    style={{
+                      flex: 1,
+                      display: "flex",
+                      flexDirection: "column",
+                      height: "100%",
+                      width: "100%",
+                    }}
                   >
-                    <SandpackLayout
-                      style={{
-                        flex: 1,
-                        display: "flex",
-                        flexDirection: "column",
-                        height: "100%",
-                        width: "100%",
-                      }}
-                    >
-                      <SandpackCodeEditor
-                        showRunButton={false}
-                        showReadOnly={false}
-                        showTabs={false}
-                        readOnly
-                      />
-                    </SandpackLayout>
-                  </div>
-                  <div
-                    className={clsx(
-                      "h-full transition-all xl:w-1/2",
-                      isCanvas ? "xl:block" : "xl:hidden",
-                      isCanvas ? "block" : "hidden",
-                    )}
-                  >
-                    <SandpackLayout
-                      style={{
-                        flex: 1,
-                        display: "flex",
-                        flexDirection: "column",
-                        height: "100%",
-                        width: "100%",
-                      }}
-                    >
-                      <SandpackPreview
-                        showOpenInCodeSandbox={false}
-                        showRefreshButton={false}
-                      />
-                    </SandpackLayout>
-                  </div>
+                    <SandpackPreview
+                      showOpenInCodeSandbox={false}
+                      showRefreshButton={false}
+                    />
+                  </SandpackLayout>
                 </div>
-              </SandpackProvider>
-            ) : (
-              <div className="flex size-full flex-col space-y-3 rounded-lg border bg-white">
-                <Skeleton className="m-5 h-1/2 rounded-lg" />
-                <div className="m-5 space-y-2">
-                  <Skeleton className="h-4 w-1/2" />
-                  <Skeleton className="h-4 w-[27%]" />
-                  <Skeleton className="h-4 w-[34%]" />
+                <div
+                  className={clsx(
+                    "group h-full transition-all xl:block",
+                    isCanvas ? "xl:invisible xl:w-0" : "xl:visible xl:w-1/2",
+                    !isCanvas ? "block" : "hidden",
+                  )}
+                >
+                  <SandpackLayout
+                    style={{
+                      flex: 1,
+                      display: "flex",
+                      position: "relative",
+                      flexDirection: "column",
+                      height: "100%",
+                      width: "100%",
+                    }}
+                  >
+                    <SandpackCodeEditor
+                      showRunButton={false}
+                      showReadOnly={false}
+                      showTabs={false}
+                      readOnly
+                    />
+                    <div className="absolute right-0 top-0 m-2 flex flex-col items-center justify-center space-y-2 xl:hidden group-hover:xl:flex">
+                      <Button
+                        disabled={isLoading}
+                        variant="outline"
+                        onClick={copyRawHTML}
+                        className=" items-center p-1 transition-all duration-300"
+                      >
+                        <span className="mr-1 text-nowrap text-xs">
+                          Copy code
+                        </span>{" "}
+                        <ClipboardIcon className="w-4" />
+                      </Button>
+
+                      <Button
+                        disabled={isLoading}
+                        variant="outline"
+                        onClick={downloadCode}
+                        className="  items-center p-1 transition-all duration-300"
+                      >
+                        <span className="mr-1 text-nowrap text-xs">
+                          Download
+                        </span>{" "}
+                        <ArrowDownTrayIcon className="w-4" />
+                      </Button>
+                    </div>
+                  </SandpackLayout>
                 </div>
               </div>
-            )}
+            </SandpackProvider>
+
             {authorized && (
               <form
                 className="flex w-full flex-1 items-center xl:justify-start"

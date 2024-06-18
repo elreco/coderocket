@@ -1,5 +1,6 @@
 "use server";
 
+import { getSubscription } from "@/app/supabase-server";
 import { createClient } from "@/utils/supabase/server";
 
 export const changeVisiblity = async (
@@ -11,6 +12,11 @@ export const changeVisiblity = async (
   const user = userData?.user;
 
   if (!user) throw new Error("Could not get user");
+  const subscription = await getSubscription();
+  if (!subscription || subscription.status !== "active") {
+    throw new Error("payment-required");
+  }
+
   const { error } = await supabase
     .from("chats")
     .update({ is_private: !isVisible })
