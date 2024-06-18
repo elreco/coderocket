@@ -427,14 +427,14 @@ ${completion}
                       showTabs={false}
                       readOnly
                     />
-                    <div className="absolute right-0 top-0 m-2 flex flex-col items-center justify-center space-y-2 xl:hidden group-hover:xl:flex">
+                    <div className="absolute right-0 top-0 m-2 flex flex-col items-center justify-center space-y-2 transition duration-300  xl:hidden group-hover:xl:flex">
                       <Button
                         disabled={isLoading}
                         variant="outline"
                         onClick={copyRawHTML}
-                        className=" items-center p-1 transition-all duration-300"
+                        className="flex items-center"
                       >
-                        <span className="mr-1 text-nowrap text-xs">
+                        <span className="mr-1 text-nowrap text-xs transition duration-300">
                           Copy code
                         </span>{" "}
                         <ClipboardIcon className="w-4" />
@@ -444,9 +444,9 @@ ${completion}
                         disabled={isLoading}
                         variant="outline"
                         onClick={downloadCode}
-                        className="  items-center p-1 transition-all duration-300"
+                        className="flex items-center"
                       >
-                        <span className="mr-1 text-nowrap text-xs">
+                        <span className="mr-1 text-nowrap text-xs transition duration-300">
                           Download
                         </span>{" "}
                         <ArrowDownTrayIcon className="w-4" />
