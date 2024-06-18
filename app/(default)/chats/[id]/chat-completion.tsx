@@ -254,7 +254,7 @@ export default function ChatCompletion({
                   </Avatar>
                 )}
                 {userFullName && (
-                  <Badge variant="default">{userFullName}</Badge>
+                  <Badge variant="default" className="text-nowrap">{userFullName}</Badge>
                 )}
                 <h1>
                   {isLoading || !title ? (
