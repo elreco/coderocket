@@ -1,6 +1,5 @@
 "use client";
 
-import { useCompletion } from "@ai-sdk/react";
 import { ArrowPathIcon } from "@heroicons/react/20/solid";
 import {
   ArrowTopRightOnSquareIcon,
@@ -9,6 +8,7 @@ import {
   TvIcon,
 } from "@heroicons/react/24/outline";
 import { LockClosedIcon, LockOpenIcon } from "@heroicons/react/24/solid";
+import { useCompletion } from "ai/react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useCopyToClipboard } from "usehooks-ts";
