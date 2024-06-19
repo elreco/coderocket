@@ -18,6 +18,7 @@ export default function AuthUI() {
             <Input
               className="!border-gray-300 bg-white !text-gray-900"
               id="email"
+              required
               placeholder="name@example.com"
               type="email"
               name="email"
@@ -34,6 +35,7 @@ export default function AuthUI() {
               className="!border-gray-300 bg-white !text-gray-900"
               id="password"
               placeholder="password"
+              required
               name="password"
               type="password"
               autoCapitalize="none"

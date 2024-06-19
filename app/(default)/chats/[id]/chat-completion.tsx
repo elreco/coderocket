@@ -386,9 +386,9 @@ ${completion}
               <div className="flex size-full flex-col gap-3 xl:flex-row">
                 <div
                   className={clsx(
-                    "size-full transition-all xl:block",
+                    "transition-all xl:visible xl:h-full",
                     !isCanvas ? "xl:w-1/2" : "xl:w-full",
-                    !isCanvas ? "hidden" : "block",
+                    !isCanvas ? "invisible h-0" : "visible h-full",
                   )}
                 >
                   <SandpackLayout
@@ -408,9 +408,9 @@ ${completion}
                 </div>
                 <div
                   className={clsx(
-                    "group h-full transition-all xl:block",
+                    "group transition-all xl:h-full",
                     isCanvas ? "xl:invisible xl:w-0" : "xl:visible xl:w-1/2",
-                    !isCanvas ? "block" : "hidden",
+                    !isCanvas ? "visible h-full" : "invisible h-0",
                   )}
                 >
                   <SandpackLayout
