@@ -1,28 +1,15 @@
 "use client";
 
-import {
-  SandpackCodeEditor,
-  SandpackLayout,
-  SandpackPreview,
-  SandpackProvider,
-} from "@codesandbox/sandpack-react";
+import { useCompletion } from "@ai-sdk/react";
 import { ArrowPathIcon } from "@heroicons/react/20/solid";
 import {
-  ArrowDownTrayIcon,
   ArrowTopRightOnSquareIcon,
-  ClipboardIcon,
   CodeBracketIcon,
   ShareIcon,
   TvIcon,
 } from "@heroicons/react/24/outline";
 import { LockClosedIcon, LockOpenIcon } from "@heroicons/react/24/solid";
-import { User } from "@supabase/supabase-js";
-import { useCompletion } from "ai/react";
-import clsx from "clsx";
-import { saveAs } from "file-saver";
-import JSZip from "jszip";
 import { usePathname, useRouter } from "next/navigation";
-import { notFound } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useCopyToClipboard } from "usehooks-ts";
 
@@ -47,37 +34,43 @@ import { ChatMessage, ChatProps } from "../types";
 import { changeVisiblity } from "./actions";
 import ChatSidebar from "./chat-sidebar";
 import ChatSidebarMobile from "./chat-sidebar-mobile";
-
-const cssContent = `
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
-body {
-  font-family: 'Inter', sans-serif!important;
-}
-`;
+import MemoizedSandpack from "./memoized-sandpack";
 
 export default function ChatCompletion({
   fetchedChat,
-  user,
+  authorized,
+  userAvatar,
+  userFullName,
+  defaultCompletion,
+  defaultVisibility,
+  defaultTitle,
+  defaultSelectedVersion,
+  defaultMessages,
+  defaultMessage,
 }: {
   fetchedChat: ChatProps;
-  user: User | null;
+  authorized: boolean;
+  userAvatar: string;
+  userFullName: string;
+  defaultCompletion: string;
+  defaultVisibility: boolean;
+  defaultTitle: string;
+  defaultSelectedVersion: string;
+  defaultMessages: ChatMessage[];
+  defaultMessage: string;
 }) {
   const [, copy] = useCopyToClipboard();
   const { toast } = useToast();
   const router = useRouter();
   const pathname = usePathname();
-  const [messages, setMessages] = useState<ChatMessage[]>(
-    fetchedChat?.messages || [],
+
+  const [messages, setMessages] = useState<ChatMessage[]>(defaultMessages);
+  const [selectedVersion, setSelectedVersion] = useState<string>(
+    defaultSelectedVersion,
   );
-  const [selectedVersion, setSelectedVersion] = useState<string | null>(null);
-  const [title, setTitle] = useState<string>("");
-  const authorized = user?.id === fetchedChat?.user_id?.id;
-  const [isCanvas, setCanvas] = useState(true);
-  const userFullName = fetchedChat?.user_id?.full_name || "";
-  const userAvatar = fetchedChat?.user_id?.avatar_url || "";
-  const [isVisible, setVisible] = useState(!fetchedChat?.is_private);
-  const isNotFound =
-    fetchedChat?.is_private && fetchedChat?.user_id?.id !== user?.id;
+  const [title, setTitle] = useState<string>(defaultTitle);
+  const [isCanvas, setCanvas] = useState(false);
+  const [isVisible, setVisible] = useState(defaultVisibility);
 
   const {
     completion,
@@ -91,6 +84,8 @@ export default function ChatCompletion({
   } = useCompletion({
     api: "/api/completion",
     body: { id: fetchedChat.id },
+    initialInput: defaultMessage,
+    initialCompletion: defaultCompletion,
     onError: async (error) => {
       if (error.message === "payment-required") {
         return router.push("/pricing?paymentRequired=true");
@@ -108,74 +103,35 @@ export default function ChatCompletion({
       const refreshedChatData = await fetchChat(fetchedChat.id);
       setMessages(refreshedChatData?.messages || []);
       setInput("");
+      const lastCompletionMessage = refreshedChatData?.messages
+        .slice()
+        .reverse()
+        .find((message) => message.role === "assistant");
+      if (lastCompletionMessage) {
+        setCompletion(lastCompletionMessage.content ?? "");
+        handleVersionSelect(lastCompletionMessage.id);
+      }
     },
   });
 
   useEffect(() => {
-    if (messages.length === 1) {
-      const defaultMessage =
-        messages?.find((m) => m.role === "user")?.content || "";
-      setInput(defaultMessage);
+    if (defaultMessages.length === 1) {
       complete(defaultMessage);
     }
-    const lastCompletionMessage = messages
-      .slice()
-      .reverse()
-      .find((message) => message.role === "assistant");
-    if (lastCompletionMessage) {
-      setCompletion(lastCompletionMessage.content ?? "");
-      handleVersionSelect(lastCompletionMessage.id);
-    }
-  }, [messages.length]);
-
-  const downloadCode = () => {
-    const htmlContent = `
-      <html class="size-full">
-        <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <script src="https://cdn.tailwindcss.com"></script>
-          <link href="https://cdn.jsdelivr.net/gh/iconoir-icons/iconoir@main/css/iconoir.css" rel="stylesheet" />
-          <link href="tailwindai.css" rel="stylesheet">
-        </head>
-        ${completion}
-      </html>
-    `;
-
-    const zip = new JSZip();
-    zip.file("index.html", htmlContent);
-    zip.file("tailwindai.css", cssContent);
-
-    zip.generateAsync({ type: "blob" }).then(function (content) {
-      saveAs(content, "tailwindai-dev.zip");
-    });
-  };
+  }, []);
 
   const handleVersionSelect = (id: string) => {
     const selectedMessageIndex = messages.findIndex((m) => m.id === id);
     if (selectedMessageIndex > -1) {
       setSelectedVersion(id);
-      setTitle(messages[selectedMessageIndex - 1].content ?? "");
-      setCompletion(messages[selectedMessageIndex].content ?? "");
+      setTitle(messages[selectedMessageIndex - 1]?.content ?? "");
+      setCompletion(messages[selectedMessageIndex]?.content ?? "");
     }
   };
 
   const assistantMessages = useMemo(() => {
-    const assistantMessagesOnly = messages.filter(
-      (m) => m.role === "assistant",
-    );
-    return assistantMessagesOnly.slice(-30);
+    return messages.filter((m) => m.role === "assistant").slice(-30);
   }, [messages]);
-
-  const copyRawHTML = () => {
-    copy(completion);
-    toast({
-      variant: "default",
-      title: "Successfully copied",
-      description:
-        "Your component has been successfully saved to your clipboard",
-    });
-  };
 
   const copyPrompt = (prompt: string) => {
     copy(prompt);
@@ -193,7 +149,7 @@ export default function ChatCompletion({
     toast({
       variant: "default",
       title: "Successfully copied",
-      description: "The url has been successfully saved to your clipboard",
+      description: "The URL has been successfully saved to your clipboard",
     });
   };
 
@@ -206,14 +162,10 @@ export default function ChatCompletion({
         variant: "destructive",
         title: "Premium account required",
         description:
-          "You are not premium, the visiblity can not be changed. Please upgrade to premium and try again.",
+          "You are not premium, the visibility cannot be changed. Please upgrade to premium and try again.",
       });
     }
   };
-
-  if (isNotFound) {
-    return notFound();
-  }
 
   return (
     <Container>
@@ -350,120 +302,11 @@ export default function ChatCompletion({
             </div>
           </div>
           <div className="flex flex-1 flex-col space-y-2 rounded-lg pb-2 transition-all duration-200">
-            <SandpackProvider
-              style={{ height: "100%" }}
-              options={{
-                autoReload: true,
-                recompileMode: "immediate",
-                visibleFiles: ["/index.html", "/tailwind.css"],
-                activeFile: "/completion.html",
-              }}
-              template="static"
-              customSetup={{
-                entry: "/index.html",
-              }}
-              files={{
-                "/completion.html": {
-                  code: completion,
-                },
-                "/index.html": {
-                  code: `<html class="size-full">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<script src="https://cdn.tailwindcss.com"></script>
-<link href="https://cdn.jsdelivr.net/gh/iconoir-icons/iconoir@main/css/iconoir.css" rel="stylesheet" />
-<link href="tailwindai.css" rel="stylesheet">
-</head>
-${completion}
-</html>`,
-                },
-                "/tailwindai.css": {
-                  code: cssContent,
-                },
-              }}
-            >
-              <div
-                className={clsx(
-                  "flex size-full flex-col xl:flex-row",
-                  !isCanvas ? "gap-3" : "gap-0",
-                )}
-              >
-                <div
-                  className={clsx(
-                    "transition-all xl:visible xl:h-full",
-                    !isCanvas ? "xl:w-1/2" : "xl:w-full",
-                    !isCanvas ? "invisible h-0" : "visible h-full",
-                  )}
-                >
-                  <SandpackLayout
-                    style={{
-                      flex: 1,
-                      display: "flex",
-                      flexDirection: "column",
-                      height: "100%",
-                      width: "100%",
-                    }}
-                  >
-                    <SandpackPreview
-                      showOpenInCodeSandbox={false}
-                      showRefreshButton={false}
-                    />
-                  </SandpackLayout>
-                </div>
-                <div
-                  className={clsx(
-                    "group transition-all xl:h-full",
-                    isCanvas ? "xl:invisible xl:w-0" : "xl:visible xl:w-1/2",
-                    !isCanvas ? "visible h-full" : "invisible h-0",
-                  )}
-                >
-                  <SandpackLayout
-                    style={{
-                      flex: 1,
-                      display: "flex",
-                      position: "relative",
-                      flexDirection: "column",
-                      height: "100%",
-                      width: "100%",
-                    }}
-                  >
-                    <SandpackCodeEditor
-                      showRunButton={false}
-                      showReadOnly={false}
-                      showTabs={false}
-                      readOnly
-                    />
-                    <div className="absolute right-0 top-0 m-2 flex flex-col items-center justify-center space-y-2 transition duration-300  xl:hidden group-hover:xl:flex">
-                      <Button
-                        disabled={isLoading}
-                        variant="outline"
-                        onClick={copyRawHTML}
-                        className="flex items-center"
-                      >
-                        <span className="mr-1 text-nowrap text-xs transition duration-300">
-                          Copy code
-                        </span>{" "}
-                        <ClipboardIcon className="w-4" />
-                      </Button>
-
-                      <Button
-                        disabled={isLoading}
-                        variant="outline"
-                        onClick={downloadCode}
-                        className="flex items-center"
-                      >
-                        <span className="mr-1 text-nowrap text-xs transition duration-300">
-                          Download
-                        </span>{" "}
-                        <ArrowDownTrayIcon className="w-4" />
-                      </Button>
-                    </div>
-                  </SandpackLayout>
-                </div>
-              </div>
-            </SandpackProvider>
-
+            <MemoizedSandpack
+              completion={completion}
+              isCanvas={isCanvas}
+              isLoading={isLoading}
+            />
             {authorized && (
               <form
                 className="flex w-full flex-1 items-center xl:justify-start"
