@@ -383,7 +383,12 @@ ${completion}
                 },
               }}
             >
-              <div className="flex size-full flex-col gap-3 xl:flex-row">
+              <div
+                className={clsx(
+                  "flex size-full flex-col xl:flex-row",
+                  !isCanvas ? "gap-3" : "gap-0",
+                )}
+              >
                 <div
                   className={clsx(
                     "transition-all xl:visible xl:h-full",
