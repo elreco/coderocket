@@ -67,6 +67,7 @@ export default function AuthUI() {
         <Button
           formAction={signInWithGithub}
           variant="outline"
+          type="button"
           className="flex items-center space-x-2"
         >
           <svg
