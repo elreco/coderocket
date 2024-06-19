@@ -20,6 +20,7 @@ export default function AuthUIMagicLink() {
               className="!border-gray-300 bg-white !text-gray-900"
               placeholder="name@example.com"
               type="email"
+              required
               name="email"
               autoCapitalize="none"
               autoComplete="email"
