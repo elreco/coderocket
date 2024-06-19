@@ -1,12 +1,37 @@
+"use client";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { useEffect } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { toast } from "@/components/ui/toaster/use-toast";
 
 import { login, signup, signInWithGithub } from "./actions";
 
 export default function AuthUI() {
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const error = searchParams.get("error");
+    if (error) {
+      if (error === "github") {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Can't connect with Github, please try again",
+        });
+        return;
+      }
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "You must fill Email and Password",
+      });
+    }
+  });
+
   return (
     <form>
       <div className="grid gap-6">
