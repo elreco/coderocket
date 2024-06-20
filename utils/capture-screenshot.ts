@@ -1,14 +1,15 @@
 import captureWebsite from "capture-website";
-import chromium from "chrome-aws-lambda";
+import chrome from "chrome-aws-lambda";
 
 export async function captureScreenshot(url: string) {
   try {
     const response = await captureWebsite.buffer(url, {
       launchOptions: {
-        args: chromium.args,
-        defaultViewport: chromium.defaultViewport,
-        executablePath: await chromium.executablePath,
-        headless: chromium.headless,
+        args: [...chrome.args, "--hide-scrollbars", "--disable-web-security"],
+        defaultViewport: chrome.defaultViewport,
+        executablePath: await chrome.executablePath,
+        headless: true,
+        ignoreHTTPSErrors: true,
       },
     });
     return response;
