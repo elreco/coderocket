@@ -1,18 +1,18 @@
-import captureWebsite from "capture-website";
-import chrome from "chrome-aws-lambda";
+import { Buffer } from "buffer";
+
+import { screenshotApiUrl } from "./config";
 
 export async function captureScreenshot(url: string) {
+  const apiUrl = `${screenshotApiUrl}${encodeURIComponent(url)}`;
+  console.log(apiUrl);
   try {
-    const response = await captureWebsite.buffer(url, {
-      launchOptions: {
-        args: [...chrome.args, "--hide-scrollbars", "--disable-web-security"],
-        defaultViewport: chrome.defaultViewport,
-        executablePath: await chrome.executablePath,
-        headless: true,
-        ignoreHTTPSErrors: true,
-      },
-    });
-    return response;
+    const response = await fetch(apiUrl);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch screenshot: ${response.statusText}`);
+    }
+    const arrayBuffer = await response.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    return buffer;
   } catch (error) {
     console.error("Error taking screenshot:", error);
     throw error;
