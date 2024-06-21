@@ -107,7 +107,7 @@ export default function Pricing({ user, products, subscription }: Props) {
 
   if (products.length === 1)
     return (
-      <div className="flex h-full flex-col items-start justify-center">
+      <div className="flex h-auto flex-col items-start justify-center">
         <h1 className="mb-1 text-lg font-medium text-gray-900 sm:text-left sm:text-2xl">
           Pricing Plans
         </h1>
