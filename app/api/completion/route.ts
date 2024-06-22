@@ -149,12 +149,12 @@ const validateRequest = async (id: string, prompt: string) => {
   }
 
   // Check if the user has more than 3 prompt_images
-  const promptImagesCount = messagesFromDatabase.filter(
+  /* const promptImagesCount = messagesFromDatabase.filter(
     (m) => m.prompt_image,
   ).length;
   if (promptImagesCount >= 3) {
     throw new Error("payment-required");
-  }
+  } */
 
   // Prompt validation
   if (prompt.length > maxPromptLength) {

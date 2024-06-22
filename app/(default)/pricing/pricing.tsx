@@ -144,15 +144,15 @@ export default function Pricing({ user, products, subscription }: Props) {
                     <p className="mt-4 text-gray-700">{price.description}</p>
                     <p className="mt-4 flex items-center text-sm font-medium text-gray-700">
                       <CheckIcon className="mr-2 size-4 text-emerald-500" />{" "}
-                      Unlinimited credits
+                      Unlimited credits
                     </p>
                     <p className="mt-4 flex items-center text-sm font-medium text-gray-700">
                       <CheckIcon className="mr-2 size-4 text-emerald-500" />{" "}
-                      Unlinimited versions
+                      Unlimited versions
                     </p>
                     <p className="mt-4 flex items-center text-sm font-medium text-gray-700">
-                      <CheckIcon className="mr-2 size-4 text-emerald-500" /> 3
-                      components with image
+                      <CheckIcon className="mr-2 size-4 text-emerald-500" />{" "}
+                      Unlimited components with image
                     </p>
                     <p className="mt-4 flex items-center text-sm font-medium text-gray-700">
                       <CheckIcon className="mr-2 size-4 text-emerald-500" />{" "}
