@@ -1,5 +1,10 @@
 "use client";
-import { PhotoIcon, XMarkIcon } from "@heroicons/react/24/solid";
+import {
+  LockClosedIcon,
+  LockOpenIcon,
+  PhotoIcon,
+  XMarkIcon,
+} from "@heroicons/react/24/solid";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
@@ -9,6 +14,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/toaster/use-toast";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { maxPromptLength } from "@/utils/config";
 import { createClient } from "@/utils/supabase/client";
 
@@ -42,7 +52,9 @@ export default function Hero() {
   const router = useRouter();
   const { toast } = useToast();
   const [prompt, setPrompt] = useState("");
+  const [isVisible, setVisible] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [loadingVisibility, setLoadingVisibility] = useState(false);
   const [image, setImage] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -69,6 +81,7 @@ export default function Hero() {
     if (image) {
       formData.append("file", image as File);
     }
+    formData.append("isVisible", isVisible.toString());
     try {
       await createChat(prompt, formData);
     } catch (e) {
@@ -76,6 +89,7 @@ export default function Hero() {
         variant: "destructive",
         title: "Can't create your component",
         description: "Please upload a different image or try another prompt",
+        duration: 5000,
       });
 
       setLoading(false);
@@ -99,6 +113,40 @@ export default function Hero() {
     }
   };
 
+  const handleVisibility = async () => {
+    setLoadingVisibility(true);
+    const { data } = await supabase.auth.getUser();
+    if (!data.user?.id) {
+      toast({
+        variant: "destructive",
+        title: "Premium account required",
+        description:
+          "You are not premium, the visibility cannot be changed. Please upgrade to premium and try again.",
+        duration: 5000,
+      });
+      setLoadingVisibility(false);
+      return;
+    }
+    const { data: subscription } = await supabase
+      .from("subscriptions")
+      .select("*, prices(*, products(*))")
+      .in("status", ["trialing", "active"])
+      .eq("user_id", data.user.id)
+      .maybeSingle();
+    if (!subscription || subscription.status !== "active") {
+      toast({
+        variant: "destructive",
+        title: "Premium account required",
+        description:
+          "You are not premium, the visibility cannot be changed. Please upgrade to premium and try again.",
+        duration: 5000,
+      });
+    } else {
+      setVisible(!isVisible);
+    }
+    setLoadingVisibility(false);
+  };
+
   return (
     <Container className="bg-hero flex min-h-full flex-col items-center justify-center space-y-4 !pt-0">
       <div className="flex w-full flex-col items-center space-y-1.5">
@@ -114,7 +162,7 @@ export default function Hero() {
         className="group relative z-10 flex w-full flex-col items-center justify-center gap-x-0 space-y-5 rounded-lg bg-gray-900 p-3 text-center shadow-lg shadow-black/40 backdrop-blur-xl transition-all duration-300 sm:gap-x-3 sm:space-y-0 xl:w-1/2"
         onSubmit={handleSubmit}
       >
-        <div className="mb-1 flex w-full">
+        <div className="mb-0 flex w-full xl:mb-2">
           <Input
             placeholder="Start generate a beautiful Tailwind component"
             autoFocus
@@ -124,11 +172,12 @@ export default function Hero() {
             minLength={2}
             maxLength={maxPromptLength}
             onChange={(e) => setPrompt(e.target.value)}
+            className="pl-1"
           />
         </div>
         <div className="flex w-full flex-1 items-center justify-between">
-          <div className="size-12">
-            {image && (
+          {image && (
+            <div className="size-12">
               <div className="relative size-12">
                 <Image
                   src={URL.createObjectURL(image)}
@@ -145,23 +194,57 @@ export default function Hero() {
                   <XMarkIcon className="size-4 text-white" />
                 </button>
               </div>
-            )}
-          </div>
-          <div className="flex items-center space-x-2">
-            <Button type="button" onClick={handleButtonClick}>
-              <PhotoIcon className="mr-2 size-4 " />
-              <span>Image</span>
-            </Button>
-            <input
-              ref={fileInputRef}
-              className="sr-only"
-              type="file"
-              onChange={handleImageChange}
-            />
+            </div>
+          )}
+          <div className="flex w-full items-center justify-between">
+            <Tooltip>
+              <TooltipTrigger type="button">
+                <Button
+                  onClick={handleVisibility}
+                  className="flex items-center"
+                  loading={loadingVisibility}
+                  disabled={loading}
+                  type="button"
+                >
+                  {isVisible ? (
+                    <>
+                      <LockOpenIcon className="mr-1 w-5" />
+                      <span>Public</span>
+                    </>
+                  ) : (
+                    <>
+                      <LockClosedIcon className="mr-1 w-5" />{" "}
+                      <span>Private</span>
+                    </>
+                  )}
+                </Button>
+              </TooltipTrigger>
 
-            <Button type="submit" loading={loading}>
-              Generate
-            </Button>
+              <TooltipContent side="left">
+                <p>{isVisible ? "Set private" : "Set public"}</p>
+              </TooltipContent>
+            </Tooltip>
+            <div className="flex items-center space-x-2">
+              <Button type="button" onClick={handleButtonClick}>
+                <PhotoIcon className="mr-2 size-4 " />
+                <span>Image</span>
+              </Button>
+
+              <input
+                ref={fileInputRef}
+                className="sr-only"
+                type="file"
+                onChange={handleImageChange}
+              />
+
+              <Button
+                type="submit"
+                loading={loading}
+                disabled={loadingVisibility}
+              >
+                Generate
+              </Button>
+            </div>
           </div>
         </div>
       </form>

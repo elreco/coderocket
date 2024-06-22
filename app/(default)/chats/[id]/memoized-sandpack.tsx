@@ -61,6 +61,7 @@ const MemoizedSandpack = ({
       title: "Successfully copied",
       description:
         "Your component has been successfully saved to your clipboard",
+      duration: 5000,
     });
   }, [completion, copy]);
 
@@ -93,7 +94,7 @@ ${completion}
       style={{ height: "100%" }}
       options={{
         autoReload: true,
-        recompileMode: "delayed",
+        recompileMode: "immediate",
         recompileDelay: 1000,
         visibleFiles: ["/index.html", "/tailwind.css"],
         activeFile: "/completion.html",

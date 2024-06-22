@@ -21,6 +21,16 @@ export default function AuthUI() {
           variant: "destructive",
           title: "Error",
           description: "Can't connect with Github, please try again",
+          duration: 5000,
+        });
+        return;
+      }
+      if (error === "sign-in") {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Can't find your account, Sign Up or try again.",
+          duration: 5000,
         });
         return;
       }
@@ -28,6 +38,7 @@ export default function AuthUI() {
         variant: "destructive",
         title: "Error",
         description: "You must fill Email and Password",
+        duration: 5000,
       });
     }
   });

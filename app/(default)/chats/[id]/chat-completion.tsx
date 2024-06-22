@@ -95,6 +95,7 @@ export default function ChatCompletion({
           variant: "destructive",
           title: "Something went wrong",
           description: error.message,
+          duration: 5000,
         });
       }
       return;
@@ -139,6 +140,7 @@ export default function ChatCompletion({
       variant: "default",
       title: "Successfully copied",
       description: "The prompt has been successfully saved to your clipboard",
+      duration: 5000,
     });
   };
 
@@ -150,6 +152,7 @@ export default function ChatCompletion({
       variant: "default",
       title: "Successfully copied",
       description: "The URL has been successfully saved to your clipboard",
+      duration: 5000,
     });
   };
 
@@ -163,6 +166,7 @@ export default function ChatCompletion({
         title: "Premium account required",
         description:
           "You are not premium, the visibility cannot be changed. Please upgrade to premium and try again.",
+        duration: 5000,
       });
     }
   };

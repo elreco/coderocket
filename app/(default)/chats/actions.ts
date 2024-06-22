@@ -69,6 +69,12 @@ export const createChat = async (prompt: string, formData: FormData) => {
     .from("chats")
     .select()
     .eq("user_id", user?.id);
+  const isVisible = formData.get("isVisible");
+  const is_private = isVisible === "false";
+
+  if ((!subscription || subscription.status !== "active") && is_private) {
+    return redirect("pricing?paymentRequired=true");
+  }
 
   if (
     (!subscription || subscription.status !== "active") &&
@@ -84,6 +90,7 @@ export const createChat = async (prompt: string, formData: FormData) => {
 
   let imageUrl = null;
   const image = formData.get("file") as File;
+
   if (image) {
     const { data: imageData, error: imageError } = await supabase.storage
       .from("images")
@@ -100,6 +107,7 @@ export const createChat = async (prompt: string, formData: FormData) => {
       {
         user_id: user.id,
         ...(imageUrl && { prompt_image: imageUrl }),
+        is_private,
         messages: [
           {
             role: "user",

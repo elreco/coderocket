@@ -53,6 +53,7 @@ export default function Pricing({ user, products, subscription }: Props) {
         title: "You must subscribe",
         description:
           "With a free account, you are limited to generating one component with four versions, and image use is not permitted. Upgrade to our premium plan for unlimited access to all features.",
+        duration: 5000,
       });
     }
   }, [paymentRequired]);
