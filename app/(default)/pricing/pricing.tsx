@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toaster/use-toast";
 import { Database } from "@/types_db";
+import { formattedAmount } from "@/utils/config";
 import { postData } from "@/utils/helpers";
 import { getStripe } from "@/utils/stripe-client";
 
@@ -152,7 +153,7 @@ export default function Pricing({ user, products, subscription }: Props) {
                     </p>
                     <p className="mt-4 flex items-center text-sm font-medium text-gray-700">
                       <CheckIcon className="mr-2 size-4 text-emerald-500" />{" "}
-                      Unlimited components with image
+                      {formattedAmount} per component using Image with Vision
                     </p>
                     <p className="mt-4 flex items-center text-sm font-medium text-gray-700">
                       <CheckIcon className="mr-2 size-4 text-emerald-500" />{" "}

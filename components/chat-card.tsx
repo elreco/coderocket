@@ -10,12 +10,14 @@ import { Badge } from "./ui/badge";
 export default function ChatCard({ chat }: { chat: Chat }) {
   return (
     <div key={chat.chat_id} className="relative aspect-video w-full">
-      <Image
-        src={chat.last_assistant_message.screenshot}
-        fill
-        className="w-full rounded-md border object-cover shadow-md"
-        alt=""
-      />
+      {chat.last_assistant_message?.screenshot && (
+        <Image
+          src={chat.last_assistant_message.screenshot}
+          fill
+          className="w-full rounded-md border object-cover shadow-md"
+          alt=""
+        />
+      )}
       <Link
         href={`/chats/${chat.chat_id}`}
         className="absolute inset-0 z-10 flex cursor-pointer select-none items-center justify-center rounded-md bg-black/25 transition-all duration-300 hover:bg-transparent"

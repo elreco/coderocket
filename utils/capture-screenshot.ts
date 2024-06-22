@@ -4,7 +4,6 @@ import { screenshotApiUrl } from "./config";
 
 export async function captureScreenshot(url: string) {
   const apiUrl = `${screenshotApiUrl}${encodeURIComponent(url)}`;
-  console.log(apiUrl);
   try {
     const response = await fetch(apiUrl);
     if (!response.ok) {

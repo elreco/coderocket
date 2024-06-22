@@ -72,15 +72,11 @@ export const createChat = async (prompt: string, formData: FormData) => {
   const isVisible = formData.get("isVisible");
   const is_private = isVisible === "false";
 
-  if ((!subscription || subscription.status !== "active") && is_private) {
+  if (!subscription && is_private) {
     return redirect("pricing?paymentRequired=true");
   }
 
-  if (
-    (!subscription || subscription.status !== "active") &&
-    existingChats &&
-    existingChats?.length > 0
-  ) {
+  if (!subscription && existingChats && existingChats?.length > 0) {
     return redirect("pricing?paymentRequired=true");
   }
 
@@ -94,7 +90,7 @@ export const createChat = async (prompt: string, formData: FormData) => {
   if (image) {
     const { data: imageData, error: imageError } = await supabase.storage
       .from("images")
-      .upload(`${Date.now()}-${image.name}`, image);
+      .upload(`${Date.now()}-${user?.id}`, image);
     if (imageError) {
       throw Error("Failed to upload image");
     }

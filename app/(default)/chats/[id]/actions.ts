@@ -13,7 +13,7 @@ export const changeVisiblity = async (
 
   if (!user) throw new Error("Could not get user");
   const subscription = await getSubscription();
-  if (!subscription || subscription.status !== "active") {
+  if (!subscription) {
     throw new Error("payment-required");
   }
 

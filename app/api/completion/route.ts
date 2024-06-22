@@ -8,6 +8,7 @@ import { captureScreenshot } from "@/utils/capture-screenshot";
 import { maxPromptLength, openAIModel, storageUrl } from "@/utils/config";
 import { getURL } from "@/utils/helpers";
 import { createClient } from "@/utils/supabase/server";
+import { addInvoiceItem } from "@/utils/supabase-admin";
 
 const openai = new OpenAI({
   apiKey: process.env.OPEN_AI || "",
@@ -131,7 +132,7 @@ const validateRequest = async (id: string, prompt: string) => {
   // Check subscription
   const subscription = await getSubscription();
   if (
-    (!subscription || subscription.status !== "active") &&
+    !subscription &&
     messagesFromDatabase &&
     messagesFromDatabase.filter((m) => m.role === "assistant")?.length > 3
   ) {
@@ -140,21 +141,22 @@ const validateRequest = async (id: string, prompt: string) => {
 
   const imageUrl = chat.prompt_image;
 
-  if ((!subscription || subscription.status !== "active") && imageUrl) {
+  if (!subscription && imageUrl) {
     throw new Error("payment-required");
+  }
+
+  if (chat.prompt_image) {
+    try {
+      await addInvoiceItem(user.id);
+    } catch (e) {
+      console.log(e);
+      throw new Error("payment-required");
+    }
   }
 
   if (messagesFromDatabase.filter((m) => m.role === "assistant")?.length > 30) {
     throw new Error("You can't have more than 30 versions");
   }
-
-  // Check if the user has more than 3 prompt_images
-  /* const promptImagesCount = messagesFromDatabase.filter(
-    (m) => m.prompt_image,
-  ).length;
-  if (promptImagesCount >= 3) {
-    throw new Error("payment-required");
-  } */
 
   // Prompt validation
   if (prompt.length > maxPromptLength) {

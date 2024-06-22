@@ -12,6 +12,15 @@ import { useRef, useState } from "react";
 import { Container } from "@/components/container";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/toaster/use-toast";
 import {
@@ -19,7 +28,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { maxPromptLength } from "@/utils/config";
+import { formattedAmount, maxPromptLength } from "@/utils/config";
 import { createClient } from "@/utils/supabase/client";
 
 import { createChat } from "./chats/actions";
@@ -82,6 +91,23 @@ export default function Hero() {
       formData.append("file", image as File);
     }
     formData.append("isVisible", isVisible.toString());
+    const { data: subscription } = await supabase
+      .from("subscriptions")
+      .select("*, prices(*, products(*))")
+      .in("status", ["trialing", "active"])
+      .eq("user_id", userData.user.id)
+      .maybeSingle();
+
+    if (!subscription && image) {
+      toast({
+        variant: "destructive",
+        title: "Premium account required",
+        description:
+          "You are not premium, you can't generate components with Vision. Please upgrade to premium and try again.",
+        duration: 5000,
+      });
+      return;
+    }
     try {
       await createChat(prompt, formData);
     } catch (e) {
@@ -121,7 +147,7 @@ export default function Hero() {
         variant: "destructive",
         title: "Premium account required",
         description:
-          "You are not premium, the visibility cannot be changed. Please upgrade to premium and try again.",
+          "You are not logged in, the visibility cannot be changed. Please login and upgrade to premium and try again.",
         duration: 5000,
       });
       setLoadingVisibility(false);
@@ -133,7 +159,8 @@ export default function Hero() {
       .in("status", ["trialing", "active"])
       .eq("user_id", data.user.id)
       .maybeSingle();
-    if (!subscription || subscription.status !== "active") {
+
+    if (!subscription) {
       toast({
         variant: "destructive",
         title: "Premium account required",
@@ -159,6 +186,7 @@ export default function Hero() {
         <p>Design UI with Tailwind from basic text prompts and images.</p>
       </div>
       <form
+        id="generate-form"
         className="group relative z-10 flex w-full flex-col items-center justify-center gap-x-0 space-y-5 rounded-lg bg-gray-900 p-3 text-center shadow-lg shadow-black/40 backdrop-blur-xl transition-all duration-300 sm:gap-x-3 sm:space-y-0 xl:w-1/2"
         onSubmit={handleSubmit}
       >
@@ -177,7 +205,7 @@ export default function Hero() {
         </div>
         <div className="flex w-full flex-1 items-center justify-between">
           {image && (
-            <div className="size-12">
+            <div className="mr-2 size-12">
               <div className="relative size-12">
                 <Image
                   src={URL.createObjectURL(image)}
@@ -236,14 +264,44 @@ export default function Hero() {
                 type="file"
                 onChange={handleImageChange}
               />
-
-              <Button
-                type="submit"
-                loading={loading}
-                disabled={loadingVisibility}
-              >
-                Generate
-              </Button>
+              {image && prompt ? (
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button type="button">Generate</Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Are you sure?</DialogTitle>
+                      <DialogDescription>
+                        <p className="mb-2">
+                          You will be charged <strong>{formattedAmount}</strong>{" "}
+                          for using Vision to generate this component. This fee
+                          will be added to your next invoice. Thank you for your
+                          understanding and support.
+                        </p>
+                      </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                      <Button
+                        type="submit"
+                        form="generate-form"
+                        loading={loading}
+                        disabled={loadingVisibility}
+                      >
+                        Yes, let&apos;s go
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              ) : (
+                <Button
+                  type="submit"
+                  loading={loading}
+                  disabled={loadingVisibility}
+                >
+                  Generate
+                </Button>
+              )}
             </div>
           </div>
         </div>

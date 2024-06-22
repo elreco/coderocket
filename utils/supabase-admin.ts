@@ -3,6 +3,7 @@ import Stripe from "stripe";
 
 import type { Database } from "types_db";
 
+import { amount } from "./config";
 import { toDateTime } from "./helpers";
 import { stripe } from "./stripe";
 
@@ -178,9 +179,45 @@ const manageSubscriptionStatusChange = async (
     );
 };
 
+const addInvoiceItem = async (userId: string) => {
+  // Récupérer l'utilisateur depuis la table des clients
+  const { data: userData, error: userError } = await supabaseAdmin
+    .from("customers")
+    .select("stripe_customer_id")
+    .eq("id", userId)
+    .single();
+
+  if (userError || !userData) {
+    throw new Error(`User not found or error: ${userError?.message}`);
+  }
+
+  const stripeCustomerId = userData.stripe_customer_id;
+
+  if (!stripeCustomerId) {
+    throw new Error(`Stripe customer not found or error`);
+  }
+
+  // Ajouter un élément de facture
+  await stripe.invoiceItems.create({
+    customer: stripeCustomerId,
+    amount,
+    currency: "eur",
+    description: "Vision Generation",
+  });
+
+  // Finaliser et envoyer la facture
+  const invoice = await stripe.invoices.create({
+    customer: stripeCustomerId,
+    auto_advance: true,
+  });
+
+  await stripe.invoices.finalizeInvoice(invoice.id);
+};
+
 export {
   upsertProductRecord,
   upsertPriceRecord,
+  addInvoiceItem,
   createOrRetrieveCustomer,
   manageSubscriptionStatusChange,
 };
