@@ -126,7 +126,9 @@ export function MobileNav({ user, handleSignOut }: Props) {
                       ) : (
                         <Popover.Button
                           as={Button}
-                          onClick={handleSignOut}
+                          onClick={() => {
+                            handleSignOut();
+                          }}
                           variant="solid"
                         >
                           Sign Out
@@ -147,9 +149,10 @@ export function MobileNav({ user, handleSignOut }: Props) {
         </Button>
       ) : (
         <Button
-          onClick={async () => {
-            await handleSignOut();
+          onClick={() => {
+            handleSignOut();
           }}
+          type="button"
           variant="outline"
           className="hidden lg:block"
         >
