@@ -150,8 +150,8 @@ export default function Pricing({ user, products, subscription }: Props) {
                       Unlinimited versions
                     </p>
                     <p className="mt-4 flex items-center text-sm font-medium text-gray-700">
-                      <CheckIcon className="mr-2 size-4 text-emerald-500" />{" "}
-                      Unlinimited components with image
+                      <CheckIcon className="mr-2 size-4 text-emerald-500" /> 3
+                      components with image
                     </p>
                     <p className="mt-4 flex items-center text-sm font-medium text-gray-700">
                       <CheckIcon className="mr-2 size-4 text-emerald-500" />{" "}

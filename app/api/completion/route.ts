@@ -148,6 +148,14 @@ const validateRequest = async (id: string, prompt: string) => {
     throw new Error("You can't have more than 30 versions");
   }
 
+  // Check if the user has more than 3 prompt_images
+  const promptImagesCount = messagesFromDatabase.filter(
+    (m) => m.prompt_image,
+  ).length;
+  if (promptImagesCount >= 3) {
+    throw new Error("payment-required");
+  }
+
   // Prompt validation
   if (prompt.length > maxPromptLength) {
     throw new Error("Prompt length is too long");
