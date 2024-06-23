@@ -66,6 +66,7 @@ export default function Hero() {
   const [loadingVisibility, setLoadingVisibility] = useState(false);
   const [image, setImage] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [isDialogOpen, setDialogOpen] = useState(false);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -79,6 +80,7 @@ export default function Hero() {
     const { data: userData } = await supabase.auth.getUser();
     if (!userData.user?.id) {
       setLoading(false);
+      setDialogOpen(false);
       toast({
         variant: "destructive",
         title: "You must Log In",
@@ -106,6 +108,8 @@ export default function Hero() {
           "You are not premium, you can't generate components with Vision. Please upgrade to premium and try again.",
         duration: 5000,
       });
+      setLoading(false);
+      setDialogOpen(false);
       return;
     }
     try {
@@ -119,6 +123,7 @@ export default function Hero() {
       });
 
       setLoading(false);
+      setDialogOpen(false);
     }
   };
 
@@ -265,7 +270,7 @@ export default function Hero() {
                 onChange={handleImageChange}
               />
               {image && prompt ? (
-                <Dialog>
+                <Dialog open={isDialogOpen} onOpenChange={setDialogOpen}>
                   <DialogTrigger asChild>
                     <Button type="button">Generate</Button>
                   </DialogTrigger>
