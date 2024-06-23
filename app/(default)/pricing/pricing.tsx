@@ -113,12 +113,12 @@ export default function Pricing({ user, products, subscription }: Props) {
         <h1 className="mb-1 text-lg font-medium text-gray-900 sm:text-left sm:text-2xl">
           Pricing Plans
         </h1>
-        <h2 className="mb-8 text-lg text-gray-700 sm:text-left sm:text-xl">
+        <h2 className="text-lg text-gray-700 sm:text-left sm:text-xl">
           Start building for free, then add a site plan to go live. Account
           plans unlock additional features.
         </h2>
-        <div className="flex w-full flex-1 items-center justify-between pb-20">
-          <div className="mt-6 w-full space-y-4 sm:mt-12 sm:grid sm:grid-cols-2 sm:gap-6 sm:space-y-0 lg:mx-auto lg:max-w-4xl xl:mx-0 xl:max-w-none xl:grid-cols-3">
+        <div className="flex w-full items-start justify-between pb-20">
+          <div className="mt-6 w-full space-y-4 sm:mt-12 sm:grid sm:grid-cols-2 sm:gap-6 sm:space-y-0 lg:mx-auto lg:max-w-4xl xl:mx-0 xl:max-w-none xl:grid-cols-3 xl:space-y-0">
             {products[0].prices?.map((price) => {
               const priceString =
                 price.unit_amount &&

@@ -8,6 +8,12 @@ import { createClient } from "@/utils/supabase/server";
 
 import Pricing from "./pricing";
 
+export const metadata = {
+  title: `Pricing - Tailwind AI`,
+  description:
+    "Start building for free, then add a site plan to go live. Account plans unlock additional features.",
+};
+
 export default async function PricingPage() {
   const supabase = createClient();
   const [userData, subscription, products] = await Promise.all([

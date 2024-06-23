@@ -6,6 +6,10 @@ import { createClient } from "@/utils/supabase/server";
 
 import AuthUI from "./auth-ui";
 
+export const metadata = {
+  title: `Login - Tailwind AI`,
+};
+
 export default async function SignIn({
   searchParams,
 }: {

@@ -1,5 +1,3 @@
-"use server";
-
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ReactNode, Suspense } from "react";
@@ -14,6 +12,11 @@ import { getUserChats } from "../chats/actions";
 
 import { getUser, updateEmail, updateName } from "./actions";
 import ManageSubscriptionButton from "./manage-subscription-button";
+
+export const metadata = {
+  title: `My Account - Tailwind AI`,
+  description: "Manage your account and billing.",
+};
 
 export default async function Account() {
   const [userData, userDetails, subscription] = await Promise.all([

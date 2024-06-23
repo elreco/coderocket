@@ -3,6 +3,12 @@ import { Container } from "@/components/container";
 
 import { getFeaturedChats } from "../actions";
 
+export const metadata = {
+  title: `Featured components - Tailwind AI`,
+  description:
+    "Start your projects with our handpicked components, designed to inspire creativity and provide seamless integration.",
+};
+
 export default async function Featured() {
   const chats = await getFeaturedChats();
   return (
@@ -11,9 +17,7 @@ export default async function Featured() {
         Featured Components
       </h1>
       <h2 className="mb-8 text-lg text-gray-700 sm:text-left sm:text-xl">
-        Start your projects with our handpicked components, designed to inspire
-        creativity and provide seamless integration, high quality, and
-        exceptional functionality for outstanding results.
+        Start your projects with our handpicked components
       </h2>
       <div className="grid grid-cols-1 gap-3 pb-20 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
         {chats?.map((chat) => <ChatCard key={chat.chat_id} chat={chat} />)}

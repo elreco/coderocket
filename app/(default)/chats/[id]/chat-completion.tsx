@@ -313,10 +313,10 @@ export default function ChatCompletion({
             />
             {authorized && (
               <form
-                className="flex w-full flex-1 items-center xl:justify-start"
+                className="flex w-full flex-row items-center xl:justify-between xl:gap-3"
                 onSubmit={handleSubmit}
               >
-                <div className="mr-0 flex w-full space-x-4 rounded-md bg-gray-900 p-2 xl:mr-2 xl:w-1/2">
+                <div className="flex w-full space-x-4 rounded-md bg-gray-900 p-2 xl:w-1/2">
                   <Input
                     autoFocus
                     disabled={isLoading}
@@ -330,6 +330,7 @@ export default function ChatCompletion({
                     Iterate
                   </Button>
                 </div>
+                <div className="hidden w-1/2 xl:block"></div>
               </form>
             )}
           </div>
