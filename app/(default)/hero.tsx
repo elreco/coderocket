@@ -279,10 +279,15 @@ export default function Hero() {
                       <DialogTitle>Are you sure?</DialogTitle>
                       <DialogDescription>
                         <p className="mb-2">
-                          You will be charged <strong>{formattedAmount}</strong>{" "}
-                          for using Vision to generate this component. This fee
-                          will be added to your next invoice. Thank you for your
-                          understanding and support.
+                          Due to the high volume of requests, we have
+                          temporarily implemented a charge of{" "}
+                          <strong>{formattedAmount}</strong> per request. Rest
+                          assured, this is only temporary. We are working on a
+                          credit system included in the subscription to avoid
+                          per-request charges. <br />
+                          Thank you for your understanding.
+                          <br />
+                          Best regards, The Tailwind AI Team
                         </p>
                       </DialogDescription>
                     </DialogHeader>
