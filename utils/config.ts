@@ -6,7 +6,7 @@ export const screenshotApiUrl =
 
 export const maxPromptLength = 1000;
 
-export const openAIModel = "gpt-4o";
+export const openAIModel = "gpt-4o-mini";
 
 export const amount = 50;
 
