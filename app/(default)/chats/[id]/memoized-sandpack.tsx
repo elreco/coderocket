@@ -94,7 +94,7 @@ ${completion}
       style={{ height: "100%" }}
       options={{
         autoReload: true,
-        recompileMode: "immediate",
+        recompileMode: "delayed",
         recompileDelay: 250,
         visibleFiles: ["/index.html", "/tailwind.css"],
         activeFile: "/completion.html",
