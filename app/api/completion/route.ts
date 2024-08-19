@@ -8,7 +8,6 @@ import { captureScreenshot } from "@/utils/capture-screenshot";
 import { maxPromptLength, openAIModel, storageUrl } from "@/utils/config";
 import { getURL } from "@/utils/helpers";
 import { createClient } from "@/utils/supabase/server";
-import { addInvoiceItem } from "@/utils/supabase-admin";
 
 const openai = new OpenAI({
   apiKey: process.env.OPEN_AI || "",
@@ -143,15 +142,6 @@ const validateRequest = async (id: string, prompt: string) => {
 
   if (!subscription && imageUrl) {
     throw new Error("payment-required");
-  }
-
-  if (chat.prompt_image) {
-    try {
-      await addInvoiceItem(user.id);
-    } catch (e) {
-      console.log(e);
-      throw new Error("payment-required");
-    }
   }
 
   if (messagesFromDatabase.filter((m) => m.role === "assistant")?.length > 30) {

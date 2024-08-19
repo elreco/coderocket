@@ -12,15 +12,6 @@ import { useRef, useState } from "react";
 import { Container } from "@/components/container";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/toaster/use-toast";
 import {
@@ -28,7 +19,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { formattedAmount, maxPromptLength } from "@/utils/config";
+import { maxPromptLength } from "@/utils/config";
 import { createClient } from "@/utils/supabase/client";
 
 import { createChat } from "./chats/actions";
@@ -66,7 +57,6 @@ export default function Hero() {
   const [loadingVisibility, setLoadingVisibility] = useState(false);
   const [image, setImage] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const [isDialogOpen, setDialogOpen] = useState(false);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -80,7 +70,6 @@ export default function Hero() {
     const { data: userData } = await supabase.auth.getUser();
     if (!userData.user?.id) {
       setLoading(false);
-      setDialogOpen(false);
       toast({
         variant: "destructive",
         title: "You must Log In",
@@ -109,7 +98,6 @@ export default function Hero() {
         duration: 5000,
       });
       setLoading(false);
-      setDialogOpen(false);
       return;
     }
     try {
@@ -123,7 +111,6 @@ export default function Hero() {
       });
 
       setLoading(false);
-      setDialogOpen(false);
     }
   };
 
@@ -269,49 +256,13 @@ export default function Hero() {
                 type="file"
                 onChange={handleImageChange}
               />
-              {image && prompt ? (
-                <Dialog open={isDialogOpen} onOpenChange={setDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button type="button">Generate</Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Are you sure?</DialogTitle>
-                      <DialogDescription>
-                        <p className="mb-2">
-                          Due to the high volume of requests, we have
-                          temporarily implemented a charge of{" "}
-                          <strong>{formattedAmount}</strong> per request. Rest
-                          assured, this is only temporary. We are working on a
-                          credit system included in the subscription to avoid
-                          per-request charges. <br />
-                          Thank you for your understanding.
-                          <br />
-                          Best regards, The Tailwind AI Team
-                        </p>
-                      </DialogDescription>
-                    </DialogHeader>
-                    <DialogFooter>
-                      <Button
-                        type="submit"
-                        form="generate-form"
-                        loading={loading}
-                        disabled={loadingVisibility}
-                      >
-                        Yes, let&apos;s go
-                      </Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
-              ) : (
-                <Button
-                  type="submit"
-                  loading={loading}
-                  disabled={loadingVisibility}
-                >
-                  Generate
-                </Button>
-              )}
+              <Button
+                type="submit"
+                loading={loading}
+                disabled={loadingVisibility}
+              >
+                Generate
+              </Button>
             </div>
           </div>
         </div>
