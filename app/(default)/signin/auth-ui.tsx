@@ -34,6 +34,15 @@ export default function AuthUI() {
         });
         return;
       }
+      if (error === "sign-up") {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Email already exists.",
+          duration: 5000,
+        });
+        return;
+      }
       toast({
         variant: "destructive",
         title: "Error",
