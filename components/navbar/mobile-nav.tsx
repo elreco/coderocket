@@ -97,7 +97,14 @@ export function MobileNav({ user, handleSignOut }: Props) {
                     <div className="space-y-4">
                       {links.map(([label, href], index) => (
                         <MobileNavLink key={index} href={href}>
-                          {label}
+                          <span className="flex items-center">
+                            {label}
+                            {label === "AI Tools" && (
+                              <span className="ml-2 rounded-full bg-red-500 px-1.5 py-0.5 text-xs font-bold text-white">
+                                New
+                              </span>
+                            )}
+                          </span>
                         </MobileNavLink>
                       ))}
                     </div>

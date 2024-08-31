@@ -18,7 +18,14 @@ export function NavLinks() {
         "relative -mx-3 -my-2 rounded-full px-3 py-0.5 text-sm text-gray-900 transition-all duration-300 hover:text-gray-700",
       )}
     >
-      <span className="relative z-10">{label}</span>
+      <span className="relative z-10 flex items-center">
+        {label}
+        {label === "AI Tools" && (
+          <span className="ml-2 rounded-full bg-red-500 px-1.5 py-0.5 text-xs font-bold text-white">
+            New
+          </span>
+        )}
+      </span>
     </Link>
   ));
 }

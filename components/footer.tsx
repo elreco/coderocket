@@ -8,11 +8,19 @@ export function Footer() {
       <p className="text-xs text-gray-700">
         Copyright {new Date().getFullYear()} -{" "}
         <a
-          href="https://linkedin.com/in/alexandre-le-corre"
+          href="https://instagram.com/tailwindai.dev"
           target="_blank"
           className="text-xs font-medium text-gray-900 hover:text-gray-700"
         >
-          contact
+          instagram
+        </a>{" "}
+        -{" "}
+        <a
+          href="https://tools.tailwindai.dev"
+          target="_blank"
+          className="text-xs font-medium text-gray-900 hover:text-gray-700"
+        >
+          AI Tools
         </a>{" "}
         - <span className="font-medium">tailwindai.dev</span>
       </p>
