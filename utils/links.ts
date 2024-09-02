@@ -4,5 +4,4 @@ export const links = [
   ["Public components", "/chats"],
   ["Pricing", "/pricing"],
   ["My account", "/account"],
-  ["AI Tools", "https://tools.tailwindai.dev"],
 ];
