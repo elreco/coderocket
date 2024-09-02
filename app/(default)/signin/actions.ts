@@ -19,7 +19,7 @@ export async function login(formData: FormData) {
   const { error } = await supabase.auth.signInWithPassword(data);
 
   if (error) {
-    redirect("/signin?error=sign-in");
+    redirect(`/signin?error=${error.message}`);
   }
 
   revalidatePath("/", "layout");
@@ -39,7 +39,7 @@ export async function signup(formData: FormData) {
   const { error } = await supabase.auth.signUp(data);
 
   if (error) {
-    redirect("/signin?error=sign-up");
+    redirect(`/signin?error=${error.message}`);
   }
 
   revalidatePath("/", "layout");
@@ -53,7 +53,7 @@ export async function signInWithEmail(formData: FormData) {
   };
   const { error } = await supabase.auth.signInWithOtp(data);
   if (error) {
-    redirect("/signin?error=true");
+    redirect(`/signin?error=${error.message}`);
   }
   revalidatePath("/signin", "layout");
   redirect("/signin?emailSent=true");
@@ -68,7 +68,7 @@ export async function signInWithGithub() {
     },
   });
   if (error) {
-    redirect("/signin?error=github");
+    redirect(`/signin?error=${error.message}`);
   }
   if (data.url) {
     redirect(data.url);

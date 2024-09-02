@@ -16,39 +16,13 @@ export default function AuthUI() {
   useEffect(() => {
     const error = searchParams.get("error");
     if (error) {
-      if (error === "github") {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Can't connect with Github, please try again",
-          duration: 5000,
-        });
-        return;
-      }
-      if (error === "sign-in") {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Can't find your account, Sign Up or try again.",
-          duration: 5000,
-        });
-        return;
-      }
-      if (error === "sign-up") {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Email already exists.",
-          duration: 5000,
-        });
-        return;
-      }
       toast({
         variant: "destructive",
         title: "Error",
-        description: "You must fill Email and Password",
+        description: error,
         duration: 5000,
       });
+      return;
     }
   });
 
