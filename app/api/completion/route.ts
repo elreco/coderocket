@@ -144,8 +144,8 @@ const validateRequest = async (id: string, prompt: string) => {
     throw new Error("payment-required");
   }
 
-  if (messagesFromDatabase.filter((m) => m.role === "assistant")?.length > 30) {
-    throw new Error("You can't have more than 30 versions");
+  if (messagesFromDatabase.filter((m) => m.role === "assistant")?.length > 200) {
+    throw new Error("You can't have more than 200 versions");
   }
 
   // Prompt validation
