@@ -145,7 +145,7 @@ const validateRequest = async (id: string, prompt: string) => {
   }
 
   if (
-  messagesFromDatabase.filter((m) => m.role === "assistant")?.length > 200
+    messagesFromDatabase.filter((m) => m.role === "assistant")?.length > 200
   ) {
     throw new Error("You can't have more than 200 versions");
   }
