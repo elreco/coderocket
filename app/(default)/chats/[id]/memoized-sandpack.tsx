@@ -13,13 +13,7 @@ import { useCopyToClipboard } from "usehooks-ts";
 
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/toaster/use-toast";
-
-const cssContent = `
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
-body {
-  font-family: 'Inter', sans-serif!important;
-}
-`;
+import { cssContent, getHtmlContent } from "@/utils/config";
 
 const MemoizedSandpack = ({
   completion,
@@ -31,20 +25,8 @@ const MemoizedSandpack = ({
   isLoading: boolean;
 }) => {
   const [, copy] = useCopyToClipboard();
+  const htmlContent = getHtmlContent(completion);
   const downloadCode = () => {
-    const htmlContent = `
-      <html class="size-full">
-        <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <script src="https://cdn.tailwindcss.com"></script>
-          <link href="https://cdn.jsdelivr.net/gh/iconoir-icons/iconoir@main/css/iconoir.css" rel="stylesheet" />
-          <link href="tailwindai.css" rel="stylesheet">
-        </head>
-        ${completion}
-      </html>
-    `;
-
     const zip = new JSZip();
     zip.file("index.html", htmlContent);
     zip.file("tailwindai.css", cssContent);
@@ -71,16 +53,7 @@ const MemoizedSandpack = ({
         code: completion,
       },
       "/index.html": {
-        code: `<html class="size-full">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<script src="https://cdn.tailwindcss.com"></script>
-<link href="https://cdn.jsdelivr.net/gh/iconoir-icons/iconoir@main/css/iconoir.css" rel="stylesheet" />
-<link href="tailwindai.css" rel="stylesheet">
-</head>
-${completion}
-</html>`,
+        code: getHtmlContent(completion),
       },
       "/tailwindai.css": {
         code: cssContent,

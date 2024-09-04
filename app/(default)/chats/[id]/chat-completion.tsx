@@ -83,7 +83,7 @@ export default function ChatCompletion({
     setInput,
   } = useCompletion({
     api: "/api/completion",
-    body: { id: fetchedChat.id },
+    body: { id: fetchedChat.id, selectedVersion },
     initialInput: defaultMessage,
     initialCompletion: defaultCompletion,
     onError: async (error) => {
@@ -110,7 +110,10 @@ export default function ChatCompletion({
         .find((message) => message.role === "assistant");
       if (lastCompletionMessage) {
         setCompletion(lastCompletionMessage.content ?? "");
-        handleVersionSelect(lastCompletionMessage.id);
+        handleVersionSelect(
+          lastCompletionMessage.id,
+          refreshedChatData?.messages || [],
+        );
       }
     },
   });
@@ -120,12 +123,15 @@ export default function ChatCompletion({
     }
   }, []);
 
-  const handleVersionSelect = (id: string) => {
-    const selectedMessageIndex = messages.findIndex((m) => m.id === id);
+  const handleVersionSelect = (
+    id: string,
+    updatedMessages: ChatMessage[] = messages,
+  ) => {
+    const selectedMessageIndex = updatedMessages.findIndex((m) => m.id === id);
     if (selectedMessageIndex > -1) {
       setSelectedVersion(id);
-      setTitle(messages[selectedMessageIndex - 1]?.content ?? "");
-      setCompletion(messages[selectedMessageIndex]?.content ?? "");
+      setTitle(updatedMessages[selectedMessageIndex - 1]?.content ?? "");
+      setCompletion(updatedMessages[selectedMessageIndex]?.content ?? "");
     }
   };
 

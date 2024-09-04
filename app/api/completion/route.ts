@@ -158,7 +158,7 @@ const validateRequest = async (id: string, prompt: string) => {
   // Fetch HTML content
   const { data: blobContent, error } = await supabase.storage
     .from("featured")
-    .download("html-gen.md");
+    .download("html-gen-1.md");
   if (error) throw new Error("Could not get AI Model file. Please try again");
   const contentMd = await blobContent.text();
 
