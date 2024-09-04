@@ -39,7 +39,7 @@ export default function ChatSidebar({
     if (assistantIndex > 0) {
       for (let i = assistantIndex - 1; i >= 0; i--) {
         if (messages[i].role === "user") {
-          return messages[i].content;
+          return messages[i].content?.substring(0, 200);
         }
       }
     }

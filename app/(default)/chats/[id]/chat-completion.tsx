@@ -114,7 +114,6 @@ export default function ChatCompletion({
       }
     },
   });
-
   useEffect(() => {
     if (defaultMessages.length === 1) {
       complete(defaultMessage);
@@ -131,7 +130,7 @@ export default function ChatCompletion({
   };
 
   const assistantMessages = useMemo(() => {
-    return messages.filter((m) => m.role === "assistant").slice(-30);
+    return messages.filter((m) => m.role === "assistant");
   }, [messages]);
 
   const copyPrompt = (prompt: string) => {
@@ -260,21 +259,13 @@ export default function ChatCompletion({
                   <p>{isCanvas ? "Display code" : "Hide code"}</p>
                 </TooltipContent>
               </Tooltip>
-              <Tooltip>
-                <TooltipTrigger>
-                  <ChatSidebarMobile
-                    isLoading={isLoading}
-                    assistantMessages={assistantMessages}
-                    selectedVersion={selectedVersion}
-                    messages={messages}
-                    handleVersionSelect={handleVersionSelect}
-                  />
-                </TooltipTrigger>
-
-                <TooltipContent>
-                  <p>Versions</p>
-                </TooltipContent>
-              </Tooltip>
+              <ChatSidebarMobile
+                isLoading={isLoading}
+                assistantMessages={assistantMessages}
+                selectedVersion={selectedVersion}
+                messages={messages}
+                handleVersionSelect={handleVersionSelect}
+              />
 
               <Tooltip>
                 <TooltipTrigger>
