@@ -55,7 +55,7 @@ export default function ChatCompletion({
   defaultCompletion: string;
   defaultVisibility: boolean;
   defaultTitle: string;
-  defaultSelectedVersion: string;
+  defaultSelectedVersion: number;
   defaultMessages: ChatMessage[];
   defaultMessage: string;
 }) {
@@ -65,7 +65,7 @@ export default function ChatCompletion({
   const pathname = usePathname();
 
   const [messages, setMessages] = useState<ChatMessage[]>(defaultMessages);
-  const [selectedVersion, setSelectedVersion] = useState<string>(
+  const [selectedVersion, setSelectedVersion] = useState<number>(
     defaultSelectedVersion,
   );
   const [title, setTitle] = useState<string>(defaultTitle);
@@ -124,7 +124,7 @@ export default function ChatCompletion({
   }, []);
 
   const handleVersionSelect = (
-    id: string,
+    id: number,
     updatedMessages: ChatMessage[] = messages,
   ) => {
     const selectedMessageIndex = updatedMessages.findIndex((m) => m.id === id);

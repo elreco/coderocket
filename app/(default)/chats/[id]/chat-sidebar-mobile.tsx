@@ -14,10 +14,10 @@ import {
 import { ChatMessage } from "../types";
 
 interface Props {
-  selectedVersion: string | null;
+  selectedVersion: number | null;
   assistantMessages: ChatMessage[];
   messages: ChatMessage[];
-  handleVersionSelect: (id: string) => void;
+  handleVersionSelect: (id: number) => void;
   isLoading: boolean;
 }
 

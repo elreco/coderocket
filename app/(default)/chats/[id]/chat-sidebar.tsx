@@ -12,10 +12,10 @@ import { Badge } from "@/components/ui/badge";
 import { ChatMessage } from "../types";
 
 interface Props {
-  selectedVersion: string | null;
+  selectedVersion: number | null;
   assistantMessages: ChatMessage[];
   messages: ChatMessage[];
-  handleVersionSelect: (id: string) => void;
+  handleVersionSelect: (id: number) => void;
 }
 
 export default function ChatSidebar({
@@ -32,7 +32,7 @@ export default function ChatSidebar({
     }
   }, [messages]);
 
-  const getUserMessage = (assistantMessageId: string) => {
+  const getUserMessage = (assistantMessageId: number) => {
     const assistantIndex = messages.findIndex(
       (m) => m.id === assistantMessageId,
     );

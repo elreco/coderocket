@@ -73,7 +73,7 @@ export default async function Chats({ params }: Props) {
     chat.messages
       .slice()
       .reverse()
-      .find((message) => message.role === "assistant")?.id || "";
+      .find((message) => message.role === "assistant")?.id || 0;
   const defaultMessages = chat.messages;
   const defaultMessage =
     defaultMessages.length === 1

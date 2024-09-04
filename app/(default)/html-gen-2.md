@@ -20,10 +20,10 @@ The HTML code should ONLY use the following guidelines and available elements:
 - Use semantic HTML elements and aria attributes to ensure the accessibility of results.
 
 - **Icons**:
-  - **Do not generate any SVG code yourself** for icons. **You must copy the exact SVG code directly from the Lucide Icons GitHub repository** (available at: github.com/lucide-icons/lucide/tree/main/icons).
-  - For example, if you need the "shopping-cart" icon, go to the GitHub repository, find the file `shopping-cart.svg`, and copy the exact SVG code. **Do not alter the SVG in any way.**
-  - Do not attempt to auto-generate SVGs or create custom paths. The SVG must be identical to the one in the Lucide Icons repository.
-  - If the icon you want to use is not available, automatically replace it with a default icon (like "alert-circle" or another suitable one) from the same repository to ensure the prototype remains functional and visually complete.
+  - You are not allowed to generate any custom SVG code for icons. You must copy the exact SVG code from the official Lucide Icons GitHub repository (available at: github.com/lucide-icons/lucide/tree/main/icons).
+  - For example, if you need the "shopping-cart" icon, go to the Lucide Icons repository, open shopping-cart.svg, and copy the exact SVG code without making any modifications.
+  - Do not generate or modify the SVG code. You must copy the exact SVG content from the Lucide repository. The SVG must match the repository's version 100%.
+  - If the icon you want is not available, replace it with a default icon (like "alert-circle") from the Lucide repository.
 
 **Fonts**:
 - Do not change or import any fonts. Assume that the required font is already available and applied globally. Your task is to focus on the HTML structure and Tailwind CSS styling without modifying or replacing the font family.
@@ -103,7 +103,7 @@ Result:
             </a>
           </div>
           <div class="hidden md:flex items-center space-x-1">
-            <a href="#" class="py-5 px-3 text-gray-700 hover:text-gray-900">
+            <a href="#" class="flex items-center py-5 px-3 text-gray-700 hover:text-gray-900">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="24"
@@ -123,7 +123,7 @@ Result:
               </svg>
               <span class="ml-1">Home</span>
             </a>
-            <a href="#" class="py-5 px-3 text-gray-700 hover:text-gray-900">
+            <a href="#" class="flex items-center py-5 px-3 text-gray-700 hover:text-gray-900">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="24"
@@ -143,7 +143,7 @@ Result:
               </svg>
               <span class="ml-1">About</span>
             </a>
-            <a href="#" class="py-5 px-3 text-gray-700 hover:text-gray-900">
+            <a href="#" class="flex items-center py-5 px-3 text-gray-700 hover:text-gray-900">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="24"
@@ -164,7 +164,7 @@ Result:
               </svg>
               <span class="ml-1">Services</span>
             </a>
-            <a href="#" class="py-5 px-3 text-gray-700 hover:text-gray-900">
+            <a href="#" class="flex items-center py-5 px-3 text-gray-700 hover:text-gray-900">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="24"
@@ -188,7 +188,7 @@ Result:
           </div>
         </div>
         <div class="hidden md:flex items-center space-x-1">
-          <a href="#" class="py-5 px-3 text-gray-700 hover:text-gray-900">
+          <a href="#" class="flex items-center py-5 px-3 text-gray-700 hover:text-gray-900">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="24"
@@ -211,7 +211,7 @@ Result:
           </a>
           <a
             href="#"
-            class="py-2 px-3 bg-yellow-400 text-yellow-900 rounded hover:bg-yellow-300 transition duration-300"
+            class="flex items-center py-2 px-3 bg-yellow-400 text-yellow-900 rounded hover:bg-yellow-300 transition duration-300"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -256,7 +256,7 @@ Result:
       </div>
     </div>
     <div class="mobile-menu hidden md:hidden">
-      <a href="#" class="block py-2 px-4 text-sm hover:bg-gray-200">
+      <a href="#" class="flex items-center py-2 px-4 text-sm hover:bg-gray-200">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="24"
@@ -276,7 +276,7 @@ Result:
         </svg>
         <span class="ml-1">Home</span>
       </a>
-      <a href="#" class="block py-2 px-4 text-sm hover:bg-gray-200">
+      <a href="#" class="flex items-center  py-2 px-4 text-sm hover:bg-gray-200">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="24"
@@ -296,7 +296,7 @@ Result:
         </svg>
         <span class="ml-1">About</span>
       </a>
-      <a href="#" class="block py-2 px-4 text-sm hover:bg-gray-200">
+      <a href="#" class="flex items-center py-2 px-4 text-sm hover:bg-gray-200">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="24"
@@ -317,7 +317,7 @@ Result:
         </svg>
         <span class="ml-1">Services</span>
       </a>
-      <a href="#" class="block py-2 px-4 text-sm hover:bg-gray-200">
+      <a href="#" class="flex items-center py-2 px-4 text-sm hover:bg-gray-200">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="24"
@@ -338,7 +338,7 @@ Result:
         </svg>
         <span class="ml-1">Contact</span>
       </a>
-      <a href="#" class="block py-2 px-4 text-sm hover:bg-gray-200">
+      <a href="#" class="flex items-center py-2 px-4 text-sm hover:bg-gray-200">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="24"
@@ -361,7 +361,7 @@ Result:
       </a>
       <a
         href="#"
-        class="block py-2 px-4 text-sm bg-yellow-400 text-yellow-900 rounded hover:bg-yellow-300 transition duration-300"
+        class="flex items-center py-2 px-4 text-sm bg-yellow-400 text-yellow-900 rounded hover:bg-yellow-300 transition duration-300"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"

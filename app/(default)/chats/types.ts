@@ -2,7 +2,7 @@
 import { FunctionCall } from "ai";
 
 export interface ChatMessage {
-  id: string;
+  id: number;
   createdAt?: Date;
   version?: number;
   content: string | null;

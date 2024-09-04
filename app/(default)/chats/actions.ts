@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { getSubscription } from "@/app/supabase-server";
 import { createClient } from "@/utils/supabase/server";
 
-import { Chat, ChatMessage, ChatProps } from "./types";
+import { Chat, ChatProps } from "./types";
 export const fetchChat = async (id: string): Promise<ChatProps | null> => {
   const supabase = createClient();
   const { data } = await supabase
@@ -31,29 +31,9 @@ export const fetchChat = async (id: string): Promise<ChatProps | null> => {
 
   const messages = data?.length ? data[0]?.messages : [];
 
-  let assistantVersion = -1;
-  const filteredMessages: ChatMessage[] = messages.reduce(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (acc: ChatMessage[], m: any, index: any) => {
-      if (m.content === null) {
-        m.content = "";
-      }
-
-      const message = {
-        ...m,
-        id: `message-${index}`,
-        version: m.role === "assistant" ? ++assistantVersion : -1,
-      };
-
-      acc.push(message);
-      return acc;
-    },
-    [],
-  );
-
   return {
     ...data[0],
-    messages: filteredMessages,
+    messages,
   };
 };
 

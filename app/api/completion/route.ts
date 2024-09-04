@@ -3,6 +3,7 @@ export const maxDuration = 300;
 import { OpenAIStream, StreamingTextResponse } from "ai";
 import OpenAI from "openai";
 
+import { ChatMessage } from "@/app/(default)/chats/types";
 import { getSubscription } from "@/app/supabase-server";
 import { captureScreenshot } from "@/utils/capture-screenshot";
 import { maxPromptLength, openAIModel, storageUrl } from "@/utils/config";
@@ -15,7 +16,11 @@ const openai = new OpenAI({
 
 export async function POST(req: Request) {
   // Extract prompt and id from request
-  const { prompt, id } = (await req.json()) as { prompt: string; id: string };
+  const { prompt, id, selectedVersion } = (await req.json()) as {
+    prompt: string;
+    id: string;
+    selectedVersion: number;
+  };
 
   try {
     const { messagesFromDatabase, imageUrl, contentMd } = await validateRequest(
@@ -29,6 +34,7 @@ export async function POST(req: Request) {
       messagesFromDatabase,
       prompt,
       imageUrl,
+      selectedVersion,
     );
 
     // Request OpenAI completion
@@ -66,26 +72,42 @@ const buildMessagesToOpenAi = async (
   messages: readonly any[],
   prompt: string,
   imageUrl?: string | null | undefined,
+  selectedVersion?: number, // added selectedVersion as a parameter
 ) => {
   const initialSystemMessage = { role: "system", content: contentMd };
 
   // Construct base message array starting with system message
   let messagesToOpenAI = [initialSystemMessage, ...messages];
 
-  // Handling the scenario where there's more than one message in the database
   if (messages.length > 1) {
-    // Retrieve the first user message and the last assistant message
-    const userMessage = messages.find((message) => message.role === "user");
-    const lastAssistantMessage = [...messages]
-      .reverse()
-      .find((message) => message.role === "assistant");
+    // Find the assistant message by selectedVersion
+    const lastAssistantMessage = messages.find(
+      (message) =>
+        message.role === "assistant" && message.id === selectedVersion,
+    );
 
-    // Reconstruct messages with relevant user and assistant messages
+    if (!lastAssistantMessage) {
+      throw new Error("Selected assistant message version not found");
+    }
+
+    // Find the user message that appears just before the selected assistant message
+    const selectedVersionIndex = messages.findIndex(
+      (message) => message.id === selectedVersion,
+    );
+
+    const userMessage =
+      selectedVersionIndex > 0 ? messages[selectedVersionIndex - 1] : null;
+
+    // Reconstruct messages with the relevant user and assistant messages
     messagesToOpenAI = [initialSystemMessage];
-    if (userMessage) messagesToOpenAI.push(userMessage);
-    if (lastAssistantMessage) messagesToOpenAI.push(lastAssistantMessage);
 
-    // Adding new user message regarding previous implementation
+    if (userMessage && userMessage.role === "user") {
+      messagesToOpenAI.push(userMessage);
+    }
+
+    messagesToOpenAI.push(lastAssistantMessage);
+
+    // Adding new user messaEge regarding previous implementation
     messagesToOpenAI.push({
       role: "user",
       content: `Previously you already implemented this code, use it as a reference and meet my new requirements: ${prompt}`,
@@ -158,7 +180,7 @@ const validateRequest = async (id: string, prompt: string) => {
   // Fetch HTML content
   const { data: blobContent, error } = await supabase.storage
     .from("featured")
-    .download("html-gen-1.md");
+    .download("html-gen-2.md");
   if (error) throw new Error("Could not get AI Model file. Please try again");
   const contentMd = await blobContent.text();
 
@@ -178,24 +200,41 @@ const updateDataAfterCompletion = async (
 
   const { data: chatData } = await supabase.from("chats").select().eq("id", id);
 
-  if (chatData) {
-    const newMessages = [...chatData[0].messages];
-    if (newMessages.length > 1) {
-      newMessages.push(
-        { content: prompt, role: "user" },
-        {
-          content: completion,
-          role: "assistant",
-        },
-      );
-    } else {
-      newMessages.push({
+  if (chatData?.length) {
+    const currentMessages = chatData[0]?.messages ?? [];
+    const newMessages = [
+      ...currentMessages,
+      { content: prompt, role: "user" },
+      {
         content: completion,
         role: "assistant",
-      });
-    }
+      },
+    ];
 
-    await supabase.from("chats").update({ messages: newMessages }).eq("id", id);
+    let assistantVersion = -1;
+
+    const filteredMessages: ChatMessage[] = newMessages.reduce(
+      (acc: ChatMessage[], m: ChatMessage, index: number) => {
+        if (m.content === null) {
+          m.content = "";
+        }
+
+        const message = {
+          ...m,
+          id: index,
+          version: m.role === "assistant" ? ++assistantVersion : -1,
+        };
+
+        acc.push(message);
+        return acc;
+      },
+      [],
+    );
+
+    await supabase
+      .from("chats")
+      .update({ messages: filteredMessages })
+      .eq("id", id);
 
     const screenshot = await captureScreenshot(`${getURL()}content/${id}`);
 
@@ -206,15 +245,18 @@ const updateDataAfterCompletion = async (
         cacheControl: "3600",
         upsert: false,
       });
+
     if (!error) {
       const { data: imageData } = supabase.storage
         .from("chat-images")
         .getPublicUrl(data.path);
 
-      newMessages[newMessages.length - 1].screenshot = imageData.publicUrl;
+      filteredMessages[filteredMessages.length - 1].screenshot =
+        imageData.publicUrl;
+
       await supabase
         .from("chats")
-        .update({ messages: newMessages })
+        .update({ messages: filteredMessages })
         .eq("id", id);
     } else {
       throw new Error("Failed to upload image to Supabase: " + error.message);
