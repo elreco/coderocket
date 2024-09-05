@@ -202,14 +202,25 @@ const updateDataAfterCompletion = async (
 
   if (chatData?.length) {
     const currentMessages = chatData[0]?.messages ?? [];
-    const newMessages = [
-      ...currentMessages,
-      { content: prompt, role: "user" },
-      {
-        content: completion,
-        role: "assistant",
-      },
-    ];
+
+    // Check if the last user message already exists in currentMessages
+    const lastMessage = currentMessages[currentMessages.length - 1];
+    const newMessages = [...currentMessages];
+
+    // Only add the user prompt if it's not already present
+    if (
+      !lastMessage ||
+      lastMessage.content !== prompt ||
+      lastMessage.role !== "user"
+    ) {
+      newMessages.push({ content: prompt, role: "user" });
+    }
+
+    // Add the assistant's completion result
+    newMessages.push({
+      content: completion,
+      role: "assistant",
+    });
 
     let assistantVersion = -1;
 
