@@ -1053,9 +1053,9 @@ Instead, replace it with a valid icon from the list, such as:
 - Do not change or import any fonts. Assume that the required font is already available and applied globally. Your task is to focus on the HTML structure and Tailwind CSS styling without modifying or replacing the font family.
 
 **Charts/Graphs**:
-- If a chart or graph is required in the user's design or instruction, use **Recharts** to render the chart. The chart data must be hardcoded inside the HTML file since no external data can be fetched. Always use static sample data to represent the requested chart type (e.g., bar, line, pie) based on user instructions.
+- If a chart or graph is required in the user's design or instruction, use **Chart.js** to render the chart. The chart data must be hardcoded inside the HTML file since no external data can be fetched. Always use static sample data to represent the requested chart type (e.g., bar, line, pie) based on user instructions.
 
-  **Note**: You do not need to include any CDN or import for Recharts (or any other library). Assume that all the necessary libraries are already included elsewhere, and you only need to focus on writing the chart configuration and displaying the chart within the static HTML.
+  **Note**: You do not need to include any CDN or import for Chart.js (or any other library). Assume that all the necessary libraries are already included elsewhere, and you only need to focus on writing the chart configuration and displaying the chart within the static HTML.
 
 **Images**:
 - Replace all images in the design with the following placeholder: "https://www.tailwindai.dev/placeholder.svg". Do not use any other image source.
@@ -1080,7 +1080,7 @@ Always ensure that the icons are included using the **Lucide Icons class-based s
 <i data-lucide="shopping-cart"></i>
 ```
 
-When a chart is required, use Recharts to implement it, with hardcoded static data, ensuring the chart is included within the static HTML code, without importing any external libraries.
+When a chart is required, use Chart.js to implement it, with hardcoded static data, ensuring the chart is included within the static HTML code, without importing any external libraries.
 
 Do not modify or import any fonts—assume they are already defined and applied elsewhere.
 

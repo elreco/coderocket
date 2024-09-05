@@ -34,7 +34,7 @@ export default function RootLayout({ children }: PropsWithChildren) {
         />
         <Script
           strategy="beforeInteractive"
-          src="https://unpkg.com/recharts/umd/Recharts.js"
+          src="https://cdn.jsdelivr.net/npm/chart.js"
         />
       </head>
       <body>{children}</body>
