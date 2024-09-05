@@ -46,16 +46,6 @@ interface Props {
 export function MobileNav({ user, handleSignOut }: Props) {
   return (
     <div className="flex items-center gap-6">
-      <a
-        href="https://www.producthunt.com/posts/tailwind-ai?utm_source=badge-featured&utm_medium=badge&utm_souce=badge-tailwind&#0045;ai"
-        target="_blank"
-      >
-        <img
-          src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=426541&theme=dark"
-          alt="Tailwind&#0032;AI - AI&#0045;Powered&#0032;Tailwind&#0032;Component&#0032;Generation | Product Hunt"
-          className="h-[40px] w-[180px]"
-        />
-      </a>
       <Popover className="flex items-center lg:hidden">
         {({ open }) => (
           <>
@@ -108,19 +98,7 @@ export function MobileNav({ user, handleSignOut }: Props) {
                         </MobileNavLink>
                       ))}
                     </div>
-                    <a
-                      href="https://www.producthunt.com/posts/tailwind-ai?utm_source=badge-featured&utm_medium=badge&utm_souce=badge-tailwind&#0045;ai"
-                      target="_blank"
-                    >
-                      <img
-                        className="my-3"
-                        src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=426541&theme=dark"
-                        alt="Tailwind&#0032;AI - AI&#0045;Powered&#0032;Tailwind&#0032;Component&#0032;Generation | Product Hunt"
-                        style={{ width: "250px", height: "54px" }}
-                        width="250"
-                        height="54"
-                      />
-                    </a>
+
                     <div className="mt-8 flex flex-col gap-4">
                       {!user ? (
                         <Popover.Button
