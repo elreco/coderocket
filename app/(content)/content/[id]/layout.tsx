@@ -23,6 +23,10 @@ export default function RootLayout({ children }: PropsWithChildren) {
           href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap"
           rel="stylesheet"
         />
+        <link
+          rel="stylesheet"
+          href="https://cdn.jsdelivr.net/gh/iconoir-icons/iconoir@7.8.0/css/iconoir.css"
+        />
         <title>Tailwind AI</title>
         <Script
           strategy="beforeInteractive"
