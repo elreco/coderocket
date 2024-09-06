@@ -6,7 +6,7 @@ export const screenshotApiUrl =
 
 export const maxPromptLength = 1000;
 
-export const openAIModel = "gpt-4o-mini";
+export const openAIModel = "ft:gpt-4o-mini-2024-07-18:personal::A49crEM5";
 
 export const getHtmlContent = (completion: string) => `<html class="size-full">
 <head>
