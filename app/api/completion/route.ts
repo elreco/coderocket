@@ -65,14 +65,13 @@ export async function POST(req: Request) {
     });
   }
 }
-
 const buildMessagesToOpenAi = async (
   contentMd: string,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   messages: readonly any[],
   prompt: string,
   imageUrl?: string | null | undefined,
-  selectedVersion?: number, // added selectedVersion as a parameter
+  selectedVersion?: number,
 ) => {
   const initialSystemMessage = { role: "system", content: contentMd };
 
@@ -80,25 +79,34 @@ const buildMessagesToOpenAi = async (
   let messagesToOpenAI = [initialSystemMessage, ...messages];
 
   if (messages.length > 1) {
-    // Find the assistant message by selectedVersion
-    const lastAssistantMessage = messages.find(
+    // Trouver le message assistant basé sur selectedVersion
+    let lastAssistantMessage = messages.find(
       (message) =>
         message.role === "assistant" && message.id === selectedVersion,
     );
 
+    // Si la version sélectionnée n'est pas trouvée, prendre la dernière version existante
     if (!lastAssistantMessage) {
-      throw new Error("Selected assistant message version not found");
+      console.warn(
+        "Selected assistant message version not found, using last available version.",
+      );
+      lastAssistantMessage = [...messages]
+        .reverse()
+        .find((message) => message.role === "assistant");
+
+      if (!lastAssistantMessage) {
+        throw new Error("No assistant message found");
+      }
     }
 
-    // Find the user message that appears just before the selected assistant message
     const selectedVersionIndex = messages.findIndex(
-      (message) => message.id === selectedVersion,
+      (message) => message.id === lastAssistantMessage.id,
     );
 
     const userMessage =
       selectedVersionIndex > 0 ? messages[selectedVersionIndex - 1] : null;
 
-    // Reconstruct messages with the relevant user and assistant messages
+    // Reconstruire les messages avec le message utilisateur et assistant appropriés
     messagesToOpenAI = [initialSystemMessage];
 
     if (userMessage && userMessage.role === "user") {
@@ -107,13 +115,13 @@ const buildMessagesToOpenAi = async (
 
     messagesToOpenAI.push(lastAssistantMessage);
 
-    // Adding new user messaEge regarding previous implementation
+    // Ajouter un nouveau message utilisateur basé sur le nouveau prompt
     messagesToOpenAI.push({
       role: "user",
       content: `Previously you already implemented this code, use it as a reference and meet my new requirements: ${prompt}`,
     });
   } else if (imageUrl) {
-    // Handling image URL integration if there is an image
+    // Gérer l'intégration de l'URL de l'image si une image est fournie
     messagesToOpenAI[1].content = [
       {
         type: "text",
