@@ -34,6 +34,9 @@ Make sure the design feels fresh, sleek, and professional, taking into account t
 
 - Use **Iconoir Icons** via the **class-based system**, assuming the CDN for version **7.8.0** is already included and available globally.
 - You are provided with a specific list of valid icons. You **must only** use icons from this list. **Any icon not on this list is forbidden** and must not be used under any circumstances.
+- Ensure that the icons used across the design are consistent in style and purpose. For example, maintain a uniform size, color scheme, and positioning for all icons. When using icons, prioritize a coherent theme (e.g., all action-related icons should have a similar look and size).
+- Avoid mixing different icon styles or sizes on the same interface.
++ Use Tailwind utilities such as `text-gray-500`, `text-lg`, and `inline-flex` to harmonize the icon appearance and ensure visual alignment with the rest of the UI elements.
 - The valid icons list is as follows (replace with the exact icons you allow):
 [
   "iconoir-accessibility-sign",
