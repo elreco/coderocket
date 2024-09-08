@@ -2,6 +2,7 @@
 import { PropsWithChildren } from "react";
 
 import { Footer } from "@/components/footer";
+import { IntercomWidget } from "@/components/intercom-widget";
 import { Navbar } from "@/components/navbar/navbar";
 import { Analytics } from "@vercel/analytics/react";
 import clsx from "clsx";
@@ -12,9 +13,6 @@ import { Rubik } from "next/font/google";
 import { SandPackCSS } from "@/components/sandpack-styles";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import Intercom from "@intercom/messenger-js-sdk";
-import { getUserDetails } from "../supabase-server";
-import { getUser } from "./account/actions";
 
 const rubik = Rubik({
   subsets: ["latin"],
@@ -66,25 +64,7 @@ export const metadata = {
   },
 };
 
-const getUnixTimestamp = (date: string) => {
-  const dateObject = new Date(date);
-  const unixTimestamp = Math.floor(dateObject.getTime() / 1000);
-  return unixTimestamp;
-};
-
-export default async function RootLayout({ children }: PropsWithChildren) {
-  const [userData, userDetails] = await Promise.all([
-    getUser(),
-    getUserDetails(),
-  ]);
-  Intercom({
-    app_id: "lddkt5f9",
-    user_id: userData.data.user?.id,
-    name: userDetails.full_name,
-    email: userData.data.user?.email,
-    created_at: getUnixTimestamp(userDetails.created_at),
-  });
-
+export default function RootLayout({ children }: PropsWithChildren) {
   return (
     <html
       lang="en"
@@ -98,6 +78,7 @@ export default async function RootLayout({ children }: PropsWithChildren) {
           <Navbar />
           <main className="size-full">{children}</main>
           <Footer />
+          <IntercomWidget />
           <Toaster />
           <Analytics />
         </body>
