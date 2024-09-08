@@ -2,7 +2,6 @@
 import { PropsWithChildren } from "react";
 
 import { Footer } from "@/components/footer";
-import { IntercomWidget } from "@/components/intercom-widget";
 import { Navbar } from "@/components/navbar/navbar";
 import { Analytics } from "@vercel/analytics/react";
 import clsx from "clsx";
@@ -13,6 +12,7 @@ import { Rubik } from "next/font/google";
 import { SandPackCSS } from "@/components/sandpack-styles";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { ChatWidget } from "@/components/chat-widget";
 
 const rubik = Rubik({
   subsets: ["latin"],
@@ -78,7 +78,7 @@ export default function RootLayout({ children }: PropsWithChildren) {
           <Navbar />
           <main className="size-full">{children}</main>
           <Footer />
-          <IntercomWidget />
+          <ChatWidget />
           <Toaster />
           <Analytics />
         </body>

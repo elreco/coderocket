@@ -19,7 +19,7 @@ export function Footer() {
       </div>
 
       {/* Paragraph aligned to the right */}
-      <p className="text-right text-xs text-gray-700">
+      <p className="mr-20 text-right text-xs text-gray-700">
         Copyright {new Date().getFullYear()} -{" "}
         <a
           href="https://instagram.com/tailwindai.dev"
