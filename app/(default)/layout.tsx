@@ -12,6 +12,9 @@ import { Rubik } from "next/font/google";
 import { SandPackCSS } from "@/components/sandpack-styles";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import Intercom from "@intercom/messenger-js-sdk";
+import { getUserDetails } from "../supabase-server";
+import { getUser } from "./account/actions";
 
 const rubik = Rubik({
   subsets: ["latin"],
@@ -63,7 +66,25 @@ export const metadata = {
   },
 };
 
-export default function RootLayout({ children }: PropsWithChildren) {
+const getUnixTimestamp = (date: string) => {
+  const dateObject = new Date(date);
+  const unixTimestamp = Math.floor(dateObject.getTime() / 1000);
+  return unixTimestamp;
+};
+
+export default async function RootLayout({ children }: PropsWithChildren) {
+  const [userData, userDetails] = await Promise.all([
+    getUser(),
+    getUserDetails(),
+  ]);
+  Intercom({
+    app_id: "lddkt5f9",
+    user_id: userData.data.user?.id,
+    name: userDetails.full_name,
+    email: userData.data.user?.email,
+    created_at: getUnixTimestamp(userDetails.created_at),
+  });
+
   return (
     <html
       lang="en"
@@ -71,22 +92,6 @@ export default function RootLayout({ children }: PropsWithChildren) {
     >
       <head>
         <SandPackCSS />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function(d, w, c) {
-                  w.BrevoConversationsID = '66c30f09e1078bbc630253d8';
-                  w[c] = w[c] || function() {
-                      (w[c].q = w[c].q || []).push(arguments);
-                  };
-                  var s = d.createElement('script');
-                  s.async = true;
-                  s.src = 'https://conversations-widget.brevo.com/brevo-conversations.js';
-                  if (d.head) d.head.appendChild(s);
-              })(document, window, 'BrevoConversations');
-            `,
-          }}
-        ></script>
       </head>
       <TooltipProvider>
         <body className="size-full">
