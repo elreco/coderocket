@@ -25,7 +25,7 @@ export function ChatWidget() {
         Crisp.configure("2f740c23-7cfa-40ff-ba55-581ff73c5a67");
 
         if (userDetails) {
-          Crisp.user.setEmail(userDetails.email);
+          Crisp.user.setEmail(authData.user?.email || "");
           Crisp.user.setNickname(userDetails.full_name);
         }
       }
