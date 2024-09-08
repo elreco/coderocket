@@ -1114,7 +1114,7 @@ Result:
               <div class="flex space-x-4">
                   <div>
                       <a href="#" class="flex items-center py-5 px-2 text-gray-700 hover:text-gray-900">
-                          <i class="home text-2xl"></i>
+                          <i class="iconoir-home text-2xl"></i>
                           <span class="font-bold text-xl ml-2">Brand</span>
                       </a>
                   </div>
