@@ -22,7 +22,6 @@ export function ChatWidget() {
           .eq("id", userId)
           .single();
 
-
         if (userDetails) {
           Crisp.user.setEmail(authData.user?.email || "");
           Crisp.user.setNickname(userDetails.full_name);
