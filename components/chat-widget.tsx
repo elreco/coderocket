@@ -12,7 +12,8 @@ export function ChatWidget() {
       // Récupère les informations de l'utilisateur connecté
       const { data: authData } = await supabase.auth.getUser();
       const userId = authData?.user?.id;
-
+      // Initialisation de Crisp avec ton ID
+      Crisp.configure("2f740c23-7cfa-40ff-ba55-581ff73c5a67");
       // Si l'utilisateur est connecté, récupérer les détails supplémentaires
       if (userId) {
         const { data: userDetails } = await supabase
@@ -21,8 +22,6 @@ export function ChatWidget() {
           .eq("id", userId)
           .single();
 
-        // Initialisation de Crisp avec ton ID
-        Crisp.configure("2f740c23-7cfa-40ff-ba55-581ff73c5a67");
 
         if (userDetails) {
           Crisp.user.setEmail(authData.user?.email || "");
