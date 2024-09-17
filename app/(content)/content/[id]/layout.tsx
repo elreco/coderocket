@@ -33,8 +33,8 @@ export default function RootLayout({ children }: PropsWithChildren) {
           src="https://cdn.jsdelivr.net/npm/chart.js"
         />
         <Script
+          strategy="beforeInteractive"
           src="https://kit.fontawesome.com/0d11f7e939.js"
-          crossOrigin="anonymous"
         />
       </head>
       <body>{children}</body>
