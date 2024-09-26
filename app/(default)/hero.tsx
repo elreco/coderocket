@@ -184,7 +184,7 @@ export default function Hero() {
       >
         <div className="mb-0 flex w-full xl:mb-2">
           <Input
-            placeholder="Start generate a beautiful Tailwind component"
+            placeholder="Start generating a beautiful Tailwind component"
             autoFocus
             required
             color="dark"
