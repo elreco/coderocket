@@ -75,7 +75,7 @@ export default function Hero() {
         title: "You must Log In",
         description: "Log in to your account to start generate components",
       });
-      return router.push("/signin");
+      return router.push("/login");
     }
     const formData = new FormData();
     if (image) {

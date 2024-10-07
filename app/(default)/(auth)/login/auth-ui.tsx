@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/toaster/use-toast";
 
-import { login, signup, signInWithGithub } from "./actions";
+import { login, signInWithGithub } from "../actions";
 
 export default function AuthUI() {
   const searchParams = useSearchParams();
@@ -28,6 +28,9 @@ export default function AuthUI() {
 
   return (
     <form>
+      <h1 className="mb-4 text-center text-lg font-medium text-gray-900 sm:text-2xl">
+        Login
+      </h1>
       <div className="grid gap-6">
         <div className="grid gap-2">
           <div className="grid gap-1">
@@ -60,11 +63,8 @@ export default function AuthUI() {
               autoCorrect="off"
             />
           </div>
-          <Button formAction={login}>Sign In</Button>
-          <Button className="mb-4" variant="outline" formAction={signup}>
-            Sign Up
-          </Button>
-          <Link href="/signin/magic-link">
+          <Button formAction={login}>Login</Button>
+          <Link href="/login/magic-link">
             <Button className="w-full" variant="outline" type="button">
               Send magic link
             </Button>
@@ -102,6 +102,25 @@ export default function AuthUI() {
           </svg>
           <span>GitHub</span>
         </Button>
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="rounded-md bg-gray-900  px-2 text-white">
+              You don&apos;t have an account?
+            </span>
+          </div>
+        </div>
+        <Link href="/register">
+          <Button
+            className="flex w-full items-center space-x-2"
+            variant="outline"
+            type="button"
+          >
+            Register
+          </Button>
+        </Link>
       </div>
     </form>
   );

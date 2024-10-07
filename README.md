@@ -47,7 +47,7 @@ Otherwise, for auth redirects (email confirmations, magic links, OAuth providers
 
 #### [Optional] - Set up OAuth providers
 
-You can use third-party login providers like GitHub or Google. Refer to the [docs](https://supabase.io/docs/guides/auth#third-party-logins) to learn how to configure these. Once configured, you can add them to the `provider` array of the [`Auth` component](./app/signin/AuthUI.tsx) page.
+You can use third-party login providers like GitHub or Google. Refer to the [docs](https://supabase.io/docs/guides/auth#third-party-logins) to learn how to configure these. Once configured, you can add them to the `provider` array of the [`Auth` component](./app/login/AuthUI.tsx) page.
 
 #### [Maybe Optional] - Set up Supabase environment variables (not needed if you installed via the Deploy Button)
 

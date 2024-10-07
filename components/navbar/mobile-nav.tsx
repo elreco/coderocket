@@ -45,7 +45,7 @@ interface Props {
 
 export function MobileNav({ user, handleSignOut }: Props) {
   return (
-    <div className="flex items-center gap-6">
+    <div className="flex items-center gap-3">
       <Popover className="flex items-center lg:hidden">
         {({ open }) => (
           <>
@@ -99,15 +99,24 @@ export function MobileNav({ user, handleSignOut }: Props) {
                       ))}
                     </div>
 
-                    <div className="mt-8 flex flex-col gap-4">
+                    <div className="mt-8 flex flex-col gap-2">
                       {!user ? (
-                        <Popover.Button
-                          as={Button}
-                          href="/signin"
-                          variant="solid"
-                        >
-                          Log in
-                        </Popover.Button>
+                        <>
+                          <Popover.Button
+                            as={Button}
+                            href="/register"
+                            variant="outline"
+                          >
+                            Register
+                          </Popover.Button>
+                          <Popover.Button
+                            as={Button}
+                            href="/login"
+                            variant="solid"
+                          >
+                            Login
+                          </Popover.Button>
+                        </>
                       ) : (
                         <Popover.Button
                           as={Button}
@@ -129,9 +138,18 @@ export function MobileNav({ user, handleSignOut }: Props) {
       </Popover>
 
       {!user ? (
-        <Button href="/signin" variant="solid" className="hidden lg:block">
-          Log in
-        </Button>
+        <>
+          <Button
+            href="/register"
+            variant="outline"
+            className="hidden lg:block"
+          >
+            Register
+          </Button>
+          <Button href="/login" variant="solid" className="hidden lg:block">
+            Login
+          </Button>
+        </>
       ) : (
         <Button
           onClick={() => {

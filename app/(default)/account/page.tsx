@@ -28,7 +28,7 @@ export default async function Account() {
   const user = userData.data.user;
 
   if (!user) {
-    return redirect("/signin");
+    return redirect("/login");
   }
 
   const subscriptionPrice =

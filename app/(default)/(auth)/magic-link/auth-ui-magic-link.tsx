@@ -40,7 +40,7 @@ export default function AuthUIMagicLink() {
             <span className="rounded-md bg-gray-900  px-2 text-white">Or</span>
           </div>
         </div>
-        <Link href="/signin">
+        <Link href="/login">
           <Button className="w-full" variant="outline" type="button">
             Back to login
           </Button>
