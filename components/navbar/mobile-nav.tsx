@@ -139,14 +139,10 @@ export function MobileNav({ user, handleSignOut }: Props) {
 
       {!user ? (
         <>
-          <Button
-            href="/register"
-            variant="outline"
-            className="hidden lg:block"
-          >
+          <Button href="/register" variant="solid" className="hidden lg:block">
             Register
           </Button>
-          <Button href="/login" variant="o" className="hidden lg:block">
+          <Button href="/login" variant="outline" className="hidden lg:block">
             Login
           </Button>
         </>
