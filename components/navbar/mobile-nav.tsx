@@ -105,14 +105,14 @@ export function MobileNav({ user, handleSignOut }: Props) {
                           <Popover.Button
                             as={Button}
                             href="/register"
-                            variant="outline"
+                            variant="solid"
                           >
                             Register
                           </Popover.Button>
                           <Popover.Button
                             as={Button}
                             href="/login"
-                            variant="solid"
+                            variant="outline"
                           >
                             Login
                           </Popover.Button>
@@ -146,7 +146,7 @@ export function MobileNav({ user, handleSignOut }: Props) {
           >
             Register
           </Button>
-          <Button href="/login" variant="solid" className="hidden lg:block">
+          <Button href="/login" variant="o" className="hidden lg:block">
             Login
           </Button>
         </>
