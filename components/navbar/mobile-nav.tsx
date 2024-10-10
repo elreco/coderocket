@@ -137,16 +137,7 @@ export function MobileNav({ user, handleSignOut }: Props) {
         )}
       </Popover>
 
-      {!user ? (
-        <>
-          <Button href="/register" variant="solid" className="hidden lg:block">
-            Register
-          </Button>
-          <Button href="/login" variant="outline" className="hidden lg:block">
-            Login
-          </Button>
-        </>
-      ) : (
+      {user ? (
         <Button
           onClick={() => {
             handleSignOut();
@@ -157,6 +148,15 @@ export function MobileNav({ user, handleSignOut }: Props) {
         >
           Sign Out
         </Button>
+      ) : (
+        <>
+          <Button href="/register" variant="solid" className="hidden lg:block">
+            Register
+          </Button>
+          <Button href="/login" variant="outline" className="hidden lg:block">
+            Login
+          </Button>
+        </>
       )}
     </div>
   );
