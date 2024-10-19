@@ -1,3 +1,4 @@
+import { XMarkIcon } from "@heroicons/react/24/solid";
 import {
   TooltipProvider,
   Tooltip,
@@ -7,15 +8,29 @@ import {
 import clsx from "clsx";
 import { useRef, useEffect } from "react";
 
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 
-import { ChatMessage } from "../types";
+import { ChatMessage, ChatProps } from "../types";
 
 interface Props {
   selectedVersion: number | null;
   assistantMessages: ChatMessage[];
   messages: ChatMessage[];
+  fetchedChat: ChatProps;
   handleVersionSelect: (id: number) => void;
+  handleDeleteVersion: (chatId: string, id: number) => void;
+  authorized: boolean;
 }
 
 export default function ChatSidebar({
@@ -23,6 +38,9 @@ export default function ChatSidebar({
   assistantMessages,
   messages,
   handleVersionSelect,
+  handleDeleteVersion,
+  fetchedChat,
+  authorized,
 }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -91,6 +109,29 @@ export default function ChatSidebar({
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
+          {messages.length > 2 && authorized && (
+            <AlertDialog>
+              <AlertDialogTrigger className="absolute right-3 top-2 z-20 cursor-pointer">
+                <XMarkIcon className="size-6 fill-red-500 font-bold hover:fill-red-300" />
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete Version</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure you want to delete this version?
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => handleDeleteVersion(fetchedChat.id, m.id)}
+                  >
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
         </div>
       ))}
     </div>

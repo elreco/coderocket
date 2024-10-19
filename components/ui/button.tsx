@@ -16,9 +16,13 @@ const variantStyles = {
     white:
       "bg-white text-cyan-900 hover:bg-white/90 active:bg-white/90 active:text-cyan-900/70",
     gray: "bg-gray-800 text-white hover:bg-gray-700 active:bg-gray-800 active:text-white/80",
+    destructive:
+      "bg-red-600 text-white hover:bg-red-700 active:bg-red-800 active:text-white/80",
   },
   outline: {
     gray: "border-gray-300 text-gray-700 hover:border-gray-400 active:bg-gray-100 active:text-gray-700/80",
+    destructive:
+      "border-red-600 text-red-600 hover:border-red-700 hover:bg-red-50 active:bg-red-100 active:text-red-700/80",
   },
 };
 

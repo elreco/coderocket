@@ -31,7 +31,7 @@ import { capitalizeFirstLetter } from "@/utils/helpers";
 import { fetchChat } from "../actions";
 import { ChatMessage, ChatProps } from "../types";
 
-import { changeVisiblity } from "./actions";
+import { changeVisiblity, deleteVersion } from "./actions";
 import ChatSidebar from "./chat-sidebar";
 import ChatSidebarMobile from "./chat-sidebar-mobile";
 import MemoizedSandpack from "./memoized-sandpack";
@@ -101,20 +101,7 @@ export default function ChatCompletion({
       return;
     },
     onFinish: async () => {
-      const refreshedChatData = await fetchChat(fetchedChat.id);
-      setMessages(refreshedChatData?.messages || []);
-      setInput("");
-      const lastCompletionMessage = refreshedChatData?.messages
-        .slice()
-        .reverse()
-        .find((message) => message.role === "assistant");
-      if (lastCompletionMessage) {
-        setCompletion(lastCompletionMessage.content ?? "");
-        handleVersionSelect(
-          lastCompletionMessage.id,
-          refreshedChatData?.messages || [],
-        );
-      }
+      await refreshChatData();
     },
   });
   useEffect(() => {
@@ -173,6 +160,38 @@ export default function ChatCompletion({
           "You are not premium, the visibility cannot be changed. Please upgrade to premium and try again.",
         duration: 5000,
       });
+    }
+  };
+
+  const handleDeleteVersion = async (chatId: string, id: number) => {
+    try {
+      await deleteVersion(chatId, id);
+      await refreshChatData();
+    } catch {
+      toast({
+        variant: "destructive",
+        title: "Premium account required",
+        description:
+          "You are not premium, you can't delete a version. Please upgrade to premium and try again.",
+        duration: 5000,
+      });
+    }
+  };
+
+  const refreshChatData = async () => {
+    const refreshedChatData = await fetchChat(fetchedChat.id);
+    setMessages(refreshedChatData?.messages || []);
+    setInput("");
+    const lastCompletionMessage = refreshedChatData?.messages
+      .slice()
+      .reverse()
+      .find((message) => message.role === "assistant");
+    if (lastCompletionMessage) {
+      setCompletion(lastCompletionMessage.content ?? "");
+      handleVersionSelect(
+        lastCompletionMessage.id,
+        refreshedChatData?.messages || [],
+      );
     }
   };
 
@@ -266,6 +285,9 @@ export default function ChatCompletion({
                 </TooltipContent>
               </Tooltip>
               <ChatSidebarMobile
+                authorized={authorized}
+                fetchedChat={fetchedChat}
+                handleDeleteVersion={handleDeleteVersion}
                 isLoading={isLoading}
                 assistantMessages={assistantMessages}
                 selectedVersion={selectedVersion}
@@ -333,10 +355,13 @@ export default function ChatCompletion({
           </div>
         </div>
         <ChatSidebar
+          authorized={authorized}
           assistantMessages={assistantMessages}
           selectedVersion={selectedVersion}
           messages={messages}
+          fetchedChat={fetchedChat}
           handleVersionSelect={handleVersionSelect}
+          handleDeleteVersion={handleDeleteVersion}
         />
       </div>
     </Container>
