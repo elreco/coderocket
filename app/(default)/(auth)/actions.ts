@@ -29,8 +29,6 @@ export async function login(formData: FormData) {
 export async function register(formData: FormData) {
   const supabase = createClient();
 
-  // type-casting here for convenience
-  // in practice, you should validate your inputs
   const data = {
     email: formData.get("email") as string,
     password: formData.get("password") as string,
@@ -39,9 +37,14 @@ export async function register(formData: FormData) {
   const { error } = await supabase.auth.signUp(data);
 
   if (error) {
-    redirect(`/login?error=${error.message}`);
+    redirect(`/register?error=${error.message}`);
   }
 
+  const { error: loginError } = await supabase.auth.signInWithPassword(data);
+  if (loginError) {
+    redirect(`/register?error=${loginError.message}`);
+  }
+  await new Promise((resolve) => setTimeout(resolve, 1000));
   revalidatePath("/", "layout");
   redirect("/");
 }
