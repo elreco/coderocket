@@ -1,22 +1,19 @@
-/* eslint-disable import/order */
-import { PropsWithChildren } from "react";
-
-import { Footer } from "@/components/footer";
-import { Navbar } from "@/components/navbar/navbar";
 import { Analytics } from "@vercel/analytics/react";
 import clsx from "clsx";
+import { Rubik } from "next/font/google";
+import { PropsWithChildren } from "react";
+
+import { ChatWidget } from "@/components/chat-widget";
+import { Footer } from "@/components/footer";
+import { HotjarWidget } from "@/components/hotjar-widget";
+// eslint-disable-next-line import/order
+import { Navbar } from "@/components/navbar/navbar";
 
 import "styles/main.css";
-import { Rubik } from "next/font/google";
 
 import { SandPackCSS } from "@/components/sandpack-styles";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { ChatWidget } from "@/components/chat-widget";
-import Hotjar from "@hotjar/browser";
-
-const siteId = 5216030;
-const hotjarVersion = 6;
 
 const rubik = Rubik({
   subsets: ["latin"],
@@ -69,7 +66,6 @@ export const metadata = {
 };
 
 export default function RootLayout({ children }: PropsWithChildren) {
-  Hotjar.init(siteId, hotjarVersion);
   return (
     <html
       lang="en"
@@ -86,6 +82,7 @@ export default function RootLayout({ children }: PropsWithChildren) {
           <ChatWidget />
           <Toaster />
           <Analytics />
+          <HotjarWidget />
         </body>
       </TooltipProvider>
     </html>
