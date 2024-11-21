@@ -13,6 +13,10 @@ import { SandPackCSS } from "@/components/sandpack-styles";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ChatWidget } from "@/components/chat-widget";
+import Hotjar from "@hotjar/browser";
+
+const siteId = 5216030;
+const hotjarVersion = 6;
 
 const rubik = Rubik({
   subsets: ["latin"],
@@ -65,6 +69,7 @@ export const metadata = {
 };
 
 export default function RootLayout({ children }: PropsWithChildren) {
+  Hotjar.init(siteId, hotjarVersion);
   return (
     <html
       lang="en"
