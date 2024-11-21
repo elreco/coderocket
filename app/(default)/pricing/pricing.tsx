@@ -116,6 +116,11 @@ export default function Pricing({ user, products, subscription }: Props) {
           Start building for free, then add a site plan to go live. Account
           plans unlock additional features.
         </h2>
+        <h3 className="text-sm text-gray-600">
+          With a free account, you are limited to generating one component with
+          four versions, and image use is not permitted. Upgrade to our premium
+          plan for unlimited access to all features.
+        </h3>
         <div className="flex w-full items-start justify-between pb-20">
           <div className="mt-6 w-full space-y-4 sm:mt-12 sm:grid sm:grid-cols-2 sm:gap-6 sm:space-y-0 lg:mx-auto lg:max-w-4xl xl:mx-0 xl:max-w-none xl:grid-cols-3 xl:space-y-0">
             {products[0].prices?.map((price) => {

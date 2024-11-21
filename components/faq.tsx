@@ -62,6 +62,18 @@ export default function Faq() {
           </p>
         </AccordionContent>
       </AccordionItem>
+      <AccordionItem value="item-4">
+        <AccordionTrigger>
+          What are the limitations of a free account?
+        </AccordionTrigger>
+        <AccordionContent>
+          <p>
+            With a free account, you are limited to generating one component
+            with four versions, and image use is not permitted. Upgrade to our
+            premium plan for unlimited access to all features.
+          </p>
+        </AccordionContent>
+      </AccordionItem>
     </Accordion>
   );
 }
