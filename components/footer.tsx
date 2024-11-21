@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import Logo from "@/components/icons/logo";
 
 export function Footer() {
@@ -21,13 +23,12 @@ export function Footer() {
       {/* Paragraph aligned to the right */}
       <p className="mr-20 text-right text-xs text-gray-700">
         Copyright {new Date().getFullYear()} -{" "}
-        <a
-          href="https://instagram.com/tailwindai.dev"
-          target="_blank"
-          className="text-xs font-medium text-gray-900 hover:text-gray-700"
+        <Link
+          href="/changelog"
+          className="text-xs font-medium text-gray-700 hover:text-gray-900"
         >
-          instagram
-        </a>{" "}
+          CHANGELOG
+        </Link>{" "}
         - <span className="font-medium">tailwindai.dev</span>
       </p>
     </footer>
