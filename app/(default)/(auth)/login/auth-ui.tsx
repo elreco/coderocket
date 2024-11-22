@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,7 @@ import { login, signInWithGithub } from "../actions";
 
 export default function AuthUI() {
   const searchParams = useSearchParams();
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const error = searchParams.get("error");
@@ -26,8 +27,30 @@ export default function AuthUI() {
     }
   });
 
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    setIsLoading(true);
+    try {
+      await login(formData);
+      toast({
+        title: "Success",
+        description: "Account created successfully!",
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to login. Please try again.",
+      });
+      console.error("Registration error:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
-    <form>
+    <form onSubmit={handleLogin}>
       <h1 className="mb-4 text-center text-lg font-medium text-gray-900 sm:text-2xl">
         Login
       </h1>
@@ -63,7 +86,9 @@ export default function AuthUI() {
               autoCorrect="off"
             />
           </div>
-          <Button formAction={login}>Login</Button>
+          <Button type="submit" disabled={isLoading}>
+            {isLoading ? "Loading..." : "Login"}
+          </Button>
           <Link href="/login/magic-link">
             <Button className="w-full" variant="outline" type="button">
               Send magic link

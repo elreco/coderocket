@@ -3,11 +3,11 @@ import clsx from "clsx";
 import { Rubik } from "next/font/google";
 import { PropsWithChildren } from "react";
 
-import { ChatWidget } from "@/components/chat-widget";
 import { Footer } from "@/components/footer";
-import { HotjarWidget } from "@/components/hotjar-widget";
 // eslint-disable-next-line import/order
 import { Navbar } from "@/components/navbar/navbar";
+// eslint-disable-next-line import/order
+import { PluginWidget } from "@/components/plugin-widget";
 
 import "styles/main.css";
 
@@ -79,10 +79,9 @@ export default function RootLayout({ children }: PropsWithChildren) {
           <Navbar />
           <main className="size-full">{children}</main>
           <Footer />
-          <ChatWidget />
+          <PluginWidget />
           <Toaster />
           <Analytics />
-          <HotjarWidget />
         </body>
       </TooltipProvider>
     </html>
