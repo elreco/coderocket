@@ -107,8 +107,9 @@ export default function AuthUI() {
           </div>
         </div>
         <Button
-          formAction={signInWithGithub}
+          onClick={signInWithGithub}
           variant="outline"
+          disabled={isLoading}
           className="flex items-center space-x-2"
         >
           <svg
