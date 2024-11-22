@@ -49,6 +49,8 @@ export default function AuthUI() {
     }
   };
 
+  const handleGithubLogin = async () => signInWithGithub();
+
   return (
     <form onSubmit={handleLogin}>
       <h1 className="mb-4 text-center text-lg font-medium text-gray-900 sm:text-2xl">
@@ -107,7 +109,7 @@ export default function AuthUI() {
           </div>
         </div>
         <Button
-          onClick={signInWithGithub}
+          onClick={handleGithubLogin}
           variant="outline"
           type="button"
           disabled={isLoading}
