@@ -109,6 +109,7 @@ export default function AuthUI() {
         <Button
           onClick={signInWithGithub}
           variant="outline"
+          type="button"
           disabled={isLoading}
           className="flex items-center space-x-2"
         >
