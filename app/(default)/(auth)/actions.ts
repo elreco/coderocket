@@ -21,7 +21,7 @@ export async function login(formData: FormData) {
   if (error) {
     redirect(`/login?error=${error.message}`);
   }
-
+  await new Promise((resolve) => setTimeout(resolve, 1000));
   revalidatePath("/", "layout");
   redirect("/");
 }
@@ -58,6 +58,7 @@ export async function signInWithEmail(formData: FormData) {
   if (error) {
     redirect(`/login?error=${error.message}`);
   }
+  await new Promise((resolve) => setTimeout(resolve, 1000));
   revalidatePath("/login", "layout");
   redirect("/login?emailSent=true");
 }
@@ -74,6 +75,7 @@ export async function signInWithGithub() {
     redirect(`/login?error=${error.message}`);
   }
   if (data.url) {
+    await new Promise((resolve) => setTimeout(resolve, 1000));
     redirect(data.url);
   }
 }
