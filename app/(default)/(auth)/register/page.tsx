@@ -1,8 +1,5 @@
-import { redirect } from "next/navigation";
-
 import Logo from "@/components/icons/logo";
 import { Alert } from "@/components/ui/alert";
-import { createClient } from "@/utils/supabase/server";
 
 import AuthUI from "./auth-ui";
 
@@ -16,12 +13,6 @@ export default async function SignIn({
   searchParams: Promise<{ emailSent?: string }>;
 }) {
   const { emailSent } = await searchParams;
-  const supabase = await createClient();
-  const { data: userData } = await supabase.auth.getUser();
-
-  if (userData.user?.id) {
-    return redirect("/account");
-  }
   return (
     <div className="flex h-screen justify-center">
       <div className="m-auto flex w-80 max-w-lg flex-col justify-between p-3 ">

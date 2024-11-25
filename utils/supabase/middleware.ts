@@ -43,7 +43,7 @@ export async function updateSession(request: NextRequest) {
       request.nextUrl.pathname.startsWith("/register"))
   ) {
     const url = request.nextUrl.clone();
-    url.pathname = "/";
+    url.pathname = "/account";
     return NextResponse.redirect(url);
   }
 
