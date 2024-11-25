@@ -44,7 +44,6 @@ export default function AuthUI() {
         title: "Error",
         description: "Failed to register. Please try again.",
       });
-      console.error("Registration error:", error);
     } finally {
       setIsLoading(false);
     }

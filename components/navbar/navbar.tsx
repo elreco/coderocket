@@ -1,21 +1,55 @@
-"use server";
+"use client";
+import { User } from "@supabase/supabase-js";
 import Link from "next/link";
-import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 import Logo from "@/components/icons/logo";
-import { createClient } from "@/utils/supabase/server";
+import { createClient } from "@/utils/supabase/client";
 
 import { MobileNav } from "./mobile-nav";
 import { NavLinks } from "./nav-links";
 
-export async function Navbar() {
+export function Navbar() {
+  const [userData, setUserData] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const supabase = createClient();
-  const { data: userData } = await supabase.auth.getUser();
+  const router = useRouter();
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      setIsLoading(true);
+      const { data } = await supabase.auth.getUser();
+      if (data.user) {
+        setUserData(data.user);
+      }
+      setIsLoading(false);
+    };
+    fetchUser();
+  }, [supabase]);
+
+  useEffect(() => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("event", event);
+      console.log("session", session);
+      if (event === "SIGNED_IN" && session?.user) {
+        setUserData(session.user);
+      }
+      if (event === "SIGNED_OUT") {
+        setUserData(null);
+        router.push("/login");
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [router, supabase]);
+
   async function logout() {
-    "use server";
-    const supabase = createClient();
     await supabase.auth.signOut();
-    redirect("/");
   }
 
   return (
@@ -30,7 +64,11 @@ export async function Navbar() {
           </div>
         </div>
         <div className="flex items-center gap-6">
-          <MobileNav user={userData.user} handleSignOut={logout} />
+          <MobileNav
+            user={userData}
+            handleSignOut={logout}
+            isLoading={isLoading}
+          />
         </div>
       </div>
     </header>

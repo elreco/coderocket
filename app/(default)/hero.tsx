@@ -5,9 +5,10 @@ import {
   PhotoIcon,
   XMarkIcon,
 } from "@heroicons/react/24/solid";
+import { User } from "@supabase/supabase-js";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 
 import { Container } from "@/components/container";
 import { Badge } from "@/components/ui/badge";
@@ -48,7 +49,6 @@ const previewButtons = [
 
 export default function Hero() {
   const supabase = createClient();
-
   const router = useRouter();
   const { toast } = useToast();
   const [prompt, setPrompt] = useState("");
@@ -57,6 +57,15 @@ export default function Hero() {
   const [loadingVisibility, setLoadingVisibility] = useState(false);
   const [image, setImage] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [userData, setUserData] = useState<User | null>(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const { data } = await supabase.auth.getUser();
+      setUserData(data.user);
+    };
+    fetchUser();
+  }, [supabase.auth]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -67,8 +76,9 @@ export default function Hero() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { data: userData } = await supabase.auth.getUser();
-    if (!userData.user?.id) {
+
+    console.log("userData", userData);
+    if (!userData?.id) {
       setLoading(false);
       toast({
         variant: "destructive",
@@ -86,7 +96,7 @@ export default function Hero() {
       .from("subscriptions")
       .select("*, prices(*, products(*))")
       .in("status", ["trialing", "active"])
-      .eq("user_id", userData.user.id)
+      .eq("user_id", userData.id)
       .maybeSingle();
 
     if (!subscription && image) {
@@ -101,7 +111,10 @@ export default function Hero() {
       return;
     }
     try {
-      await createChat(prompt, formData);
+      const chat = await createChat(prompt, formData);
+      if (chat) {
+        router.push(`/chats/${chat.id}`);
+      }
     } catch (e) {
       toast({
         variant: "destructive",
@@ -109,7 +122,6 @@ export default function Hero() {
         description: "Please upload a different image or try another prompt",
         duration: 5000,
       });
-
       setLoading(false);
     }
   };
@@ -133,8 +145,7 @@ export default function Hero() {
 
   const handleVisibility = async () => {
     setLoadingVisibility(true);
-    const { data } = await supabase.auth.getUser();
-    if (!data.user?.id) {
+    if (!userData?.id) {
       toast({
         variant: "destructive",
         title: "Premium account required",
@@ -149,7 +160,7 @@ export default function Hero() {
       .from("subscriptions")
       .select("*, prices(*, products(*))")
       .in("status", ["trialing", "active"])
-      .eq("user_id", data.user.id)
+      .eq("user_id", userData.id)
       .maybeSingle();
 
     if (!subscription) {
@@ -218,7 +229,7 @@ export default function Hero() {
           )}
           <div className="flex w-full items-center justify-between">
             <Tooltip>
-              <TooltipTrigger type="button">
+              <TooltipTrigger asChild>
                 <Button
                   onClick={handleVisibility}
                   className="flex items-center"

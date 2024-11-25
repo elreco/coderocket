@@ -1,7 +1,7 @@
 import { createClient } from "@/utils/supabase/server";
 
 export async function getUserDetails() {
-  const supabase = createClient();
+  const supabase = await createClient();
   try {
     const { data } = await supabase.auth.getUser();
     if (!data.user?.id) return null;
@@ -18,7 +18,7 @@ export async function getUserDetails() {
 }
 
 export async function getSubscription() {
-  const supabase = createClient();
+  const supabase = await createClient();
   try {
     const { data } = await supabase.auth.getUser();
     if (!data.user?.id) return null;
@@ -37,7 +37,7 @@ export async function getSubscription() {
 }
 
 export const getActiveProductsWithPrices = async () => {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("products")
     .select("*, prices(*)")

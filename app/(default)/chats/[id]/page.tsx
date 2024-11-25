@@ -11,14 +11,14 @@ import { fetchChat } from "../actions";
 import ChatCompletion from "./chat-completion";
 
 type Props = {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 };
 
 export async function generateMetadata(
   { params }: Props,
   parent: ResolvingMetadata,
 ): Promise<Metadata> {
-  const id = params.id;
+  const { id } = await params;
   const chat = await fetchChat(id);
 
   const lastCompletionMessage = chat?.messages
@@ -45,9 +45,10 @@ export async function generateMetadata(
 }
 
 export default async function Chats({ params }: Props) {
-  const chat = await fetchChat(params.id);
+  const { id } = await params;
+  const chat = await fetchChat(id);
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const userData = await supabase.auth.getUser();
   const user = userData.data.user;
   const authorized = user?.id === chat?.user_id?.id;

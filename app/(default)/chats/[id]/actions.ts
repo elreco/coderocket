@@ -8,7 +8,7 @@ export const changeVisiblity = async (
   isVisible: boolean,
   id: string,
 ): Promise<void> => {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
   const user = userData?.user;
 
@@ -33,7 +33,7 @@ export const deleteVersion = async (
   chatId: string,
   id: number,
 ): Promise<void> => {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
   const user = userData?.user;
 

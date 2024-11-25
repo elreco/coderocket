@@ -140,7 +140,7 @@ const buildMessagesToOpenAi = async (
 };
 
 const validateRequest = async (id: string, prompt: string) => {
-  const supabase = createClient();
+  const supabase = await createClient();
   // Fetch user
   const {
     data: { user },
@@ -204,7 +204,7 @@ const updateDataAfterCompletion = async (
   completion: string,
   prompt: string,
 ) => {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const { data: chatData } = await supabase.from("chats").select().eq("id", id);
 

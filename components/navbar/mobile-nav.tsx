@@ -4,6 +4,7 @@ import { Popover } from "@headlessui/react";
 import { ChevronUpIcon } from "@heroicons/react/20/solid";
 import { User } from "@supabase/supabase-js";
 import { AnimatePresence, motion } from "framer-motion";
+import { Loader2 } from "lucide-react";
 import Link from "next/link";
 
 import { links } from "@/utils/links";
@@ -41,9 +42,10 @@ function MobileNavLink(
 interface Props {
   user: User | null;
   handleSignOut: () => Promise<void>;
+  isLoading: boolean;
 }
 
-export function MobileNav({ user, handleSignOut }: Props) {
+export function MobileNav({ user, handleSignOut, isLoading }: Props) {
   return (
     <div className="flex items-center gap-3">
       <Popover className="flex items-center lg:hidden">
@@ -100,7 +102,21 @@ export function MobileNav({ user, handleSignOut }: Props) {
                     </div>
 
                     <div className="mt-8 flex flex-col gap-2">
-                      {!user ? (
+                      {isLoading ? (
+                        <div className="flex justify-center">
+                          <Loader2 className="size-4 animate-spin" />
+                        </div>
+                      ) : user ? (
+                        <Popover.Button
+                          as={Button}
+                          onClick={() => {
+                            handleSignOut();
+                          }}
+                          variant="solid"
+                        >
+                          Sign Out
+                        </Popover.Button>
+                      ) : (
                         <>
                           <Popover.Button
                             as={Button}
@@ -117,16 +133,6 @@ export function MobileNav({ user, handleSignOut }: Props) {
                             Login
                           </Popover.Button>
                         </>
-                      ) : (
-                        <Popover.Button
-                          as={Button}
-                          onClick={() => {
-                            handleSignOut();
-                          }}
-                          variant="solid"
-                        >
-                          Sign Out
-                        </Popover.Button>
                       )}
                     </div>
                   </Popover.Panel>
@@ -137,7 +143,11 @@ export function MobileNav({ user, handleSignOut }: Props) {
         )}
       </Popover>
 
-      {user ? (
+      {isLoading ? (
+        <div className="flex justify-center">
+          <Loader2 className="size-4 animate-spin" />
+        </div>
+      ) : user ? (
         <Button
           onClick={() => {
             handleSignOut();

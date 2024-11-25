@@ -9,9 +9,9 @@ const siteId = 5216030;
 const hotjarVersion = 6;
 
 export function PluginWidget() {
-  const supabase = createClient();
   useEffect(() => {
     const fetchUserData = async () => {
+      const supabase = await createClient();
       // Récupère les informations de l'utilisateur connecté
       const { data: authData } = await supabase.auth.getUser();
       const userId = authData?.user?.id;

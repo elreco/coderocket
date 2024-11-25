@@ -7,7 +7,7 @@ import { createClient } from "@/utils/supabase/server";
 
 import { Chat, ChatProps } from "./types";
 export const fetchChat = async (id: string): Promise<ChatProps | null> => {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data } = await supabase
     .from("chats")
     .select(
@@ -38,7 +38,7 @@ export const fetchChat = async (id: string): Promise<ChatProps | null> => {
 };
 
 export const createChat = async (prompt: string, formData: FormData) => {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
   const user = userData.user;
 
@@ -53,11 +53,12 @@ export const createChat = async (prompt: string, formData: FormData) => {
   const is_private = isVisible === "false";
 
   if (!subscription && is_private) {
-    return redirect("pricing?paymentRequired=true");
+    return redirect("/pricing?paymentRequired=true");
   }
 
   if (!subscription && existingChats && existingChats?.length > 0) {
-    return redirect("pricing?paymentRequired=true");
+    console.log("data");
+    return redirect("/pricing?paymentRequired=true");
   }
 
   if (prompt.length > 1000) {
@@ -96,12 +97,15 @@ export const createChat = async (prompt: string, formData: FormData) => {
   if (!data?.length) {
     return null;
   }
+
   const chat = data[0];
-  return redirect(`/chats/${chat.id}`);
+  return {
+    ...chat,
+  };
 };
 
 export const getUserChats = async (): Promise<Chat[]> => {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
   const user = userData.user;
 
@@ -118,7 +122,7 @@ export const getUserChats = async (): Promise<Chat[]> => {
 };
 
 export const getFeaturedChats = async (): Promise<Chat[]> => {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const { data } = await supabase
     .rpc("get_chats")
@@ -131,7 +135,7 @@ export const getFeaturedChats = async (): Promise<Chat[]> => {
 };
 
 export const getAllPublicChats = async (): Promise<Chat[]> => {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const { data } = await supabase
     .rpc("get_chats")

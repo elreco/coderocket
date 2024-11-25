@@ -74,16 +74,18 @@ export default function RootLayout({ children }: PropsWithChildren) {
       <head>
         <SandPackCSS />
       </head>
-      <TooltipProvider>
-        <body className="size-full">
-          <Navbar />
+
+      <body className="size-full">
+        <Navbar />
+        <TooltipProvider>
           <main className="size-full">{children}</main>
-          <Footer />
-          <PluginWidget />
-          <Toaster />
-          <Analytics />
-        </body>
-      </TooltipProvider>
+        </TooltipProvider>
+        <Footer />
+
+        <PluginWidget />
+        <Toaster />
+        <Analytics />
+      </body>
     </html>
   );
 }

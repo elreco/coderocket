@@ -9,7 +9,7 @@ export async function POST(req: Request) {
 
     try {
       // 2. Get the user from Supabase auth
-      const supabase = createClient();
+      const supabase = await createClient();
       const {
         data: { user },
       } = await supabase.auth.getUser();

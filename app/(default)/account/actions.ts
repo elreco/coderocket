@@ -4,13 +4,13 @@ import { createClient } from "@/utils/supabase/server";
 
 export const getUser = async () => {
   "use server";
-  const supabase = createClient();
+  const supabase = await createClient();
   return supabase.auth.getUser();
 };
 
 export const updateName = async (formData: FormData) => {
   "use server";
-  const supabase = createClient();
+  const supabase = await createClient();
   const newName = formData.get("name") as string;
   const { data: userData } = await supabase.auth.getUser();
   const user = userData.user;
@@ -28,7 +28,7 @@ export const updateEmail = async (formData: FormData) => {
   "use server";
 
   const newEmail = formData.get("email") as string;
-  const supabase = createClient();
+  const supabase = await createClient();
   const { error } = await supabase.auth.updateUser({ email: newEmail });
   if (error) {
     console.log(error);

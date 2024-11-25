@@ -13,9 +13,10 @@ export const metadata = {
 export default async function SignIn({
   searchParams,
 }: {
-  searchParams: { emailSent?: string };
+  searchParams: Promise<{ emailSent?: string }>;
 }) {
-  const supabase = createClient();
+  const { emailSent } = await searchParams;
+  const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
 
   if (userData.user?.id) {
@@ -27,7 +28,7 @@ export default async function SignIn({
         <div className="flex justify-center pb-12 ">
           <Logo className="w-16" />
         </div>
-        {searchParams?.emailSent && (
+        {emailSent && (
           <Alert className="my-2">
             A magic link has been sent to your email address
           </Alert>

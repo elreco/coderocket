@@ -1,6 +1,5 @@
 import { XMarkIcon } from "@heroicons/react/24/solid";
 import {
-  TooltipProvider,
   Tooltip,
   TooltipTrigger,
   TooltipContent,
@@ -77,38 +76,36 @@ export default function ChatSidebar({
             src={m?.screenshot || ""}
             className="aspect-video w-full rounded-md border border-gray-300 object-cover"
           />
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger
-                className={clsx(
-                  "absolute inset-0 z-10 flex cursor-pointer select-none items-center justify-center rounded-md transition-all duration-300",
-                  selectedVersion === m.id
-                    ? "bg-transparent"
-                    : "bg-black/40 hover:bg-transparent",
-                )}
-                onClick={() => handleVersionSelect(m.id)}
+          <Tooltip>
+            <TooltipTrigger
+              className={clsx(
+                "absolute inset-0 z-10 flex cursor-pointer select-none items-center justify-center rounded-md transition-all duration-300",
+                selectedVersion === m.id
+                  ? "bg-transparent"
+                  : "bg-black/40 hover:bg-transparent",
+              )}
+              onClick={() => handleVersionSelect(m.id)}
+            >
+              <Badge
+                className="absolute bottom-0 right-0 m-2"
+                variant="secondary"
               >
-                <Badge
-                  className="absolute bottom-0 right-0 m-2"
-                  variant="secondary"
-                >
-                  v{m.version}
-                </Badge>
-              </TooltipTrigger>
+                v{m.version}
+              </Badge>
+            </TooltipTrigger>
 
-              <TooltipContent
-                side="left"
-                className="z-50 mr-2 flex w-64 flex-col space-y-2 rounded border-gray-700 bg-gray-900 p-3"
-              >
-                <img
-                  alt=""
-                  src={m?.screenshot || ""}
-                  className="w-full rounded object-cover"
-                />
-                <p className="text-sm text-white">{getUserMessage(m.id)}</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+            <TooltipContent
+              side="left"
+              className="z-50 mr-2 flex w-64 flex-col space-y-2 rounded border-gray-700 bg-gray-900 p-3"
+            >
+              <img
+                alt=""
+                src={m?.screenshot || ""}
+                className="w-full rounded object-cover"
+              />
+              <p className="text-sm text-white">{getUserMessage(m.id)}</p>
+            </TooltipContent>
+          </Tooltip>
           {messages.length > 2 && authorized && (
             <AlertDialog>
               <AlertDialogTrigger className="absolute right-3 top-2 z-20 cursor-pointer">

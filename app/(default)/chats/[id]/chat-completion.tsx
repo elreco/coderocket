@@ -204,7 +204,7 @@ export default function ChatCompletion({
               <div className="flex items-center space-x-2">
                 {!isLoading && title && authorized && (
                   <Tooltip>
-                    <TooltipTrigger>
+                    <TooltipTrigger asChild>
                       <Button
                         onClick={handleVisibility}
                         className="flex items-center"
@@ -262,7 +262,7 @@ export default function ChatCompletion({
             </div>
             <div className="flex items-center">
               <Tooltip>
-                <TooltipTrigger>
+                <TooltipTrigger asChild>
                   <Button
                     onClick={() => setCanvas(!isCanvas)}
                     className="mr-1 flex items-center"
@@ -296,7 +296,7 @@ export default function ChatCompletion({
               />
 
               <Tooltip>
-                <TooltipTrigger>
+                <TooltipTrigger asChild>
                   <Button
                     disabled={isLoading}
                     variant="outline"
@@ -312,7 +312,7 @@ export default function ChatCompletion({
                 </TooltipContent>
               </Tooltip>
               <Tooltip>
-                <TooltipTrigger>
+                <TooltipTrigger asChild>
                   <Button variant="outline" onClick={share}>
                     <ShareIcon className="w-5" />
                   </Button>

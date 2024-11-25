@@ -5,7 +5,7 @@ import { createOrRetrieveCustomer } from "@/utils/supabase-admin";
 export async function POST(req: Request) {
   if (req.method === "POST") {
     try {
-      const supabase = createClient();
+      const supabase = await createClient();
       const {
         data: { user },
       } = await supabase.auth.getUser();

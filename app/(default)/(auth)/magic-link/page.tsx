@@ -6,7 +6,7 @@ import { createClient } from "@/utils/supabase/server";
 import AuthUIMagicLink from "./auth-ui-magic-link";
 
 export default async function MagicLink() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
 
   if (userData.user?.id) {
