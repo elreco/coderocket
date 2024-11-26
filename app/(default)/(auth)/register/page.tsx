@@ -4,7 +4,7 @@ import { Alert } from "@/components/ui/alert";
 import AuthUI from "./auth-ui";
 
 export const metadata = {
-  title: `Login - Tailwind AI`,
+  title: `Register - Tailwind AI`,
 };
 
 export default async function SignIn({

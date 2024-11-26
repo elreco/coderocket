@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,7 @@ import { register, signInWithGithub } from "../actions";
 export default function AuthUI() {
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
-
+  const router = useRouter();
   useEffect(() => {
     const error = searchParams.get("error");
     if (error) {
@@ -38,11 +38,12 @@ export default function AuthUI() {
         title: "Success",
         description: "Account created successfully!",
       });
-    } catch (error) {
+      router.push("/");
+    } catch (error: unknown) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to register. Please try again.",
+        description: error instanceof Error ? error.message : "Unknown error",
       });
     } finally {
       setIsLoading(false);
