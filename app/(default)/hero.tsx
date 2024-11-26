@@ -5,10 +5,9 @@ import {
   PhotoIcon,
   XMarkIcon,
 } from "@heroicons/react/24/solid";
-import { User } from "@supabase/supabase-js";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState } from "react";
 
 import { Container } from "@/components/container";
 import { Badge } from "@/components/ui/badge";
@@ -23,7 +22,7 @@ import {
 import { maxPromptLength } from "@/utils/config";
 import { createClient } from "@/utils/supabase/client";
 
-import { createChat } from "./chats/actions";
+import { createChat } from "./components/actions";
 
 const previewButtons = [
   {
@@ -57,18 +56,6 @@ export default function Hero() {
   const [loadingVisibility, setLoadingVisibility] = useState(false);
   const [image, setImage] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const [userData, setUserData] = useState<User | null>(null);
-  const [loadingUser, setLoadingUser] = useState(true);
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      setLoadingUser(true);
-      const { data } = await supabase.auth.getUser();
-      setUserData(data.user);
-      setLoadingUser(false);
-    };
-    fetchUser();
-  }, [supabase.auth]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -78,10 +65,10 @@ export default function Hero() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (loadingUser) return;
     setLoading(true);
+    const { data } = await supabase.auth.getSession();
 
-    if (!userData?.id) {
+    if (!data?.session?.user?.id) {
       setLoading(false);
       toast({
         variant: "destructive",
@@ -99,7 +86,7 @@ export default function Hero() {
       .from("subscriptions")
       .select("*, prices(*, products(*))")
       .in("status", ["trialing", "active"])
-      .eq("user_id", userData.id)
+      .eq("user_id", data.session?.user?.id)
       .maybeSingle();
 
     if (!subscription && image) {
@@ -116,16 +103,10 @@ export default function Hero() {
     try {
       const chat = await createChat(prompt, formData);
       if (chat) {
-        router.push(`/chats/${chat.id}`);
+        router.push(`/components/${chat.id}`);
       }
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
-      toast({
-        variant: "destructive",
-        title: "Can't create your component",
-        description: "Please upload a different image or try another prompt",
-        duration: 5000,
-      });
       setLoading(false);
     }
   };
@@ -149,7 +130,8 @@ export default function Hero() {
 
   const handleVisibility = async () => {
     setLoadingVisibility(true);
-    if (!userData?.id) {
+    const { data } = await supabase.auth.getSession();
+    if (!data?.session?.user?.id) {
       toast({
         variant: "destructive",
         title: "Premium account required",
@@ -164,10 +146,12 @@ export default function Hero() {
       .from("subscriptions")
       .select("*, prices(*, products(*))")
       .in("status", ["trialing", "active"])
-      .eq("user_id", userData.id)
+      .eq("user_id", data.session?.user?.id)
       .maybeSingle();
 
-    if (!subscription) {
+    if (subscription) {
+      setVisible(!isVisible);
+    } else {
       toast({
         variant: "destructive",
         title: "Premium account required",
@@ -175,8 +159,6 @@ export default function Hero() {
           "You are not premium, the visibility cannot be changed. Please upgrade to premium and try again.",
         duration: 5000,
       });
-    } else {
-      setVisible(!isVisible);
     }
     setLoadingVisibility(false);
   };
@@ -269,12 +251,13 @@ export default function Hero() {
                 ref={fileInputRef}
                 className="sr-only"
                 type="file"
+                accept=".png, .jpeg, .jpg, .gif, .webp"
                 onChange={handleImageChange}
               />
               <Button
                 type="submit"
-                loading={loading || loadingUser}
-                disabled={loadingVisibility || loadingUser}
+                loading={loading}
+                disabled={loadingVisibility}
               >
                 Generate
               </Button>

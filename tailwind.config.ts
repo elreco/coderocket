@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-var-requires */
+
 import headlessuiPlugin from "@headlessui/tailwindcss";
 import formsPlugin from "@tailwindcss/forms";
 import { type Config } from "tailwindcss";

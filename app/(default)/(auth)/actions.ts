@@ -31,11 +31,6 @@ export async function register(formData: FormData) {
   if (error) {
     throw new Error(error.message);
   }
-
-  const { error: loginError } = await supabase.auth.signInWithPassword(data);
-  if (loginError) {
-    throw new Error(loginError.message);
-  }
 }
 
 export async function signInWithEmail(formData: FormData) {

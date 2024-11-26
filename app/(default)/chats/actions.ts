@@ -57,7 +57,6 @@ export const createChat = async (prompt: string, formData: FormData) => {
   }
 
   if (!subscription && existingChats && existingChats?.length > 0) {
-    console.log("data");
     return redirect("/pricing?paymentRequired=true");
   }
 

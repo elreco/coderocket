@@ -4,11 +4,13 @@ import { ReactNode, Suspense } from "react";
 
 import { getUserDetails, getSubscription } from "@/app/supabase-server";
 import ChatCard from "@/components/chat-card";
+import ComponentCard from "@/components/component-card";
 import { Container } from "@/components/container";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 import { getUserChats } from "../chats/actions";
+import { getChatsFromUser } from "../components/actions";
 
 import { getUser, updateEmail, updateName } from "./actions";
 import ManageSubscriptionButton from "./manage-subscription-button";
@@ -41,6 +43,7 @@ export default async function Account() {
     }).format((subscription?.prices?.unit_amount || 0) / 100);
 
   const chats = await getUserChats();
+  const chatsFromUser = await getChatsFromUser();
   return (
     <Container>
       <h1 className="mb-1 text-lg font-medium text-gray-900 sm:text-left sm:text-2xl">
@@ -132,6 +135,18 @@ export default async function Account() {
               <Button href="/chats">View featured components</Button>
             </div>
           }
+        >
+          <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+            {chatsFromUser?.map((chat) => (
+              <ComponentCard key={chat.chat_id} chat={chat} />
+            ))}
+          </div>
+        </Card>
+      </div>
+      <div className="mt-3 pb-20">
+        <Card
+          title="Your Components (old version - deprecated)"
+          description="Your generated components"
         >
           <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
             {chats.map((chat) => (

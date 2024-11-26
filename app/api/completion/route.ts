@@ -1,6 +1,6 @@
 export const maxDuration = 300;
 
-import { OpenAIStream, StreamingTextResponse } from "ai";
+import { OpenAIStream, StreamingTextResponse } from "ai-old";
 import OpenAI from "openai";
 
 import { ChatMessage } from "@/app/(default)/chats/types";

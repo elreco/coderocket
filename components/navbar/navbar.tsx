@@ -32,8 +32,6 @@ export function Navbar() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("event", event);
-      console.log("session", session);
       if (event === "SIGNED_IN" && session?.user) {
         setUserData(session.user);
       }

@@ -1,10 +1,18 @@
+import { createOpenAI } from "@ai-sdk/openai";
+
 export const storageUrl =
   "https://jojdwiugelqhcajbccxn.supabase.co/storage/v1/object/public/images";
 
 export const screenshotApiUrl =
-  "https://websitescreenshot.vercel.app/api/screenshot?url=";
+  "https://screenshot-api-elreco.vercel.app/api?url=";
 
 export const maxPromptLength = 1000;
+
+export const openAINewModel = createOpenAI({
+  name: "gpt-4o-mini",
+  apiKey: process.env.OPEN_AI || "",
+  compatibility: "strict",
+});
 
 export const openAIModel = "gpt-4o-mini";
 

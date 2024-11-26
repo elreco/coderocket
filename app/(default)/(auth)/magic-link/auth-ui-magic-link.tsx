@@ -1,14 +1,41 @@
+"use client";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { toast } from "@/components/ui/toaster/use-toast";
 
 import { signInWithEmail } from "../actions";
 
 export default function AuthUIMagicLink() {
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    setIsLoading(true);
+    try {
+      await signInWithEmail(formData);
+      toast({
+        title: "Success",
+        description: "Magic link sent successfully!",
+      });
+      router.push("/login");
+    } catch {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to send magic link. Please try again.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
   return (
-    <form>
+    <form onSubmit={handleLogin}>
       <div className="grid gap-6">
         <div className="grid gap-2">
           <div className="grid gap-1">
@@ -27,8 +54,8 @@ export default function AuthUIMagicLink() {
               autoCorrect="off"
             />
           </div>
-          <Button variant="outline" formAction={signInWithEmail}>
-            Send magic link
+          <Button type="submit" disabled={isLoading}>
+            {isLoading ? "Loading..." : "Send magic link"}
           </Button>
         </div>
 

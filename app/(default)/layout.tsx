@@ -4,14 +4,11 @@ import { Rubik } from "next/font/google";
 import { PropsWithChildren } from "react";
 
 import { Footer } from "@/components/footer";
-// eslint-disable-next-line import/order
 import { Navbar } from "@/components/navbar/navbar";
 // eslint-disable-next-line import/order
 import { PluginWidget } from "@/components/plugin-widget";
 
 import "styles/main.css";
-
-import { SandPackCSS } from "@/components/sandpack-styles";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
@@ -71,10 +68,6 @@ export default function RootLayout({ children }: PropsWithChildren) {
       lang="en"
       className={clsx("h-full bg-gray-50 antialiased", rubik.variable)}
     >
-      <head>
-        <SandPackCSS />
-      </head>
-
       <body className="size-full">
         <Navbar />
         <TooltipProvider>
