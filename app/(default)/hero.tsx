@@ -58,11 +58,14 @@ export default function Hero() {
   const [image, setImage] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [userData, setUserData] = useState<User | null>(null);
+  const [loadingUser, setLoadingUser] = useState(true);
 
   useEffect(() => {
     const fetchUser = async () => {
+      setLoadingUser(true);
       const { data } = await supabase.auth.getUser();
       setUserData(data.user);
+      setLoadingUser(false);
     };
     fetchUser();
   }, [supabase.auth]);
@@ -75,9 +78,9 @@ export default function Hero() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loadingUser) return;
     setLoading(true);
 
-    console.log("userData", userData);
     if (!userData?.id) {
       setLoading(false);
       toast({
@@ -115,6 +118,7 @@ export default function Hero() {
       if (chat) {
         router.push(`/chats/${chat.id}`);
       }
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
       toast({
         variant: "destructive",
@@ -269,8 +273,8 @@ export default function Hero() {
               />
               <Button
                 type="submit"
-                loading={loading}
-                disabled={loadingVisibility}
+                loading={loading || loadingUser}
+                disabled={loadingVisibility || loadingUser}
               >
                 Generate
               </Button>
