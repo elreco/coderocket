@@ -30,10 +30,17 @@ export function PluginWidget() {
           if (userDetails.full_name) {
             Crisp.user.setNickname(userDetails.full_name);
           }
-          Hotjar.identify(userId, {
-            full_name: userDetails?.full_name || "",
-            email: authData.session?.user?.email || "",
-          });
+          const hotjarData: { full_name?: string; email?: string } = {};
+          const email = authData.session?.user?.email;
+          const fullName = userDetails?.full_name;
+
+          if (email) {
+            hotjarData.email = email;
+          }
+          if (fullName) {
+            hotjarData.full_name = fullName;
+          }
+          Hotjar.identify(userId, hotjarData);
         }
       }
     };
