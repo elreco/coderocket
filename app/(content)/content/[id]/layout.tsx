@@ -1,43 +1,14 @@
-/* eslint-disable import/order */
 import { PropsWithChildren } from "react";
 
-import { Inter } from "next/font/google";
-import clsx from "clsx";
-import Script from "next/script";
-
-const inter = Inter({
-  subsets: ["latin"],
-  display: "swap",
-  variable: "--font-inter",
-});
+import "styles/main.css";
 
 export default function RootLayout({ children }: PropsWithChildren) {
   return (
-    <html className={clsx("size-full antialiased", inter.variable)}>
+    <html className="size-full">
       <head>
-        <meta charSet="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap"
-          rel="stylesheet"
-        />
-        <title>Tailwind AI</title>
-        <Script
-          strategy="beforeInteractive"
-          src="https://cdn.tailwindcss.com"
-        />
-        <Script
-          strategy="beforeInteractive"
-          src="https://cdn.jsdelivr.net/npm/chart.js"
-        />
-        <Script
-          strategy="beforeInteractive"
-          src="https://kit.fontawesome.com/0d11f7e939.js"
-        />
+        <title>Tailwind AI Content</title>
       </head>
-      <body>{children}</body>
+      <body className="size-full">{children}</body>
     </html>
   );
 }

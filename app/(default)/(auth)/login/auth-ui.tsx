@@ -39,7 +39,7 @@ export default function AuthUI() {
         description: "Logged in successfully!",
       });
       router.push("/");
-    } catch (error) {
+    } catch {
       toast({
         variant: "destructive",
         title: "Error",
@@ -92,7 +92,7 @@ export default function AuthUI() {
           <Button type="submit" disabled={isLoading}>
             {isLoading ? "Loading..." : "Login"}
           </Button>
-          <Link href="/login/magic-link">
+          <Link href="/magic-link">
             <Button className="w-full" variant="outline" type="button">
               Send magic link
             </Button>

@@ -1,0 +1,207 @@
+"use server";
+import { redirect } from "next/navigation";
+
+import { getSubscription } from "@/app/supabase-server";
+import { createClient } from "@/utils/supabase/server";
+
+export const fetchChatById = async (id: string) => {
+  const supabase = await createClient();
+  const chatsWithUser = supabase
+    .from("chats")
+    .select(
+      `
+    id,
+    created_at,
+    is_private,
+    is_featured,
+    messages,
+    prompt_image,
+    user_id,
+    user:users (*)
+`,
+    )
+    .eq("id", id)
+    .single();
+
+  const { data, error } = await chatsWithUser;
+  if (error) throw error;
+
+  return data;
+};
+
+export const fetchMessagesByChatId = async (chatId: string) => {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("messages")
+    .select()
+    .eq("chat_id", chatId)
+    .order("version", { ascending: false });
+  return data;
+};
+
+export const fetchFirstUserMessageByChatId = async (chatId: string) => {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("messages")
+    .select()
+    .eq("chat_id", chatId)
+    .eq("role", "user")
+    .order("version", { ascending: true })
+    .limit(1)
+    .single();
+  return data;
+};
+
+export const fetchLastAssistantMessageByChatId = async (chatId: string) => {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("messages")
+    .select()
+    .eq("chat_id", chatId)
+    .eq("role", "assistant")
+    .order("version", { ascending: false })
+    .limit(1)
+    .single();
+  return data;
+};
+
+export const fetchLastUserMessageByChatId = async (chatId: string) => {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("messages")
+    .select()
+    .eq("chat_id", chatId)
+    .eq("role", "user")
+    .order("version", { ascending: false })
+    .limit(1)
+    .single();
+  return data;
+};
+
+export const fetchAssistantMessageByChatIdAndVersion = async (
+  chatId: string,
+  version: number,
+) => {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("messages")
+    .select()
+    .eq("chat_id", chatId)
+    .eq("role", "assistant")
+    .eq("version", version)
+    .single();
+  return data;
+};
+
+export const fetchUserMessageByChatIdAndVersion = async (
+  chatId: string,
+  version: number,
+) => {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("messages")
+    .select()
+    .eq("chat_id", chatId)
+    .eq("role", "user")
+    .eq("version", version)
+    .single();
+  return data;
+};
+
+export const createChat = async (prompt: string, formData: FormData) => {
+  const supabase = await createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  const user = userData.user;
+
+  if (!user?.id) throw Error("Could not get user");
+
+  const subscription = await getSubscription();
+  const { data: existingChats } = await supabase
+    .from("chats")
+    .select()
+    .eq("user_id", user?.id);
+  const isVisible = formData.get("isVisible");
+  const is_private = isVisible === "false";
+
+  if (!subscription && is_private) {
+    return redirect("/pricing?paymentRequired=true");
+  }
+
+  if (!subscription && existingChats && existingChats?.length > 0) {
+    return redirect("/pricing?paymentRequired=true");
+  }
+
+  if (prompt.length > 1000) {
+    throw Error("Prompt length is too long");
+  }
+
+  let imageUrl = null;
+  const image = formData.get("file") as File;
+
+  if (image) {
+    const { data: imageData, error: imageError } = await supabase.storage
+      .from("images")
+      .upload(`${Date.now()}-${user?.id}`, image);
+    if (imageError) {
+      throw Error("Failed to upload image");
+    }
+
+    imageUrl = imageData?.path;
+  }
+  const { data } = await supabase
+    .from("chats")
+    .insert([
+      {
+        user_id: user.id,
+        ...(imageUrl && { prompt_image: imageUrl }),
+        is_private,
+        messages: [],
+      },
+    ])
+    .select()
+    .single();
+  if (!data) throw Error("Failed to create chat");
+
+  await supabase.from("messages").insert({
+    chat_id: data.id,
+    role: "user",
+    content: prompt,
+    version: -1,
+  });
+  return data;
+};
+
+export const getChatsFromUser = async () => {
+  const supabase = await createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  const user = userData.user;
+
+  if (!user) throw Error("Could not get user");
+  const { data } = await supabase
+    .rpc("get_components")
+    .eq("user_id", user.id)
+    .limit(100);
+
+  return data;
+};
+
+export const getFeaturedChats = async () => {
+  const supabase = await createClient();
+
+  const { data } = await supabase
+    .rpc("get_components")
+    .is("is_featured", true)
+    .limit(50);
+  return data;
+};
+
+export const getAllPublicChats = async () => {
+  const supabase = await createClient();
+
+  const { data } = await supabase
+    .rpc("get_components")
+    .is("is_private", false)
+    .limit(24);
+
+  return data;
+};

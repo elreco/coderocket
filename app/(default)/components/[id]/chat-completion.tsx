@@ -2,17 +2,17 @@
 
 import { ArrowPathIcon } from "@heroicons/react/20/solid";
 import {
-  ArrowTopRightOnSquareIcon,
   CodeBracketIcon,
   ShareIcon,
   TvIcon,
 } from "@heroicons/react/24/outline";
 import { LockClosedIcon, LockOpenIcon } from "@heroicons/react/24/solid";
-import { useCompletion } from "ai/react";
+import { experimental_useObject as useObject } from "ai/react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useCopyToClipboard } from "usehooks-ts";
 
+import { schema, ComponentType } from "@/app/api/component/schema";
 import { Container } from "@/components/container";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -24,69 +24,81 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { openInCodeSandbox } from "@/utils/codesandbox";
+import { Tables } from "@/types_db";
 import { maxPromptLength } from "@/utils/config";
 import { capitalizeFirstLetter } from "@/utils/helpers";
+import { createClient } from "@/utils/supabase/client";
 
-import { fetchChat } from "../actions";
-import { ChatMessage, ChatProps } from "../types";
+import { fetchMessagesByChatId } from "../actions";
 
-import { changeVisiblity, deleteVersion } from "./actions";
+import { changeVisibilityByChatId, deleteVersionByMessageId } from "./actions";
 import ChatSidebar from "./chat-sidebar";
 import ChatSidebarMobile from "./chat-sidebar-mobile";
-import MemoizedSandpack from "./memoized-sandpack";
+import CodePreview from "./code-preview";
+
+interface Props {
+  fetchedChat: Tables<"chats"> & { user: Tables<"users"> | null };
+  authorized: boolean;
+  fetchedMessages: Tables<"messages">[];
+  userAvatar: string;
+  userFullName: string;
+  lastAssistantMessage: Tables<"messages"> | null;
+  lastUserMessage: Tables<"messages">;
+}
 
 export default function ChatCompletion({
   fetchedChat,
+  fetchedMessages,
   authorized,
   userAvatar,
   userFullName,
-  defaultCompletion,
-  defaultVisibility,
-  defaultTitle,
-  defaultSelectedVersion,
-  defaultMessages,
-  defaultMessage,
-}: {
-  fetchedChat: ChatProps;
-  authorized: boolean;
-  userAvatar: string;
-  userFullName: string;
-  defaultCompletion: string;
-  defaultVisibility: boolean;
-  defaultTitle: string;
-  defaultSelectedVersion: number;
-  defaultMessages: ChatMessage[];
-  defaultMessage: string;
-}) {
+  lastAssistantMessage,
+  lastUserMessage,
+}: Props) {
+  const supabase = createClient();
   const [, copy] = useCopyToClipboard();
   const { toast } = useToast();
   const router = useRouter();
   const pathname = usePathname();
 
-  const [messages, setMessages] = useState<ChatMessage[]>(defaultMessages);
-  const [selectedVersion, setSelectedVersion] = useState<number>(
-    defaultSelectedVersion,
-  );
-  const [title, setTitle] = useState<string>(defaultTitle);
-  const [isCanvas, setCanvas] = useState(false);
-  const [isVisible, setVisible] = useState(defaultVisibility);
+  const [messages, setMessages] = useState(fetchedMessages);
 
-  const {
-    completion,
-    isLoading,
-    input,
-    handleInputChange,
-    handleSubmit,
-    setCompletion,
-    complete,
-    setInput,
-  } = useCompletion({
-    api: "/api/completion",
-    body: { id: fetchedChat.id, selectedVersion },
-    initialInput: defaultMessage,
-    initialCompletion: defaultCompletion,
-    onError: async (error) => {
+  const [selectedVersion, setSelectedVersion] = useState(
+    lastUserMessage.version,
+  );
+  const [title, setTitle] = useState<string>(
+    lastUserMessage.content?.toString() || "",
+  );
+  const [isCanvas, setCanvas] = useState(false);
+  const [isVisible, setVisible] = useState(!fetchedChat.is_private);
+  const [input, setInput] = useState<string>("");
+
+  useEffect(() => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_OUT") {
+        stop();
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  });
+
+  const { object, submit, isLoading, stop } = useObject({
+    api: "/api/component",
+    schema,
+    headers: {
+      "X-Custom-Header": JSON.stringify({
+        id: fetchedChat.id,
+        selectedVersion,
+      }),
+    },
+    initialValue: lastAssistantMessage?.content,
+    onError: async (error: Error) => {
+      console.error("error", error.cause);
       if (error.message === "payment-required") {
         return router.push("/pricing?paymentRequired=true");
       }
@@ -100,25 +112,44 @@ export default function ChatCompletion({
       }
       return;
     },
-    onFinish: async () => {
-      await refreshChatData();
-    },
+    onFinish: () => refreshChatData(),
   });
+
+  const [activeObject, setActiveObject] = useState(object);
+
   useEffect(() => {
-    if (defaultMessages.length === 1) {
-      complete(defaultMessage);
+    if (object) {
+      setActiveObject(object);
+    }
+  }, [object]);
+
+  useEffect(() => {
+    if (!lastAssistantMessage) {
+      submit(lastUserMessage.content);
     }
   }, []);
 
-  const handleVersionSelect = (
-    id: number,
-    updatedMessages: ChatMessage[] = messages,
-  ) => {
-    const selectedMessageIndex = updatedMessages.findIndex((m) => m.id === id);
-    if (selectedMessageIndex > -1) {
-      setSelectedVersion(id);
-      setTitle(updatedMessages[selectedMessageIndex - 1]?.content ?? "");
-      setCompletion(updatedMessages[selectedMessageIndex]?.content ?? "");
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    submit(input);
+  };
+
+  const handleVersionSelect = (version: number) => {
+    setSelectedVersion(version);
+    const selectedMessages = messages.filter((m) => m.version == version);
+    if (selectedMessages.length !== 2) {
+      return;
+    }
+    const selectedUserMessage = selectedMessages.find((m) => m.role === "user");
+    if (selectedUserMessage) {
+      setTitle(selectedUserMessage.content?.toString() ?? "");
+    }
+
+    const selectedAssistantMessage = selectedMessages.find(
+      (m) => m.role === "assistant",
+    );
+    if (selectedAssistantMessage) {
+      setActiveObject(selectedAssistantMessage.content);
     }
   };
 
@@ -150,7 +181,7 @@ export default function ChatCompletion({
 
   const handleVisibility = async () => {
     try {
-      await changeVisiblity(!isVisible, fetchedChat.id);
+      await changeVisibilityByChatId(fetchedChat.id, !isVisible);
       setVisible(!isVisible);
     } catch {
       toast({
@@ -163,9 +194,9 @@ export default function ChatCompletion({
     }
   };
 
-  const handleDeleteVersion = async (chatId: string, id: number) => {
+  const handleDeleteVersion = async (messageId: number) => {
     try {
-      await deleteVersion(chatId, id);
+      await deleteVersionByMessageId(messageId);
       await refreshChatData();
     } catch {
       toast({
@@ -179,21 +210,26 @@ export default function ChatCompletion({
   };
 
   const refreshChatData = async () => {
-    const refreshedChatData = await fetchChat(fetchedChat.id);
-    setMessages(refreshedChatData?.messages || []);
-    setInput("");
-    const lastCompletionMessage = refreshedChatData?.messages
-      .slice()
-      .reverse()
-      .find((message) => message.role === "assistant");
-    if (lastCompletionMessage) {
-      setCompletion(lastCompletionMessage.content ?? "");
-      handleVersionSelect(
-        lastCompletionMessage.id,
-        refreshedChatData?.messages || [],
-      );
-    }
+    const refreshedChatMessages = await fetchMessagesByChatId(fetchedChat.id);
+    if (!refreshedChatMessages) return;
+    setMessages(refreshedChatMessages);
   };
+
+  useEffect(() => {
+    if (messages.length > 0) {
+      const lastAssistantMessage = messages
+        .filter((m) => m.role === "assistant")
+        .reduce(
+          (prev, current) => (prev.version > current.version ? prev : current),
+          messages[0],
+        );
+
+      if (lastAssistantMessage) {
+        handleVersionSelect(lastAssistantMessage.version);
+      }
+      setInput("");
+    }
+  }, [messages]);
 
   return (
     <Container>
@@ -260,12 +296,12 @@ export default function ChatCompletion({
                 </h1>
               </div>
             </div>
-            <div className="flex items-center">
+            <div className="flex items-center space-x-2">
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
                     onClick={() => setCanvas(!isCanvas)}
-                    className="flex items-center"
+                    className="mr-1 flex items-center"
                   >
                     {isCanvas ? (
                       <>
@@ -286,7 +322,6 @@ export default function ChatCompletion({
               </Tooltip>
               <ChatSidebarMobile
                 authorized={authorized}
-                fetchedChat={fetchedChat}
                 handleDeleteVersion={handleDeleteVersion}
                 isLoading={isLoading}
                 assistantMessages={assistantMessages}
@@ -294,22 +329,6 @@ export default function ChatCompletion({
                 messages={messages}
                 handleVersionSelect={handleVersionSelect}
               />
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    disabled={isLoading}
-                    variant="outline"
-                    onClick={() => openInCodeSandbox(completion)}
-                    className="mr-1"
-                  >
-                    <ArrowTopRightOnSquareIcon className="w-5" />
-                  </Button>
-                </TooltipTrigger>
-
-                <TooltipContent>
-                  <p>Open Sandbox</p>
-                </TooltipContent>
-              </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button variant="outline" onClick={share}>
@@ -323,9 +342,9 @@ export default function ChatCompletion({
               </Tooltip>
             </div>
           </div>
-          <div className="flex flex-1 flex-col space-y-2 rounded-lg pb-2 transition-all duration-200">
-            <MemoizedSandpack
-              completion={completion}
+          <div className="m-0 flex h-full flex-1 flex-col">
+            <CodePreview
+              completion={activeObject as ComponentType | null}
               isCanvas={isCanvas}
               isLoading={isLoading}
             />
@@ -334,21 +353,22 @@ export default function ChatCompletion({
                 className="flex w-full flex-row items-center xl:justify-between xl:gap-3"
                 onSubmit={handleSubmit}
               >
-                <div className="flex w-full space-x-4 rounded-md bg-gray-900 p-2 xl:w-1/2">
+                <div className="my-2 flex w-full space-x-4 rounded-md bg-gray-900 p-2 xl:w-1/2">
                   <Input
                     autoFocus
                     disabled={isLoading}
                     value={input}
-                    onChange={handleInputChange}
+                    onChange={(e) => setInput(e.target.value)}
                     minLength={2}
                     maxLength={maxPromptLength}
                     placeholder="Add a button, modify a color..."
+                    required
                   />
                   <Button loading={isLoading} type="submit">
                     Iterate
                   </Button>
                 </div>
-                <div className="hidden w-1/2 xl:block"></div>
+                <div className="hidden w-1/2 xl:block" />
               </form>
             )}
           </div>
@@ -358,9 +378,9 @@ export default function ChatCompletion({
           assistantMessages={assistantMessages}
           selectedVersion={selectedVersion}
           messages={messages}
-          fetchedChat={fetchedChat}
           handleVersionSelect={handleVersionSelect}
           handleDeleteVersion={handleDeleteVersion}
+          isLoading={isLoading}
         />
       </div>
     </Container>
