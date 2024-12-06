@@ -26,13 +26,15 @@ export function PluginWidget() {
           .eq("id", userId)
           .single();
         if (userDetails) {
-          Crisp.user.setEmail(authData.session?.user?.email || "");
-          if (userDetails.full_name) {
-            Crisp.user.setNickname(userDetails.full_name);
-          }
-          const hotjarData: { full_name?: string; email?: string } = {};
           const email = authData.session?.user?.email;
           const fullName = userDetails?.full_name;
+          if (email) {
+            Crisp.user.setEmail(email);
+          }
+          if (fullName) {
+            Crisp.user.setNickname(fullName);
+          }
+          const hotjarData: { full_name?: string; email?: string } = {};
 
           if (email) {
             hotjarData.email = email;
