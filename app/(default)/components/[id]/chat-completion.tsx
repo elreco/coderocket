@@ -124,7 +124,12 @@ export default function ChatCompletion({
   }, [object]);
 
   useEffect(() => {
-    if (!lastAssistantMessage?.content && !isLoading && messages.length === 1) {
+    if (
+      !lastAssistantMessage?.content &&
+      !isLoading &&
+      messages.length === 1 &&
+      lastUserMessage.content
+    ) {
       submit(lastUserMessage.content);
     }
   }, []);
