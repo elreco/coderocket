@@ -1,19 +1,19 @@
 import { css } from "@codemirror/lang-css";
 import { html } from "@codemirror/lang-html";
 import { javascript } from "@codemirror/lang-javascript";
-import { ClipboardIcon, ArrowDownTrayIcon } from "@heroicons/react/24/outline";
-import { githubLight } from "@uiw/codemirror-theme-github";
-import CodeMirror from "@uiw/react-codemirror";
+import { draculaInit } from "@uiw/codemirror-theme-dracula";
+import CodeMirror, { EditorView } from "@uiw/react-codemirror";
 import clsx from "clsx";
 import saveAs from "file-saver";
 import JSZip from "jszip";
+import { Clipboard, Download } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useCopyToClipboard } from "usehooks-ts";
 
 import { ComponentType } from "@/app/api/component/schema";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { toast } from "@/components/ui/toaster/use-toast";
+import { toast } from "@/hooks/use-toast";
 import { downloadBuilder, iframeBuilder } from "@/utils/iframe-builder";
 
 export default function CodePreview({
@@ -128,7 +128,7 @@ export default function CodePreview({
       </div>
       <div
         className={clsx(
-          "group transition-all xl:h-full",
+          "group w-full transition-all xl:h-full",
           isCanvas
             ? "invisible h-0 xl:invisible xl:w-0"
             : "visible h-full xl:visible xl:w-1/2",
@@ -137,10 +137,10 @@ export default function CodePreview({
         <div className="relative flex size-full flex-col rounded-none border-none">
           <Tabs
             defaultValue="html"
-            className="flex size-full flex-col items-start justify-start"
+            className="relative flex flex-1 flex-col items-start justify-start"
             onValueChange={setActiveTab}
           >
-            <TabsList className="flex w-full items-start justify-start">
+            <TabsList className="flex w-full items-start justify-start rounded-none border-none">
               <TabsTrigger value="html">index.html</TabsTrigger>
               <TabsTrigger value="config">tailwind.config.js</TabsTrigger>
               <TabsTrigger value="css">style.css</TabsTrigger>
@@ -153,15 +153,21 @@ export default function CodePreview({
             </TabsList>
             <TabsContent
               value={activeTab}
-              className="h-0 w-full grow transition-all duration-300 ease-in-out"
+              className="m-0 flex h-0 w-full grow transition-all duration-300 ease-in-out"
             >
               <CodeMirror
-                theme={githubLight}
+                theme={draculaInit({
+                  settings: {
+                    background: "hsl(var(--secondary))",
+                    gutterBackground: "hsl(var(--secondary))",
+                  },
+                })}
                 value={value || ""}
                 lang={lang}
                 height="100%"
+                width="100%"
                 className="size-full rounded-r-md"
-                extensions={extensions}
+                extensions={[...extensions, EditorView.lineWrapping]}
                 readOnly
                 basicSetup={{
                   lineNumbers: true,
@@ -182,7 +188,7 @@ export default function CodePreview({
                 className="flex items-center rounded-sm"
               >
                 <span className="mr-1 text-nowrap text-xs">Copy code</span>{" "}
-                <ClipboardIcon className="w-4" />
+                <Clipboard className="w-4" />
               </Button>
             )}
 
@@ -193,7 +199,7 @@ export default function CodePreview({
                 className="flex items-center rounded-sm"
               >
                 <span className="mr-1 text-nowrap text-xs">Download</span>{" "}
-                <ArrowDownTrayIcon className="w-4" />
+                <Download className="w-4" />
               </Button>
             )}
           </div>

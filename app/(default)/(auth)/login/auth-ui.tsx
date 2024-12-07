@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { toast } from "@/components/ui/toaster/use-toast";
+import { toast } from "@/hooks/use-toast";
 
 import { login, signInWithGithub } from "../actions";
 
@@ -54,7 +54,7 @@ export default function AuthUI() {
 
   return (
     <form onSubmit={handleLogin}>
-      <h1 className="mb-4 text-center text-lg font-medium text-gray-900 sm:text-2xl">
+      <h1 className="mb-4 text-center text-lg font-medium sm:text-2xl">
         Login
       </h1>
       <div className="grid gap-6">
@@ -64,7 +64,6 @@ export default function AuthUI() {
               Email
             </Label>
             <Input
-              className="!border-gray-300 bg-white !text-gray-900"
               id="email"
               placeholder="name@example.com"
               type="email"
@@ -72,6 +71,7 @@ export default function AuthUI() {
               autoCapitalize="none"
               autoComplete="email"
               autoCorrect="off"
+              className="bg-secondary"
             />
           </div>
           <div className="grid gap-1">
@@ -79,7 +79,6 @@ export default function AuthUI() {
               Password
             </Label>
             <Input
-              className="!border-gray-300 bg-white !text-gray-900"
               id="password"
               placeholder="password"
               name="password"
@@ -87,10 +86,11 @@ export default function AuthUI() {
               autoCapitalize="none"
               autoComplete="password"
               autoCorrect="off"
+              className="bg-secondary"
             />
           </div>
-          <Button type="submit" disabled={isLoading}>
-            {isLoading ? "Loading..." : "Login"}
+          <Button type="submit" disabled={isLoading} loading={isLoading}>
+            {isLoading ? "Logging in..." : "Login"}
           </Button>
           <Link href="/magic-link">
             <Button className="w-full" variant="outline" type="button">
@@ -104,14 +104,14 @@ export default function AuthUI() {
             <span className="w-full border-t" />
           </div>
           <div className="relative flex justify-center text-xs uppercase">
-            <span className="rounded-md bg-gray-900  px-2 text-white">
+            <span className="rounded-md bg-secondary px-2">
               Or continue with
             </span>
           </div>
         </div>
         <Button
           onClick={handleGithubLogin}
-          variant="outline"
+          variant="secondary"
           type="button"
           disabled={isLoading}
           className="flex items-center space-x-2"
@@ -137,7 +137,7 @@ export default function AuthUI() {
             <span className="w-full border-t" />
           </div>
           <div className="relative flex justify-center text-xs uppercase">
-            <span className="rounded-md bg-gray-900  px-2 text-white">
+            <span className="rounded-md bg-secondary px-2">
               You don&apos;t have an account?
             </span>
           </div>
@@ -145,7 +145,7 @@ export default function AuthUI() {
         <Link href="/register">
           <Button
             className="flex w-full items-center space-x-2"
-            variant="outline"
+            variant="secondary"
             type="button"
           >
             Register

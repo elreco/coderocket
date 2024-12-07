@@ -1,87 +1,69 @@
-"use client";
-import { ArrowPathIcon } from "@heroicons/react/20/solid";
-import clsx from "clsx";
-import Link from "next/link";
+import { Slot } from "@radix-ui/react-slot";
+import { cva, type VariantProps } from "class-variance-authority";
+import { Loader2 as Spinner } from "lucide-react";
+import * as React from "react";
 
-const baseStyles = {
-  solid:
-    "inline-flex items-center justify-center rounded-lg text-sm font-medium py-[calc(theme(spacing.2)-2.5px)] px-[calc(theme(spacing.3)-1px)] outline-2 outline-offset-2 transition-colors",
-  outline:
-    "inline-flex bg-white items-center justify-center rounded-lg border py-[calc(theme(spacing.2)-2.5px)] px-[calc(theme(spacing.3)-1px)] text-sm outline-2 outline-offset-2 transition-colors",
-};
+import { cn } from "@/lib/utils";
 
-const variantStyles = {
-  solid: {
-    cyan: "relative overflow-hidden bg-cyan-500 text-white before:absolute before:inset-0 active:before:bg-transparent hover:before:bg-white/10 active:bg-cyan-600 active:text-white/80 before:transition-colors",
-    white:
-      "bg-white text-cyan-900 hover:bg-white/90 active:bg-white/90 active:text-cyan-900/70",
-    gray: "bg-gray-800 text-white hover:bg-gray-700 active:bg-gray-800 active:text-white/80",
-    destructive:
-      "bg-red-600 text-white hover:bg-red-700 active:bg-red-800 active:text-white/80",
+const buttonVariants = cva(
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  {
+    variants: {
+      variant: {
+        default:
+          "bg-primary text-primary-foreground shadow hover:bg-primary/90",
+        destructive:
+          "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
+        outline:
+          "border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground",
+        secondary:
+          "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80",
+        background:
+          "bg-background text-secondary-foreground shadow hover:bg-background/50",
+        ghost: "hover:bg-accent hover:text-accent-foreground",
+        link: "text-primary underline-offset-4 hover:underline",
+      },
+      size: {
+        default: "h-9 px-4 py-2",
+        sm: "h-8 rounded-md px-3 text-xs",
+        lg: "h-10 rounded-md px-8",
+        icon: "size-9",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+      size: "default",
+    },
   },
-  outline: {
-    gray: "border-gray-300 text-gray-700 hover:border-gray-400 active:bg-gray-100 active:text-gray-700/80",
-    destructive:
-      "border-red-600 text-red-600 hover:border-red-700 hover:bg-red-50 active:bg-red-100 active:text-red-700/80",
-  },
-};
-
-type VariantKey = keyof typeof variantStyles;
-type ColorKey<Variant extends VariantKey> =
-  keyof (typeof variantStyles)[Variant];
-
-type ButtonProps<
-  Variant extends VariantKey,
-  Color extends ColorKey<Variant>,
-> = {
-  variant?: Variant;
-  color?: Color;
-  loading?: boolean;
-} & (
-  | Omit<React.ComponentPropsWithoutRef<typeof Link>, "color">
-  | (Omit<React.ComponentPropsWithoutRef<"button">, "color"> & {
-      href?: undefined;
-    })
 );
 
-export function Button<
-  Color extends ColorKey<Variant>,
-  Variant extends VariantKey = "solid",
->({
-  variant,
-  color,
-  loading,
-  className,
-  ...props
-}: ButtonProps<Variant, Color>) {
-  variant = variant ?? ("solid" as Variant);
-  color = color ?? ("gray" as Color);
-
-  className = clsx(
-    baseStyles[variant],
-    variantStyles[variant][color] || "",
-    className,
-  );
-
-  // Modify rendering logic to handle the loading state
-  if (loading) {
-    return (
-      <button
-        className={clsx(
-          "flex items-center justify-center bg-gray-700 text-white hover:bg-gray-700 active:bg-gray-700",
-          className,
-        )}
-        disabled={true}
-      >
-        <ArrowPathIcon className="mr-2 size-4 animate-spin" />{" "}
-        <div className="whitespace-nowrap">Loading</div>
-      </button>
-    );
-  }
-
-  return typeof props.href === "undefined" ? (
-    <button className={className} {...props} />
-  ) : (
-    <Link className={className} {...props} />
-  );
+export interface ButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+    VariantProps<typeof buttonVariants> {
+  asChild?: boolean;
+  loading?: boolean;
 }
+
+const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  (
+    { className, variant, size, asChild = false, loading = false, ...props },
+    ref,
+  ) => {
+    const Comp = asChild ? Slot : "button";
+    return (
+      <Comp
+        className={cn(buttonVariants({ variant, size, className }), {
+          "opacity-50": loading,
+        })}
+        ref={ref}
+        disabled={loading || props.disabled}
+        {...props}
+      >
+        {loading ? <Spinner className="size-5 animate-spin" /> : props.children}
+      </Comp>
+    );
+  },
+);
+Button.displayName = "Button";
+
+export { Button, buttonVariants };

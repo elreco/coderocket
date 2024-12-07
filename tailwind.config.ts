@@ -1,107 +1,106 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import type { Config } from "tailwindcss";
 
-import headlessuiPlugin from "@headlessui/tailwindcss";
-import formsPlugin from "@tailwindcss/forms";
-import { type Config } from "tailwindcss";
-
-const {
-  default: flattenColorPalette,
-} = require("tailwindcss/lib/util/flattenColorPalette");
-
-export default {
+const config: Config = {
+  darkMode: ["class"],
   content: [
-    "app/**/*.{ts,tsx}",
-    "components/**/*.{ts,tsx}",
-    "pages/**/*.{ts,tsx}",
+    "./app/**/*.{js,ts,jsx,tsx,mdx}",
+    "./components/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
-    fontSize: {
-      xs: ["0.75rem", { lineHeight: "1rem" }],
-      sm: ["0.875rem", { lineHeight: "1.5rem" }],
-      base: ["1rem", { lineHeight: "1.5rem" }],
-      lg: ["1.125rem", { lineHeight: "2rem" }],
-      xl: ["1.25rem", { lineHeight: "1.75rem" }],
-      "2xl": ["1.5rem", { lineHeight: "2rem" }],
-      "3xl": ["2rem", { lineHeight: "3rem" }],
-      "4xl": ["2.5rem", { lineHeight: "3rem" }],
-      "5xl": ["3rem", { lineHeight: "1" }],
-      "6xl": ["3.75rem", { lineHeight: "1" }],
-      "7xl": ["4.5rem", { lineHeight: "1" }],
-      "8xl": ["6rem", { lineHeight: "1" }],
-      "9xl": ["8rem", { lineHeight: "1" }],
-    },
     extend: {
-      animation: {
-        scroll:
-          "scroll var(--animation-duration, 40s) var(--animation-direction, forwards) linear infinite",
-        "fade-in": "fade-in 0.5s linear forwards",
-        marquee: "marquee var(--marquee-duration) linear infinite",
-        "spin-slow": "spin 4s linear infinite",
-        "spin-slower": "spin 6s linear infinite",
-        "spin-reverse": "spin-reverse 1s linear infinite",
-        "spin-reverse-slow": "spin-reverse 4s linear infinite",
-        "spin-reverse-slower": "spin-reverse 6s linear infinite",
-        "accordion-down": "accordion-down 0.2s ease-out",
-        "accordion-up": "accordion-up 0.2s ease-out",
-      },
       borderRadius: {
-        "4xl": "2rem",
-        "5xl": "2.5rem",
+        lg: "var(--radius)",
+        md: "calc(var(--radius) - 2px)",
+        sm: "calc(var(--radius) - 4px)",
       },
-      colors: ({ colors }) => ({
-        gray: colors.neutral,
-      }),
-      fontFamily: {
-        sans: "var(--font-rubik)",
+      colors: {
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
+        card: {
+          DEFAULT: "hsl(var(--card))",
+          foreground: "hsl(var(--card-foreground))",
+        },
+        popover: {
+          DEFAULT: "hsl(var(--popover))",
+          foreground: "hsl(var(--popover-foreground))",
+        },
+        primary: {
+          DEFAULT: "hsl(var(--primary))",
+          foreground: "hsl(var(--primary-foreground))",
+        },
+        secondary: {
+          DEFAULT: "hsl(var(--secondary))",
+          foreground: "hsl(var(--secondary-foreground))",
+        },
+        muted: {
+          DEFAULT: "hsl(var(--muted))",
+          foreground: "hsl(var(--muted-foreground))",
+        },
+        accent: {
+          DEFAULT: "hsl(var(--accent))",
+          foreground: "hsl(var(--accent-foreground))",
+        },
+        destructive: {
+          DEFAULT: "hsl(var(--destructive))",
+          foreground: "hsl(var(--destructive-foreground))",
+        },
+        border: "hsl(var(--border))",
+        input: "hsl(var(--input))",
+        ring: "hsl(var(--ring))",
+        chart: {
+          "1": "hsl(var(--chart-1))",
+          "2": "hsl(var(--chart-2))",
+          "3": "hsl(var(--chart-3))",
+          "4": "hsl(var(--chart-4))",
+          "5": "hsl(var(--chart-5))",
+        },
+        sidebar: {
+          DEFAULT: "hsl(var(--sidebar-background))",
+          foreground: "hsl(var(--sidebar-foreground))",
+          primary: "hsl(var(--sidebar-primary))",
+          "primary-foreground": "hsl(var(--sidebar-primary-foreground))",
+          accent: "hsl(var(--sidebar-accent))",
+          "accent-foreground": "hsl(var(--sidebar-accent-foreground))",
+          border: "hsl(var(--sidebar-border))",
+          ring: "hsl(var(--sidebar-ring))",
+        },
       },
       keyframes: {
         "accordion-down": {
-          from: { height: "0" },
-          to: { height: "var(--radix-accordion-content-height)" },
+          from: {
+            height: "0",
+          },
+          to: {
+            height: "var(--radix-accordion-content-height)",
+          },
         },
         "accordion-up": {
-          from: { height: "var(--radix-accordion-content-height)" },
-          to: { height: "0" },
-        },
-        "fade-in": {
           from: {
+            height: "var(--radix-accordion-content-height)",
+          },
+          to: {
+            height: "0",
+          },
+        },
+        spotlight: {
+          "0%": {
             opacity: "0",
+            transform: "translate(-72%, -62%) scale(0.5)",
           },
-          to: {
-            opacity: "1",
-          },
-        },
-        marquee: {
           "100%": {
-            transform: "translateY(-50%)",
-          },
-        },
-        "spin-reverse": {
-          to: {
-            transform: "rotate(-360deg)",
-          },
-        },
-        scroll: {
-          to: {
-            transform: "translate(calc(-50% - 0.5rem))",
+            opacity: "1",
+            transform: "translate(-50%,-40%) scale(1)",
           },
         },
       },
-      maxWidth: {
-        "2xl": "40rem",
+      animation: {
+        "accordion-down": "accordion-down 0.2s ease-out",
+        "accordion-up": "accordion-up 0.2s ease-out",
+        spotlight: "spotlight 2s ease .75s 1 forwards",
       },
     },
   },
-  plugins: [formsPlugin, headlessuiPlugin, addVariablesForColors],
-} satisfies Config;
-
-function addVariablesForColors({ addBase, theme }: any) {
-  const allColors = flattenColorPalette(theme("colors"));
-  const newVars = Object.fromEntries(
-    Object.entries(allColors).map(([key, val]) => [`--${key}`, val]),
-  );
-
-  addBase({
-    ":root": newVars,
-  });
-}
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  plugins: [require("tailwindcss-animate")],
+};
+export default config;

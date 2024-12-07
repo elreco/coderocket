@@ -6,7 +6,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { toast } from "@/components/ui/toaster/use-toast";
+import { toast } from "@/hooks/use-toast";
 
 import { signInWithEmail } from "../actions";
 
@@ -44,7 +44,6 @@ export default function AuthUIMagicLink() {
             </Label>
             <Input
               id="email"
-              className="!border-gray-300 bg-white !text-gray-900"
               placeholder="name@example.com"
               type="email"
               required

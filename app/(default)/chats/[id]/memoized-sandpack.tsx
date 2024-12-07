@@ -4,15 +4,15 @@ import {
   SandpackPreview,
   SandpackProvider,
 } from "@codesandbox/sandpack-react";
-import { ClipboardIcon, ArrowDownTrayIcon } from "@heroicons/react/24/outline";
 import clsx from "clsx";
 import saveAs from "file-saver";
 import JSZip from "jszip";
+import { Clipboard, Download } from "lucide-react";
 import { useCallback, useMemo } from "react";
 import { useCopyToClipboard } from "usehooks-ts";
 
 import { Button } from "@/components/ui/button";
-import { toast } from "@/components/ui/toaster/use-toast";
+import { toast } from "@/hooks/use-toast";
 import { cssContent, getHtmlContent } from "@/utils/config";
 
 const MemoizedSandpack = ({
@@ -139,7 +139,7 @@ const MemoizedSandpack = ({
                   <span className="mr-1 text-nowrap text-xs transition duration-300">
                     Copy code
                   </span>{" "}
-                  <ClipboardIcon className="w-4" />
+                  <Clipboard className="w-4" />
                 </Button>
               )}
 
@@ -152,7 +152,7 @@ const MemoizedSandpack = ({
                   <span className="mr-1 text-nowrap text-xs transition duration-300">
                     Download
                   </span>{" "}
-                  <ArrowDownTrayIcon className="w-4" />
+                  <Download className="w-4" />
                 </Button>
               )}
             </div>
