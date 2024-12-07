@@ -7,7 +7,7 @@ export function Container({
   return (
     <div
       className={clsx(
-        "size-full min-h-full px-4 pb-14 pt-20 font-normal sm:px-6 lg:px-8",
+        "size-full min-h-full p-2 pt-10 sm:pl-11 sm:pt-2",
         className,
       )}
       {...props}

@@ -6,6 +6,7 @@ import { getUserDetails, getSubscription } from "@/app/supabase-server";
 import ChatCard from "@/components/chat-card";
 import ComponentCard from "@/components/component-card";
 import { Container } from "@/components/container";
+import { PageTitle } from "@/components/page-title";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -46,12 +47,10 @@ export default async function Account() {
   const chatsFromUser = await getChatsFromUser();
   return (
     <Container>
-      <h1 className="mb-1 text-lg font-medium text-gray-900 sm:text-left sm:text-2xl">
-        My Account
-      </h1>
-      <h2 className="mb-8 text-lg text-gray-700 sm:text-left sm:text-xl">
-        Manage your account and billing.
-      </h2>
+      <PageTitle
+        title="My Account"
+        subtitle="Manage your account and billing."
+      />
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
         <Card
           title="Your Plan"
@@ -62,7 +61,7 @@ export default async function Account() {
           }
           footer={<ManageSubscriptionButton />}
         >
-          <div className="mb-4 mt-8 text-xl font-medium text-gray-700 hover:text-gray-900">
+          <div className="mb-4 mt-8 h-16 text-xl font-medium text-primary">
             {subscription ? (
               `${subscriptionPrice}/${subscription?.prices?.interval}`
             ) : (
@@ -74,7 +73,7 @@ export default async function Account() {
           title="Your Name"
           description="Please enter your full name, or a display name you are comfortable with."
           footer={
-            <div className="flex flex-col items-start justify-between sm:flex-row sm:items-center">
+            <div className="flex w-full flex-col items-center justify-between sm:flex-row">
               <p className="pb-4 sm:pb-0">64 characters maximum</p>
               <Suspense fallback={<Button loading></Button>}>
                 <Button type="submit" form="nameForm">
@@ -88,6 +87,7 @@ export default async function Account() {
             <form id="nameForm" action={updateName}>
               <Input
                 type="text"
+                className="bg-background"
                 name="name"
                 defaultValue={userDetails?.full_name ?? ""}
                 placeholder="Your name"
@@ -100,7 +100,7 @@ export default async function Account() {
           title="Your Email"
           description="Please enter the email address you want to use to login."
           footer={
-            <div className="flex flex-col items-start justify-between sm:flex-row sm:items-center">
+            <div className="flex w-full flex-col items-start justify-between sm:flex-row sm:items-center">
               <p className="pb-4 sm:pb-0">
                 We will email you to verify the change.
               </p>
@@ -118,6 +118,7 @@ export default async function Account() {
                 defaultValue={user ? user.email : ""}
                 placeholder="Your email"
                 maxLength={64}
+                className="bg-background"
               />
             </form>
           </div>
@@ -128,11 +129,13 @@ export default async function Account() {
           title="Your Components"
           description="Your generated components"
           footer={
-            <div className="flex items-center justify-between">
-              <Button variant="outline" href="/">
-                Generate component
-              </Button>
-              <Button href="/chats">View featured components</Button>
+            <div className="flex w-full items-center justify-between">
+              <Link href="/">
+                <Button variant="background">Generate component</Button>
+              </Link>
+              <Link href="/chats/featured">
+                <Button>View featured components</Button>
+              </Link>
             </div>
           }
         >
@@ -168,13 +171,13 @@ interface Props {
 
 function Card({ title, description, footer, children }: Props) {
   return (
-    <div className="w-full rounded-md border bg-white">
-      <div className="px-5 py-4 ">
-        <h3 className="mb-1 text-2xl font-medium text-gray-700">{title}</h3>
-        <p className="text-gray-700">{description}</p>
+    <div className="w-full rounded-md border bg-card">
+      <div className="px-5 py-4">
+        <h3 className="mb-1 text-2xl font-medium">{title}</h3>
+        <p>{description}</p>
         {children}
       </div>
-      <div className="rounded-b-md border-t bg-white p-4 text-gray-700">
+      <div className="flex h-20 w-full items-center justify-between rounded-b-md border-t p-4 ">
         {footer}
       </div>
     </div>

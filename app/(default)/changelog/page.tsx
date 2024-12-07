@@ -2,6 +2,9 @@
 
 import React, { useState, useEffect } from "react";
 
+import { Container } from "@/components/container";
+import { Button } from "@/components/ui/button";
+
 const Changelog = () => {
   const [openSection, setOpenSection] = useState("1.2.1");
 
@@ -27,7 +30,7 @@ const Changelog = () => {
   }, []);
 
   return (
-    <div className="mt-12 bg-gray-100 px-4 py-12 font-sans leading-normal tracking-normal">
+    <Container>
       <div className="mx-auto max-w-screen-md p-8">
         {/* What We're Working On */}
         <div className="mb-16">
@@ -35,11 +38,11 @@ const Changelog = () => {
             What We&apos;re Working On
           </h1>
           <div className="space-y-6">
-            <p className="mb-6 text-gray-700">
+            <p className="mb-6 ">
               We’d love to hear your feedback! Share your thoughts and{" "}
               <b>get free time</b> added to your subscription as a thank you! 🎉
             </p>
-            <div className="rounded-lg border bg-white">
+            <div className="rounded-lg border bg-card">
               <div className="p-4">
                 <p className="mb-4">
                   <b>Improving iteration management:</b> We&apos;re working on
@@ -75,26 +78,21 @@ const Changelog = () => {
               </div>
             </div>
 
-            <button
-              id="openChat"
-              className="rounded bg-black px-4 py-2 text-white"
-            >
-              Share your thoughts
-            </button>
+            <Button id="openChat">Share your thoughts</Button>
           </div>
         </div>
 
         {/* Changelog */}
         <div className="mb-12">
           <h1 className="mb-1 text-3xl font-bold">Changelog</h1>
-          <p className="mb-6 text-gray-700">
+          <p className="mb-6">
             Keep track of the latest changes and improvements in our
             application.
           </p>
 
           <div className=" mt-8 space-y-4">
             {/* Version 1.2.1 (open by default) */}
-            <div className="rounded-lg border bg-white">
+            <div className="rounded-lg border bg-card">
               <button
                 className="flex w-full justify-between border-b p-4"
                 onClick={() => toggleAccordion("1.2.1")}
@@ -121,7 +119,7 @@ const Changelog = () => {
             </div>
 
             {/* Version 1.2.0 */}
-            <div className="rounded-lg border bg-white">
+            <div className="rounded-lg border bg-card">
               <button
                 className="flex w-full justify-between border-b p-4"
                 onClick={() => toggleAccordion("1.2.0")}
@@ -146,7 +144,7 @@ const Changelog = () => {
             </div>
 
             {/* Version 1.1.1 */}
-            <div className="rounded-lg border bg-white">
+            <div className="rounded-lg border bg-card">
               <button
                 className="flex w-full justify-between border-b p-4"
                 onClick={() => toggleAccordion("1.1.1")}
@@ -172,7 +170,7 @@ const Changelog = () => {
             </div>
 
             {/* Version 1.1.0 */}
-            <div className="rounded-lg border bg-white">
+            <div className="rounded-lg border bg-card">
               <button
                 className="flex w-full justify-between border-b p-4"
                 onClick={() => toggleAccordion("1.1.0")}
@@ -197,7 +195,7 @@ const Changelog = () => {
             </div>
 
             {/* Version 1.0.0 */}
-            <div className="rounded-lg border bg-white">
+            <div className="rounded-lg border bg-card">
               <button
                 className="flex w-full justify-between border-b p-4"
                 onClick={() => toggleAccordion("1.0.0")}
@@ -220,7 +218,7 @@ const Changelog = () => {
           </div>
         </div>
       </div>
-    </div>
+    </Container>
   );
 };
 

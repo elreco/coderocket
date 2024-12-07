@@ -4,7 +4,7 @@ import Logo from "@/components/icons/logo";
 
 export function Footer() {
   return (
-    <footer className="fixed bottom-0 z-50 mx-auto flex w-full items-center justify-between border-t bg-white px-6 py-2">
+    <footer className="fixed bottom-0 z-50 mx-auto flex w-full items-center justify-between border-t px-6 py-2">
       {/* Wrapper for logo and Product Hunt badge */}
       <div className="flex items-center space-x-4">
         <Logo />

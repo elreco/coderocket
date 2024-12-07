@@ -1,31 +1,27 @@
 "use client";
 
-import { ArrowPathIcon } from "@heroicons/react/20/solid";
-import {
-  CodeBracketIcon,
-  ShareIcon,
-  TvIcon,
-} from "@heroicons/react/24/outline";
-import { LockClosedIcon, LockOpenIcon } from "@heroicons/react/24/solid";
 import { experimental_useObject as useObject } from "ai/react";
+import { LoaderCircle } from "lucide-react";
+import { Code, Share, Tv, Lock, Unlock } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useCopyToClipboard } from "usehooks-ts";
 
 import { schema, ComponentType } from "@/app/api/component/schema";
 import { Container } from "@/components/container";
-import { Avatar, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/components/ui/toaster/use-toast";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useToast } from "@/hooks/use-toast";
+import { getInitials } from "@/lib/utils";
 import { Tables } from "@/types_db";
 import { maxPromptLength } from "@/utils/config";
+import { getRelativeDate } from "@/utils/date";
 import { capitalizeFirstLetter } from "@/utils/helpers";
 import { createClient } from "@/utils/supabase/client";
 
@@ -241,23 +237,24 @@ export default function ChatCompletion({
       <div className="flex size-full flex-col justify-center space-x-0 xl:max-h-full xl:flex-row xl:space-x-3">
         <div className="flex h-full flex-col space-y-2 xl:w-11/12">
           <div className="flex flex-col items-center justify-start space-y-2 lg:flex-row lg:justify-between lg:space-y-0">
-            <div className="font-medium text-gray-700">
+            <div className="font-medium">
               <div className="flex items-center space-x-2">
                 {!isLoading && title && authorized && (
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button
                         onClick={handleVisibility}
+                        variant="secondary"
                         className="flex items-center"
                       >
                         {isVisible ? (
                           <>
-                            <LockOpenIcon className="mr-1 w-5" />
+                            <Unlock className="mr-1 w-5" />
                             <span>Public</span>
                           </>
                         ) : (
                           <>
-                            <LockClosedIcon className="mr-1 w-5" />{" "}
+                            <Lock className="mr-1 w-5" />
                             <span>Private</span>
                           </>
                         )}
@@ -269,20 +266,10 @@ export default function ChatCompletion({
                     </TooltipContent>
                   </Tooltip>
                 )}
-                {userAvatar && (
-                  <Avatar>
-                    <AvatarImage src={userAvatar} />
-                  </Avatar>
-                )}
-                {userFullName && (
-                  <Badge variant="default" className="text-nowrap">
-                    {userFullName}
-                  </Badge>
-                )}
                 <h1>
                   {isLoading || !title ? (
                     <span className="flex items-center">
-                      <ArrowPathIcon className="mr-2 size-4 animate-spin" />{" "}
+                      <LoaderCircle className="mr-2 size-4 animate-spin" />
                       Loading
                     </span>
                   ) : (
@@ -305,17 +292,19 @@ export default function ChatCompletion({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
+                    variant="secondary"
                     onClick={() => setCanvas(!isCanvas)}
                     className="mr-1 flex items-center"
                   >
                     {isCanvas ? (
                       <>
-                        <CodeBracketIcon className="mr-1 w-5" />{" "}
+                        <Code className="mr-1 w-5" />
                         <span>Code</span>
                       </>
                     ) : (
                       <>
-                        <TvIcon className="mr-1 w-5" /> <span>Canvas</span>
+                        <Tv className="mr-1 w-5" />
+                        <span>Canvas</span>
                       </>
                     )}
                   </Button>
@@ -336,8 +325,8 @@ export default function ChatCompletion({
               />
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="outline" onClick={share}>
-                    <ShareIcon className="w-5" />
+                  <Button variant="secondary" onClick={share}>
+                    <Share className="w-5" />
                   </Button>
                 </TooltipTrigger>
 
@@ -353,29 +342,42 @@ export default function ChatCompletion({
               isCanvas={isCanvas}
               isLoading={isLoading}
             />
-            {authorized && (
+            <div className="flex w-full flex-col items-center justify-between sm:flex-row">
               <form
-                className="flex w-full flex-row items-center xl:justify-between xl:gap-3"
+                className="flex w-full items-center"
                 onSubmit={handleSubmit}
               >
-                <div className="my-2 flex w-full space-x-4 rounded-md bg-gray-900 p-2 xl:w-1/2">
-                  <Input
-                    autoFocus
-                    disabled={isLoading}
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    minLength={2}
-                    maxLength={maxPromptLength}
-                    placeholder="Add a button, modify a color..."
-                    required
-                  />
-                  <Button loading={isLoading} type="submit">
-                    Iterate
-                  </Button>
-                </div>
-                <div className="hidden w-1/2 xl:block" />
+                {authorized && (
+                  <div className="my-2 flex w-full space-x-4 rounded-md bg-gray-900 p-2">
+                    <Input
+                      autoFocus
+                      disabled={isLoading}
+                      value={input}
+                      onChange={(e) => setInput(e.target.value)}
+                      minLength={2}
+                      maxLength={maxPromptLength}
+                      placeholder="Add a button, modify a color..."
+                      required
+                    />
+                    <Button loading={isLoading} type="submit">
+                      Iterate
+                    </Button>
+                  </div>
+                )}
               </form>
-            )}
+              <div className="flex w-full items-center justify-end pt-1">
+                <p className="text-sm text-muted-foreground">
+                  {getRelativeDate(lastUserMessage.created_at)} by
+                </p>
+                <div className="ml-2 flex items-center space-x-2">
+                  <Avatar>
+                    <AvatarImage src={userAvatar} />
+                    <AvatarFallback>{getInitials(userFullName)}</AvatarFallback>
+                  </Avatar>
+                  <p className="text-sm font-medium">{userFullName}</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
         <ChatSidebar

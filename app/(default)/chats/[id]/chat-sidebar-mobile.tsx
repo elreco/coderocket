@@ -1,6 +1,5 @@
-import { Square3Stack3DIcon } from "@heroicons/react/24/outline";
-import { XCircleIcon } from "@heroicons/react/24/solid";
 import clsx from "clsx";
+import { Layers, XCircle } from "lucide-react";
 import { useRef, useEffect } from "react";
 
 import {
@@ -58,8 +57,8 @@ export default function ChatSidebar({
     <div className="block xl:hidden">
       <Drawer>
         <DrawerTrigger asChild>
-          <Button disabled={isLoading} variant="outline" className="mr-1">
-            <Square3Stack3DIcon className="w-5" />
+          <Button disabled={isLoading} variant="secondary" className="mr-1">
+            <Layers className="w-5" />
           </Button>
         </DrawerTrigger>
         <DrawerContent className="h-[90%] px-8">
@@ -94,7 +93,7 @@ export default function ChatSidebar({
                   {messages.length > 2 && authorized && (
                     <AlertDialog>
                       <AlertDialogTrigger className="absolute right-3 top-2 z-20 cursor-pointer">
-                        <XCircleIcon className="size-4 cursor-pointer fill-red-500 hover:fill-red-400" />
+                        <XCircle className="size-4 cursor-pointer fill-red-500 hover:fill-red-400" />
                       </AlertDialogTrigger>
                       <AlertDialogContent>
                         <AlertDialogHeader>

@@ -1,24 +1,27 @@
 "use client";
 import {
-  LockClosedIcon,
-  LockOpenIcon,
-  PhotoIcon,
-  XMarkIcon,
-} from "@heroicons/react/24/solid";
+  Lock,
+  Unlock,
+  Image as LucideImage,
+  X,
+  Wand,
+  Terminal,
+} from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 
 import { Container } from "@/components/container";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/components/ui/toaster/use-toast";
+import { Spotlight } from "@/components/ui/spotlight";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useToast } from "@/hooks/use-toast";
 import { maxPromptLength } from "@/utils/config";
 import { createClient } from "@/utils/supabase/client";
 
@@ -56,6 +59,13 @@ export default function Hero() {
   const [loadingVisibility, setLoadingVisibility] = useState(false);
   const [image, setImage] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, []);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -67,7 +77,6 @@ export default function Hero() {
     e.preventDefault();
     setLoading(true);
     const { data } = await supabase.auth.getSession();
-
     if (!data?.session?.user?.id) {
       setLoading(false);
       toast({
@@ -164,32 +173,39 @@ export default function Hero() {
   };
 
   return (
-    <Container className="bg-hero flex min-h-full flex-col items-center justify-center space-y-4 !pt-0">
+    <Container className="flex min-h-full w-auto flex-col items-center justify-center space-y-4 pr-2 sm:pr-11">
+      <Spotlight
+        className="-top-40 left-0 md:-top-20 md:left-60"
+        fill="hsl(var(--primary))"
+      />
       <div className="flex w-full flex-col items-center space-y-1.5">
         <h2
           className="text-4xl font-medium tracking-tighter sm:text-5xl"
           data-testid="home-h2"
         >
-          Create. Refine. Deliver.
+          Create. <span className="text-primary">Refine.</span> Deliver.
         </h2>
-        <p>Design UI with Tailwind from basic text prompts and images.</p>
+        <p className="font-normal">
+          Design UI with Tailwind from basic text prompts and images.
+        </p>
       </div>
       <form
         id="generate-form"
-        className="group relative z-10 flex w-full flex-col items-center justify-center gap-x-0 space-y-5 rounded-lg bg-gray-900 p-3 text-center shadow-lg shadow-black/40 backdrop-blur-xl transition-all duration-300 sm:gap-x-3 sm:space-y-0 xl:w-1/2"
+        className="group relative z-10 flex w-full flex-col items-center justify-center gap-x-0 space-y-3 rounded-lg border bg-secondary p-3 text-center shadow-black/40 backdrop-blur-xl transition-all duration-300 xl:w-2/3"
         onSubmit={handleSubmit}
       >
-        <div className="mb-0 flex w-full xl:mb-2">
+        <div className="flex w-full items-center">
+          <Terminal className="ml-1 size-4" />
           <Input
+            ref={inputRef}
             placeholder="Start generating a beautiful Tailwind component"
-            autoFocus
+            autoFocus={true}
             required
-            color="dark"
             value={prompt}
             minLength={2}
             maxLength={maxPromptLength}
             onChange={(e) => setPrompt(e.target.value)}
-            className="pl-1"
+            className="bg-secondary pl-1 focus-visible:ring-0"
           />
         </div>
         <div className="flex w-full flex-1 items-center justify-between">
@@ -208,7 +224,7 @@ export default function Hero() {
                   className="absolute right-0 top-0 cursor-pointer rounded-full bg-black/50 p-1"
                   onClick={handleImageRemove}
                 >
-                  <XMarkIcon className="size-4 text-white" />
+                  <X className="size-4 text-white" />
                 </button>
               </div>
             </div>
@@ -217,6 +233,7 @@ export default function Hero() {
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
+                  variant="background"
                   onClick={handleVisibility}
                   className="flex items-center"
                   loading={loadingVisibility}
@@ -225,28 +242,39 @@ export default function Hero() {
                 >
                   {isVisible ? (
                     <>
-                      <LockOpenIcon className="mr-1 w-5" />
+                      <Unlock className="mr-1 w-5" />
                       <span>Public</span>
                     </>
                   ) : (
                     <>
-                      <LockClosedIcon className="mr-1 w-5" />{" "}
+                      <Lock className="mr-1 w-5" />
                       <span>Private</span>
                     </>
                   )}
                 </Button>
               </TooltipTrigger>
 
-              <TooltipContent side="left">
+              <TooltipContent side="right">
                 <p>{isVisible ? "Set private" : "Set public"}</p>
               </TooltipContent>
             </Tooltip>
             <div className="flex items-center space-x-2">
-              <Button type="button" onClick={handleButtonClick}>
-                <PhotoIcon className="mr-2 size-4 " />
-                <span>Image</span>
-              </Button>
-
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="background"
+                    type="button"
+                    disabled={loading}
+                    onClick={handleButtonClick}
+                  >
+                    <LucideImage className="mr-1 size-4" />
+                    <span>Image</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="left">
+                  <p>Upload an image to generate a component with it</p>
+                </TooltipContent>
+              </Tooltip>
               <input
                 ref={fileInputRef}
                 className="sr-only"
@@ -254,11 +282,8 @@ export default function Hero() {
                 accept=".png, .jpeg, .jpg, .gif, .webp"
                 onChange={handleImageChange}
               />
-              <Button
-                type="submit"
-                loading={loading}
-                disabled={loadingVisibility}
-              >
+              <Button type="submit" variant="default" loading={loading}>
+                <Wand className="mr-1 size-4" />
                 Generate
               </Button>
             </div>
@@ -271,7 +296,7 @@ export default function Hero() {
             key={index}
             variant="secondary"
             onClick={() => handleBadgeClick(button.input)}
-            className="cursor-pointer whitespace-nowrap hover:bg-gray-700"
+            className="whitespace-nowrap"
           >
             {button.text}
           </Badge>

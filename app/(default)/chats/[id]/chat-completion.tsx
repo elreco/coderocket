@@ -1,29 +1,30 @@
 "use client";
 
-import { ArrowPathIcon } from "@heroicons/react/20/solid";
-import {
-  ArrowTopRightOnSquareIcon,
-  CodeBracketIcon,
-  ShareIcon,
-  TvIcon,
-} from "@heroicons/react/24/outline";
-import { LockClosedIcon, LockOpenIcon } from "@heroicons/react/24/solid";
 import { useCompletion } from "ai/react";
+import {
+  LoaderCircle,
+  ArrowUpRight,
+  Code,
+  Share,
+  Tv,
+  Lock,
+  Unlock,
+} from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useCopyToClipboard } from "usehooks-ts";
 
 import { Container } from "@/components/container";
-import { Avatar, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/components/ui/toaster/use-toast";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useToast } from "@/hooks/use-toast";
 import { openInCodeSandbox } from "@/utils/codesandbox";
 import { maxPromptLength } from "@/utils/config";
 import { capitalizeFirstLetter } from "@/utils/helpers";
@@ -211,12 +212,12 @@ export default function ChatCompletion({
                       >
                         {isVisible ? (
                           <>
-                            <LockOpenIcon className="mr-1 w-5" />
+                            <Unlock className="mr-1 w-5" />
                             <span>Public</span>
                           </>
                         ) : (
                           <>
-                            <LockClosedIcon className="mr-1 w-5" />{" "}
+                            <Lock className="mr-1 w-5" />
                             <span>Private</span>
                           </>
                         )}
@@ -228,11 +229,10 @@ export default function ChatCompletion({
                     </TooltipContent>
                   </Tooltip>
                 )}
-                {userAvatar && (
-                  <Avatar>
-                    <AvatarImage src={userAvatar} />
-                  </Avatar>
-                )}
+                <Avatar>
+                  <AvatarImage src={userAvatar || undefined} />
+                  <AvatarFallback>{userFullName}</AvatarFallback>
+                </Avatar>
                 {userFullName && (
                   <Badge variant="default" className="text-nowrap">
                     {userFullName}
@@ -241,7 +241,7 @@ export default function ChatCompletion({
                 <h1>
                   {isLoading || !title ? (
                     <span className="flex items-center">
-                      <ArrowPathIcon className="mr-2 size-4 animate-spin" />{" "}
+                      <LoaderCircle className="mr-2 size-4 animate-spin" />
                       Loading
                     </span>
                   ) : (
@@ -269,12 +269,13 @@ export default function ChatCompletion({
                   >
                     {isCanvas ? (
                       <>
-                        <CodeBracketIcon className="mr-1 w-5" />{" "}
+                        <Code className="mr-1 w-5" />
                         <span>Code</span>
                       </>
                     ) : (
                       <>
-                        <TvIcon className="mr-1 w-5" /> <span>Canvas</span>
+                        <Tv className="mr-1 w-5" />
+                        <span>Canvas</span>
                       </>
                     )}
                   </Button>
@@ -302,7 +303,7 @@ export default function ChatCompletion({
                     onClick={() => openInCodeSandbox(completion)}
                     className="mr-1"
                   >
-                    <ArrowTopRightOnSquareIcon className="w-5" />
+                    <ArrowUpRight className="w-5" />
                   </Button>
                 </TooltipTrigger>
 
@@ -313,7 +314,7 @@ export default function ChatCompletion({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button variant="outline" onClick={share}>
-                    <ShareIcon className="w-5" />
+                    <Share className="w-5" />
                   </Button>
                 </TooltipTrigger>
 
@@ -344,7 +345,7 @@ export default function ChatCompletion({
                     maxLength={maxPromptLength}
                     placeholder="Add a button, modify a color..."
                   />
-                  <Button loading={isLoading} type="submit">
+                  <Button loading={isLoading} variant="outline" type="submit">
                     Iterate
                   </Button>
                 </div>

@@ -23,18 +23,16 @@ export default async function PricingPage() {
   ]);
 
   return (
-    <Container>
+    <Container className="pr-2 sm:pr-11">
       <Pricing
         user={userData.data.user}
         products={products}
         subscription={subscription}
       />
-      <div className="grid grid-cols-1 pb-40 lg:grid-cols-2">
+      <div className="mt-10 grid grid-cols-1 pb-40 sm:mt-0 lg:grid-cols-2">
         <div>
-          <h1 className="text-left text-2xl font-medium text-gray-900">
-            How it works?
-          </h1>
-          <p className="mt-8 max-w-2xl text-left text-base text-gray-900">
+          <h1 className="text-left text-2xl font-medium">How it works?</h1>
+          <p className="mt-8 max-w-2xl text-left text-base">
             Generate components effortlessly with simple prompts, iterate
             seamlessly, and use vision technology to create components from
             images, ensuring flexibility and innovation in your projects.

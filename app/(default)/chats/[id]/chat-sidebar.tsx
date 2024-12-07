@@ -1,10 +1,10 @@
-import { XMarkIcon } from "@heroicons/react/24/solid";
 import {
   Tooltip,
   TooltipTrigger,
   TooltipContent,
 } from "@radix-ui/react-tooltip";
 import clsx from "clsx";
+import { X } from "lucide-react";
 import { useRef, useEffect } from "react";
 
 import {
@@ -109,7 +109,7 @@ export default function ChatSidebar({
           {messages.length > 2 && authorized && (
             <AlertDialog>
               <AlertDialogTrigger className="absolute right-3 top-2 z-20 cursor-pointer">
-                <XMarkIcon className="size-6 fill-red-500 font-bold hover:fill-red-300" />
+                <X className="size-6 fill-red-500 font-bold hover:fill-red-300" />
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>

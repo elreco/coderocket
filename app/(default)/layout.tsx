@@ -1,16 +1,17 @@
 import { Analytics } from "@vercel/analytics/react";
 import clsx from "clsx";
 import { Rubik } from "next/font/google";
+import { cookies } from "next/headers";
 import { PropsWithChildren } from "react";
 
-import { Footer } from "@/components/footer";
-import { Navbar } from "@/components/navbar/navbar";
-// eslint-disable-next-line import/order
+import { AppSidebar } from "@/components/app-sidebar";
 import { PluginWidget } from "@/components/plugin-widget";
-
 import "styles/main.css";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+
+import { getUserDetails } from "../supabase-server";
 
 const rubik = Rubik({
   subsets: ["latin"],
@@ -62,19 +63,26 @@ export const metadata = {
   },
 };
 
-export default function RootLayout({ children }: PropsWithChildren) {
+export default async function RootLayout({ children }: PropsWithChildren) {
+  const cookieStore = await cookies();
+  const defaultOpen = cookieStore.get("sidebar:state")?.value === "true";
+  const userDetails = await getUserDetails();
+
   return (
     <html
       lang="en"
-      className={clsx("h-full bg-gray-50 antialiased", rubik.variable)}
+      className={clsx("dark size-full antialiased", rubik.variable)}
     >
-      <body className="size-full">
-        <Navbar />
-        <TooltipProvider>
-          <main className="size-full">{children}</main>
-        </TooltipProvider>
-        <Footer />
-
+      <body className="size-full bg-background">
+        <SidebarProvider defaultOpen={defaultOpen} className="size-full">
+          <AppSidebar user={userDetails} />
+          <TooltipProvider>
+            <main className="relative size-full">
+              <SidebarTrigger className="fixed z-50 m-2" />
+              {children}
+            </main>
+          </TooltipProvider>
+        </SidebarProvider>
         <PluginWidget />
         <Toaster />
         <Analytics />

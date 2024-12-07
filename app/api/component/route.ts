@@ -47,7 +47,6 @@ export async function POST(req: Request) {
           if (data.error) {
             throw new Error(data.error.toString());
           }
-          console.log("data", data);
           await updateDataAfterCompletion(id, data.object, prompt);
         } catch (e) {
           console.error(e);
