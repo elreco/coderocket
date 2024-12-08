@@ -10,9 +10,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useRouter } from "next/navigation";
 import * as React from "react";
-import { useEffect, useState } from "react";
 
 import { NavMain } from "@/components/nav-main";
 import { NavUser } from "@/components/nav-user";
@@ -27,7 +25,6 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 import { Tables } from "@/types_db";
-import { createClient } from "@/utils/supabase/client";
 
 import Logo from "./icons/logo";
 import { NavAuth } from "./nav-auth";
@@ -76,11 +73,6 @@ export function AppSidebar({
   user: (Tables<"users"> & { email: string | null }) | null;
 }) {
   const pathname = usePathname();
-  const router = useRouter();
-  const supabase = createClient();
-  const [userData, setUserData] = useState<
-    (Tables<"users"> & { email: string | null }) | null
-  >(user);
 
   const navMainItems = data.navMain.map((item) => ({
     ...item,
@@ -91,30 +83,6 @@ export function AppSidebar({
     ...item,
     isActive: pathname === item.url,
   }));
-
-  useEffect(() => {
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === "SIGNED_IN" && session?.user) {
-        const email = session.user.email ?? null;
-        const { data: userDetails } = await supabase
-          .from("users")
-          .select("*")
-          .eq("id", session.user.id)
-          .single();
-        if (!userDetails) setUserData(null);
-        setUserData({ ...userDetails, email });
-      }
-      if (event === "SIGNED_OUT") {
-        setUserData(null);
-      }
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [router, supabase]);
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -147,7 +115,7 @@ export function AppSidebar({
         <NavMain items={navOtherItems} label="Other" />
       </SidebarContent>
       <SidebarFooter>
-        {userData ? <NavUser user={userData} /> : <NavAuth />}
+        {user ? <NavUser user={user} /> : <NavAuth />}
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>
