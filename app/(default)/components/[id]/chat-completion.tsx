@@ -132,6 +132,7 @@ export default function ChatCompletion({
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setCanvas(false);
     submit(input);
   };
 
@@ -155,7 +156,7 @@ export default function ChatCompletion({
   };
 
   const assistantMessages = useMemo(() => {
-    return messages.filter((m) => m.role === "assistant");
+    return messages.filter((m) => m.role === "assistant").reverse();
   }, [messages]);
 
   const copyPrompt = (prompt: string) => {

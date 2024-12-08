@@ -12,7 +12,7 @@ import { useRouter } from "next/navigation";
 import { useRef, useState, useEffect } from "react";
 
 import { Container } from "@/components/container";
-import AnimatedGridPattern from "@/components/ui/animated-grid-pattern";
+import { AnimatedGridPattern } from "@/components/ui/animated-grid-pattern";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -180,7 +180,6 @@ export default function Hero() {
         numSquares={80}
         maxOpacity={0.1}
         duration={1}
-        repeatDelay={1}
         className={cn(
           "[mask-image:radial-gradient(500px_circle_at_center,hsl(var(--secondary)),transparent)]",
           "inset-x-0 inset-y-[-30%] h-[200%] skew-y-12 opacity-75",
