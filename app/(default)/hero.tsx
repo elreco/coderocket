@@ -8,7 +8,6 @@ import {
   Terminal,
 } from "lucide-react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { useRef, useState, useEffect } from "react";
 
 import { Container } from "@/components/container";
@@ -53,7 +52,6 @@ const previewButtons = [
 
 export default function Hero() {
   const supabase = createClient();
-  const router = useRouter();
   const { toast } = useToast();
   const [prompt, setPrompt] = useState("");
   const [isVisible, setVisible] = useState(true);
@@ -78,46 +76,14 @@ export default function Hero() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { data } = await supabase.auth.getSession();
-    if (!data?.session?.user?.id) {
-      setLoading(false);
-      toast({
-        variant: "destructive",
-        title: "You must Log In",
-        description: "Log in to your account to start generate components",
-      });
-      return router.push("/login");
-    }
     const formData = new FormData();
     if (image) {
       formData.append("file", image as File);
     }
     formData.append("isVisible", isVisible.toString());
-    const { data: subscription } = await supabase
-      .from("subscriptions")
-      .select("*, prices(*, products(*))")
-      .in("status", ["trialing", "active"])
-      .eq("user_id", data.session?.user?.id)
-      .maybeSingle();
-
-    if (!subscription && image) {
-      toast({
-        variant: "destructive",
-        title: "Premium account required",
-        description:
-          "You are not premium, you can't generate components with Vision. Please upgrade to premium and try again.",
-        duration: 5000,
-      });
-      setLoading(false);
-      return;
-    }
     try {
-      const chat = await createChat(prompt, formData);
-      if (chat) {
-        router.push(`/components/${chat.id}`);
-      }
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (e) {
+      await createChat(prompt, formData);
+    } catch {
       setLoading(false);
     }
   };
@@ -141,8 +107,8 @@ export default function Hero() {
 
   const handleVisibility = async () => {
     setLoadingVisibility(true);
-    const { data } = await supabase.auth.getSession();
-    if (!data?.session?.user?.id) {
+    const { data } = await supabase.auth.getUser();
+    if (!data?.user?.id) {
       toast({
         variant: "destructive",
         title: "Premium account required",
@@ -157,7 +123,7 @@ export default function Hero() {
       .from("subscriptions")
       .select("*, prices(*, products(*))")
       .in("status", ["trialing", "active"])
-      .eq("user_id", data.session?.user?.id)
+      .eq("user_id", data.user.id)
       .maybeSingle();
 
     if (subscription) {

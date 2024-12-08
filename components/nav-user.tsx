@@ -1,8 +1,8 @@
 "use client";
 import { BadgeCheck, ChevronsUpDown, CreditCard, LogOut } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 
+import { logout } from "@/app/(default)/(auth)/actions";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -19,10 +19,8 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { toast } from "@/hooks/use-toast";
 import { getInitials } from "@/lib/utils";
 import { Tables } from "@/types_db";
-import { createClient } from "@/utils/supabase/client";
 
 export function NavUser({
   user,
@@ -30,19 +28,9 @@ export function NavUser({
   user: Tables<"users"> & { email: string | null };
 }) {
   const { isMobile } = useSidebar();
-  const router = useRouter();
-  async function logout() {
-    "use client";
-    const supabase = createClient();
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      console.error(error.message);
-    } else {
-      toast({
-        title: "Logged out successfully",
-      });
-      router.push("/");
-    }
+
+  async function handleLogout() {
+    await logout();
   }
   return (
     <SidebarMenu>
@@ -113,7 +101,7 @@ export function NavUser({
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem
-              onClick={() => logout()}
+              onClick={() => handleLogout()}
               className="cursor-pointer"
             >
               <LogOut />

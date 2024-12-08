@@ -36,6 +36,7 @@ export default function Pricing({ user, products, subscription }: Props) {
   const searchParams = useSearchParams();
   const { toast } = useToast();
   const paymentRequired = searchParams.get("paymentRequired");
+  const loginRequired = searchParams.get("loginRequired");
 
   useEffect(() => {
     if (paymentRequired === "true") {
@@ -48,6 +49,17 @@ export default function Pricing({ user, products, subscription }: Props) {
       });
     }
   }, [paymentRequired]);
+
+  useEffect(() => {
+    if (loginRequired === "true") {
+      toast({
+        variant: "destructive",
+        title: "You must login",
+        description: "You must be logged in to start generating components.",
+        duration: 5000,
+      });
+    }
+  }, [loginRequired]);
 
   const [priceIdLoading, setPriceIdLoading] = useState<string>();
 

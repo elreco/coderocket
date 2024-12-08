@@ -42,7 +42,7 @@ const data = {
     },
     {
       title: "Featured",
-      url: "/chats/featured",
+      url: "/components/featured",
       icon: Star,
     },
     {

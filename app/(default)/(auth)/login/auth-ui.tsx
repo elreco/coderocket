@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,6 @@ import { login, signInWithGithub } from "../actions";
 export default function AuthUI() {
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
 
   useEffect(() => {
     const error = searchParams.get("error");
@@ -32,22 +31,8 @@ export default function AuthUI() {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     setIsLoading(true);
-    try {
-      await login(formData);
-      toast({
-        title: "Success",
-        description: "Logged in successfully!",
-      });
-      router.push("/");
-    } catch {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to login. Please try again.",
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    await login(formData);
+    setIsLoading(false);
   };
 
   const handleGithubLogin = async () => signInWithGithub();

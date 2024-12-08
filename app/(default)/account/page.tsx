@@ -133,7 +133,7 @@ export default async function Account() {
               <Link href="/">
                 <Button variant="background">Generate component</Button>
               </Link>
-              <Link href="/chats/featured">
+              <Link href="/components/featured">
                 <Button>View featured components</Button>
               </Link>
             </div>

@@ -114,7 +114,9 @@ export const createChat = async (prompt: string, formData: FormData) => {
   const { data: userData } = await supabase.auth.getUser();
   const user = userData.user;
 
-  if (!user?.id) throw Error("Could not get user");
+  if (!user?.id) {
+    return redirect("/login?error=loginRequired=true");
+  }
 
   const subscription = await getSubscription();
   const { data: existingChats } = await supabase
@@ -133,7 +135,7 @@ export const createChat = async (prompt: string, formData: FormData) => {
   }
 
   if (prompt.length > 1000) {
-    throw Error("Prompt length is too long");
+    return redirect("/?promptTooLong=true");
   }
 
   let imageUrl = null;
@@ -161,7 +163,7 @@ export const createChat = async (prompt: string, formData: FormData) => {
     ])
     .select()
     .single();
-  if (!data) throw Error("Failed to create chat");
+  if (!data) return redirect("/?failedToCreateChat=true");
 
   await supabase.from("messages").insert({
     chat_id: data.id,
@@ -169,7 +171,7 @@ export const createChat = async (prompt: string, formData: FormData) => {
     content: prompt,
     version: -1,
   });
-  return data;
+  return redirect(`/components/${data.id}`);
 };
 
 export const getChatsFromUser = async () => {
@@ -193,6 +195,7 @@ export const getFeaturedChats = async () => {
     .rpc("get_components")
     .is("is_featured", true)
     .limit(50);
+  console.log(data);
   return data;
 };
 

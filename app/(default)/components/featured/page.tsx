@@ -1,4 +1,4 @@
-import ChatCard from "@/components/chat-card";
+import ComponentCard from "@/components/component-card";
 import { Container } from "@/components/container";
 import { PageTitle } from "@/components/page-title";
 
@@ -19,7 +19,7 @@ export default async function Featured() {
         subtitle="Start your projects with our handpicked components"
       />
       <div className="grid grid-cols-1 gap-3 pb-20 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
-        {chats?.map((chat) => <ChatCard key={chat.chat_id} chat={chat} />)}
+        {chats?.map((chat) => <ComponentCard key={chat.chat_id} chat={chat} />)}
       </div>
     </Container>
   );

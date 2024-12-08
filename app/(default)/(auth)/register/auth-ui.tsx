@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,7 @@ import { register, signInWithGithub } from "../actions";
 export default function AuthUI() {
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
+
   useEffect(() => {
     const error = searchParams.get("error");
     if (error) {
@@ -31,23 +31,8 @@ export default function AuthUI() {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     setIsLoading(true);
-
-    try {
-      await register(formData);
-      toast({
-        title: "Success",
-        description: "Account created successfully!",
-      });
-      router.push("/");
-    } catch (error: unknown) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error instanceof Error ? error.message : "Unknown error",
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    await register(formData);
+    setIsLoading(false);
   };
 
   const handleGithubLogin = async () => signInWithGithub();
