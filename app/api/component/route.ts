@@ -41,7 +41,7 @@ export async function POST(req: Request) {
       messages,
       model: openAINewModel("gpt-4o-mini"),
       system: contentMd,
-      temperature: 0.5,
+      temperature: 0.7,
       schema,
       onFinish: async (data) => {
         try {
