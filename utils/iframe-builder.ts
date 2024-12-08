@@ -9,7 +9,7 @@ function buildHtmlDocument(
 ) {
   return `
     <!DOCTYPE html>
-    <html class="size-full dark">
+    <html class="size-full">
     <head>
       <meta charset="UTF-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />

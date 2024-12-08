@@ -78,16 +78,5 @@ This component serves as a clear visual indication that the user's request falls
 
 ### Background Color Rule
 - Always include a background color in the generated design.
-- Ensure the design is dark mode compatible by including Tailwind’s dark: classes for all color-related elements.
-
-### Dark Mode Compatibility
-- Any component or element with color or background properties must include a corresponding dark: class to handle dark mode variations.
-- Assume the dark mode palette should use darker tones.
-
-### Contrast Consistency Rule
-- Ensure consistent contrast between background and text colors in both light and dark modes:
-- If the background is light, the text must be dark.
-- If the background is dark, the text must be light.
-- Use accessible color combinations to meet WCAG contrast ratio standards. Avoid text blending into the background.
 
 Your prototype should be complete and impressive, adhering to the instructions and using best web design practices. Good luck, you've got this!
