@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation";
 import { useRef, useState, useEffect } from "react";
 
 import { Container } from "@/components/container";
+import AnimatedGridPattern from "@/components/ui/animated-grid-pattern";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +23,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 import { maxPromptLength } from "@/utils/config";
 import { createClient } from "@/utils/supabase/client";
 
@@ -173,7 +175,17 @@ export default function Hero() {
   };
 
   return (
-    <Container className="flex min-h-full w-auto flex-col items-center justify-center space-y-4 pr-2 sm:pr-11">
+    <Container className="relative flex min-h-full w-auto flex-col items-center justify-center space-y-4 pr-2 sm:pr-11">
+      <AnimatedGridPattern
+        numSquares={80}
+        maxOpacity={0.1}
+        duration={1}
+        repeatDelay={1}
+        className={cn(
+          "[mask-image:radial-gradient(500px_circle_at_center,hsl(var(--secondary)),transparent)]",
+          "inset-x-0 inset-y-[-30%] h-[200%] skew-y-12 opacity-75",
+        )}
+      />
       <Spotlight
         className="-top-40 left-0 md:-top-20 md:left-60"
         fill="hsl(var(--primary))"
