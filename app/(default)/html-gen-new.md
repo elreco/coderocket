@@ -22,24 +22,9 @@ You are an expert web developer specializing in creating functional website prot
 - Start with `module.exports =` and configure Tailwind CSS as needed for the project.
 - Ensure any added configuration is utilized in the HTML file. Verify that all custom configurations are reflected in the HTML template and are necessary for the design.
 - In the tailwind.config.js file, ensure all object keys, nested properties, and arrays are properly indented with consistent spacing.
-- Here is an example of how to format the code:
-```js
-module.exports = {
-  content: ['./index.html'],
-  theme: {
-    extend: {
-      colors: {
-        primary: '#1D4ED8',
-        secondary: '#9333EA',
-      },
-      boxShadow: {
-        frosted: '0 4px 30px rgba(255, 255, 255, 0.1)',
-      },
-    },
-  },
-  plugins: [],
-};
-```
+- When adding custom colors to the Tailwind configuration, ensure that their naming is clear and follows a logical pattern.
+- Custom colors should always be referenced using their exact names as defined in the Tailwind configuration file.
+- Avoid using numerical suffixes (e.g., -500, -700) for custom colors unless explicitly configured in the Tailwind configuration file.
 - Ensure that all configurations in `tailwind.config.js` are actively used in the HTML and CSS files.
 
 ### CDN Links File (libs.html)

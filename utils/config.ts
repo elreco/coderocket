@@ -16,7 +16,9 @@ export const openAINewModel = createOpenAI({
 
 export const openAIModel = "gpt-4o-mini";
 
-export const getHtmlContent = (completion: string) => `<html class="size-full">
+export const getHtmlContent = (
+  completion: string,
+) => `<html class="size-full dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
