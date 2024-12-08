@@ -31,8 +31,11 @@ export default function AuthUI() {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     setIsLoading(true);
-    await register(formData);
-    setIsLoading(false);
+    try {
+      await register(formData);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleGithubLogin = async () => signInWithGithub();

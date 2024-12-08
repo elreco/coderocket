@@ -29,10 +29,13 @@ export default function AuthUI() {
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const formData = new FormData(e.currentTarget);
     setIsLoading(true);
-    await login(formData);
-    setIsLoading(false);
+    const formData = new FormData(e.currentTarget);
+    try {
+      await login(formData);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleGithubLogin = async () => signInWithGithub();

@@ -36,6 +36,7 @@ export async function POST(req: Request) {
       imageUrl,
       selectedVersion,
     );
+
     const stream = streamObject({
       messages,
       model: openAINewModel("gpt-4o-mini"),
@@ -74,12 +75,17 @@ const buildMessagesToOpenAi = async (
   imageUrl?: string | null | undefined,
   selectedVersion?: number,
 ) => {
+  // Filter messages based on selectedVersion if provided
   const filteredMessages =
     selectedVersion !== undefined
       ? messages.filter((m) => m.version <= selectedVersion)
       : messages;
 
-  const messagesToOpenAI = filteredMessages.map((m) => {
+  // Limit to the last 4 messages
+  const limitedMessages = filteredMessages.slice(-4);
+
+  // Map messages to the format required by OpenAI
+  const messagesToOpenAI = limitedMessages.map((m) => {
     if (m.role === "assistant") {
       const content = m.content as ComponentType;
       return {
@@ -90,6 +96,7 @@ const buildMessagesToOpenAi = async (
     return { role: m.role, content: m.content };
   }) as CoreMessage[];
 
+  // Add the prompt and optional imageUrl as the final user message
   if (imageUrl) {
     messagesToOpenAI.push({
       role: "user",
@@ -104,6 +111,8 @@ const buildMessagesToOpenAi = async (
       content: [{ type: "text", text: prompt }],
     });
   }
+
+  // Return the final list of messages
   return messagesToOpenAI as CoreMessage[];
 };
 

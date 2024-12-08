@@ -115,7 +115,7 @@ export const createChat = async (prompt: string, formData: FormData) => {
   const user = userData.user;
 
   if (!user?.id) {
-    return redirect("/login?error=loginRequired=true");
+    return redirect("/login?loginRequired=true");
   }
 
   const subscription = await getSubscription();

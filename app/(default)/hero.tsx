@@ -83,7 +83,7 @@ export default function Hero() {
     formData.append("isVisible", isVisible.toString());
     try {
       await createChat(prompt, formData);
-    } catch {
+    } finally {
       setLoading(false);
     }
   };
