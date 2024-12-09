@@ -41,7 +41,7 @@ export async function POST(req: Request) {
       messages,
       model: openAINewModel("gpt-4o-mini"),
       system: contentMd,
-      temperature: 0.7,
+      temperature: 0.5,
       schema,
       onFinish: async (data) => {
         try {
@@ -169,7 +169,7 @@ const validateRequest = async (id: string, prompt: string) => {
   // Fetch HTML content
   const { data: blobContent, error } = await supabase.storage
     .from("featured")
-    .download("html-gen-new.md");
+    .download("html-gen-new-v0.txt");
   if (error) throw new Error("Could not get AI Model file. Please try again");
   const contentMd = await blobContent.text();
 
