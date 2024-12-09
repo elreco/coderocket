@@ -183,7 +183,7 @@ const validateRequest = async (id: string, prompt: string) => {
 const createContentArray = (content: ComponentType) => {
   let contentText = "";
   const contentMap = {
-    htmlTemplate: "index.html",
+    index: "index.html",
     cssFile: "style.css",
     script: "script.js",
     tailwindConfig: "tailwind.config.js",

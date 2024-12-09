@@ -32,7 +32,7 @@ export function iframeBuilder(completion: ComponentType | null) {
     return "";
   }
 
-  const htmlContent = completion?.htmlTemplate || "";
+  const htmlContent = completion?.index || "";
   const cssInput = completion?.cssFile || "";
   const libsInput = completion?.libs || "";
   const scriptInput = completion?.script || "";
@@ -78,7 +78,7 @@ export function downloadBuilder(completion: ComponentType | null) {
     return "";
   }
 
-  const htmlContent = completion?.htmlTemplate || "";
+  const htmlContent = completion?.index || "";
   const libsInput = completion?.libs || "";
   const scriptInput = completion?.script || "";
   let tailwindConfig = completion?.tailwindConfig || "{}";

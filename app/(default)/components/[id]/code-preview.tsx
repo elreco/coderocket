@@ -36,7 +36,7 @@ export default function CodePreview({
     }
 
     debounceTimeout.current = setTimeout(() => {
-      if (completion?.htmlTemplate) {
+      if (completion?.index) {
         const content = iframeBuilder(completion);
         setIframeContent(content);
       } else {
@@ -46,7 +46,7 @@ export default function CodePreview({
   }, [completion]);
 
   const downloadCode = async () => {
-    const htmlContent = completion?.htmlTemplate || "";
+    const htmlContent = completion?.index || "";
 
     if (!htmlContent) return;
     const zip = new JSZip();
@@ -81,7 +81,7 @@ export default function CodePreview({
     switch (activeTab) {
       case "html":
         return {
-          value: completion?.htmlTemplate,
+          value: completion?.index,
           lang: "html",
           extensions: [html()],
         };

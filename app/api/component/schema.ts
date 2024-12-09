@@ -6,7 +6,7 @@ export const schema = z.object({
     .describe(
       "Generate the tailwind.config.js file. Always include this file in the response.",
     ),
-  htmlTemplate: z
+  index: z
     .string()
     .describe(
       "Generate the index.html file. Always include this file in the response.",
