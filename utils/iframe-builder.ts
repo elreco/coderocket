@@ -13,6 +13,7 @@ function buildHtmlDocument(
     <head>
       <meta charset="UTF-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <script src="https://cdn.tailwindcss.com?plugins=forms,typography,aspect-ratio,line-clamp,container-queries"></script>
       ${additionalHeadContent}
       ${libsInput}
       <script>
@@ -36,9 +37,7 @@ export function iframeBuilder(completion: ComponentType | null) {
   const cssInput = completion?.cssFile || "";
   const libsInput = completion?.libs || "";
   const scriptInput = completion?.script || "";
-  let tailwindConfig = completion?.tailwindConfig || "{}";
-
-  tailwindConfig = tailwindConfig.replace(/module\.exports\s*=\s*/, "");
+  const tailwindConfig = completion?.tailwindConfig || "{}";
 
   const additionalHeadContent = `
     <style type="text/tailwindcss">
@@ -81,9 +80,7 @@ export function downloadBuilder(completion: ComponentType | null) {
   const htmlContent = completion?.index || "";
   const libsInput = completion?.libs || "";
   const scriptInput = completion?.script || "";
-  let tailwindConfig = completion?.tailwindConfig || "{}";
-
-  tailwindConfig = tailwindConfig.replace(/module\.exports\s*=\s*/, "");
+  const tailwindConfig = completion?.tailwindConfig || "{}";
 
   const additionalHeadContent = `
     <link rel="stylesheet" href="./style.css">

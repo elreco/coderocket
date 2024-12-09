@@ -11,7 +11,7 @@
       <File type="HTML">
         <Name>index.html</Name>
         <Instructions>
-          The HTML file must include:
+          Only include the specific component requested without adding `<!DOCTYPE>`, `<head>` or `html` tags. The HTML content must:
           - Semantic HTML5 structure and ARIA attributes for accessibility.
           - A responsive, visually balanced layout that adapts perfectly to different screen sizes (mobile-first approach).
           - Interactive components with realistic text and placeholder images (e.g., `https://www.tailwindai.dev/placeholder.svg`).
@@ -27,6 +27,7 @@
           - Subtle animations for entry, hover, and focus states.
           - Usage of Tailwind classes that are either part of the default Tailwind library or are explicitly defined in the `tailwind.config.js`.
           - Ensure no unused custom classes are included.
+          - Always use the `size-full` class on the container element.
         </Instructions>
       </File>
       <File type="CSS">
@@ -39,12 +40,10 @@
           @tailwind utilities;
           ```
           Add custom CSS for:
-          - Smooth transitions for hover, focus, and page entry animations.
           - Subtle box shadows and border effects for hierarchy and elevation.
           - Custom spacing, typography, and color harmonization.
-          - Fine-tuned responsive utilities for perfect alignment across screen sizes.
-          - All custom styles added must correspond to entries defined in `tailwind.config.js`.
           - Avoid defining unused or unrelated configurations.
+          - Don't create custom classes that already exist in the Tailwind library or can be configured in the `tailwind.config.js` file.
         </Instructions>
       </File>
       <File type="JavaScript">
@@ -64,13 +63,14 @@
         <Instructions>
           Configure Tailwind with:
           - Custom colors, animations, spacing, and typography utilities.
-          - `darkMode` enabled using the `class` strategy for seamless light/dark switching.
           - Only include custom configurations for classes that are used in `index.html` and `style.css`.
           - Ensure consistency between configurations and their usage in the generated files.
           - Fully formatted and readable code with proper indentation and comments.
+          - Usable with the Tailwind CSS CDN (no need to include content paths and plugins).
+          - Don't create custom classes that already exist in the Tailwind library.
           Example configuration:
           ```javascript
-          module.exports = {
+          tailwind.config = {
             theme: {
               extend: {
                 colors: {
@@ -89,8 +89,7 @@
                   },
                 },
               },
-            },
-            darkMode: 'class',
+            }
           };
           ```
         </Instructions>
@@ -98,9 +97,14 @@
       <File type="CDNLinks">
         <Name>libs.html</Name>
         <Instructions>
-          Include only the required Tailwind CDN links and plugins:
+          - This is where you include the plugins you need for the component.
+          - Tailwind CSS CDN links must not be included in the output.
+          - Include only the required plugins
+          - Only include the the script or link tags for the plugins you need.
+          Example:
           ```html
-          <script src="https://cdn.tailwindcss.com?plugins=forms,typography,aspect-ratio,line-clamp"></script>
+          <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.min.css">
+          <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
           ```
         </Instructions>
       </File>
