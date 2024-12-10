@@ -11,7 +11,7 @@ The output must:
 - Ensure responsiveness and functionality using Daisy UI's built-in utilities.
 - Avoid importing external libraries, adding scripts, or unused styles.
 - Component must take at least the full width and height of the screen.
-- If you need icons, use svg icons from heroicons.com.
+- If you need icons, use from fontawesome v6.7.1, don't use any other library.
 - If an image is provided by the user, try to match the image as closely as possible with the Daisy UI components.
 - If the user's instructions are not related to Tailwind CSS or Daisy UI, return an alert component with the text "This instruction is not related to Tailwind CSS or Daisy UI".
 
