@@ -88,7 +88,9 @@ export default function Hero() {
       router.push(`/components/${id}`);
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : "An error occurred";
+        error instanceof Error && error.cause === "paymentRequired"
+          ? "You have reached the limit of your free plan. Please upgrade to continue."
+          : "You must be logged in to create a component.";
       toast({
         variant: "destructive",
         title: "Error",
