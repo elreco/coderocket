@@ -16,3 +16,14 @@ export function getInitials(name: string) {
 
   return initials;
 }
+
+export const sanitizePrompt = (prompt: string): string => {
+  // Retire les balises HTML
+  return prompt.replace(/<[^>]*>/g, "");
+};
+
+export const isValidPrompt = (prompt: string): boolean => {
+  // Autorise uniquement les lettres, chiffres, espaces et certains caractères de ponctuation
+  const regex = /^[a-zA-Z0-9\s.,?!'-]+$/;
+  return regex.test(prompt);
+};

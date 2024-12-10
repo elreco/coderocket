@@ -1,7 +1,9 @@
 "use server";
-import { redirect } from "next/navigation";
 
 import { getSubscription } from "@/app/supabase-server";
+import { sanitizePrompt } from "@/lib/utils";
+import { isValidPrompt } from "@/lib/utils";
+import { maxPromptLength } from "@/utils/config";
 import { createClient } from "@/utils/supabase/server";
 
 export const fetchChatById = async (id: string) => {
@@ -115,7 +117,9 @@ export const createChat = async (prompt: string, formData: FormData) => {
   const user = userData.user;
 
   if (!user?.id) {
-    return redirect("/login?loginRequired=true");
+    throw new Error("You must be logged in to create a component.", {
+      cause: "notLoggedIn",
+    });
   }
 
   const subscription = await getSubscription();
@@ -127,15 +131,43 @@ export const createChat = async (prompt: string, formData: FormData) => {
   const is_private = isVisible === "false";
 
   if (!subscription && is_private) {
-    return redirect("/pricing?paymentRequired=true");
+    throw new Error(
+      "You have reached the limit of your free plan. Please upgrade to continue.",
+      {
+        cause: "paymentRequired",
+      },
+    );
   }
 
   if (!subscription && existingChats && existingChats?.length > 0) {
-    return redirect("/pricing?paymentRequired=true");
+    throw new Error(
+      "You have reached the limit of your free plan. Please upgrade to continue.",
+      {
+        cause: "paymentRequired",
+      },
+    );
   }
 
-  if (prompt.length > 1000) {
-    return redirect("/?promptTooLong=true");
+  // Nettoyage de la prompt
+  const sanitizedPrompt = sanitizePrompt(prompt);
+
+  // Validation de la prompt
+  if (!isValidPrompt(sanitizedPrompt)) {
+    throw new Error(
+      "Special characters and code are not allowed. Tailwind AI is meant to generate components from simple instructions.",
+      {
+        cause: "invalidPrompt",
+      },
+    );
+  }
+
+  if (sanitizedPrompt.length > maxPromptLength) {
+    throw new Error(
+      "Prompt is too long. Tailwind AI is meant to generate components from simple instructions.",
+      {
+        cause: "invalidPrompt",
+      },
+    );
   }
 
   let imageUrl = null;
@@ -146,7 +178,9 @@ export const createChat = async (prompt: string, formData: FormData) => {
       .from("images")
       .upload(`${Date.now()}-${user?.id}`, image);
     if (imageError) {
-      throw Error("Failed to upload image");
+      throw new Error("Failed to upload image", {
+        cause: "failedToUploadImage",
+      });
     }
 
     imageUrl = imageData?.path;
@@ -163,15 +197,19 @@ export const createChat = async (prompt: string, formData: FormData) => {
     ])
     .select()
     .single();
-  if (!data) return redirect("/?failedToCreateChat=true");
+  if (!data)
+    throw new Error("Failed to create chat", {
+      cause: "failedToCreateChat",
+    });
 
   await supabase.from("messages").insert({
     chat_id: data.id,
     role: "user",
-    content: prompt,
+    content: sanitizedPrompt,
     version: -1,
   });
-  return redirect(`/components/${data.id}`);
+
+  return data.id;
 };
 
 export const getChatsFromUser = async () => {

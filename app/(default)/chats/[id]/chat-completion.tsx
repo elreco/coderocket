@@ -89,7 +89,9 @@ export default function ChatCompletion({
     initialCompletion: defaultCompletion,
     onError: async (error) => {
       if (error.message === "payment-required") {
-        return router.push("/pricing?paymentRequired=true");
+        return router.push(
+          "/pricing?error=You have reached the limit of your free plan. Please upgrade to continue.",
+        );
       }
       if (error.message) {
         toast({

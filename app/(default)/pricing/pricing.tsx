@@ -35,31 +35,18 @@ export default function Pricing({ user, products, subscription }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
-  const paymentRequired = searchParams.get("paymentRequired");
-  const loginRequired = searchParams.get("loginRequired");
+  const error = searchParams.get("error");
 
   useEffect(() => {
-    if (paymentRequired === "true") {
+    if (error) {
       toast({
         variant: "destructive",
         title: "You must subscribe",
-        description:
-          "With a free account, you are limited to generating one component with four versions, and image use is not permitted. Upgrade to our premium plan for unlimited access to all features.",
+        description: error,
         duration: 5000,
       });
     }
-  }, [paymentRequired]);
-
-  useEffect(() => {
-    if (loginRequired === "true") {
-      toast({
-        variant: "destructive",
-        title: "You must login",
-        description: "You must be logged in to start generating components.",
-        duration: 5000,
-      });
-    }
-  }, [loginRequired]);
+  }, [error]);
 
   const [priceIdLoading, setPriceIdLoading] = useState<string>();
 

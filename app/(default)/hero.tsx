@@ -8,6 +8,7 @@ import {
   Terminal,
 } from "lucide-react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useRef, useState, useEffect } from "react";
 
 import { Container } from "@/components/container";
@@ -60,6 +61,7 @@ export default function Hero() {
   const [image, setImage] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     if (inputRef.current) {
@@ -82,7 +84,17 @@ export default function Hero() {
     }
     formData.append("isVisible", isVisible.toString());
     try {
-      await createChat(prompt, formData);
+      const id = await createChat(prompt, formData);
+      router.push(`/components/${id}`);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "An error occurred";
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: message,
+        duration: 5000,
+      });
     } finally {
       setLoading(false);
     }
@@ -107,8 +119,8 @@ export default function Hero() {
 
   const handleVisibility = async () => {
     setLoadingVisibility(true);
-    const { data } = await supabase.auth.getUser();
-    if (!data?.user?.id) {
+    const { data } = await supabase.auth.getSession();
+    if (!data?.session?.user?.id) {
       toast({
         variant: "destructive",
         title: "Premium account required",
@@ -123,7 +135,7 @@ export default function Hero() {
       .from("subscriptions")
       .select("*, prices(*, products(*))")
       .in("status", ["trialing", "active"])
-      .eq("user_id", data.user.id)
+      .eq("user_id", data.session.user.id)
       .maybeSingle();
 
     if (subscription) {
