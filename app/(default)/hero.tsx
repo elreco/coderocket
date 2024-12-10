@@ -86,15 +86,12 @@ export default function Hero() {
     try {
       const id = await createChat(prompt, formData);
       router.push(`/components/${id}`);
-    } catch (error) {
-      const message =
-        error instanceof Error && error.cause === "paymentRequired"
-          ? "You have reached the limit of your free plan. Please upgrade to continue."
-          : "You must be logged in to create a component.";
+    } catch {
       toast({
         variant: "destructive",
         title: "Error",
-        description: message,
+        description:
+          "You must be logged in and have a premium plan to create a component.",
         duration: 5000,
       });
     } finally {

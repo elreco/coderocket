@@ -117,9 +117,7 @@ export const createChat = async (prompt: string, formData: FormData) => {
   const user = userData.user;
 
   if (!user?.id) {
-    throw new Error("You must be logged in to create a component.", {
-      cause: "notLoggedIn",
-    });
+    throw new Error("You must be logged in to create a component.");
   }
 
   const subscription = await getSubscription();
@@ -133,18 +131,12 @@ export const createChat = async (prompt: string, formData: FormData) => {
   if (!subscription && is_private) {
     throw new Error(
       "You have reached the limit of your free plan. Please upgrade to continue.",
-      {
-        cause: "paymentRequired",
-      },
     );
   }
 
   if (!subscription && existingChats && existingChats?.length > 0) {
     throw new Error(
       "You have reached the limit of your free plan. Please upgrade to continue.",
-      {
-        cause: "paymentRequired",
-      },
     );
   }
 
@@ -155,18 +147,12 @@ export const createChat = async (prompt: string, formData: FormData) => {
   if (!isValidPrompt(sanitizedPrompt)) {
     throw new Error(
       "Special characters and code are not allowed. Tailwind AI is meant to generate components from simple instructions.",
-      {
-        cause: "invalidPrompt",
-      },
     );
   }
 
   if (sanitizedPrompt.length > maxPromptLength) {
     throw new Error(
       "Prompt is too long. Tailwind AI is meant to generate components from simple instructions.",
-      {
-        cause: "invalidPrompt",
-      },
     );
   }
 
@@ -178,9 +164,7 @@ export const createChat = async (prompt: string, formData: FormData) => {
       .from("images")
       .upload(`${Date.now()}-${user?.id}`, image);
     if (imageError) {
-      throw new Error("Failed to upload image", {
-        cause: "failedToUploadImage",
-      });
+      throw new Error("Failed to upload image");
     }
 
     imageUrl = imageData?.path;
@@ -197,10 +181,7 @@ export const createChat = async (prompt: string, formData: FormData) => {
     ])
     .select()
     .single();
-  if (!data)
-    throw new Error("Failed to create chat", {
-      cause: "failedToCreateChat",
-    });
+  if (!data) throw new Error("Failed to create chat");
 
   await supabase.from("messages").insert({
     chat_id: data.id,

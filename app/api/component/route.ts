@@ -36,7 +36,6 @@ export async function POST(req: Request) {
       imageUrl,
       selectedVersion,
     );
-    console.log(messages);
     const stream = streamText({
       messages,
       model: openAINewModel("gpt-4o-mini"),
@@ -55,7 +54,6 @@ export async function POST(req: Request) {
     return stream.toTextStreamResponse();
   } catch (error: unknown) {
     if (error instanceof Error) {
-      console.log("error", error);
       return new Response(error.message, {
         status: 500,
         headers: { "Content-Type": "application/json" },
