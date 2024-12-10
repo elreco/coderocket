@@ -65,7 +65,7 @@ export type Database = {
       messages: {
         Row: {
           chat_id: string;
-          content: Json;
+          content: string;
           created_at: string;
           id: number;
           role: string;
@@ -74,7 +74,7 @@ export type Database = {
         };
         Insert: {
           chat_id: string;
-          content: Json;
+          content: string;
           created_at?: string;
           id?: number;
           role: string;

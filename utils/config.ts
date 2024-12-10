@@ -6,7 +6,7 @@ export const storageUrl =
 export const screenshotApiUrl =
   "https://screenshot-api-elreco.vercel.app/api?url=";
 
-export const maxPromptLength = 1000;
+export const maxPromptLength = 150;
 
 export const openAINewModel = createOpenAI({
   name: "gpt-4o-mini",

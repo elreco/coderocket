@@ -4,7 +4,7 @@ import "styles/main.css";
 
 export default function RootLayout({ children }: PropsWithChildren) {
   return (
-    <html className="dark size-full">
+    <html className="size-full" data-theme="cupcake">
       <head>
         <title>Tailwind AI Content</title>
       </head>

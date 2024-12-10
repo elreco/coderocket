@@ -1,6 +1,6 @@
 export const maxDuration = 300;
 
-import { CoreMessage, streamObject } from "ai";
+import { CoreMessage, streamText } from "ai";
 
 import {
   fetchChatById,
@@ -14,15 +14,13 @@ import { maxPromptLength, openAINewModel, storageUrl } from "@/utils/config";
 import { getURL } from "@/utils/helpers";
 import { createClient } from "@/utils/supabase/server";
 
-import { ComponentType, schema } from "./schema";
-
 export async function POST(req: Request) {
   try {
     const headers = req.headers;
     const { id, selectedVersion } = JSON.parse(
       headers.get("X-Custom-Header") as string,
     ) as { id: string; selectedVersion: number };
-    const prompt = await req.json();
+    const { prompt }: { prompt: string } = await req.json();
     if (!prompt) throw new Error("No prompt");
 
     const { messagesFromDatabase, imageUrl, contentMd } = await validateRequest(
@@ -36,19 +34,17 @@ export async function POST(req: Request) {
       imageUrl,
       selectedVersion,
     );
-
-    const stream = streamObject({
+    console.log(messages);
+    const stream = streamText({
       messages,
       model: openAINewModel("gpt-4o-mini"),
       system: contentMd,
+      maxSteps: 5,
+      experimental_continueSteps: true,
       temperature: 0.5,
-      schema,
-      onFinish: async (data) => {
+      onFinish: async ({ text }) => {
         try {
-          if (data.error) {
-            throw new Error(data.error.toString());
-          }
-          await updateDataAfterCompletion(id, data.object, prompt);
+          await updateDataAfterCompletion(id, text, prompt);
         } catch (e) {
           console.error(e);
         }
@@ -57,6 +53,7 @@ export async function POST(req: Request) {
     return stream.toTextStreamResponse();
   } catch (error: unknown) {
     if (error instanceof Error) {
+      console.log("error", error);
       return new Response(error.message, {
         status: 500,
         headers: { "Content-Type": "application/json" },
@@ -86,14 +83,10 @@ const buildMessagesToOpenAi = async (
 
   // Map messages to the format required by OpenAI
   const messagesToOpenAI = limitedMessages.map((m) => {
-    if (m.role === "assistant") {
-      const content = m.content as ComponentType;
-      return {
-        role: m.role,
-        content: createContentArray(content),
-      };
-    }
-    return { role: m.role, content: m.content };
+    return {
+      role: m.role as "user" | "assistant" | "tool" | "system",
+      content: m.content,
+    };
   }) as CoreMessage[];
 
   // Add the prompt and optional imageUrl as the final user message
@@ -101,19 +94,25 @@ const buildMessagesToOpenAi = async (
     messagesToOpenAI.push({
       role: "user",
       content: [
-        { type: "text", text: prompt },
-        { type: "image", image: new URL(`${storageUrl}/${imageUrl}`) },
+        {
+          type: "text",
+          text: prompt,
+        },
+        {
+          type: "image",
+          image: new URL(`${storageUrl}/${imageUrl}`),
+        },
       ],
     });
-  } else {
+  } else if (messagesToOpenAI.length > 1) {
     messagesToOpenAI.push({
       role: "user",
-      content: [{ type: "text", text: prompt }],
+      content: prompt,
     });
   }
 
   // Return the final list of messages
-  return messagesToOpenAI as CoreMessage[];
+  return messagesToOpenAI;
 };
 
 const validateRequest = async (id: string, prompt: string) => {
@@ -169,7 +168,7 @@ const validateRequest = async (id: string, prompt: string) => {
   // Fetch HTML content
   const { data: blobContent, error } = await supabase.storage
     .from("featured")
-    .download("html-gen-new-v0.txt");
+    .download("html-gen-daisy-ui.txt");
   if (error) throw new Error("Could not get AI Model file. Please try again");
   const contentMd = await blobContent.text();
 
@@ -180,27 +179,9 @@ const validateRequest = async (id: string, prompt: string) => {
   };
 };
 
-const createContentArray = (content: ComponentType) => {
-  let contentText = "";
-  const contentMap = {
-    index: "index.html",
-    cssFile: "style.css",
-    script: "script.js",
-    tailwindConfig: "tailwind.config.js",
-    libs: "libs.html",
-  };
-
-  for (const [key, fileName] of Object.entries(contentMap)) {
-    if (content[key as keyof ComponentType]) {
-      contentText += `${fileName}: ${content[key as keyof ComponentType]}\n`;
-    }
-  }
-  return contentText;
-};
-
 const updateDataAfterCompletion = async (
   chatId: string,
-  completion: ComponentType | undefined,
+  text: string | undefined,
   prompt: string,
 ) => {
   const supabase = await createClient();
@@ -209,7 +190,7 @@ const updateDataAfterCompletion = async (
   if (!lastUserMessage) return console.error("Could not get chat messages");
   const newMessages = [];
 
-  if (!completion) return console.error("No completion");
+  if (!text) return console.error("No completion");
 
   const version = lastUserMessage.version + 1;
 
@@ -233,7 +214,7 @@ const updateDataAfterCompletion = async (
     chat_id: chatId,
     screenshot: null,
     version,
-    content: completion,
+    content: text,
     role: "assistant",
   });
 

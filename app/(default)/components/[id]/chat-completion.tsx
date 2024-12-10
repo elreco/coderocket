@@ -1,13 +1,12 @@
 "use client";
 
-import { experimental_useObject as useObject } from "ai/react";
+import { useCompletion } from "ai/react";
 import { LoaderCircle } from "lucide-react";
 import { Code, Share, Tv, Lock, Unlock } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useCopyToClipboard } from "usehooks-ts";
 
-import { schema, ComponentType } from "@/app/api/component/schema";
 import { Container } from "@/components/container";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -83,18 +82,17 @@ export default function ChatCompletion({
     };
   });
 
-  const { object, submit, isLoading, stop } = useObject({
+  const { completion, isLoading, stop, complete } = useCompletion({
     api: "/api/component",
-    schema,
     headers: {
       "X-Custom-Header": JSON.stringify({
         id: fetchedChat.id,
         selectedVersion,
       }),
     },
-    initialValue: lastAssistantMessage?.content,
+    streamProtocol: "text",
+    initialCompletion: lastAssistantMessage?.content,
     onError: async (error: Error) => {
-      console.error("error", error.cause);
       if (error.message === "payment-required") {
         return router.push("/pricing?paymentRequired=true");
       }
@@ -111,13 +109,13 @@ export default function ChatCompletion({
     onFinish: () => refreshChatData(),
   });
 
-  const [activeObject, setActiveObject] = useState(object);
+  const [activeCompletion, setActiveCompletion] = useState(completion);
 
   useEffect(() => {
-    if (object) {
-      setActiveObject(object);
+    if (completion) {
+      setActiveCompletion(completion);
     }
-  }, [object]);
+  }, [completion]);
 
   useEffect(() => {
     if (
@@ -126,14 +124,14 @@ export default function ChatCompletion({
       messages.length === 1 &&
       lastUserMessage.content
     ) {
-      submit(lastUserMessage.content);
+      complete(lastUserMessage.content);
     }
   }, []);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmitToAI = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setCanvas(false);
-    submit(input);
+    complete(input);
   };
 
   const handleVersionSelect = (version: number) => {
@@ -150,8 +148,8 @@ export default function ChatCompletion({
     const selectedAssistantMessage = selectedMessages.find(
       (m) => m.role === "assistant",
     );
-    if (selectedAssistantMessage) {
-      setActiveObject(selectedAssistantMessage.content);
+    if (selectedAssistantMessage?.content) {
+      setActiveCompletion(selectedAssistantMessage.content);
     }
   };
 
@@ -339,14 +337,14 @@ export default function ChatCompletion({
           </div>
           <div className="m-0 flex h-full flex-1 flex-col">
             <CodePreview
-              completion={activeObject as ComponentType | null}
+              completion={activeCompletion}
               isCanvas={isCanvas}
               isLoading={isLoading}
             />
             <div className="flex w-full flex-col items-center justify-between sm:flex-row">
               <form
                 className="flex w-full items-center"
-                onSubmit={handleSubmit}
+                onSubmit={handleSubmitToAI}
               >
                 {authorized && (
                   <div className="my-2 flex w-full space-x-4 rounded-md bg-gray-900 p-2">

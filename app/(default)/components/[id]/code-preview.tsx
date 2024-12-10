@@ -1,34 +1,33 @@
-import { css } from "@codemirror/lang-css";
 import { html } from "@codemirror/lang-html";
-import { javascript } from "@codemirror/lang-javascript";
 import { draculaInit } from "@uiw/codemirror-theme-dracula";
 import CodeMirror, { EditorView } from "@uiw/react-codemirror";
 import clsx from "clsx";
 import saveAs from "file-saver";
 import JSZip from "jszip";
 import { Clipboard, Download } from "lucide-react";
+import { useParams } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import { useCopyToClipboard } from "usehooks-ts";
 
-import { ComponentType } from "@/app/api/component/schema";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
-import { downloadBuilder, iframeBuilder } from "@/utils/iframe-builder";
+import { iframeBuilder } from "@/utils/iframe-builder";
 
 export default function CodePreview({
   completion,
   isCanvas,
   isLoading,
 }: {
-  completion: ComponentType | null;
+  completion: string;
   isCanvas: boolean;
   isLoading: boolean;
 }) {
   const [, copy] = useCopyToClipboard();
   const [iframeContent, setIframeContent] = useState("");
   const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
-  const [activeTab, setActiveTab] = useState("html");
+  const [activeTab, setActiveTab] = useState("component");
+  const { id } = useParams();
 
   useEffect(() => {
     if (debounceTimeout.current) {
@@ -36,8 +35,8 @@ export default function CodePreview({
     }
 
     debounceTimeout.current = setTimeout(() => {
-      if (completion?.index) {
-        const content = iframeBuilder(completion);
+      if (completion) {
+        const content = iframeBuilder(completion, id?.toString() || "");
         setIframeContent(content);
       } else {
         setIframeContent("");
@@ -46,17 +45,13 @@ export default function CodePreview({
   }, [completion]);
 
   const downloadCode = async () => {
-    const htmlContent = completion?.index || "";
+    const htmlContent = completion || "";
 
     if (!htmlContent) return;
     const zip = new JSZip();
-    const iframeContent = downloadBuilder(completion);
-    zip.file("index.html", iframeContent);
-    zip.file("tailwind.config.js", completion?.tailwindConfig || "{}");
-    zip.file("style.css", completion?.cssFile || "");
-    if (completion?.script) {
-      zip.file("script.js", completion?.script || "");
-    }
+    const iframeContent = iframeBuilder(completion, id?.toString() || "");
+    zip.file("component.html", completion);
+    zip.file("page.html", iframeContent);
 
     zip.generateAsync({ type: "blob" }).then(function (content) {
       saveAs(content, "tailwindai-dev.zip");
@@ -79,34 +74,20 @@ export default function CodePreview({
 
   const getCodeContent = () => {
     switch (activeTab) {
-      case "html":
+      case "component":
         return {
-          value: completion?.index,
+          value: completion,
           lang: "html",
           extensions: [html()],
         };
-      case "config":
+      case "page":
         return {
-          value: completion?.tailwindConfig,
-          lang: "javascript",
-          extensions: [javascript()],
-        };
-      case "css":
-        return { value: completion?.cssFile, lang: "css", extensions: [css()] };
-      case "js":
-        return {
-          value: completion?.script,
-          lang: "javascript",
-          extensions: [javascript()],
-        };
-      case "libs":
-        return {
-          value: completion?.libs,
+          value: iframeBuilder(completion, id?.toString() || ""),
           lang: "html",
           extensions: [html()],
         };
       default:
-        return { value: "", lang: "html", extensions: [html()] };
+        return { value: completion, lang: "html", extensions: [html()] };
     }
   };
 
@@ -136,21 +117,15 @@ export default function CodePreview({
       >
         <div className="relative flex size-full flex-col rounded-none border-none">
           <Tabs
-            defaultValue="html"
+            defaultValue="component"
             className="relative flex flex-1 flex-col items-start justify-start"
             onValueChange={setActiveTab}
           >
             <TabsList className="flex w-full items-start justify-start rounded-none border-none">
-              <TabsTrigger value="html">index.html</TabsTrigger>
-              <TabsTrigger value="config">tailwind.config.js</TabsTrigger>
-              <TabsTrigger value="css">style.css</TabsTrigger>
-              {completion?.script && (
-                <TabsTrigger value="js">script.js</TabsTrigger>
-              )}
-              {completion?.libs && (
-                <TabsTrigger value="libs">libs.html</TabsTrigger>
-              )}
+              <TabsTrigger value="component">component.html</TabsTrigger>
+              <TabsTrigger value="page">page.html</TabsTrigger>
             </TabsList>
+
             <TabsContent
               value={activeTab}
               className="m-0 flex h-0 w-full grow transition-all duration-300 ease-in-out"
