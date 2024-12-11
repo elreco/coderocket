@@ -27,7 +27,7 @@ export function NavUser({
 }: {
   user: Tables<"users"> & { email: string | null };
 }) {
-  const { isMobile } = useSidebar();
+  const { isMobile, setOpenMobile } = useSidebar();
 
   async function handleLogout() {
     await logout();
@@ -87,13 +87,13 @@ export function NavUser({
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem asChild className="cursor-pointer">
-                <Link href="/account">
+                <Link href="/account" onClick={() => setOpenMobile(false)}>
                   <BadgeCheck />
                   My Account
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild className="cursor-pointer">
-                <Link href="/pricing">
+                <Link href="/pricing" onClick={() => setOpenMobile(false)}>
                   <CreditCard />
                   Subscribe
                 </Link>

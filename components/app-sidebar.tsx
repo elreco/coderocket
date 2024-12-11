@@ -23,6 +23,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { Tables } from "@/types_db";
 
@@ -84,13 +85,19 @@ export function AppSidebar({
     isActive: pathname === item.url,
   }));
 
+  const { setOpenMobile } = useSidebar();
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <Link href="/" className="group/link">
+              <Link
+                href="/"
+                className="group/link"
+                onClick={() => setOpenMobile(false)}
+              >
                 <Logo
                   className="group-hover/link:hidden"
                   src="/logo-alternate.png"
