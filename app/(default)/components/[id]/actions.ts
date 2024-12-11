@@ -98,3 +98,33 @@ export const deleteVersionByMessageId = async (
     }
   }
 };
+
+export const updateTheme = async (
+  chatId: string,
+  theme: string,
+  version: number,
+) => {
+  const supabase = await createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  const user = userData?.user;
+
+  if (!user) throw new Error("Could not get user");
+
+  const { error: chatError } = await supabase
+    .from("chats")
+    .select("id")
+    .eq("id", chatId)
+    .eq("user_id", user.id)
+    .single();
+
+  if (chatError) {
+    throw new Error(`Failed to fetch chat: ${chatError.message}`);
+  }
+
+  await supabase
+    .from("messages")
+    .update({ theme })
+    .eq("chat_id", chatId)
+    .eq("version", version)
+    .eq("role", "assistant");
+};

@@ -18,10 +18,12 @@ export default function CodePreview({
   completion,
   isCanvas,
   isLoading,
+  theme,
 }: {
   completion: string;
   isCanvas: boolean;
   isLoading: boolean;
+  theme: string;
 }) {
   const [, copy] = useCopyToClipboard();
   const [iframeContent, setIframeContent] = useState("");
@@ -36,20 +38,24 @@ export default function CodePreview({
 
     debounceTimeout.current = setTimeout(() => {
       if (completion) {
-        const content = iframeBuilder(completion, id?.toString() || "");
+        const content = iframeBuilder(completion, id?.toString() || "", theme);
         setIframeContent(content);
       } else {
         setIframeContent("");
       }
     }, 300);
-  }, [completion]);
+  }, [completion, theme]);
 
   const downloadCode = async () => {
     const htmlContent = completion || "";
 
     if (!htmlContent) return;
     const zip = new JSZip();
-    const iframeContent = iframeBuilder(completion, id?.toString() || "");
+    const iframeContent = iframeBuilder(
+      completion,
+      id?.toString() || "",
+      theme,
+    );
     zip.file("component.html", completion);
     zip.file("page.html", iframeContent);
 
@@ -82,7 +88,7 @@ export default function CodePreview({
         };
       case "page":
         return {
-          value: iframeBuilder(completion, id?.toString() || ""),
+          value: iframeBuilder(completion, id?.toString() || "", theme),
           lang: "html",
           extensions: [html()],
         };

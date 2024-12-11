@@ -1,4 +1,4 @@
-export function iframeBuilder(completion: string, id: string) {
+export function iframeBuilder(completion: string, id: string, theme: string) {
   if (!completion) {
     return "";
   }
@@ -10,7 +10,7 @@ export function iframeBuilder(completion: string, id: string) {
 https://tailwindai.dev/components/${id}
 *********************************************************************
 -->
-<html data-theme="cupcake">
+<html data-theme="${theme}">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />

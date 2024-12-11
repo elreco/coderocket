@@ -1,7 +1,7 @@
 "use client";
 
 import { useCompletion } from "ai/react";
-import { LoaderCircle } from "lucide-react";
+import { LoaderCircle, Paintbrush } from "lucide-react";
 import { Code, Share, Tv, Lock, Unlock } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -10,6 +10,14 @@ import { useCopyToClipboard } from "usehooks-ts";
 import { Container } from "@/components/container";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import {
   Tooltip,
@@ -19,14 +27,18 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { getInitials } from "@/lib/utils";
 import { Tables } from "@/types_db";
-import { maxPromptLength } from "@/utils/config";
+import { defaultTheme, maxPromptLength } from "@/utils/config";
 import { getRelativeDate } from "@/utils/date";
 import { capitalizeFirstLetter } from "@/utils/helpers";
 import { createClient } from "@/utils/supabase/client";
 
 import { fetchMessagesByChatId } from "../actions";
 
-import { changeVisibilityByChatId, deleteVersionByMessageId } from "./actions";
+import {
+  changeVisibilityByChatId,
+  deleteVersionByMessageId,
+  updateTheme,
+} from "./actions";
 import ChatSidebar from "./chat-sidebar";
 import ChatSidebarMobile from "./chat-sidebar-mobile";
 import CodePreview from "./code-preview";
@@ -55,6 +67,9 @@ export default function ChatCompletion({
   const { toast } = useToast();
   const router = useRouter();
   const pathname = usePathname();
+  const [currentTheme, setCurrentTheme] = useState(
+    lastAssistantMessage?.theme || defaultTheme,
+  );
 
   const [messages, setMessages] = useState(fetchedMessages);
 
@@ -129,6 +144,11 @@ export default function ChatCompletion({
       complete(lastUserMessage.content);
     }
   }, []);
+
+  const setTheme = async (theme: string) => {
+    await updateTheme(fetchedChat.id, theme, selectedVersion);
+    setCurrentTheme(theme);
+  };
 
   const handleSubmitToAI = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -315,6 +335,78 @@ export default function ChatCompletion({
                   <p>{isCanvas ? "Display code" : "Hide code"}</p>
                 </TooltipContent>
               </Tooltip>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="secondary" className="capitalize">
+                    <Paintbrush className="w-5" />
+                    {currentTheme}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuLabel>Change Theme</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    className="cursor-pointer"
+                    onClick={() => setTheme("cupcake")}
+                  >
+                    Cupcake
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="cursor-pointer"
+                    onClick={() => setTheme("dark")}
+                  >
+                    Dark
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="cursor-pointer capitalize"
+                    onClick={() => setTheme("light")}
+                  >
+                    Light
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="cursor-pointer capitalize"
+                    onClick={() => setTheme("retro")}
+                  >
+                    Retro
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="cursor-pointer capitalize"
+                    onClick={() => setTheme("sunset")}
+                  >
+                    Sunset
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="cursor-pointer capitalize"
+                    onClick={() => setTheme("night")}
+                  >
+                    Night
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="cursor-pointer capitalize"
+                    onClick={() => setTheme("winter")}
+                  >
+                    Winter
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="cursor-pointer capitalize"
+                    onClick={() => setTheme("cyberpunk")}
+                  >
+                    Cyberpunk
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="cursor-pointer capitalize"
+                    onClick={() => setTheme("autumn")}
+                  >
+                    Autumn
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="cursor-pointer capitalize"
+                    onClick={() => setTheme("dracula")}
+                  >
+                    Dracula
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <ChatSidebarMobile
                 authorized={authorized}
                 handleDeleteVersion={handleDeleteVersion}
@@ -342,6 +434,7 @@ export default function ChatCompletion({
               completion={activeCompletion}
               isCanvas={isCanvas}
               isLoading={isLoading}
+              theme={currentTheme}
             />
             <div className="flex w-full flex-col items-center justify-between sm:flex-row">
               <form

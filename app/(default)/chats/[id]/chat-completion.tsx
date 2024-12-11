@@ -9,6 +9,7 @@ import {
   Tv,
   Lock,
   Unlock,
+  Paintbrush,
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -18,6 +19,12 @@ import { Container } from "@/components/container";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import {
   Tooltip,
@@ -287,6 +294,16 @@ export default function ChatCompletion({
                   <p>{isCanvas ? "Display code" : "Hide code"}</p>
                 </TooltipContent>
               </Tooltip>
+              <DropdownMenu>
+                <DropdownMenuTrigger>
+                  <Button variant="outline">
+                    <Paintbrush className="w-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem>Change Theme</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <ChatSidebarMobile
                 authorized={authorized}
                 fetchedChat={fetchedChat}

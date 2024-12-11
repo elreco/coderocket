@@ -9,6 +9,8 @@ export const screenshotApiUrl =
 
 export const maxPromptLength = 150;
 
+export const defaultTheme = "cupcake";
+
 export const openAINewModel = createOpenAI({
   name: "gpt-4o-mini",
   apiKey: process.env.OPEN_AI || "",
