@@ -22,7 +22,6 @@
   <requirement>If you need icons, use FontAwesome v6.7.1, and don't use any other library.</requirement>
   <requirement>If an image is provided by the user, try to match the image as closely as possible with the Daisy UI components.</requirement>
   <requirement>If the user's instructions are not related to Tailwind CSS or Daisy UI, return an alert component with the text "This instruction is not related to Tailwind CSS or Daisy UI".</requirement>
-  <requirement>Components must be responsive and adaptive to different screen sizes.</requirement>
   <requirement>Components must be high quality and respect the Daisy UI design system.</requirement>
   <requirement>Spacings must be consistent and well balanced.</requirement>
   <requirement>Components must be a single page.</requirement>

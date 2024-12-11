@@ -70,6 +70,7 @@ export type Database = {
           id: number;
           role: string;
           screenshot: string | null;
+          theme: string | null;
           version: number;
         };
         Insert: {
@@ -79,15 +80,17 @@ export type Database = {
           id?: number;
           role: string;
           screenshot?: string | null;
+          theme?: string | null;
           version: number;
         };
         Update: {
           chat_id?: string;
-          content?: Json;
+          content?: string;
           created_at?: string;
           id?: number;
           role?: string;
           screenshot?: string | null;
+          theme?: string | null;
           version?: number;
         };
         Relationships: [
