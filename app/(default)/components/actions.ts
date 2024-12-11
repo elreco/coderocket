@@ -117,7 +117,12 @@ export const createChat = async (prompt: string, formData: FormData) => {
   const user = userData.user;
 
   if (!user?.id) {
-    throw new Error("You must be logged in to create a component.");
+    return {
+      error: {
+        title: "You must be logged in to create a component",
+        description: "Please login or create an account to continue.",
+      },
+    };
   }
 
   const subscription = await getSubscription();
@@ -129,15 +134,21 @@ export const createChat = async (prompt: string, formData: FormData) => {
   const is_private = isVisible === "false";
 
   if (!subscription && is_private) {
-    throw new Error(
-      "You have reached the limit of your free plan. Please upgrade to continue.",
-    );
+    return {
+      error: {
+        title: "You have reached the limit of your free plan",
+        description: "Please upgrade to continue.",
+      },
+    };
   }
 
   if (!subscription && existingChats && existingChats?.length > 0) {
-    throw new Error(
-      "You have reached the limit of your free plan. Please upgrade to continue.",
-    );
+    return {
+      error: {
+        title: "You have reached the limit of your free plan",
+        description: "Please upgrade to continue.",
+      },
+    };
   }
 
   // Nettoyage de la prompt
@@ -145,15 +156,23 @@ export const createChat = async (prompt: string, formData: FormData) => {
 
   // Validation de la prompt
   if (!isValidPrompt(sanitizedPrompt)) {
-    throw new Error(
-      "Special characters and code are not allowed. Tailwind AI is meant to generate components from simple instructions.",
-    );
+    return {
+      error: {
+        title: "Special characters and code are not allowed",
+        description:
+          "Tailwind AI is meant to generate components from simple instructions.",
+      },
+    };
   }
 
   if (sanitizedPrompt.length > maxPromptLength) {
-    throw new Error(
-      "Prompt is too long. Tailwind AI is meant to generate components from simple instructions.",
-    );
+    return {
+      error: {
+        title: "Prompt is too long",
+        description:
+          "Tailwind AI is meant to generate components from simple instructions.",
+      },
+    };
   }
 
   let imageUrl = null;
@@ -164,7 +183,12 @@ export const createChat = async (prompt: string, formData: FormData) => {
       .from("images")
       .upload(`${Date.now()}-${user?.id}`, image);
     if (imageError) {
-      throw new Error("Failed to upload image");
+      return {
+        error: {
+          title: "Failed to upload image",
+          description: "Please try again later.",
+        },
+      };
     }
 
     imageUrl = imageData?.path;
@@ -181,7 +205,14 @@ export const createChat = async (prompt: string, formData: FormData) => {
     ])
     .select()
     .single();
-  if (!data) throw new Error("Failed to create chat");
+  if (!data) {
+    return {
+      error: {
+        title: "Failed to create chat",
+        description: "Please try again later.",
+      },
+    };
+  }
 
   await supabase.from("messages").insert({
     chat_id: data.id,
@@ -190,7 +221,7 @@ export const createChat = async (prompt: string, formData: FormData) => {
     version: -1,
   });
 
-  return data.id;
+  return { id: data.id };
 };
 
 export const getChatsFromUser = async () => {

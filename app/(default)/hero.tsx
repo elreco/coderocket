@@ -84,7 +84,17 @@ export default function Hero() {
     }
     formData.append("isVisible", isVisible.toString());
     try {
-      const id = await createChat(prompt, formData);
+      const { id, error } = await createChat(prompt, formData);
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: error.title,
+          description: error.description,
+          duration: 5000,
+        });
+        return;
+      }
+      console.log(id);
       router.push(`/components/${id}`);
     } catch {
       toast({
