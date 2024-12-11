@@ -68,7 +68,6 @@ export default function Video() {
             className="aspect-video rounded-lg border"
             controls
             preload="none"
-            autoPlay
             muted
             loop
           >
