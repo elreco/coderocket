@@ -4,6 +4,7 @@ import { CoreMessage, streamText } from "ai";
 
 import {
   fetchChatById,
+  fetchLastAssistantMessageByChatId,
   fetchLastUserMessageByChatId,
   fetchMessagesByChatId,
 } from "@/app/(default)/components/actions";
@@ -12,7 +13,12 @@ import { sanitizePrompt } from "@/lib/utils";
 import { isValidPrompt } from "@/lib/utils";
 import { Tables } from "@/types_db";
 import { captureScreenshot } from "@/utils/capture-screenshot";
-import { anthropicModel, maxPromptLength, storageUrl } from "@/utils/config";
+import {
+  anthropicModel,
+  defaultTheme,
+  maxPromptLength,
+  storageUrl,
+} from "@/utils/config";
 import { getURL } from "@/utils/helpers";
 import { createClient } from "@/utils/supabase/server";
 
@@ -225,12 +231,14 @@ const updateDataAfterCompletion = async (
       role: "user",
     });
   }
+  const lastAssistantMessage = await fetchLastAssistantMessageByChatId(chatId);
 
   newMessages.push({
     chat_id: chatId,
     screenshot: null,
     version,
     content: text,
+    theme: lastAssistantMessage?.theme || defaultTheme,
     role: "assistant",
   });
 

@@ -26,6 +26,7 @@
   <requirement>Spacings must be consistent and well balanced.</requirement>
   <requirement>Components must be a single page.</requirement>
   <requirement>You can also use Dicebear API if you need to generate avatars.</requirement>
+  <requirement>Do not delete the previous generations unless the user explicitly requests it.</requirement>
 </requirements>
 
 <examples>

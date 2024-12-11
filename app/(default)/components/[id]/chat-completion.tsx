@@ -335,78 +335,80 @@ export default function ChatCompletion({
                   <p>{isCanvas ? "Display code" : "Hide code"}</p>
                 </TooltipContent>
               </Tooltip>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="secondary" className="capitalize">
-                    <Paintbrush className="w-5" />
-                    {currentTheme}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuLabel>Change Theme</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    className="cursor-pointer"
-                    onClick={() => setTheme("cupcake")}
-                  >
-                    Cupcake
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="cursor-pointer"
-                    onClick={() => setTheme("dark")}
-                  >
-                    Dark
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="cursor-pointer capitalize"
-                    onClick={() => setTheme("light")}
-                  >
-                    Light
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="cursor-pointer capitalize"
-                    onClick={() => setTheme("retro")}
-                  >
-                    Retro
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="cursor-pointer capitalize"
-                    onClick={() => setTheme("sunset")}
-                  >
-                    Sunset
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="cursor-pointer capitalize"
-                    onClick={() => setTheme("night")}
-                  >
-                    Night
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="cursor-pointer capitalize"
-                    onClick={() => setTheme("winter")}
-                  >
-                    Winter
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="cursor-pointer capitalize"
-                    onClick={() => setTheme("cyberpunk")}
-                  >
-                    Cyberpunk
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="cursor-pointer capitalize"
-                    onClick={() => setTheme("autumn")}
-                  >
-                    Autumn
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="cursor-pointer capitalize"
-                    onClick={() => setTheme("dracula")}
-                  >
-                    Dracula
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              {authorized && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="secondary" className="capitalize">
+                      <Paintbrush className="w-5" />
+                      {currentTheme}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    <DropdownMenuLabel>Change Theme</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      className="cursor-pointer"
+                      onClick={() => setTheme("cupcake")}
+                    >
+                      Cupcake
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="cursor-pointer"
+                      onClick={() => setTheme("dark")}
+                    >
+                      Dark
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="cursor-pointer capitalize"
+                      onClick={() => setTheme("light")}
+                    >
+                      Light
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="cursor-pointer capitalize"
+                      onClick={() => setTheme("retro")}
+                    >
+                      Retro
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="cursor-pointer capitalize"
+                      onClick={() => setTheme("sunset")}
+                    >
+                      Sunset
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="cursor-pointer capitalize"
+                      onClick={() => setTheme("night")}
+                    >
+                      Night
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="cursor-pointer capitalize"
+                      onClick={() => setTheme("winter")}
+                    >
+                      Winter
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="cursor-pointer capitalize"
+                      onClick={() => setTheme("cyberpunk")}
+                    >
+                      Cyberpunk
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="cursor-pointer capitalize"
+                      onClick={() => setTheme("autumn")}
+                    >
+                      Autumn
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="cursor-pointer capitalize"
+                      onClick={() => setTheme("dracula")}
+                    >
+                      Dracula
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
               <ChatSidebarMobile
                 authorized={authorized}
                 handleDeleteVersion={handleDeleteVersion}
