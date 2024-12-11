@@ -12,7 +12,7 @@ import { sanitizePrompt } from "@/lib/utils";
 import { isValidPrompt } from "@/lib/utils";
 import { Tables } from "@/types_db";
 import { captureScreenshot } from "@/utils/capture-screenshot";
-import { maxPromptLength, openAINewModel, storageUrl } from "@/utils/config";
+import { anthropicModel, maxPromptLength, storageUrl } from "@/utils/config";
 import { getURL } from "@/utils/helpers";
 import { createClient } from "@/utils/supabase/server";
 
@@ -30,15 +30,21 @@ export async function POST(req: Request) {
       prompt,
     );
     // Build messages for OpenAI
-    const messages = await buildMessagesToOpenAi(
-      messagesFromDatabase,
-      prompt,
-      imageUrl,
-      selectedVersion,
-    );
+    const { messagesToOpenAI: messages, isFirstMessageWithImage } =
+      await buildMessagesToOpenAi(
+        messagesFromDatabase,
+        prompt,
+        imageUrl,
+        selectedVersion,
+      );
+
     const stream = streamText({
       messages,
-      model: openAINewModel("gpt-4o-mini"),
+      model: anthropicModel(
+        isFirstMessageWithImage
+          ? "claude-3-5-sonnet-latest"
+          : "claude-3-5-haiku-latest",
+      ),
       system: contentMd,
       maxSteps: 5,
       experimental_continueSteps: true,
@@ -72,6 +78,7 @@ const buildMessagesToOpenAi = async (
   imageUrl?: string | null | undefined,
   selectedVersion?: number,
 ) => {
+  let isFirstMessageWithImage = false;
   // Filter messages based on selectedVersion if provided
   const filteredMessages =
     selectedVersion !== undefined
@@ -90,7 +97,8 @@ const buildMessagesToOpenAi = async (
   }) as CoreMessage[];
 
   // Add the prompt and optional imageUrl as the final user message
-  if (imageUrl) {
+  if (imageUrl && messages.length === 1) {
+    isFirstMessageWithImage = true;
     messagesToOpenAI.push({
       role: "user",
       content: [
@@ -112,7 +120,7 @@ const buildMessagesToOpenAi = async (
   }
 
   // Return the final list of messages
-  return messagesToOpenAI;
+  return { messagesToOpenAI, isFirstMessageWithImage };
 };
 
 const validateRequest = async (id: string, prompt: string) => {
@@ -176,7 +184,7 @@ const validateRequest = async (id: string, prompt: string) => {
   // Fetch HTML content
   const { data: blobContent, error } = await supabase.storage
     .from("featured")
-    .download("html-gen-daisy-ui.txt");
+    .download("html-gen-daisy-ui-v2.txt");
   if (error) throw new Error("Could not get AI Model file. Please try again");
   const contentMd = await blobContent.text();
 

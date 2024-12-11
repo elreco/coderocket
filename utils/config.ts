@@ -1,3 +1,4 @@
+import { createAnthropic } from "@ai-sdk/anthropic";
 import { createOpenAI } from "@ai-sdk/openai";
 
 export const storageUrl =
@@ -12,6 +13,11 @@ export const openAINewModel = createOpenAI({
   name: "gpt-4o-mini",
   apiKey: process.env.OPEN_AI || "",
   compatibility: "strict",
+});
+
+export const anthropicModel = createAnthropic({
+  apiKey:
+    "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",
 });
 
 export const openAIModel = "gpt-4o-mini";
