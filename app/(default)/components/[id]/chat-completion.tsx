@@ -439,6 +439,7 @@ export default function ChatCompletion({
               isCanvas={isCanvas}
               isLoading={isLoading}
               theme={currentTheme}
+              selectedVersion={selectedVersion}
             />
             <div className="flex w-full flex-col items-center justify-between sm:flex-row">
               <form

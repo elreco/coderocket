@@ -23,12 +23,14 @@ export default function CodePreview({
   isCanvas,
   isLoading,
   theme,
+  selectedVersion,
 }: {
   completion: string;
   chatId: string;
   isCanvas: boolean;
   isLoading: boolean;
   theme: string;
+  selectedVersion: number;
 }) {
   const [, copy] = useCopyToClipboard();
   const [activeTab, setActiveTab] = useState("component");
@@ -102,7 +104,7 @@ export default function CodePreview({
         ) : (
           <iframe
             className="prose mx-auto size-full border-none"
-            src={`${getURL()}/content/${chatId}`}
+            src={`${getURL()}/content/${chatId}/${selectedVersion}`}
             title="Preview"
           />
         )}
