@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { ReactNode, Suspense } from "react";
 
 import { getUserDetails, getSubscription } from "@/app/supabase-server";
@@ -29,10 +28,6 @@ export default async function Account() {
   ]);
 
   const user = userData.data.user;
-
-  if (!user) {
-    return redirect("/login");
-  }
 
   const subscriptionPrice =
     subscription &&

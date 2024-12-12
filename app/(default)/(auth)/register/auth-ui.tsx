@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,34 +11,54 @@ import { toast } from "@/hooks/use-toast";
 import { register, signInWithGithub } from "../actions";
 
 export default function AuthUI() {
-  const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
-
-  useEffect(() => {
-    const error = searchParams.get("error");
-    if (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error,
-        duration: 5000,
-      });
-      return;
-    }
-  });
+  const router = useRouter();
 
   const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     setIsLoading(true);
-    try {
-      await register(formData);
-    } finally {
-      setIsLoading(false);
+    const result = await register(formData);
+    if (result?.error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: result.error,
+        duration: 5000,
+      });
     }
+    if (result?.url) {
+      toast({
+        title: "Success",
+        description: "Registered successfully!",
+      });
+      router.push(result.url);
+      return;
+    }
+    setIsLoading(false);
   };
 
-  const handleGithubLogin = async () => signInWithGithub();
+  const handleGithubLogin = async () => {
+    setIsLoading(true);
+    const result = await signInWithGithub();
+    if (result?.error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: result.error,
+        duration: 5000,
+      });
+    }
+    if (result?.url) {
+      toast({
+        title: "Success",
+        description: "Logged in successfully!",
+      });
+      router.push(result.url);
+      return;
+    }
+    setIsLoading(false);
+  };
 
   return (
     <form onSubmit={handleRegister}>
@@ -48,12 +68,28 @@ export default function AuthUI() {
       <div className="grid gap-6">
         <div className="grid gap-2">
           <div className="grid gap-1">
+            <Label className="sr-only" htmlFor="full_name">
+              Full Name
+            </Label>
+            <Input
+              id="full_name"
+              placeholder="John Doe"
+              type="text"
+              name="full_name"
+              autoCapitalize="true"
+              autoComplete="full_name"
+              autoCorrect="off"
+              required
+              className="bg-secondary"
+            />
+          </div>
+          <div className="grid gap-1">
             <Label className="sr-only" htmlFor="email">
               Email
             </Label>
             <Input
               id="email"
-              placeholder="name@example.com"
+              placeholder="name@gmail.com"
               type="email"
               name="email"
               autoCapitalize="none"

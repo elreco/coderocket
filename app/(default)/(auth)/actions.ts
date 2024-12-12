@@ -1,6 +1,4 @@
 "use server";
-import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 
 import { getURL } from "@/utils/helpers";
 import { createClient } from "@/utils/supabase/server";
@@ -16,10 +14,10 @@ export async function login(formData: FormData) {
   const { error } = await supabase.auth.signInWithPassword(data);
 
   if (error) {
-    redirect("/login?error=" + error.message);
+    return { error: error.message };
   }
-  revalidatePath("/", "layout");
-  redirect("/");
+
+  return { url: "/" };
 }
 
 export async function register(formData: FormData) {
@@ -30,26 +28,41 @@ export async function register(formData: FormData) {
     password: formData.get("password") as string,
   };
 
-  const { error } = await supabase.auth.signUp(data);
+  const { error, data: returnedData } = await supabase.auth.signUp(data);
 
   if (error) {
-    redirect("/register?error=" + error.message);
+    return { error: error.message };
   }
-  revalidatePath("/", "layout");
-  redirect("/");
+
+  // update full name from table users
+  if (!returnedData.user?.id) {
+    return { error: "" };
+  }
+  const { error: updateError } = await supabase
+    .from("users")
+    .update({ full_name: formData.get("full_name") as string })
+    .eq("id", returnedData.user.id);
+
+  if (updateError) {
+    return { error: updateError.message };
+  }
+
+  return { url: "/" };
 }
 
 export async function signInWithEmail(formData: FormData) {
   const supabase = await createClient();
   const data = {
     email: formData.get("email") as string,
+    options: {
+      shouldCreateUser: false,
+    },
   };
   const { error } = await supabase.auth.signInWithOtp(data);
-  if (error) {
-    redirect("/login?error=" + error.message);
+  if (error?.status === 422) {
+    return { error: "User with this email does not exist. Please sign up." };
   }
-  revalidatePath("/", "layout");
-  redirect("/");
+  return { url: "/" };
 }
 
 export async function signInWithGithub() {
@@ -61,10 +74,10 @@ export async function signInWithGithub() {
     },
   });
   if (error) {
-    redirect("/login?error=" + error.message);
+    return { error: error.message };
   }
   if (data.url) {
-    redirect(data.url);
+    return { url: data.url };
   }
 }
 
@@ -72,8 +85,7 @@ export async function logout() {
   const supabase = await createClient();
   const { error } = await supabase.auth.signOut();
   if (error) {
-    redirect("/?error=" + error.message);
+    return { error: error.message };
   }
-  revalidatePath("/", "layout");
-  redirect("/");
+  return { url: "/" };
 }

@@ -17,22 +17,24 @@ export default function AuthUIMagicLink() {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     setIsLoading(true);
-    try {
-      await signInWithEmail(formData);
+    const result = await signInWithEmail(formData);
+    if (result?.error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: result.error,
+        duration: 5000,
+      });
+    }
+    if (result?.url) {
       toast({
         title: "Success",
         description: "Magic link sent successfully!",
       });
-      router.push("/login");
-    } catch {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to send magic link. Please try again.",
-      });
-    } finally {
-      setIsLoading(false);
+      router.push(result.url);
+      return;
     }
+    setIsLoading(false);
   };
   return (
     <form onSubmit={handleLogin}>
@@ -44,7 +46,7 @@ export default function AuthUIMagicLink() {
             </Label>
             <Input
               id="email"
-              placeholder="name@example.com"
+              placeholder="name@gmail.com"
               type="email"
               required
               name="email"

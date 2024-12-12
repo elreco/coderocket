@@ -1,6 +1,7 @@
 "use client";
 import { BadgeCheck, ChevronsUpDown, CreditCard, LogOut } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 import { logout } from "@/app/(default)/(auth)/actions";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -19,6 +20,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { toast } from "@/hooks/use-toast";
 import { getInitials } from "@/lib/utils";
 import { Tables } from "@/types_db";
 
@@ -28,9 +30,25 @@ export function NavUser({
   user: Tables<"users"> & { email: string | null };
 }) {
   const { isMobile, setOpenMobile } = useSidebar();
+  const router = useRouter();
 
   async function handleLogout() {
-    await logout();
+    const result = await logout();
+    if (result.error) {
+      toast({
+        title: "Error",
+        description: result.error,
+        variant: "destructive",
+      });
+    }
+    if (result.url) {
+      toast({
+        title: "Success",
+        description: "Logged out successfully!",
+      });
+      router.push(result.url);
+      return;
+    }
     setOpenMobile(false);
   }
   return (

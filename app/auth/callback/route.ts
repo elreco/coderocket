@@ -32,7 +32,15 @@ export async function GET(request: Request) {
         },
       },
     );
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    const { error, data } = await supabase.auth.exchangeCodeForSession(code);
+
+    if (data.user?.user_metadata.full_name) {
+      await supabase
+        .from("users")
+        .update({ full_name: data.user?.user_metadata.full_name })
+        .eq("id", data.user?.id);
+    }
+
     if (!error) {
       return NextResponse.redirect(`${origin}${next}`);
     }
