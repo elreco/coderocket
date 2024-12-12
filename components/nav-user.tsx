@@ -31,6 +31,7 @@ export function NavUser({
 
   async function handleLogout() {
     await logout();
+    setOpenMobile(false);
   }
   return (
     <SidebarMenu>
