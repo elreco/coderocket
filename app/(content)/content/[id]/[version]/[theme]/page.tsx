@@ -7,13 +7,13 @@ import { partialIframeBuilder } from "@/utils/iframe-builder";
 export default async function Chats({
   params,
 }: {
-  params: Promise<{ id: string; version: number }>;
+  params: Promise<{ id: string; version: number; theme: string }>;
 }) {
-  const { id, version } = await params;
+  const { id, version, theme } = await params;
   const message = await fetchAssistantMessageByChatIdAndVersion(id, version);
   const content = partialIframeBuilder(
     message?.content || "",
-    message?.theme || defaultTheme,
+    theme || defaultTheme,
   );
   return parse(content);
 }

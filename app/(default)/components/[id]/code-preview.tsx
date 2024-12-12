@@ -104,7 +104,7 @@ export default function CodePreview({
         ) : (
           <iframe
             className="prose mx-auto size-full border-none"
-            src={`${getURL()}/content/${chatId}/${selectedVersion}`}
+            src={`${getURL()}/content/${chatId}/${selectedVersion}/${theme}`}
             title="Preview"
           />
         )}
