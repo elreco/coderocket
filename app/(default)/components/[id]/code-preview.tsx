@@ -94,7 +94,7 @@ export default function CodePreview({
           isCanvas ? "visible h-full xl:w-full" : "invisible h-0 xl:w-1/2",
         )}
       >
-        {!isLoading ? (
+        {isLoading ? (
           <div className="flex size-full items-center justify-center">
             <div className="flex w-full flex-col space-y-6 p-6">
               <div className="flex items-center gap-4">
