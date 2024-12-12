@@ -51,11 +51,8 @@ export default function AuthUI() {
       });
     }
     if (result?.url) {
-      toast({
-        title: "Success",
-        description: "Logged in successfully!",
-      });
-      router.push(result.url);
+      window.location.href = result.url;
+      return;
     }
     setIsLoading(false);
   };

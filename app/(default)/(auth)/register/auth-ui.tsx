@@ -54,7 +54,7 @@ export default function AuthUI() {
         title: "Success",
         description: "Logged in successfully!",
       });
-      router.push(result.url);
+      window.location.href = result.url;
       return;
     }
     setIsLoading(false);
