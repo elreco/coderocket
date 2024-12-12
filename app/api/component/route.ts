@@ -232,13 +232,13 @@ const updateDataAfterCompletion = async (
     });
   }
   const lastAssistantMessage = await fetchLastAssistantMessageByChatId(chatId);
-
+  const theme = lastAssistantMessage?.theme || defaultTheme;
   newMessages.push({
     chat_id: chatId,
     screenshot: null,
     version,
     content: text,
-    theme: lastAssistantMessage?.theme || defaultTheme,
+    theme,
     role: "assistant",
   });
 
@@ -248,7 +248,9 @@ const updateDataAfterCompletion = async (
     .eq("chat_id", chatId)
     .select();
 
-  const screenshot = await captureScreenshot(`${getURL()}content/${chatId}`);
+  const screenshot = await captureScreenshot(
+    `${getURL()}content/${chatId}/${version}/${theme}`,
+  );
 
   const { error, data } = await supabase.storage
     .from("chat-images")

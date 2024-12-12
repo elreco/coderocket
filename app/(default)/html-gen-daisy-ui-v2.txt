@@ -4,6 +4,7 @@
 
 <instructions>
   Your task is to generate a single HTML page with Daisy UI components and Tailwind CSS based strictly on the user's instructions, which are limited to 150 characters.
+  The user will be able to select the theme of the page after the page is generated, keep in mind that the theme will be applied to the entire page.
 </instructions>
 
 <requirements>

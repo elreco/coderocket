@@ -21,7 +21,7 @@ export default function ChatSkeleton() {
           </div>
         </div>
 
-        <div className="space-y-4">
+        <div className="hidden space-y-4 md:block">
           <div className="space-y-2">
             <Skeleton className="h-4 w-full" />
             <Skeleton className="h-4 w-2/3" />
@@ -34,7 +34,7 @@ export default function ChatSkeleton() {
         </div>
       </div>
 
-      <div className="flex items-center justify-between">
+      <div className="hidden items-center justify-between md:flex">
         <div className="flex gap-2">
           <Skeleton className="size-8 rounded-full" />
           <Skeleton className="size-8 rounded-full" />
