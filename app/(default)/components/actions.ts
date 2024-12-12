@@ -245,7 +245,6 @@ export const getFeaturedChats = async () => {
     .rpc("get_components")
     .is("is_featured", true)
     .limit(50);
-  console.log(data);
   return data;
 };
 

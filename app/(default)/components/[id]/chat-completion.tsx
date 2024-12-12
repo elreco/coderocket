@@ -8,7 +8,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useCopyToClipboard } from "usehooks-ts";
 
 import { Container } from "@/components/container";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -24,11 +23,10 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { UserWidget } from "@/components/user-widget";
 import { useToast } from "@/hooks/use-toast";
-import { getInitials } from "@/lib/utils";
 import { Tables } from "@/types_db";
 import { defaultTheme, maxPromptLength } from "@/utils/config";
-import { getRelativeDate } from "@/utils/date";
 import { capitalizeFirstLetter } from "@/utils/helpers";
 import { createClient } from "@/utils/supabase/client";
 
@@ -469,21 +467,11 @@ export default function ChatCompletion({
                 )}
               </form>
               <div className="flex w-full items-center justify-end pt-1">
-                <p className="text-sm text-muted-foreground">
-                  {getRelativeDate(lastUserMessage.created_at)}
-                  {userFullName && ` by `}
-                </p>
-                {userFullName && (
-                  <div className="ml-2 flex items-center space-x-2">
-                    <Avatar>
-                      <AvatarImage src={userAvatar} />
-                      <AvatarFallback>
-                        {getInitials(userFullName)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <p className="text-sm font-medium">{userFullName}</p>
-                  </div>
-                )}
+                <UserWidget
+                  createdAt={lastUserMessage.created_at}
+                  userAvatarUrl={userAvatar}
+                  userFullName={userFullName}
+                />
               </div>
             </div>
           </div>

@@ -1,15 +1,16 @@
 import Image from "next/image";
 import Link from "next/link";
 
-import { getRelativeDate } from "@/utils/date";
 import { capitalizeFirstLetter } from "@/utils/helpers";
 
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card";
+import { UserWidget } from "./user-widget";
 
 type GetComponentsReturnType = {
   chat_id: string;
   user_id: string;
   user_full_name: string;
+  user_avatar_url: string;
   is_featured: boolean;
   is_private: boolean;
   created_at: string;
@@ -46,10 +47,11 @@ export default function ComponentCard({
       </HoverCardTrigger>
       <HoverCardContent className="w-80">
         <p className="mb-1">{chat.first_user_message}</p>
-        <p className="text-sm font-medium text-muted-foreground">
-          {getRelativeDate(chat.created_at)}
-          {chat.user_full_name && ` by ${chat.user_full_name}`}
-        </p>
+        <UserWidget
+          createdAt={chat.created_at}
+          userAvatarUrl={chat.user_avatar_url}
+          userFullName={chat.user_full_name}
+        />
       </HoverCardContent>
     </HoverCard>
   );

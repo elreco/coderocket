@@ -297,6 +297,7 @@ export type Database = {
           chat_id: string;
           user_id: string;
           user_full_name: string;
+          user_avatar_url: string;
           is_featured: boolean;
           is_private: boolean;
           created_at: string;
