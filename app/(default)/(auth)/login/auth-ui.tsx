@@ -40,21 +40,7 @@ export default function AuthUI() {
   };
 
   const handleGithubLogin = async () => {
-    setIsLoading(true);
-    const result = await signInWithGithub();
-    if (result?.error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: result.error,
-        duration: 5000,
-      });
-    }
-    if (result?.url) {
-      window.location.href = result.url;
-      return;
-    }
-    setIsLoading(false);
+    await signInWithGithub();
   };
 
   return (

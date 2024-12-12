@@ -1,5 +1,4 @@
 "use client";
-import Link from "next/link";
 
 import {
   Accordion,
@@ -45,16 +44,7 @@ export default function Faq() {
       <AccordionItem value="item-3">
         <AccordionTrigger>How much does it cost?</AccordionTrigger>
         <AccordionContent>
-          <p>
-            Check out our{" "}
-            <Link
-              className="text-indigo-500 underline hover:text-indigo-900"
-              href="/pricing"
-            >
-              pricing page
-            </Link>{" "}
-            for more information.
-          </p>{" "}
+          <p>Check out our this section for more information.</p>{" "}
           <p>
             You can copy paste its code, or refine it further. To refine, you
             can fine tune your creation. When you are ready, you can copy,

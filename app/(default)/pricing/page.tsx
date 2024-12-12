@@ -4,6 +4,7 @@ import {
 } from "@/app/supabase-server";
 import { Container } from "@/components/container";
 import Faq from "@/components/faq";
+import { PageTitle } from "@/components/page-title";
 import { createClient } from "@/utils/supabase/server";
 
 import Pricing from "./pricing";
@@ -24,6 +25,10 @@ export default async function PricingPage() {
 
   return (
     <Container className="pr-2 sm:pr-11">
+      <PageTitle
+        title="Pricing Plans"
+        subtitle="Start building for free, then add a site plan to go live. Account plans unlock additional features."
+      />
       <Pricing
         user={userData.data.user}
         products={products}

@@ -1,5 +1,7 @@
 "use server";
 
+import { redirect } from "next/navigation";
+
 import { getURL } from "@/utils/helpers";
 import { createClient } from "@/utils/supabase/server";
 
@@ -74,10 +76,10 @@ export async function signInWithGithub() {
     },
   });
   if (error) {
-    return { error: error.message };
+    redirect("/login?error=" + error.message);
   }
   if (data.url) {
-    return { url: data.url };
+    redirect(data.url);
   }
 }
 

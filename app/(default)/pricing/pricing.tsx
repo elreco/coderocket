@@ -5,7 +5,6 @@ import { Check } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
-import { PageTitle } from "@/components/page-title";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Database } from "@/types_db";
@@ -75,71 +74,60 @@ export default function Pricing({ user, products, subscription }: Props) {
 
   if (products.length === 1)
     return (
-      <div className="min-h-screen">
-        <PageTitle
-          title="Pricing Plans"
-          subtitle="Start building for free, then add a site plan to go live. Account plans unlock additional features."
-        />
-        <h3 className="text-sm">
-          With a free account, you are limited to generating one component with
-          four versions, and image use is not permitted. Upgrade to our premium
-          plan for unlimited access to all features.
-        </h3>
-        <div className="flex size-full flex-1 grow items-center">
-          <div className="mt-6 size-full items-center space-y-4 sm:mt-12 sm:grid sm:grid-cols-2 sm:gap-6 sm:space-y-0 lg:mx-auto lg:max-w-4xl xl:mx-0 xl:max-w-none xl:grid-cols-3 xl:space-y-0">
-            {products[0].prices?.map((price) => {
-              const priceString =
-                price.unit_amount &&
-                new Intl.NumberFormat("en-US", {
-                  style: "currency",
-                  currency: price.currency!,
-                  minimumFractionDigits: 0,
-                }).format(price.unit_amount / 100);
+      <div className="flex items-center">
+        <div className="my-4 size-full items-center space-y-4 sm:my-4 sm:grid sm:grid-cols-2 sm:gap-6 sm:space-y-0 lg:mx-auto lg:max-w-4xl xl:mx-0 xl:max-w-none xl:grid-cols-3 xl:space-y-0">
+          {products[0].prices?.map((price) => {
+            const priceString =
+              price.unit_amount &&
+              new Intl.NumberFormat("en-US", {
+                style: "currency",
+                currency: price.currency!,
+                minimumFractionDigits: 0,
+              }).format(price.unit_amount / 100);
 
-              return (
-                <div
-                  key={price.interval}
-                  className="divide-y divide-zinc-600 rounded-lg border bg-card"
-                >
-                  <div className="p-6">
-                    <p>
-                      <span className="text-5xl font-bold text-primary">
-                        {priceString}
-                      </span>
-                      <span className="text-base font-medium ">
-                        /{price.interval}
-                      </span>
-                    </p>
-                    <p className="mt-4 ">{price.description}</p>
-                    <p className="mt-4 flex items-center text-sm font-medium ">
-                      <Check className="mr-2 size-4 text-emerald-500" />{" "}
-                      Unlimited credits
-                    </p>
-                    <p className="mt-4 flex items-center text-sm font-medium ">
-                      <Check className="mr-2 size-4 text-emerald-500" />{" "}
-                      Unlimited versions
-                    </p>
-                    <p className="mt-4 flex items-center text-sm font-medium ">
-                      <Check className="mr-2 size-4 text-emerald-500" /> Fast
-                      generation
-                    </p>
-                    <Button
-                      variant="default"
-                      type="button"
-                      disabled={false}
-                      loading={priceIdLoading === price.id}
-                      onClick={() => handleCheckout(price)}
-                      className="mt-12 block w-full"
-                    >
-                      {products[0].name === subscription?.prices?.products?.name
-                        ? "Manage"
-                        : "Subscribe"}
-                    </Button>
-                  </div>
+            return (
+              <div
+                key={price.interval}
+                className="divide-y divide-zinc-600 rounded-lg border bg-card"
+              >
+                <div className="p-6">
+                  <p>
+                    <span className="text-5xl font-bold text-primary">
+                      {priceString}
+                    </span>
+                    <span className="text-base font-medium ">
+                      /{price.interval}
+                    </span>
+                  </p>
+                  <p className="mt-4 ">{price.description}</p>
+                  <p className="mt-4 flex items-center text-sm font-medium ">
+                    <Check className="mr-2 size-4 text-emerald-500" /> Unlimited
+                    credits
+                  </p>
+                  <p className="mt-4 flex items-center text-sm font-medium ">
+                    <Check className="mr-2 size-4 text-emerald-500" /> Unlimited
+                    versions
+                  </p>
+                  <p className="mt-4 flex items-center text-sm font-medium ">
+                    <Check className="mr-2 size-4 text-emerald-500" /> Fast
+                    generation
+                  </p>
+                  <Button
+                    variant="default"
+                    type="button"
+                    disabled={false}
+                    loading={priceIdLoading === price.id}
+                    onClick={() => handleCheckout(price)}
+                    className="mt-12 block w-full"
+                  >
+                    {products[0].name === subscription?.prices?.products?.name
+                      ? "Manage"
+                      : "Subscribe"}
+                  </Button>
                 </div>
-              );
-            })}
-          </div>
+              </div>
+            );
+          })}
         </div>
       </div>
     );
