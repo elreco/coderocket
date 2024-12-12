@@ -79,7 +79,7 @@ export default function ChatCompletion({
   const [title, setTitle] = useState<string>(
     lastUserMessage.content?.toString() || "",
   );
-  const [isCanvas, setCanvas] = useState(false);
+  const [isCanvas, setCanvas] = useState(true);
   const [isVisible, setVisible] = useState(!fetchedChat.is_private);
   const [input, setInput] = useState<string>("");
 
@@ -141,6 +141,7 @@ export default function ChatCompletion({
       messages.length === 1 &&
       lastUserMessage.content
     ) {
+      setCanvas(false);
       complete(lastUserMessage.content);
     }
   }, []);

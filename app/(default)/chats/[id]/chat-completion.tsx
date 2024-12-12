@@ -77,7 +77,7 @@ export default function ChatCompletion({
     defaultSelectedVersion,
   );
   const [title, setTitle] = useState<string>(defaultTitle);
-  const [isCanvas, setCanvas] = useState(false);
+  const [isCanvas, setCanvas] = useState(true);
   const [isVisible, setVisible] = useState(defaultVisibility);
 
   const {
@@ -116,6 +116,7 @@ export default function ChatCompletion({
   });
   useEffect(() => {
     if (defaultMessages.length === 1) {
+      setCanvas(false);
       complete(defaultMessage);
     }
   }, []);
