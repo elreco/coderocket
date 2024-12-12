@@ -83,6 +83,8 @@ export default function ChatCompletion({
   const [isVisible, setVisible] = useState(!fetchedChat.is_private);
   const [input, setInput] = useState<string>("");
 
+  const [isThemeLoading, setIsThemeLoading] = useState(false);
+
   useEffect(() => {
     const {
       data: { subscription },
@@ -147,8 +149,10 @@ export default function ChatCompletion({
   }, []);
 
   const setTheme = async (theme: string) => {
+    setIsThemeLoading(true);
     await updateTheme(fetchedChat.id, theme, selectedVersion);
     setCurrentTheme(theme);
+    setIsThemeLoading(false);
   };
 
   const handleSubmitToAI = (e: React.FormEvent<HTMLFormElement>) => {
@@ -437,7 +441,7 @@ export default function ChatCompletion({
               chatId={fetchedChat.id}
               completion={activeCompletion}
               isCanvas={isCanvas}
-              isLoading={isLoading}
+              isLoading={isLoading || isThemeLoading}
               theme={currentTheme}
               selectedVersion={selectedVersion}
             />
