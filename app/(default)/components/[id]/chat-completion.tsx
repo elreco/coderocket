@@ -465,15 +465,20 @@ export default function ChatCompletion({
               </form>
               <div className="flex w-full items-center justify-end pt-1">
                 <p className="text-sm text-muted-foreground">
-                  {getRelativeDate(lastUserMessage.created_at)} by
+                  {getRelativeDate(lastUserMessage.created_at)}
+                  {userFullName && ` by `}
                 </p>
-                <div className="ml-2 flex items-center space-x-2">
-                  <Avatar>
-                    <AvatarImage src={userAvatar} />
-                    <AvatarFallback>{getInitials(userFullName)}</AvatarFallback>
-                  </Avatar>
-                  <p className="text-sm font-medium">{userFullName}</p>
-                </div>
+                {userFullName && (
+                  <div className="ml-2 flex items-center space-x-2">
+                    <Avatar>
+                      <AvatarImage src={userAvatar} />
+                      <AvatarFallback>
+                        {getInitials(userFullName)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <p className="text-sm font-medium">{userFullName}</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
