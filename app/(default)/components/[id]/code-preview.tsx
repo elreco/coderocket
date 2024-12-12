@@ -6,45 +6,32 @@ import saveAs from "file-saver";
 import JSZip from "jszip";
 import { Clipboard, Download } from "lucide-react";
 import { useParams } from "next/navigation";
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { useCopyToClipboard } from "usehooks-ts";
 
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
+import { getURL } from "@/utils/helpers";
 import { iframeBuilder } from "@/utils/iframe-builder";
 
 export default function CodePreview({
   completion,
+  chatId,
   isCanvas,
   isLoading,
   theme,
 }: {
   completion: string;
+  chatId: string;
   isCanvas: boolean;
   isLoading: boolean;
   theme: string;
 }) {
   const [, copy] = useCopyToClipboard();
-  const [iframeContent, setIframeContent] = useState("");
-  const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
   const [activeTab, setActiveTab] = useState("component");
   const { id } = useParams();
-
-  useEffect(() => {
-    if (debounceTimeout.current) {
-      clearTimeout(debounceTimeout.current);
-    }
-
-    debounceTimeout.current = setTimeout(() => {
-      if (completion) {
-        const content = iframeBuilder(completion, id?.toString() || "", theme);
-        setIframeContent(content);
-      } else {
-        setIframeContent("");
-      }
-    }, 300);
-  }, [completion, theme]);
 
   const downloadCode = async () => {
     const htmlContent = completion || "";
@@ -107,11 +94,57 @@ export default function CodePreview({
           isCanvas ? "visible h-full xl:w-full" : "invisible h-0 xl:w-1/2",
         )}
       >
-        <iframe
-          className="prose mx-auto size-full border-none"
-          srcDoc={iframeContent}
-          title="Preview"
-        />
+        {!isLoading ? (
+          <div className="flex size-full items-center justify-center">
+            <div className="flex w-full flex-col space-y-6 p-6">
+              <div className="flex items-center gap-4">
+                <Skeleton className="size-12 rounded-full" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-5 w-1/3" />
+                  <Skeleton className="h-4 w-1/4" />
+                </div>
+                <Skeleton className="h-10 w-24" />
+              </div>
+
+              <div className="grid gap-6 md:grid-cols-2">
+                <div className="space-y-4">
+                  <Skeleton className="h-[200px] w-full rounded-lg" />
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-4 w-1/2" />
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-2/3" />
+                    <Skeleton className="h-4 w-5/6" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <Skeleton className="h-[75px] rounded-lg" />
+                    <Skeleton className="h-[75px] rounded-lg" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="flex gap-2">
+                  <Skeleton className="size-8 rounded-full" />
+                  <Skeleton className="size-8 rounded-full" />
+                  <Skeleton className="size-8 rounded-full" />
+                </div>
+                <Skeleton className="h-8 w-32" />
+              </div>
+            </div>
+          </div>
+        ) : (
+          <iframe
+            className="prose mx-auto size-full border-none"
+            src={`${getURL()}/content/${chatId}`}
+            title="Preview"
+          />
+        )}
       </div>
       <div
         className={clsx(

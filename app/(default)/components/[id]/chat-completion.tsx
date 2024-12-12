@@ -434,6 +434,7 @@ export default function ChatCompletion({
           </div>
           <div className="m-0 flex h-full flex-1 flex-col">
             <CodePreview
+              chatId={fetchedChat.id}
               completion={activeCompletion}
               isCanvas={isCanvas}
               isLoading={isLoading}

@@ -1,6 +1,8 @@
+import parse from "html-react-parser";
+
 import { fetchLastAssistantMessageByChatId } from "@/app/(default)/components/actions";
 import { defaultTheme } from "@/utils/config";
-import { iframeBuilder } from "@/utils/iframe-builder";
+import { partialIframeBuilder } from "@/utils/iframe-builder";
 
 export default async function Chats({
   params,
@@ -9,16 +11,9 @@ export default async function Chats({
 }) {
   const { id } = await params;
   const message = await fetchLastAssistantMessageByChatId(id);
-  const srcDoc = iframeBuilder(
+  const content = partialIframeBuilder(
     message?.content || "",
-    id,
     message?.theme || defaultTheme,
   );
-  return (
-    <iframe
-      className="mx-auto size-full border-none"
-      srcDoc={srcDoc}
-      title="Preview"
-    />
-  );
+  return parse(content);
 }
