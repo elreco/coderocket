@@ -97,7 +97,7 @@ export default function CodePreview({
           isCanvas ? "visible h-full xl:w-full" : "invisible h-0 xl:w-1/2",
         )}
       >
-        {isLoading || !selectedVersion || !chatId ? (
+        {isLoading ? (
           <div className="flex size-full items-center justify-center">
             <ChatSkeleton />
           </div>
