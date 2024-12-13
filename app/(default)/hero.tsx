@@ -94,8 +94,8 @@ export default function Hero() {
         });
         return;
       }
-      console.log(id);
       router.push(`/components/${id}`);
+      return;
     } catch {
       toast({
         variant: "destructive",
@@ -104,9 +104,9 @@ export default function Hero() {
           "You must be logged in and have a premium plan to create a component.",
         duration: 5000,
       });
-    } finally {
       setLoading(false);
     }
+    setLoading(false);
   };
 
   const handleBadgeClick = (input: string) => {
