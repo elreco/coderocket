@@ -11,7 +11,7 @@ export const metadata = {
 
 export default async function Featured() {
   const chats = await getAllPublicChats();
-  console.log("chats", chats);
+
   return (
     <Container>
       <PageTitle
