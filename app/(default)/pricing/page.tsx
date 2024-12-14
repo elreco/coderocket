@@ -34,7 +34,7 @@ export default async function PricingPage() {
         products={products}
         subscription={subscription}
       />
-      <div className="mt-10 grid grid-cols-1 pb-40 sm:mt-0 lg:grid-cols-2">
+      <div className="mt-4 grid grid-cols-1 pb-40 sm:mt-10 lg:grid-cols-2">
         <div>
           <h1 className="text-left text-2xl font-medium">How it works?</h1>
           <p className="mt-8 max-w-2xl text-left text-base">
