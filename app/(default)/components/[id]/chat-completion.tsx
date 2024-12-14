@@ -109,9 +109,14 @@ export default function ChatCompletion({
     initialCompletion: lastAssistantMessage?.content,
     onError: async (error: Error) => {
       if (error.message === "payment-required") {
-        return router.push(
-          "/pricing?error=You have reached the limit of your free plan. Please upgrade to continue.",
-        );
+        router.push("/pricing");
+        toast({
+          variant: "destructive",
+          title: "You have reached the limit of your free plan",
+          description: "Please upgrade to continue.",
+          duration: 5000,
+        });
+        return;
       }
       if (error.message) {
         toast({
@@ -121,7 +126,6 @@ export default function ChatCompletion({
           duration: 5000,
         });
       }
-      return;
     },
     onFinish: () => refreshChatData(),
   });

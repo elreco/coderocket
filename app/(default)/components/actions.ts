@@ -177,7 +177,14 @@ export const createChat = async (prompt: string, formData: FormData) => {
 
   let imageUrl = null;
   const image = formData.get("file") as File;
-
+  if (!subscription && image) {
+    return {
+      error: {
+        title: "You can't upload images with a free plan",
+        description: "Please upgrade to continue.",
+      },
+    };
+  }
   if (image) {
     const { data: imageData, error: imageError } = await supabase.storage
       .from("images")
