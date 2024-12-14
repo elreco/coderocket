@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { maxPromptLength } from "@/utils/config";
+import { maxImageSize, maxPromptLength } from "@/utils/config";
 import { createClient } from "@/utils/supabase/client";
 
 import { createChat } from "./components/actions";
@@ -70,9 +70,22 @@ export default function Hero() {
   }, []);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setImage(e.target.files[0]);
+    if (!e.target.files?.[0]) {
+      return;
     }
+    const file = e.target.files[0];
+
+    if (file.size > maxImageSize) {
+      toast({
+        variant: "destructive",
+        title: "Image too large",
+        description: `The image must be less than ${maxImageSize / (1024 * 1024)} Mo.`,
+        duration: 5000,
+      });
+      return;
+    }
+
+    setImage(file);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

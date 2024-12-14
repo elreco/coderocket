@@ -7,6 +7,8 @@ export const storageUrl =
 export const screenshotApiUrl =
   "https://screenshot-api-elreco.vercel.app/api?url=";
 
+export const maxImageSize = 1 * 1024 * 1024; // 1 Mo
+
 export const maxPromptLength = 150;
 
 export const defaultTheme = "cupcake";
