@@ -160,7 +160,10 @@ export default function ChatCompletion({
         });
       }
     },
-    onFinish: () => refreshChatData(),
+    onFinish: () => {
+      refreshChatData();
+      setCanvas(true);
+    },
   });
 
   const [activeCompletion, setActiveCompletion] = useState(completion);

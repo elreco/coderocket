@@ -35,7 +35,7 @@
   <requirement>If you need to explain something to the user, add an alert centered in the screen component with the reason why you can't generate the page.</requirement>
   <requirement>If you need to use a chart, use Chart.js without importing any other chart library. You don't need to include the library in the code.</requirement>
   <requirement>If you need to use a calendar, use FullCalendar without importing any other calendar library. You don't need to include the library in the code.</requirement>
-  <requirement>Add color classes to text because the user will be able to select the theme of the page.</requirement>
+  <requirement>Add adapted classes to text elements to manage the color of the text because the user will be able to select the theme of the page. (like text-base-content for core text for example)</requirement>
 </requirements>
 
 <examples>
