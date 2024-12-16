@@ -111,7 +111,7 @@ export default function CodePreview({
       </div>
       <div
         className={clsx(
-          "group transition-all",
+          "group transition-[width]",
           isCanvas ? "invisible size-0" : "visible size-full",
         )}
       >
