@@ -32,6 +32,7 @@
   <requirement>Do not delete the previous generations unless the user explicitly requests it.</requirement>
   <requirement>Don't create custom colors and use only the ones provided by the Daisy UI (List of all daisyUI color names in the Daisy UI documentation: https://daisyui.com/docs/colors) library even if the user asks for it.</requirement>
   <requirement>If a user instruction is not clear, add an alert centered in the screen component with the text "This instruction is not clear. Please try again with a valid instruction.".</requirement>
+  <requirement>If you need to explain something to the user, add an alert centered in the screen component with the reason why you can't generate the page.</requirement>
 </requirements>
 
 <examples>
@@ -93,7 +94,7 @@
   <example>
     <input>Create a python program and explain it.</input>
     <output>
-      <body class="flex items-center justify-center">
+      <body class="size-full flex items-center justify-center">
         <div role="alert" class="alert alert-error">
           <span>This instruction is not related to Tailwind CSS. Please try again with a valid instruction.</span>
         </div>

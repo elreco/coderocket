@@ -182,7 +182,7 @@ export default function Hero() {
         duration={1}
         className={cn(
           "[mask-image:radial-gradient(500px_circle_at_center,hsl(var(--secondary)),transparent)]",
-          "inset-x-0 inset-y-[-30%] h-[200%] skew-y-12 opacity-75",
+          "inset-x-0 inset-y-[-20%] h-full skew-y-12 opacity-75",
         )}
       />
       <Spotlight
