@@ -1,5 +1,3 @@
-import parse from "html-react-parser";
-
 import { fetchAssistantMessageByChatIdAndVersion } from "@/app/(default)/components/actions";
 import { defaultTheme } from "@/utils/config";
 import { partialIframeBuilder } from "@/utils/iframe-builder";
@@ -15,5 +13,5 @@ export default async function Chats({
     message?.content || "",
     theme || defaultTheme,
   );
-  return parse(content);
+  return <iframe srcDoc={content} className="size-full border-none" />;
 }

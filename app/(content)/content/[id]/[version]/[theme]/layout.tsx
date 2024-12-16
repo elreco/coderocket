@@ -3,5 +3,9 @@ import { PropsWithChildren } from "react";
 import "styles/main.css";
 
 export default function RootLayout({ children }: PropsWithChildren) {
-  return children;
+  return (
+    <html className="size-full">
+      <body className="size-full">{children}</body>
+    </html>
+  );
 }
