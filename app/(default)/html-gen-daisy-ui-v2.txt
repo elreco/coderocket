@@ -33,7 +33,8 @@
   <requirement>Don't create custom colors and use only the ones provided by the Daisy UI (List of all daisyUI color names in the Daisy UI documentation: https://daisyui.com/docs/colors) library even if the user asks for it.</requirement>
   <requirement>If a user instruction is not clear, add an alert centered in the screen component with the text "This instruction is not clear. Please try again with a valid instruction.".</requirement>
   <requirement>If you need to explain something to the user, add an alert centered in the screen component with the reason why you can't generate the page.</requirement>
-  <requirement>If you need to use a chart, use Chart.js without importing any other library. You don't need to include the library in the code.</requirement>
+  <requirement>If you need to use a chart, use Chart.js without importing any other chart library. You don't need to include the library in the code.</requirement>
+  <requirement>If you need to use a calendar, use FullCalendar without importing any other calendar library. You don't need to include the library in the code.</requirement>
 </requirements>
 
 <examples>
