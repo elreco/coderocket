@@ -93,8 +93,8 @@ export default function CodePreview({
     <div className="flex size-full flex-col overflow-hidden rounded-md border xl:flex-row">
       <div
         className={clsx(
-          "group flex flex-col transition-all xl:visible xl:h-full",
-          isCanvas ? "visible h-full xl:w-full" : "invisible h-0 xl:w-1/2",
+          "group flex flex-col transition-[width]",
+          isCanvas ? "visible size-full" : "invisible size-0",
         )}
       >
         {isLoading ? (
@@ -111,10 +111,8 @@ export default function CodePreview({
       </div>
       <div
         className={clsx(
-          "group w-full transition-all xl:h-full",
-          isCanvas
-            ? "invisible h-0 xl:invisible xl:w-0"
-            : "visible h-full xl:visible xl:w-1/2",
+          "group transition-all",
+          isCanvas ? "invisible size-0" : "visible size-full",
         )}
       >
         <div className="relative flex size-full flex-col rounded-none border-none">

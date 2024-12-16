@@ -11,7 +11,7 @@ export const maxImageSize = 1 * 1024 * 1024; // 1 Mo
 
 export const maxPromptLength = 150;
 
-export const defaultTheme = "cupcake";
+export const defaultTheme = "light";
 
 export const openAINewModel = createOpenAI({
   name: "gpt-4o-mini",

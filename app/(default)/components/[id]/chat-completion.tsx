@@ -1,23 +1,24 @@
 "use client";
 
 import { useCompletion } from "ai/react";
-import { LoaderCircle, Paintbrush } from "lucide-react";
-import { Code, Share, Tv, Lock, Unlock } from "lucide-react";
+import { Fullscreen, LoaderCircle, Settings } from "lucide-react";
+import { Code, Share, Tv } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useCopyToClipboard } from "usehooks-ts";
 
 import { Container } from "@/components/container";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Sheet,
+  SheetContent,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { Switch } from "@/components/ui/switch";
 import {
   Tooltip,
   TooltipContent,
@@ -25,9 +26,10 @@ import {
 } from "@/components/ui/tooltip";
 import { UserWidget } from "@/components/user-widget";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 import { Tables } from "@/types_db";
 import { defaultTheme, maxPromptLength } from "@/utils/config";
-import { capitalizeFirstLetter } from "@/utils/helpers";
+import { capitalizeFirstLetter, getURL } from "@/utils/helpers";
 import { createClient } from "@/utils/supabase/client";
 
 import { fetchMessagesByChatId } from "../actions";
@@ -50,6 +52,37 @@ interface Props {
   lastAssistantMessage: Tables<"messages"> | null;
   lastUserMessage: Tables<"messages">;
 }
+
+const themes = [
+  "light",
+  "dark",
+  "cupcake",
+  "retro",
+  "sunset",
+  "night",
+  "winter",
+  "cyberpunk",
+  "autumn",
+  "dracula",
+  "bumblebee",
+  "emerald",
+  "corporate",
+  "synthwave",
+  "halloween",
+  "forest",
+  "aqua",
+  "lofi",
+  "pastel",
+  "fantasy",
+  "wireframe",
+  "black",
+  "luxury",
+  "coffee",
+  "acid",
+  "lemonade",
+  "business",
+  "cmyk",
+];
 
 export default function ChatCompletion({
   fetchedChat,
@@ -80,8 +113,8 @@ export default function ChatCompletion({
   const [isCanvas, setCanvas] = useState(true);
   const [isVisible, setVisible] = useState(!fetchedChat.is_private);
   const [input, setInput] = useState<string>("");
-
-  const [isThemeLoading, setIsThemeLoading] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSettingLoading, setIsSettingLoading] = useState(false);
 
   useEffect(() => {
     const {
@@ -151,10 +184,11 @@ export default function ChatCompletion({
   }, []);
 
   const setTheme = async (theme: string) => {
-    setIsThemeLoading(true);
+    if (isSettingLoading || theme === currentTheme) return;
+    setIsSettingLoading(true);
     await updateTheme(fetchedChat.id, theme, selectedVersion);
     setCurrentTheme(theme);
-    setIsThemeLoading(false);
+    setIsSettingLoading(false);
   };
 
   const handleSubmitToAI = (e: React.FormEvent<HTMLFormElement>) => {
@@ -209,9 +243,12 @@ export default function ChatCompletion({
   };
 
   const handleVisibility = async () => {
+    if (isSettingLoading) return;
     try {
+      setIsSettingLoading(true);
       await changeVisibilityByChatId(fetchedChat.id, !isVisible);
       setVisible(!isVisible);
+      setIsSettingLoading(false);
     } catch {
       toast({
         variant: "destructive",
@@ -267,33 +304,6 @@ export default function ChatCompletion({
           <div className="flex flex-col items-center justify-start space-y-2 lg:flex-row lg:justify-between lg:space-y-0">
             <div className="font-medium">
               <div className="flex items-center space-x-2">
-                {!isLoading && title && authorized && (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        onClick={handleVisibility}
-                        variant="secondary"
-                        className="flex items-center"
-                      >
-                        {isVisible ? (
-                          <>
-                            <Unlock className="mr-1 w-5" />
-                            <span>Public</span>
-                          </>
-                        ) : (
-                          <>
-                            <Lock className="mr-1 w-5" />
-                            <span>Private</span>
-                          </>
-                        )}
-                      </Button>
-                    </TooltipTrigger>
-
-                    <TooltipContent side="right">
-                      <p>{isVisible ? "Set private" : "Set public"}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                )}
                 <h1>
                   {isLoading || !title ? (
                     <span className="flex items-center">
@@ -317,6 +327,70 @@ export default function ChatCompletion({
               </div>
             </div>
             <div className="flex items-center space-x-2">
+              {!isLoading && title && authorized && (
+                <Sheet>
+                  <SheetTrigger asChild>
+                    <Button variant="secondary">
+                      <Settings className="w-5" />
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent className="overflow-auto">
+                    <SheetTitle className="mb-4">Component Settings</SheetTitle>
+                    <div>
+                      <h3 className="mb-4 text-base font-semibold">
+                        Change visibility
+                      </h3>
+                      <div className="space-y-4">
+                        <div className="mb-5 flex flex-row items-center justify-between rounded-lg border p-4">
+                          <div className="space-y-0.5">
+                            <Label>Private mode</Label>
+                            <p className="text-sm text-muted-foreground">
+                              When private, the component will not be visible to
+                              the public.
+                            </p>
+                          </div>
+                          <Switch
+                            checked={!isVisible}
+                            onCheckedChange={handleVisibility}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="mb-1 text-base font-semibold">
+                        Change theme
+                      </h3>
+                      <h4 className="mb-4 text-sm">
+                        Current theme:{" "}
+                        <span className="text-primary">{currentTheme}</span>
+                      </h4>
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-3 gap-4">
+                          {themes.map((theme) => (
+                            <div
+                              key={theme}
+                              className={cn(
+                                "aspect-video cursor-pointer rounded-md items-center justify-center border-2 opacity-75 hover:border-2 hover:border-primary hover:opacity-100 overflow-hidden",
+                                {
+                                  "border-primary opacity-100":
+                                    currentTheme === theme,
+                                },
+                              )}
+                              onClick={() => setTheme(theme)}
+                            >
+                              <img
+                                src={`/daisy-themes/${theme}.png`}
+                                alt="Theme"
+                                className="size-full scale-110 object-cover"
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </SheetContent>
+                </Sheet>
+              )}
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
@@ -342,80 +416,30 @@ export default function ChatCompletion({
                   <p>{isCanvas ? "Display code" : "Hide code"}</p>
                 </TooltipContent>
               </Tooltip>
-              {authorized && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="secondary" className="capitalize">
-                      <Paintbrush className="w-5" />
-                      {currentTheme}
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    <DropdownMenuLabel>Change Theme</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      className="cursor-pointer"
-                      onClick={() => setTheme("cupcake")}
-                    >
-                      Cupcake
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      className="cursor-pointer"
-                      onClick={() => setTheme("dark")}
-                    >
-                      Dark
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      className="cursor-pointer capitalize"
-                      onClick={() => setTheme("light")}
-                    >
-                      Light
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      className="cursor-pointer capitalize"
-                      onClick={() => setTheme("retro")}
-                    >
-                      Retro
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      className="cursor-pointer capitalize"
-                      onClick={() => setTheme("sunset")}
-                    >
-                      Sunset
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      className="cursor-pointer capitalize"
-                      onClick={() => setTheme("night")}
-                    >
-                      Night
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      className="cursor-pointer capitalize"
-                      onClick={() => setTheme("winter")}
-                    >
-                      Winter
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      className="cursor-pointer capitalize"
-                      onClick={() => setTheme("cyberpunk")}
-                    >
-                      Cyberpunk
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      className="cursor-pointer capitalize"
-                      onClick={() => setTheme("autumn")}
-                    >
-                      Autumn
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      className="cursor-pointer capitalize"
-                      onClick={() => setTheme("dracula")}
-                    >
-                      Dracula
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="secondary"
+                    onClick={() => setIsModalOpen(true)}
+                    className="mr-1 flex items-center"
+                  >
+                    <Fullscreen className="w-5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Display in fullscreen</p>
+                </TooltipContent>
+              </Tooltip>
+              <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+                <DialogContent className="h-[95%] max-w-[95%] rounded-none p-10">
+                  <DialogTitle className="hidden">Fullscreen</DialogTitle>
+                  <iframe
+                    className="prose mx-auto size-full rounded-md border-none"
+                    src={`${getURL()}/content/${fetchedChat.id}/${selectedVersion}/${currentTheme}`}
+                    title="Preview"
+                  />
+                </DialogContent>
+              </Dialog>
               <ChatSidebarMobile
                 authorized={authorized}
                 handleDeleteVersion={handleDeleteVersion}
@@ -443,7 +467,7 @@ export default function ChatCompletion({
               chatId={fetchedChat.id}
               completion={activeCompletion}
               isCanvas={isCanvas}
-              isLoading={isLoading || isThemeLoading}
+              isLoading={isLoading || isSettingLoading}
               theme={currentTheme}
               selectedVersion={selectedVersion}
             />
