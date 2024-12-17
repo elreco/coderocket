@@ -322,15 +322,6 @@ export default function ChatCompletion({
               </div>
             </div>
             <div className="flex items-center space-x-2">
-              {!isLoading && title && authorized && (
-                <ComponentSettings
-                  isVisible={isVisible}
-                  handleVisibility={handleVisibility}
-                  currentTheme={currentTheme}
-                  setTheme={setTheme}
-                  themes={themes}
-                />
-              )}
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
@@ -400,6 +391,15 @@ export default function ChatCompletion({
                   <p>Share Component</p>
                 </TooltipContent>
               </Tooltip>
+              {!isLoading && title && authorized && (
+                <ComponentSettings
+                  isVisible={isVisible}
+                  handleVisibility={handleVisibility}
+                  currentTheme={currentTheme}
+                  setTheme={setTheme}
+                  themes={themes}
+                />
+              )}
             </div>
           </div>
           <div className="m-0 flex h-full flex-1 flex-col">
