@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 type ComponentSettingsProps = {
   isVisible: boolean;
   handleVisibility: (checked: boolean) => void;
-  currentTheme: string;
+  selectedTheme: string;
   setTheme: (theme: string) => void;
   themes: string[];
 };
@@ -22,7 +22,7 @@ type ComponentSettingsProps = {
 export default function ComponentSettings({
   isVisible,
   handleVisibility,
-  currentTheme,
+  selectedTheme,
   setTheme,
   themes,
 }: ComponentSettingsProps) {
@@ -52,7 +52,7 @@ export default function ComponentSettings({
         <div>
           <h3 className="mb-1 text-base font-semibold">Change theme</h3>
           <h4 className="mb-4 text-sm">
-            Current theme: <span className="text-primary">{currentTheme}</span>
+            Current theme: <span className="text-primary">{selectedTheme}</span>
           </h4>
           <div className="space-y-4">
             <div className="grid grid-cols-3 gap-4">
@@ -62,7 +62,7 @@ export default function ComponentSettings({
                   className={cn(
                     "aspect-video cursor-pointer rounded-md items-center justify-center border-2 opacity-75 hover:border-2 hover:border-primary hover:opacity-100 overflow-hidden",
                     {
-                      "border-primary opacity-100": currentTheme === theme,
+                      "border-primary opacity-100": selectedTheme === theme,
                     },
                   )}
                   onClick={() => setTheme(theme)}

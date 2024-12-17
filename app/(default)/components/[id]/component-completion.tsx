@@ -90,14 +90,14 @@ export default function ChatCompletion({
   const { toast } = useToast();
   const router = useRouter();
   const pathname = usePathname();
-  const [currentTheme, setCurrentTheme] = useState(
-    lastAssistantMessage?.theme || defaultTheme,
-  );
 
   const [messages, setMessages] = useState(fetchedMessages);
 
   const [selectedVersion, setSelectedVersion] = useState(
     lastUserMessage.version,
+  );
+  const [selectedTheme, setSelectedTheme] = useState(
+    lastAssistantMessage?.theme || defaultTheme,
   );
   const [title, setTitle] = useState<string>(
     lastUserMessage.content?.toString() || "",
@@ -179,10 +179,10 @@ export default function ChatCompletion({
   }, []);
 
   const setTheme = async (theme: string) => {
-    if (isSettingLoading || theme === currentTheme) return;
+    if (isSettingLoading || theme === selectedTheme) return;
     setIsSettingLoading(true);
     await updateTheme(fetchedChat.id, theme, selectedVersion);
-    setCurrentTheme(theme);
+    setSelectedTheme(theme);
     setIsSettingLoading(false);
   };
 
@@ -208,6 +208,7 @@ export default function ChatCompletion({
     );
     if (selectedAssistantMessage?.content) {
       setActiveCompletion(selectedAssistantMessage.content);
+      setSelectedTheme(selectedAssistantMessage?.theme || defaultTheme);
     }
   };
 
@@ -366,7 +367,7 @@ export default function ChatCompletion({
                   <DialogTitle className="hidden">Fullscreen</DialogTitle>
                   <iframe
                     className="prose mx-auto size-full rounded-md border-none"
-                    src={`${getURL()}/content/${fetchedChat.id}/${selectedVersion}/${currentTheme}`}
+                    src={`${getURL()}/content/${fetchedChat.id}/${selectedVersion}/${selectedTheme}`}
                     title="Preview"
                   />
                 </DialogContent>
@@ -395,7 +396,7 @@ export default function ChatCompletion({
                 <ComponentSettings
                   isVisible={isVisible}
                   handleVisibility={handleVisibility}
-                  currentTheme={currentTheme}
+                  selectedTheme={selectedTheme}
                   setTheme={setTheme}
                   themes={themes}
                 />
@@ -408,7 +409,7 @@ export default function ChatCompletion({
               completion={activeCompletion}
               isCanvas={isCanvas}
               isLoading={isLoading || isSettingLoading}
-              theme={currentTheme}
+              selectedTheme={selectedTheme}
               selectedVersion={selectedVersion}
             />
             <div className="flex w-full flex-col items-center justify-between sm:flex-row">

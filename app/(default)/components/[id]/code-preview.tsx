@@ -22,14 +22,14 @@ export default function CodePreview({
   chatId,
   isCanvas,
   isLoading,
-  theme,
+  selectedTheme,
   selectedVersion,
 }: {
   completion: string;
   chatId: string;
   isCanvas: boolean;
   isLoading: boolean;
-  theme: string;
+  selectedTheme: string;
   selectedVersion: number;
 }) {
   const [, copy] = useCopyToClipboard();
@@ -44,7 +44,7 @@ export default function CodePreview({
     const iframeContent = iframeBuilder(
       completion,
       id?.toString() || "",
-      theme,
+      selectedTheme,
     );
     zip.file("component.html", completion);
     zip.file("page.html", iframeContent);
@@ -78,7 +78,7 @@ export default function CodePreview({
         };
       case "page":
         return {
-          value: iframeBuilder(completion, id?.toString() || "", theme),
+          value: iframeBuilder(completion, id?.toString() || "", selectedTheme),
           lang: "html",
           extensions: [html()],
         };
@@ -104,7 +104,7 @@ export default function CodePreview({
         ) : (
           <iframe
             className="prose mx-auto size-full border-none"
-            src={`${getURL()}/content/${chatId}/${selectedVersion}/${theme}`}
+            src={`${getURL()}/content/${chatId}/${selectedVersion}/${selectedTheme}`}
             title="Preview"
           />
         )}
