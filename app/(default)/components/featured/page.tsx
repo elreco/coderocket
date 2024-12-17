@@ -18,7 +18,7 @@ export default async function Featured() {
         title="Featured Components"
         subtitle="Start your projects with our handpicked components"
       />
-      <div className="grid grid-cols-1 gap-x-4 gap-y-10 pb-20 lg:grid-cols-2 2xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-x-4 gap-y-10 pb-20 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
         {chats?.map((chat) => <ComponentCard key={chat.chat_id} chat={chat} />)}
       </div>
     </Container>
