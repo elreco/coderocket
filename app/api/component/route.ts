@@ -254,10 +254,10 @@ const updateDataAfterCompletion = async (
 
   const { error, data } = await supabase.storage
     .from("chat-images")
-    .upload(`${chatId}/${Date.now()}`, screenshot, {
+    .upload(`${chatId}/${version}-${theme}`, screenshot, {
       contentType: "image/png",
       cacheControl: "3600",
-      upsert: false,
+      upsert: true,
     });
 
   if (error) {

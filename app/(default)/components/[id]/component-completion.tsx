@@ -26,11 +26,7 @@ import { createClient } from "@/utils/supabase/client";
 import { fetchMessagesByChatId } from "../actions";
 
 import ComponentSettings from "./(settings)/component-settings";
-import {
-  changeVisibilityByChatId,
-  deleteVersionByMessageId,
-  updateTheme,
-} from "./actions";
+import { deleteVersionByMessageId } from "./actions";
 import CodePreview from "./code-preview";
 import ComponentSidebar from "./component-sidebar";
 import ComponentSidebarMobile from "./component-sidebar-mobile";
@@ -44,37 +40,6 @@ interface Props {
   lastAssistantMessage: Tables<"messages"> | null;
   lastUserMessage: Tables<"messages">;
 }
-
-const themes = [
-  "light",
-  "dark",
-  "cupcake",
-  "retro",
-  "sunset",
-  "night",
-  "winter",
-  "cyberpunk",
-  "autumn",
-  "dracula",
-  "bumblebee",
-  "emerald",
-  "corporate",
-  "synthwave",
-  "halloween",
-  "forest",
-  "aqua",
-  "lofi",
-  "pastel",
-  "fantasy",
-  "wireframe",
-  "black",
-  "luxury",
-  "coffee",
-  "acid",
-  "lemonade",
-  "business",
-  "cmyk",
-];
 
 export default function ChatCompletion({
   fetchedChat,
@@ -106,7 +71,6 @@ export default function ChatCompletion({
   const [isVisible, setVisible] = useState(!fetchedChat.is_private);
   const [input, setInput] = useState<string>("");
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isSettingLoading, setIsSettingLoading] = useState(false);
 
   useEffect(() => {
     const {
@@ -178,14 +142,6 @@ export default function ChatCompletion({
     }
   }, []);
 
-  const setTheme = async (theme: string) => {
-    if (isSettingLoading || theme === selectedTheme) return;
-    setIsSettingLoading(true);
-    await updateTheme(fetchedChat.id, theme, selectedVersion);
-    setSelectedTheme(theme);
-    setIsSettingLoading(false);
-  };
-
   const handleSubmitToAI = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setCanvas(false);
@@ -236,24 +192,6 @@ export default function ChatCompletion({
       description: "The URL has been successfully saved to your clipboard",
       duration: 5000,
     });
-  };
-
-  const handleVisibility = async () => {
-    if (isSettingLoading) return;
-    try {
-      setIsSettingLoading(true);
-      await changeVisibilityByChatId(fetchedChat.id, !isVisible);
-      setVisible(!isVisible);
-      setIsSettingLoading(false);
-    } catch {
-      toast({
-        variant: "destructive",
-        title: "Premium account required",
-        description:
-          "You are not premium, the visibility cannot be changed. Please upgrade to premium and try again.",
-        duration: 5000,
-      });
-    }
   };
 
   const handleDeleteVersion = async (messageId: number) => {
@@ -395,10 +333,12 @@ export default function ChatCompletion({
               {!isLoading && title && authorized && (
                 <ComponentSettings
                   isVisible={isVisible}
-                  handleVisibility={handleVisibility}
+                  setVisible={setVisible}
                   selectedTheme={selectedTheme}
-                  setTheme={setTheme}
-                  themes={themes}
+                  setSelectedTheme={setSelectedTheme}
+                  selectedVersion={selectedVersion}
+                  chatId={fetchedChat.id}
+                  refreshChatData={refreshChatData}
                 />
               )}
             </div>
@@ -408,7 +348,7 @@ export default function ChatCompletion({
               chatId={fetchedChat.id}
               completion={activeCompletion}
               isCanvas={isCanvas}
-              isLoading={isLoading || isSettingLoading}
+              isLoading={isLoading}
               selectedTheme={selectedTheme}
               selectedVersion={selectedVersion}
             />

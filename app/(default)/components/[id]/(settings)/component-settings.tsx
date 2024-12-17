@@ -1,4 +1,5 @@
-import { Settings } from "lucide-react";
+import { Settings, Loader } from "lucide-react";
+import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -9,23 +10,89 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Switch } from "@/components/ui/switch";
+import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+
+import { changeVisibilityByChatId, updateTheme } from "../actions";
+
+const themes = [
+  "light",
+  "dark",
+  "cupcake",
+  "retro",
+  "sunset",
+  "night",
+  "winter",
+  "cyberpunk",
+  "autumn",
+  "dracula",
+  "bumblebee",
+  "emerald",
+  "corporate",
+  "synthwave",
+  "halloween",
+  "forest",
+  "aqua",
+  "lofi",
+  "pastel",
+  "fantasy",
+  "wireframe",
+  "black",
+  "luxury",
+  "coffee",
+  "acid",
+  "lemonade",
+  "business",
+  "cmyk",
+];
 
 type ComponentSettingsProps = {
   isVisible: boolean;
-  handleVisibility: (checked: boolean) => void;
+  setVisible: (visible: boolean) => void;
   selectedTheme: string;
-  setTheme: (theme: string) => void;
-  themes: string[];
+  setSelectedTheme: (theme: string) => void;
+  selectedVersion: number;
+  chatId: string;
+  refreshChatData: () => Promise<void>;
 };
 
 export default function ComponentSettings({
   isVisible,
-  handleVisibility,
+  setVisible,
   selectedTheme,
-  setTheme,
-  themes,
+  setSelectedTheme,
+  selectedVersion,
+  chatId,
+  refreshChatData,
 }: ComponentSettingsProps) {
+  const [isSettingLoading, setIsSettingLoading] = useState("");
+
+  const handleVisibility = async () => {
+    if (isSettingLoading) return;
+    try {
+      setIsSettingLoading(selectedTheme);
+      await changeVisibilityByChatId(chatId, !isVisible);
+      setVisible(!isVisible);
+      setIsSettingLoading(selectedTheme);
+    } catch {
+      toast({
+        variant: "destructive",
+        title: "Premium account required",
+        description:
+          "You are not premium, the visibility cannot be changed. Please upgrade to premium and try again.",
+        duration: 5000,
+      });
+    }
+  };
+
+  const setTheme = async (theme: string) => {
+    if (isSettingLoading || theme === selectedTheme) return;
+    setIsSettingLoading(theme);
+    await updateTheme(chatId, theme, selectedVersion);
+    await refreshChatData();
+    setSelectedTheme(theme);
+    setIsSettingLoading("");
+  };
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -60,17 +127,22 @@ export default function ComponentSettings({
                 <div
                   key={theme}
                   className={cn(
-                    "aspect-video cursor-pointer rounded-md items-center justify-center border-2 opacity-75 hover:border-2 hover:border-primary hover:opacity-100 overflow-hidden",
+                    "relative aspect-video cursor-pointer rounded-md items-center justify-center border-2 opacity-75 hover:border-2 hover:border-primary hover:opacity-100 overflow-hidden",
                     {
                       "border-primary opacity-100": selectedTheme === theme,
                     },
                   )}
                   onClick={() => setTheme(theme)}
                 >
+                  {isSettingLoading === theme && (
+                    <Loader className="absolute inset-0 z-10 m-auto size-6 animate-spin text-foreground opacity-100" />
+                  )}
                   <img
                     src={`/daisy-themes/${theme}.png`}
                     alt="Theme"
-                    className="size-full scale-110 object-cover"
+                    className={cn("size-full scale-110 object-cover", {
+                      "opacity-50": isSettingLoading === theme,
+                    })}
                   />
                 </div>
               ))}

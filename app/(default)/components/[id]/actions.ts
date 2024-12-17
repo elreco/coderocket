@@ -1,6 +1,8 @@
 "use server";
 
 import { getSubscription } from "@/app/supabase-server";
+import { captureScreenshot } from "@/utils/capture-screenshot";
+import { getURL } from "@/utils/helpers";
 import { createClient } from "@/utils/supabase/server";
 
 export const changeVisibilityByChatId = async (
@@ -120,10 +122,28 @@ export const updateTheme = async (
   if (chatError) {
     throw new Error(`Failed to fetch chat: ${chatError.message}`);
   }
+  const screenshot = await captureScreenshot(
+    `${getURL()}content/${chatId}/${version}/${theme}`,
+  );
+
+  const { error, data } = await supabase.storage
+    .from("chat-images")
+    .upload(`${chatId}/${version}-${theme}`, screenshot, {
+      contentType: "image/png",
+      cacheControl: "3600",
+      upsert: true,
+    });
+  if (error) {
+    throw new Error("Failed to upload image to Supabase: " + error.message);
+  }
+
+  const { data: imageData } = supabase.storage
+    .from("chat-images")
+    .getPublicUrl(data.path);
 
   await supabase
     .from("messages")
-    .update({ theme })
+    .update({ theme, screenshot: imageData.publicUrl })
     .eq("chat_id", chatId)
     .eq("version", version)
     .eq("role", "assistant");
