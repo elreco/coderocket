@@ -30,7 +30,7 @@ interface Props {
   isLoading: boolean;
 }
 
-export default function ChatSidebar({
+export default function ComponentSidebar({
   selectedVersion,
   assistantMessages,
   messages,

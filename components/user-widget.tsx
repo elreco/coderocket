@@ -12,13 +12,9 @@ export function UserWidget({
   userFullName: string;
 }) {
   return (
-    <div className="flex items-center space-x-2">
-      <p className="text-sm text-muted-foreground">
-        {getRelativeDate(createdAt)}
-        {userFullName && ` by `}
-      </p>
+    <div className="flex items-center justify-center space-x-2">
       {userFullName && (
-        <div className="ml-2 flex items-center space-x-2">
+        <div className="flex items-center space-x-2">
           <Avatar>
             <AvatarImage src={userAvatarUrl} />
             <AvatarFallback>{getInitials(userFullName)}</AvatarFallback>
@@ -26,6 +22,9 @@ export function UserWidget({
           <p className="text-sm font-medium">{userFullName}</p>
         </div>
       )}
+      <p className="text-xs font-semibold text-primary">
+        {getRelativeDate(createdAt)}
+      </p>
     </div>
   );
 }

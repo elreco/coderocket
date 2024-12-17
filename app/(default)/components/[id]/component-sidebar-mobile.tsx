@@ -33,7 +33,7 @@ interface Props {
   authorized: boolean;
 }
 
-export default function ChatSidebarMobile({
+export default function ComponentSidebarMobile({
   selectedVersion,
   assistantMessages,
   messages,

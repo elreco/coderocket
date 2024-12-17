@@ -3,7 +3,6 @@ import Link from "next/link";
 
 import { capitalizeFirstLetter } from "@/utils/helpers";
 
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card";
 import { UserWidget } from "./user-widget";
 
 type GetComponentsReturnType = {
@@ -24,35 +23,32 @@ export default function ComponentCard({
   chat: GetComponentsReturnType;
 }) {
   return (
-    <HoverCard key={chat.chat_id}>
-      <HoverCardTrigger asChild>
-        <div className="relative aspect-video w-full">
-          {chat.last_assistant_message && (
-            <Image
-              src={chat.last_assistant_message}
-              fill
-              className="w-full rounded-md border object-cover shadow-md"
-              alt=""
-            />
-          )}
-          <Link
-            href={`/components/${chat.chat_id}`}
-            className="group absolute inset-0 z-10 flex cursor-pointer select-none items-end justify-end rounded-md bg-background/25 transition-all duration-300 hover:bg-transparent"
-          >
-            <h2 className="m-2 text-xs font-semibold text-foreground group-hover:hidden">
-              {capitalizeFirstLetter(chat.first_user_message, 50)}
-            </h2>
-          </Link>
+    <Link
+      key={chat.chat_id}
+      href={`/components/${chat.chat_id}`}
+      className="group flex flex-col"
+    >
+      <div className="mb-2 flex text-clip rounded-xl">
+        <div className="relative aspect-video size-full transition duration-300 md:group-hover:scale-105">
+          <Image
+            src={chat.last_assistant_message}
+            fill
+            sizes="600px"
+            className="rounded-md border object-cover"
+            alt=""
+          />
         </div>
-      </HoverCardTrigger>
-      <HoverCardContent className="w-80">
-        <p className="mb-1">{chat.first_user_message}</p>
+      </div>
+      <div className="mb-1 line-clamp-3 break-words pt-4 text-sm font-medium md:mb-1 md:pt-4 lg:pt-2 lg:text-base">
+        {capitalizeFirstLetter(chat.first_user_message, 40)}
+      </div>
+      <div className="flex items-center gap-2">
         <UserWidget
           createdAt={chat.created_at}
           userAvatarUrl={chat.user_avatar_url}
           userFullName={chat.user_full_name}
         />
-      </HoverCardContent>
-    </HoverCard>
+      </div>
+    </Link>
   );
 }

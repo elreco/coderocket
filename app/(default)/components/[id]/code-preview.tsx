@@ -15,7 +15,7 @@ import { toast } from "@/hooks/use-toast";
 import { getURL } from "@/utils/helpers";
 import { iframeBuilder } from "@/utils/iframe-builder";
 
-import ChatSkeleton from "./chat-skeleton";
+import ChatSkeleton from "./component-skeleton";
 
 export default function CodePreview({
   completion,

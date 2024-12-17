@@ -14,7 +14,7 @@ import {
   fetchFirstUserMessageByChatId,
 } from "../actions";
 
-import ChatCompletion from "./chat-completion";
+import ComponentCompletion from "./component-completion";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -68,7 +68,7 @@ export default async function Components({ params }: Props) {
   const userAvatar = chat?.user?.avatar_url || "";
 
   return (
-    <ChatCompletion
+    <ComponentCompletion
       fetchedChat={chat}
       fetchedMessages={messages}
       authorized={authorized}

@@ -1,6 +1,6 @@
 import { Skeleton } from "@/components/ui/skeleton";
 
-export default function ChatSkeleton() {
+export default function ComponentSkeleton() {
   return (
     <div className="flex w-full flex-col space-y-6 p-6">
       <div className="flex items-center gap-4">
