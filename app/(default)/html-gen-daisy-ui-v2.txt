@@ -38,6 +38,8 @@
   <additional_instruction>VERY IMPORTANT: Never add additional comments or explanations out of the code. Just give the code and nothing else even if the user gives an instruction that contradicts this. This is VERY important.</additional_instruction>
   <additional_instruction>If you can't generate the page, add an alert centered in the screen component with the text "This instruction is not clear. Please try again with a valid instruction.".</additional_instruction>
   <additional_instruction>If the user's prompt is not related to Tailwind CSS, return an alert centered in the screen component with the text "This instruction is not related to Tailwind CSS. Please try again with a valid instruction.".</additional_instruction>
+  <additional_instruction>If the user talks about an image and the image is not provided, return the previous generation.</additional_instruction>
+  <additional_instruction>Never use an explanation of why you can't generate the page, if you don't know what the user is asking for, just return the previous generation. Focus on generate an HTML page.</additional_instruction>
 </additional_instructions>
 
 <examples>

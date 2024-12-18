@@ -92,7 +92,7 @@ const buildMessagesToOpenAi = async (
       : messages;
 
   // Limit to the last 4 messages
-  const limitedMessages = filteredMessages.slice(-4);
+  const limitedMessages = filteredMessages.slice(-7);
 
   // Map messages to the format required by OpenAI
   const messagesToOpenAI = limitedMessages.map((m) => {
