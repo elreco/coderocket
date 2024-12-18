@@ -1,12 +1,15 @@
 import { html } from "@codemirror/lang-html";
 import { draculaInit } from "@uiw/codemirror-theme-dracula";
-import CodeMirror, { EditorView } from "@uiw/react-codemirror";
+import CodeMirror, {
+  EditorView,
+  ReactCodeMirrorRef,
+} from "@uiw/react-codemirror";
 import clsx from "clsx";
 import saveAs from "file-saver";
 import JSZip from "jszip";
 import { Clipboard, Download } from "lucide-react";
 import { useParams } from "next/navigation";
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useRef } from "react";
 import { useCopyToClipboard } from "usehooks-ts";
 
 import { Button } from "@/components/ui/button";
@@ -35,8 +38,8 @@ export default function CodePreview({
   const [, copy] = useCopyToClipboard();
   const [activeTab, setActiveTab] = useState("component");
   const { id } = useParams();
-  const [isAutoScrollEnabled, setIsAutoScrollEnabled] = useState(true);
-  const codeMirrorRef = useRef<HTMLDivElement>(null);
+  // const [isAutoScrollEnabled, setIsAutoScrollEnabled] = useState(true);
+  const codeMirrorRef = useRef<ReactCodeMirrorRef>(null);
 
   const codeContent = useMemo(() => {
     switch (activeTab) {
@@ -57,15 +60,22 @@ export default function CodePreview({
     }
   }, [completion, activeTab, id, selectedTheme]);
 
-  useEffect(() => {
-    if (isAutoScrollEnabled && codeMirrorRef.current) {
-      codeMirrorRef.current.scrollTop = codeMirrorRef.current.scrollHeight;
-    }
-  }, [completion, isAutoScrollEnabled]);
+  // useEffect(() => {
+  //   if (isAutoScrollEnabled && codeMirrorRef.current) {
+  //     const editor = codeMirrorRef.current.view;
+  //     if (editor) {
+  //       editor.scrollDOM.scrollTo({
+  //         top: editor.scrollDOM.scrollHeight,
+  //         behavior: "smooth",
+  //       });
+  //     }
+  //   }
+  // }, [completion, isAutoScrollEnabled]);
 
-  const handleUserScroll = () => {
-    setIsAutoScrollEnabled(false);
-  };
+  // const handleUserScroll = () => {
+  //   console.log("User scrolled");
+  //   setIsAutoScrollEnabled(false);
+  // };
 
   const downloadCode = async () => {
     const htmlContent = completion || "";
@@ -124,8 +134,6 @@ export default function CodePreview({
           "group transition-[width]",
           isCanvas ? "invisible size-0" : "visible size-full",
         )}
-        ref={codeMirrorRef}
-        onScroll={handleUserScroll}
       >
         <div className="relative flex size-full flex-col rounded-none border-none">
           <Tabs
@@ -143,6 +151,7 @@ export default function CodePreview({
               className="m-0 flex h-0 w-full grow transition-all duration-300 ease-in-out"
             >
               <CodeMirror
+                ref={codeMirrorRef}
                 theme={draculaInit({
                   settings: {
                     background: "hsl(var(--secondary))",
@@ -159,6 +168,7 @@ export default function CodePreview({
                   EditorView.lineWrapping,
                 ]}
                 readOnly
+                // onScroll={handleUserScroll}
                 basicSetup={{
                   lineNumbers: true,
                   foldGutter: true,
