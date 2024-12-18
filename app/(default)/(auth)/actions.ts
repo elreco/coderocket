@@ -50,7 +50,7 @@ export async function register(formData: FormData) {
     return { error: updateError.message };
   }
 
-  return { url: "/" };
+  return { url: "/register" };
 }
 
 export async function signInWithEmail(formData: FormData) {
