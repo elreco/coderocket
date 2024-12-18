@@ -4,7 +4,7 @@ import { useCompletion } from "ai/react";
 import { Fullscreen, LoaderCircle } from "lucide-react";
 import { Code, Share, Tv } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { useCopyToClipboard } from "usehooks-ts";
 
 import { Container } from "@/components/container";
@@ -86,49 +86,42 @@ export default function ChatCompletion({
     };
   });
 
-  const { completion, isLoading, stop, complete } = useCompletion({
-    api: "/api/component",
-    headers: {
-      "X-Custom-Header": JSON.stringify({
-        id: fetchedChat.id,
-        selectedVersion,
-      }),
-    },
-    streamProtocol: "text",
-    initialCompletion: lastAssistantMessage?.content,
-    onError: async (error: Error) => {
-      if (error.message === "payment-required") {
-        router.push("/pricing");
-        toast({
-          variant: "destructive",
-          title: "You have reached the limit of your free plan",
-          description: "Please upgrade to continue.",
-          duration: 5000,
-        });
-        return;
-      }
-      if (error.message) {
-        toast({
-          variant: "destructive",
-          title: "Something went wrong",
-          description: error.message,
-          duration: 5000,
-        });
-      }
-    },
-    onFinish: () => {
-      refreshChatData();
-      setCanvas(true);
-    },
-  });
-
-  const [activeCompletion, setActiveCompletion] = useState(completion);
-
-  useEffect(() => {
-    if (completion) {
-      setActiveCompletion(completion);
-    }
-  }, [completion]);
+  const { completion, isLoading, stop, complete, setCompletion } =
+    useCompletion({
+      api: "/api/component",
+      headers: {
+        "X-Custom-Header": JSON.stringify({
+          id: fetchedChat.id,
+          selectedVersion,
+        }),
+      },
+      streamProtocol: "text",
+      initialCompletion: lastAssistantMessage?.content,
+      onError: async (error: Error) => {
+        if (error.message === "payment-required") {
+          router.push("/pricing");
+          toast({
+            variant: "destructive",
+            title: "You have reached the limit of your free plan",
+            description: "Please upgrade to continue.",
+            duration: 5000,
+          });
+          return;
+        }
+        if (error.message) {
+          toast({
+            variant: "destructive",
+            title: "Something went wrong",
+            description: error.message,
+            duration: 5000,
+          });
+        }
+      },
+      onFinish: () => {
+        refreshChatData();
+        setCanvas(true);
+      },
+    });
 
   useEffect(() => {
     if (
@@ -144,29 +137,51 @@ export default function ChatCompletion({
 
   const handleSubmitToAI = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setCompletion("");
     setCanvas(false);
     complete(input);
   };
 
-  const handleVersionSelect = (version: number) => {
-    setSelectedVersion(version);
-    const selectedMessages = messages.filter((m) => m.version == version);
-    if (selectedMessages.length !== 2) {
-      return;
-    }
-    const selectedUserMessage = selectedMessages.find((m) => m.role === "user");
-    if (selectedUserMessage) {
-      setTitle(selectedUserMessage.content?.toString() ?? "");
-    }
+  const handleVersionSelect = useCallback(
+    (version: number) => {
+      setSelectedVersion(version);
+      const selectedMessages = messages.filter((m) => m.version == version);
+      if (selectedMessages.length !== 2) {
+        return;
+      }
+      const selectedUserMessage = selectedMessages.find(
+        (m) => m.role === "user",
+      );
+      if (selectedUserMessage) {
+        setTitle(selectedUserMessage.content?.toString() ?? "");
+      }
 
-    const selectedAssistantMessage = selectedMessages.find(
-      (m) => m.role === "assistant",
-    );
-    if (selectedAssistantMessage?.content) {
-      setActiveCompletion(selectedAssistantMessage.content);
-      setSelectedTheme(selectedAssistantMessage?.theme || defaultTheme);
+      const selectedAssistantMessage = selectedMessages.find(
+        (m) => m.role === "assistant",
+      );
+      if (selectedAssistantMessage?.content) {
+        setCompletion(selectedAssistantMessage.content);
+        setSelectedTheme(selectedAssistantMessage?.theme || defaultTheme);
+      }
+    },
+    [messages, setCompletion, setSelectedTheme, setTitle],
+  );
+
+  useEffect(() => {
+    if (messages.length > 0) {
+      const lastAssistantMessage = messages
+        .filter((m) => m.role === "assistant")
+        .reduce(
+          (prev, current) => (prev.version > current.version ? prev : current),
+          messages[0],
+        );
+
+      if (lastAssistantMessage) {
+        handleVersionSelect(lastAssistantMessage.version);
+      }
+      setInput("");
     }
-  };
+  }, [messages, handleVersionSelect]);
 
   const assistantMessages = useMemo(() => {
     return messages.filter((m) => m.role === "assistant").reverse();
@@ -214,22 +229,6 @@ export default function ChatCompletion({
     if (!refreshedChatMessages) return;
     setMessages(refreshedChatMessages);
   };
-
-  useEffect(() => {
-    if (messages.length > 0) {
-      const lastAssistantMessage = messages
-        .filter((m) => m.role === "assistant")
-        .reduce(
-          (prev, current) => (prev.version > current.version ? prev : current),
-          messages[0],
-        );
-
-      if (lastAssistantMessage) {
-        handleVersionSelect(lastAssistantMessage.version);
-      }
-      setInput("");
-    }
-  }, [messages]);
 
   return (
     <Container>
@@ -345,7 +344,7 @@ export default function ChatCompletion({
           <div className="m-0 flex h-full flex-1 flex-col">
             <CodePreview
               chatId={fetchedChat.id}
-              completion={activeCompletion}
+              completion={completion}
               isCanvas={isCanvas}
               isLoading={isLoading}
               selectedTheme={selectedTheme}

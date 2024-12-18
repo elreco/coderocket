@@ -6,7 +6,7 @@ import saveAs from "file-saver";
 import JSZip from "jszip";
 import { Clipboard, Download } from "lucide-react";
 import { useParams } from "next/navigation";
-import { useState } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useCopyToClipboard } from "usehooks-ts";
 
 import { Button } from "@/components/ui/button";
@@ -35,6 +35,37 @@ export default function CodePreview({
   const [, copy] = useCopyToClipboard();
   const [activeTab, setActiveTab] = useState("component");
   const { id } = useParams();
+  const [isAutoScrollEnabled, setIsAutoScrollEnabled] = useState(true);
+  const codeMirrorRef = useRef<HTMLDivElement>(null);
+
+  const codeContent = useMemo(() => {
+    switch (activeTab) {
+      case "component":
+        return {
+          value: completion,
+          lang: "html",
+          extensions: [html()],
+        };
+      case "page":
+        return {
+          value: iframeBuilder(completion, id?.toString() || "", selectedTheme),
+          lang: "html",
+          extensions: [html()],
+        };
+      default:
+        return { value: completion, lang: "html", extensions: [html()] };
+    }
+  }, [completion, activeTab, id, selectedTheme]);
+
+  useEffect(() => {
+    if (isAutoScrollEnabled && codeMirrorRef.current) {
+      codeMirrorRef.current.scrollTop = codeMirrorRef.current.scrollHeight;
+    }
+  }, [completion, isAutoScrollEnabled]);
+
+  const handleUserScroll = () => {
+    setIsAutoScrollEnabled(false);
+  };
 
   const downloadCode = async () => {
     const htmlContent = completion || "";
@@ -55,7 +86,7 @@ export default function CodePreview({
   };
 
   const copyRawHTML = () => {
-    const { value } = getCodeContent();
+    const { value } = codeContent;
 
     if (!value) return;
     copy(value);
@@ -67,27 +98,6 @@ export default function CodePreview({
       duration: 5000,
     });
   };
-
-  const getCodeContent = () => {
-    switch (activeTab) {
-      case "component":
-        return {
-          value: completion,
-          lang: "html",
-          extensions: [html()],
-        };
-      case "page":
-        return {
-          value: iframeBuilder(completion, id?.toString() || "", selectedTheme),
-          lang: "html",
-          extensions: [html()],
-        };
-      default:
-        return { value: completion, lang: "html", extensions: [html()] };
-    }
-  };
-
-  const { value, lang, extensions } = getCodeContent();
 
   return (
     <div className="flex size-full flex-col overflow-hidden rounded-md border xl:flex-row">
@@ -114,6 +124,8 @@ export default function CodePreview({
           "group transition-[width]",
           isCanvas ? "invisible size-0" : "visible size-full",
         )}
+        ref={codeMirrorRef}
+        onScroll={handleUserScroll}
       >
         <div className="relative flex size-full flex-col rounded-none border-none">
           <Tabs
@@ -137,12 +149,15 @@ export default function CodePreview({
                     gutterBackground: "hsl(var(--secondary))",
                   },
                 })}
-                value={value || ""}
-                lang={lang}
+                value={codeContent.value || ""}
+                lang={codeContent.lang}
                 height="100%"
                 width="100%"
                 className="size-full rounded-r-md"
-                extensions={[...extensions, EditorView.lineWrapping]}
+                extensions={[
+                  ...codeContent.extensions,
+                  EditorView.lineWrapping,
+                ]}
                 readOnly
                 basicSetup={{
                   lineNumbers: true,
