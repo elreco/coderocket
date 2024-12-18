@@ -36,20 +36,17 @@ export async function POST(req: Request) {
       prompt,
     );
     // Build messages for OpenAI
-    const { messagesToOpenAI: messages, isFirstMessageWithImage } =
-      await buildMessagesToOpenAi(
-        messagesFromDatabase,
-        prompt,
-        imageUrl,
-        selectedVersion,
-      );
+    const { messagesToOpenAI: messages } = await buildMessagesToOpenAi(
+      messagesFromDatabase,
+      prompt,
+      imageUrl,
+      selectedVersion,
+    );
 
     const stream = streamText({
       messages,
       model: anthropicModel(
-        isFirstMessageWithImage
-          ? "claude-3-5-sonnet-latest"
-          : "claude-3-5-haiku-latest",
+        imageUrl ? "claude-3-5-sonnet-latest" : "claude-3-5-haiku-latest",
       ),
       system: contentMd,
       maxSteps: 5,
@@ -84,17 +81,16 @@ const buildMessagesToOpenAi = async (
   imageUrl?: string | null | undefined,
   selectedVersion?: number,
 ) => {
-  let isFirstMessageWithImage = false;
-  // Filter messages based on selectedVersion if provided
+  // Filtrer les messages en fonction de selectedVersion si fourni
   const filteredMessages =
     selectedVersion !== undefined
       ? messages.filter((m) => m.version <= selectedVersion)
       : messages;
 
-  // Limit to the last 4 messages
-  const limitedMessages = filteredMessages.slice(-7);
+  // Limiter aux derniers messages pour obtenir un nombre pair
+  const limitedMessages = filteredMessages.slice(-4);
 
-  // Map messages to the format required by OpenAI
+  // Mapper les messages au format requis par OpenAI
   const messagesToOpenAI = limitedMessages.map((m) => {
     return {
       role: m.role as "user" | "assistant" | "tool" | "system",
@@ -102,9 +98,20 @@ const buildMessagesToOpenAi = async (
     };
   }) as CoreMessage[];
 
-  // Add the prompt and optional imageUrl as the final user message
-  if (imageUrl && messages.length === 1) {
-    isFirstMessageWithImage = true;
+  if (messagesToOpenAI.length === 1 && imageUrl) {
+    messagesToOpenAI[0].content = [
+      {
+        type: "text",
+        text: prompt,
+      },
+      {
+        type: "image",
+        image: new URL(`${storageUrl}/${imageUrl}`),
+      },
+    ];
+  }
+
+  if (messagesToOpenAI.length > 1 && imageUrl) {
     messagesToOpenAI.push({
       role: "user",
       content: [
@@ -118,15 +125,16 @@ const buildMessagesToOpenAi = async (
         },
       ],
     });
-  } else if (messagesToOpenAI.length > 1) {
+  }
+
+  if (messagesToOpenAI.length > 1 && !imageUrl) {
     messagesToOpenAI.push({
       role: "user",
       content: prompt,
     });
   }
 
-  // Return the final list of messages
-  return { messagesToOpenAI, isFirstMessageWithImage };
+  return { messagesToOpenAI };
 };
 
 const validateRequest = async (id: string, prompt: string) => {

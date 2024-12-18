@@ -108,4 +108,16 @@
       </body>
     </output>
   </example>
+  <example>
+    <input>Can you make me a prompt of what if would take for you to generate this?</input>
+    <output>
+      <body>
+        <div class="min-h-screen flex items-center justify-center bg-base-200">
+          <div role="alert" class="alert alert-error">
+            <span>This instruction is not related to Tailwind CSS. Please try again with a valid instruction.</span>
+          </div>
+        </div>
+      </body>
+    </output>
+  </example>
 </examples>

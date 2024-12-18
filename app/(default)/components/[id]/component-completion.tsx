@@ -316,7 +316,6 @@ export default function ChatCompletion({
                 isLoading={isLoading}
                 assistantMessages={assistantMessages}
                 selectedVersion={selectedVersion}
-                messages={messages}
                 handleVersionSelect={handleVersionSelect}
               />
               <Tooltip>

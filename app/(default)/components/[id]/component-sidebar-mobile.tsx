@@ -1,6 +1,5 @@
 import clsx from "clsx";
 import { XCircle, Layers } from "lucide-react";
-import { useRef, useEffect } from "react";
 
 import {
   AlertDialog,
@@ -26,7 +25,6 @@ import { Tables } from "@/types_db";
 interface Props {
   selectedVersion: number | null;
   assistantMessages: Tables<"messages">[];
-  messages: Tables<"messages">[];
   handleVersionSelect: (id: number) => void;
   handleDeleteVersion: (messageId: number) => void;
   isLoading: boolean;
@@ -36,20 +34,11 @@ interface Props {
 export default function ComponentSidebarMobile({
   selectedVersion,
   assistantMessages,
-  messages,
   handleVersionSelect,
   handleDeleteVersion,
   isLoading,
   authorized,
 }: Props) {
-  const scrollRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [messages]);
-
   return (
     <div className="block xl:hidden">
       <Drawer>
