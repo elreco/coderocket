@@ -1,5 +1,6 @@
 "use server";
 
+import { Provider } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
 
 import { getURL } from "@/utils/helpers";
@@ -67,10 +68,10 @@ export async function signInWithEmail(formData: FormData) {
   return { url: "/" };
 }
 
-export async function signInWithGithub() {
+export async function signInWithOAuth(provider: Provider) {
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: "github",
+    provider,
     options: {
       redirectTo: `${getURL()}/auth/callback`,
     },

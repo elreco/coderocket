@@ -1,5 +1,6 @@
 "use client";
 
+import { type IconType } from "@icons-pack/react-simple-icons";
 import { type LucideIcon } from "lucide-react";
 import Link from "next/link";
 
@@ -19,7 +20,7 @@ export function NavMain({
   items: {
     title: string;
     url: string;
-    icon: LucideIcon;
+    icon: LucideIcon | IconType;
     isActive?: boolean;
   }[];
   label: string;

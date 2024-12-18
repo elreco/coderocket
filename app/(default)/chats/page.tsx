@@ -5,6 +5,6 @@ export const metadata = {
   description: "Last Tailwind components generated with AI by our users",
 };
 
-export default async function Featured() {
+export default async function Chats() {
   redirect("/components");
 }

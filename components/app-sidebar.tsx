@@ -1,13 +1,7 @@
 "use client";
 
-import {
-  CreditCard,
-  Globe,
-  Rocket,
-  Sprout,
-  SquareTerminal,
-  Star,
-} from "lucide-react";
+import { SiProducthunt } from "@icons-pack/react-simple-icons";
+import { CreditCard, Globe, Rocket, SquareTerminal, Star } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import * as React from "react";
@@ -63,7 +57,7 @@ const data = {
     {
       title: "Product Hunt",
       url: "https://www.producthunt.com/posts/tailwind-ai?utm_source=badge-featured&utm_medium=badge&utm_souce=badge-tailwind&#0045;ai",
-      icon: Sprout,
+      icon: SiProducthunt,
     },
   ],
 };
