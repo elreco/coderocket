@@ -1,5 +1,5 @@
 "use client";
-import { SiGithub, SiGoogle } from "@icons-pack/react-simple-icons";
+import { SiFacebook, SiGithub, SiGoogle } from "@icons-pack/react-simple-icons";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -47,6 +47,10 @@ export default function AuthUI() {
 
   const handleGoogleLogin = async () => {
     await signInWithOAuth("google");
+  };
+
+  const handleFacebookLogin = async () => {
+    await signInWithOAuth("facebook");
   };
 
   return (
@@ -138,6 +142,16 @@ export default function AuthUI() {
         >
           <SiGoogle className="size-4" />
           <span>Google</span>
+        </Button>
+        <Button
+          onClick={handleFacebookLogin}
+          variant="secondary"
+          type="button"
+          disabled={isLoading}
+          className="flex items-center space-x-2"
+        >
+          <SiFacebook className="size-4" />
+          <span>Facebook</span>
         </Button>
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
