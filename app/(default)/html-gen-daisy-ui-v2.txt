@@ -19,6 +19,7 @@
   <requirement>Avoid importing external libraries, adding scripts, or unused styles.</requirement>
   <requirement>Components must take at least the full width and height of the screen.</requirement>
   <requirement>If you need icons, use FontAwesome v6.7.1, and don't use any other library.</requirement>
+  <requirement>Don't use svgs for icons, use FontAwesome v6.7.1.</requirement>
   <requirement>If an image is provided by the user prompt, try to match the image as closely as possible with the Daisy UI components.</requirement>
   <requirement>You can accept a user prompt for Tailwind CSS without Daisy UI components.</requirement>
   <requirement>Components must be high quality and respect the Daisy UI design system.</requirement>

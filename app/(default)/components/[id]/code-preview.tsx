@@ -1,15 +1,13 @@
 import { html } from "@codemirror/lang-html";
 import { draculaInit } from "@uiw/codemirror-theme-dracula";
-import CodeMirror, {
-  EditorView,
-  ReactCodeMirrorRef,
-} from "@uiw/react-codemirror";
+import CodeMirror, { ReactCodeMirrorRef } from "@uiw/react-codemirror";
 import clsx from "clsx";
 import saveAs from "file-saver";
 import JSZip from "jszip";
+import { debounce } from "lodash";
 import { Clipboard, Download } from "lucide-react";
 import { useParams } from "next/navigation";
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { useCopyToClipboard } from "usehooks-ts";
 
 import { Button } from "@/components/ui/button";
@@ -38,44 +36,43 @@ export default function CodePreview({
   const [, copy] = useCopyToClipboard();
   const [activeTab, setActiveTab] = useState("component");
   const { id } = useParams();
-  // const [isAutoScrollEnabled, setIsAutoScrollEnabled] = useState(true);
   const codeMirrorRef = useRef<ReactCodeMirrorRef>(null);
+  const [editorValue, setEditorValue] = useState(completion);
 
-  const codeContent = useMemo(() => {
-    switch (activeTab) {
-      case "component":
-        return {
-          value: completion,
-          lang: "html",
-          extensions: [html()],
-        };
-      case "page":
-        return {
-          value: iframeBuilder(completion, id?.toString() || "", selectedTheme),
-          lang: "html",
-          extensions: [html()],
-        };
-      default:
-        return { value: completion, lang: "html", extensions: [html()] };
-    }
-  }, [completion, activeTab, id, selectedTheme]);
+  const debouncedSetCodeContent = useMemo(
+    () =>
+      debounce((newContent: string) => {
+        codeMirrorRef.current?.view?.dispatch({
+          changes: {
+            from: 0,
+            to: codeMirrorRef.current.view.state.doc.length,
+            insert: newContent,
+          },
+        });
+        setEditorValue(newContent);
+      }, 100),
+    [],
+  );
 
-  // useEffect(() => {
-  //   if (isAutoScrollEnabled && codeMirrorRef.current) {
-  //     const editor = codeMirrorRef.current.view;
-  //     if (editor) {
-  //       editor.scrollDOM.scrollTo({
-  //         top: editor.scrollDOM.scrollHeight,
-  //         behavior: "smooth",
-  //       });
-  //     }
-  //   }
-  // }, [completion, isAutoScrollEnabled]);
+  useEffect(() => {
+    const newContent =
+      activeTab === "page"
+        ? iframeBuilder(completion, id?.toString() || "", selectedTheme)
+        : completion;
 
-  // const handleUserScroll = () => {
-  //   console.log("User scrolled");
-  //   setIsAutoScrollEnabled(false);
-  // };
+    codeMirrorRef.current?.view?.dispatch({
+      changes: {
+        from: 0,
+        to: codeMirrorRef.current.view.state.doc.length,
+        insert: newContent,
+      },
+    });
+    setEditorValue(newContent);
+  }, [activeTab, id, selectedTheme]);
+
+  useEffect(() => {
+    debouncedSetCodeContent(completion);
+  }, [completion]);
 
   const downloadCode = async () => {
     const htmlContent = completion || "";
@@ -96,7 +93,7 @@ export default function CodePreview({
   };
 
   const copyRawHTML = () => {
-    const { value } = codeContent;
+    const value = editorValue;
 
     if (!value) return;
     copy(value);
@@ -158,17 +155,13 @@ export default function CodePreview({
                     gutterBackground: "hsl(var(--secondary))",
                   },
                 })}
-                value={codeContent.value || ""}
-                lang={codeContent.lang}
+                value={editorValue}
+                lang="html"
                 height="100%"
                 width="100%"
                 className="size-full rounded-r-md"
-                extensions={[
-                  ...codeContent.extensions,
-                  EditorView.lineWrapping,
-                ]}
+                extensions={[html()]}
                 readOnly
-                // onScroll={handleUserScroll}
                 basicSetup={{
                   lineNumbers: true,
                   foldGutter: true,
