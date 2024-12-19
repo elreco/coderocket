@@ -96,30 +96,19 @@ export default function Hero() {
       formData.append("file", image as File);
     }
     formData.append("isVisible", isVisible.toString());
-    try {
-      const { id, error } = await createChat(prompt, formData);
-      if (error) {
-        toast({
-          variant: "destructive",
-          title: error.title,
-          description: error.description,
-          duration: 5000,
-        });
-        return;
-      }
-      router.push(`/components/${id}`);
-      return;
-    } catch {
+    const { id, error } = await createChat(prompt, formData);
+    if (error) {
       toast({
         variant: "destructive",
-        title: "Error",
-        description:
-          "You must be logged in and have a premium plan to create a component.",
+        title: error.title,
+        description: error.description,
         duration: 5000,
       });
       setLoading(false);
+      return;
     }
-    setLoading(false);
+    router.push(`/components/${id}`);
+    return;
   };
 
   const handleBadgeClick = (input: string) => {
