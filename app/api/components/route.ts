@@ -42,7 +42,6 @@ export async function POST(req: Request) {
       imageUrl,
       selectedVersion,
     );
-    console.log("messages", messages);
     const stream = streamText({
       messages,
       model: anthropicModel(
