@@ -1,3 +1,4 @@
+export const revalidate = 0;
 import { Analytics } from "@vercel/analytics/react";
 import clsx from "clsx";
 import { Rubik } from "next/font/google";
