@@ -1,7 +1,6 @@
 "use server";
 
 import { getSubscription } from "@/app/supabase-server";
-import { sanitizePrompt } from "@/lib/utils";
 import { isValidPrompt } from "@/lib/utils";
 import { maxPromptLength } from "@/utils/config";
 import { createClient } from "@/utils/supabase/server";
@@ -152,7 +151,7 @@ export const createChat = async (prompt: string, formData: FormData) => {
   }
 
   // Nettoyage de la prompt
-  const sanitizedPrompt = sanitizePrompt(prompt);
+  const sanitizedPrompt = prompt;
 
   // Validation de la prompt
   if (!isValidPrompt(sanitizedPrompt)) {

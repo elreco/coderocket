@@ -9,7 +9,6 @@ import {
   fetchMessagesByChatId,
 } from "@/app/(default)/components/actions";
 import { getSubscription } from "@/app/supabase-server";
-import { sanitizePrompt } from "@/lib/utils";
 import { isValidPrompt } from "@/lib/utils";
 import { Tables } from "@/types_db";
 import { captureScreenshot } from "@/utils/capture-screenshot";
@@ -181,7 +180,7 @@ const validateRequest = async (id: string, prompt: string) => {
     throw new Error("You can't have more than 200 versions");
   }
 
-  const sanitizedPrompt = sanitizePrompt(prompt);
+  const sanitizedPrompt = prompt;
 
   // Validation de la prompt
   if (!isValidPrompt(sanitizedPrompt)) {
