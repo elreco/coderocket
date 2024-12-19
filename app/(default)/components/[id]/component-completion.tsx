@@ -88,7 +88,7 @@ export default function ChatCompletion({
 
   const { completion, isLoading, stop, complete, setCompletion } =
     useCompletion({
-      api: "/api/component",
+      api: "/api/components",
       headers: {
         "X-Custom-Header": JSON.stringify({
           id: fetchedChat.id,

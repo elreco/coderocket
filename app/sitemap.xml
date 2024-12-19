@@ -6,13 +6,13 @@
     <priority>1.00</priority>
   </url>
   <url>
-    <loc>https://www.tailwindai.dev/chats</loc>
+    <loc>https://www.tailwindai.dev/components</loc>
     <lastmod>2024-06-17T19:53:33+00:00</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.80</priority>
   </url>
   <url>
-    <loc>https://www.tailwindai.dev/chats/featured</loc>
+    <loc>https://www.tailwindai.dev/components/featured</loc>
     <lastmod>2024-06-17T19:53:33+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.80</priority>
