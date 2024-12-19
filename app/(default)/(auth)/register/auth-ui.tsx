@@ -1,5 +1,5 @@
 "use client";
-import { SiGithub } from "@icons-pack/react-simple-icons";
+import { SiGithub, SiGoogle } from "@icons-pack/react-simple-icons";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -45,9 +45,9 @@ export default function AuthUI() {
     await signInWithOAuth("github");
   };
 
-  // const handleGoogleLogin = async () => {
-  //   await signInWithOAuth("google");
-  // };
+  const handleGoogleLogin = async () => {
+    await signInWithOAuth("google");
+  };
 
   return (
     <form onSubmit={handleRegister}>
@@ -129,7 +129,7 @@ export default function AuthUI() {
           <SiGithub className="size-4" />
           <span>GitHub</span>
         </Button>
-        {/* <Button
+        <Button
           onClick={handleGoogleLogin}
           variant="secondary"
           type="button"
@@ -138,7 +138,7 @@ export default function AuthUI() {
         >
           <SiGoogle className="size-4" />
           <span>Google</span>
-        </Button> */}
+        </Button>
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
             <span className="w-full border-t" />
