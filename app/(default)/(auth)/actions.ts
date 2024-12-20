@@ -30,8 +30,16 @@ export async function register(formData: FormData) {
     email: formData.get("email") as string,
     password: formData.get("password") as string,
   };
-
   const { error, data: returnedData } = await supabase.auth.signUp(data);
+
+  if (
+    returnedData.user?.identities &&
+    returnedData.user.identities.length === 0
+  ) {
+    return {
+      error: "User already exists in our database",
+    };
+  }
 
   if (error) {
     return { error: error.message };
@@ -50,7 +58,7 @@ export async function register(formData: FormData) {
     return { error: updateError.message };
   }
 
-  return { url: "/register" };
+  return { url: "/login" };
 }
 
 export async function signInWithEmail(formData: FormData) {

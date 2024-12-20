@@ -35,9 +35,7 @@ export default function AuthUI() {
         title: "Registered successfully!",
         description: "An email has been sent to you to verify your account.",
       });
-      if (result.url === "/register") {
-        router.push(result.url);
-      }
+      router.push(result.url);
       setIsLoading(false);
       return;
     }
