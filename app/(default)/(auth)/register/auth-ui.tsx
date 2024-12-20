@@ -36,6 +36,7 @@ export default function AuthUI() {
       if (result.url === "/register") {
         router.push(result.url);
       }
+      setIsLoading(false);
       return;
     }
     setIsLoading(false);
