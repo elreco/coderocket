@@ -27,6 +27,8 @@ export default function AuthUI() {
         description: result.error,
         duration: 5000,
       });
+      setIsLoading(false);
+      return;
     }
     if (result?.url) {
       toast({
