@@ -1,6 +1,9 @@
 import { html } from "@codemirror/lang-html";
 import { draculaInit } from "@uiw/codemirror-theme-dracula";
-import CodeMirror, { ReactCodeMirrorRef } from "@uiw/react-codemirror";
+import CodeMirror, {
+  EditorView,
+  ReactCodeMirrorRef,
+} from "@uiw/react-codemirror";
 import clsx from "clsx";
 import saveAs from "file-saver";
 import JSZip from "jszip";
@@ -160,7 +163,7 @@ export default function CodePreview({
                 height="100%"
                 width="100%"
                 className="size-full rounded-r-md"
-                extensions={[html()]}
+                extensions={[html(), EditorView.lineWrapping]}
                 readOnly
                 basicSetup={{
                   lineNumbers: true,
