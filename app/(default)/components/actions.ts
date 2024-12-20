@@ -1,7 +1,7 @@
 "use server";
 
 import { getSubscription } from "@/app/supabase-server";
-import { isValidPrompt } from "@/lib/utils";
+import { sanitizePrompt } from "@/lib/utils";
 import { maxPromptLength } from "@/utils/config";
 import { createClient } from "@/utils/supabase/server";
 
@@ -151,18 +151,7 @@ export const createChat = async (prompt: string, formData: FormData) => {
   }
 
   // Nettoyage de la prompt
-  const sanitizedPrompt = prompt;
-
-  // Validation de la prompt
-  if (!isValidPrompt(sanitizedPrompt)) {
-    return {
-      error: {
-        title: "Special characters and code are not allowed",
-        description:
-          "Tailwind AI is meant to generate components from simple instructions.",
-      },
-    };
-  }
+  const sanitizedPrompt = sanitizePrompt(prompt);
 
   if (sanitizedPrompt.length > maxPromptLength) {
     return {

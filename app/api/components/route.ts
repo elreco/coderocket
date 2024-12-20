@@ -9,7 +9,7 @@ import {
   fetchMessagesByChatId,
 } from "@/app/(default)/components/actions";
 import { getSubscription } from "@/app/supabase-server";
-import { isValidPrompt } from "@/lib/utils";
+import { sanitizePrompt } from "@/lib/utils";
 import { Tables } from "@/types_db";
 import { captureScreenshot } from "@/utils/capture-screenshot";
 import {
@@ -180,14 +180,7 @@ const validateRequest = async (id: string, prompt: string) => {
     throw new Error("You can't have more than 200 versions");
   }
 
-  const sanitizedPrompt = prompt;
-
-  // Validation de la prompt
-  if (!isValidPrompt(sanitizedPrompt)) {
-    throw new Error(
-      "Special characters and code are not allowed. Tailwind AI is meant to generate components from simple instructions.",
-    );
-  }
+  const sanitizedPrompt = sanitizePrompt(prompt);
 
   if (sanitizedPrompt.length > maxPromptLength) {
     throw new Error("Prompt length is too long");

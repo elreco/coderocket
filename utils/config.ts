@@ -9,7 +9,7 @@ export const screenshotApiUrl =
 
 export const maxImageSize = 1 * 1024 * 1024; // 1 Mo
 
-export const maxPromptLength = 150;
+export const maxPromptLength = 500;
 
 export const defaultTheme = "light";
 
