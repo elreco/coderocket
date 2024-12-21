@@ -5,9 +5,10 @@ import clsx from "clsx";
 import saveAs from "file-saver";
 import JSZip from "jszip";
 import { debounce } from "lodash";
+import { camelCase } from "lodash";
 import { Clipboard, Download } from "lucide-react";
 import { useParams } from "next/navigation";
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useCopyToClipboard } from "usehooks-ts";
 
 import { Button } from "@/components/ui/button";
@@ -19,73 +20,66 @@ import { iframeBuilder } from "@/utils/iframe-builder";
 import ChatSkeleton from "./component-skeleton";
 
 export default function CodePreview({
-  completion,
+  htmlFiles,
   chatId,
   isCanvas,
   isLoading,
   selectedTheme,
   selectedVersion,
+  submitSignal,
 }: {
-  completion: string;
+  htmlFiles: { name: string | null; content: string }[];
   chatId: string;
   isCanvas: boolean;
   isLoading: boolean;
   selectedTheme: string;
   selectedVersion: number;
+  submitSignal: boolean;
 }) {
   const [, copy] = useCopyToClipboard();
-  const [activeTab, setActiveTab] = useState("component");
   const { id } = useParams();
   const codeMirrorRef = useRef<ReactCodeMirrorRef>(null);
-  const [editorValue, setEditorValue] = useState(completion);
+  const [editorValue, setEditorValue] = useState("");
 
-  const debouncedSetCodeContent = useMemo(
-    () =>
-      debounce((newContent: string) => {
-        codeMirrorRef.current?.view?.dispatch({
-          changes: {
-            from: 0,
-            to: codeMirrorRef.current.view.state.doc.length,
-            insert: newContent,
-          },
-        });
-        setEditorValue(newContent);
-      }, 100),
-    [],
+  useEffect(() => {
+    setEditorValue("");
+  }, [submitSignal]);
+
+  const [activeTab, setActiveTab] = useState(() => {
+    if (htmlFiles.length > 0) {
+      const lastFile = htmlFiles[htmlFiles.length - 1];
+      setEditorValue(lastFile.content);
+      return camelCase(lastFile.name || "");
+    }
+    return "";
+  });
+
+  const debouncedUpdate = useCallback(
+    debounce(() => {
+      const lastFile = htmlFiles[htmlFiles.length - 1];
+      setEditorValue(lastFile.content);
+      setActiveTab(camelCase(lastFile.name || ""));
+    }, 200),
+    [htmlFiles],
   );
 
   useEffect(() => {
-    const newContent =
-      activeTab === "page"
-        ? iframeBuilder(completion, id?.toString() || "", selectedTheme)
-        : completion;
-
-    codeMirrorRef.current?.view?.dispatch({
-      changes: {
-        from: 0,
-        to: codeMirrorRef.current.view.state.doc.length,
-        insert: newContent,
-      },
-    });
-    setEditorValue(newContent);
-  }, [activeTab, id, selectedTheme]);
-
-  useEffect(() => {
-    debouncedSetCodeContent(completion);
-  }, [completion]);
+    debouncedUpdate();
+  }, [htmlFiles]);
 
   const downloadCode = async () => {
-    const htmlContent = completion || "";
-
-    if (!htmlContent) return;
+    if (!htmlFiles.length) return;
     const zip = new JSZip();
-    const iframeContent = iframeBuilder(
-      completion,
-      id?.toString() || "",
-      selectedTheme,
-    );
-    zip.file("component.html", completion);
-    zip.file("page.html", iframeContent);
+
+    htmlFiles.forEach((file) => {
+      const iframeContent = iframeBuilder(
+        file.content,
+        id?.toString() || "",
+        selectedTheme,
+      );
+      zip.file(`${file.name || "component"}.html`, file.content);
+      zip.file(`${file.name || "page"}.html`, iframeContent);
+    });
 
     zip.generateAsync({ type: "blob" }).then(function (content) {
       saveAs(content, "tailwindai-dev.zip");
@@ -104,6 +98,12 @@ export default function CodePreview({
         "Your component has been successfully saved to your clipboard",
       duration: 5000,
     });
+  };
+
+  const handleChange = (value: string) => {
+    setActiveTab(value);
+    const file = htmlFiles.find((file) => camelCase(file.name || "") === value);
+    if (file) setEditorValue(file.content);
   };
 
   return (
@@ -126,6 +126,7 @@ export default function CodePreview({
           />
         )}
       </div>
+
       <div
         className={clsx(
           "group transition-[width]",
@@ -134,18 +135,24 @@ export default function CodePreview({
       >
         <div className="relative flex size-full flex-col rounded-none border-none">
           <Tabs
-            defaultValue="component"
+            value={activeTab}
             className="relative flex flex-1 flex-col items-start justify-start"
-            onValueChange={setActiveTab}
+            onValueChange={handleChange}
           >
             <TabsList className="flex w-full items-start justify-start rounded-none border-none">
-              <TabsTrigger value="component">component.html</TabsTrigger>
-              <TabsTrigger value="page">page.html</TabsTrigger>
+              {htmlFiles.map((file) => (
+                <TabsTrigger
+                  key={camelCase(file.name || "")}
+                  value={camelCase(file.name || "")}
+                >
+                  {file.name}
+                </TabsTrigger>
+              ))}
             </TabsList>
 
             <TabsContent
               value={activeTab}
-              className="m-0 flex h-0 w-full grow transition-all duration-300 ease-in-out"
+              className="m-0 flex h-0 w-full max-w-full grow transition-all duration-300 ease-in-out"
             >
               <CodeMirror
                 ref={codeMirrorRef}
@@ -159,7 +166,7 @@ export default function CodePreview({
                 lang="html"
                 height="100%"
                 width="100%"
-                className="size-full rounded-r-md"
+                className="size-full max-w-full overflow-hidden rounded-r-md"
                 extensions={[html()]}
                 readOnly
                 basicSetup={{

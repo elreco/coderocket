@@ -19,6 +19,7 @@ import {
 import { UserWidget } from "@/components/user-widget";
 import { useToast } from "@/hooks/use-toast";
 import { Tables } from "@/types_db";
+import { handleAIResponseForHTML } from "@/utils/completion-parser";
 import { defaultTheme, maxPromptLength } from "@/utils/config";
 import { capitalizeFirstLetter, getURL } from "@/utils/helpers";
 import { createClient } from "@/utils/supabase/client";
@@ -71,6 +72,12 @@ export default function ChatCompletion({
   const [isVisible, setVisible] = useState(!fetchedChat.is_private);
   const [input, setInput] = useState<string>("");
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const [htmlFiles, setHtmlFiles] = useState<
+    { name: string | null; content: string }[]
+  >(handleAIResponseForHTML(lastAssistantMessage?.content || ""));
+
+  const [submitSignal, setSubmitSignal] = useState(false);
 
   useEffect(() => {
     const {
@@ -139,6 +146,7 @@ export default function ChatCompletion({
     e.preventDefault();
     setCompletion("");
     setCanvas(false);
+    setSubmitSignal((prev) => !prev);
     complete(input);
   };
 
@@ -229,6 +237,13 @@ export default function ChatCompletion({
     if (!refreshedChatMessages) return;
     setMessages(refreshedChatMessages);
   };
+
+  useEffect(() => {
+    if (completion) {
+      const htmlFiles = handleAIResponseForHTML(completion);
+      setHtmlFiles(htmlFiles);
+    }
+  }, [completion]);
 
   return (
     <Container>
@@ -344,11 +359,12 @@ export default function ChatCompletion({
           <div className="m-0 flex h-full flex-1 flex-col">
             <CodePreview
               chatId={fetchedChat.id}
-              completion={completion}
+              htmlFiles={htmlFiles}
               isCanvas={isCanvas}
               isLoading={isLoading}
               selectedTheme={selectedTheme}
               selectedVersion={selectedVersion}
+              submitSignal={submitSignal}
             />
             <div className="flex w-full flex-col items-center justify-between sm:flex-row">
               <form
