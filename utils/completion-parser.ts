@@ -1,26 +1,18 @@
-import * as cheerio from "cheerio";
+import { parse } from "node-html-parser";
 
 const extractHTMLFiles = (response: string) => {
   if (!response) return [];
-  const $ = cheerio.load(response, {
-    xml: { recognizeSelfClosing: false, xmlMode: false, decodeEntities: false },
-  });
-  const artifacts = $("tailwindaiartifact");
+  const root = parse(response);
+  const artifacts = root.querySelectorAll("tailwindaiartifact");
   const filesArray: { name: string | null; content: string }[] = [];
-
-  artifacts.each((_, artifact) => {
-    const files = $(artifact)
-      .find("tailwindaiFile")
-      .map((_, file) => {
-        return {
-          name: $(file).attr("name"),
-          content: $(file).html()?.trim() || "",
-        };
-      })
-      .get();
-    filesArray.push(
-      ...files.map((file) => ({ ...file, name: file.name || null })),
-    );
+  artifacts.forEach((artifact) => {
+    const files = artifact.querySelectorAll("tailwindaifile");
+    files.forEach((file) => {
+      filesArray.push({
+        name: file.getAttribute("name") || null,
+        content: file.innerHTML.trim(),
+      });
+    });
   });
 
   return filesArray;
