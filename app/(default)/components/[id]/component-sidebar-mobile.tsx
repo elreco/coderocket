@@ -53,7 +53,7 @@ export default function ComponentSidebarMobile({
               <div key={m.id} className="relative">
                 <img
                   alt=""
-                  src={m?.screenshot || ""}
+                  src={m?.screenshot || undefined}
                   className={clsx(
                     "aspect-video w-full rounded-md border object-cover",
                     selectedVersion === m.version

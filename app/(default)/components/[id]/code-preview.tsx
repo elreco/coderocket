@@ -4,11 +4,9 @@ import CodeMirror, { ReactCodeMirrorRef } from "@uiw/react-codemirror";
 import clsx from "clsx";
 import saveAs from "file-saver";
 import JSZip from "jszip";
-import { debounce } from "lodash";
-import { camelCase } from "lodash";
 import { Clipboard, Download } from "lucide-react";
 import { useParams } from "next/navigation";
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useCopyToClipboard } from "usehooks-ts";
 
 import { Button } from "@/components/ui/button";
@@ -26,7 +24,6 @@ export default function CodePreview({
   isLoading,
   selectedTheme,
   selectedVersion,
-  submitSignal,
 }: {
   htmlFiles: { name: string | null; content: string }[];
   chatId: string;
@@ -34,37 +31,42 @@ export default function CodePreview({
   isLoading: boolean;
   selectedTheme: string;
   selectedVersion: number;
-  submitSignal: boolean;
 }) {
   const [, copy] = useCopyToClipboard();
   const { id } = useParams();
   const codeMirrorRef = useRef<ReactCodeMirrorRef>(null);
   const [editorValue, setEditorValue] = useState("");
-
-  useEffect(() => {
-    setEditorValue("");
-  }, [submitSignal]);
+  const scrollPositionRef = useRef<number>(0);
 
   const [activeTab, setActiveTab] = useState(() => {
     if (htmlFiles.length > 0) {
       const lastFile = htmlFiles[htmlFiles.length - 1];
       setEditorValue(lastFile.content);
-      return camelCase(lastFile.name || "");
+      return lastFile.name || "";
     }
     return "";
   });
 
-  const debouncedUpdate = useCallback(
-    debounce(() => {
-      const lastFile = htmlFiles[htmlFiles.length - 1];
-      setEditorValue(lastFile.content);
-      setActiveTab(camelCase(lastFile.name || ""));
-    }, 200),
-    [htmlFiles],
-  );
-
   useEffect(() => {
-    debouncedUpdate();
+    const lastFile = htmlFiles[htmlFiles.length - 1];
+    if (lastFile) {
+      const editor = codeMirrorRef.current?.view;
+      if (editor) {
+        scrollPositionRef.current = editor.scrollDOM.scrollTop;
+      }
+
+      setEditorValue(lastFile.content);
+      setActiveTab(lastFile.name || "");
+
+      requestAnimationFrame(() => {
+        if (editor) {
+          editor.scrollDOM.scrollTop = scrollPositionRef.current;
+        }
+      });
+    } else {
+      setEditorValue("");
+      setActiveTab("");
+    }
   }, [htmlFiles]);
 
   const downloadCode = async () => {
@@ -102,7 +104,7 @@ export default function CodePreview({
 
   const handleChange = (value: string) => {
     setActiveTab(value);
-    const file = htmlFiles.find((file) => camelCase(file.name || "") === value);
+    const file = htmlFiles.find((file) => file.name === value);
     if (file) setEditorValue(file.content);
   };
 
@@ -141,10 +143,7 @@ export default function CodePreview({
           >
             <TabsList className="flex w-full items-start justify-start rounded-none border-none">
               {htmlFiles.map((file) => (
-                <TabsTrigger
-                  key={camelCase(file.name || "")}
-                  value={camelCase(file.name || "")}
-                >
+                <TabsTrigger key={file.name || ""} value={file.name || ""}>
                   {file.name}
                 </TabsTrigger>
               ))}
@@ -166,7 +165,7 @@ export default function CodePreview({
                 lang="html"
                 height="100%"
                 width="100%"
-                className="size-full max-w-full overflow-hidden rounded-r-md"
+                className="w-full max-w-full overflow-hidden rounded-r-md"
                 extensions={[html()]}
                 readOnly
                 basicSetup={{

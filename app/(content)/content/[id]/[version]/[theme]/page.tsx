@@ -1,7 +1,6 @@
 import { fetchAssistantMessageByChatIdAndVersion } from "@/app/(default)/components/actions";
-import { handleAIResponseForHTML } from "@/utils/completion-parser";
-import { defaultTheme } from "@/utils/config";
-import { partialIframeBuilder } from "@/utils/iframe-builder";
+
+import Render from "./render";
 
 export default async function Chats({
   params,
@@ -10,9 +9,6 @@ export default async function Chats({
 }) {
   const { id, version, theme } = await params;
   const message = await fetchAssistantMessageByChatIdAndVersion(id, version);
-  const content = partialIframeBuilder(
-    handleAIResponseForHTML(message?.content || "")[0].content,
-    theme || defaultTheme,
-  );
-  return <iframe srcDoc={content} className="size-full border-none" />;
+
+  return <Render message={message} theme={theme} />;
 }

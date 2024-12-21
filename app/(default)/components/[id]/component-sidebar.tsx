@@ -52,14 +52,14 @@ export default function ComponentSidebar({
 
   return (
     <div
-      className="hidden size-full space-y-3 overflow-auto pb-2 xl:block"
+      className="hidden h-full w-[120px] space-y-3 overflow-auto pb-2 xl:block"
       style={{ scrollbarWidth: "none" }}
     >
       {assistantMessages.map((m) => (
         <div key={m.id} className="relative">
           <img
             alt=""
-            src={m?.screenshot || ""}
+            src={m?.screenshot || undefined}
             className="aspect-video w-full rounded-md border object-cover"
           />
           <Tooltip>
@@ -91,7 +91,7 @@ export default function ComponentSidebar({
             >
               <img
                 alt=""
-                src={m?.screenshot || ""}
+                src={m?.screenshot || undefined}
                 className="w-full rounded object-cover"
               />
               <p className="text-sm text-white">{getUserMessage(m.version)}</p>

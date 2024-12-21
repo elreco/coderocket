@@ -75,23 +75,7 @@ export default function ChatCompletion({
 
   const [htmlFiles, setHtmlFiles] = useState<
     { name: string | null; content: string }[]
-  >(handleAIResponseForHTML(lastAssistantMessage?.content || ""));
-
-  const [submitSignal, setSubmitSignal] = useState(false);
-
-  useEffect(() => {
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "SIGNED_OUT") {
-        stop();
-      }
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  });
+  >([]);
 
   const { completion, isLoading, stop, complete, setCompletion } =
     useCompletion({
@@ -104,6 +88,7 @@ export default function ChatCompletion({
       },
       streamProtocol: "text",
       initialCompletion: lastAssistantMessage?.content,
+      experimental_throttle: 500,
       onError: async (error: Error) => {
         if (error.message === "payment-required") {
           router.push("/pricing");
@@ -130,23 +115,11 @@ export default function ChatCompletion({
       },
     });
 
-  useEffect(() => {
-    if (
-      !lastAssistantMessage?.content &&
-      !isLoading &&
-      messages.length === 1 &&
-      lastUserMessage.content
-    ) {
-      setCanvas(false);
-      complete(lastUserMessage.content);
-    }
-  }, []);
-
   const handleSubmitToAI = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setCompletion("");
+    setHtmlFiles([]);
     setCanvas(false);
-    setSubmitSignal((prev) => !prev);
     complete(input);
   };
 
@@ -174,22 +147,6 @@ export default function ChatCompletion({
     },
     [messages, setCompletion, setSelectedTheme, setTitle],
   );
-
-  useEffect(() => {
-    if (messages.length > 0) {
-      const lastAssistantMessage = messages
-        .filter((m) => m.role === "assistant")
-        .reduce(
-          (prev, current) => (prev.version > current.version ? prev : current),
-          messages[0],
-        );
-
-      if (lastAssistantMessage) {
-        handleVersionSelect(lastAssistantMessage.version);
-      }
-      setInput("");
-    }
-  }, [messages, handleVersionSelect]);
 
   const assistantMessages = useMemo(() => {
     return messages.filter((m) => m.role === "assistant").reverse();
@@ -238,17 +195,64 @@ export default function ChatCompletion({
     setMessages(refreshedChatMessages);
   };
 
-  useEffect(() => {
-    if (completion) {
-      const htmlFiles = handleAIResponseForHTML(completion);
-      setHtmlFiles(htmlFiles);
+  const handleHtmlFiles = (completion: string) => {
+    const files = handleAIResponseForHTML(completion);
+    if (files.length > 0) {
+      setHtmlFiles(files);
     }
-  }, [completion]);
+  };
+
+  useEffect(() => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_OUT") {
+        stop();
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  });
+
+  useEffect(() => {
+    if (
+      !lastAssistantMessage?.content &&
+      !isLoading &&
+      messages.length === 1 &&
+      lastUserMessage.content
+    ) {
+      setCanvas(false);
+      complete(lastUserMessage.content);
+      handleHtmlFiles(completion);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (messages.length > 0) {
+      const lastAssistantMessage = messages
+        .filter((m) => m.role === "assistant")
+        .reduce(
+          (prev, current) => (prev.version > current.version ? prev : current),
+          messages[0],
+        );
+
+      if (lastAssistantMessage) {
+        handleVersionSelect(lastAssistantMessage.version);
+      }
+      setInput("");
+    }
+  }, [messages, handleVersionSelect]);
+
+  useEffect(() => {
+    handleHtmlFiles(completion);
+  }, [completion, isLoading]);
 
   return (
     <Container>
-      <div className="grid size-full grid-cols-6 justify-center space-x-0 xl:max-h-full xl:space-x-3">
-        <div className="col-span-6 flex h-full flex-col space-y-2 xl:col-span-5">
+      <div className="flex size-full flex-col justify-center space-x-0 xl:max-h-full xl:flex-row xl:space-x-3">
+        <div className="flex size-full flex-col space-y-2">
           <div className="flex flex-col items-center justify-start space-y-2 lg:flex-row lg:justify-between lg:space-y-0">
             <div className="font-medium">
               <div className="flex items-center space-x-2">
@@ -314,16 +318,18 @@ export default function ChatCompletion({
                   <p>Display in fullscreen</p>
                 </TooltipContent>
               </Tooltip>
-              <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-                <DialogContent className="h-[95%] max-w-[95%] rounded-none p-10">
-                  <DialogTitle className="hidden">Fullscreen</DialogTitle>
-                  <iframe
-                    className="prose mx-auto size-full rounded-md border-none"
-                    src={`${getURL()}/content/${fetchedChat.id}/${selectedVersion}/${selectedTheme}`}
-                    title="Preview"
-                  />
-                </DialogContent>
-              </Dialog>
+              {!isLoading && (
+                <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+                  <DialogContent className="h-[95%] max-w-[95%] rounded-none p-10">
+                    <DialogTitle className="hidden">Fullscreen</DialogTitle>
+                    <iframe
+                      className="prose mx-auto size-full rounded-md border-none"
+                      src={`${getURL()}/content/${fetchedChat.id}/${selectedVersion}/${selectedTheme}`}
+                      title="Preview"
+                    />
+                  </DialogContent>
+                </Dialog>
+              )}
               <ComponentSidebarMobile
                 authorized={authorized}
                 handleDeleteVersion={handleDeleteVersion}
@@ -364,9 +370,8 @@ export default function ChatCompletion({
               isLoading={isLoading}
               selectedTheme={selectedTheme}
               selectedVersion={selectedVersion}
-              submitSignal={submitSignal}
             />
-            <div className="flex w-full flex-col items-center justify-between sm:flex-row">
+            {/* <div className="flex w-full flex-col items-center justify-between sm:flex-row">
               <form
                 className="flex w-full items-center"
                 onSubmit={handleSubmitToAI}
@@ -396,7 +401,7 @@ export default function ChatCompletion({
                   userFullName={userFullName}
                 />
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
         <ComponentSidebar
