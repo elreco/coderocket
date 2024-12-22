@@ -51,28 +51,63 @@ export default function CodePreview({
     return "";
   });
 
+  const [userScrolled, setUserScrolled] = useState(false);
+  const editorWrapperRef = useRef<HTMLDivElement>(null);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const lastScrollPosition = useRef<number>(0);
+
   useEffect(() => {
     const lastFile = htmlFiles[htmlFiles.length - 1];
-    if (lastFile) {
-      const editor = codeMirrorRef.current?.view;
-      if (editor) {
-        const currentScroll = editor.scrollDOM.scrollTop;
-
-        setEditorValue(lastFile.content);
-        setActiveTab(lastFile.name || "");
-
-        setTimeout(() => {
-          editor.scrollDOM.scrollTop = currentScroll;
-        }, 0);
-      } else {
-        setEditorValue(lastFile.content);
-        setActiveTab(lastFile.name || "");
-      }
-    } else {
+    if (!lastFile) {
       setEditorValue("");
       setActiveTab("");
+      return;
+    }
+
+    const editor = codeMirrorRef.current?.view;
+    if (editor) {
+      setIsUpdating(true);
+      lastScrollPosition.current = editor.scrollDOM.scrollTop;
+
+      setEditorValue(lastFile.content);
+      setActiveTab(lastFile.name || "");
+
+      requestAnimationFrame(() => {
+        if (codeMirrorRef.current?.view) {
+          codeMirrorRef.current.view.scrollDOM.scrollTop =
+            lastScrollPosition.current;
+          setIsUpdating(false);
+        }
+      });
+    } else {
+      setEditorValue(lastFile.content);
+      setActiveTab(lastFile.name || "");
     }
   }, [htmlFiles]);
+
+  useEffect(() => {
+    const wrapper = editorWrapperRef.current;
+    if (!wrapper) return;
+
+    const handleScroll = () => {
+      const isAtBottom =
+        wrapper.scrollHeight - wrapper.scrollTop === wrapper.clientHeight;
+      if (!isAtBottom) {
+        setUserScrolled(true);
+      }
+    };
+
+    wrapper.addEventListener("scroll", handleScroll);
+    return () => wrapper.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  useEffect(() => {
+    if (userScrolled) return;
+    const wrapper = editorWrapperRef.current;
+    if (wrapper) {
+      wrapper.scrollTop = wrapper.scrollHeight;
+    }
+  }, [htmlFiles, userScrolled]);
 
   const downloadCode = async () => {
     if (!htmlFiles.length) return;
@@ -108,9 +143,9 @@ export default function CodePreview({
   };
 
   const handleHtmlFiles = (completion: string) => {
+    setHtmlFiles([]);
     const files = handleAIcompletionForHTML(completion);
-    console.log(files);
-    if (files.length > 0 && isLoading) {
+    if (files.length > 0) {
       setHtmlFiles(files);
     }
   };
@@ -122,6 +157,9 @@ export default function CodePreview({
   };
 
   useEffect(() => {
+    if (!isLoading) {
+      return;
+    }
     handleHtmlFiles(completion);
   }, [completion, isLoading]);
 
@@ -186,7 +224,7 @@ export default function CodePreview({
                 lang="html"
                 height="100%"
                 width="100%"
-                className="w-full max-w-full overflow-hidden rounded-r-md"
+                className={`w-full max-w-full ${!userScrolled ? "scroll-smooth" : ""}`}
                 extensions={[html()]}
                 readOnly
                 basicSetup={{
@@ -196,6 +234,18 @@ export default function CodePreview({
                   highlightActiveLineGutter: true,
                   highlightSpecialChars: true,
                   tabSize: 2,
+                }}
+                onUpdate={(viewUpdate) => {
+                  if (isUpdating && lastScrollPosition.current > 0) {
+                    viewUpdate.view.scrollDOM.scrollTop =
+                      lastScrollPosition.current;
+                  }
+                }}
+                onChange={(value, viewUpdate) => {
+                  if (!isUpdating) {
+                    lastScrollPosition.current =
+                      viewUpdate.view.scrollDOM.scrollTop;
+                  }
                 }}
               />
             </TabsContent>

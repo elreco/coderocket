@@ -5,7 +5,7 @@ import {
 } from "@radix-ui/react-tooltip";
 import clsx from "clsx";
 import { X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 import {
   AlertDialog,
@@ -34,9 +34,14 @@ import { maxPromptLength } from "@/utils/config";
 import ComponentFiles from "./component-files";
 
 interface Props {
+  user: Tables<"users"> | null;
   selectedVersion: number | null;
   completion: string;
-  messages: Tables<"messages">[];
+  messages: (Tables<"messages"> & {
+    chats: Tables<"chats"> & {
+      user: Tables<"users">;
+    };
+  })[];
   handleVersionSelect: (id: number) => void;
   handleDeleteVersion: (messageId: number) => void;
   handleSubmitToAI: (
@@ -51,6 +56,7 @@ export default function ComponentSidebar({
   completion,
   selectedVersion,
   messages,
+  user,
   handleVersionSelect,
   handleDeleteVersion,
   handleSubmitToAI,
@@ -58,62 +64,66 @@ export default function ComponentSidebar({
   isLoading,
 }: Props) {
   const [input, setInput] = useState<string>("");
+  const [userScrolled, setUserScrolled] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      const isAtBottom =
+        Math.abs(
+          container.scrollHeight - container.scrollTop - container.clientHeight,
+        ) < 10;
+
+      if (!isAtBottom) {
+        setUserScrolled(true);
+      }
+    };
+
+    container.addEventListener("scroll", handleScroll);
+    return () => container.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (container && !userScrolled) {
+      container.scrollTop = container.scrollHeight;
+    }
+  }, [messages, completion]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     handleSubmitToAI(e, input);
     setInput("");
   };
-
-  useEffect(() => {
-    console.log("🔥 completion", completion);
-  }, [completion]);
+  console.log(messages);
 
   return (
     <div
-      className="relative hidden h-full w-[520px] rounded-md border bg-secondary xl:block"
+      className="relative hidden size-full overflow-hidden rounded-md border bg-secondary xl:block"
       style={{ scrollbarWidth: "none" }}
     >
       <div className="relative size-full">
-        <div className="flex size-full flex-col overflow-y-auto pb-12">
+        <div
+          ref={containerRef}
+          className="flex size-full flex-col overflow-y-auto scroll-smooth pb-12"
+        >
           {messages.map((m) => (
-            <div key={m.id} className="flex px-2 py-6 sm:px-4">
-              <Avatar className="mr-2 size-8 rounded-none">
-                <AvatarImage src="/logo-white.png" />
-                <AvatarFallback>T</AvatarFallback>
-              </Avatar>
-
-              <div className="flex w-full flex-col gap-4">
-                {splitContentIntoChunks(m.content).map((chunk, index) => (
-                  <div key={index}>
-                    {chunk.type === "text" && (
-                      <div className="whitespace-pre-wrap text-sm">
-                        {chunk.content}
-                      </div>
-                    )}
-                    {chunk.type === "artifact" && (
-                      <ComponentFiles completion={chunk.content} />
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
+            <ComponentFiles
+              key={m.id}
+              completion={m.content}
+              role={m.role}
+              user={m.chats.user}
+            />
           ))}
           {isLoading && completion && (
-            <div className="flex w-full flex-col gap-4">
-              {splitContentIntoChunks(completion).map((chunk, index) => (
-                <div key={index}>
-                  {chunk.type === "text" && (
-                    <div className="whitespace-pre-wrap text-sm">
-                      {chunk.content}
-                    </div>
-                  )}
-                  {chunk.type === "artifact" && (
-                    <ComponentFiles completion={chunk.content} />
-                  )}
-                </div>
-              ))}
-            </div>
+            <ComponentFiles
+              completion={completion}
+              role="assistant"
+              user={user}
+            />
           )}
         </div>
 

@@ -34,9 +34,10 @@ import ComponentSidebarMobile from "./component-sidebar-mobile";
 interface Props {
   fetchedChat: Tables<"chats"> & { user: Tables<"users"> | null };
   authorized: boolean;
-  fetchedMessages: Tables<"messages">[];
-  userAvatar: string;
-  userFullName: string;
+  fetchedMessages: (Tables<"messages"> & {
+    chats: Tables<"chats"> & { user: Tables<"users"> | null };
+  })[];
+  user: Tables<"users"> | null;
   lastAssistantMessage: Tables<"messages"> | null;
   lastUserMessage: Tables<"messages">;
 }
@@ -45,8 +46,7 @@ export default function ChatCompletion({
   fetchedChat,
   fetchedMessages,
   authorized,
-  userAvatar,
-  userFullName,
+  user,
   lastAssistantMessage,
   lastUserMessage,
 }: Props) {
@@ -234,8 +234,8 @@ export default function ChatCompletion({
 
   return (
     <Container>
-      <div className="flex size-full flex-col justify-center space-x-0 xl:max-h-full xl:flex-row xl:space-x-3">
-        <div className="flex size-full flex-col space-y-2">
+      <div className="grid size-full grid-cols-3 justify-center space-x-0 xl:max-h-full xl:flex-row xl:space-x-3">
+        <div className="col-span-2 flex size-full flex-col space-y-2">
           <div className="flex flex-col items-center justify-start space-y-2 lg:flex-row lg:justify-between lg:space-y-0">
             <div className="font-medium">
               <div className="flex items-center space-x-2">
@@ -354,16 +354,6 @@ export default function ChatCompletion({
               selectedTheme={selectedTheme}
               selectedVersion={selectedVersion}
             />
-            {/* <div className="flex w-full flex-col items-center justify-between sm:flex-row">
-
-              <div className="flex w-full items-center justify-end pt-1">
-                <UserWidget
-                  createdAt={lastUserMessage.created_at}
-                  userAvatarUrl={userAvatar}
-                  userFullName={userFullName}
-                />
-              </div>
-            </div> */}
           </div>
         </div>
         <ComponentSidebar
@@ -372,6 +362,7 @@ export default function ChatCompletion({
           handleSubmitToAI={handleSubmitToAI}
           selectedVersion={selectedVersion}
           messages={messages}
+          user={user}
           handleVersionSelect={handleVersionSelect}
           handleDeleteVersion={handleDeleteVersion}
           isLoading={isLoading}

@@ -5,73 +5,53 @@ const extractHTMLFiles = (completion: string) => {
 
   const filesArray: { name: string | null; content: string }[] = [];
 
-  console.log("completion reçue:", completion.substring(0, 200));
+  // Chercher la dernière balise ouvrante d'artifact complète
+  const artifactStartIndex = completion.lastIndexOf("<tailwindaiArtifact");
+  if (artifactStartIndex === -1) return [];
 
-  // Chercher d'abord la balise ouvrante de l'artifact
-  const artifactStartRegex = /<tailwindaiArtifact[^>]*>/i;
-  const artifactStart = completion.match(artifactStartRegex);
-  console.log("Artifact start trouvé:", artifactStart);
-  if (!artifactStart) return [];
+  // Trouver la fin de la balise ouvrante
+  const artifactOpenEndIndex = completion.indexOf(">", artifactStartIndex);
+  if (artifactOpenEndIndex === -1) return [];
 
-  // Trouver la balise fermante de l'artifact
-  const artifactEndRegex = /<\/tailwindaiArtifact>/i;
-  const artifactEnd = completion.match(artifactEndRegex);
-  if (!artifactEnd) return [];
+  // Extraire le contenu après la balise ouvrante
+  const contentAfterArtifact = completion.slice(artifactOpenEndIndex + 1);
 
-  // Extraire uniquement le contenu entre les balises artifact
-  const contentAfterArtifact = completion.slice(
-    artifactStart.index! + artifactStart[0].length,
-    artifactEnd.index,
-  );
+  // Regex pour trouver les balises de fichier
+  const fileRegex =
+    /<tailwindaiFile.*?name=["']([^"']*?)["'][^>]*>([\s\S]*?)(?=<\/tailwindaiFile>|<tailwindaiFile|$)/g;
 
-  console.log("🔥 contentAfterArtifact", contentAfterArtifact);
-  // Regex pour les balises de fichier
-  const openTagRegex = /<tailwindaiFile.*?name=["']([^"']*?)["'][^>]*>/gi;
-  let lastIndex = 0;
-  let currentFile: { name: string | null; content: string } | null = null;
-
-  // Parcourir toutes les balises ouvrantes de fichier
   let match;
-  while ((match = openTagRegex.exec(contentAfterArtifact)) !== null) {
-    if (currentFile) {
-      console.log("🔥 currentFile", currentFile);
-      // Ajouter le contenu accumulé jusqu'à la prochaine balise, en nettoyant les balises
-      let content = contentAfterArtifact.slice(lastIndex, match.index).trim();
-      content = content
-        .replace(/<\/tailwindaiFile>/g, "")
-        .replace(/<\/tailwindaiArtifact>/g, "")
-        .trim();
-      currentFile.content += content;
-      filesArray.push({ ...currentFile });
+  while ((match = fileRegex.exec(contentAfterArtifact)) !== null) {
+    const fileName = match[1];
+    let content = match[2];
+
+    // Si on trouve une balise fermante pour ce fichier, on l'utilise comme limite
+    const closeTagIndex = content.indexOf("</tailwindaiFile>");
+    if (closeTagIndex !== -1) {
+      content = content.slice(0, closeTagIndex);
     }
 
-    // Commencer un nouveau fichier
-    currentFile = {
-      name: match[1] || null,
-      content: "",
-    };
-
-    lastIndex = match.index + match[0].length;
-  }
-
-  // Ajouter le contenu restant pour le dernier fichier
-  if (currentFile) {
-    let content = contentAfterArtifact.slice(lastIndex).trim();
+    // Nettoyer le contenu sans affecter l'indentation
     content = content
       .replace(/<\/tailwindaiFile>/g, "")
       .replace(/<\/tailwindaiArtifact>/g, "")
-      .trim();
-    currentFile.content += content;
-    filesArray.push({ ...currentFile });
+      // Supprimer la première ligne si elle est vide
+      .replace(/^\n/, "")
+      // Retirer une indentation en trop
+      .replace(/^\s{4}/gm, "");
+
+    filesArray.push({
+      name: fileName || null,
+      content: content,
+    });
   }
-  console.log("🔥 filesArray", filesArray);
+
   return filesArray;
 };
 
 export const handleAIcompletionForHTML = (completion: string) => {
   const extractedHtmlFiles = extractHTMLFiles(completion);
-  console.log(extractedHtmlFiles);
-  console.log("🔥 extractedHtmlFiles", extractedHtmlFiles);
+  console.log("extractedHtmlFiles", extractedHtmlFiles);
   return extractedHtmlFiles;
 };
 

@@ -34,7 +34,15 @@ export const fetchMessagesByChatId = async (chatId: string) => {
   const supabase = await createClient();
   const { data } = await supabase
     .from("messages")
-    .select()
+    .select(
+      `
+      *,
+      chats (
+        user_id,
+        user:users (*)
+      )
+    `,
+    )
     .eq("chat_id", chatId)
     .order("version", { ascending: true })
     .order("role", { ascending: false });
