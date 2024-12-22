@@ -19,8 +19,7 @@ import {
 import { UserWidget } from "@/components/user-widget";
 import { useToast } from "@/hooks/use-toast";
 import { Tables } from "@/types_db";
-import { handleAIResponseForHTML } from "@/utils/completion-parser";
-import { defaultTheme, maxPromptLength } from "@/utils/config";
+import { defaultTheme } from "@/utils/config";
 import { capitalizeFirstLetter, getURL } from "@/utils/helpers";
 import { createClient } from "@/utils/supabase/client";
 
@@ -70,12 +69,7 @@ export default function ChatCompletion({
   );
   const [isCanvas, setCanvas] = useState(true);
   const [isVisible, setVisible] = useState(!fetchedChat.is_private);
-  const [input, setInput] = useState<string>("");
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-  const [htmlFiles, setHtmlFiles] = useState<
-    { name: string | null; content: string }[]
-  >([]);
 
   const { completion, isLoading, stop, complete, setCompletion } =
     useCompletion({
@@ -115,10 +109,12 @@ export default function ChatCompletion({
       },
     });
 
-  const handleSubmitToAI = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmitToAI = (
+    e: React.FormEvent<HTMLFormElement>,
+    input: string,
+  ) => {
     e.preventDefault();
     setCompletion("");
-    setHtmlFiles([]);
     setCanvas(false);
     complete(input);
   };
@@ -195,13 +191,6 @@ export default function ChatCompletion({
     setMessages(refreshedChatMessages);
   };
 
-  const handleHtmlFiles = (completion: string) => {
-    const files = handleAIResponseForHTML(completion);
-    if (files.length > 0) {
-      setHtmlFiles(files);
-    }
-  };
-
   useEffect(() => {
     const {
       data: { subscription },
@@ -225,7 +214,6 @@ export default function ChatCompletion({
     ) {
       setCanvas(false);
       complete(lastUserMessage.content);
-      handleHtmlFiles(completion);
     }
   }, []);
 
@@ -241,13 +229,8 @@ export default function ChatCompletion({
       if (lastAssistantMessage) {
         handleVersionSelect(lastAssistantMessage.version);
       }
-      setInput("");
     }
   }, [messages, handleVersionSelect]);
-
-  useEffect(() => {
-    handleHtmlFiles(completion);
-  }, [completion, isLoading]);
 
   return (
     <Container>
@@ -365,35 +348,14 @@ export default function ChatCompletion({
           <div className="m-0 flex h-full flex-1 flex-col">
             <CodePreview
               chatId={fetchedChat.id}
-              htmlFiles={htmlFiles}
+              completion={completion}
               isCanvas={isCanvas}
               isLoading={isLoading}
               selectedTheme={selectedTheme}
               selectedVersion={selectedVersion}
             />
             {/* <div className="flex w-full flex-col items-center justify-between sm:flex-row">
-              <form
-                className="flex w-full items-center"
-                onSubmit={handleSubmitToAI}
-              >
-                {authorized && (
-                  <div className="my-2 flex w-full space-x-4 rounded-md bg-gray-900 p-2">
-                    <Input
-                      autoFocus
-                      disabled={isLoading}
-                      value={input}
-                      onChange={(e) => setInput(e.target.value)}
-                      minLength={2}
-                      maxLength={maxPromptLength}
-                      placeholder="Add a button, modify a color..."
-                      required
-                    />
-                    <Button loading={isLoading} type="submit">
-                      Iterate
-                    </Button>
-                  </div>
-                )}
-              </form>
+
               <div className="flex w-full items-center justify-end pt-1">
                 <UserWidget
                   createdAt={lastUserMessage.created_at}
@@ -406,7 +368,8 @@ export default function ChatCompletion({
         </div>
         <ComponentSidebar
           authorized={authorized}
-          assistantMessages={assistantMessages}
+          completion={completion}
+          handleSubmitToAI={handleSubmitToAI}
           selectedVersion={selectedVersion}
           messages={messages}
           handleVersionSelect={handleVersionSelect}

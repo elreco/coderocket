@@ -12,20 +12,21 @@ import { useCopyToClipboard } from "usehooks-ts";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
+import { handleAIcompletionForHTML } from "@/utils/completion-parser";
 import { getURL } from "@/utils/helpers";
 import { iframeBuilder } from "@/utils/iframe-builder";
 
 import ChatSkeleton from "./component-skeleton";
 
 export default function CodePreview({
-  htmlFiles,
+  completion,
   chatId,
   isCanvas,
   isLoading,
   selectedTheme,
   selectedVersion,
 }: {
-  htmlFiles: { name: string | null; content: string }[];
+  completion: string;
   chatId: string;
   isCanvas: boolean;
   isLoading: boolean;
@@ -36,7 +37,10 @@ export default function CodePreview({
   const { id } = useParams();
   const codeMirrorRef = useRef<ReactCodeMirrorRef>(null);
   const [editorValue, setEditorValue] = useState("");
-  const scrollPositionRef = useRef<number>(0);
+
+  const [htmlFiles, setHtmlFiles] = useState<
+    { name: string | null; content: string }[]
+  >([]);
 
   const [activeTab, setActiveTab] = useState(() => {
     if (htmlFiles.length > 0) {
@@ -52,17 +56,18 @@ export default function CodePreview({
     if (lastFile) {
       const editor = codeMirrorRef.current?.view;
       if (editor) {
-        scrollPositionRef.current = editor.scrollDOM.scrollTop;
+        const currentScroll = editor.scrollDOM.scrollTop;
+
+        setEditorValue(lastFile.content);
+        setActiveTab(lastFile.name || "");
+
+        setTimeout(() => {
+          editor.scrollDOM.scrollTop = currentScroll;
+        }, 0);
+      } else {
+        setEditorValue(lastFile.content);
+        setActiveTab(lastFile.name || "");
       }
-
-      setEditorValue(lastFile.content);
-      setActiveTab(lastFile.name || "");
-
-      requestAnimationFrame(() => {
-        if (editor) {
-          editor.scrollDOM.scrollTop = scrollPositionRef.current;
-        }
-      });
     } else {
       setEditorValue("");
       setActiveTab("");
@@ -102,11 +107,27 @@ export default function CodePreview({
     });
   };
 
+  const handleHtmlFiles = (completion: string) => {
+    const files = handleAIcompletionForHTML(completion);
+    console.log(files);
+    if (files.length > 0 && isLoading) {
+      setHtmlFiles(files);
+    }
+  };
+
   const handleChange = (value: string) => {
     setActiveTab(value);
     const file = htmlFiles.find((file) => file.name === value);
     if (file) setEditorValue(file.content);
   };
+
+  useEffect(() => {
+    handleHtmlFiles(completion);
+  }, [completion, isLoading]);
+
+  useEffect(() => {
+    handleHtmlFiles(completion);
+  }, []);
 
   return (
     <div className="flex size-full flex-col overflow-hidden rounded-md border xl:flex-row">

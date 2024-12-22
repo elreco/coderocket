@@ -1,7 +1,7 @@
 "use client";
 
 import { Tables } from "@/types_db";
-import { handleAIResponseForHTML } from "@/utils/completion-parser";
+import { handleAIcompletionForHTML } from "@/utils/completion-parser";
 import { defaultTheme } from "@/utils/config";
 import { partialIframeBuilder } from "@/utils/iframe-builder";
 
@@ -13,7 +13,7 @@ export default function Render({
   theme: string;
 }) {
   const content = message?.content
-    ? handleAIResponseForHTML(message.content)
+    ? handleAIcompletionForHTML(message.content)
         .map((file) =>
           partialIframeBuilder(file.content, theme || defaultTheme),
         )
