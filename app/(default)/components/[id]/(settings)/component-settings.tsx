@@ -66,14 +66,14 @@ export default function ComponentSettings({
   refreshChatData,
 }: ComponentSettingsProps) {
   const [isSettingLoading, setIsSettingLoading] = useState("");
-
+  const [isVisibilityLoading, setIsVisibilityLoading] = useState(false);
   const handleVisibility = async () => {
-    if (isSettingLoading) return;
+    if (isVisibilityLoading || isSettingLoading) return;
     try {
-      setIsSettingLoading(selectedTheme);
+      setIsVisibilityLoading(true);
       await changeVisibilityByChatId(chatId, !isVisible);
       setVisible(!isVisible);
-      setIsSettingLoading(selectedTheme);
+      setIsVisibilityLoading(false);
     } catch {
       toast({
         variant: "destructive",
@@ -86,7 +86,8 @@ export default function ComponentSettings({
   };
 
   const setTheme = async (theme: string) => {
-    if (isSettingLoading || theme === selectedTheme) return;
+    if (isSettingLoading || isVisibilityLoading || theme === selectedTheme)
+      return;
     setIsSettingLoading(theme);
     await updateTheme(chatId, theme, selectedVersion);
     await refreshChatData();
@@ -112,7 +113,11 @@ export default function ComponentSettings({
                   When private, the component will not be visible to the public.
                 </p>
               </div>
-              <Switch checked={!isVisible} onCheckedChange={handleVisibility} />
+              <Switch
+                checked={!isVisible}
+                onCheckedChange={handleVisibility}
+                disabled={isVisibilityLoading}
+              />
             </div>
           </div>
         </div>
