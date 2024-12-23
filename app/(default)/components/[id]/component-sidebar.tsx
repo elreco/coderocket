@@ -52,7 +52,7 @@ export default function ComponentSidebar({
 
   return (
     <div
-      className="hidden h-full w-1/12 space-y-3 overflow-auto pb-2 xl:block"
+      className="hidden size-full space-y-3 overflow-auto pb-2 xl:block"
       style={{ scrollbarWidth: "none" }}
     >
       {assistantMessages.map((m) => (

@@ -232,8 +232,8 @@ export default function ChatCompletion({
 
   return (
     <Container>
-      <div className="flex size-full flex-col justify-center space-x-0 xl:max-h-full xl:flex-row xl:space-x-3">
-        <div className="flex h-full flex-col space-y-2 xl:w-11/12">
+      <div className="grid size-full grid-cols-6 justify-center space-x-0 xl:max-h-full xl:space-x-3">
+        <div className="col-span-6 flex h-full flex-col space-y-2 xl:col-span-5">
           <div className="flex flex-col items-center justify-start space-y-2 lg:flex-row lg:justify-between lg:space-y-0">
             <div className="font-medium">
               <div className="flex items-center space-x-2">

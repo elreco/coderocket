@@ -3,10 +3,6 @@
 @tailwind components;
 @tailwind utilities;
 
-.cm-focused {
-  @apply !outline-none !overflow-hidden;
-}
-
 @layer base {
   :root {
 
