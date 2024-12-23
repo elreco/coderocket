@@ -98,8 +98,6 @@ export default function ComponentSidebar({
     handleSubmitToAI(e, input);
     setInput("");
   };
-  console.log(messages);
-
   return (
     <div
       className="relative hidden size-full overflow-hidden rounded-md border bg-secondary xl:block"

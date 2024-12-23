@@ -36,9 +36,9 @@ const extractHTMLFiles = (completion: string) => {
       .replace(/<\/tailwindaiFile>/g, "")
       .replace(/<\/tailwindaiArtifact>/g, "")
       // Supprimer la première ligne si elle est vide
-      .replace(/^\n/, "")
-      // Retirer une indentation en trop
-      .replace(/^\s{4}/gm, "");
+      .replace(/^\n/, "");
+    // Ne plus retirer l'indentation
+    // .replace(/^\s{4}/gm, ""); <- Cette ligne est supprimée
 
     filesArray.push({
       name: fileName || null,

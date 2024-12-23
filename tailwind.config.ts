@@ -98,9 +98,18 @@ const config: Config = {
         "accordion-up": "accordion-up 0.2s ease-out",
         spotlight: "spotlight 2s ease .75s 1 forwards",
       },
+      typography: {
+        DEFAULT: {
+          css: {
+            "--tw-prose-pre-code": "hsl(var(--foreground))",
+            "--tw-prose-counters": "hsl(var(--foreground))",
+            "--tw-prose-pre-bg": "hsl(var(--accent))",
+          },
+        },
+      },
     },
   },
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  plugins: [require("tailwindcss-animate")],
+  plugins: [require("tailwindcss-animate"), require("@tailwindcss/typography")],
 };
 export default config;

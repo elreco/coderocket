@@ -146,6 +146,7 @@ export default function CodePreview({
     setHtmlFiles([]);
     const files = handleAIcompletionForHTML(completion);
     if (files.length > 0) {
+      console.log("here", files);
       setHtmlFiles(files);
     }
   };
@@ -181,7 +182,7 @@ export default function CodePreview({
           </div>
         ) : (
           <iframe
-            className="prose mx-auto size-full border-none"
+            className="mx-auto size-full border-none"
             src={`${getURL()}/content/${chatId}/${selectedVersion}/${selectedTheme}`}
             title="Preview"
           />

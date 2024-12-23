@@ -306,7 +306,7 @@ export default function ChatCompletion({
                   <DialogContent className="h-[95%] max-w-[95%] rounded-none p-10">
                     <DialogTitle className="hidden">Fullscreen</DialogTitle>
                     <iframe
-                      className="prose mx-auto size-full rounded-md border-none"
+                      className="mx-auto size-full rounded-md border-none"
                       src={`${getURL()}/content/${fetchedChat.id}/${selectedVersion}/${selectedTheme}`}
                       title="Preview"
                     />
