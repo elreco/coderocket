@@ -51,7 +51,6 @@ const extractHTMLFiles = (completion: string) => {
 
 export const handleAIcompletionForHTML = (completion: string) => {
   const extractedHtmlFiles = extractHTMLFiles(completion);
-  console.log("extractedHtmlFiles", extractedHtmlFiles);
   return extractedHtmlFiles;
 };
 
@@ -98,7 +97,7 @@ export const hasFiles = (completion: string): boolean => {
 };
 
 // Ajoutez cette nouvelle interface et fonction
-interface ContentChunk {
+export interface ContentChunk {
   type: "text" | "artifact";
   content: string;
 }

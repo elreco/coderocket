@@ -98,6 +98,7 @@ export default function ComponentSidebar({
               authorized={authorized}
               isDeletable={messages.length > 2}
               selectedVersion={selectedVersion}
+              screenshot={m.screenshot}
               key={m.id}
               completion={m.content}
               role={m.role}

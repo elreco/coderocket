@@ -1,7 +1,15 @@
-export function partialIframeBuilder(completion: string, theme: string) {
-  if (!completion) {
+export function partialIframeBuilder(
+  files: {
+    name: string | null;
+    content: string;
+  }[],
+  theme: string,
+) {
+  if (!files) {
     return "";
   }
+
+  const completion = files.map((file) => file.content).join("");
 
   return `<html data-theme="${theme}">
   <head>
@@ -18,7 +26,10 @@ export function partialIframeBuilder(completion: string, theme: string) {
 }
 
 export const iframeBuilder = (
-  completion: string,
+  files: {
+    name: string | null;
+    content: string;
+  }[],
   id: string,
   theme: string,
 ) => {
@@ -29,6 +40,6 @@ export const iframeBuilder = (
 https://tailwindai.dev/components/${id}
 *********************************************************************
 -->
-  ${partialIframeBuilder(completion, theme)}
+  ${partialIframeBuilder(files, theme)}
   `;
 };

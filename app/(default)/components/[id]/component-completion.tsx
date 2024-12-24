@@ -136,10 +136,6 @@ export default function ChatCompletion({
         (m) => m.role === "assistant",
       );
       if (selectedAssistantMessage?.content) {
-        console.log(
-          "selectedAssistantMessage.content",
-          selectedAssistantMessage.content,
-        );
         setCompletion(selectedAssistantMessage.content);
         setSelectedTheme(selectedAssistantMessage?.theme || defaultTheme);
       }

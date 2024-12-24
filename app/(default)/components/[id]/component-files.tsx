@@ -20,6 +20,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn, getInitials } from "@/lib/utils";
 import { Tables } from "@/types_db";
 import {
+  ContentChunk,
   handleAIcompletionForHTML,
   hasArtifacts,
   splitContentIntoChunks,
@@ -37,6 +38,7 @@ export default function ComponentFiles({
   version,
   createdAt,
   isDeletable,
+  screenshot,
 }: {
   completion: string;
   role: string;
@@ -48,17 +50,29 @@ export default function ComponentFiles({
   selectedVersion?: number | null;
   createdAt: string;
   isDeletable: boolean;
+  screenshot: string | null;
 }) {
   const [serializedContents, setSerializedContents] = useState<
     (MDXRemoteSerializeResult | null)[]
   >([]);
+  const [files, setFiles] = useState<
+    {
+      name: string | null;
+      content: string;
+    }[]
+  >([]);
+  const [hasArtifact, setHasArtifact] = useState(false);
+  const [chunks, setChunks] = useState<ContentChunk[]>([]);
 
   useEffect(() => {
     const prepareContent = async () => {
-      const chunks = splitContentIntoChunks(completion);
+      const hasArtifactResult = hasArtifacts(completion);
+      setHasArtifact(hasArtifactResult);
+      setFiles(hasArtifactResult ? handleAIcompletionForHTML(completion) : []);
+      setChunks(splitContentIntoChunks(completion));
 
       const contents = await Promise.all(
-        chunks.map(async (chunk) => {
+        splitContentIntoChunks(completion).map(async (chunk) => {
           if (chunk.type === "text") {
             return await serialize(chunk.content);
           }
@@ -72,9 +86,6 @@ export default function ComponentFiles({
     prepareContent();
   }, [completion]);
 
-  const hasArtifact = hasArtifacts(completion);
-  const files = hasArtifact ? handleAIcompletionForHTML(completion) : [];
-  const chunks = splitContentIntoChunks(completion);
   const isDeleteVersionVisible = version !== undefined && handleDeleteVersion;
   const isSelectedVersion = selectedVersion === version;
 
@@ -186,6 +197,13 @@ export default function ComponentFiles({
                             </div>
                           ))}
                         </div>
+                        {screenshot && (
+                          <img
+                            src={screenshot || "https://placehold.co/600x400"}
+                            alt="screenshot"
+                            className="size-full"
+                          />
+                        )}
                       </div>
                     </div>
                   )}
