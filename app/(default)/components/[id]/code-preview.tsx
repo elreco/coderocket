@@ -165,6 +165,12 @@ export default function CodePreview({
   }, [completion, isLoading]);
 
   useEffect(() => {
+    if (completion) {
+      handleHtmlFiles(completion);
+    }
+  }, [selectedVersion]);
+
+  useEffect(() => {
     handleHtmlFiles(completion);
   }, []);
 

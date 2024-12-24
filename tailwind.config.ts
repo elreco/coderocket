@@ -101,9 +101,15 @@ const config: Config = {
       typography: {
         DEFAULT: {
           css: {
-            "--tw-prose-pre-code": "hsl(var(--foreground))",
+            "--tw-prose-pre-code": "hsl(var(--background))",
             "--tw-prose-counters": "hsl(var(--foreground))",
-            "--tw-prose-pre-bg": "hsl(var(--accent))",
+            "--tw-prose-pre-bg": "hsl(var(--background))",
+            "--tw-prose-code": "hsl(var(--primary))",
+            "--tw-prose-pre-code-bg": "hsl(var(--background))",
+            "--tw-prose-pre-code-inline": "hsl(var(--background))",
+            "--tw-prose-pre-code-inline-bg": "hsl(var(--background))",
+            "--tw-prose-pre-code-inline-text": "hsl(var(--background))",
+            "--tw-prose-pre-code-inline-text-bg": "hsl(var(--background))",
           },
         },
       },

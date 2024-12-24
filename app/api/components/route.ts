@@ -86,7 +86,7 @@ const buildMessagesToOpenAi = async (
       : messages;
 
   // Limiter aux derniers messages pour obtenir un nombre pair
-  const limitedMessages = filteredMessages.slice(-4);
+  const limitedMessages = filteredMessages.slice(-12);
 
   // Mapper les messages au format requis par OpenAI
   const messagesToOpenAI = limitedMessages.map((m) => {

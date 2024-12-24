@@ -38,7 +38,6 @@ export const fetchMessagesByChatId = async (chatId: string) => {
       `
       *,
       chats (
-        user_id,
         user:users (*)
       )
     `,

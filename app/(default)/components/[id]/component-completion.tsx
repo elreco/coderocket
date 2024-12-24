@@ -4,19 +4,17 @@ import { useCompletion } from "ai/react";
 import { Fullscreen, LoaderCircle } from "lucide-react";
 import { Code, Share, Tv } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useCopyToClipboard } from "usehooks-ts";
 
 import { Container } from "@/components/container";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { UserWidget } from "@/components/user-widget";
 import { useToast } from "@/hooks/use-toast";
 import { Tables } from "@/types_db";
 import { defaultTheme } from "@/utils/config";
@@ -29,13 +27,12 @@ import ComponentSettings from "./(settings)/component-settings";
 import { deleteVersionByMessageId } from "./actions";
 import CodePreview from "./code-preview";
 import ComponentSidebar from "./component-sidebar";
-import ComponentSidebarMobile from "./component-sidebar-mobile";
 
 interface Props {
   fetchedChat: Tables<"chats"> & { user: Tables<"users"> | null };
   authorized: boolean;
   fetchedMessages: (Tables<"messages"> & {
-    chats: Tables<"chats"> & { user: Tables<"users"> | null };
+    chats: { user: Tables<"users"> };
   })[];
   user: Tables<"users"> | null;
   lastAssistantMessage: Tables<"messages"> | null;
@@ -55,6 +52,7 @@ export default function ChatCompletion({
   const { toast } = useToast();
   const router = useRouter();
   const pathname = usePathname();
+  const [input, setInput] = useState<string>("");
 
   const [messages, setMessages] = useState(fetchedMessages);
 
@@ -106,6 +104,7 @@ export default function ChatCompletion({
       onFinish: () => {
         refreshChatData();
         setCanvas(true);
+        setInput("");
       },
     });
 
@@ -137,16 +136,16 @@ export default function ChatCompletion({
         (m) => m.role === "assistant",
       );
       if (selectedAssistantMessage?.content) {
+        console.log(
+          "selectedAssistantMessage.content",
+          selectedAssistantMessage.content,
+        );
         setCompletion(selectedAssistantMessage.content);
         setSelectedTheme(selectedAssistantMessage?.theme || defaultTheme);
       }
     },
     [messages, setCompletion, setSelectedTheme, setTitle],
   );
-
-  const assistantMessages = useMemo(() => {
-    return messages.filter((m) => m.role === "assistant").reverse();
-  }, [messages]);
 
   const copyPrompt = (prompt: string) => {
     copy(prompt);
@@ -234,9 +233,9 @@ export default function ChatCompletion({
 
   return (
     <Container>
-      <div className="grid size-full grid-cols-3 justify-center space-x-0 xl:max-h-full xl:flex-row xl:space-x-3">
-        <div className="col-span-2 flex size-full flex-col space-y-2">
-          <div className="flex flex-col items-center justify-start space-y-2 lg:flex-row lg:justify-between lg:space-y-0">
+      <div className="grid grid-cols-1 justify-center gap-y-4 space-x-0 pb-4 lg:size-full lg:max-h-full lg:grid-cols-3 lg:flex-row lg:gap-y-0 lg:space-x-3 lg:pb-0 xl:grid-cols-4">
+        <div className="col-span-1 flex size-full min-h-screen flex-col space-y-2 lg:col-span-2 xl:col-span-3 xl:mb-0 xl:min-h-full">
+          <div className="flex flex-col items-center justify-start space-y-2 xl:flex-row xl:justify-between xl:space-y-0">
             <div className="font-medium">
               <div className="flex items-center space-x-2">
                 <h1>
@@ -261,13 +260,13 @@ export default function ChatCompletion({
                 </h1>
               </div>
             </div>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center gap-2">
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
                     variant="secondary"
                     onClick={() => setCanvas(!isCanvas)}
-                    className="mr-1 flex items-center"
+                    className="flex items-center"
                   >
                     {isCanvas ? (
                       <>
@@ -292,7 +291,7 @@ export default function ChatCompletion({
                   <Button
                     variant="secondary"
                     onClick={() => setIsModalOpen(true)}
-                    className="mr-1 flex items-center"
+                    className="flex items-center"
                   >
                     <Fullscreen className="w-5" />
                   </Button>
@@ -313,14 +312,6 @@ export default function ChatCompletion({
                   </DialogContent>
                 </Dialog>
               )}
-              <ComponentSidebarMobile
-                authorized={authorized}
-                handleDeleteVersion={handleDeleteVersion}
-                isLoading={isLoading}
-                assistantMessages={assistantMessages}
-                selectedVersion={selectedVersion}
-                handleVersionSelect={handleVersionSelect}
-              />
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button variant="secondary" onClick={share}>
@@ -356,17 +347,21 @@ export default function ChatCompletion({
             />
           </div>
         </div>
-        <ComponentSidebar
-          authorized={authorized}
-          completion={completion}
-          handleSubmitToAI={handleSubmitToAI}
-          selectedVersion={selectedVersion}
-          messages={messages}
-          user={user}
-          handleVersionSelect={handleVersionSelect}
-          handleDeleteVersion={handleDeleteVersion}
-          isLoading={isLoading}
-        />
+        <div className="relative h-[500px] overflow-auto lg:size-full lg:overflow-hidden">
+          <ComponentSidebar
+            authorized={authorized}
+            completion={completion}
+            handleSubmitToAI={handleSubmitToAI}
+            selectedVersion={selectedVersion}
+            messages={messages}
+            user={user}
+            setInput={setInput}
+            input={input}
+            handleVersionSelect={handleVersionSelect}
+            handleDeleteVersion={handleDeleteVersion}
+            isLoading={isLoading}
+          />
+        </div>
       </div>
     </Container>
   );

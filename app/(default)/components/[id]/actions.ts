@@ -51,7 +51,7 @@ export const deleteVersionByMessageId = async (
     .single();
 
   if (fetchError) {
-    throw new Error(`Failed to fetch message: ${fetchError.message}`);
+    throw new Error(fetchError.message);
   }
 
   if (!message) {
