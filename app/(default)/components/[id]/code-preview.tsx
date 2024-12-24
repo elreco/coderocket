@@ -51,11 +51,6 @@ export default function CodePreview({
     return "";
   });
 
-  const [userScrolled, setUserScrolled] = useState(false);
-  const editorWrapperRef = useRef<HTMLDivElement>(null);
-  const [isUpdating, setIsUpdating] = useState(false);
-  const lastScrollPosition = useRef<number>(0);
-
   useEffect(() => {
     const lastFile = htmlFiles[htmlFiles.length - 1];
     if (!lastFile) {
@@ -64,50 +59,9 @@ export default function CodePreview({
       return;
     }
 
-    const editor = codeMirrorRef.current?.view;
-    if (editor) {
-      setIsUpdating(true);
-      lastScrollPosition.current = editor.scrollDOM.scrollTop;
-
-      setEditorValue(lastFile.content);
-      setActiveTab(lastFile.name || "");
-
-      requestAnimationFrame(() => {
-        if (codeMirrorRef.current?.view) {
-          codeMirrorRef.current.view.scrollDOM.scrollTop =
-            lastScrollPosition.current;
-          setIsUpdating(false);
-        }
-      });
-    } else {
-      setEditorValue(lastFile.content);
-      setActiveTab(lastFile.name || "");
-    }
+    setEditorValue(lastFile.content);
+    setActiveTab(lastFile.name || "");
   }, [htmlFiles]);
-
-  useEffect(() => {
-    const wrapper = editorWrapperRef.current;
-    if (!wrapper) return;
-
-    const handleScroll = () => {
-      const isAtBottom =
-        wrapper.scrollHeight - wrapper.scrollTop === wrapper.clientHeight;
-      if (!isAtBottom) {
-        setUserScrolled(true);
-      }
-    };
-
-    wrapper.addEventListener("scroll", handleScroll);
-    return () => wrapper.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  useEffect(() => {
-    if (userScrolled) return;
-    const wrapper = editorWrapperRef.current;
-    if (wrapper) {
-      wrapper.scrollTop = wrapper.scrollHeight;
-    }
-  }, [htmlFiles, userScrolled]);
 
   const downloadCode = async () => {
     if (!htmlFiles.length) return;
@@ -129,10 +83,8 @@ export default function CodePreview({
   };
 
   const copyRawHTML = () => {
-    const value = editorValue;
-
-    if (!value) return;
-    copy(value);
+    if (!editorValue) return;
+    copy(editorValue);
     toast({
       variant: "default",
       title: "Successfully copied",
@@ -146,7 +98,6 @@ export default function CodePreview({
     setHtmlFiles([]);
     const files = handleAIcompletionForHTML(completion);
     if (files.length > 0) {
-      console.log("here", files);
       setHtmlFiles(files);
     }
   };
@@ -231,7 +182,7 @@ export default function CodePreview({
                 lang="html"
                 height="100%"
                 width="100%"
-                className={`w-full max-w-full ${!userScrolled ? "scroll-smooth" : ""}`}
+                className="w-full max-w-full"
                 extensions={[html()]}
                 readOnly
                 basicSetup={{
@@ -241,18 +192,6 @@ export default function CodePreview({
                   highlightActiveLineGutter: true,
                   highlightSpecialChars: true,
                   tabSize: 2,
-                }}
-                onUpdate={(viewUpdate) => {
-                  if (isUpdating && lastScrollPosition.current > 0) {
-                    viewUpdate.view.scrollDOM.scrollTop =
-                      lastScrollPosition.current;
-                  }
-                }}
-                onChange={(value, viewUpdate) => {
-                  if (!isUpdating) {
-                    lastScrollPosition.current =
-                      viewUpdate.view.scrollDOM.scrollTop;
-                  }
                 }}
               />
             </TabsContent>
