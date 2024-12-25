@@ -1,6 +1,4 @@
-"use client";
-
-const extractHTMLFiles = (completion: string) => {
+export const handleAIcompletionForHTML = (completion: string) => {
   if (!completion) return [];
 
   const filesArray: { name: string | null; content: string }[] = [];
@@ -42,16 +40,11 @@ const extractHTMLFiles = (completion: string) => {
 
     filesArray.push({
       name: fileName || null,
-      content: content,
+      content: content || completion,
     });
   }
 
   return filesArray;
-};
-
-export const handleAIcompletionForHTML = (completion: string) => {
-  const extractedHtmlFiles = extractHTMLFiles(completion);
-  return extractedHtmlFiles;
 };
 
 // Je veux récupérer tout le contenu de la réponse, sans les balises

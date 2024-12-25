@@ -11,69 +11,52 @@ import saveAs from "file-saver";
 import JSZip from "jszip";
 import { Clipboard, Download } from "lucide-react";
 import { useParams } from "next/navigation";
-import { useState, useRef, useEffect } from "react";
+import { useRef, useEffect } from "react";
 import { useCopyToClipboard } from "usehooks-ts";
 
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
-import { handleAIcompletionForHTML } from "@/utils/completion-parser";
 import { getURL } from "@/utils/helpers";
 import { iframeBuilder } from "@/utils/iframe-builder";
 
 import ChatSkeleton from "./component-skeleton";
 
 export default function CodePreview({
-  completion,
   chatId,
   isCanvas,
   isLoading,
   selectedTheme,
   selectedVersion,
+  htmlFiles,
+  activeTab,
+  editorValue,
+  handleVersionSelect,
 }: {
-  completion: string;
   chatId: string;
   isCanvas: boolean;
   isLoading: boolean;
   selectedTheme: string;
   selectedVersion: number;
+  htmlFiles: { name: string | null; content: string }[];
+  activeTab: string;
+  editorValue: string;
+  handleVersionSelect: (version: number, tabName?: string) => void;
 }) {
   const [, copy] = useCopyToClipboard();
   const { id } = useParams();
   const codeMirrorRef = useRef<ReactCodeMirrorRef>(null);
-  const [editorValue, setEditorValue] = useState("");
 
-  const [htmlFiles, setHtmlFiles] = useState<
-    { name: string | null; content: string }[]
-  >([]);
-
-  const [activeTab, setActiveTab] = useState(() => {
-    if (htmlFiles.length > 0) {
-      const lastFile = htmlFiles[htmlFiles.length - 1];
-      setEditorValue(lastFile.content);
-      return lastFile.name || "";
-    }
-    return "";
-  });
-
-  useEffect(() => {
-    const lastFile = htmlFiles[htmlFiles.length - 1];
-    if (!lastFile) {
-      setEditorValue("");
-      setActiveTab("");
-      return;
-    }
-
-    setEditorValue(lastFile.content);
-    setActiveTab(lastFile.name || "");
-  }, [htmlFiles]);
+  const handleTabChange = (tabName: string) => {
+    handleVersionSelect(selectedVersion, tabName);
+  };
 
   const downloadCode = async () => {
     if (!htmlFiles.length) return;
     const zip = new JSZip();
 
     htmlFiles.forEach((file) => {
-      zip.file(`${file.name || "component"}.html`, file.content);
+      zip.file(`${file.name || "component.html"}`, file.content);
     });
 
     const iframeContent = iframeBuilder(
@@ -101,20 +84,6 @@ export default function CodePreview({
     });
   };
 
-  const handleHtmlFiles = (completion: string) => {
-    setHtmlFiles([]);
-    const files = handleAIcompletionForHTML(completion);
-    if (files.length > 0) {
-      setHtmlFiles(files);
-    }
-  };
-
-  const handleChange = (value: string) => {
-    setActiveTab(value);
-    const file = htmlFiles.find((file) => file.name === value);
-    if (file) setEditorValue(file.content);
-  };
-
   // Créer un StateField pour gérer le scroll
   const scrollField = StateField.define<number>({
     create: () => 0,
@@ -134,23 +103,19 @@ export default function CodePreview({
     const view = codeMirrorRef.current?.view as EditorView;
     if (!view) return;
 
-    // Forcer le scroll vers le bas pendant le chargement
     const scrollToBottom = () => {
       if (isLoading) {
         view.scrollDOM.scrollTop = view.scrollDOM.scrollHeight;
       }
     };
-    handleHtmlFiles(completion);
 
-    // Mettre en place un intervalle pour le scroll automatique
-    const scrollInterval = setInterval(scrollToBottom, 100);
+    const scrollInterval = setInterval(scrollToBottom, 250);
 
     return () => {
       clearInterval(scrollInterval);
     };
-  }, [completion, isLoading]);
+  }, [htmlFiles, isLoading]);
 
-  // Configuration initiale de l'éditeur
   useEffect(() => {
     if (codeMirrorRef.current?.view) {
       const view = codeMirrorRef.current.view as EditorView;
@@ -158,16 +123,6 @@ export default function CodePreview({
         effects: StateEffect.appendConfig.of([scrollField]),
       });
     }
-  }, []);
-
-  useEffect(() => {
-    if (completion) {
-      handleHtmlFiles(completion);
-    }
-  }, [selectedVersion]);
-
-  useEffect(() => {
-    handleHtmlFiles(completion);
   }, []);
 
   return (
@@ -190,7 +145,6 @@ export default function CodePreview({
           />
         )}
       </div>
-
       <div
         className={clsx(
           "group transition-[width]",
@@ -201,7 +155,7 @@ export default function CodePreview({
           <Tabs
             value={activeTab}
             className="relative flex flex-1 flex-col items-start justify-start"
-            onValueChange={handleChange}
+            onValueChange={handleTabChange}
           >
             <TabsList className="flex w-full items-start justify-start rounded-none border-none">
               {htmlFiles.map((file) => (

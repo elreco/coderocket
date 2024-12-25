@@ -20,6 +20,7 @@ interface Props {
       user: Tables<"users">;
     };
   })[];
+  activeTab: string;
   handleVersionSelect: (version: number) => void;
   handleDeleteVersion: (messageId: number) => void;
   handleSubmitToAI: (
@@ -29,6 +30,7 @@ interface Props {
   authorized: boolean;
   isLoading: boolean;
   setInput: (input: string) => void;
+  isCanvas: boolean;
   input: string;
 }
 
@@ -36,6 +38,7 @@ export default function ComponentSidebar({
   selectedVersion,
   messages,
   user,
+  activeTab,
   handleVersionSelect,
   handleDeleteVersion,
   handleSubmitToAI,
@@ -43,6 +46,7 @@ export default function ComponentSidebar({
   isLoading,
   setInput,
   input,
+  isCanvas,
 }: Props) {
   const [isLoaderVisible, setLoaderVisible] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -86,7 +90,7 @@ export default function ComponentSidebar({
       <div className="relative size-full">
         <div
           ref={containerRef}
-          className="flex size-full flex-col overflow-y-auto pb-12"
+          className="flex size-full flex-col overflow-y-auto pb-16"
         >
           {isLoaderVisible && (
             <div className="absolute inset-0 z-10 flex size-full flex-col items-start bg-secondary p-4">
@@ -96,17 +100,14 @@ export default function ComponentSidebar({
           {messages.map((m) => (
             <ComponentFiles
               authorized={authorized}
+              activeTab={activeTab}
               isDeletable={messages.length > 2}
               selectedVersion={selectedVersion}
-              screenshot={m.screenshot}
+              message={m}
               key={m.id}
-              completion={m.content}
-              role={m.role}
-              user={m.chats.user}
-              version={m.version}
-              createdAt={m.created_at}
               handleVersionSelect={handleVersionSelect}
               handleDeleteVersion={handleDeleteVersion}
+              isCanvas={isCanvas}
             />
           ))}
           <div
@@ -149,9 +150,7 @@ export default function ComponentSidebar({
                 <AvatarImage src="/logo-white.png" />
                 <AvatarFallback>T</AvatarFallback>
               </Avatar>
-              <p className="text-sm">
-                Generating<span className="animate-pulse">...</span>
-              </p>
+              <p className="animate-pulse text-sm">Generating...</p>
             </div>
           </div>
 
@@ -160,20 +159,28 @@ export default function ComponentSidebar({
             onSubmit={(e) => handleSubmit(e)}
           >
             {authorized && (
-              <div className="flex w-full space-x-4 rounded-b-md border-t bg-background p-2">
-                <Input
-                  autoFocus
-                  disabled={isLoading}
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  minLength={2}
-                  maxLength={maxPromptLength}
-                  placeholder="Add a button, modify a div..."
-                  required
-                />
-                <Button loading={isLoading} type="submit">
-                  Iterate
-                </Button>
+              <div className="flex w-full flex-col space-y-2 rounded-b-md border-t bg-background p-2">
+                <div className="w-full text-sm font-semibold">
+                  Iterate from selected{" "}
+                  <span className="text-primary">
+                    version #{selectedVersion}
+                  </span>
+                </div>
+                <div className="flex w-full space-x-4">
+                  <Input
+                    autoFocus
+                    disabled={isLoading}
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    minLength={2}
+                    maxLength={maxPromptLength}
+                    placeholder="Add a button, modify a div..."
+                    required
+                  />
+                  <Button loading={isLoading} type="submit">
+                    Iterate
+                  </Button>
+                </div>
               </div>
             )}
           </form>

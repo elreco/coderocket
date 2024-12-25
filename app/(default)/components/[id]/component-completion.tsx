@@ -4,7 +4,7 @@ import { useCompletion } from "ai/react";
 import { Fullscreen, LoaderCircle } from "lucide-react";
 import { Code, Share, Tv } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { useCopyToClipboard } from "usehooks-ts";
 
 import { Container } from "@/components/container";
@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
 import { Tables } from "@/types_db";
+import { handleAIcompletionForHTML } from "@/utils/completion-parser";
 import { defaultTheme } from "@/utils/config";
 import { capitalizeFirstLetter, getURL } from "@/utils/helpers";
 import { createClient } from "@/utils/supabase/client";
@@ -39,7 +40,7 @@ interface Props {
   lastUserMessage: Tables<"messages">;
 }
 
-export default function ChatCompletion({
+export default function ComponentCompletion({
   fetchedChat,
   fetchedMessages,
   authorized,
@@ -68,6 +69,20 @@ export default function ChatCompletion({
   const [isCanvas, setCanvas] = useState(true);
   const [isVisible, setVisible] = useState(!fetchedChat.is_private);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editorValue, setEditorValue] = useState("");
+
+  const [htmlFiles, setHtmlFiles] = useState<
+    { name: string | null; content: string }[]
+  >([]);
+
+  const [activeTab, setActiveTab] = useState(() => {
+    if (htmlFiles.length > 0) {
+      const lastFile = htmlFiles[htmlFiles.length - 1];
+      setEditorValue(lastFile.content);
+      return lastFile.name || "";
+    }
+    return "";
+  });
 
   const { completion, isLoading, stop, complete, setCompletion } =
     useCompletion({
@@ -118,30 +133,27 @@ export default function ChatCompletion({
     complete(input);
   };
 
-  const handleVersionSelect = useCallback(
-    (version: number) => {
-      setSelectedVersion(version);
-      const selectedMessages = messages.filter((m) => m.version == version);
-      if (selectedMessages.length !== 2) {
-        return;
-      }
-      const selectedUserMessage = selectedMessages.find(
-        (m) => m.role === "user",
-      );
-      if (selectedUserMessage) {
-        setTitle(selectedUserMessage.content?.toString() ?? "");
-      }
+  const handleVersionSelect = (version: number, tabName?: string) => {
+    setSelectedVersion(version);
+    const selectedMessages = messages.filter((m) => m.version == version);
+    if (selectedMessages.length !== 2) {
+      return;
+    }
+    const selectedUserMessage = selectedMessages.find((m) => m.role === "user");
+    if (selectedUserMessage) {
+      setTitle(selectedUserMessage.content?.toString() ?? "");
+    }
 
-      const selectedAssistantMessage = selectedMessages.find(
-        (m) => m.role === "assistant",
-      );
-      if (selectedAssistantMessage?.content) {
-        setCompletion(selectedAssistantMessage.content);
-        setSelectedTheme(selectedAssistantMessage?.theme || defaultTheme);
-      }
-    },
-    [messages, setCompletion, setSelectedTheme, setTitle],
-  );
+    const selectedAssistantMessage = selectedMessages.find(
+      (m) => m.role === "assistant",
+    );
+    if (!selectedAssistantMessage?.content) {
+      return;
+    }
+    setCompletion(selectedAssistantMessage.content);
+    setSelectedTheme(selectedAssistantMessage?.theme || defaultTheme);
+    handleHtmlFiles(selectedAssistantMessage.content, false, tabName);
+  };
 
   const copyPrompt = (prompt: string) => {
     copy(prompt);
@@ -186,6 +198,58 @@ export default function ChatCompletion({
     setMessages(refreshedChatMessages);
   };
 
+  const handleHtmlFiles = (
+    _completion: string,
+    isFirstRun?: boolean,
+    tabName?: string,
+  ) => {
+    const files = handleAIcompletionForHTML(_completion);
+    if (files.length > 0) {
+      setHtmlFiles(files);
+    } else {
+      setHtmlFiles([]);
+    }
+
+    if (tabName) {
+      const file = files.find((file) => file.name === tabName);
+      if (!file) {
+        setEditorValue("");
+        setActiveTab("");
+        return;
+      }
+      setEditorValue(file.content);
+      setActiveTab(tabName);
+      setCanvas(false);
+      return;
+    }
+
+    if (isFirstRun) {
+      const firstFile = files[0];
+      if (!firstFile) {
+        setEditorValue("");
+        setActiveTab("");
+        return;
+      }
+      setEditorValue(firstFile.content);
+      setActiveTab(firstFile.name || "");
+      setCanvas(true);
+      return;
+    }
+
+    if (!isLoading) {
+      setCanvas(true);
+      return;
+    }
+    const lastFile = files[files.length - 1];
+    if (!lastFile) {
+      setEditorValue("");
+      setActiveTab("");
+      return;
+    }
+    setEditorValue(lastFile.content);
+    setActiveTab(lastFile.name || "");
+  };
+
   useEffect(() => {
     const {
       data: { subscription },
@@ -225,7 +289,17 @@ export default function ChatCompletion({
         handleVersionSelect(lastAssistantMessage.version);
       }
     }
-  }, [messages, handleVersionSelect]);
+  }, [messages]);
+
+  useEffect(() => {
+    handleHtmlFiles(completion);
+  }, [completion]);
+
+  useEffect(() => {
+    if (lastAssistantMessage?.content) {
+      handleHtmlFiles(lastAssistantMessage.content, true);
+    }
+  }, []);
 
   return (
     <Container>
@@ -335,17 +409,21 @@ export default function ChatCompletion({
           <div className="m-0 flex h-full flex-1 flex-col">
             <CodePreview
               chatId={fetchedChat.id}
-              completion={completion}
               isCanvas={isCanvas}
               isLoading={isLoading}
               selectedTheme={selectedTheme}
               selectedVersion={selectedVersion}
+              htmlFiles={htmlFiles}
+              activeTab={activeTab}
+              editorValue={editorValue}
+              handleVersionSelect={handleVersionSelect}
             />
           </div>
         </div>
         <div className="relative h-[500px] overflow-auto lg:size-full lg:overflow-hidden">
           <ComponentSidebar
             authorized={authorized}
+            activeTab={activeTab}
             completion={completion}
             handleSubmitToAI={handleSubmitToAI}
             selectedVersion={selectedVersion}
@@ -356,6 +434,7 @@ export default function ChatCompletion({
             handleVersionSelect={handleVersionSelect}
             handleDeleteVersion={handleDeleteVersion}
             isLoading={isLoading}
+            isCanvas={isCanvas}
           />
         </div>
       </div>

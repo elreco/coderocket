@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 import { capitalizeFirstLetter } from "@/utils/helpers";
 import { createClient } from "@/utils/supabase/server";
 
+import "@/styles/crisp.css";
 import {
   fetchChatById,
   fetchMessagesByChatId,
