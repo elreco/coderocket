@@ -112,6 +112,14 @@ export default function Pricing({ user, products, subscription }: Props) {
                     <Check className="mr-2 size-4 text-emerald-500" /> Fast
                     generation
                   </p>
+                  <p className="mt-4 flex items-center text-sm font-medium ">
+                    <Check className="mr-2 size-4 text-emerald-500" />
+                    Powerful AI
+                  </p>
+                  <p className="mt-4 flex items-center text-sm font-medium ">
+                    <Check className="mr-2 size-4 text-emerald-500" />
+                    Extended support
+                  </p>
                   <Button
                     variant="default"
                     type="button"

@@ -1,13 +1,17 @@
 import { html } from "@codemirror/lang-html";
+import { StateField } from "@codemirror/state";
+import { EditorView } from "@codemirror/view";
 import { draculaInit } from "@uiw/codemirror-theme-dracula";
-import CodeMirror, { ReactCodeMirrorRef } from "@uiw/react-codemirror";
+import CodeMirror, {
+  ReactCodeMirrorRef,
+  StateEffect,
+} from "@uiw/react-codemirror";
 import clsx from "clsx";
 import saveAs from "file-saver";
 import JSZip from "jszip";
-import { debounce } from "lodash";
 import { Clipboard, Download } from "lucide-react";
 import { useParams } from "next/navigation";
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useRef, useEffect } from "react";
 import { useCopyToClipboard } from "usehooks-ts";
 
 import { Button } from "@/components/ui/button";
@@ -19,73 +23,49 @@ import { iframeBuilder } from "@/utils/iframe-builder";
 import ChatSkeleton from "./component-skeleton";
 
 export default function CodePreview({
-  completion,
   chatId,
   isCanvas,
   isLoading,
   selectedTheme,
   selectedVersion,
+  htmlFiles,
+  activeTab,
+  editorValue,
+  handleVersionSelect,
 }: {
-  completion: string;
   chatId: string;
   isCanvas: boolean;
   isLoading: boolean;
   selectedTheme: string;
   selectedVersion: number;
+  htmlFiles: { name: string | null; content: string }[];
+  activeTab: string;
+  editorValue: string;
+  handleVersionSelect: (version: number, tabName?: string) => void;
 }) {
   const [, copy] = useCopyToClipboard();
-  const [activeTab, setActiveTab] = useState("component");
   const { id } = useParams();
   const codeMirrorRef = useRef<ReactCodeMirrorRef>(null);
-  const [editorValue, setEditorValue] = useState(completion);
 
-  const debouncedSetCodeContent = useMemo(
-    () =>
-      debounce((newContent: string) => {
-        codeMirrorRef.current?.view?.dispatch({
-          changes: {
-            from: 0,
-            to: codeMirrorRef.current.view.state.doc.length,
-            insert: newContent,
-          },
-        });
-        setEditorValue(newContent);
-      }, 100),
-    [],
-  );
-
-  useEffect(() => {
-    const newContent =
-      activeTab === "page"
-        ? iframeBuilder(completion, id?.toString() || "", selectedTheme)
-        : completion;
-
-    codeMirrorRef.current?.view?.dispatch({
-      changes: {
-        from: 0,
-        to: codeMirrorRef.current.view.state.doc.length,
-        insert: newContent,
-      },
-    });
-    setEditorValue(newContent);
-  }, [activeTab, id, selectedTheme]);
-
-  useEffect(() => {
-    debouncedSetCodeContent(completion);
-  }, [completion]);
+  const handleTabChange = (tabName: string) => {
+    handleVersionSelect(selectedVersion, tabName);
+  };
 
   const downloadCode = async () => {
-    const htmlContent = completion || "";
-
-    if (!htmlContent) return;
+    if (!htmlFiles.length) return;
     const zip = new JSZip();
+
+    htmlFiles.forEach((file) => {
+      zip.file(`${file.name || "component.html"}`, file.content);
+    });
+
     const iframeContent = iframeBuilder(
-      completion,
+      htmlFiles,
       id?.toString() || "",
       selectedTheme,
     );
-    zip.file("component.html", completion);
-    zip.file("page.html", iframeContent);
+
+    zip.file(`page.html`, iframeContent);
 
     zip.generateAsync({ type: "blob" }).then(function (content) {
       saveAs(content, "tailwindai-dev.zip");
@@ -93,10 +73,8 @@ export default function CodePreview({
   };
 
   const copyRawHTML = () => {
-    const value = editorValue;
-
-    if (!value) return;
-    copy(value);
+    if (!editorValue) return;
+    copy(editorValue);
     toast({
       variant: "default",
       title: "Successfully copied",
@@ -105,6 +83,47 @@ export default function CodePreview({
       duration: 5000,
     });
   };
+
+  // Créer un StateField pour gérer le scroll
+  const scrollField = StateField.define<number>({
+    create: () => 0,
+    update: (value, tr) => {
+      if (!tr.docChanged) return value;
+      return tr.startState.doc.length
+        ? (tr.startState.doc.length / tr.state.doc.length) * value
+        : value;
+    },
+  });
+
+  useEffect(() => {
+    if (!isLoading) {
+      return;
+    }
+
+    const view = codeMirrorRef.current?.view as EditorView;
+    if (!view) return;
+
+    const scrollToBottom = () => {
+      if (isLoading) {
+        view.scrollDOM.scrollTop = view.scrollDOM.scrollHeight;
+      }
+    };
+
+    const scrollInterval = setInterval(scrollToBottom, 250);
+
+    return () => {
+      clearInterval(scrollInterval);
+    };
+  }, [htmlFiles, isLoading]);
+
+  useEffect(() => {
+    if (codeMirrorRef.current?.view) {
+      const view = codeMirrorRef.current.view as EditorView;
+      view.dispatch({
+        effects: StateEffect.appendConfig.of([scrollField]),
+      });
+    }
+  }, []);
 
   return (
     <div className="flex size-full flex-col overflow-hidden rounded-md border xl:flex-row">
@@ -120,7 +139,7 @@ export default function CodePreview({
           </div>
         ) : (
           <iframe
-            className="prose mx-auto size-full border-none"
+            className="mx-auto size-full border-none"
             src={`${getURL()}/content/${chatId}/${selectedVersion}/${selectedTheme}`}
             title="Preview"
           />
@@ -134,18 +153,21 @@ export default function CodePreview({
       >
         <div className="relative flex size-full flex-col rounded-none border-none">
           <Tabs
-            defaultValue="component"
+            value={activeTab}
             className="relative flex flex-1 flex-col items-start justify-start"
-            onValueChange={setActiveTab}
+            onValueChange={handleTabChange}
           >
             <TabsList className="flex w-full items-start justify-start rounded-none border-none">
-              <TabsTrigger value="component">component.html</TabsTrigger>
-              <TabsTrigger value="page">page.html</TabsTrigger>
+              {htmlFiles.map((file) => (
+                <TabsTrigger key={file.name || ""} value={file.name || ""}>
+                  {file.name}
+                </TabsTrigger>
+              ))}
             </TabsList>
 
             <TabsContent
               value={activeTab}
-              className="m-0 flex h-0 w-full grow transition-all duration-300 ease-in-out"
+              className="m-0 flex h-0 w-full max-w-full grow transition-all duration-300 ease-in-out"
             >
               <CodeMirror
                 ref={codeMirrorRef}
@@ -159,7 +181,9 @@ export default function CodePreview({
                 lang="html"
                 height="100%"
                 width="100%"
-                className="size-full rounded-r-md"
+                className={`w-full max-w-full ${
+                  isLoading ? "pointer-events-none overflow-hidden" : ""
+                }`}
                 extensions={[html()]}
                 readOnly
                 basicSetup={{

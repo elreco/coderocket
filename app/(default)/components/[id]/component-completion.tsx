@@ -4,22 +4,21 @@ import { useCompletion } from "ai/react";
 import { Fullscreen, LoaderCircle } from "lucide-react";
 import { Code, Share, Tv } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { useCopyToClipboard } from "usehooks-ts";
 
 import { Container } from "@/components/container";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { UserWidget } from "@/components/user-widget";
 import { useToast } from "@/hooks/use-toast";
 import { Tables } from "@/types_db";
-import { defaultTheme, maxPromptLength } from "@/utils/config";
+import { handleAIcompletionForHTML } from "@/utils/completion-parser";
+import { defaultTheme } from "@/utils/config";
 import { capitalizeFirstLetter, getURL } from "@/utils/helpers";
 import { createClient } from "@/utils/supabase/client";
 
@@ -29,24 +28,23 @@ import ComponentSettings from "./(settings)/component-settings";
 import { deleteVersionByMessageId } from "./actions";
 import CodePreview from "./code-preview";
 import ComponentSidebar from "./component-sidebar";
-import ComponentSidebarMobile from "./component-sidebar-mobile";
 
 interface Props {
   fetchedChat: Tables<"chats"> & { user: Tables<"users"> | null };
   authorized: boolean;
-  fetchedMessages: Tables<"messages">[];
-  userAvatar: string;
-  userFullName: string;
+  fetchedMessages: (Tables<"messages"> & {
+    chats: { user: Tables<"users"> };
+  })[];
+  user: Tables<"users"> | null;
   lastAssistantMessage: Tables<"messages"> | null;
   lastUserMessage: Tables<"messages">;
 }
 
-export default function ChatCompletion({
+export default function ComponentCompletion({
   fetchedChat,
   fetchedMessages,
   authorized,
-  userAvatar,
-  userFullName,
+  user,
   lastAssistantMessage,
   lastUserMessage,
 }: Props) {
@@ -55,6 +53,7 @@ export default function ChatCompletion({
   const { toast } = useToast();
   const router = useRouter();
   const pathname = usePathname();
+  const [input, setInput] = useState<string>("");
 
   const [messages, setMessages] = useState(fetchedMessages);
 
@@ -69,21 +68,20 @@ export default function ChatCompletion({
   );
   const [isCanvas, setCanvas] = useState(true);
   const [isVisible, setVisible] = useState(!fetchedChat.is_private);
-  const [input, setInput] = useState<string>("");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editorValue, setEditorValue] = useState("");
 
-  useEffect(() => {
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "SIGNED_OUT") {
-        stop();
-      }
-    });
+  const [htmlFiles, setHtmlFiles] = useState<
+    { name: string | null; content: string }[]
+  >([]);
 
-    return () => {
-      subscription.unsubscribe();
-    };
+  const [activeTab, setActiveTab] = useState(() => {
+    if (htmlFiles.length > 0) {
+      const lastFile = htmlFiles[htmlFiles.length - 1];
+      setEditorValue(lastFile.content);
+      return lastFile.name || "";
+    }
+    return "";
   });
 
   const { completion, isLoading, stop, complete, setCompletion } =
@@ -97,6 +95,7 @@ export default function ChatCompletion({
       },
       streamProtocol: "text",
       initialCompletion: lastAssistantMessage?.content,
+      experimental_throttle: 500,
       onError: async (error: Error) => {
         if (error.message === "payment-required") {
           router.push("/pricing");
@@ -120,72 +119,41 @@ export default function ChatCompletion({
       onFinish: () => {
         refreshChatData();
         setCanvas(true);
+        setInput("");
       },
     });
 
-  useEffect(() => {
-    if (
-      !lastAssistantMessage?.content &&
-      !isLoading &&
-      messages.length === 1 &&
-      lastUserMessage.content
-    ) {
-      setCanvas(false);
-      complete(lastUserMessage.content);
-    }
-  }, []);
-
-  const handleSubmitToAI = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmitToAI = (
+    e: React.FormEvent<HTMLFormElement>,
+    input: string,
+  ) => {
     e.preventDefault();
     setCompletion("");
     setCanvas(false);
     complete(input);
   };
 
-  const handleVersionSelect = useCallback(
-    (version: number) => {
-      setSelectedVersion(version);
-      const selectedMessages = messages.filter((m) => m.version == version);
-      if (selectedMessages.length !== 2) {
-        return;
-      }
-      const selectedUserMessage = selectedMessages.find(
-        (m) => m.role === "user",
-      );
-      if (selectedUserMessage) {
-        setTitle(selectedUserMessage.content?.toString() ?? "");
-      }
-
-      const selectedAssistantMessage = selectedMessages.find(
-        (m) => m.role === "assistant",
-      );
-      if (selectedAssistantMessage?.content) {
-        setCompletion(selectedAssistantMessage.content);
-        setSelectedTheme(selectedAssistantMessage?.theme || defaultTheme);
-      }
-    },
-    [messages, setCompletion, setSelectedTheme, setTitle],
-  );
-
-  useEffect(() => {
-    if (messages.length > 0) {
-      const lastAssistantMessage = messages
-        .filter((m) => m.role === "assistant")
-        .reduce(
-          (prev, current) => (prev.version > current.version ? prev : current),
-          messages[0],
-        );
-
-      if (lastAssistantMessage) {
-        handleVersionSelect(lastAssistantMessage.version);
-      }
-      setInput("");
+  const handleVersionSelect = (version: number, tabName?: string) => {
+    setSelectedVersion(version);
+    const selectedMessages = messages.filter((m) => m.version == version);
+    if (selectedMessages.length !== 2) {
+      return;
     }
-  }, [messages, handleVersionSelect]);
+    const selectedUserMessage = selectedMessages.find((m) => m.role === "user");
+    if (selectedUserMessage) {
+      setTitle(selectedUserMessage.content?.toString() ?? "");
+    }
 
-  const assistantMessages = useMemo(() => {
-    return messages.filter((m) => m.role === "assistant").reverse();
-  }, [messages]);
+    const selectedAssistantMessage = selectedMessages.find(
+      (m) => m.role === "assistant",
+    );
+    if (!selectedAssistantMessage?.content) {
+      return;
+    }
+    setCompletion(selectedAssistantMessage.content);
+    setSelectedTheme(selectedAssistantMessage?.theme || defaultTheme);
+    handleHtmlFiles(selectedAssistantMessage.content, false, tabName);
+  };
 
   const copyPrompt = (prompt: string) => {
     copy(prompt);
@@ -230,11 +198,114 @@ export default function ChatCompletion({
     setMessages(refreshedChatMessages);
   };
 
+  const handleHtmlFiles = (
+    _completion: string,
+    isFirstRun?: boolean,
+    tabName?: string,
+  ) => {
+    const files = handleAIcompletionForHTML(_completion);
+    if (files.length > 0) {
+      setHtmlFiles(files);
+    } else {
+      setHtmlFiles([]);
+    }
+
+    if (tabName) {
+      const file = files.find((file) => file.name === tabName);
+      if (!file) {
+        setEditorValue("");
+        setActiveTab("");
+        return;
+      }
+      setEditorValue(file.content);
+      setActiveTab(tabName);
+      setCanvas(false);
+      return;
+    }
+
+    if (isFirstRun) {
+      const firstFile = files[0];
+      if (!firstFile) {
+        setEditorValue("");
+        setActiveTab("");
+        return;
+      }
+      setEditorValue(firstFile.content);
+      setActiveTab(firstFile.name || "");
+      setCanvas(true);
+      return;
+    }
+
+    if (!isLoading) {
+      setCanvas(true);
+      return;
+    }
+    const lastFile = files[files.length - 1];
+    if (!lastFile) {
+      setEditorValue("");
+      setActiveTab("");
+      return;
+    }
+    setEditorValue(lastFile.content);
+    setActiveTab(lastFile.name || "");
+  };
+
+  useEffect(() => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_OUT") {
+        stop();
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  });
+
+  useEffect(() => {
+    if (
+      !lastAssistantMessage?.content &&
+      !isLoading &&
+      messages.length === 1 &&
+      lastUserMessage.content
+    ) {
+      setCanvas(false);
+      complete(lastUserMessage.content);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (messages.length > 0) {
+      const lastAssistantMessage = messages
+        .filter((m) => m.role === "assistant")
+        .reduce(
+          (prev, current) => (prev.version > current.version ? prev : current),
+          messages[0],
+        );
+
+      if (lastAssistantMessage) {
+        handleVersionSelect(lastAssistantMessage.version);
+      }
+    }
+  }, [messages]);
+
+  useEffect(() => {
+    handleHtmlFiles(completion);
+  }, [completion]);
+
+  useEffect(() => {
+    if (lastAssistantMessage?.content) {
+      handleHtmlFiles(lastAssistantMessage.content, true);
+    }
+  }, []);
+
   return (
     <Container>
-      <div className="grid size-full grid-cols-6 justify-center space-x-0 xl:max-h-full xl:space-x-3">
-        <div className="col-span-6 flex h-full flex-col space-y-2 xl:col-span-5">
-          <div className="flex flex-col items-center justify-start space-y-2 lg:flex-row lg:justify-between lg:space-y-0">
+      <div className="grid grid-cols-1 justify-center gap-y-4 space-x-0 pb-4 lg:size-full lg:max-h-full lg:grid-cols-3 lg:flex-row lg:gap-y-0 lg:space-x-3 lg:pb-0 xl:grid-cols-4">
+        <div className="col-span-1 flex size-full min-h-screen flex-col space-y-2 lg:col-span-2 xl:col-span-3 xl:mb-0 xl:min-h-full">
+          <div className="flex flex-col items-center justify-start space-y-2 xl:flex-row xl:justify-between xl:space-y-0">
             <div className="font-medium">
               <div className="flex items-center space-x-2">
                 <h1>
@@ -259,13 +330,13 @@ export default function ChatCompletion({
                 </h1>
               </div>
             </div>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center gap-2">
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
                     variant="secondary"
                     onClick={() => setCanvas(!isCanvas)}
-                    className="mr-1 flex items-center"
+                    className="flex items-center"
                   >
                     {isCanvas ? (
                       <>
@@ -290,7 +361,7 @@ export default function ChatCompletion({
                   <Button
                     variant="secondary"
                     onClick={() => setIsModalOpen(true)}
-                    className="mr-1 flex items-center"
+                    className="flex items-center"
                   >
                     <Fullscreen className="w-5" />
                   </Button>
@@ -299,24 +370,18 @@ export default function ChatCompletion({
                   <p>Display in fullscreen</p>
                 </TooltipContent>
               </Tooltip>
-              <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-                <DialogContent className="h-[95%] max-w-[95%] rounded-none p-10">
-                  <DialogTitle className="hidden">Fullscreen</DialogTitle>
-                  <iframe
-                    className="prose mx-auto size-full rounded-md border-none"
-                    src={`${getURL()}/content/${fetchedChat.id}/${selectedVersion}/${selectedTheme}`}
-                    title="Preview"
-                  />
-                </DialogContent>
-              </Dialog>
-              <ComponentSidebarMobile
-                authorized={authorized}
-                handleDeleteVersion={handleDeleteVersion}
-                isLoading={isLoading}
-                assistantMessages={assistantMessages}
-                selectedVersion={selectedVersion}
-                handleVersionSelect={handleVersionSelect}
-              />
+              {!isLoading && (
+                <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+                  <DialogContent className="h-[95%] max-w-[95%] rounded-none p-10">
+                    <DialogTitle className="hidden">Fullscreen</DialogTitle>
+                    <iframe
+                      className="mx-auto size-full rounded-md border-none"
+                      src={`${getURL()}/content/${fetchedChat.id}/${selectedVersion}/${selectedTheme}`}
+                      title="Preview"
+                    />
+                  </DialogContent>
+                </Dialog>
+              )}
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button variant="secondary" onClick={share}>
@@ -344,54 +409,34 @@ export default function ChatCompletion({
           <div className="m-0 flex h-full flex-1 flex-col">
             <CodePreview
               chatId={fetchedChat.id}
-              completion={completion}
               isCanvas={isCanvas}
               isLoading={isLoading}
               selectedTheme={selectedTheme}
               selectedVersion={selectedVersion}
+              htmlFiles={htmlFiles}
+              activeTab={activeTab}
+              editorValue={editorValue}
+              handleVersionSelect={handleVersionSelect}
             />
-            <div className="flex w-full flex-col items-center justify-between sm:flex-row">
-              <form
-                className="flex w-full items-center"
-                onSubmit={handleSubmitToAI}
-              >
-                {authorized && (
-                  <div className="my-2 flex w-full space-x-4 rounded-md bg-gray-900 p-2">
-                    <Input
-                      autoFocus
-                      disabled={isLoading}
-                      value={input}
-                      onChange={(e) => setInput(e.target.value)}
-                      minLength={2}
-                      maxLength={maxPromptLength}
-                      placeholder="Add a button, modify a color..."
-                      required
-                    />
-                    <Button loading={isLoading} type="submit">
-                      Iterate
-                    </Button>
-                  </div>
-                )}
-              </form>
-              <div className="flex w-full items-center justify-end pt-1">
-                <UserWidget
-                  createdAt={lastUserMessage.created_at}
-                  userAvatarUrl={userAvatar}
-                  userFullName={userFullName}
-                />
-              </div>
-            </div>
           </div>
         </div>
-        <ComponentSidebar
-          authorized={authorized}
-          assistantMessages={assistantMessages}
-          selectedVersion={selectedVersion}
-          messages={messages}
-          handleVersionSelect={handleVersionSelect}
-          handleDeleteVersion={handleDeleteVersion}
-          isLoading={isLoading}
-        />
+        <div className="relative h-[500px] overflow-auto lg:size-full lg:overflow-hidden">
+          <ComponentSidebar
+            authorized={authorized}
+            activeTab={activeTab}
+            completion={completion}
+            handleSubmitToAI={handleSubmitToAI}
+            selectedVersion={selectedVersion}
+            messages={messages}
+            user={user}
+            setInput={setInput}
+            input={input}
+            handleVersionSelect={handleVersionSelect}
+            handleDeleteVersion={handleDeleteVersion}
+            isLoading={isLoading}
+            isCanvas={isCanvas}
+          />
+        </div>
       </div>
     </Container>
   );

@@ -1,125 +1,191 @@
-import {
-  Tooltip,
-  TooltipTrigger,
-  TooltipContent,
-} from "@radix-ui/react-tooltip";
-import clsx from "clsx";
-import { X } from "lucide-react";
+import { useEffect, useState, useRef } from "react";
 
-import {
-  AlertDialog,
-  AlertDialogTrigger,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogAction,
-  AlertDialogCancel,
-} from "@/components/ui/alert-dialog";
-import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { cn, getInitials } from "@/lib/utils";
 import { Tables } from "@/types_db";
+import { maxPromptLength } from "@/utils/config";
+import { getRelativeDate } from "@/utils/date";
+
+import ComponentFiles from "./component-files";
+import { ComponentSidebarSkeleton } from "./component-sidebar-skeleton";
 
 interface Props {
+  user: Tables<"users"> | null;
   selectedVersion: number | null;
-  assistantMessages: Tables<"messages">[];
-  messages: Tables<"messages">[];
-  handleVersionSelect: (id: number) => void;
+  completion: string;
+  messages: (Tables<"messages"> & {
+    chats: {
+      user: Tables<"users">;
+    };
+  })[];
+  activeTab: string;
+  handleVersionSelect: (version: number) => void;
   handleDeleteVersion: (messageId: number) => void;
+  handleSubmitToAI: (
+    e: React.FormEvent<HTMLFormElement>,
+    input: string,
+  ) => void;
   authorized: boolean;
   isLoading: boolean;
+  setInput: (input: string) => void;
+  isCanvas: boolean;
+  input: string;
 }
 
 export default function ComponentSidebar({
   selectedVersion,
-  assistantMessages,
   messages,
+  user,
+  activeTab,
   handleVersionSelect,
   handleDeleteVersion,
+  handleSubmitToAI,
   authorized,
   isLoading,
+  setInput,
+  input,
+  isCanvas,
 }: Props) {
-  const getUserMessage = (version: number) => {
-    const selectedMessages = messages.filter((m) => m.version === version);
-    if (selectedMessages.length === 2) {
-      const userMessage = selectedMessages.find((m) => m.role === "user");
-      if (userMessage) {
-        return userMessage.content?.toString()?.substring(0, 200);
+  const [isLoaderVisible, setLoaderVisible] = useState(true);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoaderVisible(false);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (containerRef.current && messages.length > 0) {
+        containerRef.current.scrollTop = containerRef.current.scrollHeight;
       }
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [messages]);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    handleSubmitToAI(e, input);
+    if (containerRef.current) {
+      containerRef.current.scrollTop = containerRef.current.scrollHeight;
     }
-    return "No user message found.";
   };
+
+  useEffect(() => {
+    if (containerRef.current) {
+      containerRef.current.scrollTop = containerRef.current.scrollHeight;
+    }
+  }, [isLoading, messages]);
 
   return (
     <div
-      className="hidden size-full space-y-3 overflow-auto pb-2 xl:block"
+      className="relative size-full overflow-hidden rounded-md border bg-secondary"
       style={{ scrollbarWidth: "none" }}
     >
-      {assistantMessages.map((m) => (
-        <div key={m.id} className="relative">
-          <img
-            alt=""
-            src={m?.screenshot || ""}
-            className="aspect-video w-full rounded-md border object-cover"
-          />
-          <Tooltip>
-            <TooltipTrigger
-              className={clsx(
-                "absolute inset-0 z-10 flex cursor-pointer select-none items-center justify-center rounded-md transition-all duration-300",
-                selectedVersion === m.version
-                  ? "bg-transparent"
-                  : "bg-black/40 hover:bg-transparent",
-                isLoading && "cursor-not-allowed",
-              )}
-              onClick={() => {
-                if (!isLoading) {
-                  handleVersionSelect(m.version);
-                }
-              }}
-            >
-              <Badge
-                className="absolute bottom-0 right-0 m-2"
-                variant="secondary"
-              >
-                v{m.version}
-              </Badge>
-            </TooltipTrigger>
-
-            <TooltipContent
-              side="left"
-              className="z-50 mr-2 flex w-64 flex-col space-y-2 rounded border-gray-700 bg-gray-900 p-3"
-            >
-              <img
-                alt=""
-                src={m?.screenshot || ""}
-                className="w-full rounded object-cover"
-              />
-              <p className="text-sm text-white">{getUserMessage(m.version)}</p>
-            </TooltipContent>
-          </Tooltip>
-          {assistantMessages.length > 1 && authorized && (
-            <AlertDialog>
-              <AlertDialogTrigger className="absolute right-3 top-2 z-20 cursor-pointer">
-                <X className="size-6 fill-red-500 font-bold hover:fill-red-300" />
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Delete Version</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Are you sure you want to delete this version?
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={() => handleDeleteVersion(m.id)}>
-                    Delete
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+      <div className="relative size-full">
+        <div
+          ref={containerRef}
+          className="flex size-full flex-col overflow-y-auto pb-16"
+        >
+          {isLoaderVisible && (
+            <div className="absolute inset-0 z-10 flex size-full flex-col items-start bg-secondary p-4">
+              <ComponentSidebarSkeleton />
+            </div>
           )}
+          {messages.map((m) => (
+            <ComponentFiles
+              authorized={authorized}
+              activeTab={activeTab}
+              isDeletable={messages.length > 2}
+              selectedVersion={selectedVersion}
+              message={m}
+              key={m.id}
+              handleVersionSelect={handleVersionSelect}
+              handleDeleteVersion={handleDeleteVersion}
+              isCanvas={isCanvas}
+            />
+          ))}
+          <div
+            className={cn(
+              "flex flex-col px-2 py-6 sm:px-4",
+              "transition-all duration-200",
+              isLoading && messages.length > 1 ? "block" : "hidden",
+            )}
+          >
+            <div className="flex gap-2">
+              <div className="flex items-center">
+                <Avatar className="mr-2 size-8 rounded-lg">
+                  <AvatarImage
+                    src={user?.avatar_url || ""}
+                    alt={user?.full_name || ""}
+                  />
+                  <AvatarFallback className="border bg-background">
+                    <span className="text-xs">
+                      {getInitials(user?.full_name || "")}
+                    </span>
+                  </AvatarFallback>
+                </Avatar>
+              </div>
+              <p className="text-sm">{input}</p>
+            </div>
+            <p className="mt-2 text-right text-xs font-semibold text-primary">
+              {getRelativeDate(new Date().toISOString())}
+            </p>
+          </div>
+
+          <div
+            className={cn(
+              "flex flex-col px-2 py-6 sm:px-4",
+              "transition-all duration-200",
+              isLoading ? "block" : "hidden",
+            )}
+          >
+            <div className="flex items-start gap-2">
+              <Avatar className="mr-2 size-8 rounded-none">
+                <AvatarImage src="/logo-white.png" />
+                <AvatarFallback>T</AvatarFallback>
+              </Avatar>
+              <p className="animate-pulse text-sm">Generating...</p>
+            </div>
+          </div>
+
+          <form
+            className="absolute inset-x-0 bottom-0 flex w-full items-center"
+            onSubmit={(e) => handleSubmit(e)}
+          >
+            {authorized && (
+              <div className="flex w-full flex-col space-y-2 rounded-b-md border-t bg-background p-2">
+                <div className="w-full text-sm font-semibold">
+                  Iterate from selected{" "}
+                  <span className="text-primary">
+                    version #{selectedVersion}
+                  </span>
+                </div>
+                <div className="flex w-full space-x-4">
+                  <Input
+                    autoFocus
+                    disabled={isLoading}
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    minLength={2}
+                    maxLength={maxPromptLength}
+                    placeholder="Add a button, modify a div..."
+                    required
+                  />
+                  <Button loading={isLoading} type="submit">
+                    Iterate
+                  </Button>
+                </div>
+              </div>
+            )}
+          </form>
         </div>
-      ))}
+      </div>
     </div>
   );
 }

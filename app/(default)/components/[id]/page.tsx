@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 import { capitalizeFirstLetter } from "@/utils/helpers";
 import { createClient } from "@/utils/supabase/server";
 
+import "@/styles/crisp.css";
 import {
   fetchChatById,
   fetchMessagesByChatId,
@@ -49,9 +50,9 @@ export default async function Components({ params }: Props) {
 
   const supabase = await createClient();
   const userData = await supabase.auth.getUser();
-  const user = userData.data.user;
+  const connectedUser = userData.data.user;
   const chat = await fetchChatById(id);
-  const isNotFound = chat.is_private && chat.user?.id !== user?.id;
+  const isNotFound = chat.is_private && chat.user?.id !== connectedUser?.id;
   if (!chat || isNotFound) {
     return notFound();
   }
@@ -63,17 +64,15 @@ export default async function Components({ params }: Props) {
     return notFound();
   }
 
-  const authorized = user?.id === chat?.user?.id;
-  const userFullName = chat?.user?.full_name || "";
-  const userAvatar = chat?.user?.avatar_url || "";
+  const authorized = connectedUser?.id === chat?.user?.id;
+  const user = chat?.user;
 
   return (
     <ComponentCompletion
       fetchedChat={chat}
       fetchedMessages={messages}
       authorized={authorized}
-      userAvatar={userAvatar}
-      userFullName={userFullName}
+      user={user}
       lastAssistantMessage={lastAssistantMessage}
       lastUserMessage={lastUserMessage}
     />
