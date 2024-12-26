@@ -160,12 +160,14 @@ export default function ComponentSidebar({
           >
             {authorized && (
               <div className="flex w-full flex-col space-y-2 rounded-b-md border-t bg-background p-2">
-                <div className="w-full text-sm font-semibold">
-                  Iterate from selected{" "}
-                  <span className="text-primary">
-                    version #{selectedVersion}
-                  </span>
-                </div>
+                {selectedVersion && selectedVersion >= 0 && (
+                  <div className="w-full text-sm font-semibold">
+                    Iterate from selected{" "}
+                    <span className="text-primary">
+                      version #{selectedVersion}
+                    </span>
+                  </div>
+                )}
                 <div className="flex w-full space-x-4">
                   <Input
                     autoFocus

@@ -244,6 +244,7 @@ export default function ComponentCompletion({
     if (!lastFile) {
       setEditorValue("");
       setActiveTab("");
+      setCanvas(false);
       return;
     }
     setEditorValue(lastFile.content);
