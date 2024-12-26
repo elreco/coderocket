@@ -36,6 +36,7 @@ export default function AuthUI() {
         description: "An email has been sent to you to verify your account.",
       });
       router.push(result.url);
+      router.refresh();
       setIsLoading(false);
       return;
     }

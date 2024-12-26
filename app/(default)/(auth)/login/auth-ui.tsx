@@ -34,6 +34,7 @@ export default function AuthUI() {
         description: "Logged in successfully!",
       });
       router.push(result.url);
+      router.refresh();
       return;
     }
 
