@@ -212,6 +212,7 @@ export default function ComponentCompletion({
 
     if (tabName) {
       const file = files.find((file) => file.name === tabName);
+
       if (!file) {
         setEditorValue("");
         setActiveTab("");
@@ -222,7 +223,7 @@ export default function ComponentCompletion({
       setCanvas(false);
       return;
     }
-
+    console.log("file");
     if (isFirstRun) {
       const firstFile = files[0];
       if (!firstFile) {
@@ -293,11 +294,14 @@ export default function ComponentCompletion({
   }, [messages]);
 
   useEffect(() => {
-    handleHtmlFiles(completion);
+    if (isLoading) {
+      handleHtmlFiles(completion);
+    }
   }, [completion]);
 
   useEffect(() => {
     if (lastAssistantMessage?.content) {
+      console.log("here 4");
       handleHtmlFiles(lastAssistantMessage.content, true);
     }
   }, []);
