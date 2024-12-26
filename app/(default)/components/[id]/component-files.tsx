@@ -36,6 +36,7 @@ export default function ComponentFiles({
   handleVersionSelect,
   handleDeleteVersion,
   isCanvas,
+  isLoading,
 }: {
   message: Tables<"messages"> & {
     chats: {
@@ -49,6 +50,7 @@ export default function ComponentFiles({
   handleVersionSelect: (version: number, tabName?: string) => void;
   handleDeleteVersion: (id: number) => void;
   isCanvas: boolean;
+  isLoading: boolean;
 }) {
   const [serializedContents, setSerializedContents] = useState<
     (MDXRemoteSerializeResult | null)[]
@@ -85,12 +87,16 @@ export default function ComponentFiles({
 
     prepareContent();
   }, [message.content]);
-  const isSelectedVersion = selectedVersion === message.version;
+
+  const isSelectedVersion = selectedVersion === message.version && !isLoading;
 
   const handleFileClick = (
     version: number,
     file?: { name: string | null; content: string },
   ) => {
+    if (isLoading) {
+      return;
+    }
     handleVersionSelect(version, file?.name || undefined);
   };
 
@@ -160,8 +166,9 @@ export default function ComponentFiles({
           <div className="flex w-full flex-col gap-4">
             <h2
               className={cn(
-                "cursor-pointer text-lg font-semibold transition-all hover:text-foreground/75",
+                "text-lg font-semibold transition-all hover:text-foreground/75",
                 isSelectedVersion && "text-foreground hover:text-foreground",
+                isLoading ? "cursor-default" : "cursor-pointer",
               )}
               onClick={() => handleFileClick(message.version)}
             >
@@ -186,7 +193,8 @@ export default function ComponentFiles({
                             <div
                               key={index}
                               className={cn(
-                                "flex cursor-pointer items-center rounded text-primary bg-foreground p-4 transition-all hover:bg-foreground/80",
+                                "flex items-center rounded text-primary bg-foreground p-4 transition-all hover:bg-foreground/80",
+                                isLoading ? "cursor-default" : "cursor-pointer",
                                 activeTab === file.name &&
                                   isSelectedVersion &&
                                   !isCanvas &&
@@ -212,7 +220,10 @@ export default function ComponentFiles({
               <img
                 src={message.screenshot}
                 alt="screenshot"
-                className="size-full max-w-full cursor-pointer rounded-md border shadow-md"
+                className={cn(
+                  "size-full max-w-full cursor-pointer rounded-md border shadow-md",
+                  isLoading ? "cursor-default" : "cursor-pointer",
+                )}
                 onClick={() => handleFileClick(message.version)}
               />
             )}

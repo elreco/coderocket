@@ -82,6 +82,8 @@ export default function ComponentSidebar({
     }
   }, [isLoading, messages]);
 
+  const isIterationVisible = selectedVersion !== null && selectedVersion > -1;
+
   return (
     <div
       className="relative size-full overflow-hidden rounded-md border bg-secondary"
@@ -105,6 +107,7 @@ export default function ComponentSidebar({
               selectedVersion={selectedVersion}
               message={m}
               key={m.id}
+              isLoading={isLoading}
               handleVersionSelect={handleVersionSelect}
               handleDeleteVersion={handleDeleteVersion}
               isCanvas={isCanvas}
@@ -160,7 +163,7 @@ export default function ComponentSidebar({
           >
             {authorized && (
               <div className="flex w-full flex-col space-y-2 rounded-b-md border-t bg-background p-2">
-                {selectedVersion && selectedVersion >= 0 && (
+                {isIterationVisible && (
                   <div className="w-full text-sm font-semibold">
                     Iterate from selected{" "}
                     <span className="text-primary">
