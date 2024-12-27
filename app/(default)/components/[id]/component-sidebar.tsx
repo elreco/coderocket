@@ -111,7 +111,7 @@ export default function ComponentSidebar({
       <div className="relative size-full">
         <div
           ref={containerRef}
-          className="flex size-full flex-col overflow-y-auto pb-16"
+          className="flex size-full flex-col overflow-y-auto pb-20"
         >
           {isLoaderVisible && (
             <div className="absolute inset-0 z-10 flex size-full flex-col items-start bg-secondary p-4">
