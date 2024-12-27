@@ -22,9 +22,23 @@ export default function RenderHtmlComponent({
     }
 
     const handleLinkClick = (event: MouseEvent) => {
-      event.preventDefault();
       const target = event.target as HTMLAnchorElement;
-      const fileName = target.getAttribute("href")?.replace("./", "");
+      const href = target.getAttribute("href");
+
+      if (href?.startsWith("#")) {
+        event.preventDefault();
+        const anchorId = href.substring(1);
+        const iframeDocument =
+          iframe.contentDocument || iframe.contentWindow?.document;
+        const anchorElement = iframeDocument?.getElementById(anchorId);
+        if (anchorElement) {
+          anchorElement.scrollIntoView({ behavior: "smooth" });
+        }
+        return;
+      }
+
+      event.preventDefault();
+      const fileName = href?.replace("./", "");
       if (fileName) {
         const fileContent = files.find((file) => file.name === fileName);
         setContent(fileContent?.content || "");
