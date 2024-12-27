@@ -407,7 +407,6 @@ export default function ComponentCompletion({
                   setVisible={setVisible}
                   selectedTheme={selectedTheme}
                   setSelectedTheme={setSelectedTheme}
-                  selectedVersion={selectedVersion}
                   chatId={fetchedChat.id}
                   completion={completion}
                   handleComponentFiles={handleComponentFiles}

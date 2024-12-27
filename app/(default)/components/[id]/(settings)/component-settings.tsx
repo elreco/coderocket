@@ -51,7 +51,6 @@ type ComponentSettingsProps = {
   setVisible: (visible: boolean) => void;
   selectedTheme: string | null | undefined;
   setSelectedTheme: (theme: string) => void;
-  selectedVersion: number;
   chatId: string;
   refreshChatData: () => Promise<void>;
   handleComponentFiles: (
@@ -68,7 +67,6 @@ export default function ComponentSettings({
   setVisible,
   selectedTheme,
   setSelectedTheme,
-  selectedVersion,
   chatId,
   refreshChatData,
   handleComponentFiles,

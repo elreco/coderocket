@@ -147,7 +147,11 @@ export default function CodePreview({
           >
             <TabsList className="flex w-full items-start justify-start rounded-none border-none">
               {componentFiles.map((file) => (
-                <TabsTrigger key={file.name || ""} value={file.name || ""}>
+                <TabsTrigger
+                  key={file.name || ""}
+                  value={file.name || ""}
+                  disabled={isLoading}
+                >
                   {file.name}
                 </TabsTrigger>
               ))}
