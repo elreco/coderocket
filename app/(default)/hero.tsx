@@ -230,51 +230,54 @@ export default function Hero() {
             </div>
           )}
           <div className="flex w-full items-center justify-between">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="background"
-                  onClick={handleVisibility}
-                  className="flex items-center"
-                  loading={loadingVisibility}
-                  disabled={loading}
-                  type="button"
-                >
-                  {isVisible ? (
-                    <>
-                      <Unlock className="mr-1 w-5" />
-                      <span>Public</span>
-                    </>
-                  ) : (
-                    <>
-                      <Lock className="mr-1 w-5" />
-                      <span>Private</span>
-                    </>
-                  )}
-                </Button>
-              </TooltipTrigger>
+            <div className="flex items-center space-x-2">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="background"
+                    onClick={handleVisibility}
+                    className="flex items-center"
+                    loading={loadingVisibility}
+                    disabled={loading}
+                    type="button"
+                    size="sm"
+                  >
+                    {isVisible ? (
+                      <>
+                        <Unlock className="size-3" />
+                        <span>Public</span>
+                      </>
+                    ) : (
+                      <>
+                        <Lock className="size-3" />
+                        <span>Private</span>
+                      </>
+                    )}
+                  </Button>
+                </TooltipTrigger>
 
-              <TooltipContent side="right">
-                <p>{isVisible ? "Set private" : "Set public"}</p>
-              </TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="background"
-                  size="sm"
-                  type="button"
-                  disabled={loading}
-                  onClick={handleButtonClick}
-                >
-                  <LucideImage className="mr-1 size-4" />
-                  <span>Image</span>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="left">
-                <p>Upload an image to generate a component with it</p>
-              </TooltipContent>
-            </Tooltip>
+                <TooltipContent side="right">
+                  <p>{isVisible ? "Set private" : "Set public"}</p>
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="background"
+                    size="sm"
+                    type="button"
+                    disabled={loading}
+                    onClick={handleButtonClick}
+                  >
+                    <LucideImage className="size-3" />
+                    <span>Image</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="left">
+                  <p>Upload an image to generate a component with it</p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
             <div className="flex items-center space-x-2">
               <input
                 ref={fileInputRef}
@@ -283,8 +286,13 @@ export default function Hero() {
                 accept=".png, .jpeg, .jpg, .gif, .webp"
                 onChange={handleImageChange}
               />
-              <Button type="submit" variant="default" loading={loading}>
-                <Wand className="mr-1 size-4" />
+              <Button
+                type="submit"
+                size="sm"
+                variant="default"
+                loading={loading}
+              >
+                <Wand className="size-3" />
                 Generate
               </Button>
             </div>
