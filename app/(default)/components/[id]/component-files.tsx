@@ -171,10 +171,7 @@ export default function ComponentFiles({
               <img
                 src={`${storageUrl}/${message.chats.prompt_image}`}
                 alt="screenshot"
-                className={cn(
-                  "size-full max-w-full rounded-md border shadow-md",
-                  isLoading ? "cursor-default" : "cursor-pointer",
-                )}
+                className="size-full max-w-full rounded-md border shadow-md"
               />
             )}
           </div>

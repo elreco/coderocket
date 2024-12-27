@@ -195,28 +195,30 @@ export default function ComponentSidebar({
                       </span>
                     </div>
                   )}
-                  <div className="text-sm font-semibold">
-                    <ComponentSettings
-                      isVisible={isVisible}
-                      setVisible={setVisible}
-                      selectedTheme={selectedTheme}
-                      setSelectedTheme={setSelectedTheme}
-                      selectedVersion={selectedVersion}
-                      chatId={chatId}
-                      completion={completion}
-                      handleComponentFiles={handleComponentFiles}
-                      refreshChatData={refreshChatData}
-                    >
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        className="flex items-center"
+                  {authorized && !isLoading && (
+                    <div className="text-sm font-semibold">
+                      <ComponentSettings
+                        isVisible={isVisible}
+                        setVisible={setVisible}
+                        selectedTheme={selectedTheme}
+                        setSelectedTheme={setSelectedTheme}
+                        selectedVersion={selectedVersion}
+                        chatId={chatId}
+                        completion={completion}
+                        handleComponentFiles={handleComponentFiles}
+                        refreshChatData={refreshChatData}
                       >
-                        <Paintbrush className="size-4" />
-                        <span className="ml-0.5">Theme</span>
-                      </Button>
-                    </ComponentSettings>
-                  </div>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          className="flex items-center"
+                        >
+                          <Paintbrush className="size-4" />
+                          <span className="ml-0.5">Theme</span>
+                        </Button>
+                      </ComponentSettings>
+                    </div>
+                  )}
                 </div>
                 <div className="flex w-full space-x-4">
                   <Input
