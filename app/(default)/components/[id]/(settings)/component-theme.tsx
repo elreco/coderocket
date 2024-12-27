@@ -8,6 +8,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { Tables } from "@/types_db";
 
 import { updateTheme } from "../actions";
 
@@ -46,7 +47,7 @@ type ComponentSettingsProps = {
   selectedTheme: string | null | undefined;
   setSelectedTheme: (theme: string) => void;
   chatId: string;
-  refreshChatData: () => Promise<void>;
+  refreshChatData: () => Promise<Tables<"messages">[] | undefined>;
   handleComponentFiles: (
     _completion: string,
     theme: string | null | undefined,

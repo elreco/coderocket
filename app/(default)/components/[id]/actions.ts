@@ -28,9 +28,7 @@ export const changeVisibilityByChatId = async (
   }
 };
 
-export const deleteVersionByMessageId = async (
-  messageId: number,
-): Promise<void> => {
+export const deleteVersionByMessageId = async (messageId: number) => {
   const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
   const user = userData?.user;

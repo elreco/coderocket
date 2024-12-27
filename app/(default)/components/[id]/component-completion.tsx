@@ -76,14 +76,7 @@ export default function ComponentCompletion({
     { name: string | null; content: string }[]
   >([]);
 
-  const [activeTab, setActiveTab] = useState(() => {
-    if (componentFiles.length > 0) {
-      const lastFile = componentFiles[componentFiles.length - 1];
-      setEditorValue(lastFile.content);
-      return lastFile.name || "";
-    }
-    return "";
-  });
+  const [activeTab, setActiveTab] = useState("");
 
   const { completion, isLoading, stop, complete, setCompletion } =
     useCompletion({
@@ -117,8 +110,18 @@ export default function ComponentCompletion({
           });
         }
       },
-      onFinish: () => {
-        refreshChatData();
+      onFinish: async () => {
+        const refreshedChatMessages = await refreshChatData();
+        if (refreshedChatMessages) {
+          const refreshedLastAssistantMessage = refreshedChatMessages.reduce(
+            (prev, current) =>
+              prev.version > current.version ? prev : current,
+            { version: 0 },
+          );
+          if (refreshedLastAssistantMessage) {
+            handleVersionSelect(refreshedLastAssistantMessage.version);
+          }
+        }
         setCanvas(true);
         setInput("");
       },
@@ -186,7 +189,16 @@ export default function ComponentCompletion({
   const handleDeleteVersion = async (messageId: number) => {
     try {
       await deleteVersionByMessageId(messageId);
-      await refreshChatData();
+      const refreshedChatMessages = await refreshChatData();
+      if (refreshedChatMessages) {
+        const refreshedLastAssistantMessage = refreshedChatMessages.reduce(
+          (prev, current) => (prev.version > current.version ? prev : current),
+          { version: 0 },
+        );
+        if (refreshedLastAssistantMessage) {
+          handleVersionSelect(refreshedLastAssistantMessage.version);
+        }
+      }
     } catch {
       toast({
         variant: "destructive",
@@ -202,6 +214,7 @@ export default function ComponentCompletion({
     const refreshedChatMessages = await fetchMessagesByChatId(fetchedChat.id);
     if (!refreshedChatMessages) return;
     setMessages(refreshedChatMessages);
+    return refreshedChatMessages;
   };
 
   const handleComponentFiles = (
@@ -244,11 +257,6 @@ export default function ComponentCompletion({
       setCanvas(true);
       return;
     }
-
-    if (!isLoading) {
-      setCanvas(true);
-      return;
-    }
     const lastFile = files[files.length - 1];
     if (!lastFile) {
       setEditorValue("");
@@ -258,6 +266,9 @@ export default function ComponentCompletion({
     }
     setEditorValue(lastFile.content);
     setActiveTab(lastFile.name || "");
+    if (!isLoading) {
+      setCanvas(true);
+    }
   };
 
   useEffect(() => {
@@ -275,33 +286,6 @@ export default function ComponentCompletion({
   });
 
   useEffect(() => {
-    if (
-      !lastAssistantMessage?.content &&
-      !isLoading &&
-      messages.length === 1 &&
-      lastUserMessage.content
-    ) {
-      setCanvas(false);
-      complete(lastUserMessage.content);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (messages.length > 0) {
-      const lastAssistantMessage = messages
-        .filter((m) => m.role === "assistant")
-        .reduce(
-          (prev, current) => (prev.version > current.version ? prev : current),
-          messages[0],
-        );
-
-      if (lastAssistantMessage) {
-        handleVersionSelect(lastAssistantMessage.version);
-      }
-    }
-  }, [messages]);
-
-  useEffect(() => {
     if (isLoading) {
       handleComponentFiles(completion, selectedTheme);
     }
@@ -310,6 +294,16 @@ export default function ComponentCompletion({
   useEffect(() => {
     if (lastAssistantMessage?.content) {
       handleComponentFiles(lastAssistantMessage.content, selectedTheme, true);
+      handleVersionSelect(lastAssistantMessage.version);
+    }
+    if (
+      !lastAssistantMessage?.content &&
+      !isLoading &&
+      messages.length === 1 &&
+      lastUserMessage.content
+    ) {
+      setCanvas(false);
+      complete(lastUserMessage.content);
     }
   }, []);
 
@@ -347,6 +341,7 @@ export default function ComponentCompletion({
                 <TooltipTrigger asChild>
                   <Button
                     variant="secondary"
+                    size="sm"
                     onClick={() => setCanvas(!isCanvas)}
                     className="flex items-center"
                   >
@@ -372,8 +367,10 @@ export default function ComponentCompletion({
                 <TooltipTrigger asChild>
                   <Button
                     variant="secondary"
+                    size="icon"
                     onClick={() => setIsModalOpen(true)}
                     className="flex items-center"
+                    disabled={isLoading}
                   >
                     <Fullscreen className="w-5" />
                   </Button>
@@ -382,17 +379,15 @@ export default function ComponentCompletion({
                   <p>Display in fullscreen</p>
                 </TooltipContent>
               </Tooltip>
-              {!isLoading && (
-                <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-                  <DialogContent className="h-[95%] max-w-[95%] rounded-none p-10">
-                    <DialogTitle className="hidden">Fullscreen</DialogTitle>
-                    <RenderHtmlComponent files={componentFiles} />
-                  </DialogContent>
-                </Dialog>
-              )}
+              <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+                <DialogContent className="h-[95%] max-w-[95%] rounded-none p-10">
+                  <DialogTitle className="hidden">Fullscreen</DialogTitle>
+                  <RenderHtmlComponent files={componentFiles} />
+                </DialogContent>
+              </Dialog>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="secondary" onClick={share}>
+                  <Button size="icon" variant="secondary" onClick={share}>
                     <Share className="w-5" />
                   </Button>
                 </TooltipTrigger>
@@ -407,7 +402,12 @@ export default function ComponentCompletion({
                   setVisible={setVisible}
                   chatId={fetchedChat.id}
                 >
-                  <Button variant="secondary">
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="secondary"
+                    disabled={isLoading}
+                  >
                     <Settings className="w-5" />
                   </Button>
                 </ComponentSettings>

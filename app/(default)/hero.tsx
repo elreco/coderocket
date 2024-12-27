@@ -258,23 +258,24 @@ export default function Hero() {
                 <p>{isVisible ? "Set private" : "Set public"}</p>
               </TooltipContent>
             </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="background"
+                  size="sm"
+                  type="button"
+                  disabled={loading}
+                  onClick={handleButtonClick}
+                >
+                  <LucideImage className="mr-1 size-4" />
+                  <span>Image</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="left">
+                <p>Upload an image to generate a component with it</p>
+              </TooltipContent>
+            </Tooltip>
             <div className="flex items-center space-x-2">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="background"
-                    type="button"
-                    disabled={loading}
-                    onClick={handleButtonClick}
-                  >
-                    <LucideImage className="mr-1 size-4" />
-                    <span>Image</span>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="left">
-                  <p>Upload an image to generate a component with it</p>
-                </TooltipContent>
-              </Tooltip>
               <input
                 ref={fileInputRef}
                 className="sr-only"

@@ -1,4 +1,4 @@
-import { Paintbrush } from "lucide-react";
+import { CircleFadingArrowUp, Paintbrush } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -25,7 +25,7 @@ interface Props {
   })[];
   activeTab: string;
   handleVersionSelect: (version: number) => void;
-  handleDeleteVersion: (messageId: number) => void;
+  handleDeleteVersion: (messageId: number, newVersion: number) => void;
   handleSubmitToAI: (
     e: React.FormEvent<HTMLFormElement>,
     input: string,
@@ -43,7 +43,7 @@ interface Props {
     isFirstRun?: boolean,
     tabName?: string,
   ) => void;
-  refreshChatData: () => Promise<void>;
+  refreshChatData: () => Promise<Tables<"messages">[] | undefined>;
   chatId: string;
 }
 
@@ -113,7 +113,7 @@ export default function ComponentSidebar({
           ref={containerRef}
           className={cn(
             "flex size-full flex-col overflow-y-auto",
-            authorized && "pb-20",
+            authorized && "pb-24",
           )}
         >
           {isLoaderVisible && (
@@ -184,17 +184,17 @@ export default function ComponentSidebar({
             onSubmit={(e) => handleSubmit(e)}
           >
             {authorized && (
-              <div className="flex w-full flex-col space-y-2 rounded-b-md border-t bg-background p-2">
-                <div className="flex w-full items-center justify-between">
+              <div className="flex w-full flex-col rounded-b-md bg-background">
+                <div className="flex w-full items-center justify-between border-t p-2">
                   {isIterationVisible && (
                     <div className="whitespace-nowrap text-sm font-semibold">
-                      Iterate from selected{" "}
+                      {isLoading ? "Iterating from " : "Iterate from "}
                       <span className="text-primary">
                         version #{selectedVersion}
                       </span>
                     </div>
                   )}
-                  {authorized && !isLoading && (
+                  {authorized && (
                     <div className="text-sm font-semibold">
                       <ComponentTheme
                         selectedTheme={selectedTheme}
@@ -206,9 +206,11 @@ export default function ComponentSidebar({
                         refreshChatData={refreshChatData}
                       >
                         <Button
+                          type="button"
                           variant="secondary"
                           size="sm"
                           className="flex items-center"
+                          disabled={isLoading}
                         >
                           <Paintbrush className="size-4" />
                           <span className="ml-0.5">Theme</span>
@@ -217,7 +219,7 @@ export default function ComponentSidebar({
                     </div>
                   )}
                 </div>
-                <div className="flex w-full space-x-4">
+                <div className="flex w-full items-center space-x-1 border-t p-2">
                   <Input
                     autoFocus
                     disabled={isLoading}
@@ -227,9 +229,16 @@ export default function ComponentSidebar({
                     maxLength={maxPromptLength}
                     placeholder="Add a button, modify a div..."
                     required
+                    className="border-background focus-visible:ring-0"
                   />
-                  <Button loading={isLoading} type="submit">
-                    Iterate
+                  <Button
+                    size="sm"
+                    loading={isLoading}
+                    type="submit"
+                    className="flex items-center"
+                  >
+                    <CircleFadingArrowUp className="size-3" />
+                    <span>Iterate</span>
                   </Button>
                 </div>
               </div>

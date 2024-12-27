@@ -1,6 +1,6 @@
 "use client";
 
-import { FileIcon, Trash } from "lucide-react";
+import { FileIcon, Trash2 } from "lucide-react";
 import { MDXRemote, MDXRemoteSerializeResult } from "next-mdx-remote";
 import { serialize } from "next-mdx-remote/serialize";
 import { useEffect, useState } from "react";
@@ -17,6 +17,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import { cn, getInitials } from "@/lib/utils";
 import { Tables } from "@/types_db";
 import {
@@ -50,7 +51,7 @@ export default function ComponentFiles({
   authorized: boolean;
   activeTab: string;
   handleVersionSelect: (version: number, tabName?: string) => void;
-  handleDeleteVersion: (id: number) => void;
+  handleDeleteVersion: (id: number, version: number) => void;
   isCanvas: boolean;
   isLoading: boolean;
 }) {
@@ -115,21 +116,17 @@ export default function ComponentFiles({
     >
       <div className="flex w-full gap-2">
         {message.role === "assistant" ? (
-          <div className="mr-2 flex size-8 flex-col items-center gap-2">
-            <Avatar className="size-8 rounded-none">
+          <div className="mr-2 flex flex-col items-center justify-start space-y-2">
+            <Avatar className="rounded-none">
               <AvatarImage src="/logo-white.png" />
               <AvatarFallback>T</AvatarFallback>
             </Avatar>
             {isDeletable && authorized && (
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <Trash
-                    className={cn(
-                      "size-4 cursor-pointer text-primary hover:text-primary/50",
-                      isSelectedVersion &&
-                        "text-foreground hover:text-foreground/75",
-                    )}
-                  />
+                  <Button variant="destructive" size="icon">
+                    <Trash2 className="size-4" />
+                  </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
@@ -141,7 +138,9 @@ export default function ComponentFiles({
                   <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
                     <AlertDialogAction
-                      onClick={() => handleDeleteVersion(message.id)}
+                      onClick={() =>
+                        handleDeleteVersion(message.id, message.version - 1)
+                      }
                     >
                       Delete
                     </AlertDialogAction>
@@ -151,7 +150,7 @@ export default function ComponentFiles({
             )}
           </div>
         ) : (
-          <Avatar className="mr-2 size-8 rounded-lg">
+          <Avatar className="mr-2 rounded-lg">
             <AvatarImage
               src={message.chats.user.avatar_url || ""}
               alt={message.chats.user.full_name || ""}
