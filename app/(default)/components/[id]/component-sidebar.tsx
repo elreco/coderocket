@@ -1,3 +1,4 @@
+import { Paintbrush } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -8,16 +9,18 @@ import { Tables } from "@/types_db";
 import { maxPromptLength } from "@/utils/config";
 import { getRelativeDate } from "@/utils/date";
 
+import ComponentSettings from "./(settings)/component-settings";
 import ComponentFiles from "./component-files";
 import { ComponentSidebarSkeleton } from "./component-sidebar-skeleton";
 
 interface Props {
   user: Tables<"users"> | null;
-  selectedVersion: number | null;
+  selectedVersion: number;
   completion: string;
   messages: (Tables<"messages"> & {
     chats: {
       user: Tables<"users">;
+      prompt_image: string | null;
     };
   })[];
   activeTab: string;
@@ -32,6 +35,18 @@ interface Props {
   setInput: (input: string) => void;
   isCanvas: boolean;
   input: string;
+  isVisible: boolean;
+  setVisible: (visible: boolean) => void;
+  selectedTheme: string | null | undefined;
+  setSelectedTheme: (theme: string) => void;
+  handleComponentFiles: (
+    _completion: string,
+    theme: string | null | undefined,
+    isFirstRun?: boolean,
+    tabName?: string,
+  ) => void;
+  refreshChatData: () => Promise<void>;
+  chatId: string;
 }
 
 export default function ComponentSidebar({
@@ -47,6 +62,14 @@ export default function ComponentSidebar({
   setInput,
   input,
   isCanvas,
+  isVisible,
+  setVisible,
+  selectedTheme,
+  setSelectedTheme,
+  completion,
+  handleComponentFiles,
+  refreshChatData,
+  chatId,
 }: Props) {
   const [isLoaderVisible, setLoaderVisible] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -163,14 +186,38 @@ export default function ComponentSidebar({
           >
             {authorized && (
               <div className="flex w-full flex-col space-y-2 rounded-b-md border-t bg-background p-2">
-                {isIterationVisible && (
-                  <div className="w-full text-sm font-semibold">
-                    Iterate from selected{" "}
-                    <span className="text-primary">
-                      version #{selectedVersion}
-                    </span>
+                <div className="flex w-full items-center justify-between">
+                  {isIterationVisible && (
+                    <div className="whitespace-nowrap text-sm font-semibold">
+                      Iterate from selected{" "}
+                      <span className="text-primary">
+                        version #{selectedVersion}
+                      </span>
+                    </div>
+                  )}
+                  <div className="text-sm font-semibold">
+                    <ComponentSettings
+                      isVisible={isVisible}
+                      setVisible={setVisible}
+                      selectedTheme={selectedTheme}
+                      setSelectedTheme={setSelectedTheme}
+                      selectedVersion={selectedVersion}
+                      chatId={chatId}
+                      completion={completion}
+                      handleComponentFiles={handleComponentFiles}
+                      refreshChatData={refreshChatData}
+                    >
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        className="flex items-center"
+                      >
+                        <Paintbrush className="size-4" />
+                        <span className="ml-0.5">Theme</span>
+                      </Button>
+                    </ComponentSettings>
                   </div>
-                )}
+                </div>
                 <div className="flex w-full space-x-4">
                   <Input
                     autoFocus

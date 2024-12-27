@@ -1,7 +1,7 @@
 "use client";
 
 import { useCompletion } from "ai/react";
-import { Fullscreen, LoaderCircle } from "lucide-react";
+import { Fullscreen, LoaderCircle, Settings } from "lucide-react";
 import { Code, Share, Tv } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -34,7 +34,7 @@ interface Props {
   fetchedChat: Tables<"chats"> & { user: Tables<"users"> | null };
   authorized: boolean;
   fetchedMessages: (Tables<"messages"> & {
-    chats: { user: Tables<"users"> };
+    chats: { user: Tables<"users">; prompt_image: string | null };
   })[];
   user: Tables<"users"> | null;
   lastAssistantMessage: Tables<"messages"> | null;
@@ -419,7 +419,11 @@ export default function ComponentCompletion({
                   completion={completion}
                   handleComponentFiles={handleComponentFiles}
                   refreshChatData={refreshChatData}
-                />
+                >
+                  <Button variant="secondary">
+                    <Settings className="w-5" />
+                  </Button>
+                </ComponentSettings>
               )}
             </div>
           </div>
@@ -450,6 +454,13 @@ export default function ComponentCompletion({
             handleDeleteVersion={handleDeleteVersion}
             isLoading={isLoading}
             isCanvas={isCanvas}
+            chatId={fetchedChat.id}
+            isVisible={isVisible}
+            setVisible={setVisible}
+            selectedTheme={selectedTheme}
+            setSelectedTheme={setSelectedTheme}
+            handleComponentFiles={handleComponentFiles}
+            refreshChatData={refreshChatData}
           />
         </div>
       </div>

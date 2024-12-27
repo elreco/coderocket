@@ -25,6 +25,7 @@ import {
   hasArtifacts,
   splitContentIntoChunks,
 } from "@/utils/completion-parser";
+import { storageUrl } from "@/utils/config";
 import { getRelativeDate } from "@/utils/date";
 
 export default function ComponentFiles({
@@ -41,6 +42,7 @@ export default function ComponentFiles({
   message: Tables<"messages"> & {
     chats: {
       user: Tables<"users">;
+      prompt_image: string | null;
     };
   };
   isDeletable: boolean;
@@ -163,7 +165,19 @@ export default function ComponentFiles({
         )}
 
         {message.role === "user" ? (
-          <p className="text-sm">{message.content}</p>
+          <div className="flex flex-col gap-2">
+            <p className="text-sm">{message.content}</p>
+            {message.chats.prompt_image && (
+              <img
+                src={`${storageUrl}/${message.chats.prompt_image}`}
+                alt="screenshot"
+                className={cn(
+                  "size-full max-w-full rounded-md border shadow-md",
+                  isLoading ? "cursor-default" : "cursor-pointer",
+                )}
+              />
+            )}
+          </div>
         ) : (
           <div className="flex w-full flex-col gap-4">
             <h2

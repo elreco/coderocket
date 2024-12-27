@@ -1,7 +1,6 @@
-import { Settings, Loader } from "lucide-react";
+import { Loader } from "lucide-react";
 import { useState } from "react";
 
-import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
   Sheet,
@@ -61,6 +60,7 @@ type ComponentSettingsProps = {
   ) => void;
   completion: string;
   selectedVersion: number;
+  children: React.ReactNode;
 };
 
 export default function ComponentSettings({
@@ -73,6 +73,7 @@ export default function ComponentSettings({
   handleComponentFiles,
   completion,
   selectedVersion,
+  children,
 }: ComponentSettingsProps) {
   const [isSettingLoading, setIsSettingLoading] = useState("");
   const [isVisibilityLoading, setIsVisibilityLoading] = useState(false);
@@ -106,11 +107,7 @@ export default function ComponentSettings({
   };
   return (
     <Sheet>
-      <SheetTrigger asChild>
-        <Button variant="secondary">
-          <Settings className="w-5" />
-        </Button>
-      </SheetTrigger>
+      <SheetTrigger asChild>{children}</SheetTrigger>
       <SheetContent className="overflow-auto">
         <SheetTitle className="mb-4">Component Settings</SheetTitle>
         <div>

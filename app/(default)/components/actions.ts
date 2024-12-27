@@ -38,7 +38,8 @@ export const fetchMessagesByChatId = async (chatId: string) => {
       `
       *,
       chats (
-        user:users (*)
+        user:users (*),
+        prompt_image
       )
     `,
     )
