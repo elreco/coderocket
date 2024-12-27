@@ -11,14 +11,14 @@ import {
 import { getSubscription } from "@/app/supabase-server";
 import { sanitizePrompt } from "@/lib/utils";
 import { Tables } from "@/types_db";
-import { captureScreenshot } from "@/utils/capture-screenshot";
+// import { captureScreenshot } from "@/utils/capture-screenshot";
 import {
   anthropicModel,
   defaultTheme,
   maxPromptLength,
   storageUrl,
 } from "@/utils/config";
-import { getURL } from "@/utils/helpers";
+// import { getURL } from "@/utils/helpers";
 import { createClient } from "@/utils/supabase/server";
 
 export async function POST(req: Request) {
@@ -186,7 +186,7 @@ const validateRequest = async (id: string, prompt: string) => {
   // Fetch HTML content
   const { data: blobContent, error } = await supabase.storage
     .from("featured")
-    .download("html.txt");
+    .download("system-html.txt");
   if (error) throw new Error("Could not get AI Model file. Please try again");
   const contentMd = await blobContent.text();
 
@@ -239,41 +239,37 @@ const updateDataAfterCompletion = async (
     role: "assistant",
   });
 
-  const { data: newMessagesData } = await supabase
-    .from("messages")
-    .insert(newMessages)
-    .eq("chat_id", chatId)
-    .select();
+  await supabase.from("messages").insert(newMessages).eq("chat_id", chatId);
 
-  const screenshot = await captureScreenshot(
-    `${getURL()}content/${chatId}/${version}/${theme}`,
-  );
+  // const screenshot = await captureScreenshot(
+  //   `${getURL()}content/${chatId}/${version}/${theme}`,
+  // );
 
-  const { error, data } = await supabase.storage
-    .from("chat-images")
-    .upload(`${chatId}/${version}-${theme}`, screenshot, {
-      contentType: "image/png",
-      cacheControl: "3600",
-      upsert: true,
-    });
+  // const { error, data } = await supabase.storage
+  //   .from("chat-images")
+  //   .upload(`${chatId}/${version}-${theme}`, screenshot, {
+  //     contentType: "image/png",
+  //     cacheControl: "3600",
+  //     upsert: true,
+  //   });
 
-  if (error) {
-    throw new Error("Failed to upload image to Supabase: " + error.message);
-  }
-  const { data: imageData } = supabase.storage
-    .from("chat-images")
-    .getPublicUrl(data.path);
+  // if (error) {
+  //   throw new Error("Failed to upload image to Supabase: " + error.message);
+  // }
+  // const { data: imageData } = supabase.storage
+  //   .from("chat-images")
+  //   .getPublicUrl(data.path);
 
-  const findAssistantMessage = newMessagesData?.find(
-    (m) => m.role === "assistant",
-  );
+  // const findAssistantMessage = newMessagesData?.find(
+  //   (m) => m.role === "assistant",
+  // );
 
-  if (!findAssistantMessage)
-    return console.error("Could not find assistant message");
-  findAssistantMessage.screenshot = imageData.publicUrl;
+  // if (!findAssistantMessage)
+  //   return console.error("Could not find assistant message");
+  // findAssistantMessage.screenshot = imageData.publicUrl;
 
-  await supabase
-    .from("messages")
-    .update({ screenshot: imageData.publicUrl })
-    .eq("id", findAssistantMessage.id);
+  // await supabase
+  //   .from("messages")
+  //   .update({ screenshot: imageData.publicUrl })
+  //   .eq("id", findAssistantMessage.id);
 };

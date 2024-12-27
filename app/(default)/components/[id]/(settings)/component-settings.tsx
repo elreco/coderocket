@@ -13,7 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
-import { changeVisibilityByChatId, updateTheme } from "../actions";
+import { changeVisibilityByChatId } from "../actions";
 
 const themes = [
   "light",
@@ -49,11 +49,18 @@ const themes = [
 type ComponentSettingsProps = {
   isVisible: boolean;
   setVisible: (visible: boolean) => void;
-  selectedTheme: string;
+  selectedTheme: string | null | undefined;
   setSelectedTheme: (theme: string) => void;
   selectedVersion: number;
   chatId: string;
   refreshChatData: () => Promise<void>;
+  handleComponentFiles: (
+    _completion: string,
+    theme: string | null | undefined,
+    isFirstRun?: boolean,
+    tabName?: string,
+  ) => void;
+  completion: string;
 };
 
 export default function ComponentSettings({
@@ -64,6 +71,8 @@ export default function ComponentSettings({
   selectedVersion,
   chatId,
   refreshChatData,
+  handleComponentFiles,
+  completion,
 }: ComponentSettingsProps) {
   const [isSettingLoading, setIsSettingLoading] = useState("");
   const [isVisibilityLoading, setIsVisibilityLoading] = useState(false);
@@ -89,8 +98,8 @@ export default function ComponentSettings({
     if (isSettingLoading || isVisibilityLoading || theme === selectedTheme)
       return;
     setIsSettingLoading(theme);
-    await updateTheme(chatId, theme, selectedVersion);
     await refreshChatData();
+    handleComponentFiles(completion, theme);
     setSelectedTheme(theme);
     setIsSettingLoading("");
   };

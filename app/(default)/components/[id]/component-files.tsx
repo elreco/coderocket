@@ -69,7 +69,9 @@ export default function ComponentFiles({
       const hasArtifactResult = hasArtifacts(message.content);
       setHasArtifact(hasArtifactResult);
       setFiles(
-        hasArtifactResult ? handleAIcompletionForHTML(message.content) : [],
+        hasArtifactResult
+          ? handleAIcompletionForHTML(message.content, message.theme)
+          : [],
       );
       setChunks(splitContentIntoChunks(message.content));
 

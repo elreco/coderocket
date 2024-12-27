@@ -14,31 +14,27 @@ import { useParams } from "next/navigation";
 import { useRef, useEffect } from "react";
 import { useCopyToClipboard } from "usehooks-ts";
 
+import RenderHtmlComponent from "@/app/(content)/render-html-component";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
-import { getURL } from "@/utils/helpers";
 import { iframeBuilder } from "@/utils/iframe-builder";
 
 import ChatSkeleton from "./component-skeleton";
 
 export default function CodePreview({
-  chatId,
   isCanvas,
   isLoading,
-  selectedTheme,
   selectedVersion,
-  htmlFiles,
+  componentFiles,
   activeTab,
   editorValue,
   handleVersionSelect,
 }: {
-  chatId: string;
   isCanvas: boolean;
   isLoading: boolean;
-  selectedTheme: string;
   selectedVersion: number;
-  htmlFiles: { name: string | null; content: string }[];
+  componentFiles: { name: string | null; content: string }[];
   activeTab: string;
   editorValue: string;
   handleVersionSelect: (version: number, tabName?: string) => void;
@@ -52,18 +48,14 @@ export default function CodePreview({
   };
 
   const downloadCode = async () => {
-    if (!htmlFiles.length) return;
+    if (!componentFiles.length) return;
     const zip = new JSZip();
 
-    htmlFiles.forEach((file) => {
+    componentFiles.forEach((file) => {
       zip.file(`${file.name || "component.html"}`, file.content);
     });
 
-    const iframeContent = iframeBuilder(
-      htmlFiles,
-      id?.toString() || "",
-      selectedTheme,
-    );
+    const iframeContent = iframeBuilder(componentFiles, id?.toString() || "");
 
     zip.file(`page.html`, iframeContent);
 
@@ -114,7 +106,7 @@ export default function CodePreview({
     return () => {
       clearInterval(scrollInterval);
     };
-  }, [htmlFiles, isLoading]);
+  }, [componentFiles, isLoading]);
 
   useEffect(() => {
     if (codeMirrorRef.current?.view) {
@@ -138,11 +130,7 @@ export default function CodePreview({
             <ChatSkeleton />
           </div>
         ) : (
-          <iframe
-            className="mx-auto size-full border-none"
-            src={`${getURL()}/content/${chatId}/${selectedVersion}/${selectedTheme}`}
-            title="Preview"
-          />
+          <RenderHtmlComponent files={componentFiles} />
         )}
       </div>
       <div
@@ -158,7 +146,7 @@ export default function CodePreview({
             onValueChange={handleTabChange}
           >
             <TabsList className="flex w-full items-start justify-start rounded-none border-none">
-              {htmlFiles.map((file) => (
+              {componentFiles.map((file) => (
                 <TabsTrigger key={file.name || ""} value={file.name || ""}>
                   {file.name}
                 </TabsTrigger>

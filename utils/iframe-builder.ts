@@ -3,22 +3,11 @@ export function partialIframeBuilder(
     name: string | null;
     content: string;
   }[],
-  theme: string,
 ) {
   if (!files) {
-    return "";
+    return [];
   }
-
-  const completion = files.map((file) => file.content).join("");
-  return `<html data-theme="${theme}">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.22/dist/full.min.css" rel="stylesheet" type="text/css" />
-    <script src="https://cdn.tailwindcss.com"></script>
-  </head>
-  ${completion}
-</html>`;
+  return files;
 }
 
 export const iframeBuilder = (
@@ -27,7 +16,6 @@ export const iframeBuilder = (
     content: string;
   }[],
   id: string,
-  theme: string,
 ) => {
   return `<!--
 *********************************************************************
@@ -36,6 +24,6 @@ export const iframeBuilder = (
 https://tailwindai.dev/components/${id}
 *********************************************************************
 -->
-  ${partialIframeBuilder(files, theme)}
+  ${partialIframeBuilder(files)}
   `;
 };

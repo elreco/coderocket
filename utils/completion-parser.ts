@@ -1,5 +1,14 @@
-export const handleAIcompletionForHTML = (completion: string) => {
+import { defaultTheme } from "./config";
+
+export const handleAIcompletionForHTML = (
+  completion: string,
+  theme: string | null | undefined,
+) => {
   if (!completion) return [];
+
+  if (!theme) {
+    theme = defaultTheme;
+  }
 
   const filesArray: { name: string | null; content: string }[] = [];
 
@@ -37,6 +46,18 @@ export const handleAIcompletionForHTML = (completion: string) => {
       .replace(/^\n/, "");
     // Ne plus retirer l'indentation
     // .replace(/^\s{4}/gm, ""); <- Cette ligne est supprimée
+
+    // Ajouter ou mettre à jour l'attribut data-theme dans les balises HTML
+    content = content.replace(/(<html[^>]*)(>)/g, (match, p1, p2) => {
+      // Si data-theme existe déjà, le remplacer
+      if (p1.includes("data-theme=")) {
+        return (
+          p1.replace(/data-theme=["'][^"']*["']/, `data-theme="${theme}"`) + p2
+        );
+      }
+      // Sinon, l'ajouter
+      return `${p1} data-theme="${theme}"${p2}`;
+    });
 
     filesArray.push({
       name: fileName || null,

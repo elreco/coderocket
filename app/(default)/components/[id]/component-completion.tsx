@@ -7,6 +7,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useCopyToClipboard } from "usehooks-ts";
 
+import RenderHtmlComponent from "@/app/(content)/render-html-component";
 import { Container } from "@/components/container";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
@@ -19,7 +20,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Tables } from "@/types_db";
 import { handleAIcompletionForHTML } from "@/utils/completion-parser";
 import { defaultTheme } from "@/utils/config";
-import { capitalizeFirstLetter, getURL } from "@/utils/helpers";
+import { capitalizeFirstLetter } from "@/utils/helpers";
 import { createClient } from "@/utils/supabase/client";
 
 import { fetchMessagesByChatId } from "../actions";
@@ -61,7 +62,7 @@ export default function ComponentCompletion({
     lastUserMessage.version,
   );
   const [selectedTheme, setSelectedTheme] = useState(
-    lastAssistantMessage?.theme || defaultTheme,
+    lastAssistantMessage?.theme,
   );
   const [title, setTitle] = useState<string>(
     lastUserMessage.content?.toString() || "",
@@ -71,13 +72,13 @@ export default function ComponentCompletion({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editorValue, setEditorValue] = useState("");
 
-  const [htmlFiles, setHtmlFiles] = useState<
+  const [componentFiles, setComponentFiles] = useState<
     { name: string | null; content: string }[]
   >([]);
 
   const [activeTab, setActiveTab] = useState(() => {
-    if (htmlFiles.length > 0) {
-      const lastFile = htmlFiles[htmlFiles.length - 1];
+    if (componentFiles.length > 0) {
+      const lastFile = componentFiles[componentFiles.length - 1];
       setEditorValue(lastFile.content);
       return lastFile.name || "";
     }
@@ -152,7 +153,12 @@ export default function ComponentCompletion({
     }
     setCompletion(selectedAssistantMessage.content);
     setSelectedTheme(selectedAssistantMessage?.theme || defaultTheme);
-    handleHtmlFiles(selectedAssistantMessage.content, false, tabName);
+    handleComponentFiles(
+      selectedAssistantMessage.content,
+      selectedAssistantMessage?.theme,
+      false,
+      tabName,
+    );
   };
 
   const copyPrompt = (prompt: string) => {
@@ -198,16 +204,18 @@ export default function ComponentCompletion({
     setMessages(refreshedChatMessages);
   };
 
-  const handleHtmlFiles = (
+  const handleComponentFiles = (
     _completion: string,
+    theme: string | null | undefined,
     isFirstRun?: boolean,
     tabName?: string,
   ) => {
-    const files = handleAIcompletionForHTML(_completion);
+    const files = handleAIcompletionForHTML(_completion, theme);
+
     if (files.length > 0) {
-      setHtmlFiles(files);
+      setComponentFiles(files);
     } else {
-      setHtmlFiles([]);
+      setComponentFiles([]);
     }
 
     if (tabName) {
@@ -295,14 +303,13 @@ export default function ComponentCompletion({
 
   useEffect(() => {
     if (isLoading) {
-      handleHtmlFiles(completion);
+      handleComponentFiles(completion, selectedTheme);
     }
   }, [completion]);
 
   useEffect(() => {
     if (lastAssistantMessage?.content) {
-      console.log("here 4");
-      handleHtmlFiles(lastAssistantMessage.content, true);
+      handleComponentFiles(lastAssistantMessage.content, selectedTheme, true);
     }
   }, []);
 
@@ -379,11 +386,7 @@ export default function ComponentCompletion({
                 <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
                   <DialogContent className="h-[95%] max-w-[95%] rounded-none p-10">
                     <DialogTitle className="hidden">Fullscreen</DialogTitle>
-                    <iframe
-                      className="mx-auto size-full rounded-md border-none"
-                      src={`${getURL()}/content/${fetchedChat.id}/${selectedVersion}/${selectedTheme}`}
-                      title="Preview"
-                    />
+                    <RenderHtmlComponent files={componentFiles} />
                   </DialogContent>
                 </Dialog>
               )}
@@ -406,6 +409,8 @@ export default function ComponentCompletion({
                   setSelectedTheme={setSelectedTheme}
                   selectedVersion={selectedVersion}
                   chatId={fetchedChat.id}
+                  completion={completion}
+                  handleComponentFiles={handleComponentFiles}
                   refreshChatData={refreshChatData}
                 />
               )}
@@ -413,12 +418,10 @@ export default function ComponentCompletion({
           </div>
           <div className="m-0 flex h-full flex-1 flex-col">
             <CodePreview
-              chatId={fetchedChat.id}
               isCanvas={isCanvas}
               isLoading={isLoading}
-              selectedTheme={selectedTheme}
               selectedVersion={selectedVersion}
-              htmlFiles={htmlFiles}
+              componentFiles={componentFiles}
               activeTab={activeTab}
               editorValue={editorValue}
               handleVersionSelect={handleVersionSelect}
