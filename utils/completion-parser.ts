@@ -1,5 +1,24 @@
 import { defaultTheme } from "./config";
 
+const TAILWIND_SCRIPT_CDN =
+  '<script src="https://cdn.tailwindcss.com"></script>';
+const DAISYUI_CDN =
+  '<link href="https://cdn.jsdelivr.net/npm/daisyui@latest/dist/full.css" rel="stylesheet">';
+
+export const ensureCDNsPresent = (htmlContent: string): string => {
+  let updatedContent = htmlContent;
+
+  if (!htmlContent.includes("cdn.tailwindcss.com")) {
+    updatedContent += `\n${TAILWIND_SCRIPT_CDN}`;
+  }
+
+  if (!htmlContent.includes("cdn.jsdelivr.net/npm/daisyui@latest")) {
+    updatedContent += `\n${DAISYUI_CDN}`;
+  }
+
+  return updatedContent;
+};
+
 export const handleAIcompletionForHTML = (
   completion: string,
   theme: string | null | undefined,
@@ -58,6 +77,9 @@ export const handleAIcompletionForHTML = (
       // Sinon, l'ajouter
       return `${p1} data-theme="${theme}"${p2}`;
     });
+
+    // Assurez-vous que les CDN sont présents
+    content = ensureCDNsPresent(content);
 
     filesArray.push({
       name: fileName || null,
