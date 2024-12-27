@@ -9,7 +9,7 @@ import { Tables } from "@/types_db";
 import { maxPromptLength } from "@/utils/config";
 import { getRelativeDate } from "@/utils/date";
 
-import ComponentSettings from "./(settings)/component-settings";
+import ComponentTheme from "./(settings)/component-theme";
 import ComponentFiles from "./component-files";
 import { ComponentSidebarSkeleton } from "./component-sidebar-skeleton";
 
@@ -35,8 +35,6 @@ interface Props {
   setInput: (input: string) => void;
   isCanvas: boolean;
   input: string;
-  isVisible: boolean;
-  setVisible: (visible: boolean) => void;
   selectedTheme: string | null | undefined;
   setSelectedTheme: (theme: string) => void;
   handleComponentFiles: (
@@ -62,8 +60,6 @@ export default function ComponentSidebar({
   setInput,
   input,
   isCanvas,
-  isVisible,
-  setVisible,
   selectedTheme,
   setSelectedTheme,
   completion,
@@ -197,9 +193,7 @@ export default function ComponentSidebar({
                   )}
                   {authorized && !isLoading && (
                     <div className="text-sm font-semibold">
-                      <ComponentSettings
-                        isVisible={isVisible}
-                        setVisible={setVisible}
+                      <ComponentTheme
                         selectedTheme={selectedTheme}
                         setSelectedTheme={setSelectedTheme}
                         selectedVersion={selectedVersion}
@@ -216,7 +210,7 @@ export default function ComponentSidebar({
                           <Paintbrush className="size-4" />
                           <span className="ml-0.5">Theme</span>
                         </Button>
-                      </ComponentSettings>
+                      </ComponentTheme>
                     </div>
                   )}
                 </div>

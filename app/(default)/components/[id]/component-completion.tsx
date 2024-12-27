@@ -412,13 +412,7 @@ export default function ComponentCompletion({
                 <ComponentSettings
                   isVisible={isVisible}
                   setVisible={setVisible}
-                  selectedTheme={selectedTheme}
-                  setSelectedTheme={setSelectedTheme}
-                  selectedVersion={selectedVersion}
                   chatId={fetchedChat.id}
-                  completion={completion}
-                  handleComponentFiles={handleComponentFiles}
-                  refreshChatData={refreshChatData}
                 >
                   <Button variant="secondary">
                     <Settings className="w-5" />
@@ -455,8 +449,6 @@ export default function ComponentCompletion({
             isLoading={isLoading}
             isCanvas={isCanvas}
             chatId={fetchedChat.id}
-            isVisible={isVisible}
-            setVisible={setVisible}
             selectedTheme={selectedTheme}
             setSelectedTheme={setSelectedTheme}
             handleComponentFiles={handleComponentFiles}
