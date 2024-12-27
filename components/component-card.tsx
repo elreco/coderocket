@@ -36,7 +36,12 @@ export default async function ComponentCard({
     >
       <div className="mb-2 flex text-clip rounded-xl">
         <div className="relative aspect-video size-full transition duration-300 md:group-hover:scale-105">
-          <div className="relative h-0 w-full overflow-hidden rounded-md pt-[56.25%]">
+          <img
+            src="/placeholder.svg"
+            className="block size-full rounded-md object-cover md:hidden"
+            alt="Component placeholder"
+          />
+          <div className="relative hidden h-0 w-full overflow-hidden rounded-md pt-[56.25%] md:block">
             <div className="pointer-events-none absolute left-0 top-0 size-full overflow-hidden rounded-md">
               <RenderHtmlComponentServer
                 style={{
