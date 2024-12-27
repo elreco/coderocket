@@ -1,12 +1,8 @@
 "use client";
-import Hotjar from "@hotjar/browser";
 import { Crisp } from "crisp-sdk-web";
 import { useEffect } from "react";
 
 import { createClient } from "@/utils/supabase/client";
-
-const siteId = 5216030;
-const hotjarVersion = 6;
 
 export function PluginWidget() {
   const supabase = createClient();
@@ -17,7 +13,6 @@ export function PluginWidget() {
       const userId = authData?.session?.user?.id;
       // Initialisation de Crisp avec ton ID
       Crisp.configure("2f740c23-7cfa-40ff-ba55-581ff73c5a67");
-      Hotjar.init(siteId, hotjarVersion);
       // Si l'utilisateur est connecté, récupérer les détails supplémentaires
       if (userId) {
         const { data: userDetails } = await supabase
@@ -34,15 +29,6 @@ export function PluginWidget() {
           if (fullName) {
             Crisp.user.setNickname(fullName);
           }
-          const hotjarData: { full_name?: string; email?: string } = {};
-
-          if (email) {
-            hotjarData.email = email;
-          }
-          if (fullName) {
-            hotjarData.full_name = fullName;
-          }
-          Hotjar.identify(userId, hotjarData);
         }
       }
     };
