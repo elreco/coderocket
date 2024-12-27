@@ -42,7 +42,7 @@ export async function POST(req: Request) {
     const stream = streamText({
       messages,
       model: anthropicModel(
-        subscription ? "claude-3-5-sonnet-latest" : "claude-3-5-haiku-latest",
+        subscription ? "claude-3-5-sonnet-latest" : "claude-3-5-sonnet-latest",
       ),
       system: contentMd,
       toolChoice: "none",
