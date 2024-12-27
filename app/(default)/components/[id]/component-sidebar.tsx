@@ -186,14 +186,19 @@ export default function ComponentSidebar({
             {authorized && (
               <div className="flex w-full flex-col rounded-b-md bg-background">
                 <div className="flex w-full items-center justify-between border-t p-2">
-                  {isIterationVisible && (
-                    <div className="whitespace-nowrap text-sm font-semibold">
-                      {isLoading ? "Iterating from " : "Iterate from "}
+                  <div className="whitespace-nowrap text-xs font-semibold">
+                    {!isIterationVisible
+                      ? "Generating first version"
+                      : isLoading
+                        ? "Iterating from "
+                        : "Iterate from "}
+                    {isIterationVisible && (
                       <span className="text-primary">
                         version #{selectedVersion}
                       </span>
-                    </div>
-                  )}
+                    )}
+                  </div>
+
                   {authorized && (
                     <div className="text-sm font-semibold">
                       <ComponentTheme
