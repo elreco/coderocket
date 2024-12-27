@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import RenderHtmlComponent from "@/app/(content)/render-html-component";
+import RenderHtmlComponentServer from "@/app/(content)/render-html-component-server";
 import { handleAIcompletionForHTML } from "@/utils/completion-parser";
 import { capitalizeFirstLetter } from "@/utils/helpers";
 
@@ -38,7 +38,7 @@ export default function ComponentCard({
         <div className="relative aspect-video size-full transition duration-300 md:group-hover:scale-105">
           <div className="relative h-0 w-full overflow-hidden rounded-md pt-[56.25%]">
             <div className="pointer-events-none absolute left-0 top-0 size-full overflow-hidden rounded-md">
-              <RenderHtmlComponent
+              <RenderHtmlComponentServer
                 style={{
                   width: "1920px",
                   height: "1080px",
