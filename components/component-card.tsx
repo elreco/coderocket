@@ -1,6 +1,7 @@
-import Image from "next/image";
 import Link from "next/link";
 
+import RenderHtmlComponent from "@/app/(content)/render-html-component";
+import { handleAIcompletionForHTML } from "@/utils/completion-parser";
 import { capitalizeFirstLetter } from "@/utils/helpers";
 
 import { UserWidget } from "./user-widget";
@@ -14,7 +15,8 @@ type GetComponentsReturnType = {
   is_private: boolean;
   created_at: string;
   first_user_message: string;
-  last_assistant_message: string;
+  last_assistant_message_content: string;
+  last_assistant_message_theme: string;
 };
 
 export default function ComponentCard({
@@ -22,6 +24,11 @@ export default function ComponentCard({
 }: {
   chat: GetComponentsReturnType;
 }) {
+  console.log(chat);
+  const files = handleAIcompletionForHTML(
+    chat.last_assistant_message_content,
+    chat.last_assistant_message_theme,
+  );
   return (
     <Link
       key={chat.chat_id}
@@ -30,12 +37,9 @@ export default function ComponentCard({
     >
       <div className="mb-2 flex text-clip rounded-xl">
         <div className="relative aspect-video size-full transition duration-300 md:group-hover:scale-105">
-          <Image
-            src={chat.last_assistant_message}
-            fill
-            sizes="600px"
-            className="rounded-md border object-cover"
-            alt=""
+          <RenderHtmlComponent
+            className="pointer-events-none size-full rounded-md object-cover"
+            files={files}
           />
         </div>
       </div>

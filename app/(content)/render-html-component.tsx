@@ -4,8 +4,10 @@ import React, { useEffect, useState } from "react";
 
 export default function RenderHtmlComponent({
   files,
+  className,
 }: {
   files: { name: string | null; content: string }[];
+  className?: string;
 }) {
   const [testContent, setContent] = useState(files[0]?.content || "");
   useEffect(() => {
@@ -55,6 +57,7 @@ export default function RenderHtmlComponent({
   return (
     <iframe
       srcDoc={testContent}
+      className={className}
       style={{ width: "100%", height: "100%", border: "none" }}
       sandbox="allow-scripts allow-same-origin"
     />
