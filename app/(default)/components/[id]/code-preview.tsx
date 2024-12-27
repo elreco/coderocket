@@ -130,7 +130,14 @@ export default function CodePreview({
             <ChatSkeleton />
           </div>
         ) : (
-          <RenderHtmlComponent files={componentFiles} />
+          <RenderHtmlComponent
+            files={componentFiles}
+            style={{
+              width: "100%",
+              height: "100%",
+              border: "none",
+            }}
+          />
         )}
       </div>
       <div
