@@ -386,14 +386,7 @@ export default function ComponentCompletion({
                 <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
                   <DialogContent className="h-[95%] max-w-[95%] rounded-none p-10">
                     <DialogTitle className="hidden">Fullscreen</DialogTitle>
-                    <RenderHtmlComponent
-                      files={componentFiles}
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        border: "none",
-                      }}
-                    />
+                    <RenderHtmlComponent files={componentFiles} />
                   </DialogContent>
                 </Dialog>
               )}

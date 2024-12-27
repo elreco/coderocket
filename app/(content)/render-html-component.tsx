@@ -4,10 +4,8 @@ import React, { useEffect, useState } from "react";
 
 export default function RenderHtmlComponent({
   files,
-  style,
 }: {
   files: { name: string | null; content: string }[];
-  style?: React.CSSProperties;
 }) {
   const [testContent, setContent] = useState(files[0]?.content || "");
   useEffect(() => {
@@ -71,7 +69,11 @@ export default function RenderHtmlComponent({
   return (
     <iframe
       srcDoc={testContent}
-      style={style}
+      style={{
+        width: "100%",
+        height: "100%",
+        border: "none",
+      }}
       sandbox="allow-scripts allow-same-origin"
     />
   );

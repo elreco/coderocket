@@ -19,7 +19,7 @@ type GetComponentsReturnType = {
   last_assistant_message_theme: string;
 };
 
-export default function ComponentCard({
+export default async function ComponentCard({
   chat,
 }: {
   chat: GetComponentsReturnType;
