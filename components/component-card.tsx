@@ -24,7 +24,6 @@ export default function ComponentCard({
 }: {
   chat: GetComponentsReturnType;
 }) {
-  console.log(chat);
   const files = handleAIcompletionForHTML(
     chat.last_assistant_message_content,
     chat.last_assistant_message_theme,

@@ -231,7 +231,7 @@ export default function ComponentCompletion({
       setCanvas(false);
       return;
     }
-    console.log("file");
+
     if (isFirstRun) {
       const firstFile = files[0];
       if (!firstFile) {
@@ -414,6 +414,7 @@ export default function ComponentCompletion({
                   setVisible={setVisible}
                   selectedTheme={selectedTheme}
                   setSelectedTheme={setSelectedTheme}
+                  selectedVersion={selectedVersion}
                   chatId={fetchedChat.id}
                   completion={completion}
                   handleComponentFiles={handleComponentFiles}
