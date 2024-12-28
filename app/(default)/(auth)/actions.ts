@@ -3,7 +3,6 @@
 import { Provider } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
 
-import { getURL } from "@/utils/helpers";
 import { createClient } from "@/utils/supabase/server";
 
 export async function login(formData: FormData) {
@@ -81,7 +80,7 @@ export async function signInWithOAuth(provider: Provider) {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider,
     options: {
-      redirectTo: `${getURL()}/auth/callback`,
+      redirectTo: `https://www.tailwindai.dev/auth/callback`,
     },
   });
   if (error) {
