@@ -311,7 +311,7 @@ export default function ComponentCompletion({
     <Container>
       <div className="grid grid-cols-1 justify-center gap-y-4 space-x-0 pb-4 lg:size-full lg:max-h-full lg:grid-cols-3 lg:flex-row lg:gap-y-0 lg:space-x-3 lg:pb-0 xl:grid-cols-4">
         <div className="col-span-1 flex size-full min-h-screen flex-col space-y-2 lg:col-span-2 xl:col-span-3 xl:mb-0 xl:min-h-full">
-          <div className="flex flex-col items-center justify-start space-y-2 xl:flex-row xl:justify-between xl:space-y-0">
+          <div className="mr-0 flex flex-col items-center justify-start space-y-2 md:mr-1 xl:flex-row xl:justify-between xl:space-y-0">
             <div className="font-medium">
               <div className="flex items-center space-x-2">
                 <h1>
