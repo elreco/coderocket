@@ -1,7 +1,6 @@
 "use server";
 
 import { getSubscription } from "@/app/supabase-server";
-import { Tables } from "@/types_db";
 import { captureScreenshot } from "@/utils/capture-screenshot";
 import { getURL } from "@/utils/helpers";
 import { createClient } from "@/utils/supabase/server";
@@ -122,22 +121,17 @@ export const updateTheme = async (
     throw new Error(`Failed to fetch chat: ${chatError.message}`);
   }
 
-  const { data: messagesData } = await supabase
+  await supabase
     .from("messages")
-    .select("*")
+    .update({ theme })
     .eq("chat_id", chatId)
     .eq("version", version)
     .eq("role", "assistant");
 
-  if (!messagesData) {
-    throw new Error("No messages found");
-  }
-
-  takeScreenshot(messagesData, chatId, version, theme);
+  takeScreenshot(chatId, version, theme);
 };
 
 export const takeScreenshot = async (
-  newMessagesData: Tables<"messages">[],
   chatId: string,
   version: number,
   theme: string,
@@ -160,7 +154,14 @@ export const takeScreenshot = async (
     .from("chat-images")
     .getPublicUrl(data.path);
 
-  const findAssistantMessage = newMessagesData?.find(
+  const { data: messagesData } = await supabase
+    .from("messages")
+    .select("*")
+    .eq("chat_id", chatId)
+    .eq("version", version)
+    .eq("role", "assistant");
+
+  const findAssistantMessage = messagesData?.find(
     (m) => m.role === "assistant",
   );
 

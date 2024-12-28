@@ -238,13 +238,7 @@ const updateDataAfterCompletion = async (
     role: "assistant",
   });
 
-  const { data: newMessagesData } = await supabase
-    .from("messages")
-    .insert(newMessages)
-    .eq("chat_id", chatId)
-    .select();
+  await supabase.from("messages").insert(newMessages).eq("chat_id", chatId);
 
-  if (newMessagesData) {
-    takeScreenshot(newMessagesData, chatId, version, theme);
-  }
+  takeScreenshot(chatId, version, theme);
 };
