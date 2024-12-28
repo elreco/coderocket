@@ -1,7 +1,5 @@
 import { Buffer } from "buffer";
 
-import { Tables } from "@/types_db";
-
 import { screenshotApiUrl } from "./config";
 import { getURL } from "./helpers";
 import { createClient } from "./supabase/server";
@@ -23,14 +21,13 @@ export async function captureScreenshot(url: string) {
 }
 
 export const takeScreenshot = async (
-  newMessagesData: Tables<"messages">[],
   chatId: string,
   version: number,
   theme: string,
 ) => {
   const supabase = await createClient();
-
   const screenshot = await captureScreenshot(`${getURL()}/content/${chatId}`);
+
   const { error, data } = await supabase.storage
     .from("chat-images")
     .upload(`${chatId}/${version}-${theme}`, screenshot, {
@@ -46,7 +43,14 @@ export const takeScreenshot = async (
     .from("chat-images")
     .getPublicUrl(data.path);
 
-  const findAssistantMessage = newMessagesData?.find(
+  const { data: messagesData } = await supabase
+    .from("messages")
+    .select("*")
+    .eq("chat_id", chatId)
+    .eq("version", version)
+    .eq("role", "assistant");
+
+  const findAssistantMessage = messagesData?.find(
     (m) => m.role === "assistant",
   );
 

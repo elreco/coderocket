@@ -2,7 +2,6 @@ export const maxDuration = 300;
 
 import { CoreMessage, streamText } from "ai";
 
-import { takeScreenshot } from "@/app/(default)/components/[id]/actions";
 import {
   fetchChatById,
   fetchLastAssistantMessageByChatId,
@@ -12,6 +11,7 @@ import {
 import { getSubscription } from "@/app/supabase-server";
 import { sanitizePrompt } from "@/lib/utils";
 import { Tables } from "@/types_db";
+import { takeScreenshot } from "@/utils/capture-screenshot";
 import {
   anthropicModel,
   defaultTheme,
