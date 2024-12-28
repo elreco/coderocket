@@ -367,7 +367,7 @@ export default function ComponentCompletion({
                 <TooltipTrigger asChild>
                   <Button
                     variant="secondary"
-                    size="icon"
+                    size="sm"
                     onClick={() => setIsModalOpen(true)}
                     className="flex items-center"
                     disabled={isLoading}
@@ -387,7 +387,7 @@ export default function ComponentCompletion({
               </Dialog>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button size="icon" variant="secondary" onClick={share}>
+                  <Button size="sm" variant="secondary" onClick={share}>
                     <Share className="w-5" />
                   </Button>
                 </TooltipTrigger>
@@ -404,7 +404,7 @@ export default function ComponentCompletion({
                 >
                   <Button
                     type="button"
-                    size="icon"
+                    size="sm"
                     variant="secondary"
                     disabled={isLoading}
                   >

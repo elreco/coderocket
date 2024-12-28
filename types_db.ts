@@ -278,6 +278,33 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      get_chats: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          chat_id: string;
+          user_id: string;
+          user_full_name: string;
+          is_featured: boolean;
+          is_private: boolean;
+          created_at: string;
+          first_user_message: Json;
+          last_assistant_message: Json;
+        }[];
+      };
+      get_components: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          chat_id: string;
+          user_id: string;
+          user_full_name: string;
+          user_avatar_url: string;
+          is_featured: boolean;
+          is_private: boolean;
+          created_at: string;
+          first_user_message: string;
+          last_assistant_message: string;
+        }[];
+      };
       get_components_with_completion: {
         Args: Record<PropertyKey, never>;
         Returns: {

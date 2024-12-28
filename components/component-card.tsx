@@ -1,7 +1,6 @@
+import Image from "next/image";
 import Link from "next/link";
 
-import RenderHtmlComponentServer from "@/app/(content)/render-html-component-server";
-import { handleAIcompletionForHTML } from "@/utils/completion-parser";
 import { capitalizeFirstLetter } from "@/utils/helpers";
 
 import { UserWidget } from "./user-widget";
@@ -15,19 +14,14 @@ type GetComponentsReturnType = {
   is_private: boolean;
   created_at: string;
   first_user_message: string;
-  last_assistant_message_content: string;
-  last_assistant_message_theme: string;
+  last_assistant_message: string;
 };
 
-export default async function ComponentCard({
+export default function ComponentCard({
   chat,
 }: {
   chat: GetComponentsReturnType;
 }) {
-  const files = handleAIcompletionForHTML(
-    chat.last_assistant_message_content,
-    chat.last_assistant_message_theme,
-  );
   return (
     <Link
       key={chat.chat_id}
@@ -36,29 +30,13 @@ export default async function ComponentCard({
     >
       <div className="mb-2 flex text-clip rounded-xl">
         <div className="relative aspect-video size-full transition duration-300 md:group-hover:scale-105">
-          <img
-            src="/placeholder.svg"
-            className="block size-full rounded-md object-cover md:hidden"
-            alt="Component placeholder"
+          <Image
+            src={chat.last_assistant_message}
+            fill
+            sizes="600px"
+            className="rounded-md border object-cover"
+            alt=""
           />
-          <div className="relative hidden h-0 w-full overflow-hidden rounded-md pt-[56.25%] md:block">
-            <div className="pointer-events-none absolute left-0 top-0 size-full overflow-hidden rounded-md">
-              <RenderHtmlComponentServer
-                style={{
-                  width: "1920px",
-                  height: "1080px",
-                  border: "none",
-                  transform: "translateX(-50%) scale(0.3)",
-                  transformOrigin: "top center",
-                  pointerEvents: "none",
-                  position: "absolute",
-                  top: "0",
-                  left: "50%",
-                }}
-                files={files}
-              />
-            </div>
-          </div>
         </div>
       </div>
       <div className="mb-1 line-clamp-3 break-words pt-4 text-sm font-medium md:mb-1 md:pt-4 lg:pt-2 lg:text-base">

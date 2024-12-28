@@ -1,7 +1,7 @@
 "use client";
 
 import { SiProducthunt } from "@icons-pack/react-simple-icons";
-import { CreditCard, Globe, Rocket, SquareTerminal } from "lucide-react";
+import { CreditCard, Globe, Rocket, SquareTerminal, Star } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import * as React from "react";
@@ -32,11 +32,11 @@ const data = {
       url: "/",
       icon: SquareTerminal,
     },
-    // {
-    //   title: "Featured",
-    //   url: "/components/featured",
-    //   icon: Star,
-    // },
+    {
+      title: "Featured",
+      url: "/components/featured",
+      icon: Star,
+    },
     {
       title: "Browse Components",
       url: "/components",

@@ -1,6 +1,10 @@
 import { Buffer } from "buffer";
 
+import { Tables } from "@/types_db";
+
 import { screenshotApiUrl } from "./config";
+import { getURL } from "./helpers";
+import { createClient } from "./supabase/server";
 
 export async function captureScreenshot(url: string) {
   const apiUrl = `${screenshotApiUrl}${encodeURIComponent(url)}`;
@@ -17,3 +21,41 @@ export async function captureScreenshot(url: string) {
     throw error;
   }
 }
+
+export const takeScreenshot = async (
+  newMessagesData: Tables<"messages">[],
+  chatId: string,
+  version: number,
+  theme: string,
+) => {
+  const supabase = await createClient();
+
+  const screenshot = await captureScreenshot(`${getURL()}/content/${chatId}`);
+  const { error, data } = await supabase.storage
+    .from("chat-images")
+    .upload(`${chatId}/${version}-${theme}`, screenshot, {
+      contentType: "image/png",
+      cacheControl: "3600",
+      upsert: true,
+    });
+
+  if (error) {
+    throw new Error("Failed to upload image to Supabase: " + error.message);
+  }
+  const { data: imageData } = supabase.storage
+    .from("chat-images")
+    .getPublicUrl(data.path);
+
+  const findAssistantMessage = newMessagesData?.find(
+    (m) => m.role === "assistant",
+  );
+
+  if (!findAssistantMessage)
+    return console.error("Could not find assistant message");
+  findAssistantMessage.screenshot = imageData.publicUrl;
+
+  await supabase
+    .from("messages")
+    .update({ screenshot: imageData.publicUrl })
+    .eq("id", findAssistantMessage.id);
+};
