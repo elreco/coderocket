@@ -239,9 +239,7 @@ const updateDataAfterCompletion = async (
   });
 
   await supabase.from("messages").insert(newMessages).eq("chat_id", chatId);
-  after(() => {
-    takeScreenshot(chatId, version, theme).catch((error) => {
-      console.error("Error taking screenshot:", error);
-    });
+  after(async () => {
+    await takeScreenshot(chatId, version, theme);
   });
 };

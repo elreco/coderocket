@@ -128,7 +128,7 @@ export const updateTheme = async (
     .eq("chat_id", chatId)
     .eq("version", version)
     .eq("role", "assistant");
-  after(() => {
-    takeScreenshot(chatId, version, theme);
+  after(async () => {
+    await takeScreenshot(chatId, version, theme);
   });
 };
