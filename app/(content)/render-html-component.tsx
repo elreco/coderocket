@@ -10,6 +10,9 @@ export default function RenderHtmlComponent({
   const [testContent, setContent] = useState(files[0]?.content || "");
   useEffect(() => {
     setContent(files[0]?.content || "");
+  }, []);
+  useEffect(() => {
+    setContent(files[0]?.content || "");
   }, [files]);
 
   useEffect(() => {
