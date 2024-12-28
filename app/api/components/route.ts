@@ -1,6 +1,6 @@
 export const maxDuration = 300;
-
 import { CoreMessage, streamText } from "ai";
+import { after } from "next/server";
 
 import {
   fetchChatById,
@@ -239,8 +239,9 @@ const updateDataAfterCompletion = async (
   });
 
   await supabase.from("messages").insert(newMessages).eq("chat_id", chatId);
-
-  takeScreenshot(chatId, version, theme).catch((error) => {
-    console.error("Error taking screenshot:", error);
+  after(() => {
+    takeScreenshot(chatId, version, theme).catch((error) => {
+      console.error("Error taking screenshot:", error);
+    });
   });
 };

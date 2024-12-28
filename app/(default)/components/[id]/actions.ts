@@ -1,5 +1,7 @@
 "use server";
 
+import { after } from "next/server";
+
 import { getSubscription } from "@/app/supabase-server";
 import { takeScreenshot } from "@/utils/capture-screenshot";
 import { createClient } from "@/utils/supabase/server";
@@ -126,6 +128,7 @@ export const updateTheme = async (
     .eq("chat_id", chatId)
     .eq("version", version)
     .eq("role", "assistant");
-
-  takeScreenshot(chatId, version, theme);
+  after(() => {
+    takeScreenshot(chatId, version, theme);
+  });
 };
