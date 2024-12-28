@@ -124,7 +124,11 @@ export default function ComponentFiles({
             {isDeletable && authorized && (
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <Button variant="destructive" size="icon">
+                  <Button
+                    variant="destructive"
+                    size="icon"
+                    disabled={isLoading}
+                  >
                     <Trash2 className="size-4" />
                   </Button>
                 </AlertDialogTrigger>
