@@ -21,8 +21,8 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { toast } from "@/hooks/use-toast";
-import { getInitials } from "@/lib/utils";
 import { Tables } from "@/types_db";
+import { getInitials } from "@/utils/helpers";
 
 export function NavUser({
   user,

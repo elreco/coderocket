@@ -1,5 +1,5 @@
-import { getInitials } from "@/lib/utils";
 import { getRelativeDate } from "@/utils/date";
+import { getInitials } from "@/utils/helpers";
 
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 export function UserWidget({

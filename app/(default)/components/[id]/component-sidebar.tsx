@@ -4,10 +4,11 @@ import { useEffect, useState, useRef } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { cn, getInitials } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { Tables } from "@/types_db";
 import { maxPromptLength } from "@/utils/config";
 import { getRelativeDate } from "@/utils/date";
+import { getInitials } from "@/utils/helpers";
 
 import ComponentTheme from "./(settings)/component-theme";
 import ComponentFiles from "./component-files";

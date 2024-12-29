@@ -9,7 +9,6 @@ import {
   fetchMessagesByChatId,
 } from "@/app/(default)/components/actions";
 import { getSubscription } from "@/app/supabase-server";
-import { sanitizePrompt } from "@/lib/utils";
 import { Tables } from "@/types_db";
 import { takeScreenshot } from "@/utils/capture-screenshot";
 import {
@@ -18,6 +17,7 @@ import {
   maxPromptLength,
   storageUrl,
 } from "@/utils/config";
+import { promptEnhancer } from "@/utils/prompt-enhancer";
 import { createClient } from "@/utils/supabase/server";
 
 export async function POST(req: Request) {
@@ -29,20 +29,23 @@ export async function POST(req: Request) {
     const { prompt }: { prompt: string } = await req.json();
     if (!prompt) throw new Error("No prompt");
 
-    const { messagesFromDatabase, imageUrl, contentMd, subscription } =
-      await validateRequest(id, prompt);
+    const { messagesFromDatabase, imageUrl, contentMd } = await validateRequest(
+      id,
+      prompt,
+    );
+
+    const enhancedPrompt = await promptEnhancer(prompt);
+
     // Build messages for OpenAI
     const { messagesToOpenAI: messages } = await buildMessagesToOpenAi(
       messagesFromDatabase,
-      prompt,
+      enhancedPrompt,
       imageUrl,
       selectedVersion,
     );
     const stream = streamText({
       messages,
-      model: anthropicModel(
-        subscription ? "claude-3-5-sonnet-latest" : "claude-3-5-sonnet-latest",
-      ),
+      model: anthropicModel("claude-3-5-sonnet-latest"),
       system: contentMd,
       toolChoice: "none",
       maxTokens: 8192,
@@ -176,9 +179,7 @@ const validateRequest = async (id: string, prompt: string) => {
     throw new Error("You can't have more than 200 versions");
   }
 
-  const sanitizedPrompt = sanitizePrompt(prompt);
-
-  if (sanitizedPrompt.length > maxPromptLength) {
+  if (prompt.length > maxPromptLength) {
     throw new Error("Prompt length is too long");
   }
 
@@ -193,7 +194,6 @@ const validateRequest = async (id: string, prompt: string) => {
     messagesFromDatabase,
     imageUrl,
     contentMd,
-    subscription,
   };
 };
 

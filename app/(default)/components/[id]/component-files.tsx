@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { cn, getInitials } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { Tables } from "@/types_db";
 import {
   ContentChunk,
@@ -28,6 +28,7 @@ import {
 } from "@/utils/completion-parser";
 import { storageUrl } from "@/utils/config";
 import { getRelativeDate } from "@/utils/date";
+import { getInitials } from "@/utils/helpers";
 
 export default function ComponentFiles({
   message,

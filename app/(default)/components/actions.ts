@@ -1,7 +1,6 @@
 "use server";
 
 import { getSubscription } from "@/app/supabase-server";
-import { sanitizePrompt } from "@/lib/utils";
 import { maxPromptLength } from "@/utils/config";
 import { createClient } from "@/utils/supabase/server";
 
@@ -158,10 +157,7 @@ export const createChat = async (prompt: string, formData: FormData) => {
     };
   }
 
-  // Nettoyage de la prompt
-  const sanitizedPrompt = sanitizePrompt(prompt);
-
-  if (sanitizedPrompt.length > maxPromptLength) {
+  if (prompt.length > maxPromptLength) {
     return {
       error: {
         title: "Prompt is too long",
@@ -220,7 +216,7 @@ export const createChat = async (prompt: string, formData: FormData) => {
   await supabase.from("messages").insert({
     chat_id: data.id,
     role: "user",
-    content: sanitizedPrompt,
+    content: prompt,
     version: -1,
   });
 
