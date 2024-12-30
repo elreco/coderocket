@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 
 // The client you created from the Server-Side Auth instructions
 import { createClient } from "@/utils/supabase/server";
+import { createOrRetrieveCustomer } from "@/utils/supabase-admin";
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
@@ -20,6 +21,14 @@ export async function GET(request: Request) {
           .update({ full_name: data.user.user_metadata.full_name })
           .eq("id", data.user.id);
       }
+
+      if (data.user?.id && data.user?.email) {
+        await createOrRetrieveCustomer({
+          uuid: data.user.id,
+          email: data.user.email,
+        });
+      }
+
       const forwardedHost = request.headers.get("x-forwarded-host"); // original origin before load balancer
       const isLocalEnv = process.env.NODE_ENV === "development";
       if (isLocalEnv) {
