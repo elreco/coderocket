@@ -17,7 +17,7 @@ import {
   maxPromptLength,
   storageUrl,
 } from "@/utils/config";
-//import { promptEnhancer } from "@/utils/prompt-enhancer";
+import { promptEnhancer } from "@/utils/prompt-enhancer";
 import { createClient } from "@/utils/supabase/server";
 
 export async function POST(req: Request) {
@@ -34,12 +34,11 @@ export async function POST(req: Request) {
       prompt,
     );
 
-    //const enhancedPrompt = await promptEnhancer(prompt);
-
+    const enhancedPrompt = await promptEnhancer(prompt);
     // Build messages for OpenAI
     const { messagesToOpenAI: messages } = await buildMessagesToOpenAi(
       messagesFromDatabase,
-      prompt,
+      enhancedPrompt,
       imageUrl,
       selectedVersion,
     );
