@@ -63,10 +63,10 @@ export default function ComponentSidebar() {
   const isIterationVisible = selectedVersion !== null && selectedVersion > -1;
 
   return (
-    <div className="relative flex size-full flex-col overflow-hidden border-l bg-secondary">
+    <div className="relative flex size-full flex-col overflow-hidden border-l-0 bg-secondary lg:border-l">
       <div
         ref={containerRef}
-        className="flex size-full flex-col overflow-y-auto scroll-smooth"
+        className="flex size-full max-h-[500px] flex-col overflow-y-auto scroll-smooth lg:max-h-full"
       >
         {isLoaderVisible && (
           <div className="absolute inset-0 z-10 flex size-full flex-col items-start bg-secondary p-4">

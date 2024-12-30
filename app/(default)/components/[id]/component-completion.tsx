@@ -303,10 +303,10 @@ export default function ComponentCompletion({
 
   return (
     <ComponentContext.Provider value={contextValue}>
-      <Container className="overflow-hidden sm:!p-0">
-        <div className="grid grid-cols-1 justify-center gap-y-4 lg:size-full lg:max-h-full lg:grid-cols-3 lg:flex-row lg:gap-y-0 lg:pb-0 xl:grid-cols-4">
-          <div className="col-span-1 flex size-full min-h-screen flex-col lg:col-span-2 xl:col-span-3 xl:mb-0 xl:min-h-full">
-            <div className="flex flex-col items-center justify-start space-y-2 border-b pr-2 sm:py-1.5 xl:flex-row xl:justify-between xl:space-y-0">
+      <Container className="sm:!p-0 lg:overflow-hidden">
+        <div className="grid grid-cols-1 justify-center lg:size-full lg:max-h-full lg:grid-cols-3 lg:flex-row xl:grid-cols-4">
+          <div className="col-span-1 flex size-full min-h-[500px] flex-col lg:col-span-2 lg:min-h-full xl:col-span-3 xl:mb-0 xl:min-h-full">
+            <div className="flex flex-col items-center justify-start border-b pr-2 sm:py-1.5 xl:flex-row xl:justify-between">
               <h1 className="flex items-center space-x-2 pl-11 font-medium">
                 {isLoading || !title ? (
                   <span className="flex items-center">
@@ -404,7 +404,7 @@ export default function ComponentCompletion({
                 )}
               </div>
             </div>
-            <div className="m-0 flex h-full flex-1 flex-col">
+            <div className="m-0 flex h-full max-h-[500px] flex-1 flex-col border-b lg:max-h-full lg:border-b-0">
               <CodePreview />
             </div>
           </div>
