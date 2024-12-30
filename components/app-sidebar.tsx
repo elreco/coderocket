@@ -1,6 +1,6 @@
 "use client";
 
-import { SiProducthunt } from "@icons-pack/react-simple-icons";
+import { SiDiscord } from "@icons-pack/react-simple-icons";
 import { CreditCard, Globe, Rocket, SquareTerminal, Star } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -48,16 +48,16 @@ const data = {
       icon: CreditCard,
     },
   ],
-  other: [
+  community: [
     {
       title: "Changelog",
       url: "/changelog",
       icon: Rocket,
     },
     {
-      title: "Product Hunt",
-      url: "https://www.producthunt.com/posts/tailwind-ai?utm_source=badge-featured&utm_medium=badge&utm_souce=badge-tailwind&#0045;ai",
-      icon: SiProducthunt,
+      title: "Discord (Coming Soon)",
+      url: "#",
+      icon: SiDiscord,
     },
   ],
 };
@@ -74,7 +74,7 @@ export function AppSidebar({
     isActive: pathname === item.url,
   }));
 
-  const navOtherItems = data.other.map((item) => ({
+  const navCommunityItems = data.community.map((item) => ({
     ...item,
     isActive: pathname === item.url,
   }));
@@ -113,7 +113,7 @@ export function AppSidebar({
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={navMainItems} label="Components" />
-        <NavMain items={navOtherItems} label="Other" />
+        <NavMain items={navCommunityItems} label="Community" />
       </SidebarContent>
       <SidebarFooter>
         {user ? <NavUser user={user} /> : <NavAuth />}

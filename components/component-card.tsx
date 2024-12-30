@@ -28,13 +28,13 @@ export default function ComponentCard({
       href={`/components/${chat.chat_id}`}
       className="group flex flex-col"
     >
-      <div className="mb-2 flex text-clip rounded-xl">
-        <div className="relative aspect-video size-full transition duration-300 md:group-hover:scale-105">
+      <div className="mb-2 flex overflow-hidden text-clip rounded-xl border">
+        <div className="relative aspect-video size-full transition duration-300 md:group-hover:scale-110">
           <Image
             src={chat.last_assistant_message}
             fill
             sizes="600px"
-            className="rounded-md border object-cover"
+            className="rounded-md object-cover"
             alt=""
           />
         </div>
