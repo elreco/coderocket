@@ -39,7 +39,11 @@ export async function POST(req: Request) {
           mode: "subscription",
           allow_promotion_codes: true,
           subscription_data: {
-            trial_from_plan: true,
+            trial_settings: {
+              end_behavior: {
+                missing_payment_method: "cancel",
+              },
+            },
             metadata,
           },
           success_url: `https://www.tailwindai.dev/account`,

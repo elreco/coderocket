@@ -60,7 +60,9 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         {...props}
       >
         {loading ? (
-          <Spinner className="size-5 animate-spin self-center" />
+          <div className="flex w-full items-center justify-center">
+            <Spinner className="size-5 animate-spin" />
+          </div>
         ) : (
           props.children
         )}
