@@ -4,6 +4,7 @@ import { Provider } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
 
 import { createClient } from "@/utils/supabase/server";
+import { createOrRetrieveCustomer } from "@/utils/supabase-admin";
 
 export async function login(formData: FormData) {
   const supabase = await createClient();
@@ -71,6 +72,12 @@ export async function signInWithEmail(formData: FormData) {
   const { error } = await supabase.auth.signInWithOtp(data);
   if (error?.status === 422) {
     return { error: "User with this email does not exist. Please sign up." };
+  }
+  if (returnedData.user?.id && returnedData.user?.email) {
+    await createOrRetrieveCustomer({
+      uuid: returnedData.user.id,
+      email: returnedData.user.email,
+    });
   }
   return { url: "/" };
 }

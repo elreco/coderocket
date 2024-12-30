@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { Tables } from "@/types_db";
 import {
@@ -30,16 +31,11 @@ import { storageUrl } from "@/utils/config";
 import { getRelativeDate } from "@/utils/date";
 import { getInitials } from "@/utils/helpers";
 
+import { deleteVersionByMessageId } from "./actions";
+import { useComponentContext } from "./component-context";
+
 export default function ComponentFiles({
   message,
-  isDeletable,
-  authorized,
-  selectedVersion,
-  activeTab,
-  handleVersionSelect,
-  handleDeleteVersion,
-  isCanvas,
-  isLoading,
 }: {
   message: Tables<"messages"> & {
     chats: {
@@ -47,15 +43,19 @@ export default function ComponentFiles({
       prompt_image: string | null;
     };
   };
-  isDeletable: boolean;
-  selectedVersion: number | null;
-  authorized: boolean;
-  activeTab: string;
-  handleVersionSelect: (version: number, tabName?: string) => void;
-  handleDeleteVersion: (id: number, version: number) => void;
-  isCanvas: boolean;
-  isLoading: boolean;
 }) {
+  const { toast } = useToast();
+  const {
+    authorized,
+    messages,
+    isCanvas,
+    isLoading,
+    selectedVersion,
+    activeTab,
+    handleVersionSelect,
+    refreshChatData,
+  } = useComponentContext();
+
   const [serializedContents, setSerializedContents] = useState<
     (MDXRemoteSerializeResult | null)[]
   >([]);
@@ -67,15 +67,14 @@ export default function ComponentFiles({
   >([]);
   const [hasArtifact, setHasArtifact] = useState(false);
   const [chunks, setChunks] = useState<ContentChunk[]>([]);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     const prepareContent = async () => {
       const hasArtifactResult = hasArtifacts(message.content);
       setHasArtifact(hasArtifactResult);
       setFiles(
-        hasArtifactResult
-          ? handleAIcompletionForHTML(message.content, message.theme)
-          : [],
+        hasArtifactResult ? handleAIcompletionForHTML(message.content) : [],
       );
       setChunks(splitContentIntoChunks(message.content));
 
@@ -106,6 +105,33 @@ export default function ComponentFiles({
     handleVersionSelect(version, file?.name || undefined);
   };
 
+  const handleDeleteVersion = async (messageId: number) => {
+    try {
+      setIsDeleting(true);
+      await deleteVersionByMessageId(messageId);
+      const refreshedChatMessages = await refreshChatData();
+      if (refreshedChatMessages) {
+        const refreshedLastAssistantMessage = refreshedChatMessages.reduce(
+          (prev, current) => (prev.version > current.version ? prev : current),
+          { version: 0 },
+        );
+        if (refreshedLastAssistantMessage) {
+          handleVersionSelect(refreshedLastAssistantMessage.version);
+        }
+      }
+    } catch {
+      toast({
+        variant: "destructive",
+        title: "Premium account required",
+        description:
+          "You are not premium, you can't delete a version. Please upgrade to premium and try again.",
+        duration: 5000,
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <div
       className={cn(
@@ -122,7 +148,7 @@ export default function ComponentFiles({
               <AvatarImage src="/logo-white.png" />
               <AvatarFallback>T</AvatarFallback>
             </Avatar>
-            {isDeletable && authorized && (
+            {messages.length > 2 && authorized && (
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button
@@ -141,13 +167,18 @@ export default function ComponentFiles({
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={() =>
-                        handleDeleteVersion(message.id, message.version - 1)
-                      }
-                    >
-                      Delete
+                    <AlertDialogCancel disabled={isDeleting}>
+                      Cancel
+                    </AlertDialogCancel>
+                    <AlertDialogAction asChild>
+                      <Button
+                        onClick={() => handleDeleteVersion(message.id)}
+                        disabled={isDeleting}
+                        loading={isDeleting}
+                        variant="destructive"
+                      >
+                        Delete
+                      </Button>
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>

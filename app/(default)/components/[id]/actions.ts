@@ -104,6 +104,7 @@ export const updateTheme = async (
   chatId: string,
   theme: string,
   version: number,
+  completion: string,
 ) => {
   const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
@@ -124,10 +125,11 @@ export const updateTheme = async (
 
   await supabase
     .from("messages")
-    .update({ theme })
+    .update({ theme, content: completion })
     .eq("chat_id", chatId)
     .eq("version", version)
     .eq("role", "assistant");
+
   after(async () => {
     await takeScreenshot(chatId, version, theme);
   });

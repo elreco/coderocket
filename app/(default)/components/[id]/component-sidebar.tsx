@@ -5,69 +5,27 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { Tables } from "@/types_db";
 import { maxPromptLength } from "@/utils/config";
 import { getRelativeDate } from "@/utils/date";
 import { getInitials } from "@/utils/helpers";
 
 import ComponentTheme from "./(settings)/component-theme";
+import { useComponentContext } from "./component-context";
 import ComponentFiles from "./component-files";
 import { ComponentSidebarSkeleton } from "./component-sidebar-skeleton";
 
-interface Props {
-  user: Tables<"users"> | null;
-  selectedVersion: number;
-  completion: string;
-  messages: (Tables<"messages"> & {
-    chats: {
-      user: Tables<"users">;
-      prompt_image: string | null;
-    };
-  })[];
-  activeTab: string;
-  handleVersionSelect: (version: number) => void;
-  handleDeleteVersion: (messageId: number, newVersion: number) => void;
-  handleSubmitToAI: (
-    e: React.FormEvent<HTMLFormElement>,
-    input: string,
-  ) => void;
-  authorized: boolean;
-  isLoading: boolean;
-  setInput: (input: string) => void;
-  isCanvas: boolean;
-  input: string;
-  selectedTheme: string | null | undefined;
-  setSelectedTheme: (theme: string) => void;
-  handleComponentFiles: (
-    _completion: string,
-    theme: string | null | undefined,
-    isFirstRun?: boolean,
-    tabName?: string,
-  ) => void;
-  refreshChatData: () => Promise<Tables<"messages">[] | undefined>;
-  chatId: string;
-}
+export default function ComponentSidebar() {
+  const {
+    authorized,
+    messages,
+    isLoading,
+    selectedVersion,
+    user,
+    handleSubmitToAI,
+    input,
+    setInput,
+  } = useComponentContext();
 
-export default function ComponentSidebar({
-  selectedVersion,
-  messages,
-  user,
-  activeTab,
-  handleVersionSelect,
-  handleDeleteVersion,
-  handleSubmitToAI,
-  authorized,
-  isLoading,
-  setInput,
-  input,
-  isCanvas,
-  selectedTheme,
-  setSelectedTheme,
-  completion,
-  handleComponentFiles,
-  refreshChatData,
-  chatId,
-}: Props) {
   const [isLoaderVisible, setLoaderVisible] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -123,18 +81,7 @@ export default function ComponentSidebar({
             </div>
           )}
           {messages.map((m) => (
-            <ComponentFiles
-              authorized={authorized}
-              activeTab={activeTab}
-              isDeletable={messages.length > 2}
-              selectedVersion={selectedVersion}
-              message={m}
-              key={m.id}
-              isLoading={isLoading}
-              handleVersionSelect={handleVersionSelect}
-              handleDeleteVersion={handleDeleteVersion}
-              isCanvas={isCanvas}
-            />
+            <ComponentFiles message={m} key={m.id} />
           ))}
           <div
             className={cn(
@@ -202,15 +149,7 @@ export default function ComponentSidebar({
 
                   {authorized && (
                     <div className="text-sm font-semibold">
-                      <ComponentTheme
-                        selectedTheme={selectedTheme}
-                        setSelectedTheme={setSelectedTheme}
-                        selectedVersion={selectedVersion}
-                        chatId={chatId}
-                        completion={completion}
-                        handleComponentFiles={handleComponentFiles}
-                        refreshChatData={refreshChatData}
-                      >
+                      <ComponentTheme>
                         <Button
                           type="button"
                           variant="secondary"

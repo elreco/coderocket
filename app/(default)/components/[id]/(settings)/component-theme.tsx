@@ -8,9 +8,10 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
-import { Tables } from "@/types_db";
+import { extractDataTheme, setDataTheme } from "@/utils/completion-parser";
 
 import { updateTheme } from "../actions";
+import { useComponentContext } from "../component-context";
 
 const themes = [
   "light",
@@ -43,41 +44,30 @@ const themes = [
   "cmyk",
 ];
 
-type ComponentSettingsProps = {
-  selectedTheme: string | null | undefined;
-  setSelectedTheme: (theme: string) => void;
-  chatId: string;
-  refreshChatData: () => Promise<Tables<"messages">[] | undefined>;
-  handleComponentFiles: (
-    _completion: string,
-    theme: string | null | undefined,
-    isFirstRun?: boolean,
-    tabName?: string,
-  ) => void;
-  completion: string;
-  selectedVersion: number;
-  children: React.ReactNode;
-};
-
 export default function ComponentSettings({
-  selectedTheme,
-  setSelectedTheme,
-  chatId,
-  refreshChatData,
-  handleComponentFiles,
-  completion,
-  selectedVersion,
   children,
-}: ComponentSettingsProps) {
+}: {
+  children: React.ReactNode;
+}) {
+  const {
+    chatId,
+    refreshChatData,
+    handleComponentFiles,
+    completion,
+    selectedVersion,
+    setCompletion,
+  } = useComponentContext();
+
   const [isSettingLoading, setIsSettingLoading] = useState("");
 
   const setTheme = async (theme: string) => {
-    if (isSettingLoading || theme === selectedTheme) return;
+    if (isSettingLoading || theme === extractDataTheme(completion)) return;
     setIsSettingLoading(theme);
-    await updateTheme(chatId, theme, selectedVersion);
+    const completionWithTheme = setDataTheme(completion, theme);
+    await updateTheme(chatId, theme, selectedVersion, completionWithTheme);
     await refreshChatData();
-    handleComponentFiles(completion, theme);
-    setSelectedTheme(theme);
+    handleComponentFiles(completionWithTheme);
+    setCompletion(completionWithTheme);
     setIsSettingLoading("");
   };
   return (
@@ -88,7 +78,8 @@ export default function ComponentSettings({
         <div>
           <h3 className="mb-1 text-base font-semibold">Change theme</h3>
           <h4 className="mb-4 text-sm">
-            Current theme: <span className="text-primary">{selectedTheme}</span>
+            Current theme:{" "}
+            <span className="text-primary">{extractDataTheme(completion)}</span>
           </h4>
           <div className="space-y-4">
             <div className="grid grid-cols-3 gap-4">
@@ -98,7 +89,8 @@ export default function ComponentSettings({
                   className={cn(
                     "relative aspect-video cursor-pointer rounded-md items-center justify-center border-2 opacity-75 hover:border-2 hover:border-primary hover:opacity-100 overflow-hidden",
                     {
-                      "border-primary opacity-100": selectedTheme === theme,
+                      "border-primary opacity-100":
+                        extractDataTheme(completion) === theme,
                     },
                   )}
                   onClick={() => setTheme(theme)}
