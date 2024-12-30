@@ -303,34 +303,30 @@ export default function ComponentCompletion({
 
   return (
     <ComponentContext.Provider value={contextValue}>
-      <Container>
-        <div className="grid grid-cols-1 justify-center gap-y-4 space-x-0 pb-4 lg:size-full lg:max-h-full lg:grid-cols-3 lg:flex-row lg:gap-y-0 lg:space-x-3 lg:pb-0 xl:grid-cols-4">
-          <div className="col-span-1 flex size-full min-h-screen flex-col space-y-2 lg:col-span-2 xl:col-span-3 xl:mb-0 xl:min-h-full">
-            <div className="mr-0 flex flex-col items-center justify-start space-y-2 md:mr-1 xl:flex-row xl:justify-between xl:space-y-0">
-              <div className="font-medium">
-                <div className="flex items-center space-x-2">
-                  <h1>
-                    {isLoading || !title ? (
-                      <span className="flex items-center">
-                        <LoaderCircle className="mr-2 size-4 animate-spin" />
-                        Loading
+      <Container className="overflow-hidden sm:!p-0">
+        <div className="grid grid-cols-1 justify-center gap-y-4 lg:size-full lg:max-h-full lg:grid-cols-3 lg:flex-row lg:gap-y-0 lg:pb-0 xl:grid-cols-4">
+          <div className="col-span-1 flex size-full min-h-screen flex-col lg:col-span-2 xl:col-span-3 xl:mb-0 xl:min-h-full">
+            <div className="flex flex-col items-center justify-start space-y-2 border-b pr-2 sm:py-1.5 xl:flex-row xl:justify-between xl:space-y-0">
+              <h1 className="flex items-center space-x-2 pl-11 font-medium">
+                {isLoading || !title ? (
+                  <span className="flex items-center">
+                    <LoaderCircle className="mr-2 size-4 animate-spin" />
+                    Loading
+                  </span>
+                ) : (
+                  <Tooltip>
+                    <TooltipTrigger className="text-left">
+                      <span onClick={() => copyPrompt(title)}>
+                        {capitalizeFirstLetter(title)}
                       </span>
-                    ) : (
-                      <Tooltip>
-                        <TooltipTrigger className="text-left">
-                          <span onClick={() => copyPrompt(title)}>
-                            {capitalizeFirstLetter(title)}
-                          </span>
-                        </TooltipTrigger>
+                    </TooltipTrigger>
 
-                        <TooltipContent>
-                          <p>Copy Prompt</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    )}
-                  </h1>
-                </div>
-              </div>
+                    <TooltipContent>
+                      <p>Copy Prompt</p>
+                    </TooltipContent>
+                  </Tooltip>
+                )}
+              </h1>
               <div className="flex items-center gap-2">
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -338,18 +334,17 @@ export default function ComponentCompletion({
                       variant="secondary"
                       size="sm"
                       onClick={() => setCanvas(!isCanvas)}
-                      className="flex items-center"
                     >
                       {isCanvas ? (
-                        <>
-                          <Code className="mr-1 w-5" />
+                        <div className="flex items-center">
+                          <Code className="mr-1 size-4" />
                           <span>Code</span>
-                        </>
+                        </div>
                       ) : (
-                        <>
-                          <Tv className="mr-1 w-5" />
+                        <div className="flex items-center">
+                          <Tv className="mr-1 size-4" />
                           <span>Canvas</span>
-                        </>
+                        </div>
                       )}
                     </Button>
                   </TooltipTrigger>
@@ -382,17 +377,19 @@ export default function ComponentCompletion({
                     </DialogDescription>
                   </DialogContent>
                 </Dialog>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button size="sm" variant="secondary" onClick={share}>
-                      <Share className="w-5" />
-                    </Button>
-                  </TooltipTrigger>
+                {isVisible && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button size="sm" variant="secondary" onClick={share}>
+                        <Share className="w-5" />
+                      </Button>
+                    </TooltipTrigger>
 
-                  <TooltipContent>
-                    <p>Share Component</p>
-                  </TooltipContent>
-                </Tooltip>
+                    <TooltipContent>
+                      <p>Share Component</p>
+                    </TooltipContent>
+                  </Tooltip>
+                )}
                 {!isLoading && title && authorized && (
                   <ComponentSettings>
                     <Button
@@ -411,9 +408,7 @@ export default function ComponentCompletion({
               <CodePreview />
             </div>
           </div>
-          <div className="relative h-[500px] overflow-auto lg:size-full lg:overflow-hidden">
-            <ComponentSidebar />
-          </div>
+          <ComponentSidebar />
         </div>
       </Container>
     </ComponentContext.Provider>

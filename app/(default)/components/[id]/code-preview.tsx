@@ -113,7 +113,7 @@ export default function CodePreview() {
   }, []);
 
   return (
-    <div className="flex size-full flex-col overflow-hidden rounded-md border xl:flex-row">
+    <div className="flex size-full flex-col overflow-hidden xl:flex-row">
       <div
         className={clsx(
           "group flex flex-col transition-[width]",
