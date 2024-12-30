@@ -68,6 +68,7 @@ export default function ComponentFiles({
   const [hasArtifact, setHasArtifact] = useState(false);
   const [chunks, setChunks] = useState<ContentChunk[]>([]);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isAlertOpen, setIsAlertOpen] = useState(false);
 
   useEffect(() => {
     const prepareContent = async () => {
@@ -129,6 +130,7 @@ export default function ComponentFiles({
       });
     } finally {
       setIsDeleting(false);
+      setIsAlertOpen(false);
     }
   };
 
@@ -149,7 +151,10 @@ export default function ComponentFiles({
               <AvatarFallback>T</AvatarFallback>
             </Avatar>
             {messages.length > 2 && authorized && (
-              <AlertDialog>
+              <AlertDialog
+                open={isAlertOpen || isDeleting}
+                onOpenChange={setIsAlertOpen}
+              >
                 <AlertDialogTrigger asChild>
                   <Button
                     variant="destructive"

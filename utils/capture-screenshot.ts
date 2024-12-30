@@ -1,5 +1,3 @@
-import { Buffer } from "buffer";
-
 import { screenshotApiUrl } from "./config";
 import { createClient } from "./supabase/server";
 
@@ -11,8 +9,7 @@ export async function captureScreenshot(url: string) {
       throw new Error(`Failed to fetch screenshot: ${response.statusText}`);
     }
     const arrayBuffer = await response.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-    return buffer;
+    return Buffer.from(arrayBuffer);
   } catch (error) {
     console.error("Error taking screenshot:", error);
     throw error;
