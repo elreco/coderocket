@@ -10,7 +10,12 @@ import { useCopyToClipboard } from "usehooks-ts";
 import RenderHtmlComponent from "@/app/(content)/render-html-component";
 import { Container } from "@/components/container";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Tooltip,
   TooltipContent,
@@ -19,15 +24,14 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Tables } from "@/types_db";
 import { handleAIcompletionForHTML } from "@/utils/completion-parser";
-import { defaultTheme } from "@/utils/config";
 import { capitalizeFirstLetter } from "@/utils/helpers";
 import { createClient } from "@/utils/supabase/client";
 
 import { fetchMessagesByChatId } from "../actions";
 
 import ComponentSettings from "./(settings)/component-settings";
-import { deleteVersionByMessageId } from "./actions";
 import CodePreview from "./code-preview";
+import { ComponentContext } from "./component-context";
 import ComponentSidebar from "./component-sidebar";
 
 interface Props {
@@ -60,9 +64,6 @@ export default function ComponentCompletion({
 
   const [selectedVersion, setSelectedVersion] = useState(
     lastUserMessage.version,
-  );
-  const [selectedTheme, setSelectedTheme] = useState(
-    lastAssistantMessage?.theme,
   );
   const [title, setTitle] = useState<string>(
     lastUserMessage.content?.toString() || "",
@@ -155,13 +156,7 @@ export default function ComponentCompletion({
       return;
     }
     setCompletion(selectedAssistantMessage.content);
-    setSelectedTheme(selectedAssistantMessage?.theme || defaultTheme);
-    handleComponentFiles(
-      selectedAssistantMessage.content,
-      selectedAssistantMessage?.theme,
-      false,
-      tabName,
-    );
+    handleComponentFiles(selectedAssistantMessage.content, false, tabName);
   };
 
   const copyPrompt = (prompt: string) => {
@@ -186,30 +181,6 @@ export default function ComponentCompletion({
     });
   };
 
-  const handleDeleteVersion = async (messageId: number) => {
-    try {
-      await deleteVersionByMessageId(messageId);
-      const refreshedChatMessages = await refreshChatData();
-      if (refreshedChatMessages) {
-        const refreshedLastAssistantMessage = refreshedChatMessages.reduce(
-          (prev, current) => (prev.version > current.version ? prev : current),
-          { version: 0 },
-        );
-        if (refreshedLastAssistantMessage) {
-          handleVersionSelect(refreshedLastAssistantMessage.version);
-        }
-      }
-    } catch {
-      toast({
-        variant: "destructive",
-        title: "Premium account required",
-        description:
-          "You are not premium, you can't delete a version. Please upgrade to premium and try again.",
-        duration: 5000,
-      });
-    }
-  };
-
   const refreshChatData = async () => {
     const refreshedChatMessages = await fetchMessagesByChatId(fetchedChat.id);
     if (!refreshedChatMessages) return;
@@ -219,11 +190,10 @@ export default function ComponentCompletion({
 
   const handleComponentFiles = (
     _completion: string,
-    theme: string | null | undefined,
     isFirstRun?: boolean,
     tabName?: string,
   ) => {
-    const files = handleAIcompletionForHTML(_completion, theme);
+    const files = handleAIcompletionForHTML(_completion);
 
     if (files.length > 0) {
       setComponentFiles(files);
@@ -287,13 +257,13 @@ export default function ComponentCompletion({
 
   useEffect(() => {
     if (isLoading) {
-      handleComponentFiles(completion, selectedTheme);
+      handleComponentFiles(completion);
     }
   }, [completion]);
 
   useEffect(() => {
     if (lastAssistantMessage?.content) {
-      handleComponentFiles(lastAssistantMessage.content, selectedTheme, true);
+      handleComponentFiles(lastAssistantMessage.content, true);
       handleVersionSelect(lastAssistantMessage.version);
     }
     if (
@@ -307,148 +277,145 @@ export default function ComponentCompletion({
     }
   }, []);
 
-  return (
-    <Container>
-      <div className="grid grid-cols-1 justify-center gap-y-4 space-x-0 pb-4 lg:size-full lg:max-h-full lg:grid-cols-3 lg:flex-row lg:gap-y-0 lg:space-x-3 lg:pb-0 xl:grid-cols-4">
-        <div className="col-span-1 flex size-full min-h-screen flex-col space-y-2 lg:col-span-2 xl:col-span-3 xl:mb-0 xl:min-h-full">
-          <div className="mr-0 flex flex-col items-center justify-start space-y-2 md:mr-1 xl:flex-row xl:justify-between xl:space-y-0">
-            <div className="font-medium">
-              <div className="flex items-center space-x-2">
-                <h1>
-                  {isLoading || !title ? (
-                    <span className="flex items-center">
-                      <LoaderCircle className="mr-2 size-4 animate-spin" />
-                      Loading
-                    </span>
-                  ) : (
-                    <Tooltip>
-                      <TooltipTrigger className="text-left">
-                        <span onClick={() => copyPrompt(title)}>
-                          {capitalizeFirstLetter(title)}
-                        </span>
-                      </TooltipTrigger>
+  const contextValue = {
+    isCanvas,
+    setCanvas,
+    isLoading,
+    selectedVersion,
+    componentFiles,
+    activeTab,
+    editorValue,
+    handleVersionSelect,
+    authorized,
+    completion,
+    messages,
+    user,
+    handleComponentFiles,
+    refreshChatData,
+    isVisible,
+    setVisible,
+    input,
+    setInput,
+    handleSubmitToAI,
+    setCompletion,
+    chatId: fetchedChat.id,
+  };
 
-                      <TooltipContent>
-                        <p>Copy Prompt</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  )}
-                </h1>
+  return (
+    <ComponentContext.Provider value={contextValue}>
+      <Container>
+        <div className="grid grid-cols-1 justify-center gap-y-4 space-x-0 pb-4 lg:size-full lg:max-h-full lg:grid-cols-3 lg:flex-row lg:gap-y-0 lg:space-x-3 lg:pb-0 xl:grid-cols-4">
+          <div className="col-span-1 flex size-full min-h-screen flex-col space-y-2 lg:col-span-2 xl:col-span-3 xl:mb-0 xl:min-h-full">
+            <div className="mr-0 flex flex-col items-center justify-start space-y-2 md:mr-1 xl:flex-row xl:justify-between xl:space-y-0">
+              <div className="font-medium">
+                <div className="flex items-center space-x-2">
+                  <h1>
+                    {isLoading || !title ? (
+                      <span className="flex items-center">
+                        <LoaderCircle className="mr-2 size-4 animate-spin" />
+                        Loading
+                      </span>
+                    ) : (
+                      <Tooltip>
+                        <TooltipTrigger className="text-left">
+                          <span onClick={() => copyPrompt(title)}>
+                            {capitalizeFirstLetter(title)}
+                          </span>
+                        </TooltipTrigger>
+
+                        <TooltipContent>
+                          <p>Copy Prompt</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
+                  </h1>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => setCanvas(!isCanvas)}
+                      className="flex items-center"
+                    >
+                      {isCanvas ? (
+                        <>
+                          <Code className="mr-1 w-5" />
+                          <span>Code</span>
+                        </>
+                      ) : (
+                        <>
+                          <Tv className="mr-1 w-5" />
+                          <span>Canvas</span>
+                        </>
+                      )}
+                    </Button>
+                  </TooltipTrigger>
+
+                  <TooltipContent>
+                    <p>{isCanvas ? "Display code" : "Hide code"}</p>
+                  </TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => setIsModalOpen(true)}
+                      className="flex items-center"
+                      disabled={isLoading}
+                    >
+                      <Fullscreen className="w-5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Display in fullscreen</p>
+                  </TooltipContent>
+                </Tooltip>
+                <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+                  <DialogContent className="h-[95%] max-w-[95%] rounded-none p-10">
+                    <DialogTitle className="hidden">Fullscreen</DialogTitle>
+                    <DialogDescription>
+                      <RenderHtmlComponent files={componentFiles} />
+                    </DialogDescription>
+                  </DialogContent>
+                </Dialog>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button size="sm" variant="secondary" onClick={share}>
+                      <Share className="w-5" />
+                    </Button>
+                  </TooltipTrigger>
+
+                  <TooltipContent>
+                    <p>Share Component</p>
+                  </TooltipContent>
+                </Tooltip>
+                {!isLoading && title && authorized && (
+                  <ComponentSettings>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="secondary"
+                      disabled={isLoading}
+                    >
+                      <Settings className="w-5" />
+                    </Button>
+                  </ComponentSettings>
+                )}
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => setCanvas(!isCanvas)}
-                    className="flex items-center"
-                  >
-                    {isCanvas ? (
-                      <>
-                        <Code className="mr-1 w-5" />
-                        <span>Code</span>
-                      </>
-                    ) : (
-                      <>
-                        <Tv className="mr-1 w-5" />
-                        <span>Canvas</span>
-                      </>
-                    )}
-                  </Button>
-                </TooltipTrigger>
-
-                <TooltipContent>
-                  <p>{isCanvas ? "Display code" : "Hide code"}</p>
-                </TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => setIsModalOpen(true)}
-                    className="flex items-center"
-                    disabled={isLoading}
-                  >
-                    <Fullscreen className="w-5" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Display in fullscreen</p>
-                </TooltipContent>
-              </Tooltip>
-              <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-                <DialogContent className="h-[95%] max-w-[95%] rounded-none p-10">
-                  <DialogTitle className="hidden">Fullscreen</DialogTitle>
-                  <RenderHtmlComponent files={componentFiles} />
-                </DialogContent>
-              </Dialog>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button size="sm" variant="secondary" onClick={share}>
-                    <Share className="w-5" />
-                  </Button>
-                </TooltipTrigger>
-
-                <TooltipContent>
-                  <p>Share Component</p>
-                </TooltipContent>
-              </Tooltip>
-              {!isLoading && title && authorized && (
-                <ComponentSettings
-                  isVisible={isVisible}
-                  setVisible={setVisible}
-                  chatId={fetchedChat.id}
-                >
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="secondary"
-                    disabled={isLoading}
-                  >
-                    <Settings className="w-5" />
-                  </Button>
-                </ComponentSettings>
-              )}
+            <div className="m-0 flex h-full flex-1 flex-col">
+              <CodePreview />
             </div>
           </div>
-          <div className="m-0 flex h-full flex-1 flex-col">
-            <CodePreview
-              isCanvas={isCanvas}
-              isLoading={isLoading}
-              selectedVersion={selectedVersion}
-              componentFiles={componentFiles}
-              activeTab={activeTab}
-              editorValue={editorValue}
-              handleVersionSelect={handleVersionSelect}
-            />
+          <div className="relative h-[500px] overflow-auto lg:size-full lg:overflow-hidden">
+            <ComponentSidebar />
           </div>
         </div>
-        <div className="relative h-[500px] overflow-auto lg:size-full lg:overflow-hidden">
-          <ComponentSidebar
-            authorized={authorized}
-            activeTab={activeTab}
-            completion={completion}
-            handleSubmitToAI={handleSubmitToAI}
-            selectedVersion={selectedVersion}
-            messages={messages}
-            user={user}
-            setInput={setInput}
-            input={input}
-            handleVersionSelect={handleVersionSelect}
-            handleDeleteVersion={handleDeleteVersion}
-            isLoading={isLoading}
-            isCanvas={isCanvas}
-            chatId={fetchedChat.id}
-            selectedTheme={selectedTheme}
-            setSelectedTheme={setSelectedTheme}
-            handleComponentFiles={handleComponentFiles}
-            refreshChatData={refreshChatData}
-          />
-        </div>
-      </div>
-    </Container>
+      </Container>
+    </ComponentContext.Provider>
   );
 }

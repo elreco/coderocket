@@ -35,6 +35,7 @@ export async function POST(req: Request) {
     );
 
     const enhancedPrompt = await promptEnhancer(prompt);
+    console.log("enchanced prompt", enhancedPrompt);
     // Build messages for OpenAI
     const { messagesToOpenAI: messages } = await buildMessagesToOpenAi(
       messagesFromDatabase,

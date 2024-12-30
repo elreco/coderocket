@@ -19,15 +19,8 @@ export const ensureCDNsPresent = (htmlContent: string): string => {
   return updatedContent;
 };
 
-export const handleAIcompletionForHTML = (
-  completion: string,
-  theme: string | null | undefined,
-) => {
+export const handleAIcompletionForHTML = (completion: string) => {
   if (!completion) return [];
-
-  if (!theme) {
-    theme = defaultTheme;
-  }
 
   const filesArray: { name: string | null; content: string }[] = [];
 
@@ -63,20 +56,6 @@ export const handleAIcompletionForHTML = (
       .replace(/<\/tailwindaiArtifact>/g, "")
       // Supprimer la première ligne si elle est vide
       .replace(/^\n/, "");
-    // Ne plus retirer l'indentation
-    // .replace(/^\s{4}/gm, ""); <- Cette ligne est supprimée
-
-    // Ajouter ou mettre à jour l'attribut data-theme dans les balises HTML
-    content = content.replace(/(<html[^>]*)(>)/g, (match, p1, p2) => {
-      // Si data-theme existe déjà, le remplacer
-      if (p1.includes("data-theme=")) {
-        return (
-          p1.replace(/data-theme=["'][^"']*["']/, `data-theme="${theme}"`) + p2
-        );
-      }
-      // Sinon, l'ajouter
-      return `${p1} data-theme="${theme}"${p2}`;
-    });
 
     // Assurez-vous que les CDN sont présents
     content = ensureCDNsPresent(content);
@@ -186,4 +165,24 @@ export const splitContentIntoChunks = (completion: string): ContentChunk[] => {
   }
 
   return chunks;
+};
+
+export const extractDataTheme = (completion: string): string | null => {
+  const match = completion.match(/data-theme=["']([^"']*?)["']/);
+  return match ? match[1] : defaultTheme;
+};
+
+export const setDataTheme = (completion: string, theme: string): string => {
+  if (!completion.includes("data-theme=")) {
+    // Si data-theme n'existe pas, l'ajouter à la première balise html
+    return completion.replace(
+      /<html([^>]*)>/,
+      `<html$1 data-theme="${theme}">`,
+    );
+  }
+  // Si data-theme existe déjà, mettre à jour sa valeur
+  return completion.replace(
+    /data-theme=["'][^"']*["']/,
+    `data-theme="${theme}"`,
+  );
 };

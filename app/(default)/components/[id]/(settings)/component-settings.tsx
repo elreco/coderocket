@@ -11,20 +11,14 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
 
 import { changeVisibilityByChatId } from "../actions";
-
-type ComponentSettingsProps = {
-  isVisible: boolean;
-  setVisible: (visible: boolean) => void;
-  chatId: string;
-  children: React.ReactNode;
-};
+import { useComponentContext } from "../component-context";
 
 export default function ComponentSettings({
-  isVisible,
-  setVisible,
-  chatId,
   children,
-}: ComponentSettingsProps) {
+}: {
+  children: React.ReactNode;
+}) {
+  const { isVisible, setVisible, chatId } = useComponentContext();
   const [isVisibilityLoading, setIsVisibilityLoading] = useState(false);
   const handleVisibility = async () => {
     if (isVisibilityLoading) return;

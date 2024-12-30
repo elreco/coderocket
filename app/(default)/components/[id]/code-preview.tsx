@@ -20,25 +20,20 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
 import { iframeBuilder } from "@/utils/iframe-builder";
 
+import { useComponentContext } from "./component-context";
 import ChatSkeleton from "./component-skeleton";
 
-export default function CodePreview({
-  isCanvas,
-  isLoading,
-  selectedVersion,
-  componentFiles,
-  activeTab,
-  editorValue,
-  handleVersionSelect,
-}: {
-  isCanvas: boolean;
-  isLoading: boolean;
-  selectedVersion: number;
-  componentFiles: { name: string | null; content: string }[];
-  activeTab: string;
-  editorValue: string;
-  handleVersionSelect: (version: number, tabName?: string) => void;
-}) {
+export default function CodePreview() {
+  const {
+    isCanvas,
+    isLoading,
+    selectedVersion,
+    componentFiles,
+    activeTab,
+    editorValue,
+    handleVersionSelect,
+  } = useComponentContext();
+
   const [, copy] = useCopyToClipboard();
   const { id } = useParams();
   const codeMirrorRef = useRef<ReactCodeMirrorRef>(null);
