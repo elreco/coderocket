@@ -99,7 +99,7 @@ export default function ComponentSidebar() {
               {user?.full_name && (
                 <h2 className="text-lg font-semibold">{user.full_name}</h2>
               )}
-              <p className="text-sm">{input}</p>
+              <p className="text-sm first-letter:uppercase">{input}</p>
             </div>
           </div>
           <p className="mt-2 text-right text-xs font-semibold text-primary">

@@ -1,7 +1,9 @@
+import { cn } from "@/lib/utils";
 import { getRelativeDate } from "@/utils/date";
 import { getInitials } from "@/utils/helpers";
 
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+
 export function UserWidget({
   createdAt,
   userAvatarUrl,
@@ -12,9 +14,9 @@ export function UserWidget({
   userFullName: string;
 }) {
   return (
-    <div className="flex items-center justify-center space-x-2">
+    <div className="flex w-full items-center space-x-4">
       {userFullName && (
-        <div className="flex items-center space-x-2">
+        <div className="flex flex-1 items-center space-x-2">
           <Avatar>
             <AvatarImage src={userAvatarUrl} />
             <AvatarFallback>{getInitials(userFullName)}</AvatarFallback>
@@ -22,7 +24,12 @@ export function UserWidget({
           <p className="text-sm font-medium">{userFullName}</p>
         </div>
       )}
-      <p className="text-xs font-semibold text-primary">
+      <p
+        className={cn(
+          "text-xs font-semibold text-primary whitespace-nowrap",
+          userFullName ? "" : "ml-auto",
+        )}
+      >
         {getRelativeDate(createdAt)}
       </p>
     </div>

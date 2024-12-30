@@ -212,7 +212,7 @@ export default function ComponentFiles({
                 {message.chats.user.full_name}
               </h2>
             )}
-            <p className="text-sm">{message.content}</p>
+            <p className="text-sm first-letter:uppercase">{message.content}</p>
             {message.chats.prompt_image && (
               <img
                 src={`${storageUrl}/${message.chats.prompt_image}`}

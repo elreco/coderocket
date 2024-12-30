@@ -45,14 +45,11 @@ export const toDateTime = (secs: number) => {
   return t;
 };
 
-export const capitalizeFirstLetter = (
-  string: string,
-  maxLength: number = 150,
-) => {
+export const capitalizeFirstLetter = (string: string, maxLength?: number) => {
   if (!string) return "";
   let formattedString =
     string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
-  if (formattedString.length > maxLength) {
+  if (maxLength && formattedString.length > maxLength) {
     formattedString = formattedString.substring(0, maxLength) + "...";
   }
   return formattedString;
