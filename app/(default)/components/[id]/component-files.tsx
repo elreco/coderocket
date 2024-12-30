@@ -137,7 +137,7 @@ export default function ComponentFiles({
   return (
     <div
       className={cn(
-        "flex px-2 py-6 flex-col sm:px-4 hover:bg-primary/10 transition-all",
+        "group flex px-2 py-6 flex-col sm:px-4 hover:bg-primary/10 transition-all",
         message.role === "user" && "bg-background/50 hover:bg-background/50",
         isSelectedVersion &&
           message.role === "assistant" &&
@@ -243,7 +243,13 @@ export default function ComponentFiles({
                   )}
                   {chunk.type === "artifact" && (
                     <div className="w-full space-y-2">
-                      <div className="rounded-lg border bg-background p-2 text-foreground">
+                      <div
+                        className={cn(
+                          "rounded-lg border bg-background p-2 text-foreground",
+                          !isSelectedVersion &&
+                            "group-hover:border-primary/50 group-hover:shadow-primary/50 group-hover:shadow-2xl",
+                        )}
+                      >
                         <h3 className="mb-3 text-xs font-semibold">
                           {files.length === 1 ? "Output File" : "Output Files"}
                         </h3>
@@ -280,8 +286,10 @@ export default function ComponentFiles({
                 src={message.screenshot}
                 alt="screenshot"
                 className={cn(
-                  "size-full max-w-full cursor-pointer rounded-md border shadow-md",
+                  "size-full max-w-full cursor-pointer rounded-md border transition-all duration-300",
                   isLoading ? "cursor-default" : "cursor-pointer",
+                  !isSelectedVersion &&
+                    "group-hover:border-primary/50 group-hover:shadow-primary/50 group-hover:shadow-2xl",
                 )}
                 onClick={() => handleFileClick(message.version)}
               />

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCompletion } from "ai/react";
+import { Crisp } from "crisp-sdk-web";
 import { Fullscreen, LoaderCircle, Settings } from "lucide-react";
 import { Code, Share, Tv } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
@@ -276,6 +277,18 @@ export default function ComponentCompletion({
     }
   }, []);
 
+  useEffect(() => {
+    if (isModalOpen) {
+      Crisp.chat.hide();
+    } else {
+      Crisp.chat.show();
+    }
+  }, [isModalOpen]);
+
+  const handleFullscreenToggle = (isOpen: boolean) => {
+    setIsModalOpen(isOpen);
+  };
+
   const contextValue = {
     isCanvas,
     setCanvas,
@@ -370,10 +383,13 @@ export default function ComponentCompletion({
                     <p>Display in fullscreen</p>
                   </TooltipContent>
                 </Tooltip>
-                <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-                  <DialogContent className="h-[95%] max-w-[95%] rounded-none p-10">
+                <Dialog
+                  open={isModalOpen}
+                  onOpenChange={handleFullscreenToggle}
+                >
+                  <DialogContent className="z-[9999] h-[95%] max-w-[95%] rounded-none p-10">
                     <DialogTitle className="hidden">Fullscreen</DialogTitle>
-                    <DialogDescription>
+                    <DialogDescription className="z-[9999]">
                       <RenderHtmlComponent files={componentFiles} />
                     </DialogDescription>
                   </DialogContent>
