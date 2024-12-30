@@ -42,7 +42,7 @@ export default function ComponentSidebar() {
       if (containerRef.current && messages.length > 0) {
         containerRef.current.scrollTop = containerRef.current.scrollHeight;
       }
-    }, 100);
+    }, 500);
     return () => clearTimeout(timer);
   }, [messages]);
 
@@ -71,7 +71,7 @@ export default function ComponentSidebar() {
         <div
           ref={containerRef}
           className={cn(
-            "flex size-full flex-col overflow-y-auto",
+            "flex size-full flex-col overflow-y-auto scroll-smooth",
             authorized && "pb-24",
           )}
         >
@@ -90,21 +90,24 @@ export default function ComponentSidebar() {
               isLoading && messages.length > 1 ? "block" : "hidden",
             )}
           >
-            <div className="flex gap-2">
-              <div className="flex items-center">
-                <Avatar className="mr-2 size-8 rounded-lg">
-                  <AvatarImage
-                    src={user?.avatar_url || ""}
-                    alt={user?.full_name || ""}
-                  />
-                  <AvatarFallback className="border bg-background">
-                    <span className="text-xs">
-                      {getInitials(user?.full_name || "")}
-                    </span>
-                  </AvatarFallback>
-                </Avatar>
+            <div className="flex items-center">
+              <Avatar className="mr-2 size-8 rounded-lg">
+                <AvatarImage
+                  src={user?.avatar_url || ""}
+                  alt={user?.full_name || ""}
+                />
+                <AvatarFallback className="border bg-background">
+                  <span className="text-xs">
+                    {getInitials(user?.full_name || "")}
+                  </span>
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex flex-col gap-2">
+                {user?.full_name && (
+                  <h2 className="text-lg font-semibold">{user.full_name}</h2>
+                )}
+                <p className="text-sm">{input}</p>
               </div>
-              <p className="text-sm">{input}</p>
             </div>
             <p className="mt-2 text-right text-xs font-semibold text-primary">
               {getRelativeDate(new Date().toISOString())}

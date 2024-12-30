@@ -138,6 +138,7 @@ export default function ComponentFiles({
     <div
       className={cn(
         "flex px-2 py-6 flex-col sm:px-4 hover:bg-primary/10 transition-all",
+        message.role === "user" && "bg-background/50 hover:bg-background/50",
         isSelectedVersion &&
           message.role === "assistant" &&
           "bg-primary hover:bg-primary cursor-auto",
@@ -206,12 +207,17 @@ export default function ComponentFiles({
 
         {message.role === "user" ? (
           <div className="flex flex-col gap-2">
+            {message.chats.user?.full_name && (
+              <h2 className="text-lg font-semibold">
+                {message.chats.user.full_name}
+              </h2>
+            )}
             <p className="text-sm">{message.content}</p>
             {message.chats.prompt_image && (
               <img
                 src={`${storageUrl}/${message.chats.prompt_image}`}
                 alt="screenshot"
-                className="size-full max-w-full rounded-md border shadow-md"
+                className="size-full max-w-full rounded-md border border-foreground/10 shadow-md"
               />
             )}
           </div>
@@ -237,16 +243,16 @@ export default function ComponentFiles({
                   )}
                   {chunk.type === "artifact" && (
                     <div className="w-full space-y-2">
-                      <div className="rounded-lg border bg-background p-4 text-foreground">
-                        <h3 className="mb-4 text-sm font-semibold">
-                          Files generated
+                      <div className="rounded-lg border bg-background p-2 text-foreground">
+                        <h3 className="mb-3 text-xs font-semibold">
+                          {files.length === 1 ? "Output File" : "Output Files"}
                         </h3>
-                        <div className="space-y-4">
+                        <div className="space-y-2">
                           {files.map((file, index) => (
                             <div
                               key={index}
                               className={cn(
-                                "flex items-center rounded text-primary bg-foreground p-4 transition-all hover:bg-foreground/80",
+                                "flex items-center rounded text-primary bg-foreground p-1 transition-all hover:bg-foreground/80",
                                 isLoading ? "cursor-default" : "cursor-pointer",
                                 activeTab === file.name &&
                                   isSelectedVersion &&
