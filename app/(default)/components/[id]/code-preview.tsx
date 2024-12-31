@@ -117,8 +117,8 @@ export default function CodePreview() {
     <div className="flex size-full flex-col overflow-hidden xl:flex-row">
       <div
         className={cn(
-          "group flex flex-col transition-[width]",
-          isCanvas ? "visible size-full" : "invisible size-0",
+          "group flex flex-col transition-[opacity]",
+          isCanvas ? "opacity-100 size-full" : "opacity-0 size-0",
         )}
       >
         {isLoading ? (
@@ -131,8 +131,8 @@ export default function CodePreview() {
       </div>
       <div
         className={cn(
-          "group transition-[width]",
-          isCanvas ? "invisible size-0" : "visible size-full",
+          "group transition-[opacity]",
+          isCanvas ? "opacity-0 size-0" : "opacity-100 size-full",
         )}
       >
         <div className="relative flex size-full flex-col rounded-none border-none">
@@ -162,7 +162,7 @@ export default function CodePreview() {
 
             <TabsContent
               value={activeTab}
-              className="m-0 flex h-0 w-full max-w-full grow transition-all duration-300 ease-in-out"
+              className="m-0 flex h-0 w-full max-w-full grow"
             >
               <CodeMirror
                 ref={codeMirrorRef}
