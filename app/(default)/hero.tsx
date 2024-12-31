@@ -164,7 +164,7 @@ export default function Hero() {
   };
 
   return (
-    <Container className="relative flex min-h-full w-auto flex-col items-center justify-center space-y-4 pr-2 sm:pr-11">
+    <Container className="relative flex min-h-full w-auto flex-col items-center justify-center space-y-4 overflow-hidden pr-2 sm:pr-11">
       <AnimatedGridPattern
         numSquares={80}
         maxOpacity={0.1}
