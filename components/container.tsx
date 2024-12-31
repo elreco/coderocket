@@ -1,4 +1,4 @@
-import clsx from "clsx";
+import { cn } from "@/lib/utils";
 
 export function Container({
   className,
@@ -6,7 +6,7 @@ export function Container({
 }: React.ComponentPropsWithoutRef<"div">) {
   return (
     <div
-      className={clsx(
+      className={cn(
         "size-full min-h-full p-2 pt-10 sm:px-11 sm:pt-2",
         className,
       )}

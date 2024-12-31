@@ -6,7 +6,6 @@ import CodeMirror, {
   ReactCodeMirrorRef,
   StateEffect,
 } from "@uiw/react-codemirror";
-import clsx from "clsx";
 import saveAs from "file-saver";
 import JSZip from "jszip";
 import { Clipboard, Download } from "lucide-react";
@@ -18,6 +17,7 @@ import RenderHtmlComponent from "@/app/(content)/render-html-component";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 import { getFileConfig } from "@/utils/file-extensions";
 import { iframeBuilder } from "@/utils/iframe-builder";
 
@@ -116,7 +116,7 @@ export default function CodePreview() {
   return (
     <div className="flex size-full flex-col overflow-hidden xl:flex-row">
       <div
-        className={clsx(
+        className={cn(
           "group flex flex-col transition-[width]",
           isCanvas ? "visible size-full" : "invisible size-0",
         )}
@@ -130,7 +130,7 @@ export default function CodePreview() {
         )}
       </div>
       <div
-        className={clsx(
+        className={cn(
           "group transition-[width]",
           isCanvas ? "invisible size-0" : "visible size-full",
         )}

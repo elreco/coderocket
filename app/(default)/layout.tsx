@@ -1,6 +1,5 @@
 export const revalidate = 0;
 import { Analytics } from "@vercel/analytics/react";
-import clsx from "clsx";
 import { Rubik } from "next/font/google";
 import { cookies } from "next/headers";
 import { PropsWithChildren } from "react";
@@ -11,6 +10,7 @@ import "styles/main.css";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 
 import { getUserDetails } from "../supabase-server";
 
@@ -72,7 +72,7 @@ export default async function RootLayout({ children }: PropsWithChildren) {
   return (
     <html
       lang="en"
-      className={clsx("dark size-full antialiased", rubik.variable)}
+      className={cn("dark size-full antialiased", rubik.variable)}
     >
       <body className="size-full bg-background">
         <SidebarProvider defaultOpen={defaultOpen} className="size-full">
