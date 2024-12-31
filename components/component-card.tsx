@@ -26,7 +26,7 @@ export default function ComponentCard({
       href={`/components/${chat.chat_id}`}
       className="group flex flex-col"
     >
-      <div className="mb-2 flex overflow-hidden text-clip rounded-lg border transition-all duration-300 hover:border-primary/65 hover:shadow-2xl hover:shadow-primary/50">
+      <div className="mb-2 flex overflow-hidden text-clip rounded-lg border transition-all duration-300 group-hover:border-primary/65 group-hover:shadow-2xl group-hover:shadow-primary/50">
         <div className="relative aspect-video size-full transition duration-300 md:group-hover:scale-110">
           <Image
             src={chat.last_assistant_message}
@@ -37,7 +37,7 @@ export default function ComponentCard({
           />
         </div>
       </div>
-      <div className="mb-1 max-w-full truncate pt-4 text-sm font-medium first-letter:uppercase md:mb-1 md:pt-4 lg:pt-2 lg:text-base">
+      <div className="mb-1 max-w-full truncate pt-4 text-sm font-medium transition-all duration-300 first-letter:uppercase group-hover:text-primary md:mb-1 md:pt-4 lg:pt-2 lg:text-base">
         {chat.first_user_message}
       </div>
       <div className="flex items-center gap-2">

@@ -170,7 +170,10 @@ export default function ComponentFiles({
       <div className="flex w-full gap-2">
         {message.role === "assistant" ? (
           <div className="mr-2 flex flex-col items-center justify-start space-y-2">
-            <Avatar className="rounded-none">
+            <Avatar
+              className="cursor-pointer rounded-none"
+              onClick={() => handleFileClick(message.version)}
+            >
               <AvatarImage src="/logo-white.png" />
               <AvatarFallback>T</AvatarFallback>
             </Avatar>
@@ -248,8 +251,9 @@ export default function ComponentFiles({
           <div className="flex w-full flex-col gap-4">
             <h2
               className={cn(
-                "text-lg font-semibold transition-all hover:text-foreground/75",
-                isSelectedVersion && "text-foreground hover:text-foreground",
+                "text-lg font-semibold transition-all group-hover:text-primary",
+                isSelectedVersion &&
+                  "text-foreground group-hover:text-foreground",
                 isLoading ? "cursor-default" : "cursor-pointer",
               )}
               onClick={() => handleFileClick(message.version)}
