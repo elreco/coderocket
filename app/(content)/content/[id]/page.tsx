@@ -15,10 +15,7 @@ export default async function Content({
     return <div>No content found</div>;
   }
 
-  const files = handleAIcompletionForHTML(
-    lastAssistantMessage.content,
-    lastAssistantMessage.theme,
-  );
+  const files = handleAIcompletionForHTML(lastAssistantMessage.content);
 
   return (
     <RenderHtmlComponentServer

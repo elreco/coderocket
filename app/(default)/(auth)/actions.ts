@@ -45,9 +45,8 @@ export async function register(formData: FormData) {
     return { error: error.message };
   }
 
-  // update full name from table users
   if (!returnedData.user?.id) {
-    return { error: "" };
+    return { error: "User not found" };
   }
   const { error: updateError } = await supabase
     .from("users")
@@ -56,6 +55,13 @@ export async function register(formData: FormData) {
 
   if (updateError) {
     return { error: updateError.message };
+  }
+
+  if (returnedData.user?.id && returnedData.user?.email) {
+    await createOrRetrieveCustomer({
+      uuid: returnedData.user.id,
+      email: returnedData.user.email,
+    });
   }
 
   return { url: "/login" };
@@ -72,12 +78,6 @@ export async function signInWithEmail(formData: FormData) {
   const { error } = await supabase.auth.signInWithOtp(data);
   if (error?.status === 422) {
     return { error: "User with this email does not exist. Please sign up." };
-  }
-  if (returnedData.user?.id && returnedData.user?.email) {
-    await createOrRetrieveCustomer({
-      uuid: returnedData.user.id,
-      email: returnedData.user.email,
-    });
   }
   return { url: "/" };
 }
