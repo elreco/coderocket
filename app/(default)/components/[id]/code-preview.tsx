@@ -153,10 +153,7 @@ export default function CodePreview() {
                     disabled={isLoading}
                     className="flex items-center gap-2"
                   >
-                    <FileIcon
-                      className="size-4"
-                      style={{ color: fileConfig.color }}
-                    />
+                    <FileIcon className={cn("size-4", fileConfig.color)} />
                     {file.name}
                   </TabsTrigger>
                 );

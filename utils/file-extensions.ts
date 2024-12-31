@@ -14,23 +14,23 @@ interface FileExtensionConfig {
 const FILE_EXTENSIONS: Record<string, FileExtensionConfig> = {
   html: {
     icon: SiHtml5,
-    color: "#E34F26",
+    color: "text-[#E34F26]",
   },
   tsx: {
     icon: SiReact,
-    color: "#61DAFB",
+    color: "text-[#61DAFB]",
   },
   jsx: {
     icon: SiReact,
-    color: "#61DAFB",
+    color: "text-[#61DAFB]",
   },
   ts: {
     icon: SiTypescript,
-    color: "#3178C6",
+    color: "text-[#3178C6]",
   },
   json: {
     icon: SiJson,
-    color: "#000000",
+    color: "text-[#000000]",
   },
 };
 
@@ -39,7 +39,7 @@ export const getFileConfig = (fileName: string): FileExtensionConfig => {
   return (
     FILE_EXTENSIONS[extension] || {
       icon: SiHtml5,
-      color: "#E34F26",
+      color: "text-[#E34F26]",
     }
   );
 };

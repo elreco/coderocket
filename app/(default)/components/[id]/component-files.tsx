@@ -288,7 +288,7 @@ export default function ComponentFiles({
                                 key={index}
                                 className={cn(
                                   "flex items-center justify-between rounded p-1",
-                                  `text-[${fileConfig.color}] bg-foreground`,
+                                  `${fileConfig.color} bg-foreground`,
                                   "hover:bg-gradient-to-l from-emerald-400 via-emerald-500 to-emerald-600 hover:text-foreground",
                                   isLoading
                                     ? "cursor-default"
