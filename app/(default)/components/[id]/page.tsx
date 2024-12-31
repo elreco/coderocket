@@ -40,7 +40,9 @@ export async function generateMetadata(
       15,
     )} - Tailwind AI`,
     openGraph: {
-      images: [lastAssistantMessage?.screenshot || "", ...previousImages],
+      images: lastAssistantMessage?.screenshot
+        ? [lastAssistantMessage.screenshot]
+        : [...previousImages],
     },
   };
 }
