@@ -84,12 +84,12 @@ export default function ComponentSidebar() {
           )}
         >
           <div className="flex items-center">
-            <Avatar className="mr-2 size-8 rounded-lg">
+            <Avatar className="mr-2 size-10">
               <AvatarImage
                 src={user?.avatar_url || ""}
                 alt={user?.full_name || ""}
               />
-              <AvatarFallback className="border bg-background">
+              <AvatarFallback className="bg-background">
                 <span className="text-xs">
                   {getInitials(user?.full_name || "")}
                 </span>
@@ -115,7 +115,7 @@ export default function ComponentSidebar() {
           )}
         >
           <div className="flex items-start gap-2">
-            <Avatar className="mr-2 size-8 rounded-none">
+            <Avatar className="mr-2 size-10 rounded-none">
               <AvatarImage src="/logo-white.png" />
               <AvatarFallback>T</AvatarFallback>
             </Avatar>

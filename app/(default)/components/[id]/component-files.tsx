@@ -171,7 +171,7 @@ export default function ComponentFiles({
         {message.role === "assistant" ? (
           <div className="mr-2 flex flex-col items-center justify-start space-y-2">
             <Avatar
-              className="cursor-pointer rounded-none"
+              className="size-10 cursor-pointer rounded-none"
               onClick={() => handleFileClick(message.version)}
             >
               <AvatarImage src="/logo-white.png" />
@@ -218,12 +218,12 @@ export default function ComponentFiles({
             )}
           </div>
         ) : (
-          <Avatar className="mr-2 rounded-lg">
+          <Avatar className="mr-2 size-10">
             <AvatarImage
               src={message.chats.user.avatar_url || ""}
               alt={message.chats.user.full_name || ""}
             />
-            <AvatarFallback className="border bg-background">
+            <AvatarFallback className="bg-background">
               <span className="text-xs">
                 {getInitials(message.chats.user.full_name || "")}
               </span>

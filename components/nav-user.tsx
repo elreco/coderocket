@@ -60,7 +60,7 @@ export function NavUser({
               size="lg"
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
-              <Avatar className="size-8 rounded-lg">
+              <Avatar className="size-8 rounded-lg transition-all duration-300 group-hover:border-primary">
                 <AvatarImage
                   src={user.avatar_url || ""}
                   alt={user.full_name || ""}
