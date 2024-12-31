@@ -1,6 +1,6 @@
 "use client";
 
-import { FileIcon, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { MDXRemote, MDXRemoteSerializeResult } from "next-mdx-remote";
 import { serialize } from "next-mdx-remote/serialize";
 import { useEffect, useState } from "react";
@@ -29,7 +29,8 @@ import {
 } from "@/utils/completion-parser";
 import { storageUrl } from "@/utils/config";
 import { getRelativeDate } from "@/utils/date";
-import { getInitials } from "@/utils/helpers";
+import { getFileConfig } from "@/utils/file-extensions";
+import { getInitials, formatFileSize } from "@/utils/helpers";
 
 import { deleteVersionByMessageId } from "./actions";
 import { useComponentContext } from "./component-context";
@@ -254,27 +255,45 @@ export default function ComponentFiles({
                           {files.length === 1 ? "Output File" : "Output Files"}
                         </h3>
                         <div className="space-y-2">
-                          {files.map((file, index) => (
-                            <div
-                              key={index}
-                              className={cn(
-                                "flex items-center rounded text-primary bg-foreground p-1 transition-all hover:bg-foreground/80",
-                                isLoading ? "cursor-default" : "cursor-pointer",
-                                activeTab === file.name &&
-                                  isSelectedVersion &&
-                                  !isCanvas &&
-                                  "bg-green-500 hover:bg-green-500 text-foreground",
-                              )}
-                              onClick={() =>
-                                handleFileClick(message.version, file)
-                              }
-                            >
-                              <FileIcon className="mr-2 size-4" />
-                              <div className="font-mono text-sm">
-                                {file.name || "untitled.html"}
+                          {files.map((file, index) => {
+                            const fileConfig = getFileConfig(
+                              file.name || "untitled.html",
+                            );
+                            const FileIcon = fileConfig.icon;
+
+                            return (
+                              <div
+                                key={index}
+                                className={cn(
+                                  "flex items-center justify-between rounded p-1",
+                                  `text-[${fileConfig.color}] bg-foreground`,
+                                  "hover:bg-gradient-to-l from-emerald-400 via-emerald-500 to-emerald-600 hover:text-foreground",
+                                  isLoading
+                                    ? "cursor-default"
+                                    : "cursor-pointer",
+                                  activeTab === file.name &&
+                                    isSelectedVersion &&
+                                    !isCanvas &&
+                                    "bg-gradient-to-l from-emerald-400 via-emerald-500 to-emerald-600 text-foreground",
+                                )}
+                                onClick={() =>
+                                  handleFileClick(message.version, file)
+                                }
+                              >
+                                <div className="flex items-center">
+                                  <FileIcon className="mr-2 size-4" />
+                                  <div className="font-mono text-sm">
+                                    {file.name || "untitled.html"}
+                                  </div>
+                                </div>
+                                <div className="text-xs opacity-75">
+                                  {formatFileSize(
+                                    new Blob([file.content]).size,
+                                  )}
+                                </div>
                               </div>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       </div>
                     </div>

@@ -18,6 +18,7 @@ import RenderHtmlComponent from "@/app/(content)/render-html-component";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
+import { getFileConfig } from "@/utils/file-extensions";
 import { iframeBuilder } from "@/utils/iframe-builder";
 
 import { useComponentContext } from "./component-context";
@@ -141,15 +142,25 @@ export default function CodePreview() {
             onValueChange={handleTabChange}
           >
             <TabsList className="flex w-full items-start justify-start rounded-none border-none">
-              {componentFiles.map((file) => (
-                <TabsTrigger
-                  key={file.name || ""}
-                  value={file.name || ""}
-                  disabled={isLoading}
-                >
-                  {file.name}
-                </TabsTrigger>
-              ))}
+              {componentFiles.map((file) => {
+                const fileConfig = getFileConfig(file.name || "untitled.html");
+                const FileIcon = fileConfig.icon;
+
+                return (
+                  <TabsTrigger
+                    key={file.name || ""}
+                    value={file.name || ""}
+                    disabled={isLoading}
+                    className="flex items-center gap-2"
+                  >
+                    <FileIcon
+                      className="size-4"
+                      style={{ color: fileConfig.color }}
+                    />
+                    {file.name}
+                  </TabsTrigger>
+                );
+              })}
             </TabsList>
 
             <TabsContent
