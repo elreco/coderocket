@@ -23,3 +23,5 @@ export const anthropicModel = createAnthropic({
   apiKey:
     "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",
 });
+
+export const crispWebsiteId = "2f740c23-7cfa-40ff-ba55-581ff73c5a67";

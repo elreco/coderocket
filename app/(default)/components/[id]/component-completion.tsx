@@ -25,6 +25,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Tables } from "@/types_db";
 import { handleAIcompletionForHTML } from "@/utils/completion-parser";
+import { crispWebsiteId } from "@/utils/config";
 import { createClient } from "@/utils/supabase/client";
 
 import { fetchMessagesByChatId } from "../actions";
@@ -278,6 +279,8 @@ export default function ComponentCompletion({
   }, []);
 
   useEffect(() => {
+    Crisp.configure(crispWebsiteId);
+
     if (isModalOpen) {
       Crisp.chat.hide();
     } else {

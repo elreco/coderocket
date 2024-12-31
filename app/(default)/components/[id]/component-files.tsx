@@ -3,7 +3,7 @@
 import { Trash2 } from "lucide-react";
 import { MDXRemote, MDXRemoteSerializeResult } from "next-mdx-remote";
 import { serialize } from "next-mdx-remote/serialize";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 import {
   AlertDialog,
@@ -71,6 +71,8 @@ export default function ComponentFiles({
   const [isDeleting, setIsDeleting] = useState(false);
   const [isAlertOpen, setIsAlertOpen] = useState(false);
 
+  const messageRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     const prepareContent = async () => {
       const hasArtifactResult = hasArtifacts(message.content);
@@ -134,9 +136,29 @@ export default function ComponentFiles({
       setIsAlertOpen(false);
     }
   };
+  useEffect(() => {
+    if (isSelectedVersion && messageRef.current) {
+      const userMessage = messages.find(
+        (m) => m.version === message.version && m.role === "user",
+      );
+      if (userMessage) {
+        const userMessageElement = document.querySelector(
+          `[data-message-id="${userMessage.id}"]`,
+        );
+        if (userMessageElement) {
+          userMessageElement.scrollIntoView({
+            behavior: "instant",
+            block: "start",
+          });
+        }
+      }
+    }
+  }, [isSelectedVersion, messages, message.version]);
 
   return (
     <div
+      ref={messageRef}
+      data-message-id={message.id}
       className={cn(
         "group flex px-2 py-6 flex-col sm:px-4 hover:bg-primary/10 transition-all",
         message.role === "user" && "bg-background/50 hover:bg-background/50",
