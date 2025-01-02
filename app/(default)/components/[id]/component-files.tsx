@@ -294,7 +294,7 @@ export default function ComponentFiles({
                             <TooltipTrigger>
                               <Badge
                                 variant="secondary"
-                                className="cursor-default bg-border hover:bg-border"
+                                className="cursor-default border border-border"
                               >
                                 <Paintbrush className="mr-1 size-3" />{" "}
                                 <span className="first-letter:uppercase">
