@@ -29,6 +29,7 @@ export default function ComponentSettings({
   } = useComponentContext();
 
   const [isSettingLoading, setIsSettingLoading] = useState("");
+  const [open, setOpen] = useState(false);
 
   const setTheme = async (theme: string) => {
     if (isSettingLoading || theme === extractDataTheme(completion)) return;
@@ -39,9 +40,10 @@ export default function ComponentSettings({
     handleComponentFiles(completionWithTheme);
     setCompletion(completionWithTheme);
     setIsSettingLoading("");
+    setOpen(false);
   };
   return (
-    <Sheet>
+    <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>{children}</SheetTrigger>
       <SheetContent className="overflow-auto">
         <SheetTitle className="mb-4">Component Theme</SheetTitle>

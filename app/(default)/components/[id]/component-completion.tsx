@@ -337,8 +337,7 @@ export default function ComponentCompletion({
                         className="block truncate first-letter:uppercase"
                         onClick={() => copyPrompt(title)}
                       >
-                        {title} dsg dsg sdg sdgdsgdsgsdg sdgsdg sdgdsg sdg
-                        sdgsgds gsd
+                        {title}
                       </span>
                     </TooltipTrigger>
                     <TooltipContent>
@@ -445,9 +444,7 @@ export default function ComponentCompletion({
               <CodePreview />
             </div>
           </div>
-          <div className="hidden lg:block">
-            <ComponentSidebar />
-          </div>
+          <ComponentSidebar />
         </div>
       </Container>
     </ComponentContext.Provider>

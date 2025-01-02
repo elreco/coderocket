@@ -70,6 +70,7 @@ export default function Hero() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
   const router = useRouter();
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   useEffect(() => {
     if (inputRef.current) {
@@ -309,11 +310,13 @@ export default function Hero() {
                   <p>Upload an image to generate a component with it</p>
                 </TooltipContent>
               </Tooltip>
-              <Sheet>
+              <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
                 <SheetTrigger asChild>
                   <Button disabled={loading} variant="background" size="sm">
                     <Paintbrush className="size-4" />
-                    <span>Theme</span>
+                    <span className="first-letter:uppercase">
+                      {selectedTheme}
+                    </span>
                   </Button>
                 </SheetTrigger>
                 <SheetContent className="overflow-auto">
@@ -338,7 +341,10 @@ export default function Hero() {
                                   selectedTheme === theme,
                               },
                             )}
-                            onClick={() => setSelectedTheme(theme)}
+                            onClick={() => {
+                              setSelectedTheme(theme);
+                              setSheetOpen(false);
+                            }}
                           >
                             <img
                               src={`/daisy-themes/${theme}.png`}
