@@ -80,64 +80,62 @@ export default function ComponentCompletion({
 
   const [activeTab, setActiveTab] = useState("");
 
-  const {
-    completion,
-    isLoading,
-    stop,
-    complete,
-    setCompletion,
-    input,
-    setInput,
-  } = useCompletion({
-    api: "/api/components",
-    headers: {
-      "X-Custom-Header": JSON.stringify({
-        id: fetchedChat.id,
-        selectedVersion,
-      }),
-    },
-    streamProtocol: "text",
-    initialCompletion: lastAssistantMessage?.content,
-    experimental_throttle: 500,
-    onError: async (error: Error) => {
-      if (error.message === "payment-required") {
-        router.push("/pricing");
-        toast({
-          variant: "destructive",
-          title: "You have reached the limit of your free plan",
-          description: "Please upgrade to continue.",
-          duration: 5000,
-        });
-        return;
-      }
-      if (error.message) {
-        toast({
-          variant: "destructive",
-          title: "Something went wrong",
-          description: error.message,
-          duration: 5000,
-        });
-      }
-    },
-    onFinish: async () => {
-      const refreshedChatMessages = await refreshChatData();
-      if (refreshedChatMessages) {
-        const refreshedLastAssistantMessage = refreshedChatMessages.reduce(
-          (prev, current) => (prev.version > current.version ? prev : current),
-          { version: 0 },
-        );
-        if (refreshedLastAssistantMessage) {
-          handleVersionSelect(refreshedLastAssistantMessage.version);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const { completion, stop, complete, setCompletion, input, setInput } =
+    useCompletion({
+      api: "/api/components",
+      headers: {
+        "X-Custom-Header": JSON.stringify({
+          id: fetchedChat.id,
+          selectedVersion,
+        }),
+      },
+      streamProtocol: "text",
+      initialCompletion: lastAssistantMessage?.content,
+      experimental_throttle: 500,
+      onError: async (error: Error) => {
+        if (error.message === "payment-required") {
+          router.push("/pricing");
+          toast({
+            variant: "destructive",
+            title: "You have reached the limit of your free plan",
+            description: "Please upgrade to continue.",
+            duration: 5000,
+          });
+          return;
         }
-      }
-      setCanvas(true);
-      setInput("");
-    },
-  });
+        if (error.message) {
+          toast({
+            variant: "destructive",
+            title: "Something went wrong",
+            description: error.message,
+            duration: 5000,
+          });
+        }
+      },
+      onFinish: async () => {
+        const refreshedChatMessages = await refreshChatData();
+        if (refreshedChatMessages) {
+          const refreshedLastAssistantMessage = refreshedChatMessages.reduce(
+            (prev, current) =>
+              prev.version > current.version ? prev : current,
+            { version: 0 },
+          );
+          if (refreshedLastAssistantMessage) {
+            handleVersionSelect(refreshedLastAssistantMessage.version);
+          }
+        }
+        setCanvas(true);
+        setInput("");
+        setIsLoading(false);
+      },
+    });
 
   const handleSubmitToAI = (input: string) => {
     setCompletion("");
     setCanvas(false);
+    setIsLoading(true);
     complete(input);
   };
 
@@ -277,6 +275,7 @@ export default function ComponentCompletion({
     ) {
       setCanvas(false);
       complete(lastUserMessage.content);
+      setIsLoading(true);
     }
   }, []);
 
