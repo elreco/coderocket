@@ -12,6 +12,7 @@ export type Database = {
       chats: {
         Row: {
           created_at: string | null;
+          framework: string | null;
           id: string;
           is_featured: boolean | null;
           is_private: boolean | null;
@@ -21,6 +22,7 @@ export type Database = {
         };
         Insert: {
           created_at?: string | null;
+          framework?: string | null;
           id?: string;
           is_featured?: boolean | null;
           is_private?: boolean | null;
@@ -30,6 +32,7 @@ export type Database = {
         };
         Update: {
           created_at?: string | null;
+          framework?: string | null;
           id?: string;
           is_featured?: boolean | null;
           is_private?: boolean | null;

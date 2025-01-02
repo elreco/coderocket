@@ -201,7 +201,7 @@ export default function Hero() {
       </div>
       <form
         id="generate-form"
-        className="group relative z-10 flex w-full flex-col items-center justify-center gap-x-0 space-y-3 rounded-lg border bg-secondary p-3 text-center shadow-black/40 backdrop-blur-xl transition-all duration-300 xl:w-2/3"
+        className="group relative z-10 flex w-full flex-col items-center justify-center gap-x-0 space-y-3 rounded-lg border border-primary/35 bg-secondary p-3 text-center transition-all duration-300 hover:shadow-2xl hover:shadow-primary/35 xl:w-2/3"
         onSubmit={handleSubmit}
       >
         <div className="flex w-full flex-col items-end">
@@ -240,7 +240,7 @@ export default function Hero() {
             line
           </div>
         </div>
-        <div className="flex w-full flex-1 items-center justify-between">
+        <div className="flex w-full flex-1 items-center justify-between sm:flex-row">
           {image && (
             <div className="mr-2 size-12">
               <div className="relative size-12">
@@ -262,14 +262,14 @@ export default function Hero() {
             </div>
           )}
 
-          <div className="flex w-full items-center justify-between">
-            <div className="flex items-center space-x-2">
+          <div className="flex w-full flex-col items-center justify-between space-y-2 sm:flex-row sm:space-y-0">
+            <div className="flex w-full items-center space-x-2">
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
                     variant="background"
                     onClick={handleVisibility}
-                    className="flex items-center"
+                    className="flex w-full items-center sm:w-auto"
                     loading={loadingVisibility}
                     disabled={loading}
                     type="button"
@@ -297,6 +297,7 @@ export default function Hero() {
                 <TooltipTrigger asChild>
                   <Button
                     variant="background"
+                    className="w-full sm:w-auto"
                     size="sm"
                     type="button"
                     disabled={loading}
@@ -312,7 +313,12 @@ export default function Hero() {
               </Tooltip>
               <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
                 <SheetTrigger asChild>
-                  <Button disabled={loading} variant="background" size="sm">
+                  <Button
+                    disabled={loading}
+                    variant="background"
+                    size="sm"
+                    className="w-full sm:w-auto"
+                  >
                     <Paintbrush className="size-4" />
                     <span className="first-letter:uppercase">
                       {selectedTheme}
@@ -359,7 +365,7 @@ export default function Hero() {
                 </SheetContent>
               </Sheet>
             </div>
-            <div className="flex items-center space-x-2">
+            <div className="flex w-full items-center justify-end space-x-0 sm:space-x-2">
               <input
                 ref={fileInputRef}
                 className="sr-only"
@@ -371,6 +377,7 @@ export default function Hero() {
                 type="submit"
                 size="sm"
                 variant="default"
+                className="w-full sm:w-auto"
                 loading={loading}
               >
                 <Wand className="size-3" />

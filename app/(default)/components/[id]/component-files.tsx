@@ -275,7 +275,7 @@ export default function ComponentFiles({
                         className={cn(
                           "rounded-lg border bg-background p-2 text-foreground",
                           !isSelectedVersion &&
-                            "group-hover:border-primary/50 group-hover:shadow-primary/50 group-hover:shadow-2xl",
+                            "group-hover:border-primary/50 group-hover:shadow-primary/35 group-hover:shadow-2xl",
                         )}
                       >
                         <div className="mb-3 flex items-center justify-between">
@@ -346,7 +346,7 @@ export default function ComponentFiles({
                   "size-full max-w-full cursor-pointer rounded-md border transition-all duration-300",
                   isLoading ? "cursor-default" : "cursor-pointer",
                   !isSelectedVersion &&
-                    "group-hover:border-primary/50 group-hover:shadow-primary/50 group-hover:shadow-2xl",
+                    "group-hover:border-primary/50 group-hover:shadow-primary/35 group-hover:shadow-2xl",
                 )}
                 onClick={() => handleFileClick(message.version)}
               />

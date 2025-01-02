@@ -25,7 +25,7 @@ export default function ComponentCard({
     <Link
       key={chat.chat_id}
       href={`/components/${chat.chat_id}`}
-      className="group flex flex-col rounded-lg border transition-all duration-300 hover:border-primary hover:shadow-2xl hover:shadow-primary/50"
+      className="group flex flex-col rounded-lg border transition-all duration-300 hover:border-primary hover:shadow-2xl hover:shadow-primary/35"
     >
       <div className="relative flex overflow-hidden text-clip rounded-t-lg">
         <div className="relative aspect-video size-full transition duration-300 md:group-hover:scale-110">
