@@ -13,7 +13,11 @@ import { useComponentContext } from "./component-context";
 import ComponentFiles from "./component-files";
 import { ComponentSidebarSkeleton } from "./component-sidebar-skeleton";
 
-export default function ComponentSidebar() {
+export default function ComponentSidebar({
+  className,
+}: {
+  className?: string;
+}) {
   const {
     authorized,
     messages,
@@ -62,7 +66,12 @@ export default function ComponentSidebar() {
   const isIterationVisible = selectedVersion !== null && selectedVersion > -1;
 
   return (
-    <div className="relative hidden size-full flex-col overflow-hidden border-l-0 bg-secondary lg:flex lg:border-l">
+    <div
+      className={cn(
+        "relative flex size-full flex-col overflow-hidden border-l-0 bg-secondary lg:border-l",
+        className,
+      )}
+    >
       <div
         ref={containerRef}
         className="flex size-full max-h-full flex-col overflow-y-auto scroll-smooth"

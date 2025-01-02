@@ -320,10 +320,10 @@ export default function ComponentCompletion({
 
   return (
     <ComponentContext.Provider value={contextValue}>
-      <Container className="sm:!p-0 lg:overflow-hidden">
+      <Container className="!p-0 lg:overflow-hidden">
         <div className="grid size-full max-h-full grid-cols-1 justify-center lg:grid-cols-3 lg:flex-row xl:grid-cols-4">
           <div className="col-span-1 flex size-full min-h-full flex-col lg:col-span-2 xl:col-span-3 xl:mb-0">
-            <div className="flex flex-col items-center justify-start border-b pl-11 pr-2 sm:py-1.5 xl:flex-row xl:justify-between">
+            <div className="flex flex-col items-center justify-start border-b py-1.5 pr-2 xl:flex-row xl:justify-between xl:pl-11">
               <h1 className="mb-2 flex min-w-0 max-w-full flex-1 items-center font-medium lg:mb-0">
                 {isLoading || !title ? (
                   <span className="flex items-center">
@@ -332,9 +332,9 @@ export default function ComponentCompletion({
                   </span>
                 ) : (
                   <Tooltip>
-                    <TooltipTrigger className="min-w-0 max-w-full">
+                    <TooltipTrigger className="mx-10 min-w-0 max-w-full xl:mx-0">
                       <span
-                        className="block truncate first-letter:uppercase"
+                        className="block truncate text-center first-letter:uppercase"
                         onClick={() => copyPrompt(title)}
                       >
                         {title}
@@ -435,7 +435,7 @@ export default function ComponentCompletion({
                     </Button>
                   </SheetTrigger>
                   <SheetContent className="h-full p-0">
-                    <ComponentSidebar />
+                    <ComponentSidebar className="flex lg:hidden" />
                   </SheetContent>
                 </Sheet>
               </div>
@@ -444,7 +444,7 @@ export default function ComponentCompletion({
               <CodePreview />
             </div>
           </div>
-          <ComponentSidebar />
+          <ComponentSidebar className="hidden lg:flex" />
         </div>
       </Container>
     </ComponentContext.Provider>
