@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { UserMessage } from "@/components/user-message";
 import { cn } from "@/lib/utils";
 import { getRelativeDate } from "@/utils/date";
 import { getInitials } from "@/utils/helpers";
@@ -74,7 +75,7 @@ export default function ComponentSidebar({
     >
       <div
         ref={containerRef}
-        className="flex size-full max-h-full flex-col overflow-y-auto scroll-smooth"
+        className="flex size-full max-h-full flex-col overflow-y-auto overflow-x-hidden scroll-smooth"
       >
         {isLoaderVisible && (
           <div className="absolute inset-0 z-10 flex size-full flex-col items-start bg-secondary p-4">
@@ -107,7 +108,7 @@ export default function ComponentSidebar({
               {user?.full_name && (
                 <h2 className="text-lg font-semibold">{user.full_name}</h2>
               )}
-              <p className="text-sm first-letter:uppercase">{input}</p>
+              <UserMessage>{input}</UserMessage>
             </div>
           </div>
           <p className="mt-2 text-right text-xs font-semibold text-primary">

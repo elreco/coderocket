@@ -1,9 +1,8 @@
 "use client";
 
 import { Paintbrush, Trash2 } from "lucide-react";
-import { MDXRemote, MDXRemoteSerializeResult } from "next-mdx-remote";
-import { serialize } from "next-mdx-remote/serialize";
 import { useEffect, useState, useRef } from "react";
+import ReactMarkdown from "react-markdown";
 
 import {
   AlertDialog,
@@ -24,6 +23,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { UserMessage } from "@/components/user-message";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { Tables } from "@/types_db";
@@ -38,6 +38,8 @@ import { storageUrl } from "@/utils/config";
 import { getRelativeDate } from "@/utils/date";
 import { getFileConfig } from "@/utils/file-extensions";
 import { getInitials, formatFileSize } from "@/utils/helpers";
+import { rehypePlugins } from "@/utils/markdown";
+import { remarkPlugins } from "@/utils/markdown";
 
 import { deleteVersionByMessageId } from "./actions";
 import { useComponentContext } from "./component-context";
@@ -64,9 +66,6 @@ export default function ComponentFiles({
     refreshChatData,
   } = useComponentContext();
 
-  const [serializedContents, setSerializedContents] = useState<
-    (MDXRemoteSerializeResult | null)[]
-  >([]);
   const [files, setFiles] = useState<
     {
       name: string | null;
@@ -88,17 +87,6 @@ export default function ComponentFiles({
         hasArtifactResult ? handleAIcompletionForHTML(message.content) : [],
       );
       setChunks(splitContentIntoChunks(message.content));
-
-      const contents = await Promise.all(
-        splitContentIntoChunks(message.content).map(async (chunk) => {
-          if (chunk.type === "text") {
-            return await serialize(chunk.content);
-          }
-          return null;
-        }),
-      );
-
-      setSerializedContents(contents);
     };
 
     prepareContent();
@@ -239,13 +227,13 @@ export default function ComponentFiles({
         )}
 
         {message.role === "user" ? (
-          <div className="flex flex-col gap-2">
+          <div className="flex w-full flex-col">
             {message.chats.user?.full_name && (
               <h2 className="text-lg font-semibold">
                 {message.chats.user.full_name}
               </h2>
             )}
-            <p className="text-sm first-letter:uppercase">{message.content}</p>
+            <UserMessage>{message.content}</UserMessage>
             {message.chats.prompt_image && (
               <img
                 src={`${storageUrl}/${message.chats.prompt_image}`}
@@ -270,10 +258,14 @@ export default function ComponentFiles({
             {hasArtifact &&
               chunks.map((chunk, index) => (
                 <div key={index}>
-                  {chunk.type === "text" && serializedContents[index] && (
-                    <div className="prose w-full max-w-full whitespace-normal text-sm text-foreground prose-pre:whitespace-pre-wrap prose-pre:break-words prose-pre:font-mono prose-pre:text-sm prose-pre:text-foreground">
-                      <MDXRemote {...serializedContents[index]} />
-                    </div>
+                  {chunk.type === "text" && (
+                    <ReactMarkdown
+                      className="markdown text-sm"
+                      remarkPlugins={remarkPlugins(true)}
+                      rehypePlugins={rehypePlugins(true)}
+                    >
+                      {chunk.content.trim()}
+                    </ReactMarkdown>
                   )}
                   {chunk.type === "artifact" && (
                     <div className="w-full space-y-2">
