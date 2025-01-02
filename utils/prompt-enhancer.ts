@@ -2,15 +2,10 @@ import { generateText } from "ai";
 
 import { anthropicModel } from "./config";
 import { stripIndents } from "./strip-indents";
-import { createClient } from "./supabase/server";
+import { htmlSystemPrompt } from "./system-prompts/html";
 
 export const promptEnhancer = async (prompt: string): Promise<string> => {
-  const supabase = await createClient();
-  const { data: blobContent, error } = await supabase.storage
-    .from("featured")
-    .download("system-html.txt");
-  if (error) throw new Error("Could not get AI Model file. Please try again");
-  const contentMd = await blobContent.text();
+  const contentMd = htmlSystemPrompt();
   const { text } = await generateText({
     messages: [
       {

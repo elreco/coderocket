@@ -2,7 +2,7 @@
 
 import { useCompletion } from "ai/react";
 import { Crisp } from "crisp-sdk-web";
-import { Fullscreen, LoaderCircle, Settings } from "lucide-react";
+import { Fullscreen, Layers, LoaderCircle, Settings } from "lucide-react";
 import { Code, Share, Tv } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -17,6 +17,7 @@ import {
   DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
   Tooltip,
   TooltipContent,
@@ -320,10 +321,10 @@ export default function ComponentCompletion({
   return (
     <ComponentContext.Provider value={contextValue}>
       <Container className="sm:!p-0 lg:overflow-hidden">
-        <div className="grid grid-cols-1 justify-center lg:size-full lg:max-h-full lg:grid-cols-3 lg:flex-row xl:grid-cols-4">
-          <div className="col-span-1 flex size-full min-h-[500px] flex-col lg:col-span-2 lg:min-h-full xl:col-span-3 xl:mb-0 xl:min-h-full">
+        <div className="grid size-full max-h-full grid-cols-1 justify-center lg:grid-cols-3 lg:flex-row xl:grid-cols-4">
+          <div className="col-span-1 flex size-full min-h-full flex-col lg:col-span-2 xl:col-span-3 xl:mb-0">
             <div className="flex flex-col items-center justify-start border-b pl-11 pr-2 sm:py-1.5 xl:flex-row xl:justify-between">
-              <h1 className="flex min-w-0 flex-1 items-center font-medium">
+              <h1 className="mb-2 flex min-w-0 max-w-full flex-1 items-center font-medium lg:mb-0">
                 {isLoading || !title ? (
                   <span className="flex items-center">
                     <LoaderCircle className="mr-2 size-4 animate-spin" />
@@ -336,7 +337,8 @@ export default function ComponentCompletion({
                         className="block truncate first-letter:uppercase"
                         onClick={() => copyPrompt(title)}
                       >
-                        {title}
+                        {title} dsg dsg sdg sdgdsgdsgsdg sdgsdg sdgdsg sdg
+                        sdgsgds gsd
                       </span>
                     </TooltipTrigger>
                     <TooltipContent>
@@ -423,13 +425,29 @@ export default function ComponentCompletion({
                     </Button>
                   </ComponentSettings>
                 )}
+                <Sheet>
+                  <SheetTrigger asChild>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      className="block lg:hidden"
+                    >
+                      <Layers className="size-5" />
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent className="h-full p-0">
+                    <ComponentSidebar />
+                  </SheetContent>
+                </Sheet>
               </div>
             </div>
-            <div className="m-0 flex h-full max-h-[500px] flex-1 flex-col border-b lg:max-h-full lg:border-b-0">
+            <div className="m-0 flex h-full max-h-full flex-1 flex-col border-b lg:border-b-0">
               <CodePreview />
             </div>
           </div>
-          <ComponentSidebar />
+          <div className="hidden lg:block">
+            <ComponentSidebar />
+          </div>
         </div>
       </Container>
     </ComponentContext.Provider>

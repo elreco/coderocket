@@ -25,3 +25,34 @@ export const anthropicModel = createAnthropic({
 });
 
 export const crispWebsiteId = "2f740c23-7cfa-40ff-ba55-581ff73c5a67";
+
+export const themes = [
+  "light",
+  "dark",
+  "cupcake",
+  "retro",
+  "sunset",
+  "night",
+  "winter",
+  "cyberpunk",
+  "autumn",
+  "dracula",
+  "bumblebee",
+  "emerald",
+  "corporate",
+  "synthwave",
+  "halloween",
+  "forest",
+  "aqua",
+  "lofi",
+  "pastel",
+  "fantasy",
+  "wireframe",
+  "black",
+  "luxury",
+  "coffee",
+  "acid",
+  "lemonade",
+  "business",
+  "cmyk",
+];

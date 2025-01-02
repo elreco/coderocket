@@ -1,6 +1,6 @@
 "use client";
 
-import { Trash2 } from "lucide-react";
+import { Paintbrush, Trash2 } from "lucide-react";
 import { MDXRemote, MDXRemoteSerializeResult } from "next-mdx-remote";
 import { serialize } from "next-mdx-remote/serialize";
 import { useEffect, useState, useRef } from "react";
@@ -23,6 +23,7 @@ import { cn } from "@/lib/utils";
 import { Tables } from "@/types_db";
 import {
   ContentChunk,
+  extractDataTheme,
   handleAIcompletionForHTML,
   hasArtifacts,
   splitContentIntoChunks,
@@ -277,9 +278,20 @@ export default function ComponentFiles({
                             "group-hover:border-primary/50 group-hover:shadow-primary/50 group-hover:shadow-2xl",
                         )}
                       >
-                        <h3 className="mb-3 text-xs font-semibold">
-                          {files.length === 1 ? "Output File" : "Output Files"}
-                        </h3>
+                        <div className="mb-3 flex items-center justify-between">
+                          <h3 className="text-xs font-semibold">
+                            {files.length === 1
+                              ? "Output File"
+                              : "Output Files"}
+                          </h3>
+                          <p className="flex items-center text-xs text-foreground/50">
+                            <Paintbrush className="mr-1 size-3" />
+                            Theme
+                            <span className="ml-0.5 font-semibold">
+                              {extractDataTheme(files[0].content)}
+                            </span>
+                          </p>
+                        </div>
                         <div className="space-y-2">
                           {files.map((file, index) => {
                             const fileConfig = getFileConfig(

@@ -9,40 +9,10 @@ import {
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { extractDataTheme, setDataTheme } from "@/utils/completion-parser";
+import { themes } from "@/utils/config";
 
 import { updateTheme } from "../actions";
 import { useComponentContext } from "../component-context";
-
-const themes = [
-  "light",
-  "dark",
-  "cupcake",
-  "retro",
-  "sunset",
-  "night",
-  "winter",
-  "cyberpunk",
-  "autumn",
-  "dracula",
-  "bumblebee",
-  "emerald",
-  "corporate",
-  "synthwave",
-  "halloween",
-  "forest",
-  "aqua",
-  "lofi",
-  "pastel",
-  "fantasy",
-  "wireframe",
-  "black",
-  "luxury",
-  "coffee",
-  "acid",
-  "lemonade",
-  "business",
-  "cmyk",
-];
 
 export default function ComponentSettings({
   children,

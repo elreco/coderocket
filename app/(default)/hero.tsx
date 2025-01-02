@@ -6,6 +6,7 @@ import {
   X,
   Wand,
   Terminal,
+  Paintbrush,
 } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -15,6 +16,12 @@ import { Container } from "@/components/container";
 import { AnimatedGridPattern } from "@/components/ui/animated-grid-pattern";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Sheet,
+  SheetContent,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { Spotlight } from "@/components/ui/spotlight";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -24,7 +31,7 @@ import {
 } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { maxImageSize } from "@/utils/config";
+import { defaultTheme, maxImageSize, themes } from "@/utils/config";
 import { createClient } from "@/utils/supabase/client";
 
 import { createChat } from "./components/actions";
@@ -56,6 +63,7 @@ export default function Hero() {
   const { toast } = useToast();
   const [prompt, setPrompt] = useState("");
   const [isVisible, setVisible] = useState(true);
+  const [selectedTheme, setSelectedTheme] = useState(defaultTheme);
   const [loading, setLoading] = useState(false);
   const [loadingVisibility, setLoadingVisibility] = useState(false);
   const [image, setImage] = useState<File | null>(null);
@@ -96,6 +104,7 @@ export default function Hero() {
       formData.append("file", image as File);
     }
     formData.append("isVisible", isVisible.toString());
+    formData.append("theme", selectedTheme);
     const { id, error } = await createChat(prompt, formData);
     if (error) {
       toast({
@@ -300,6 +309,49 @@ export default function Hero() {
                   <p>Upload an image to generate a component with it</p>
                 </TooltipContent>
               </Tooltip>
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button disabled={loading} variant="background" size="sm">
+                    <Paintbrush className="size-4" />
+                    <span>Theme</span>
+                  </Button>
+                </SheetTrigger>
+                <SheetContent className="overflow-auto">
+                  <SheetTitle className="mb-4">Component Theme</SheetTitle>
+                  <div>
+                    <h3 className="mb-1 text-base font-semibold">
+                      Set theme for the component
+                    </h3>
+                    <h4 className="mb-4 text-sm">
+                      Selected theme:{" "}
+                      <span className="text-primary">{selectedTheme}</span>
+                    </h4>
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-3 gap-4">
+                        {themes.map((theme) => (
+                          <div
+                            key={theme}
+                            className={cn(
+                              "relative aspect-video cursor-pointer rounded-md items-center justify-center border-2 opacity-75 hover:border-2 hover:border-primary hover:opacity-100 overflow-hidden",
+                              {
+                                "border-primary opacity-100":
+                                  selectedTheme === theme,
+                              },
+                            )}
+                            onClick={() => setSelectedTheme(theme)}
+                          >
+                            <img
+                              src={`/daisy-themes/${theme}.png`}
+                              alt="Theme"
+                              className="size-full scale-110 object-cover"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </SheetContent>
+              </Sheet>
             </div>
             <div className="flex items-center space-x-2">
               <input

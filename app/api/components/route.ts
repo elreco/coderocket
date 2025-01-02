@@ -14,6 +14,7 @@ import { takeScreenshot } from "@/utils/capture-screenshot";
 import { anthropicModel, defaultTheme, storageUrl } from "@/utils/config";
 import { promptEnhancer } from "@/utils/prompt-enhancer";
 import { createClient } from "@/utils/supabase/server";
+import { htmlSystemPrompt } from "@/utils/system-prompts/html";
 
 export async function POST(req: Request) {
   try {
@@ -24,8 +25,7 @@ export async function POST(req: Request) {
     const { prompt }: { prompt: string } = await req.json();
     if (!prompt) throw new Error("No prompt");
 
-    const { messagesFromDatabase, imageUrl, contentMd } =
-      await validateRequest(id);
+    const { messagesFromDatabase, imageUrl } = await validateRequest(id);
 
     const enhancedPrompt = await promptEnhancer(prompt);
     // Build messages for OpenAI
@@ -38,7 +38,11 @@ export async function POST(req: Request) {
     const stream = streamText({
       messages,
       model: anthropicModel("claude-3-5-sonnet-latest"),
-      system: contentMd,
+      system: htmlSystemPrompt(
+        messagesFromDatabase.length === 1
+          ? messagesFromDatabase[0]?.theme
+          : null,
+      ),
       toolChoice: "none",
       maxTokens: 8192,
       onFinish: async ({ text }) => {
@@ -171,17 +175,9 @@ const validateRequest = async (id: string) => {
     throw new Error("You can't have more than 200 versions");
   }
 
-  // Fetch HTML content
-  const { data: blobContent, error } = await supabase.storage
-    .from("featured")
-    .download("system-html.txt");
-  if (error) throw new Error("Could not get AI Model file. Please try again");
-  const contentMd = await blobContent.text();
-
   return {
     messagesFromDatabase,
     imageUrl,
-    contentMd,
   };
 };
 

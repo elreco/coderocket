@@ -65,7 +65,7 @@ export default function ComponentSidebar() {
     <div className="relative flex size-full flex-col overflow-hidden border-l-0 bg-secondary lg:border-l">
       <div
         ref={containerRef}
-        className="flex size-full max-h-[500px] flex-col overflow-y-auto scroll-smooth lg:max-h-full"
+        className="flex size-full max-h-full flex-col overflow-y-auto scroll-smooth"
       >
         {isLoaderVisible && (
           <div className="absolute inset-0 z-10 flex size-full flex-col items-start bg-secondary p-4">

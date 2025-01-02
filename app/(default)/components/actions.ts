@@ -1,6 +1,7 @@
 "use server";
 
 import { getSubscription } from "@/app/supabase-server";
+import { defaultTheme } from "@/utils/config";
 import { createClient } from "@/utils/supabase/server";
 
 export const fetchChatById = async (id: string) => {
@@ -136,6 +137,7 @@ export const createChat = async (prompt: string, formData: FormData) => {
     .select()
     .eq("user_id", user?.id);
   const isVisible = formData.get("isVisible");
+  const theme = formData.get("theme")?.toString() || defaultTheme;
   const is_private = isVisible === "false";
 
   if (!subscription && is_private) {
@@ -205,6 +207,7 @@ export const createChat = async (prompt: string, formData: FormData) => {
   await supabase.from("messages").insert({
     chat_id: data.id,
     role: "user",
+    theme,
     content: prompt,
     version: -1,
   });
