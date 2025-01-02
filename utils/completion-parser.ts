@@ -167,7 +167,7 @@ export const splitContentIntoChunks = (completion: string): ContentChunk[] => {
   return chunks;
 };
 
-export const extractDataTheme = (completion: string): string | null => {
+export const extractDataTheme = (completion: string): string => {
   const match = completion.match(/data-theme=["']([^"']*?)["']/);
   return match ? match[1] : defaultTheme;
 };

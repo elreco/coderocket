@@ -4,14 +4,14 @@ import { after } from "next/server";
 
 import {
   fetchChatById,
-  fetchLastAssistantMessageByChatId,
   fetchLastUserMessageByChatId,
   fetchMessagesByChatId,
 } from "@/app/(default)/components/actions";
 import { getSubscription } from "@/app/supabase-server";
 import { Tables } from "@/types_db";
 import { takeScreenshot } from "@/utils/capture-screenshot";
-import { anthropicModel, defaultTheme, storageUrl } from "@/utils/config";
+import { extractDataTheme } from "@/utils/completion-parser";
+import { anthropicModel, storageUrl } from "@/utils/config";
 import { promptEnhancer } from "@/utils/prompt-enhancer";
 import { createClient } from "@/utils/supabase/server";
 import { htmlSystemPrompt } from "@/utils/system-prompts/html";
@@ -211,8 +211,7 @@ const updateDataAfterCompletion = async (
       role: "user",
     });
   }
-  const lastAssistantMessage = await fetchLastAssistantMessageByChatId(chatId);
-  const theme = lastAssistantMessage?.theme || defaultTheme;
+  const theme = extractDataTheme(text);
   newMessages.push({
     chat_id: chatId,
     screenshot: null,
