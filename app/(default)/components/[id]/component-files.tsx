@@ -17,7 +17,13 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { Tables } from "@/types_db";
@@ -284,13 +290,22 @@ export default function ComponentFiles({
                               ? "Output File"
                               : "Output Files"}
                           </h3>
-                          <p className="flex items-center text-xs text-foreground/50">
-                            <Paintbrush className="mr-1 size-3" />
-                            Theme
-                            <span className="ml-0.5 font-semibold">
-                              {extractDataTheme(files[0].content)}
-                            </span>
-                          </p>
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <Badge
+                                variant="secondary"
+                                className="cursor-default bg-border hover:bg-border"
+                              >
+                                <Paintbrush className="mr-1 size-3" />{" "}
+                                <span className="first-letter:uppercase">
+                                  {extractDataTheme(files[0].content)}
+                                </span>
+                              </Badge>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Theme</p>
+                            </TooltipContent>
+                          </Tooltip>
                         </div>
                         <div className="space-y-2">
                           {files.map((file, index) => {

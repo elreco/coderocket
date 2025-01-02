@@ -223,7 +223,7 @@ export const getChatsFromUser = async () => {
 
   if (!user) throw Error("Could not get user");
   const { data } = await supabase
-    .rpc("get_components")
+    .rpc("get_components_with_theme")
     .eq("user_id", user.id)
     .limit(100);
 
@@ -234,7 +234,7 @@ export const getFeaturedChats = async () => {
   const supabase = await createClient();
 
   const { data } = await supabase
-    .rpc("get_components")
+    .rpc("get_components_with_theme")
     .is("is_featured", true)
     .limit(50);
   return data;
@@ -244,7 +244,7 @@ export const getAllPublicChats = async () => {
   const supabase = await createClient();
 
   const { data } = await supabase
-    .rpc("get_components")
+    .rpc("get_components_with_theme")
     .is("is_private", false)
     .limit(24);
 

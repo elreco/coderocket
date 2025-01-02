@@ -1,7 +1,9 @@
-import { TerminalIcon } from "lucide-react";
+import { Paintbrush, TerminalIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
+import { Badge } from "./ui/badge";
+import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import { UserWidget } from "./user-widget";
 
 type GetComponentsReturnType = {
@@ -14,6 +16,7 @@ type GetComponentsReturnType = {
   created_at: string;
   first_user_message: string;
   last_assistant_message: string;
+  last_assistant_message_theme: string;
 };
 
 export default function ComponentCard({
@@ -46,11 +49,26 @@ export default function ComponentCard({
             {chat.first_user_message}
           </span>
         </div>
-        <UserWidget
-          createdAt={chat.created_at}
-          userAvatarUrl={chat.user_avatar_url}
-          userFullName={chat.user_full_name}
-        />
+        <div className="flex w-full items-center justify-between gap-2">
+          <Tooltip>
+            <TooltipTrigger>
+              <Badge className="hover:bg-primary">
+                <Paintbrush className="mr-1 size-3" />{" "}
+                <span className="first-letter:uppercase">
+                  {chat.last_assistant_message_theme}
+                </span>
+              </Badge>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Theme</p>
+            </TooltipContent>
+          </Tooltip>
+          <UserWidget
+            createdAt={chat.created_at}
+            userAvatarUrl={chat.user_avatar_url}
+            userFullName={chat.user_full_name}
+          />
+        </div>
       </div>
     </Link>
   );
