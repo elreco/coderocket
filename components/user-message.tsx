@@ -11,11 +11,12 @@ export function UserMessage({ children }: { children: string }) {
       const highlightedContent = hljs.highlightAuto(content).value;
       return (
         <div className="relative w-full overflow-x-auto">
-          <div className="min-w-[80ch] pr-10 text-sm">
-            <pre className="text-sm">
-              <code dangerouslySetInnerHTML={{ __html: highlightedContent }} />
-            </pre>
-          </div>
+          <pre className="min-w-[80ch] whitespace-pre-wrap break-words pr-10 text-sm">
+            <code
+              className="text-sm"
+              dangerouslySetInnerHTML={{ __html: highlightedContent }}
+            />
+          </pre>
         </div>
       );
     } else {
