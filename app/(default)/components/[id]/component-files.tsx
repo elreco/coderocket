@@ -227,7 +227,7 @@ export default function ComponentFiles({
         )}
 
         {message.role === "user" ? (
-          <div className="flex w-full flex-col">
+          <div className="flex w-full flex-col gap-2">
             {message.chats.user?.full_name && (
               <h2 className="text-lg font-semibold">
                 {message.chats.user.full_name}
@@ -243,7 +243,7 @@ export default function ComponentFiles({
             )}
           </div>
         ) : (
-          <div className="flex w-full flex-col gap-4">
+          <div className="flex w-full flex-col gap-2">
             <h2
               className={cn(
                 "text-lg font-semibold transition-all group-hover:text-primary",
@@ -264,7 +264,7 @@ export default function ComponentFiles({
                       remarkPlugins={remarkPlugins(true)}
                       rehypePlugins={rehypePlugins(true)}
                     >
-                      {chunk.content.trim()}
+                      {chunk.content}
                     </ReactMarkdown>
                   )}
                   {chunk.type === "artifact" && (
