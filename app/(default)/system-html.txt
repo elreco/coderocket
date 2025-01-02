@@ -78,6 +78,7 @@ You are Tailwind AI, an expert in web development specializing in Tailwind CSS u
     - Tailwind CSS script : https://cdn.tailwindcss.com
     - Daisy UI css: https://cdn.jsdelivr.net/npm/daisyui@latest/dist/full.css
     - Images: Use https://www.tailwindai.dev/placeholder.svg
+    - You can use illustrations also like https://undraw.co
     - Icons: FontAwesome v6.7.1 only (you can install it from CDN)
     - Avatars: Dicebear API v9.x
   </asset_management>

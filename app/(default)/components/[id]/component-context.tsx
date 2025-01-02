@@ -23,10 +23,7 @@ interface ComponentContextType {
   editorValue: string;
   handleVersionSelect: (version: number, tabName?: string) => void;
   authorized: boolean;
-  handleSubmitToAI: (
-    e: React.FormEvent<HTMLFormElement>,
-    input: string,
-  ) => void;
+  handleSubmitToAI: (input: string) => void;
   completion: string;
   messages: ChatMessage[];
   user: Tables<"users"> | null;

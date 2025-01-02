@@ -59,7 +59,6 @@ export default function ComponentCompletion({
   const { toast } = useToast();
   const router = useRouter();
   const pathname = usePathname();
-  const [input, setInput] = useState<string>("");
 
   const [messages, setMessages] = useState(fetchedMessages);
 
@@ -80,60 +79,62 @@ export default function ComponentCompletion({
 
   const [activeTab, setActiveTab] = useState("");
 
-  const { completion, isLoading, stop, complete, setCompletion } =
-    useCompletion({
-      api: "/api/components",
-      headers: {
-        "X-Custom-Header": JSON.stringify({
-          id: fetchedChat.id,
-          selectedVersion,
-        }),
-      },
-      streamProtocol: "text",
-      initialCompletion: lastAssistantMessage?.content,
-      experimental_throttle: 500,
-      onError: async (error: Error) => {
-        if (error.message === "payment-required") {
-          router.push("/pricing");
-          toast({
-            variant: "destructive",
-            title: "You have reached the limit of your free plan",
-            description: "Please upgrade to continue.",
-            duration: 5000,
-          });
-          return;
+  const {
+    completion,
+    isLoading,
+    stop,
+    complete,
+    setCompletion,
+    input,
+    setInput,
+  } = useCompletion({
+    api: "/api/components",
+    headers: {
+      "X-Custom-Header": JSON.stringify({
+        id: fetchedChat.id,
+        selectedVersion,
+      }),
+    },
+    streamProtocol: "text",
+    initialCompletion: lastAssistantMessage?.content,
+    experimental_throttle: 500,
+    onError: async (error: Error) => {
+      if (error.message === "payment-required") {
+        router.push("/pricing");
+        toast({
+          variant: "destructive",
+          title: "You have reached the limit of your free plan",
+          description: "Please upgrade to continue.",
+          duration: 5000,
+        });
+        return;
+      }
+      if (error.message) {
+        toast({
+          variant: "destructive",
+          title: "Something went wrong",
+          description: error.message,
+          duration: 5000,
+        });
+      }
+    },
+    onFinish: async () => {
+      const refreshedChatMessages = await refreshChatData();
+      if (refreshedChatMessages) {
+        const refreshedLastAssistantMessage = refreshedChatMessages.reduce(
+          (prev, current) => (prev.version > current.version ? prev : current),
+          { version: 0 },
+        );
+        if (refreshedLastAssistantMessage) {
+          handleVersionSelect(refreshedLastAssistantMessage.version);
         }
-        if (error.message) {
-          toast({
-            variant: "destructive",
-            title: "Something went wrong",
-            description: error.message,
-            duration: 5000,
-          });
-        }
-      },
-      onFinish: async () => {
-        const refreshedChatMessages = await refreshChatData();
-        if (refreshedChatMessages) {
-          const refreshedLastAssistantMessage = refreshedChatMessages.reduce(
-            (prev, current) =>
-              prev.version > current.version ? prev : current,
-            { version: 0 },
-          );
-          if (refreshedLastAssistantMessage) {
-            handleVersionSelect(refreshedLastAssistantMessage.version);
-          }
-        }
-        setCanvas(true);
-        setInput("");
-      },
-    });
+      }
+      setCanvas(true);
+      setInput("");
+    },
+  });
 
-  const handleSubmitToAI = (
-    e: React.FormEvent<HTMLFormElement>,
-    input: string,
-  ) => {
-    e.preventDefault();
+  const handleSubmitToAI = (input: string) => {
     setCompletion("");
     setCanvas(false);
     complete(input);

@@ -15,8 +15,8 @@ import { Container } from "@/components/container";
 import { AnimatedGridPattern } from "@/components/ui/animated-grid-pattern";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Spotlight } from "@/components/ui/spotlight";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Tooltip,
   TooltipContent,
@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { maxImageSize, maxPromptLength } from "@/utils/config";
+import { maxImageSize } from "@/utils/config";
 import { createClient } from "@/utils/supabase/client";
 
 import { createChat } from "./components/actions";
@@ -60,7 +60,7 @@ export default function Hero() {
   const [loadingVisibility, setLoadingVisibility] = useState(false);
   const [image, setImage] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const inputRef = useRef<HTMLInputElement | null>(null);
+  const inputRef = useRef<HTMLTextAreaElement | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -194,19 +194,41 @@ export default function Hero() {
         className="group relative z-10 flex w-full flex-col items-center justify-center gap-x-0 space-y-3 rounded-lg border bg-secondary p-3 text-center shadow-black/40 backdrop-blur-xl transition-all duration-300 xl:w-2/3"
         onSubmit={handleSubmit}
       >
-        <div className="flex w-full items-center">
-          <Terminal className="ml-1 size-4" />
-          <Input
-            ref={inputRef}
-            placeholder="Start generating a beautiful Tailwind component"
-            autoFocus={true}
-            required
-            value={prompt}
-            minLength={2}
-            maxLength={maxPromptLength}
-            onChange={(e) => setPrompt(e.target.value)}
-            className="bg-secondary pl-1 focus-visible:ring-0"
-          />
+        <div className="flex w-full flex-col items-end">
+          <div className="flex w-full items-start">
+            <Terminal className="mx-2 my-3 size-4" />
+            <Textarea
+              ref={inputRef}
+              placeholder="Start generating a beautiful Tailwind component"
+              autoFocus={true}
+              required
+              value={prompt}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  if (event.shiftKey) {
+                    return;
+                  }
+
+                  event.preventDefault();
+
+                  handleSubmit(event);
+                }
+              }}
+              translate="no"
+              onChange={(e) => setPrompt(e.target.value)}
+              className="max-h-[400px] min-h-[76px] bg-secondary pl-1 focus-visible:ring-0 focus-visible:ring-offset-0"
+            />
+          </div>
+          <div
+            className={cn(
+              "my-0.5 text-xs text-foreground transition-opacity",
+              prompt.length <= 3 && "opacity-0",
+            )}
+          >
+            Use <kbd className="rounded-sm bg-background p-1">Shift</kbd> +{" "}
+            <kbd className="rounded-sm bg-background p-1">Return</kbd> for a new
+            line
+          </div>
         </div>
         <div className="flex w-full flex-1 items-center justify-between">
           {image && (
@@ -229,6 +251,7 @@ export default function Hero() {
               </div>
             </div>
           )}
+
           <div className="flex w-full items-center justify-between">
             <div className="flex items-center space-x-2">
               <Tooltip>

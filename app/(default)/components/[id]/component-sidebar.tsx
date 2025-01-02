@@ -3,9 +3,8 @@ import { useEffect, useState, useRef } from "react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { maxPromptLength } from "@/utils/config";
 import { getRelativeDate } from "@/utils/date";
 import { getInitials } from "@/utils/helpers";
 
@@ -46,9 +45,9 @@ export default function ComponentSidebar() {
     return () => clearTimeout(timer);
   }, [messages]);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    handleSubmitToAI(e, input);
+    handleSubmitToAI(input);
     if (containerRef.current) {
       containerRef.current.scrollTop = containerRef.current.scrollHeight;
     }
@@ -160,23 +159,43 @@ export default function ComponentSidebar() {
                 </div>
               )}
             </div>
-            <div className="flex w-full items-center space-x-1 border-t p-2">
-              <Input
+            <div className="flex w-full flex-col items-start space-y-1 border-t p-2">
+              <Textarea
                 autoFocus
                 disabled={isLoading}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 minLength={2}
-                maxLength={maxPromptLength}
                 placeholder="Add a button, modify a div..."
                 required
-                className="border-background focus-visible:ring-0"
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    if (event.shiftKey) {
+                      return;
+                    }
+
+                    event.preventDefault();
+
+                    handleSubmit(event);
+                  }
+                }}
+                className="max-h-[400px] min-h-[76px] border-none bg-background pl-1 focus-visible:ring-0 focus-visible:ring-offset-0"
               />
+              <div
+                className={cn(
+                  "my-0.5 text-xs text-foreground transition-opacity",
+                  input.length <= 3 && "opacity-0",
+                )}
+              >
+                Use <kbd className="rounded-sm bg-secondary p-1">Shift</kbd> +{" "}
+                <kbd className="rounded-sm bg-secondary p-1">Return</kbd> for a
+                new line
+              </div>
               <Button
                 size="sm"
                 loading={isLoading}
                 type="submit"
-                className="flex items-center"
+                className="flex w-full items-center"
               >
                 <CircleFadingArrowUp className="size-3" />
                 <span>Iterate</span>

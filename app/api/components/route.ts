@@ -11,12 +11,7 @@ import {
 import { getSubscription } from "@/app/supabase-server";
 import { Tables } from "@/types_db";
 import { takeScreenshot } from "@/utils/capture-screenshot";
-import {
-  anthropicModel,
-  defaultTheme,
-  maxPromptLength,
-  storageUrl,
-} from "@/utils/config";
+import { anthropicModel, defaultTheme, storageUrl } from "@/utils/config";
 import { promptEnhancer } from "@/utils/prompt-enhancer";
 import { createClient } from "@/utils/supabase/server";
 
@@ -29,13 +24,10 @@ export async function POST(req: Request) {
     const { prompt }: { prompt: string } = await req.json();
     if (!prompt) throw new Error("No prompt");
 
-    const { messagesFromDatabase, imageUrl, contentMd } = await validateRequest(
-      id,
-      prompt,
-    );
+    const { messagesFromDatabase, imageUrl, contentMd } =
+      await validateRequest(id);
 
     const enhancedPrompt = await promptEnhancer(prompt);
-    console.log("enchanced prompt", enhancedPrompt);
     // Build messages for OpenAI
     const { messagesToOpenAI: messages } = await buildMessagesToOpenAi(
       messagesFromDatabase,
@@ -134,7 +126,7 @@ const buildMessagesToOpenAi = async (
   return { messagesToOpenAI };
 };
 
-const validateRequest = async (id: string, prompt: string) => {
+const validateRequest = async (id: string) => {
   const supabase = await createClient();
   // Fetch user
   const {
@@ -177,10 +169,6 @@ const validateRequest = async (id: string, prompt: string) => {
     messagesFromDatabase.filter((m) => m.role === "assistant")?.length > 200
   ) {
     throw new Error("You can't have more than 200 versions");
-  }
-
-  if (prompt.length > maxPromptLength) {
-    throw new Error("Prompt length is too long");
   }
 
   // Fetch HTML content

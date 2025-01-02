@@ -1,7 +1,6 @@
 "use server";
 
 import { getSubscription } from "@/app/supabase-server";
-import { maxPromptLength } from "@/utils/config";
 import { createClient } from "@/utils/supabase/server";
 
 export const fetchChatById = async (id: string) => {
@@ -153,16 +152,6 @@ export const createChat = async (prompt: string, formData: FormData) => {
       error: {
         title: "You have reached the limit of your free plan",
         description: "Please upgrade to continue.",
-      },
-    };
-  }
-
-  if (prompt.length > maxPromptLength) {
-    return {
-      error: {
-        title: "Prompt is too long",
-        description:
-          "Tailwind AI is meant to generate components from simple instructions.",
       },
     };
   }
