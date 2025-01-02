@@ -364,7 +364,9 @@ export default function ComponentFiles({
       <p
         className={cn(
           "mt-2 text-right text-xs font-semibold text-primary",
-          isSelectedVersion && "text-foreground",
+          isSelectedVersion &&
+            message.role === "assistant" &&
+            "text-foreground",
         )}
       >
         {getRelativeDate(message.created_at)}
