@@ -14,6 +14,7 @@ export const fetchChatById = async (id: string) => {
     created_at,
     is_private,
     is_featured,
+    framework,
     messages,
     prompt_image,
     user_id,

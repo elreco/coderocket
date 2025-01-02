@@ -318,6 +318,40 @@ export default function ComponentCompletion({
     chatId: fetchedChat.id,
   };
 
+  useEffect(() => {
+    const channel = supabase
+      .channel("schema-db-changes")
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "messages",
+          filter: `chat_id=eq.${fetchedChat.id}`,
+        },
+        async (payload) => {
+          if (payload.old?.screenshot !== payload.new.screenshot) {
+            setMessages((prevMessages) =>
+              prevMessages.map((message) => {
+                if (message.id === payload.new.id) {
+                  return {
+                    ...message,
+                    screenshot: payload.new.screenshot,
+                  };
+                }
+                return message;
+              }),
+            );
+          }
+        },
+      )
+      .subscribe();
+
+    return () => {
+      channel.unsubscribe();
+    };
+  }, [fetchedChat.id]);
+
   return (
     <ComponentContext.Provider value={contextValue}>
       <Container className="!p-0 lg:overflow-hidden">
