@@ -154,7 +154,7 @@ export default function ComponentFiles({
         }
       }
     }
-  }, [isSelectedVersion, messages, message.version]);
+  }, [isSelectedVersion, messages.length, message.version]);
 
   return (
     <div
