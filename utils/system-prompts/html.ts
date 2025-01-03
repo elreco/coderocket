@@ -61,7 +61,7 @@ export const htmlSystemPrompt = (
     </code_generation>
     <library_usage>
       - Always try to use classes from the Daisy UI or Tailwind CSS library, unless it's impossible.
-      - Use Daisy UI CSS variables for colors in scripts (e.g., \`getComputedStyle(document.documentElement).getPropertyValue('--p')\`).
+      - Use Daisy UI CSS variables for colors in scripts. Keep in mind that you are in an iframe and daisy ui and tailwind css are loaded from a CDN.
     </library_usage>
     <file_management>
       - If generating additional files, add a link to the main file in the additional files and add links to the additional files in the main file. Always use relative paths (e.g., ./about.html, ./index.html, etc.).
@@ -81,7 +81,7 @@ export const htmlSystemPrompt = (
   <asset_management>
     - Tailwind CSS script : https://cdn.tailwindcss.com
     - Daisy UI css: https://cdn.jsdelivr.net/npm/daisyui@latest/dist/full.css
-    - Images: Use https://www.tailwindai.dev/placeholder.svg
+    - Images: Ensure the image exists and is accessible if using an external image library, or use a placeholder: https://www.tailwindai.dev/placeholder.svg
     - You can use illustrations also like https://undraw.co
     - Icons: FontAwesome v6.7.1 only (you can install it from CDN)
     - Avatars: Dicebear API v9.x
