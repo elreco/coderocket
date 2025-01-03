@@ -17,6 +17,7 @@ type GetComponentsReturnType = {
   first_user_message: string;
   last_assistant_message: string;
   last_assistant_message_theme: string;
+  slug: string;
 };
 
 export default function ComponentCard({
@@ -27,7 +28,7 @@ export default function ComponentCard({
   return (
     <Link
       key={chat.chat_id}
-      href={`/components/${chat.chat_id}`}
+      href={`/components/${chat.slug || chat.chat_id}`}
       className="group flex flex-col rounded-lg border transition-all duration-300 hover:border-primary hover:shadow-2xl hover:shadow-primary/35"
     >
       <div className="relative flex overflow-hidden text-clip rounded-t-lg">

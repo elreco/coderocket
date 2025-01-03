@@ -18,6 +18,7 @@ export type Database = {
           is_private: boolean | null;
           messages: Json;
           prompt_image: string | null;
+          slug: string | null;
           user_id: string;
         };
         Insert: {
@@ -28,6 +29,7 @@ export type Database = {
           is_private?: boolean | null;
           messages: Json;
           prompt_image?: string | null;
+          slug?: string | null;
           user_id: string;
         };
         Update: {
@@ -38,6 +40,7 @@ export type Database = {
           is_private?: boolean | null;
           messages?: Json;
           prompt_image?: string | null;
+          slug?: string | null;
           user_id?: string;
         };
         Relationships: [
@@ -323,6 +326,22 @@ export type Database = {
           first_user_message: string;
           last_assistant_message: string;
           last_assistant_message_theme: string;
+        }[];
+      };
+      get_components_with_theme_and_slug: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          chat_id: string;
+          user_id: string;
+          user_full_name: string;
+          user_avatar_url: string;
+          is_featured: boolean;
+          is_private: boolean;
+          created_at: string;
+          first_user_message: string;
+          last_assistant_message: string;
+          last_assistant_message_theme: string;
+          slug: string;
         }[];
       };
     };

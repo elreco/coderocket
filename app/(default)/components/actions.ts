@@ -1,11 +1,20 @@
 "use server";
 
+import { nanoid } from "nanoid";
+
 import { getSubscription } from "@/app/supabase-server";
 import { defaultTheme } from "@/utils/config";
 import { createClient } from "@/utils/supabase/server";
 
-export const fetchChatById = async (id: string) => {
+export const fetchChatById = async (idOrSlug: string) => {
   const supabase = await createClient();
+
+  // Vérifier si idOrSlug est un UUID
+  const isUuid =
+    /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(
+      idOrSlug,
+    );
+
   const chatsWithUser = supabase
     .from("chats")
     .select(
@@ -18,10 +27,11 @@ export const fetchChatById = async (id: string) => {
     messages,
     prompt_image,
     user_id,
+    slug,
     user:users (*)
 `,
     )
-    .eq("id", id)
+    .eq(isUuid ? "id" : "slug", idOrSlug)
     .single();
 
   const { data, error } = await chatsWithUser;
@@ -184,6 +194,8 @@ export const createChat = async (prompt: string, formData: FormData) => {
 
     imageUrl = imageData?.path;
   }
+
+  const uniqueSlug = await generateUniqueNanoid();
   const { data } = await supabase
     .from("chats")
     .insert([
@@ -192,6 +204,7 @@ export const createChat = async (prompt: string, formData: FormData) => {
         ...(imageUrl && { prompt_image: imageUrl }),
         is_private,
         messages: [],
+        slug: uniqueSlug,
       },
     ])
     .select()
@@ -213,7 +226,7 @@ export const createChat = async (prompt: string, formData: FormData) => {
     version: -1,
   });
 
-  return { id: data.id };
+  return { slug: data.slug };
 };
 
 export const getChatsFromUser = async () => {
@@ -223,7 +236,7 @@ export const getChatsFromUser = async () => {
 
   if (!user) throw Error("Could not get user");
   const { data } = await supabase
-    .rpc("get_components_with_theme")
+    .rpc("get_components_with_theme_and_slug")
     .eq("user_id", user.id)
     .limit(100);
 
@@ -234,7 +247,7 @@ export const getFeaturedChats = async () => {
   const supabase = await createClient();
 
   const { data } = await supabase
-    .rpc("get_components_with_theme")
+    .rpc("get_components_with_theme_and_slug")
     .is("is_featured", true)
     .limit(50);
   return data;
@@ -244,9 +257,30 @@ export const getAllPublicChats = async () => {
   const supabase = await createClient();
 
   const { data } = await supabase
-    .rpc("get_components_with_theme")
+    .rpc("get_components_with_theme_and_slug")
     .is("is_private", false)
     .limit(24);
 
   return data;
+};
+
+export const generateUniqueNanoid = async () => {
+  const supabase = await createClient();
+  let uniqueId;
+  let isUnique = false;
+
+  while (!isUnique) {
+    uniqueId = nanoid(11);
+    const { data } = await supabase
+      .from("chats")
+      .select("id")
+      .eq("slug", uniqueId)
+      .single();
+
+    if (!data) {
+      isUnique = true;
+    }
+  }
+
+  return uniqueId;
 };

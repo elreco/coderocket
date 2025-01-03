@@ -18,18 +18,19 @@ import {
 import ComponentCompletion from "./component-completion";
 
 type Props = {
-  params: Promise<{ id: string }>;
+  params: Promise<{ slug: string }>;
 };
 
 export async function generateMetadata(
   { params }: Props,
   parent: ResolvingMetadata,
 ): Promise<Metadata> {
-  const { id } = await params;
+  const { slug } = await params;
+  const chat = await fetchChatById(slug);
 
-  const lastAssistantMessage = await fetchLastAssistantMessageByChatId(id);
+  const lastAssistantMessage = await fetchLastAssistantMessageByChatId(chat.id);
 
-  const firstUserMessage = await fetchFirstUserMessageByChatId(id);
+  const firstUserMessage = await fetchFirstUserMessageByChatId(chat.id);
 
   // optionally access and extend (rather than replace) parent metadata
   const previousImages = (await parent).openGraph?.images || [];
@@ -48,19 +49,20 @@ export async function generateMetadata(
 }
 
 export default async function Components({ params }: Props) {
-  const { id } = await params;
+  const { slug } = await params;
 
   const supabase = await createClient();
   const userData = await supabase.auth.getUser();
   const connectedUser = userData.data.user;
-  const chat = await fetchChatById(id);
+  const chat = await fetchChatById(slug);
   const isNotFound = chat.is_private && chat.user?.id !== connectedUser?.id;
+
   if (!chat || isNotFound) {
     return notFound();
   }
-  const lastAssistantMessage = await fetchLastAssistantMessageByChatId(id);
-  const lastUserMessage = await fetchLastUserMessageByChatId(id);
-  const messages = await fetchMessagesByChatId(id);
+  const lastAssistantMessage = await fetchLastAssistantMessageByChatId(chat.id);
+  const lastUserMessage = await fetchLastUserMessageByChatId(chat.id);
+  const messages = await fetchMessagesByChatId(chat.id);
 
   if (!lastUserMessage || !messages) {
     return notFound();

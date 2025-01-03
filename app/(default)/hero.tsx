@@ -106,7 +106,7 @@ export default function Hero() {
     }
     formData.append("isVisible", isVisible.toString());
     formData.append("theme", selectedTheme);
-    const { id, error } = await createChat(prompt, formData);
+    const { slug, error } = await createChat(prompt, formData);
     if (error) {
       toast({
         variant: "destructive",
@@ -117,7 +117,7 @@ export default function Hero() {
       setLoading(false);
       return;
     }
-    router.push(`/components/${id}`);
+    router.push(`/components/${slug}`);
     return;
   };
 
