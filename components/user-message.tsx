@@ -5,7 +5,8 @@ import "highlight.js/styles/atom-one-dark.css";
 export function UserMessage({ children }: { children: string }) {
   const renderContent = (content: string) => {
     const isCode =
-      /<\s*\/?\s*\w+/.test(content) || /function|const|let|var/.test(content);
+      /<\s*\/?\s*\w+/.test(content) ||
+      (/\b(function|const|let|var)\b/.test(content) && /\{|\}/.test(content));
 
     if (isCode) {
       const highlightedContent = hljs.highlightAuto(content).value;
@@ -20,9 +21,7 @@ export function UserMessage({ children }: { children: string }) {
         </div>
       );
     } else {
-      return (
-        <div className="relative w-full overflow-x-auto text-sm">{content}</div>
-      );
+      return <p className="whitespace-pre-line text-sm">{content}</p>;
     }
   };
 
