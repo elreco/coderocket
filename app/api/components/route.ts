@@ -12,7 +12,7 @@ import { Tables } from "@/types_db";
 import { takeScreenshot } from "@/utils/capture-screenshot";
 import { extractDataTheme } from "@/utils/completion-parser";
 import { anthropicModel, storageUrl } from "@/utils/config";
-import { promptEnhancer } from "@/utils/prompt-enhancer";
+// import { promptEnhancer } from "@/utils/prompt-enhancer";
 import { createClient } from "@/utils/supabase/server";
 import { htmlSystemPrompt } from "@/utils/system-prompts/html";
 
@@ -28,11 +28,11 @@ export async function POST(req: Request) {
     const { messagesFromDatabase, imageUrl, subscription } =
       await validateRequest(id);
 
-    const enhancedPrompt = await promptEnhancer(prompt);
+    // const enhancedPrompt = await promptEnhancer(prompt);
     // Build messages for OpenAI
     const { messagesToOpenAI: messages } = await buildMessagesToOpenAi(
       messagesFromDatabase,
-      enhancedPrompt,
+      prompt,
       imageUrl,
       selectedVersion,
     );
