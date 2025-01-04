@@ -44,7 +44,7 @@ export const htmlSystemPrompt = (
       - Keep the theme consistent between generations.
       - You can change the theme according to the user's request.
       - Ensure color consistency across components: if the user requests a color change, you can use the best theme that fit the user's request and ask the user to select the theme if they want to.
-      - If the user asks for custom colors, you can use the daisy ui theme generator to generate a custom theme.
+      - Always use the existing themes, unless the user requests custom colors. If the user requests custom colors, you can use the Daisy UI theme generator to generate a custom theme.
     </theme_management>
     <layout_consistency>
       - Components must occupy the full width/height of the screen for body and html.
