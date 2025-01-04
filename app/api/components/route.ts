@@ -39,7 +39,9 @@ export async function POST(req: Request) {
     const stream = streamText({
       messages,
       model: anthropicModel(
-        subscription ? "claude-3-5-sonnet-20240620" : "claude-3-5-haiku-latest",
+        subscription
+          ? "claude-3-5-sonnet-20240620"
+          : "claude-3-5-sonnet-20240620",
       ),
       system: htmlSystemPrompt(
         messagesFromDatabase.length === 1

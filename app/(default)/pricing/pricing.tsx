@@ -114,7 +114,7 @@ export default function Pricing({ user, products, subscription }: Props) {
                   </p>
                   <p className="mt-4 flex items-center text-sm font-medium ">
                     <Check className="mr-2 size-4 text-emerald-500" />
-                    Powerful AI
+                    AI Full Power
                   </p>
                   <p className="mt-4 flex items-center text-sm font-medium ">
                     <Check className="mr-2 size-4 text-emerald-500" />
