@@ -23,7 +23,7 @@ export const promptEnhancer = async (prompt: string): Promise<string> => {
       `,
       },
     ],
-    model: anthropicModel("claude-3-5-sonnet-20240620"),
+    model: anthropicModel("claude-3-5-haiku-latest"),
     system: contentMd,
     toolChoice: "none",
     maxTokens: 8192,

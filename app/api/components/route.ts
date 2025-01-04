@@ -25,7 +25,8 @@ export async function POST(req: Request) {
     const { prompt }: { prompt: string } = await req.json();
     if (!prompt) throw new Error("No prompt");
 
-    const { messagesFromDatabase, imageUrl } = await validateRequest(id);
+    const { messagesFromDatabase, imageUrl, subscription } =
+      await validateRequest(id);
 
     const enhancedPrompt = await promptEnhancer(prompt);
     // Build messages for OpenAI
@@ -37,7 +38,9 @@ export async function POST(req: Request) {
     );
     const stream = streamText({
       messages,
-      model: anthropicModel("claude-3-5-sonnet-latest"),
+      model: anthropicModel(
+        subscription ? "claude-3-5-sonnet-20240620" : "claude-3-5-haiku-latest",
+      ),
       system: htmlSystemPrompt(
         messagesFromDatabase.length === 1
           ? messagesFromDatabase[0]?.theme
@@ -178,6 +181,7 @@ const validateRequest = async (id: string) => {
   return {
     messagesFromDatabase,
     imageUrl,
+    subscription,
   };
 };
 
