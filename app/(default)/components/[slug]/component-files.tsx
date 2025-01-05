@@ -2,7 +2,6 @@
 
 import { Paintbrush, Trash2 } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
-import ReactMarkdown from "react-markdown";
 
 import {
   AlertDialog,
@@ -38,8 +37,6 @@ import { storageUrl } from "@/utils/config";
 import { getRelativeDate } from "@/utils/date";
 import { getFileConfig } from "@/utils/file-extensions";
 import { getInitials, formatFileSize } from "@/utils/helpers";
-import { rehypePlugins } from "@/utils/markdown";
-import { remarkPlugins } from "@/utils/markdown";
 
 import { deleteVersionByMessageId } from "./actions";
 import { useComponentContext } from "./component-context";
@@ -259,13 +256,9 @@ export default function ComponentFiles({
               chunks.map((chunk, index) => (
                 <div key={index}>
                   {chunk.type === "text" && (
-                    <ReactMarkdown
-                      className="markdown text-sm"
-                      remarkPlugins={remarkPlugins(true)}
-                      rehypePlugins={rehypePlugins(true)}
-                    >
+                    <p className="whitespace-pre-line text-sm">
                       {chunk.content}
-                    </ReactMarkdown>
+                    </p>
                   )}
                   {chunk.type === "artifact" && (
                     <div className="w-full space-y-2">

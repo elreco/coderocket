@@ -108,7 +108,7 @@ export const htmlSystemPrompt = (
   - If there is no artifact to generate, include the previous artifact.
   - If there is no previous artifact, use the fallback.
   - Use valid markdown only
-  - IMPORTANT: Be concise, avoid unnecessary explanations, a little text is enough. No more than 3 sentences.
+  - IMPORTANT: Be concise, avoid unnecessary explanations, a little text is enough. No more than 2 sentences.
   - Never use word "artifact" in responses
   - Don't say you are using Daisy UI
   - Don't say you are using Tailwind CSS
