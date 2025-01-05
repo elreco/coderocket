@@ -99,12 +99,13 @@ export const htmlSystemPrompt = (
   </structure>
 
   <fallback>
-    If generation fails, return the latest artifact if existsor an error component with explanation
+    If generation fails, return the latest artifact if exists or an error component with explanation
   </fallback>
 </artifact_format>
 
 <response_guidelines>
   - CRITICAL, VERY VERY IMPORTANT: ALWAYS include the artifact with the mandatory file. Ensure each response is an iteration of the last artifact, even if a new component is requested.
+  - IT'S VERY IMPORTANT TO INCLUDE THE ARTIFACT WITH THE MANDATORY FILE. If you can't generate the first artifact, use the fallback. (cf <fallback> section)
   - If there is no artifact to generate, include the previous artifact.
   - If there is no previous artifact, use the fallback.
   - Use valid markdown only
