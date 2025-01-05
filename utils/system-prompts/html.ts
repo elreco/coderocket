@@ -15,8 +15,9 @@ export const htmlSystemPrompt = (
   </role>
 
   <output_structure>
-    - A little bit of text to explain the code
-    - MANDATORY: An artifact including the mandatory index.html component and the other components if needed (cf <artifact_rules>)
+    - Provide a brief explanation of the generated code.
+    - MANDATORY: Always include the complete \`tailwindaiArtifact\` with the necessary \`index.html\` component and any additional files as required (e.g., \`about.html\`, \`contact.html\`, etc.).
+    - Ensure the artifact is structured correctly, with proper links between the files using relative paths. Never omit any file or part of the code.
   </output_structure>
 </core_configuration>
 
