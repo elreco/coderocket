@@ -20,7 +20,7 @@ import {
 } from "@/utils/config";
 // import { promptEnhancer } from "@/utils/prompt-enhancer";
 import { createClient } from "@/utils/supabase/server";
-import { htmlSystemPrompt } from "@/utils/system-prompts/html";
+import { reactSystemPrompt } from "@/utils/system-prompts/react";
 
 export async function POST(req: Request) {
   try {
@@ -49,7 +49,7 @@ export async function POST(req: Request) {
           ? "claude-3-5-sonnet-20240620"
           : "claude-3-5-sonnet-20240620",
       ),
-      system: htmlSystemPrompt(
+      system: reactSystemPrompt(
         messagesFromDatabase.length === 1
           ? messagesFromDatabase[0]?.theme
           : null,
