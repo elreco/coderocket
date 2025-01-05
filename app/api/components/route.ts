@@ -11,7 +11,12 @@ import { getSubscription } from "@/app/supabase-server";
 import { Tables } from "@/types_db";
 import { takeScreenshot } from "@/utils/capture-screenshot";
 import { extractDataTheme } from "@/utils/completion-parser";
-import { anthropicModel, storageUrl } from "@/utils/config";
+import {
+  anthropicModel,
+  MAX_GENERATIONS,
+  MAX_ITERATIONS,
+  storageUrl,
+} from "@/utils/config";
 // import { promptEnhancer } from "@/utils/prompt-enhancer";
 import { createClient } from "@/utils/supabase/server";
 import { htmlSystemPrompt } from "@/utils/system-prompts/html";
@@ -156,13 +161,24 @@ const validateRequest = async (id: string) => {
 
   // Check subscription
   const subscription = await getSubscription();
+  // Check if user has generated more than MAX_GENERATIONS components
+  const generations = messagesFromDatabase.filter(
+    (m) => m.role === "assistant",
+  ).length;
+  if (!subscription && generations > MAX_GENERATIONS) {
+    throw new Error("payment-required", {
+      cause: `You need to be subscribed to generate more than ${MAX_GENERATIONS} components`,
+    });
+  }
+
   if (
     !subscription &&
     messagesFromDatabase &&
-    messagesFromDatabase.filter((m) => m.role === "assistant")?.length > 3
+    messagesFromDatabase.filter((m) => m.role === "assistant")?.length >=
+      MAX_ITERATIONS
   ) {
     throw new Error("payment-required", {
-      cause: "You need to be subscribed to use this feature",
+      cause: `You need to be subscribed to generate more than ${MAX_ITERATIONS} versions`,
     });
   }
 

@@ -95,8 +95,8 @@ export default function ComponentSidebar({
           <div className="flex items-center">
             <Avatar className="mr-2 size-10">
               <AvatarImage
-                src={user?.avatar_url || ""}
-                alt={user?.full_name || ""}
+                src={user?.avatar_url || undefined}
+                alt={user?.full_name || undefined}
               />
               <AvatarFallback className="bg-background">
                 <span className="text-xs">

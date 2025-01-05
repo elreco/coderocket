@@ -1,5 +1,4 @@
 import { Paintbrush, TerminalIcon } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 
 import { Badge } from "./ui/badge";
@@ -33,12 +32,10 @@ export default function ComponentCard({
     >
       <div className="relative flex overflow-hidden text-clip rounded-t-lg">
         <div className="relative aspect-video size-full transition duration-300 md:group-hover:scale-110">
-          <Image
-            src={chat.last_assistant_message}
-            fill
-            sizes="600px"
+          <img
+            src={chat.last_assistant_message || undefined}
             className="scale-105 object-cover"
-            alt=""
+            alt={chat.last_assistant_message || undefined}
           />
         </div>
       </div>

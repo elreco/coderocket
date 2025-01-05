@@ -1,13 +1,14 @@
 "use client";
 
 import { User } from "@supabase/supabase-js";
-import { Check } from "lucide-react";
+import { Check, XIcon } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Database } from "@/types_db";
+import { MAX_GENERATIONS, MAX_ITERATIONS } from "@/utils/config";
 import { postData } from "@/utils/helpers";
 import { getStripe } from "@/utils/stripe-client";
 
@@ -75,7 +76,47 @@ export default function Pricing({ user, products, subscription }: Props) {
   if (products.length === 1)
     return (
       <div className="flex items-center">
-        <div className="my-4 size-full items-center space-y-4 sm:my-4 sm:grid sm:grid-cols-2 sm:gap-6 sm:space-y-0 lg:mx-auto lg:max-w-4xl xl:mx-0 xl:max-w-none xl:grid-cols-3 xl:space-y-0">
+        <div className="my-4 size-full items-center space-y-4 sm:my-4 sm:grid sm:grid-cols-2 sm:gap-6 sm:space-y-0 lg:mx-auto lg:max-w-4xl xl:mx-0 xl:max-w-none xl:grid-cols-4 xl:space-y-0">
+          <div className="flex h-full flex-col divide-y divide-zinc-600 rounded-lg border bg-card p-3">
+            <div className="grow p-3">
+              <p>
+                <span className="text-5xl font-bold text-primary">Free</span>
+              </p>
+              <p className="mt-4 ">
+                Experience the full potential of Tailwind AI in your workflow
+              </p>
+              <p className="mt-4 flex items-center text-sm font-medium ">
+                <Check className="mr-2 size-4 text-emerald-500" />{" "}
+                {MAX_GENERATIONS} component
+              </p>
+              <p className="mt-4 flex items-center text-sm font-medium ">
+                <Check className="mr-2 size-4 text-emerald-500" />{" "}
+                {MAX_ITERATIONS} versions
+              </p>
+              <p className="mt-4 flex items-center text-sm font-medium ">
+                <XIcon className="mr-2 size-4 text-red-500" /> Generate with
+                Image
+              </p>
+              <p className="mt-4 flex items-center text-sm font-medium ">
+                <XIcon className="mr-2 size-4 text-red-500" /> AI Full Power
+              </p>
+              <p className="mt-4 flex items-center text-sm font-medium ">
+                <XIcon className="mr-2 size-4 text-red-500" /> Extended support
+              </p>
+            </div>
+            <Button
+              variant="default"
+              type="button"
+              disabled={false}
+              onClick={() =>
+                user ? router.push("/account") : router.push("/register")
+              }
+              className="mt-12 block w-full"
+            >
+              {user ? "Manage" : "Sign up"}
+            </Button>
+          </div>
+
           {products[0].prices?.map((price) => {
             const priceString =
               price.unit_amount &&
@@ -88,9 +129,9 @@ export default function Pricing({ user, products, subscription }: Props) {
             return (
               <div
                 key={price.interval}
-                className="divide-y divide-zinc-600 rounded-lg border bg-card"
+                className="flex h-full flex-col divide-y divide-zinc-600 rounded-lg border bg-card p-3"
               >
-                <div className="p-6">
+                <div className="grow p-3">
                   <p>
                     <span className="text-5xl font-bold text-primary">
                       {priceString}
@@ -102,15 +143,15 @@ export default function Pricing({ user, products, subscription }: Props) {
                   <p className="mt-4 ">{price.description}</p>
                   <p className="mt-4 flex items-center text-sm font-medium ">
                     <Check className="mr-2 size-4 text-emerald-500" /> Unlimited
-                    credits
+                    components
                   </p>
                   <p className="mt-4 flex items-center text-sm font-medium ">
                     <Check className="mr-2 size-4 text-emerald-500" /> Unlimited
                     versions
                   </p>
                   <p className="mt-4 flex items-center text-sm font-medium ">
-                    <Check className="mr-2 size-4 text-emerald-500" /> Fast
-                    generation
+                    <Check className="mr-2 size-4 text-emerald-500" /> Generate
+                    with Image
                   </p>
                   <p className="mt-4 flex items-center text-sm font-medium ">
                     <Check className="mr-2 size-4 text-emerald-500" />
@@ -120,19 +161,19 @@ export default function Pricing({ user, products, subscription }: Props) {
                     <Check className="mr-2 size-4 text-emerald-500" />
                     Extended support
                   </p>
-                  <Button
-                    variant="default"
-                    type="button"
-                    disabled={false}
-                    loading={priceIdLoading === price.id}
-                    onClick={() => handleCheckout(price)}
-                    className="mt-12 block w-full"
-                  >
-                    {products[0].name === subscription?.prices?.products?.name
-                      ? "Manage"
-                      : "Subscribe"}
-                  </Button>
                 </div>
+                <Button
+                  variant="default"
+                  type="button"
+                  disabled={false}
+                  loading={priceIdLoading === price.id}
+                  onClick={() => handleCheckout(price)}
+                  className="block w-full"
+                >
+                  {products[0].name === subscription?.prices?.products?.name
+                    ? "Manage"
+                    : "Subscribe"}
+                </Button>
               </div>
             );
           })}

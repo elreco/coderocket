@@ -62,8 +62,8 @@ export function NavUser({
             >
               <Avatar className="size-8 rounded-lg transition-all duration-300 group-hover:border-primary">
                 <AvatarImage
-                  src={user.avatar_url || ""}
-                  alt={user.full_name || ""}
+                  src={user.avatar_url || undefined}
+                  alt={user.full_name || undefined}
                 />
                 <AvatarFallback className="rounded-lg bg-background">
                   {getInitials(user.full_name || "")}
@@ -88,8 +88,8 @@ export function NavUser({
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="size-8 rounded-lg">
                   <AvatarImage
-                    src={user.avatar_url || ""}
-                    alt={user.full_name || ""}
+                    src={user.avatar_url || undefined}
+                    alt={user.full_name || undefined}
                   />
                   <AvatarFallback className="rounded-lg">
                     {getInitials(user.full_name || "")}

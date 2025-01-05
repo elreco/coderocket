@@ -24,7 +24,7 @@ export function UserWidget({
           </p>
         </div>
         <Avatar>
-          <AvatarImage src={userAvatarUrl} />
+          <AvatarImage src={userAvatarUrl || undefined} />
           <AvatarFallback className="bg-background">
             {userFullName ? getInitials(userFullName) : "?"}
           </AvatarFallback>

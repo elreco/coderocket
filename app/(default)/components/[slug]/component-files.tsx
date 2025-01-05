@@ -212,8 +212,8 @@ export default function ComponentFiles({
         ) : (
           <Avatar className="mr-2 size-10">
             <AvatarImage
-              src={message.chats.user.avatar_url || ""}
-              alt={message.chats.user.full_name || ""}
+              src={message.chats.user.avatar_url || undefined}
+              alt={message.chats.user.full_name || undefined}
             />
             <AvatarFallback className="bg-background">
               <span className="text-xs">
@@ -340,7 +340,7 @@ export default function ComponentFiles({
               ))}
             {message.screenshot && (
               <img
-                src={message.screenshot}
+                src={message.screenshot || undefined}
                 alt="screenshot"
                 className={cn(
                   "size-full max-w-full cursor-pointer rounded-md border transition-all duration-300",
