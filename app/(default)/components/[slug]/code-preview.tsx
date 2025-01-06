@@ -14,6 +14,7 @@ import { useRef, useEffect } from "react";
 import { useCopyToClipboard } from "usehooks-ts";
 
 import RenderHtmlComponent from "@/app/(content)/render-html-component";
+import RenderReactComponent from "@/app/(content)/render-react-component";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";

@@ -19,7 +19,10 @@ export const ensureCDNsPresent = (htmlContent: string): string => {
   return updatedContent;
 };
 
-export const handleAIcompletionForHTML = (completion: string) => {
+export const handleAIcompletionForHTML = (
+  completion: string,
+  isHtml: boolean = false,
+) => {
   if (!completion) return [];
 
   const filesArray: { name: string | null; content: string }[] = [];
@@ -58,7 +61,9 @@ export const handleAIcompletionForHTML = (completion: string) => {
       .replace(/^\n/, "");
 
     // Assurez-vous que les CDN sont présents
-    content = ensureCDNsPresent(content);
+    if (isHtml) {
+      content = ensureCDNsPresent(content);
+    }
 
     filesArray.push({
       name: fileName || null,
