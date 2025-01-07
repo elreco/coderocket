@@ -1,19 +1,32 @@
 import { screenshotApiUrl } from "./config";
 import { createClient } from "./supabase/server";
 
-export async function captureScreenshot(url: string) {
+export async function captureScreenshot(url: string, maxRetries = 5) {
   const apiUrl = `${screenshotApiUrl}${encodeURIComponent(url)}`;
-  try {
-    const response = await fetch(apiUrl);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch screenshot: ${response.statusText}`);
+  let lastError: Error | null = null;
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const response = await fetch(apiUrl);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch screenshot: ${response.statusText}`);
+      }
+      const arrayBuffer = await response.arrayBuffer();
+      return Buffer.from(arrayBuffer);
+    } catch (error) {
+      lastError = error as Error;
+      console.error(`Tentative ${attempt}/${maxRetries} échouée:`, error);
+
+      if (attempt < maxRetries) {
+        // Attendre un délai croissant entre chaque tentative (exponential backoff)
+        await new Promise((resolve) => setTimeout(resolve, attempt * 1000));
+        continue;
+      }
     }
-    const arrayBuffer = await response.arrayBuffer();
-    return Buffer.from(arrayBuffer);
-  } catch (error) {
-    console.error("Error taking screenshot:", error);
-    throw error;
   }
+
+  console.error(`Échec après ${maxRetries} tentatives`);
+  throw lastError;
 }
 
 export const takeScreenshot = async (
