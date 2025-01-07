@@ -1,8 +1,6 @@
 import { screenshotApiUrl } from "./config";
 import { createClient } from "./supabase/server";
 
-export const maxDuration = 300;
-
 export async function captureScreenshot(url: string, maxRetries = 5) {
   const apiUrl = `${screenshotApiUrl}${encodeURIComponent(url)}`;
   let lastError: Error | null = null;

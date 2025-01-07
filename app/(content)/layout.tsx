@@ -1,3 +1,4 @@
+export const maxDuration = 300;
 import { PropsWithChildren } from "react";
 
 import "@/styles/chrome-bug.css";

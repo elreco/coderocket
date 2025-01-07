@@ -33,9 +33,15 @@ export default function ComponentCard({
       <div className="relative flex overflow-hidden text-clip rounded-t-lg">
         <div className="relative aspect-video size-full transition duration-300 md:group-hover:scale-110">
           <img
-            src={chat.last_assistant_message || undefined}
+            src={
+              chat.last_assistant_message ||
+              "https://www.tailwindai.dev/placeholder.svg"
+            }
             className="scale-105 object-cover"
-            alt={chat.last_assistant_message || undefined}
+            alt={
+              chat.last_assistant_message ||
+              "Placeholder image for the component"
+            }
           />
         </div>
       </div>
