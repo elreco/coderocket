@@ -37,7 +37,7 @@ export default function ComponentCard({
               chat.last_assistant_message ||
               "https://www.tailwindai.dev/placeholder.svg"
             }
-            className="scale-105 object-cover"
+            className="size-full scale-105 object-cover"
             alt={
               chat.last_assistant_message ||
               "Placeholder image for the component"
