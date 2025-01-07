@@ -1,6 +1,8 @@
 import { screenshotApiUrl } from "./config";
 import { createClient } from "./supabase/server";
 
+export const maxDuration = 300;
+
 export async function captureScreenshot(url: string, maxRetries = 5) {
   const apiUrl = `${screenshotApiUrl}${encodeURIComponent(url)}`;
   let lastError: Error | null = null;
@@ -42,7 +44,6 @@ export const takeScreenshot = async (
     .from("chat-images")
     .upload(`${chatId}/${version}-${theme}`, screenshot, {
       contentType: "image/png",
-      cacheControl: "3600",
       upsert: true,
     });
   if (error) {

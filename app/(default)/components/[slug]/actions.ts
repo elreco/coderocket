@@ -2,6 +2,8 @@
 
 import { after } from "next/server";
 
+export const maxDuration = 300;
+
 import { getSubscription } from "@/app/supabase-server";
 import { takeScreenshot } from "@/utils/capture-screenshot";
 import { createClient } from "@/utils/supabase/server";
