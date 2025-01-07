@@ -35,6 +35,8 @@ export const htmlSystemPrompt = (
   <component_guidelines>
     <html_validation>
       - Use only valid, semantic, and well-structured HTML.
+      - ONLY HTML, CSS, JS.
+      - No PHP, Python, etc.
       - Ensure all components are accessible and follow ARIA guidelines.
     </html_validation>
     <component_selection>
