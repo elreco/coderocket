@@ -121,12 +121,16 @@ export default function CodePreview() {
           isCanvas ? "opacity-100 size-full" : "opacity-0 size-0",
         )}
       >
-        {isLoading ? (
+        {isLoading && componentFiles.length === 0 ? (
           <div className="flex size-full items-center justify-center">
             <ChatSkeleton />
           </div>
-        ) : (
+        ) : componentFiles.length > 0 ? (
           <RenderHtmlComponent files={componentFiles} />
+        ) : (
+          <div className="flex size-full items-center justify-center">
+            <img src="/placeholder.svg" alt="No artifacts" />
+          </div>
         )}
       </div>
       <div

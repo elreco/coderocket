@@ -4,6 +4,7 @@ import { after } from "next/server";
 
 import { getSubscription } from "@/app/supabase-server";
 import { takeScreenshot } from "@/utils/capture-screenshot";
+import { hasArtifacts } from "@/utils/completion-parser";
 import { createClient } from "@/utils/supabase/server";
 
 export const changeVisibilityByChatId = async (
@@ -129,8 +130,10 @@ export const updateTheme = async (
     .eq("chat_id", chatId)
     .eq("version", version)
     .eq("role", "assistant");
-
-  after(async () => {
-    await takeScreenshot(chatId, version, theme);
-  });
+  const hasArtifactResult = hasArtifacts(completion);
+  if (hasArtifactResult) {
+    after(async () => {
+      await takeScreenshot(chatId, version, theme);
+    });
+  }
 };

@@ -69,7 +69,6 @@ export default function ComponentFiles({
       content: string;
     }[]
   >([]);
-  const [hasArtifact, setHasArtifact] = useState(false);
   const [chunks, setChunks] = useState<ContentChunk[]>([]);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isAlertOpen, setIsAlertOpen] = useState(false);
@@ -79,7 +78,6 @@ export default function ComponentFiles({
   useEffect(() => {
     const prepareContent = async () => {
       const hasArtifactResult = hasArtifacts(message.content);
-      setHasArtifact(hasArtifactResult);
       setFiles(
         hasArtifactResult ? handleAIcompletionForHTML(message.content) : [],
       );
@@ -252,92 +250,83 @@ export default function ComponentFiles({
             >
               Version #{message.version}
             </h2>
-            {hasArtifact &&
-              chunks.map((chunk, index) => (
-                <div key={index}>
-                  {chunk.type === "text" && (
-                    <p className="whitespace-pre-line text-sm">
-                      {chunk.content}
-                    </p>
-                  )}
-                  {chunk.type === "artifact" && (
-                    <div className="w-full space-y-2">
-                      <div
-                        className={cn(
-                          "rounded-lg border bg-background p-2 text-foreground",
-                          !isSelectedVersion &&
-                            "group-hover:border-primary/50 group-hover:shadow-primary/35 group-hover:shadow-2xl",
-                        )}
-                      >
-                        <div className="mb-3 flex items-center justify-between">
-                          <h3 className="text-xs font-semibold">
-                            {files.length === 1
-                              ? "Output File"
-                              : "Output Files"}
-                          </h3>
-                          <Tooltip>
-                            <TooltipTrigger>
-                              <Badge
-                                variant="secondary"
-                                className="cursor-default border border-border"
-                              >
-                                <Paintbrush className="mr-1 size-3" />{" "}
-                                <span className="first-letter:uppercase">
-                                  {extractDataTheme(files[0].content)}
-                                </span>
-                              </Badge>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>Theme</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </div>
-                        <div className="space-y-2">
-                          {files.map((file, index) => {
-                            const fileConfig = getFileConfig(
-                              file.name || "untitled.html",
-                            );
-                            const FileIcon = fileConfig.icon;
+            {chunks.map((chunk, index) => (
+              <div key={index}>
+                {chunk.type === "text" && (
+                  <p className="whitespace-pre-line text-sm">{chunk.content}</p>
+                )}
+                {chunk.type === "artifact" && (
+                  <div className="w-full space-y-2">
+                    <div
+                      className={cn(
+                        "rounded-lg border bg-background p-2 text-foreground",
+                        !isSelectedVersion &&
+                          "group-hover:border-primary/50 group-hover:shadow-primary/35 group-hover:shadow-2xl",
+                      )}
+                    >
+                      <div className="mb-3 flex items-center justify-between">
+                        <h3 className="text-xs font-semibold">
+                          {files.length === 1 ? "Output File" : "Output Files"}
+                        </h3>
+                        <Tooltip>
+                          <TooltipTrigger>
+                            <Badge
+                              variant="secondary"
+                              className="cursor-default border border-border"
+                            >
+                              <Paintbrush className="mr-1 size-3" />{" "}
+                              <span className="first-letter:uppercase">
+                                {extractDataTheme(files[0].content)}
+                              </span>
+                            </Badge>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Theme</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+                      <div className="space-y-2">
+                        {files.map((file, index) => {
+                          const fileConfig = getFileConfig(
+                            file.name || "untitled.html",
+                          );
+                          const FileIcon = fileConfig.icon;
 
-                            return (
-                              <div
-                                key={index}
-                                className={cn(
-                                  "flex items-center justify-between rounded p-1",
-                                  `${fileConfig.color} bg-foreground`,
-                                  "hover:bg-gradient-to-l from-emerald-400 via-emerald-500 to-emerald-600 hover:text-foreground",
-                                  isLoading
-                                    ? "cursor-default"
-                                    : "cursor-pointer",
-                                  activeTab === file.name &&
-                                    isSelectedVersion &&
-                                    !isCanvas &&
-                                    "bg-gradient-to-l from-emerald-400 via-emerald-500 to-emerald-600 text-foreground",
-                                )}
-                                onClick={() =>
-                                  handleFileClick(message.version, file)
-                                }
-                              >
-                                <div className="flex items-center">
-                                  <FileIcon className="mr-2 size-4" />
-                                  <div className="font-mono text-sm">
-                                    {file.name || "untitled.html"}
-                                  </div>
-                                </div>
-                                <div className="text-xs opacity-75">
-                                  {formatFileSize(
-                                    new Blob([file.content]).size,
-                                  )}
+                          return (
+                            <div
+                              key={index}
+                              className={cn(
+                                "flex items-center justify-between rounded p-1",
+                                `${fileConfig.color} bg-foreground`,
+                                "hover:bg-gradient-to-l from-emerald-400 via-emerald-500 to-emerald-600 hover:text-foreground",
+                                isLoading ? "cursor-default" : "cursor-pointer",
+                                activeTab === file.name &&
+                                  isSelectedVersion &&
+                                  !isCanvas &&
+                                  "bg-gradient-to-l from-emerald-400 via-emerald-500 to-emerald-600 text-foreground",
+                              )}
+                              onClick={() =>
+                                handleFileClick(message.version, file)
+                              }
+                            >
+                              <div className="flex items-center">
+                                <FileIcon className="mr-2 size-4" />
+                                <div className="font-mono text-sm">
+                                  {file.name || "untitled.html"}
                                 </div>
                               </div>
-                            );
-                          })}
-                        </div>
+                              <div className="text-xs opacity-75">
+                                {formatFileSize(new Blob([file.content]).size)}
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
-                  )}
-                </div>
-              ))}
+                  </div>
+                )}
+              </div>
+            ))}
             {message.screenshot && (
               <img
                 src={message.screenshot || undefined}

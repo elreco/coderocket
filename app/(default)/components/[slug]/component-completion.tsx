@@ -212,6 +212,7 @@ export default function ComponentCompletion({
       }
       setEditorValue(file.content);
       setActiveTab(tabName);
+      console.log("here 1");
       setCanvas(false);
       return;
     }
@@ -232,7 +233,6 @@ export default function ComponentCompletion({
     if (!lastFile) {
       setEditorValue("");
       setActiveTab("");
-      setCanvas(false);
       return;
     }
     setEditorValue(lastFile.content);
@@ -405,33 +405,37 @@ export default function ComponentCompletion({
                     <p>{isCanvas ? "Display code" : "Hide code"}</p>
                   </TooltipContent>
                 </Tooltip>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => setIsModalOpen(true)}
-                      className="flex items-center"
-                      disabled={isLoading}
+                {componentFiles.length > 0 && (
+                  <>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => setIsModalOpen(true)}
+                          className="flex items-center"
+                          disabled={isLoading}
+                        >
+                          <Fullscreen className="w-5" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Display in fullscreen</p>
+                      </TooltipContent>
+                    </Tooltip>
+                    <Dialog
+                      open={isModalOpen}
+                      onOpenChange={handleFullscreenToggle}
                     >
-                      <Fullscreen className="w-5" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Display in fullscreen</p>
-                  </TooltipContent>
-                </Tooltip>
-                <Dialog
-                  open={isModalOpen}
-                  onOpenChange={handleFullscreenToggle}
-                >
-                  <DialogContent className="z-[9999] h-[95%] max-w-[95%] rounded-none p-10">
-                    <DialogTitle className="hidden">Fullscreen</DialogTitle>
-                    <DialogDescription className="z-[9999]">
-                      <RenderHtmlComponent files={componentFiles} />
-                    </DialogDescription>
-                  </DialogContent>
-                </Dialog>
+                      <DialogContent className="z-[9999] h-[95%] max-w-[95%] rounded-none p-10">
+                        <DialogTitle className="hidden">Fullscreen</DialogTitle>
+                        <DialogDescription className="z-[9999]">
+                          <RenderHtmlComponent files={componentFiles} />
+                        </DialogDescription>
+                      </DialogContent>
+                    </Dialog>
+                  </>
+                )}
                 {isVisible && (
                   <Tooltip>
                     <TooltipTrigger asChild>

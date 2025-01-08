@@ -10,7 +10,7 @@ import {
 import { getSubscription } from "@/app/supabase-server";
 import { Tables } from "@/types_db";
 import { takeScreenshot } from "@/utils/capture-screenshot";
-import { extractDataTheme } from "@/utils/completion-parser";
+import { extractDataTheme, hasArtifacts } from "@/utils/completion-parser";
 import {
   anthropicModel,
   MAX_GENERATIONS,
@@ -244,7 +244,10 @@ const updateDataAfterCompletion = async (
   });
 
   await supabase.from("messages").insert(newMessages).eq("chat_id", chatId);
-  after(async () => {
-    await takeScreenshot(chatId, version, theme);
-  });
+  const hasArtifactResult = hasArtifacts(text);
+  if (hasArtifactResult) {
+    after(async () => {
+      await takeScreenshot(chatId, version, theme);
+    });
+  }
 };
