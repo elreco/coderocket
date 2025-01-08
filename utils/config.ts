@@ -11,7 +11,7 @@ export const maxImageSize = 1 * 1024 * 1024; // 1 Mo
 
 export const MAX_ITERATIONS = 4;
 
-export const MAX_GENERATIONS = 1;
+export const MAX_GENERATIONS = 5;
 
 export const defaultTheme = "light";
 
