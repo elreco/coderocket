@@ -20,6 +20,7 @@ import {
 } from "@/utils/config";
 // import { promptEnhancer } from "@/utils/prompt-enhancer";
 import { createClient } from "@/utils/supabase/server";
+import { htmlSystemPrompt } from "@/utils/system-prompts/html";
 import { reactSystemPrompt } from "@/utils/system-prompts/react";
 
 export async function POST(req: Request) {
@@ -31,7 +32,7 @@ export async function POST(req: Request) {
     const { prompt }: { prompt: string } = await req.json();
     if (!prompt) throw new Error("No prompt");
 
-    const { messagesFromDatabase, imageUrl, subscription } =
+    const { messagesFromDatabase, imageUrl, subscription, framework } =
       await validateRequest(id);
 
     // const enhancedPrompt = await promptEnhancer(prompt);
@@ -49,11 +50,14 @@ export async function POST(req: Request) {
           ? "claude-3-5-sonnet-20240620"
           : "claude-3-5-sonnet-20240620",
       ),
-      system: reactSystemPrompt(
-        messagesFromDatabase.length === 1
-          ? messagesFromDatabase[0]?.theme
-          : null,
-      ),
+      system:
+        framework === "html"
+          ? htmlSystemPrompt(
+              messagesFromDatabase.length === 1
+                ? messagesFromDatabase[0]?.theme
+                : null,
+            )
+          : reactSystemPrompt(),
       toolChoice: "none",
       maxTokens: 8192,
       onFinish: async ({ text }) => {
@@ -200,6 +204,7 @@ const validateRequest = async (id: string) => {
     messagesFromDatabase,
     imageUrl,
     subscription,
+    framework: chat.framework,
   };
 };
 
@@ -209,6 +214,9 @@ const updateDataAfterCompletion = async (
   prompt: string,
 ) => {
   const supabase = await createClient();
+
+  const chat = await fetchChatById(chatId);
+  if (!chat) return console.error("Could not get chat data");
 
   const lastUserMessage = await fetchLastUserMessageByChatId(chatId);
   if (!lastUserMessage) return console.error("Could not get chat messages");
@@ -245,7 +253,7 @@ const updateDataAfterCompletion = async (
 
   await supabase.from("messages").insert(newMessages).eq("chat_id", chatId);
   const hasArtifactResult = hasArtifacts(text);
-  if (hasArtifactResult) {
+  if (hasArtifactResult && chat.framework === "html") {
     after(async () => {
       await takeScreenshot(chatId, version, theme);
     });

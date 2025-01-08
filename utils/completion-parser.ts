@@ -53,12 +53,26 @@ export const handleAIcompletionForHTML = (
       content = content.slice(0, closeTagIndex);
     }
 
-    // Nettoyer le contenu sans affecter l'indentation
+    // Nettoyer le contenu et ajuster l'indentation
     content = content
       .replace(/<\/tailwindaiFile>/g, "")
       .replace(/<\/tailwindaiArtifact>/g, "")
-      // Supprimer la première ligne si elle est vide
       .replace(/^\n/, "");
+
+    // Trouver l'indentation minimale commune
+    const lines = content.split("\n");
+    const nonEmptyLines = lines.filter((line) => line.trim().length > 0);
+    const indentations = nonEmptyLines.map((line) => {
+      const match = line.match(/^[ \t]*/);
+      return match ? match[0].length : 0;
+    });
+    const minIndent = Math.min(...indentations);
+
+    // Retirer l'indentation minimale commune de chaque ligne
+    content = lines
+      .map((line) => line.slice(minIndent))
+      .join("\n")
+      .trim();
 
     // Assurez-vous que les CDN sont présents
     if (isHtml) {

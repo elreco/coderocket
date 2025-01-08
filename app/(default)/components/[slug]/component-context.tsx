@@ -38,6 +38,7 @@ interface ComponentContextType {
   input: string;
   setInput: (value: string) => void;
   chatId: string;
+  selectedFramework: string;
 }
 
 export const ComponentContext = createContext<ComponentContextType | undefined>(

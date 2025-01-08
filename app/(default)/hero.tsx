@@ -1,4 +1,5 @@
 "use client";
+import { SiHtml5, SiReact } from "@icons-pack/react-simple-icons";
 import {
   Lock,
   Unlock,
@@ -16,6 +17,13 @@ import { Container } from "@/components/container";
 import { AnimatedGridPattern } from "@/components/ui/animated-grid-pattern";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Sheet,
   SheetContent,
@@ -64,6 +72,7 @@ export default function Hero() {
   const [prompt, setPrompt] = useState("");
   const [isVisible, setVisible] = useState(true);
   const [selectedTheme, setSelectedTheme] = useState(defaultTheme);
+  const [selectedFramework, setSelectedFramework] = useState("react");
   const [loading, setLoading] = useState(false);
   const [loadingVisibility, setLoadingVisibility] = useState(false);
   const [image, setImage] = useState<File | null>(null);
@@ -106,6 +115,7 @@ export default function Hero() {
     }
     formData.append("isVisible", isVisible.toString());
     formData.append("theme", selectedTheme);
+    formData.append("framework", selectedFramework);
     const { slug, error } = await createChat(prompt, formData);
     if (error) {
       toast({
@@ -311,59 +321,87 @@ export default function Hero() {
                   <p>Upload an image to generate a component with it</p>
                 </TooltipContent>
               </Tooltip>
-              <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-                <SheetTrigger asChild>
-                  <Button
-                    disabled={loading}
-                    variant="background"
-                    size="sm"
-                    className="w-full sm:w-auto"
-                  >
-                    <Paintbrush className="size-4" />
-                    <span className="first-letter:uppercase">
-                      {selectedTheme}
-                    </span>
-                  </Button>
-                </SheetTrigger>
-                <SheetContent className="overflow-auto">
-                  <SheetTitle className="mb-4">Component Theme</SheetTitle>
-                  <div>
-                    <h3 className="mb-1 text-base font-semibold">
-                      Set theme for the component
-                    </h3>
-                    <h4 className="mb-4 text-sm">
-                      Selected theme:{" "}
-                      <span className="text-primary">{selectedTheme}</span>
-                    </h4>
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-3 gap-4">
-                        {themes.map((theme) => (
-                          <div
-                            key={theme}
-                            className={cn(
-                              "relative aspect-video cursor-pointer rounded-md items-center justify-center border-2 opacity-75 hover:border-2 hover:border-primary hover:opacity-100 overflow-hidden",
-                              {
-                                "border-primary opacity-100":
-                                  selectedTheme === theme,
-                              },
-                            )}
-                            onClick={() => {
-                              setSelectedTheme(theme);
-                              setSheetOpen(false);
-                            }}
-                          >
-                            <img
-                              src={`/daisy-themes/${theme}.png`}
-                              alt="Theme"
-                              className="size-full scale-110 object-cover"
-                            />
-                          </div>
-                        ))}
+              {selectedFramework === "html" && (
+                <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+                  <SheetTrigger asChild>
+                    <Button
+                      disabled={loading}
+                      variant="background"
+                      size="sm"
+                      className="w-full sm:w-auto"
+                    >
+                      <Paintbrush className="size-4" />
+                      <span className="first-letter:uppercase">
+                        {selectedTheme}
+                      </span>
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent className="overflow-auto">
+                    <SheetTitle className="mb-4">Component Theme</SheetTitle>
+                    <div>
+                      <h3 className="mb-1 text-base font-semibold">
+                        Set theme for the component
+                      </h3>
+                      <h4 className="mb-4 text-sm">
+                        Selected theme:{" "}
+                        <span className="text-primary">{selectedTheme}</span>
+                      </h4>
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-3 gap-4">
+                          {themes.map((theme) => (
+                            <div
+                              key={theme}
+                              className={cn(
+                                "relative aspect-video cursor-pointer rounded-md items-center justify-center border-2 opacity-75 hover:border-2 hover:border-primary hover:opacity-100 overflow-hidden",
+                                {
+                                  "border-primary opacity-100":
+                                    selectedTheme === theme,
+                                },
+                              )}
+                              onClick={() => {
+                                setSelectedTheme(theme);
+                                setSheetOpen(false);
+                              }}
+                            >
+                              <img
+                                src={`/daisy-themes/${theme}.png`}
+                                alt="Theme"
+                                className="size-full scale-110 object-cover"
+                              />
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </SheetContent>
-              </Sheet>
+                  </SheetContent>
+                </Sheet>
+              )}
+              <Select
+                disabled={loading}
+                defaultValue="react"
+                onValueChange={setSelectedFramework}
+              >
+                <SelectTrigger className="w-full border-background sm:w-auto">
+                  <SelectValue
+                    className="mr-2"
+                    placeholder="Select a framework"
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="react" className="cursor-pointer">
+                    <div className="mr-2 flex flex-row items-center">
+                      <SiReact className="mr-2 size-3" />
+                      <span className="text-sm">React</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="html" className="cursor-pointer">
+                    <div className="mr-2 flex cursor-pointer flex-row items-center">
+                      <SiHtml5 className="mr-2 size-3" />
+                      <span className="text-sm">HTML</span>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div className="flex w-full items-center justify-end space-x-0 sm:space-x-2">
               <input

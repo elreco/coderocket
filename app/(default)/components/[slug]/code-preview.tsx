@@ -1,4 +1,7 @@
+import { css } from "@codemirror/lang-css";
 import { html } from "@codemirror/lang-html";
+import { javascript } from "@codemirror/lang-javascript";
+import { json } from "@codemirror/lang-json";
 import { StateField } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 import { draculaInit } from "@uiw/codemirror-theme-dracula";
@@ -22,6 +25,7 @@ import { cn } from "@/lib/utils";
 import { getFileConfig } from "@/utils/file-extensions";
 import { iframeBuilder } from "@/utils/iframe-builder";
 
+import { CodePreviewFileTree } from "./code-preview-filetree";
 import { useComponentContext } from "./component-context";
 import ChatSkeleton from "./component-skeleton";
 
@@ -34,6 +38,7 @@ export default function CodePreview() {
     activeTab,
     editorValue,
     handleVersionSelect,
+    selectedFramework,
   } = useComponentContext();
 
   const [, copy] = useCopyToClipboard();
@@ -114,6 +119,25 @@ export default function CodePreview() {
     }
   }, []);
 
+  const getLanguageExtension = (filename: string) => {
+    const ext = filename.split(".").pop()?.toLowerCase();
+    switch (ext) {
+      case "css":
+        return css();
+      case "js":
+      case "jsx":
+        return javascript({ jsx: true });
+      case "ts":
+      case "tsx":
+        return javascript({ typescript: true, jsx: true });
+      case "json":
+        return json();
+      case "html":
+      default:
+        return html();
+    }
+  };
+
   return (
     <div className="flex size-full flex-col overflow-hidden xl:flex-row">
       <div
@@ -126,8 +150,14 @@ export default function CodePreview() {
           <div className="flex size-full items-center justify-center">
             <ChatSkeleton />
           </div>
-        ) : componentFiles.length > 0 ? (
+        ) : !isLoading &&
+          selectedFramework === "html" &&
+          componentFiles.length > 0 ? (
           <RenderHtmlComponent files={componentFiles} />
+        ) : !isLoading &&
+          selectedFramework === "react" &&
+          componentFiles.length > 0 ? (
+          <RenderReactComponent files={componentFiles} />
         ) : (
           <div className="flex size-full items-center justify-center">
             <img src="/placeholder.svg" alt="No artifacts" />
@@ -141,6 +171,7 @@ export default function CodePreview() {
         )}
       >
         <div className="relative flex size-full flex-col rounded-none border-none">
+          <CodePreviewFileTree />
           <Tabs
             value={activeTab}
             className="relative flex flex-1 flex-col items-start justify-start"
@@ -178,13 +209,13 @@ export default function CodePreview() {
                   },
                 })}
                 value={editorValue}
-                lang="html"
+                lang={activeTab.split(".").pop() || "html"}
                 height="100%"
                 width="100%"
                 className={`w-full max-w-full ${
                   isLoading ? "pointer-events-none overflow-hidden" : ""
                 }`}
-                extensions={[html()]}
+                extensions={[getLanguageExtension(activeTab)]}
                 readOnly
                 basicSetup={{
                   lineNumbers: true,

@@ -28,6 +28,7 @@ export default function ComponentSidebar({
     handleSubmitToAI,
     input,
     setInput,
+    selectedFramework,
   } = useComponentContext();
 
   const [isLoaderVisible, setLoaderVisible] = useState(true);
@@ -152,7 +153,7 @@ export default function ComponentSidebar({
                 )}
               </div>
 
-              {authorized && (
+              {authorized && selectedFramework === "html" && (
                 <div className="text-sm font-semibold">
                   <ComponentTheme>
                     <Button

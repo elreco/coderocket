@@ -3,6 +3,7 @@ import {
   SiTypescript,
   SiJson,
   SiReact,
+  SiJavascript,
 } from "@icons-pack/react-simple-icons";
 
 interface FileExtensionConfig {
@@ -31,6 +32,10 @@ const FILE_EXTENSIONS: Record<string, FileExtensionConfig> = {
   json: {
     icon: SiJson,
     color: "text-[#000000]",
+  },
+  js: {
+    icon: SiJavascript,
+    color: "text-[#F7DF1E]",
   },
 };
 

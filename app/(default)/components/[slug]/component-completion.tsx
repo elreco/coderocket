@@ -212,7 +212,6 @@ export default function ComponentCompletion({
       }
       setEditorValue(file.content);
       setActiveTab(tabName);
-      console.log("here 1");
       setCanvas(false);
       return;
     }
@@ -315,6 +314,7 @@ export default function ComponentCompletion({
     handleSubmitToAI,
     setCompletion,
     chatId: fetchedChat.id,
+    selectedFramework: fetchedChat.framework || "react",
   };
 
   useEffect(() => {

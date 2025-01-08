@@ -39,57 +39,57 @@ export default function RenderHtmlComponent({
 }) {
   const [iframeSrc, setIframeSrc] = useState<string | null>(null);
   const webcontainerInstance = useRef<WebContainer | null>(null);
-
+  console.log("files", files);
   useEffect(() => {
+    let isInitializing = false;
+
     const initWebContainer = async () => {
-      // Vérifier si une instance existe déjà
-      if (webcontainerInstance.current || files.length === 0) {
-        console.log("WebContainer instance already exists");
+      if (
+        webcontainerInstance.current ||
+        files.length === 0 ||
+        isInitializing
+      ) {
+        console.log("WebContainer instance already exists or initializing");
         return;
       }
-      console.log(files);
-      // Initialisation de WebContainer
-      const webcontainer = await WebContainer.boot();
-      webcontainerInstance.current = webcontainer;
 
-      // Transformation des fichiers en FileSystemTree
-      const fileSystemTree = buildFileSystemTree(files);
+      isInitializing = true;
 
-      // Montage des fichiers
-      await webcontainer.mount(fileSystemTree);
-      console.log(fileSystemTree);
-      // Installation des dépendances
-      const installProcess = await webcontainer.spawn("npm", ["install"]);
-      installProcess.output.pipeTo(
-        new WritableStream({
-          write(data) {
-            console.log(data);
-          },
-        }),
-      );
-      await installProcess.exit;
-      console.log("installProcess", installProcess);
-      // Démarrage du serveur de développement
-      const startProcess = await webcontainer.spawn("npm", ["run", "start"]);
-      startProcess.output.pipeTo(
-        new WritableStream({
-          write(data) {
-            console.log(data);
-          },
-        }),
-      );
+      try {
+        const webcontainer = await WebContainer.boot();
+        webcontainerInstance.current = webcontainer;
 
-      // Écoute de l'événement 'server-ready'
-      webcontainer.on("server-ready", (port, url) => {
-        console.log("server-ready", port, url);
-        setIframeSrc(url);
-      });
-      webcontainer.on("error", (error) => {
-        console.log("error", error);
-      });
-      webcontainer.on("port", (port) => {
-        console.log("port", port);
-      });
+        const fileSystemTree = buildFileSystemTree(files);
+        await webcontainer.mount(fileSystemTree);
+
+        const installProcess = await webcontainer.spawn("npm", ["install"]);
+        installProcess.output.pipeTo(
+          new WritableStream({
+            write(data) {
+              console.log(data);
+            },
+          }),
+        );
+        await installProcess.exit;
+
+        const startProcess = await webcontainer.spawn("npm", ["run", "dev"]);
+        startProcess.output.pipeTo(
+          new WritableStream({
+            write(data) {
+              console.log(data);
+            },
+          }),
+        );
+
+        webcontainer.on("server-ready", (port, url) => {
+          console.log("server-ready", port, url);
+          setIframeSrc(url);
+        });
+      } catch (error) {
+        console.error("Error during WebContainer initialization:", error);
+      } finally {
+        isInitializing = false;
+      }
     };
 
     initWebContainer();
