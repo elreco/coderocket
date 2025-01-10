@@ -11,34 +11,34 @@ export type Database = {
     Tables: {
       chats: {
         Row: {
+          artifact_code: string | null;
           created_at: string | null;
           framework: string | null;
           id: string;
           is_featured: boolean | null;
           is_private: boolean | null;
-          messages: Json;
           prompt_image: string | null;
           slug: string | null;
           user_id: string;
         };
         Insert: {
+          artifact_code?: string | null;
           created_at?: string | null;
           framework?: string | null;
           id?: string;
           is_featured?: boolean | null;
           is_private?: boolean | null;
-          messages: Json;
           prompt_image?: string | null;
           slug?: string | null;
           user_id: string;
         };
         Update: {
+          artifact_code?: string | null;
           created_at?: string | null;
           framework?: string | null;
           id?: string;
           is_featured?: boolean | null;
           is_private?: boolean | null;
-          messages?: Json;
           prompt_image?: string | null;
           slug?: string | null;
           user_id?: string;
@@ -338,10 +338,10 @@ export type Database = {
           is_featured: boolean;
           is_private: boolean;
           created_at: string;
+          slug: string;
           first_user_message: string;
           last_assistant_message: string;
           last_assistant_message_theme: string;
-          slug: string;
         }[];
       };
     };

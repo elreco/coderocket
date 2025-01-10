@@ -24,7 +24,6 @@ export const fetchChatById = async (idOrSlug: string) => {
     is_private,
     is_featured,
     framework,
-    messages,
     prompt_image,
     user_id,
     slug,
@@ -203,7 +202,6 @@ export const createChat = async (prompt: string, formData: FormData) => {
         user_id: user.id,
         ...(imageUrl && { prompt_image: imageUrl }),
         is_private,
-        messages: [],
         slug: uniqueSlug,
       },
     ])
