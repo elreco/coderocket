@@ -20,6 +20,7 @@ export const fetchChatById = async (idOrSlug: string) => {
     .select(
       `
     id,
+    artifact_code,
     created_at,
     is_private,
     is_featured,
