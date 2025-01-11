@@ -266,12 +266,7 @@ export default function ComponentCompletion({
       handleComponentFiles(lastAssistantMessage.content, true);
       handleVersionSelect(lastAssistantMessage.version);
     }
-    if (
-      !lastAssistantMessage?.content &&
-      !isLoading &&
-      messages.length === 1 &&
-      lastUserMessage.content
-    ) {
+    if (!fetchedChat.artifact_code) {
       setCanvas(false);
       complete(lastUserMessage.content);
       setIsLoading(true);

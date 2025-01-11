@@ -242,7 +242,7 @@ export const createChat = async (prompt: string, formData: FormData) => {
     role: "user",
     theme,
     content: prompt,
-    version: -1,
+    version: 0,
   });
 
   return { slug: data.slug };

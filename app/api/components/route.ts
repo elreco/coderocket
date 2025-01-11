@@ -226,13 +226,7 @@ const updateDataAfterCompletion = async (
 
   const version = lastUserMessage.version + 1;
 
-  if (lastUserMessage.version === -1) {
-    lastUserMessage.version = 0;
-    await supabase
-      .from("messages")
-      .update({ version: 0 })
-      .eq("id", lastUserMessage.id);
-  } else {
+  if (chat.artifact_code) {
     newMessages.push({
       chat_id: chatId,
       screenshot: null,
@@ -240,7 +234,13 @@ const updateDataAfterCompletion = async (
       content: prompt,
       role: "user",
     });
+  } else {
+    await supabase
+      .from("chats")
+      .update({ artifact_code: text })
+      .eq("id", chatId);
   }
+
   const theme = extractDataTheme(text);
   newMessages.push({
     chat_id: chatId,
