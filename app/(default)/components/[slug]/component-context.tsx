@@ -37,6 +37,8 @@ interface ComponentContextType {
   setVisible: (value: boolean) => void;
   input: string;
   setInput: (value: string) => void;
+  artifactCode: string;
+  setArtifactCode: (value: string) => void;
   chatId: string;
   selectedFramework: string;
 }

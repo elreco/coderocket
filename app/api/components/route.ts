@@ -11,7 +11,11 @@ import {
 import { getSubscription } from "@/app/supabase-server";
 import { Tables } from "@/types_db";
 import { takeScreenshot } from "@/utils/capture-screenshot";
-import { extractDataTheme, hasArtifacts } from "@/utils/completion-parser";
+import {
+  extractDataTheme,
+  getUpdatedArtifactCode,
+  hasArtifacts,
+} from "@/utils/completion-parser";
 import {
   anthropicModel,
   MAX_GENERATIONS,
@@ -95,11 +99,8 @@ const buildMessagesToOpenAi = async (
       ? messages.filter((m) => m.version <= selectedVersion)
       : messages;
 
-  // Limiter aux derniers messages pour obtenir un nombre pair
-  const limitedMessages = filteredMessages.slice(-12);
-
   // Mapper les messages au format requis par OpenAI
-  const messagesToOpenAI = limitedMessages.map((m) => {
+  const messagesToOpenAI = filteredMessages.map((m) => {
     return {
       role: m.role as "user" | "assistant" | "tool" | "system",
       content: m.content,
@@ -224,7 +225,8 @@ const updateDataAfterCompletion = async (
 
   if (!text) return console.error("No completion");
 
-  const version = lastUserMessage.version + 1;
+  const version = chat.artifact_code ? lastUserMessage.version + 1 : 0;
+  const artifactCode = getUpdatedArtifactCode(text, chat.artifact_code || "");
 
   if (chat.artifact_code) {
     newMessages.push({
@@ -234,12 +236,12 @@ const updateDataAfterCompletion = async (
       content: prompt,
       role: "user",
     });
-  } else {
-    await supabase
-      .from("chats")
-      .update({ artifact_code: text })
-      .eq("id", chatId);
   }
+
+  await supabase
+    .from("chats")
+    .update({ artifact_code: artifactCode })
+    .eq("id", chatId);
 
   const theme = extractDataTheme(text);
   newMessages.push({

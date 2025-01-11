@@ -1,35 +1,32 @@
 "use client";
 
-import { DirectoryNode, FileSystemTree, WebContainer } from "@webcontainer/api";
+import {
+  DirectoryNode,
+  FileSystemTree,
+  WebContainer,
+  WebContainerProcess,
+} from "@webcontainer/api";
 import React, { useEffect, useState, useRef } from "react";
 
 function buildFileSystemTree(
   files: { name: string | null; content: string }[],
 ): FileSystemTree {
-  const tree: FileSystemTree = {};
+  return files.reduce((tree: FileSystemTree, file) => {
+    if (!file.name) return tree;
 
-  files.forEach((file) => {
-    if (file.name) {
-      const parts = file.name.split("/"); // Découper le chemin en parties (dossiers et fichier)
-      let current = tree;
+    const parts = file.name.split("/");
+    let current = tree;
 
-      // Parcourir chaque partie du chemin
-      for (let i = 0; i < parts.length; i++) {
-        const part = parts[i];
+    parts.slice(0, -1).forEach((part) => {
+      current[part] = current[part] || { directory: {} };
+      current = (current[part] as DirectoryNode).directory;
+    });
 
-        // Si c'est le dernier élément, c'est un fichier
-        if (i === parts.length - 1) {
-          current[part] = { file: { contents: file.content } };
-        } else {
-          // Si ce n'est pas un fichier, créer un dossier s'il n'existe pas
-          current[part] = current[part] || { directory: {} };
-          current = (current[part] as DirectoryNode).directory;
-        }
-      }
-    }
-  });
+    const fileName = parts[parts.length - 1];
+    current[fileName] = { file: { contents: file.content } };
 
-  return tree;
+    return tree;
+  }, {});
 }
 
 export default function RenderHtmlComponent({
@@ -39,65 +36,117 @@ export default function RenderHtmlComponent({
 }) {
   const [iframeSrc, setIframeSrc] = useState<string | null>(null);
   const webcontainerInstance = useRef<WebContainer | null>(null);
-  console.log("files", files);
+  const previousFiles = useRef<typeof files>([]);
+  const serverProcess = useRef<WebContainerProcess | null>(null);
+
+  const handleServerOutput = React.useCallback((data: string) => {
+    console.log(data);
+  }, []);
+
+  const startServer = React.useCallback(
+    async (webcontainer: WebContainer) => {
+      // Arrêter le processus précédent si il existe
+      if (serverProcess.current) {
+        try {
+          await serverProcess.current.kill();
+        } catch (e) {
+          console.warn("Failed to kill previous server process:", e);
+        }
+      }
+
+      serverProcess.current = await webcontainer.spawn("npm", ["run", "start"]);
+      serverProcess.current.output.pipeTo(
+        new WritableStream({
+          write: handleServerOutput,
+        }),
+      );
+
+      webcontainer.on("server-ready", (port, url) => {
+        console.log("server-ready", port, url);
+        setIframeSrc(url);
+      });
+    },
+    [handleServerOutput],
+  );
+
+  const updateFiles = React.useCallback(
+    async (container: WebContainer, changedFiles: typeof files) => {
+      const writePromises = changedFiles
+        .filter((file) => file.name)
+        .map((file) => container.fs.writeFile(file.name!, file.content));
+
+      await Promise.all(writePromises);
+      await startServer(container);
+    },
+    [startServer],
+  );
+
   useEffect(() => {
     let isInitializing = false;
 
     const initWebContainer = async () => {
-      if (
-        webcontainerInstance.current ||
-        files.length === 0 ||
-        isInitializing
-      ) {
-        console.log("WebContainer instance already exists or initializing");
+      // Premier démarrage
+      if (!webcontainerInstance.current && !isInitializing) {
+        isInitializing = true;
+        try {
+          const webcontainer = await WebContainer.boot();
+          webcontainerInstance.current = webcontainer;
+          const fileSystemTree = buildFileSystemTree(files);
+          console.log("fileSystemTree", fileSystemTree);
+          await webcontainer.mount(fileSystemTree);
+          await installDependencies(webcontainer);
+          await startServer(webcontainer);
+        } catch (error) {
+          console.error("Error during WebContainer initialization:", error);
+        } finally {
+          isInitializing = false;
+        }
+        previousFiles.current = files;
         return;
       }
 
-      isInitializing = true;
-
-      try {
-        const webcontainer = await WebContainer.boot();
-        webcontainerInstance.current = webcontainer;
-
-        const fileSystemTree = buildFileSystemTree(files);
-        await webcontainer.mount(fileSystemTree);
-
-        const installProcess = await webcontainer.spawn("npm", ["install"]);
-        installProcess.output.pipeTo(
-          new WritableStream({
-            write(data) {
-              console.log(data);
-            },
-          }),
+      // Mise à jour des fichiers
+      const container = webcontainerInstance.current;
+      if (!container) return;
+      console.log("files", files);
+      // Vérifier les fichiers modifiés
+      const changedFiles = files.filter((file, index) => {
+        const prevFile = previousFiles.current[index];
+        return (
+          prevFile?.content !== file.content || prevFile?.name !== file.name
         );
-        await installProcess.exit;
+      });
 
-        const startProcess = await webcontainer.spawn("npm", ["run", "dev"]);
-        startProcess.output.pipeTo(
-          new WritableStream({
-            write(data) {
-              console.log(data);
-            },
-          }),
-        );
+      if (changedFiles.length === 0) return;
 
-        webcontainer.on("server-ready", (port, url) => {
-          console.log("server-ready", port, url);
-          setIframeSrc(url);
-        });
-      } catch (error) {
-        console.error("Error during WebContainer initialization:", error);
-      } finally {
-        isInitializing = false;
-      }
+      // Mettre à jour uniquement les fichiers modifiés
+      await updateFiles(container, changedFiles);
+
+      previousFiles.current = files;
+    };
+
+    const installDependencies = async (webcontainer: WebContainer) => {
+      const installProcess = await webcontainer.spawn("npm", ["install"]);
+      installProcess.output.pipeTo(
+        new WritableStream({
+          write(data) {
+            console.log(data);
+          },
+        }),
+      );
+      return installProcess.exit;
     };
 
     initWebContainer();
 
     return () => {
-      webcontainerInstance.current?.teardown();
+      try {
+        webcontainerInstance.current?.teardown();
+      } catch (error) {
+        console.error("Error during WebContainer teardown:", error);
+      }
     };
-  }, [files]);
+  }, [files, updateFiles, startServer]);
 
   return iframeSrc ? (
     <iframe

@@ -5,6 +5,90 @@ const TAILWIND_SCRIPT_CDN =
 const DAISYUI_CDN =
   '<link href="https://cdn.jsdelivr.net/npm/daisyui@latest/dist/full.css" rel="stylesheet">';
 
+// Ajoutez cette nouvelle interface et fonction
+export interface ContentChunk {
+  type: "text" | "artifact";
+  content: string;
+}
+
+export const getUpdatedArtifactCode = (
+  completion: string,
+  artifactCode: string,
+): string => {
+  console.log("completion", completion);
+  console.log("artifactCode", artifactCode);
+  // Extraire le contenu de la balise tailwindaiArtifact de completion
+  const artifactMatch = completion.match(
+    /<tailwindaiArtifact>[\s\S]*?<\/tailwindaiArtifact>/,
+  );
+  const artifactContent = artifactMatch
+    ? artifactMatch[0]
+    : "<tailwindaiArtifact></tailwindaiArtifact>";
+
+  // Si le code de référence est vide ou si completion égale artifactCode
+  if (!artifactCode || artifactContent === artifactCode) {
+    return artifactContent;
+  }
+
+  const fileRegex =
+    /<tailwindaiFile.*?name=["']([^"']*?)["'].*?(?:action=["']delete["'].*?\/|\/>|>([\s\S]*?)<\/tailwindaiFile>)/g;
+  let match;
+  const filesToDelete = new Set();
+  const filesToAdd = new Map();
+
+  // Extract files to delete and add/update
+  while ((match = fileRegex.exec(completion)) !== null) {
+    const fileName = match[1];
+    const isDelete = match[0].includes('action="delete"');
+
+    if (isDelete) {
+      filesToDelete.add(fileName);
+    } else {
+      const content = match[2] || "";
+      filesToAdd.set(fileName, content);
+    }
+  }
+
+  // Si aucun fichier à modifier ou supprimer
+  if (filesToDelete.size === 0 && filesToAdd.size === 0) {
+    return "<tailwindaiArtifact></tailwindaiArtifact>";
+  }
+
+  // Start with the artifact code or create new one if empty
+  let updatedCode = artifactCode || "<tailwindaiArtifact></tailwindaiArtifact>";
+
+  // Remove files marked for deletion
+  if (filesToDelete.size > 0) {
+    const deleteFileRegex = new RegExp(
+      `<tailwindaiFile.*?name=["'](${Array.from(filesToDelete).join("|")})["'][^>]*>([\\s\\S]*?)<\\/tailwindaiFile>`,
+      "g",
+    );
+    updatedCode = updatedCode.replace(deleteFileRegex, "");
+  }
+
+  // Add or update files
+  filesToAdd.forEach((content, fileName) => {
+    const fileRegex = new RegExp(
+      `<tailwindaiFile.*?name=["']${fileName}["'][^>]*>[\\s\\S]*?<\\/tailwindaiFile>`,
+      "g",
+    );
+    const newFile = `<tailwindaiFile name="${fileName}">${content}</tailwindaiFile>`;
+
+    if (updatedCode.match(fileRegex)) {
+      // Update existing file
+      updatedCode = updatedCode.replace(fileRegex, newFile);
+    } else {
+      // Add new file before closing artifact tag
+      updatedCode = updatedCode.replace(
+        "</tailwindaiArtifact>",
+        `${newFile}</tailwindaiArtifact>`,
+      );
+    }
+  });
+
+  return updatedCode;
+};
+
 export const ensureCDNsPresent = (htmlContent: string): string => {
   let updatedContent = htmlContent;
 
@@ -19,7 +103,7 @@ export const ensureCDNsPresent = (htmlContent: string): string => {
   return updatedContent;
 };
 
-export const handleAIcompletionForHTML = (
+export const extractFilesFromCompletion = (
   completion: string,
   isHtml: boolean = false,
 ) => {
@@ -129,12 +213,6 @@ export const hasArtifacts = (completion: string): boolean => {
 export const hasFiles = (completion: string): boolean => {
   return /<tailwindaiFile/i.test(completion);
 };
-
-// Ajoutez cette nouvelle interface et fonction
-export interface ContentChunk {
-  type: "text" | "artifact";
-  content: string;
-}
 
 export const splitContentIntoChunks = (completion: string): ContentChunk[] => {
   const chunks: ContentChunk[] = [];

@@ -29,7 +29,7 @@ import { Tables } from "@/types_db";
 import {
   ContentChunk,
   extractDataTheme,
-  handleAIcompletionForHTML,
+  extractFilesFromCompletion,
   hasArtifacts,
   splitContentIntoChunks,
 } from "@/utils/completion-parser";
@@ -61,6 +61,7 @@ export default function ComponentFiles({
     activeTab,
     handleVersionSelect,
     refreshChatData,
+    selectedFramework,
   } = useComponentContext();
 
   const [files, setFiles] = useState<
@@ -79,7 +80,7 @@ export default function ComponentFiles({
     const prepareContent = async () => {
       const hasArtifactResult = hasArtifacts(message.content);
       setFiles(
-        hasArtifactResult ? handleAIcompletionForHTML(message.content) : [],
+        hasArtifactResult ? extractFilesFromCompletion(message.content) : [],
       );
       setChunks(splitContentIntoChunks(message.content));
     };
@@ -268,22 +269,24 @@ export default function ComponentFiles({
                         <h3 className="text-xs font-semibold">
                           {files.length === 1 ? "Output File" : "Output Files"}
                         </h3>
-                        <Tooltip>
-                          <TooltipTrigger>
-                            <Badge
-                              variant="secondary"
-                              className="cursor-default border border-border"
-                            >
-                              <Paintbrush className="mr-1 size-3" />{" "}
-                              <span className="first-letter:uppercase">
-                                {extractDataTheme(files[0].content)}
-                              </span>
-                            </Badge>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Theme</p>
-                          </TooltipContent>
-                        </Tooltip>
+                        {selectedFramework === "html" && (
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <Badge
+                                variant="secondary"
+                                className="cursor-default border border-border"
+                              >
+                                <Paintbrush className="mr-1 size-3" />{" "}
+                                <span className="first-letter:uppercase">
+                                  {extractDataTheme(files[0].content)}
+                                </span>
+                              </Badge>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Theme</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
                       </div>
                       <div className="space-y-2">
                         {files.map((file, index) => {
@@ -296,8 +299,7 @@ export default function ComponentFiles({
                             <div
                               key={index}
                               className={cn(
-                                "flex items-center justify-between rounded p-1",
-                                `${fileConfig.color} bg-foreground`,
+                                "flex items-center justify-between rounded p-1 bg-foreground",
                                 "hover:bg-gradient-to-l from-emerald-400 via-emerald-500 to-emerald-600 hover:text-foreground",
                                 isLoading ? "cursor-default" : "cursor-pointer",
                                 activeTab === file.name &&
@@ -310,8 +312,13 @@ export default function ComponentFiles({
                               }
                             >
                               <div className="flex items-center">
-                                <FileIcon className="mr-2 size-4" />
-                                <div className="font-mono text-sm">
+                                <FileIcon
+                                  className={cn(
+                                    "mr-2 size-4",
+                                    fileConfig.color,
+                                  )}
+                                />
+                                <div className="font-mono text-sm font-medium text-border">
                                   {file.name || "untitled.html"}
                                 </div>
                               </div>

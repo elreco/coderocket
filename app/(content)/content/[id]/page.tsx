@@ -1,5 +1,5 @@
 import { fetchLastAssistantMessageByChatId } from "@/app/(default)/components/actions";
-import { handleAIcompletionForHTML } from "@/utils/completion-parser";
+import { extractFilesFromCompletion } from "@/utils/completion-parser";
 
 import RenderHtmlComponentServer from "../../render-html-component-server";
 
@@ -15,7 +15,7 @@ export default async function Content({
     return <div>No content found</div>;
   }
 
-  const files = handleAIcompletionForHTML(lastAssistantMessage.content);
+  const files = extractFilesFromCompletion(lastAssistantMessage.content);
 
   return (
     <RenderHtmlComponentServer

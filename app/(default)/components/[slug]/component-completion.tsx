@@ -25,11 +25,14 @@ import {
 } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
 import { Tables } from "@/types_db";
-import { handleAIcompletionForHTML } from "@/utils/completion-parser";
+import {
+  extractFilesFromCompletion,
+  getUpdatedArtifactCode,
+} from "@/utils/completion-parser";
 import { crispWebsiteId } from "@/utils/config";
 import { createClient } from "@/utils/supabase/client";
 
-import { fetchMessagesByChatId } from "../actions";
+import { fetchChatById, fetchMessagesByChatId } from "../actions";
 
 import ComponentSettings from "./(settings)/component-settings";
 import CodePreview from "./code-preview";
@@ -77,6 +80,10 @@ export default function ComponentCompletion({
   const [componentFiles, setComponentFiles] = useState<
     { name: string | null; content: string }[]
   >([]);
+
+  const [artifactCode, setArtifactCode] = useState(
+    fetchedChat.artifact_code || "",
+  );
 
   const [activeTab, setActiveTab] = useState("");
 
@@ -134,6 +141,7 @@ export default function ComponentCompletion({
 
   const handleSubmitToAI = (input: string) => {
     setCompletion("");
+    setArtifactCode("");
     setCanvas(false);
     setIsLoading(true);
     complete(input);
@@ -186,6 +194,9 @@ export default function ComponentCompletion({
     const refreshedChatMessages = await fetchMessagesByChatId(fetchedChat.id);
     if (!refreshedChatMessages) return;
     setMessages(refreshedChatMessages);
+    const refreshedChat = await fetchChatById(fetchedChat.id);
+    if (!refreshedChat) return;
+    setArtifactCode(refreshedChat.artifact_code || "");
     return refreshedChatMessages;
   };
 
@@ -194,7 +205,14 @@ export default function ComponentCompletion({
     isFirstRun?: boolean,
     tabName?: string,
   ) => {
-    const files = handleAIcompletionForHTML(_completion);
+    const updatedArtifactCode = getUpdatedArtifactCode(
+      _completion,
+      artifactCode,
+    );
+    console.log("_completion", _completion);
+    console.log("updatedArtifactCode", updatedArtifactCode);
+    console.log("artifactCode", artifactCode);
+    const files = extractFilesFromCompletion(updatedArtifactCode);
 
     if (files.length > 0) {
       setComponentFiles(files);
@@ -266,7 +284,7 @@ export default function ComponentCompletion({
       handleComponentFiles(lastAssistantMessage.content, true);
       handleVersionSelect(lastAssistantMessage.version);
     }
-    if (!fetchedChat.artifact_code) {
+    if (!artifactCode) {
       setCanvas(false);
       complete(lastUserMessage.content);
       setIsLoading(true);
@@ -308,6 +326,8 @@ export default function ComponentCompletion({
     setInput,
     handleSubmitToAI,
     setCompletion,
+    artifactCode,
+    setArtifactCode,
     chatId: fetchedChat.id,
     selectedFramework: fetchedChat.framework || "react",
   };

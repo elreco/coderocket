@@ -1,7 +1,3 @@
-import { css } from "@codemirror/lang-css";
-import { html } from "@codemirror/lang-html";
-import { javascript } from "@codemirror/lang-javascript";
-import { json } from "@codemirror/lang-json";
 import { StateField } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 import { draculaInit } from "@uiw/codemirror-theme-dracula";
@@ -19,15 +15,51 @@ import { useCopyToClipboard } from "usehooks-ts";
 import RenderHtmlComponent from "@/app/(content)/render-html-component";
 import RenderReactComponent from "@/app/(content)/render-react-component";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { getFileConfig } from "@/utils/file-extensions";
+import { getFileConfig, getLanguageExtension } from "@/utils/file-extensions";
 import { iframeBuilder } from "@/utils/iframe-builder";
 
 import { CodePreviewFileTree } from "./code-preview-filetree";
 import { useComponentContext } from "./component-context";
 import ChatSkeleton from "./component-skeleton";
+
+const RenderContent = ({
+  isLoading,
+  componentFiles,
+  selectedFramework,
+}: {
+  isLoading: boolean;
+  componentFiles: { name: string | null; content: string }[];
+  selectedFramework: string;
+}) => {
+  if (isLoading && componentFiles.length === 0) {
+    return (
+      <div className="flex size-full items-center justify-center">
+        <ChatSkeleton />
+      </div>
+    );
+  }
+  if (!isLoading && componentFiles.length > 0) {
+    if (selectedFramework === "html") {
+      return <RenderHtmlComponent files={componentFiles} />;
+    }
+    if (selectedFramework === "react") {
+      return <RenderReactComponent files={componentFiles} />;
+    }
+  }
+
+  return (
+    <div className="flex size-full items-center justify-center">
+      <img src="/placeholder.svg" alt="No artifacts" />
+    </div>
+  );
+};
 
 export default function CodePreview() {
   const {
@@ -119,25 +151,6 @@ export default function CodePreview() {
     }
   }, []);
 
-  const getLanguageExtension = (filename: string) => {
-    const ext = filename.split(".").pop()?.toLowerCase();
-    switch (ext) {
-      case "css":
-        return css();
-      case "js":
-      case "jsx":
-        return javascript({ jsx: true });
-      case "ts":
-      case "tsx":
-        return javascript({ typescript: true, jsx: true });
-      case "json":
-        return json();
-      case "html":
-      default:
-        return html();
-    }
-  };
-
   return (
     <div className="flex size-full flex-col overflow-hidden xl:flex-row">
       <div
@@ -146,23 +159,11 @@ export default function CodePreview() {
           isCanvas ? "opacity-100 size-full" : "opacity-0 size-0",
         )}
       >
-        {isLoading && componentFiles.length === 0 ? (
-          <div className="flex size-full items-center justify-center">
-            <ChatSkeleton />
-          </div>
-        ) : !isLoading &&
-          selectedFramework === "html" &&
-          componentFiles.length > 0 ? (
-          <RenderHtmlComponent files={componentFiles} />
-        ) : !isLoading &&
-          selectedFramework === "react" &&
-          componentFiles.length > 0 ? (
-          <RenderReactComponent files={componentFiles} />
-        ) : (
-          <div className="flex size-full items-center justify-center">
-            <img src="/placeholder.svg" alt="No artifacts" />
-          </div>
-        )}
+        <RenderContent
+          isLoading={isLoading}
+          componentFiles={componentFiles}
+          selectedFramework={selectedFramework}
+        />
       </div>
       <div
         className={cn(
@@ -171,8 +172,11 @@ export default function CodePreview() {
         )}
       >
         <div className="relative flex size-full flex-col rounded-none border-none">
-          <CodePreviewFileTree />
-          <Tabs
+          <SidebarProvider>
+            <CodePreviewFileTree />
+            <SidebarTrigger className="m-2" />
+          </SidebarProvider>
+          {/* <Tabs
             value={activeTab}
             className="relative flex flex-1 flex-col items-start justify-start"
             onValueChange={handleTabChange}
@@ -199,35 +203,35 @@ export default function CodePreview() {
             <TabsContent
               value={activeTab}
               className="m-0 flex h-0 w-full max-w-full grow"
-            >
-              <CodeMirror
-                ref={codeMirrorRef}
-                theme={draculaInit({
-                  settings: {
-                    background: "hsl(var(--secondary))",
-                    gutterBackground: "hsl(var(--secondary))",
-                  },
-                })}
-                value={editorValue}
-                lang={activeTab.split(".").pop() || "html"}
-                height="100%"
-                width="100%"
-                className={`w-full max-w-full ${
-                  isLoading ? "pointer-events-none overflow-hidden" : ""
-                }`}
-                extensions={[getLanguageExtension(activeTab)]}
-                readOnly
-                basicSetup={{
-                  lineNumbers: true,
-                  foldGutter: true,
-                  highlightActiveLine: true,
-                  highlightActiveLineGutter: true,
-                  highlightSpecialChars: true,
-                  tabSize: 2,
-                }}
-              />
-            </TabsContent>
-          </Tabs>
+            > */}
+          <CodeMirror
+            ref={codeMirrorRef}
+            theme={draculaInit({
+              settings: {
+                background: "hsl(var(--secondary))",
+                gutterBackground: "hsl(var(--secondary))",
+              },
+            })}
+            value={editorValue}
+            lang={activeTab.split(".").pop() || "html"}
+            height="100%"
+            width="100%"
+            className={`w-full max-w-full ${
+              isLoading ? "pointer-events-none overflow-hidden" : ""
+            }`}
+            extensions={[getLanguageExtension(activeTab)]}
+            readOnly
+            basicSetup={{
+              lineNumbers: true,
+              foldGutter: true,
+              highlightActiveLine: true,
+              highlightActiveLineGutter: true,
+              highlightSpecialChars: true,
+              tabSize: 2,
+            }}
+          />
+          {/* </TabsContent>
+          </Tabs> */}
           <div className="absolute bottom-0 right-0 m-1 flex items-center justify-center space-x-1 ease-out hover:ease-in xl:hidden group-hover:xl:flex">
             {!isLoading && (
               <Button

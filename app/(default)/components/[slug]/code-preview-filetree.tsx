@@ -13,6 +13,7 @@ import {
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarMenu,
+  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarMenuSub,
@@ -20,32 +21,85 @@ import {
 } from "@/components/ui/sidebar";
 
 // This is sample data.
-const data = [
-  [
-    "app",
-    [
-      "api",
-      ["hello", ["route.ts"]],
-      "page.tsx",
-      "layout.tsx",
-      ["blog", ["page.tsx"]],
-    ],
+const data = {
+  changes: [
+    {
+      file: "README.md",
+      state: "M",
+    },
+    {
+      file: "api/hello/route.ts",
+      state: "U",
+    },
+    {
+      file: "app/layout.tsx",
+      state: "M",
+    },
   ],
-  ["components", ["ui", "button.tsx", "card.tsx"], "header.tsx", "footer.tsx"],
-  ["lib", ["util.ts"]],
-  ["public", "favicon.ico", "vercel.svg"],
-  ".eslintrc.json",
-  ".gitignore",
-  "next.config.js",
-  "tailwind.config.js",
-  "package.json",
-  "README.md",
-];
+  tree: [
+    [
+      "app",
+      [
+        "api",
+        ["hello", ["route.ts"]],
+        "page.tsx",
+        "layout.tsx",
+        ["blog", ["page.tsx"]],
+      ],
+    ],
+    [
+      "components",
+      ["ui", "button.tsx", "card.tsx"],
+      "header.tsx",
+      "footer.tsx",
+    ],
+    ["lib", ["util.ts"]],
+    ["public", "favicon.ico", "vercel.svg"],
+    ".eslintrc.json",
+    ".gitignore",
+    "next.config.js",
+    "tailwind.config.js",
+    "package.json",
+    "README.md",
+  ],
+};
 
 export function CodePreviewFileTree({
   ...props
 }: React.ComponentProps<typeof Sidebar>) {
-  return data.map((item, index) => <Tree key={index} item={item} />);
+  return (
+    <Sidebar {...props}>
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupLabel>Changes</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {data.changes.map((item, index) => (
+                <SidebarMenuItem key={index}>
+                  <SidebarMenuButton>
+                    <File />
+                    {item.file}
+                  </SidebarMenuButton>
+                  <SidebarMenuBadge>{item.state}</SidebarMenuBadge>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+        <SidebarGroup>
+          <SidebarGroupLabel>Files</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {data.tree.map((item, index) => (
+                <Tree key={index} item={item} />
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+      <SidebarRail />
+    </Sidebar>
+  );
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -54,28 +108,37 @@ function Tree({ item }: { item: string | any[] }) {
 
   if (!items.length) {
     return (
-      <div className="flex items-center gap-2 py-1 data-[active=true]:bg-transparent">
+      <SidebarMenuButton
+        isActive={name === "button.tsx"}
+        className="data-[active=true]:bg-transparent"
+      >
         <File />
         {name}
-      </div>
+      </SidebarMenuButton>
     );
   }
 
   return (
-    <Collapsible
-      className="group/collapsible py-2 [&[data-state=open]>button>svg:first-child]:rotate-90"
-      defaultOpen={name === "components" || name === "ui"}
-    >
-      <CollapsibleTrigger className="flex items-center gap-2">
-        <ChevronRight className="transition-transform" />
-        <Folder />
-        {name}
-      </CollapsibleTrigger>
-      <CollapsibleContent className="pl-8">
-        {items.map((subItem, index) => (
-          <Tree key={index} item={subItem} />
-        ))}
-      </CollapsibleContent>
-    </Collapsible>
+    <SidebarMenuItem>
+      <Collapsible
+        className="group/collapsible [&[data-state=open]>button>svg:first-child]:rotate-90"
+        defaultOpen={name === "components" || name === "ui"}
+      >
+        <CollapsibleTrigger asChild>
+          <SidebarMenuButton>
+            <ChevronRight className="transition-transform" />
+            <Folder />
+            {name}
+          </SidebarMenuButton>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <SidebarMenuSub>
+            {items.map((subItem, index) => (
+              <Tree key={index} item={subItem} />
+            ))}
+          </SidebarMenuSub>
+        </CollapsibleContent>
+      </Collapsible>
+    </SidebarMenuItem>
   );
 }
