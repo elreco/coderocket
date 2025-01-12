@@ -22,7 +22,7 @@ export default function ComponentSettings({
   const {
     chatId,
     refreshChatData,
-    handleComponentFiles,
+    handleChatFiles,
     completion,
     selectedVersion,
     setCompletion,
@@ -37,7 +37,7 @@ export default function ComponentSettings({
     const completionWithTheme = setDataTheme(completion, theme);
     await updateTheme(chatId, theme, selectedVersion, completionWithTheme);
     await refreshChatData();
-    handleComponentFiles(completionWithTheme);
+    handleChatFiles(completionWithTheme);
     setCompletion(completionWithTheme);
     setIsSettingLoading("");
     setOpen(false);

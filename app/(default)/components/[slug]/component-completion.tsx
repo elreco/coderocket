@@ -26,6 +26,8 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Tables } from "@/types_db";
 import {
+  ChatFile,
+  extractFilesFromArtifact,
   extractFilesFromCompletion,
   getUpdatedArtifactCode,
 } from "@/utils/completion-parser";
@@ -77,9 +79,8 @@ export default function ComponentCompletion({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editorValue, setEditorValue] = useState("");
 
-  const [componentFiles, setComponentFiles] = useState<
-    { name: string | null; content: string }[]
-  >([]);
+  const [chatFiles, setChatFiles] = useState<ChatFile[]>([]);
+  const [artifactFiles, setArtifactFiles] = useState<ChatFile[]>([]);
 
   const [artifactCode, setArtifactCode] = useState(
     fetchedChat.artifact_code || "",
@@ -141,7 +142,6 @@ export default function ComponentCompletion({
 
   const handleSubmitToAI = (input: string) => {
     setCompletion("");
-    setArtifactCode("");
     setCanvas(false);
     setIsLoading(true);
     complete(input);
@@ -165,7 +165,7 @@ export default function ComponentCompletion({
       return;
     }
     setCompletion(selectedAssistantMessage.content);
-    handleComponentFiles(selectedAssistantMessage.content, false, tabName);
+    handleChatFiles(selectedAssistantMessage.content, false, tabName);
   };
 
   const copyPrompt = (prompt: string) => {
@@ -200,29 +200,25 @@ export default function ComponentCompletion({
     return refreshedChatMessages;
   };
 
-  const handleComponentFiles = (
+  const handleChatFiles = (
     _completion: string,
     isFirstRun?: boolean,
     tabName?: string,
   ) => {
-    const updatedArtifactCode = getUpdatedArtifactCode(
-      _completion,
-      artifactCode,
-    );
-    console.log("_completion", _completion);
-    console.log("updatedArtifactCode", updatedArtifactCode);
-    console.log("artifactCode", artifactCode);
-    const files = extractFilesFromCompletion(updatedArtifactCode);
+    const newArtifactCode = getUpdatedArtifactCode(_completion, artifactCode);
+    const newArtifactFiles = extractFilesFromArtifact(newArtifactCode);
+    setArtifactFiles(newArtifactFiles);
+
+    const files = extractFilesFromCompletion(_completion);
 
     if (files.length > 0) {
-      setComponentFiles(files);
+      setChatFiles(files);
     } else {
-      setComponentFiles([]);
+      setChatFiles([]);
     }
-
     if (tabName) {
-      const file = files.find((file) => file.name === tabName);
-
+      const file = newArtifactFiles.find((file) => file.name === tabName);
+      console.log("file 2", file);
       if (!file) {
         setEditorValue("");
         setActiveTab("");
@@ -235,7 +231,7 @@ export default function ComponentCompletion({
     }
 
     if (isFirstRun) {
-      const firstFile = files[0];
+      const firstFile = newArtifactFiles[0];
       if (!firstFile) {
         setEditorValue("");
         setActiveTab("");
@@ -246,7 +242,13 @@ export default function ComponentCompletion({
       setCanvas(true);
       return;
     }
-    const lastFile = files[files.length - 1];
+    if (!newArtifactFiles.length) {
+      setEditorValue("");
+      setActiveTab("");
+      return;
+    }
+    const lastFile = newArtifactFiles[newArtifactFiles.length - 1];
+
     if (!lastFile) {
       setEditorValue("");
       setActiveTab("");
@@ -275,14 +277,14 @@ export default function ComponentCompletion({
 
   useEffect(() => {
     if (isLoading) {
-      handleComponentFiles(completion);
+      handleChatFiles(completion);
     }
   }, [completion]);
 
   useEffect(() => {
     if (lastAssistantMessage?.content) {
-      handleComponentFiles(lastAssistantMessage.content, true);
-      handleVersionSelect(lastAssistantMessage.version);
+      handleChatFiles(lastAssistantMessage.content, true);
+      //handleVersionSelect(lastAssistantMessage.version);
     }
     if (!artifactCode) {
       setCanvas(false);
@@ -310,7 +312,7 @@ export default function ComponentCompletion({
     setCanvas,
     isLoading,
     selectedVersion,
-    componentFiles,
+    chatFiles,
     activeTab,
     editorValue,
     handleVersionSelect,
@@ -318,7 +320,7 @@ export default function ComponentCompletion({
     completion,
     messages,
     user,
-    handleComponentFiles,
+    handleChatFiles,
     refreshChatData,
     isVisible,
     setVisible,
@@ -329,6 +331,7 @@ export default function ComponentCompletion({
     artifactCode,
     setArtifactCode,
     chatId: fetchedChat.id,
+    artifactFiles,
     selectedFramework: fetchedChat.framework || "react",
   };
 
@@ -420,7 +423,7 @@ export default function ComponentCompletion({
                     <p>{isCanvas ? "Display code" : "Hide code"}</p>
                   </TooltipContent>
                 </Tooltip>
-                {componentFiles.length > 0 && (
+                {chatFiles.length > 0 && (
                   <>
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -445,7 +448,7 @@ export default function ComponentCompletion({
                       <DialogContent className="z-[9999] h-[95%] max-w-[95%] rounded-none p-10">
                         <DialogTitle className="hidden">Fullscreen</DialogTitle>
                         <DialogDescription className="z-[9999]">
-                          <RenderHtmlComponent files={componentFiles} />
+                          <RenderHtmlComponent files={chatFiles} />
                         </DialogDescription>
                       </DialogContent>
                     </Dialog>

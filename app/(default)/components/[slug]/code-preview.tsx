@@ -8,90 +8,79 @@ import CodeMirror, {
 import saveAs from "file-saver";
 import JSZip from "jszip";
 import { Clipboard, Download } from "lucide-react";
-import { useParams } from "next/navigation";
 import { useRef, useEffect } from "react";
+import React from "react";
 import { useCopyToClipboard } from "usehooks-ts";
 
 import RenderHtmlComponent from "@/app/(content)/render-html-component";
 import RenderReactComponent from "@/app/(content)/render-react-component";
 import { Button } from "@/components/ui/button";
-import {
-  SidebarInset,
-  SidebarProvider,
-  SidebarTrigger,
-} from "@/components/ui/sidebar";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { getFileConfig, getLanguageExtension } from "@/utils/file-extensions";
-import { iframeBuilder } from "@/utils/iframe-builder";
+import { ChatFile } from "@/utils/completion-parser";
+import { getLanguageExtension } from "@/utils/file-extensions";
 
 import { CodePreviewFileTree } from "./code-preview-filetree";
 import { useComponentContext } from "./component-context";
 import ChatSkeleton from "./component-skeleton";
 
-const RenderContent = ({
-  isLoading,
-  componentFiles,
-  selectedFramework,
-}: {
-  isLoading: boolean;
-  componentFiles: { name: string | null; content: string }[];
-  selectedFramework: string;
-}) => {
-  if (isLoading && componentFiles.length === 0) {
+const RenderContent = React.memo(
+  ({
+    isLoading,
+    chatFiles,
+    selectedFramework,
+    artifactFiles,
+  }: {
+    isLoading: boolean;
+    chatFiles: ChatFile[];
+    selectedFramework: string;
+    artifactFiles: ChatFile[];
+  }) => {
+    if (isLoading && chatFiles.length === 0) {
+      return (
+        <div className="flex size-full items-center justify-center">
+          <ChatSkeleton />
+        </div>
+      );
+    }
+    if (!isLoading && chatFiles.length > 0 && selectedFramework === "html") {
+      return <RenderHtmlComponent files={chatFiles} />;
+    }
+
+    if (selectedFramework === "react") {
+      return (
+        <RenderReactComponent isLoading={isLoading} files={artifactFiles} />
+      );
+    }
+
     return (
       <div className="flex size-full items-center justify-center">
-        <ChatSkeleton />
+        <img src="/placeholder.svg" alt="No artifacts" />
       </div>
     );
-  }
-  if (!isLoading && componentFiles.length > 0) {
-    if (selectedFramework === "html") {
-      return <RenderHtmlComponent files={componentFiles} />;
-    }
-    if (selectedFramework === "react") {
-      return <RenderReactComponent files={componentFiles} />;
-    }
-  }
-
-  return (
-    <div className="flex size-full items-center justify-center">
-      <img src="/placeholder.svg" alt="No artifacts" />
-    </div>
-  );
-};
+  },
+);
 
 export default function CodePreview() {
   const {
     isCanvas,
     isLoading,
-    selectedVersion,
-    componentFiles,
+    chatFiles,
     activeTab,
     editorValue,
-    handleVersionSelect,
     selectedFramework,
+    artifactFiles,
   } = useComponentContext();
-
   const [, copy] = useCopyToClipboard();
-  const { id } = useParams();
   const codeMirrorRef = useRef<ReactCodeMirrorRef>(null);
 
-  const handleTabChange = (tabName: string) => {
-    handleVersionSelect(selectedVersion, tabName);
-  };
-
   const downloadCode = async () => {
-    if (!componentFiles.length) return;
+    if (!artifactFiles.length) return;
     const zip = new JSZip();
 
-    componentFiles.forEach((file) => {
+    artifactFiles.forEach((file) => {
       zip.file(`${file.name || "component.html"}`, file.content);
     });
-
-    const iframeContent = iframeBuilder(componentFiles, id?.toString() || "");
-
-    zip.file(`page.html`, iframeContent);
 
     zip.generateAsync({ type: "blob" }).then(function (content) {
       saveAs(content, "tailwindai-dev.zip");
@@ -140,7 +129,7 @@ export default function CodePreview() {
     return () => {
       clearInterval(scrollInterval);
     };
-  }, [componentFiles, isLoading]);
+  }, [chatFiles, isLoading]);
 
   useEffect(() => {
     if (codeMirrorRef.current?.view) {
@@ -155,83 +144,57 @@ export default function CodePreview() {
     <div className="flex size-full flex-col overflow-hidden xl:flex-row">
       <div
         className={cn(
-          "group flex flex-col transition-[opacity]",
+          "group flex flex-col items-center justify-center",
           isCanvas ? "opacity-100 size-full" : "opacity-0 size-0",
         )}
       >
         <RenderContent
           isLoading={isLoading}
-          componentFiles={componentFiles}
+          chatFiles={chatFiles}
           selectedFramework={selectedFramework}
+          artifactFiles={artifactFiles}
         />
       </div>
       <div
         className={cn(
-          "group transition-[opacity]",
+          "group transition-opacity",
           isCanvas ? "opacity-0 size-0" : "opacity-100 size-full",
         )}
       >
         <div className="relative flex size-full flex-col rounded-none border-none">
-          <SidebarProvider>
-            <CodePreviewFileTree />
-            <SidebarTrigger className="m-2" />
-          </SidebarProvider>
-          {/* <Tabs
-            value={activeTab}
-            className="relative flex flex-1 flex-col items-start justify-start"
-            onValueChange={handleTabChange}
-          >
-            <TabsList className="flex w-full items-start justify-start rounded-none border-none">
-              {componentFiles.map((file) => {
-                const fileConfig = getFileConfig(file.name || "untitled.html");
-                const FileIcon = fileConfig.icon;
-
-                return (
-                  <TabsTrigger
-                    key={file.name || ""}
-                    value={file.name || ""}
-                    disabled={isLoading}
-                    className="flex items-center gap-2"
-                  >
-                    <FileIcon className={cn("size-4", fileConfig.color)} />
-                    {file.name}
-                  </TabsTrigger>
-                );
-              })}
-            </TabsList>
-
-            <TabsContent
-              value={activeTab}
-              className="m-0 flex h-0 w-full max-w-full grow"
-            > */}
-          <CodeMirror
-            ref={codeMirrorRef}
-            theme={draculaInit({
-              settings: {
-                background: "hsl(var(--secondary))",
-                gutterBackground: "hsl(var(--secondary))",
-              },
-            })}
-            value={editorValue}
-            lang={activeTab.split(".").pop() || "html"}
-            height="100%"
-            width="100%"
-            className={`w-full max-w-full ${
-              isLoading ? "pointer-events-none overflow-hidden" : ""
-            }`}
-            extensions={[getLanguageExtension(activeTab)]}
-            readOnly
-            basicSetup={{
-              lineNumbers: true,
-              foldGutter: true,
-              highlightActiveLine: true,
-              highlightActiveLineGutter: true,
-              highlightSpecialChars: true,
-              tabSize: 2,
-            }}
-          />
-          {/* </TabsContent>
-          </Tabs> */}
+          <div className="relative flex flex-1 flex-col items-start justify-start">
+            <div className="flex items-start justify-start p-2">
+              <CodePreviewFileTree />
+            </div>
+            <div className="m-0 flex h-0 w-full max-w-full grow">
+              <CodeMirror
+                ref={codeMirrorRef}
+                theme={draculaInit({
+                  settings: {
+                    background: "hsl(var(--secondary))",
+                    gutterBackground: "hsl(var(--secondary))",
+                  },
+                })}
+                value={editorValue}
+                lang={activeTab.split(".").pop() || "html"}
+                height="100%"
+                width="100%"
+                className={`size-full max-w-full ${
+                  isLoading ? "pointer-events-none overflow-hidden" : ""
+                }`}
+                extensions={[getLanguageExtension(activeTab)]}
+                readOnly
+                basicSetup={{
+                  lineNumbers: true,
+                  foldGutter: true,
+                  highlightActiveLine: true,
+                  highlightActiveLineGutter: true,
+                  highlightSpecialChars: true,
+                  tabSize: 2,
+                }}
+              />
+            </div>
+          </div>
           <div className="absolute bottom-0 right-0 m-1 flex items-center justify-center space-x-1 ease-out hover:ease-in xl:hidden group-hover:xl:flex">
             {!isLoading && (
               <Button

@@ -98,15 +98,19 @@ const buildMessagesToOpenAi = async (
     selectedVersion !== undefined
       ? messages.filter((m) => m.version <= selectedVersion)
       : messages;
-
-  // Mapper les messages au format requis par OpenAI
   const messagesToOpenAI = filteredMessages.map((m) => {
+    const content =
+      messages.length === 1 && m.role === "user"
+        ? `NEW PROJECT TAILWIND AI - ${m.content}`
+        : m.content;
+
     return {
       role: m.role as "user" | "assistant" | "tool" | "system",
-      content: m.content,
+      content,
     };
   }) as CoreMessage[];
 
+  // Si c'est le premier message, ajouter le préfixe au prompt
   if (messagesToOpenAI.length === 1 && imageUrl) {
     messagesToOpenAI[0].content = [
       {

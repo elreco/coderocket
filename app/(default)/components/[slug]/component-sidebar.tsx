@@ -10,8 +10,8 @@ import { getRelativeDate } from "@/utils/date";
 import { getInitials } from "@/utils/helpers";
 
 import ComponentTheme from "./(settings)/component-theme";
+import ComponentChatFiles from "./component-chat-files";
 import { useComponentContext } from "./component-context";
-import ComponentFiles from "./component-files";
 import { ComponentSidebarSkeleton } from "./component-sidebar-skeleton";
 
 export default function ComponentSidebar({
@@ -84,7 +84,7 @@ export default function ComponentSidebar({
           </div>
         )}
         {messages.map((m) => (
-          <ComponentFiles message={m} key={m.id} />
+          <ComponentChatFiles message={m} key={m.id} />
         ))}
         <div
           className={cn(
