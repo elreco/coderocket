@@ -24,6 +24,8 @@ interface ComponentContextType {
   editorValue: string;
   handleVersionSelect: (version: number, tabName?: string) => void;
   authorized: boolean;
+  iframeSrc: string | null;
+  setIframeSrc: (value: string | null) => void;
   handleSubmitToAI: (input: string) => void;
   completion: string;
   messages: ChatMessage[];

@@ -1,7 +1,13 @@
-import { fetchLastAssistantMessageByChatId } from "@/app/(default)/components/actions";
-import { extractFilesFromCompletion } from "@/utils/completion-parser";
-
-import RenderHtmlComponentServer from "../../render-html-component-server";
+import RenderHtmlComponentServer from "@/app/(content)/render-html-component-server";
+import RenderReactComponent from "@/app/(content)/render-react-component";
+import {
+  fetchChatById,
+  fetchLastAssistantMessageByChatId,
+} from "@/app/(default)/components/actions";
+import {
+  extractFilesFromArtifact,
+  extractFilesFromCompletion,
+} from "@/utils/completion-parser";
 
 export default async function Content({
   params,
@@ -9,6 +15,7 @@ export default async function Content({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const chat = await fetchChatById(id);
   const lastAssistantMessage = await fetchLastAssistantMessageByChatId(id);
 
   if (!lastAssistantMessage) {
@@ -16,11 +23,18 @@ export default async function Content({
   }
 
   const files = extractFilesFromCompletion(lastAssistantMessage.content);
+  const artifactFiles = extractFilesFromArtifact(chat.artifact_code || "");
 
-  return (
+  return chat.framework === "html" ? (
     <RenderHtmlComponentServer
       files={files}
       style={{ width: "100%", height: "100%", border: "none" }}
+    />
+  ) : (
+    <RenderReactComponent
+      isLoading={false}
+      files={artifactFiles}
+      onServerReady={() => {}}
     />
   );
 }

@@ -1,5 +1,10 @@
 "use client";
-import { SiHtml5, SiReact } from "@icons-pack/react-simple-icons";
+import {
+  SiHtml5,
+  SiReact,
+  SiVuedotjs,
+  SiSvelte,
+} from "@icons-pack/react-simple-icons";
 import {
   Lock,
   Unlock,
@@ -389,15 +394,52 @@ export default function Hero() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="react" className="cursor-pointer">
-                    <div className="mr-2 flex flex-row items-center">
-                      <SiReact className="mr-2 size-3" />
-                      <span className="text-sm">React</span>
+                    <div className="mr-2 flex w-full flex-row items-center justify-between">
+                      <div className="flex items-center">
+                        <SiReact className="mr-2 size-3" />
+                        <span className="text-sm">React</span>
+                      </div>
+                      <Badge variant="secondary" className="mr-1 text-xs">
+                        Beta
+                      </Badge>
                     </div>
                   </SelectItem>
                   <SelectItem value="html" className="cursor-pointer">
                     <div className="mr-2 flex cursor-pointer flex-row items-center">
                       <SiHtml5 className="mr-2 size-3" />
                       <span className="text-sm">HTML</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem
+                    value="svelte"
+                    className="cursor-not-allowed opacity-50"
+                    disabled
+                    onSelect={(e) => e.preventDefault()}
+                  >
+                    <div className="pointer-events-none mr-2 flex w-full flex-row items-center justify-between">
+                      <div className="flex items-center">
+                        <SiSvelte className="mr-2 size-3" />
+                        <span className="text-sm">Svelte</span>
+                      </div>
+                      <Badge variant="outline" className="ml-2 text-xs">
+                        Soon
+                      </Badge>
+                    </div>
+                  </SelectItem>
+                  <SelectItem
+                    value="vue"
+                    className="cursor-not-allowed opacity-50"
+                    disabled
+                    onSelect={(e) => e.preventDefault()}
+                  >
+                    <div className="pointer-events-none mr-2 flex w-full flex-row items-center justify-between">
+                      <div className="flex items-center">
+                        <SiVuedotjs className="mr-2 size-3" />
+                        <span className="text-sm">Vue</span>
+                      </div>
+                      <Badge variant="outline" className="ml-0.5 mr-1 text-xs">
+                        Soon
+                      </Badge>
                     </div>
                   </SelectItem>
                 </SelectContent>

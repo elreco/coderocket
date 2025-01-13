@@ -40,7 +40,6 @@ export async function setupProject(files: ChatFile[]) {
   const webcontainer = await getWebContainer();
 
   const fileSystemTree = buildFileSystemTree(files);
-  console.log("fileSystemTree", fileSystemTree);
   await webcontainer?.mount(fileSystemTree);
 
   const installProcess = await webcontainer?.spawn("npm", ["install"]);

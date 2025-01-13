@@ -94,7 +94,7 @@ export const Markdown = memo(
           <ol className="my-2 list-decimal pl-8">{children}</ol>
         ),
         li: ({ children }) => (
-          <li className="first:mt-0 last:mb-0">{children}</li>
+          <li className="py-1 first:mt-0 last:mb-0">{children}</li>
         ),
       } satisfies Components;
     }, []);

@@ -10,7 +10,7 @@ import { ChatFile } from "@/utils/completion-parser";
 
 import { getWebContainer, setupProject } from "./webcontainer";
 
-type LoadingState = "initializing" | "installing" | "starting" | "error" | null;
+type LoadingState = "initializing" | "starting" | "error" | null;
 
 function LoadingState({ state }: { state: LoadingState }) {
   return (
@@ -19,13 +19,11 @@ function LoadingState({ state }: { state: LoadingState }) {
       <div className="space-y-2">
         <h3 className="font-semibold">
           {state === "initializing" && "Initializing WebContainer..."}
-          {state === "installing" && "Reinstalling dependencies..."}
           {state === "starting" && "Starting development server..."}
         </h3>
         <p className="text-sm text-muted-foreground">
           {state === "initializing" &&
             "Setting up your development environment"}
-          {state === "installing" && "Files changed, reinstalling packages..."}
           {state === "starting" && "Almost ready to show your application"}
         </p>
       </div>
@@ -36,9 +34,11 @@ function LoadingState({ state }: { state: LoadingState }) {
 export default function RenderReactComponent({
   files,
   isLoading,
+  onServerReady,
 }: {
   files: ChatFile[];
   isLoading: boolean;
+  onServerReady: (url: string) => void;
 }) {
   const [iframeSrc, setIframeSrc] = useState<string | null>(null);
   const [loadingState, setLoadingState] =
@@ -48,7 +48,7 @@ export default function RenderReactComponent({
 
   const stopServer = useCallback(async () => {
     if (serverProcess.current) {
-      await serverProcess.current.kill();
+      serverProcess.current.kill();
       serverProcess.current = null;
     }
   }, []);
@@ -60,10 +60,8 @@ export default function RenderReactComponent({
       await stopServer();
       setLoadingState("initializing");
       setError(null);
-      setIframeSrc(null);
 
       try {
-        setLoadingState("installing");
         const webcontainer = await setupProject(files);
 
         setLoadingState("starting");
@@ -81,9 +79,10 @@ export default function RenderReactComponent({
 
         await Promise.race([
           new Promise<void>((resolve) => {
-            webcontainer.on("server-ready", (port, url) => {
-              setIframeSrc(url);
+            webcontainer.on("server-ready", async (port, url) => {
               setLoadingState(null);
+              onServerReady(url);
+              setIframeSrc(url);
               resolve();
             });
           }),
@@ -100,11 +99,12 @@ export default function RenderReactComponent({
     };
 
     setupEnvironment();
-
+    console.log("Starting server");
     return () => {
+      console.log("Stopping server");
       stopServer();
     };
-  }, [files, isLoading, stopServer]);
+  }, [files, isLoading]);
 
   const handleRetry = useCallback(async () => {
     try {
@@ -128,8 +128,9 @@ export default function RenderReactComponent({
       await Promise.race([
         new Promise<void>((resolve) => {
           webcontainer.on("server-ready", (port, url) => {
-            setIframeSrc(url);
+            onServerReady(url);
             setLoadingState(null);
+            setIframeSrc(url);
             resolve();
           });
         }),
@@ -146,8 +147,8 @@ export default function RenderReactComponent({
 
   return (
     <>
-      {isLoading || loadingState === "installing" ? (
-        <LoadingState state="installing" />
+      {isLoading ? (
+        <LoadingState state="initializing" />
       ) : error ? (
         <div className="mx-4 flex items-center justify-center">
           <Alert variant="destructive" className="bg-secondary px-12">

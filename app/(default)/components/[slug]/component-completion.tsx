@@ -3,7 +3,7 @@
 import { useCompletion } from "ai/react";
 import { Crisp } from "crisp-sdk-web";
 import { Fullscreen, Layers, LoaderCircle, Settings } from "lucide-react";
-import { Code, Share, Tv } from "lucide-react";
+import { Share } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useCopyToClipboard } from "usehooks-ts";
@@ -18,6 +18,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Tooltip,
   TooltipContent,
@@ -87,6 +88,7 @@ export default function ComponentCompletion({
   );
 
   const [activeTab, setActiveTab] = useState("");
+  const [iframeSrc, setIframeSrc] = useState<string | null>(null);
 
   const [isLoading, setIsLoading] = useState(false);
 
@@ -218,7 +220,6 @@ export default function ComponentCompletion({
     }
     if (tabName) {
       const file = newArtifactFiles.find((file) => file.name === tabName);
-      console.log("file 2", file);
       if (!file) {
         setEditorValue("");
         setActiveTab("");
@@ -330,6 +331,8 @@ export default function ComponentCompletion({
     setCompletion,
     artifactCode,
     setArtifactCode,
+    iframeSrc,
+    setIframeSrc,
     chatId: fetchedChat.id,
     artifactFiles,
     selectedFramework: fetchedChat.framework || "react",
@@ -398,62 +401,58 @@ export default function ComponentCompletion({
                 )}
               </h1>
               <div className="ml-2 flex items-center gap-2">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => setCanvas(!isCanvas)}
-                    >
-                      {isCanvas ? (
-                        <div className="flex items-center">
-                          <Code className="mr-1 size-4" />
-                          <span>Code</span>
-                        </div>
-                      ) : (
-                        <div className="flex items-center">
-                          <Tv className="mr-1 size-4" />
-                          <span>Canvas</span>
-                        </div>
-                      )}
-                    </Button>
-                  </TooltipTrigger>
-
-                  <TooltipContent>
-                    <p>{isCanvas ? "Display code" : "Hide code"}</p>
-                  </TooltipContent>
-                </Tooltip>
-                {chatFiles.length > 0 && (
-                  <>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          onClick={() => setIsModalOpen(true)}
-                          className="flex items-center"
-                          disabled={isLoading}
-                        >
-                          <Fullscreen className="w-5" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Display in fullscreen</p>
-                      </TooltipContent>
-                    </Tooltip>
-                    <Dialog
-                      open={isModalOpen}
-                      onOpenChange={handleFullscreenToggle}
-                    >
-                      <DialogContent className="z-[9999] h-[95%] max-w-[95%] rounded-none p-10">
-                        <DialogTitle className="hidden">Fullscreen</DialogTitle>
-                        <DialogDescription className="z-[9999]">
-                          <RenderHtmlComponent files={chatFiles} />
-                        </DialogDescription>
-                      </DialogContent>
-                    </Dialog>
-                  </>
-                )}
+                <Tabs
+                  value={isCanvas ? "canvas" : "code"}
+                  className="w-full"
+                  onValueChange={(value) => setCanvas(value === "canvas")}
+                >
+                  <TabsList className="grid w-fit grid-cols-2 text-xs">
+                    <TabsTrigger value="canvas">Preview</TabsTrigger>
+                    <TabsTrigger value="code">Code</TabsTrigger>
+                  </TabsList>
+                </Tabs>
+                {chatFiles.length > 0 &&
+                  (fetchedChat.framework === "html" ||
+                    (iframeSrc && fetchedChat.framework === "react")) && (
+                    <>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => setIsModalOpen(true)}
+                            className="flex items-center"
+                            disabled={isLoading}
+                          >
+                            <Fullscreen className="w-5" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Display in fullscreen</p>
+                        </TooltipContent>
+                      </Tooltip>
+                      <Dialog
+                        open={isModalOpen}
+                        onOpenChange={handleFullscreenToggle}
+                      >
+                        <DialogContent className="z-[9999] h-[98%] max-w-[98%] rounded-none p-10">
+                          <DialogTitle className="hidden">
+                            Fullscreen
+                          </DialogTitle>
+                          <DialogDescription className="z-[9999]">
+                            {fetchedChat.framework === "react" && iframeSrc ? (
+                              <iframe
+                                src={iframeSrc}
+                                className="size-full rounded-md border-none"
+                              />
+                            ) : (
+                              <RenderHtmlComponent files={chatFiles} />
+                            )}
+                          </DialogDescription>
+                        </DialogContent>
+                      </Dialog>
+                    </>
+                  )}
                 {isVisible && (
                   <Tooltip>
                     <TooltipTrigger asChild>

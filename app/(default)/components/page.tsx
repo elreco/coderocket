@@ -11,7 +11,6 @@ export const metadata = {
 
 export default async function Featured() {
   const chats = await getAllPublicChats();
-
   return (
     <Container className="pr-2 sm:pr-11">
       <PageTitle

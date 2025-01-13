@@ -30,11 +30,13 @@ const RenderContent = React.memo(
     chatFiles,
     selectedFramework,
     artifactFiles,
+    setIframeSrc,
   }: {
     isLoading: boolean;
     chatFiles: ChatFile[];
     selectedFramework: string;
     artifactFiles: ChatFile[];
+    setIframeSrc: (url: string) => void;
   }) => {
     if (isLoading && chatFiles.length === 0) {
       return (
@@ -49,7 +51,11 @@ const RenderContent = React.memo(
 
     if (selectedFramework === "react") {
       return (
-        <RenderReactComponent isLoading={isLoading} files={artifactFiles} />
+        <RenderReactComponent
+          isLoading={isLoading}
+          files={artifactFiles}
+          onServerReady={(url) => setIframeSrc(url)}
+        />
       );
     }
 
@@ -57,6 +63,25 @@ const RenderContent = React.memo(
       <div className="flex size-full items-center justify-center">
         <img src="/placeholder.svg" alt="No artifacts" />
       </div>
+    );
+  },
+  (prevProps, nextProps) => {
+    if (prevProps.selectedFramework !== nextProps.selectedFramework)
+      return false;
+    if (prevProps.isLoading !== nextProps.isLoading) return false;
+
+    const areFilesEqual = (prev: ChatFile[], next: ChatFile[]) => {
+      if (prev.length !== next.length) return false;
+      return prev.every(
+        (file, index) =>
+          file.name === next[index].name &&
+          file.content === next[index].content,
+      );
+    };
+
+    return (
+      areFilesEqual(prevProps.chatFiles, nextProps.chatFiles) &&
+      areFilesEqual(prevProps.artifactFiles, nextProps.artifactFiles)
     );
   },
 );
@@ -68,12 +93,12 @@ export default function CodePreview() {
     chatFiles,
     activeTab,
     editorValue,
-    selectedFramework,
     artifactFiles,
+    selectedFramework,
+    setIframeSrc,
   } = useComponentContext();
   const [, copy] = useCopyToClipboard();
   const codeMirrorRef = useRef<ReactCodeMirrorRef>(null);
-
   const downloadCode = async () => {
     if (!artifactFiles.length) return;
     const zip = new JSZip();
@@ -153,6 +178,7 @@ export default function CodePreview() {
           chatFiles={chatFiles}
           selectedFramework={selectedFramework}
           artifactFiles={artifactFiles}
+          setIframeSrc={setIframeSrc}
         />
       </div>
       <div

@@ -8,6 +8,8 @@ import {
   SiReact,
   SiJavascript,
   SiCss3,
+  SiSvelte,
+  SiVuedotjs,
 } from "@icons-pack/react-simple-icons";
 import { Braces } from "lucide-react";
 
@@ -46,6 +48,14 @@ const FILE_EXTENSIONS: Record<string, FileExtensionConfig> = {
     icon: SiJavascript,
     color: "text-[#F7DF1E]",
   },
+  svelte: {
+    icon: SiSvelte,
+    color: "text-[#FF3E00]",
+  },
+  vue: {
+    icon: SiVuedotjs,
+    color: "text-[#4FC08D]",
+  },
 };
 
 export const getFileConfig = (fileName: string): FileExtensionConfig => {
@@ -72,6 +82,10 @@ export const getLanguageExtension = (filename: string) => {
     case "json":
       return json();
     case "html":
+    case "svelte":
+      return javascript({ jsx: true });
+    case "vue":
+      return javascript({ jsx: true });
     default:
       return html();
   }
