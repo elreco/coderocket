@@ -21,23 +21,12 @@ export const getUpdatedArtifactCode = (
   completion: string,
   artifactCode: string,
 ): string => {
-  // Trouver tous les artifacts dans la completion
-  const artifactRegex = /<tailwindaiArtifact>[\s\S]*?<\/tailwindaiArtifact>/g;
-  const artifacts = Array.from(completion.matchAll(artifactRegex));
-
-  // Si pas de nouvel artifact dans completion, retourner l'ancien artifactCode
-  if (artifacts.length === 0) {
-    return artifactCode || completion;
-  }
-
-  // Fusionner tous les artifacts trouvés
-  let mergedArtifact = "<tailwindaiArtifact>\n";
+  // Parser les fichiers existants de artifactCode
   const allFiles = new Map();
   const filesToDelete = new Set();
-
-  // Parser les fichiers existants de artifactCode
   const existingFileRegex =
     /<tailwindaiFile.*?name=["']([^"']*?)["'].*?>([\s\S]*?)<\/tailwindaiFile>/g;
+
   let existingMatch;
   while ((existingMatch = existingFileRegex.exec(artifactCode)) !== null) {
     const fileName = existingMatch[1];
@@ -45,34 +34,44 @@ export const getUpdatedArtifactCode = (
     allFiles.set(fileName, content);
   }
 
-  // Parser tous les nouveaux artifacts
-  artifacts.forEach((artifactMatch) => {
-    const artifactContent = artifactMatch[0];
-    const fileRegex =
-      /<tailwindaiFile.*?name=["']([^"']*?)["'].*?(?:action=["']([^"']*?)["'].*?)?>([\s\S]*?)(?=<\/tailwindaiFile>|<tailwindaiFile|$)/g;
-    let match;
+  // Modifier pour gérer les fichiers partiels
+  const fileStartRegex =
+    /<tailwindaiFile.*?name=["']([^"']*?)["'].*?(?:action=["']([^"']*?)["'].*?)?>/g;
+  let match;
 
-    while ((match = fileRegex.exec(artifactContent)) !== null) {
-      const fileName = match[1];
-      const action = match[2];
-      const content = match[3].trim();
+  while ((match = fileStartRegex.exec(completion)) !== null) {
+    const fileName = match[1];
+    const action = match[2];
+    const startIndex = match.index + match[0].length;
 
-      if (action === "delete") {
-        filesToDelete.add(fileName);
-      } else {
+    // Prendre tout le contenu après l'ouverture du tag, même s'il n'est pas fermé
+    const content = completion
+      .slice(startIndex)
+      .replace(/<\/tailwindaiFile>.*$/g, "")
+      .replace(/<tailwindaiFile.*$/g, "") // Arrêter au prochain début de fichier
+      .replace(/<\/tailwindaiArtifact>.*$/g, "")
+      .trim();
+
+    if (action === "delete") {
+      filesToDelete.add(fileName);
+    } else if (content) {
+      const existingContent = allFiles.get(fileName) || "";
+      // Si le contenu est plus long que l'existant, on met à jour
+      if (content.length > existingContent.length) {
         allFiles.set(fileName, content);
       }
     }
-  });
+  }
 
-  // Construire le résultat final
+  // Construire le résultat progressif
+  let mergedArtifact = "<tailwindaiArtifact>\n";
   allFiles.forEach((content, fileName) => {
     if (!filesToDelete.has(fileName)) {
       mergedArtifact += `<tailwindaiFile name="${fileName}">\n${content}\n</tailwindaiFile>\n`;
     }
   });
-
   mergedArtifact += "</tailwindaiArtifact>";
+
   return mergedArtifact;
 };
 

@@ -1,10 +1,23 @@
-import { auth } from "@webcontainer/api";
 export const maxDuration = 300;
+export const dynamic = "force-dynamic";
+import { auth } from "@webcontainer/api";
+import { Rubik } from "next/font/google";
 import { PropsWithChildren } from "react";
+
+// eslint-disable-next-line import/order
+import { SandPackCSS } from "@/components/sandpack-styles";
 
 import "@/styles/chrome-bug.css";
 import "@/styles/main.css";
-import { SandPackCSS } from "@/components/sandpack-styles";
+
+import "styles/main.css";
+import { cn } from "@/lib/utils";
+
+const rubik = Rubik({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-rubik",
+});
 
 export default function RootLayout({ children }: PropsWithChildren) {
   auth.init({
@@ -12,7 +25,7 @@ export default function RootLayout({ children }: PropsWithChildren) {
     scope: "",
   });
   return (
-    <html className="size-full">
+    <html className={cn("dark size-full antialiased", rubik.variable)}>
       <head>
         <SandPackCSS />
       </head>

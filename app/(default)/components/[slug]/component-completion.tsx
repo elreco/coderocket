@@ -144,6 +144,9 @@ export default function ComponentCompletion({
 
   const handleSubmitToAI = (input: string) => {
     setCompletion("");
+    setArtifactFiles([]);
+    setIframeSrc(null);
+    setChatFiles([]);
     setCanvas(false);
     setIsLoading(true);
     complete(input);

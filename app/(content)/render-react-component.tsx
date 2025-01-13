@@ -147,9 +147,9 @@ export default function RenderReactComponent({
 
   return (
     <>
-      {isLoading ? (
-        <LoadingState state="initializing" />
-      ) : error ? (
+      {isLoading && <LoadingState state="initializing" />}
+
+      {error && (
         <div className="mx-4 flex items-center justify-center">
           <Alert variant="destructive" className="bg-secondary px-12">
             <AlertCircle className="size-4" />
@@ -165,12 +165,18 @@ export default function RenderReactComponent({
             </Button>
           </Alert>
         </div>
-      ) : iframeSrc ? (
+      )}
+
+      {loadingState && <LoadingState state={loadingState} />}
+
+      {iframeSrc && !isLoading && !error && !loadingState && (
         <iframe
           src={iframeSrc}
           style={{ width: "100%", height: "100%", border: "none" }}
         />
-      ) : (
+      )}
+
+      {!isLoading && !error && !loadingState && !iframeSrc && (
         <LoadingState state={loadingState} />
       )}
     </>
