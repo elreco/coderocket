@@ -4,6 +4,7 @@ import { after } from "next/server";
 
 import {
   fetchChatById,
+  fetchChatsByUserId,
   fetchLastUserMessageByChatId,
   fetchMessagesByChatId,
 } from "@/app/(default)/components/actions";
@@ -157,14 +158,13 @@ const validateRequest = async (id: string) => {
     throw new Error("User is not authorized to modify chat");
   }
   const messagesFromDatabase = await fetchMessagesByChatId(id);
+  const chatsFromDatabase = await fetchChatsByUserId(user.id);
   if (!messagesFromDatabase) throw new Error("Could not get chat messages");
 
   // Check subscription
   const subscription = await getSubscription();
   // Check if user has generated more than MAX_GENERATIONS components
-  const generations = messagesFromDatabase.filter(
-    (m) => m.role === "assistant",
-  ).length;
+  const generations = chatsFromDatabase?.length ?? 0;
   if (!subscription && generations > MAX_GENERATIONS) {
     throw new Error("payment-required", {
       cause: `You need to be subscribed to generate more than ${MAX_GENERATIONS} components`,

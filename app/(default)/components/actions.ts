@@ -59,6 +59,20 @@ export const fetchMessagesByChatId = async (chatId: string) => {
   return data;
 };
 
+export const fetchChatsByUserId = async (userId: string) => {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("chats")
+    .select(
+      `
+      *,
+    `,
+    )
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false });
+  return data;
+};
+
 export const fetchFirstUserMessageByChatId = async (chatId: string) => {
   const supabase = await createClient();
   const { data } = await supabase
