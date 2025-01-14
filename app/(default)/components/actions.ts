@@ -3,7 +3,7 @@
 import { nanoid } from "nanoid";
 
 import { getSubscription } from "@/app/supabase-server";
-import { defaultTheme } from "@/utils/config";
+import { defaultTheme, MAX_GENERATIONS } from "@/utils/config";
 import { createClient } from "@/utils/supabase/server";
 
 export const fetchChatById = async (idOrSlug: string) => {
@@ -174,7 +174,11 @@ export const createChat = async (prompt: string, formData: FormData) => {
     };
   }
 
-  if (!subscription && existingChats && existingChats?.length > 0) {
+  if (
+    !subscription &&
+    existingChats &&
+    existingChats?.length > MAX_GENERATIONS
+  ) {
     return {
       error: {
         title: "You have reached the limit of your free plan",
