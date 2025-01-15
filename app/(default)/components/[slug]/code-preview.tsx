@@ -78,7 +78,11 @@ const RenderContent = React.memo(
           file.content === next[index].content,
       );
     };
-
+    console.log(
+      "equals",
+      areFilesEqual(prevProps.chatFiles, nextProps.chatFiles) &&
+        areFilesEqual(prevProps.artifactFiles, nextProps.artifactFiles),
+    );
     return (
       areFilesEqual(prevProps.chatFiles, nextProps.chatFiles) &&
       areFilesEqual(prevProps.artifactFiles, nextProps.artifactFiles)

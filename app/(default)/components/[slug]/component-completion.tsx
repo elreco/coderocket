@@ -126,6 +126,9 @@ export default function ComponentCompletion({
       },
       onFinish: async () => {
         const refreshedChatMessages = await refreshChatData();
+        setCanvas(true);
+        setInput("");
+        setIsLoading(false);
         if (refreshedChatMessages) {
           const refreshedLastAssistantMessage = refreshedChatMessages.reduce(
             (prev, current) =>
@@ -136,9 +139,6 @@ export default function ComponentCompletion({
             handleVersionSelect(refreshedLastAssistantMessage.version);
           }
         }
-        setCanvas(true);
-        setInput("");
-        setIsLoading(false);
       },
     });
 
