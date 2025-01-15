@@ -1,4 +1,3 @@
-export const dynamic = "force-dynamic";
 import { auth } from "@webcontainer/api";
 import { Rubik } from "next/font/google";
 import { PropsWithChildren } from "react";
