@@ -1,5 +1,6 @@
 export const maxDuration = 300;
-
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 import { Analytics } from "@vercel/analytics/react";
 import { Rubik } from "next/font/google";
 import { cookies } from "next/headers";

@@ -6,8 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { UserMessage } from "@/components/user-message";
 import { cn } from "@/lib/utils";
+import {
+  ContentChunk,
+  splitContentIntoChunks,
+} from "@/utils/completion-parser";
 import { getRelativeDate } from "@/utils/date";
 import { getInitials } from "@/utils/helpers";
+
+import { Markdown } from "../markdown";
 
 import ComponentTheme from "./(settings)/component-theme";
 import ComponentChatFiles from "./component-chat-files";
@@ -29,10 +35,12 @@ export default function ComponentSidebar({
     input,
     setInput,
     selectedFramework,
+    completion,
   } = useComponentContext();
 
   const [isLoaderVisible, setLoaderVisible] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
+  const [streamingChunks, setStreamingChunks] = useState<ContentChunk[]>([]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -66,6 +74,15 @@ export default function ComponentSidebar({
   }, [isLoading, messages]);
 
   const isIterationVisible = selectedVersion !== null && selectedVersion > -1;
+
+  useEffect(() => {
+    if (isLoading && completion) {
+      const newChunks = splitContentIntoChunks(completion);
+      setStreamingChunks(newChunks);
+    } else {
+      setStreamingChunks([]);
+    }
+  }, [completion, isLoading]);
 
   return (
     <div
@@ -129,7 +146,22 @@ export default function ComponentSidebar({
               <AvatarImage src="/logo-white.png" />
               <AvatarFallback>T</AvatarFallback>
             </Avatar>
-            <p className="animate-pulse text-sm">Generating...</p>
+            <div className="flex w-full flex-col gap-2">
+              {streamingChunks.map((chunk, index) => (
+                <div key={index}>
+                  {chunk.type === "text" && (
+                    <div className="text-sm">
+                      <Markdown>{chunk.content}</Markdown>
+                    </div>
+                  )}
+                </div>
+              ))}
+              <div className="flex gap-1">
+                <span className="size-2 animate-[typing_1s_ease-in-out_infinite] rounded-full bg-foreground/50"></span>
+                <span className="size-2 animate-[typing_1s_ease-in-out_infinite] rounded-full bg-foreground/50 delay-300"></span>
+                <span className="delay-[600ms] size-2 animate-[typing_1s_ease-in-out_infinite] rounded-full bg-foreground/50"></span>
+              </div>
+            </div>
           </div>
         </div>
       </div>

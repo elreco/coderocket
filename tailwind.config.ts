@@ -93,11 +93,17 @@ const config: Config = {
             transform: "translate(-50%,-40%) scale(1)",
           },
         },
+        typing: {
+          "0%": { opacity: "0" },
+          "50%": { opacity: "1" },
+          "100%": { opacity: "0" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         spotlight: "spotlight 2s ease .75s 1 forwards",
+        typing: "typing 1s infinite",
       },
       typography: {
         DEFAULT: {

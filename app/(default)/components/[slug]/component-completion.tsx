@@ -290,7 +290,18 @@ export default function ComponentCompletion({
       handleChatFiles(lastAssistantMessage.content, true);
       //handleVersionSelect(lastAssistantMessage.version);
     }
-    if (!artifactCode) {
+    if (fetchedChat.framework === "react" && !artifactCode) {
+      setCanvas(false);
+      complete(lastUserMessage.content);
+      setIsLoading(true);
+    }
+    if (
+      !lastAssistantMessage?.content &&
+      !isLoading &&
+      messages.length === 1 &&
+      lastUserMessage.content &&
+      fetchedChat.framework === "html"
+    ) {
       setCanvas(false);
       complete(lastUserMessage.content);
       setIsLoading(true);

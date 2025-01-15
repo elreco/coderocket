@@ -80,7 +80,6 @@ export default function Hero() {
   const [selectedTheme, setSelectedTheme] = useState(defaultTheme);
   const [selectedFramework, setSelectedFramework] = useState("react");
   const [loading, setLoading] = useState(false);
-  const [loadingVisibility, setLoadingVisibility] = useState(false);
   const [image, setImage] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
@@ -155,7 +154,6 @@ export default function Hero() {
   };
 
   const handleVisibility = async () => {
-    setLoadingVisibility(true);
     const { data } = await supabase.auth.getSession();
     if (!data?.session?.user?.id) {
       toast({
@@ -165,7 +163,6 @@ export default function Hero() {
           "You are not logged in, the visibility cannot be changed. Please login and upgrade to premium and try again.",
         duration: 5000,
       });
-      setLoadingVisibility(false);
       return;
     }
     const { data: subscription } = await supabase
@@ -186,7 +183,6 @@ export default function Hero() {
         duration: 5000,
       });
     }
-    setLoadingVisibility(false);
   };
 
   return (
@@ -291,15 +287,17 @@ export default function Hero() {
               >
                 <TabsList isReverse={true} className="grid w-full grid-cols-2">
                   <TabsTrigger
+                    isReverse={true}
                     value="public"
-                    disabled={loading || loadingVisibility}
+                    disabled={loading}
                   >
                     <Unlock className="mr-2 size-3" />
                     Public
                   </TabsTrigger>
                   <TabsTrigger
+                    isReverse={true}
                     value="private"
-                    disabled={loading || loadingVisibility}
+                    disabled={loading}
                   >
                     <Lock className="mr-2 size-3" />
                     Private
