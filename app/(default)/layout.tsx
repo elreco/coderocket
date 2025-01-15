@@ -1,4 +1,7 @@
 export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
+export const revalidate = 0;
+export const maxDuration = 300;
 
 import { Analytics } from "@vercel/analytics/react";
 import { Rubik } from "next/font/google";
