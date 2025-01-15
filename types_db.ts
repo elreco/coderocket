@@ -284,7 +284,7 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
-      get_components: {
+      get_all_components: {
         Args: Record<PropertyKey, never>;
         Returns: {
           chat_id: string;
@@ -294,38 +294,11 @@ export type Database = {
           is_featured: boolean;
           is_private: boolean;
           created_at: string;
-          first_user_message: string;
-          last_assistant_message: string;
-        }[];
-      };
-      get_components_with_completion: {
-        Args: Record<PropertyKey, never>;
-        Returns: {
-          chat_id: string;
-          user_id: string;
-          user_full_name: string;
-          user_avatar_url: string;
-          is_featured: boolean;
-          is_private: boolean;
-          created_at: string;
-          first_user_message: string;
-          last_assistant_message_content: string;
-          last_assistant_message_theme: string;
-        }[];
-      };
-      get_components_with_theme: {
-        Args: Record<PropertyKey, never>;
-        Returns: {
-          chat_id: string;
-          user_id: string;
-          user_full_name: string;
-          user_avatar_url: string;
-          is_featured: boolean;
-          is_private: boolean;
-          created_at: string;
+          slug: string;
           first_user_message: string;
           last_assistant_message: string;
           last_assistant_message_theme: string;
+          framework: string;
         }[];
       };
       get_components_with_theme_and_slug: {
