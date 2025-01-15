@@ -1,3 +1,7 @@
+export const fetchCache = "force-no-store";
+export const revalidate = 0;
+export const maxDuration = 300;
+
 import ComponentCard from "@/components/component-card";
 import { Container } from "@/components/container";
 import { PageTitle } from "@/components/page-title";
