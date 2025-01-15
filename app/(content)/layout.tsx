@@ -8,7 +8,6 @@ import { SandPackCSS } from "@/components/sandpack-styles";
 import "@/styles/chrome-bug.css";
 import "@/styles/main.css";
 
-import "styles/main.css";
 import { cn } from "@/lib/utils";
 
 const rubik = Rubik({
