@@ -1,6 +1,6 @@
 "use client";
 
-import { WebContainerProcess } from "@webcontainer/api";
+import { WebContainerProcess, PreviewMessageType } from "@webcontainer/api";
 import { Loader2, AlertCircle, RefreshCcw } from "lucide-react";
 import React, { useEffect, useState, useRef, useCallback } from "react";
 
@@ -46,6 +46,13 @@ export default function RenderReactComponent({
   const [error, setError] = useState<string | null>(null);
   const serverProcess = useRef<WebContainerProcess | null>(null);
 
+  /* const converter = new Convert({
+    fg: "#fff",
+    bg: "#000",
+    newline: true,
+    escapeXML: true,
+  }); */
+
   const stopServer = useCallback(async () => {
     if (serverProcess.current) {
       serverProcess.current.kill();
@@ -64,25 +71,79 @@ export default function RenderReactComponent({
       try {
         const webcontainer = await setupProject(files);
 
+        webcontainer.on("error", (error) => {
+          console.error("WebContainer error:", error);
+          setError(`WebContainer error: ${error.message}`);
+          setLoadingState("error");
+        });
+
+        webcontainer.on("port", (port) => {
+          console.log("WebContainer port:", port);
+        });
+
+        webcontainer.on("preview-message", (message) => {
+          console.log("WebContainer preview message:", message);
+
+          switch (message.type) {
+            case PreviewMessageType.UncaughtException:
+              setError(
+                `Uncaught Exception: ${message.message}\n${message.stack || ""}`,
+              );
+              setLoadingState("error");
+              break;
+
+            case PreviewMessageType.UnhandledRejection:
+              setError(
+                `Unhandled Rejection: ${message.message}\n${message.stack || ""}`,
+              );
+              setLoadingState("error");
+              break;
+
+            case PreviewMessageType.ConsoleError: {
+              const errorMessage = message.args
+                .map((arg) =>
+                  typeof arg === "string" ? arg : JSON.stringify(arg),
+                )
+                .join(" ");
+              if (
+                errorMessage.includes("SyntaxError:") ||
+                errorMessage.includes("Error:")
+              ) {
+                setError(`Console Error: ${errorMessage}\n${message.stack}`);
+                setLoadingState("error");
+              }
+              break;
+            }
+          }
+        });
+
         setLoadingState("starting");
         serverProcess.current = await webcontainer.spawn("npm", ["run", "dev"]);
 
-        const errorStream = new WritableStream({
+        const outputStream = new WritableStream({
           write(data) {
-            if (data.includes("Error:")) {
+            console.log("Server output:", data);
+            if (data.trim()) {
+              /* const htmlOutput = converter.toHtml(data);
+              setConsoleOutput((prev) => [...prev, htmlOutput]); */
+            }
+            if (data.includes("Error:") || data.includes("SyntaxError:")) {
               setError(data);
               setLoadingState("error");
             }
           },
         });
-        serverProcess.current.output.pipeTo(errorStream).catch(console.error);
+
+        serverProcess.current.output.pipeTo(outputStream).catch(console.error);
 
         await Promise.race([
           new Promise<void>((resolve) => {
             webcontainer.on("server-ready", async (port, url) => {
-              setLoadingState(null);
               onServerReady(url);
               setIframeSrc(url);
+              setTimeout(() => {
+                setLoadingState(null);
+              }, 6000);
               resolve();
             });
           }),
@@ -148,7 +209,6 @@ export default function RenderReactComponent({
   return (
     <>
       {isLoading && <LoadingState state="initializing" />}
-
       {error && (
         <div className="mx-4 flex items-center justify-center">
           <Alert variant="destructive" className="bg-secondary px-12">
@@ -166,16 +226,28 @@ export default function RenderReactComponent({
           </Alert>
         </div>
       )}
-
       {loadingState && <LoadingState state={loadingState} />}
-
-      {iframeSrc && !isLoading && !error && !loadingState && (
-        <iframe
-          src={iframeSrc}
-          style={{ width: "100%", height: "100%", border: "none" }}
-        />
-      )}
-
+      {/*       <div className="grid h-full grid-rows-[1fr,200px] gap-4">
+       */}
+      <iframe
+        src={iframeSrc || undefined}
+        className={`size-full border-none ${
+          !iframeSrc || isLoading || error || loadingState ? "hidden" : ""
+        }`}
+        sandbox="allow-forms allow-modals allow-pointer-lock allow-popups allow-same-origin allow-scripts"
+      />
+      {/* <ScrollArea className="h-[200px] w-full rounded-md border bg-secondary p-4">
+          <div className="font-mono text-sm">
+            {consoleOutput.map((line, i) => (
+              <div
+                key={i}
+                className="whitespace-pre-wrap"
+                dangerouslySetInnerHTML={{ __html: line }}
+              />
+            ))}
+          </div>
+        </ScrollArea>
+      </div> */}
       {!isLoading && !error && !loadingState && !iframeSrc && (
         <LoadingState state={loadingState} />
       )}

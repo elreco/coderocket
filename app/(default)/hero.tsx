@@ -36,6 +36,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Spotlight } from "@/components/ui/spotlight";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Tooltip,
@@ -279,35 +280,33 @@ export default function Hero() {
 
           <div className="flex w-full flex-col items-center justify-between space-y-2 sm:flex-row sm:space-y-0">
             <div className="flex w-full items-center space-x-2">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="background"
-                    onClick={handleVisibility}
-                    className="flex w-full items-center sm:w-auto"
-                    loading={loadingVisibility}
-                    disabled={loading}
-                    type="button"
-                    size="sm"
+              <Tabs
+                defaultValue="public"
+                value={isVisible ? "public" : "private"}
+                onValueChange={(value) => {
+                  if (value === "public" && !isVisible) handleVisibility();
+                  if (value === "private" && isVisible) handleVisibility();
+                }}
+                className="w-full sm:w-auto"
+              >
+                <TabsList isReverse={true} className="grid w-full grid-cols-2">
+                  <TabsTrigger
+                    value="public"
+                    disabled={loading || loadingVisibility}
                   >
-                    {isVisible ? (
-                      <>
-                        <Unlock className="size-3" />
-                        <span>Public</span>
-                      </>
-                    ) : (
-                      <>
-                        <Lock className="size-3" />
-                        <span>Private</span>
-                      </>
-                    )}
-                  </Button>
-                </TooltipTrigger>
+                    <Unlock className="mr-2 size-3" />
+                    Public
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="private"
+                    disabled={loading || loadingVisibility}
+                  >
+                    <Lock className="mr-2 size-3" />
+                    Private
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
 
-                <TooltipContent side="right">
-                  <p>{isVisible ? "Set private" : "Set public"}</p>
-                </TooltipContent>
-              </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
