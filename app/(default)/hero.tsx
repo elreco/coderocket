@@ -259,6 +259,7 @@ export default function Hero() {
                   alt="Uploaded"
                   width={12}
                   height={12}
+                  crossOrigin="anonymous"
                   className="size-12 rounded-md object-cover"
                 />
                 <button
