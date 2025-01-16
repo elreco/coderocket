@@ -15,15 +15,15 @@ const nextConfig = {
       //     },
       //   ],
       // },
-      {
-        source: '/storage/v1/object/public/(.*)',
-        headers: [
-          {
-            key: 'X-Dummy-Header',
-            value: 'dummy',
-          },
-        ],
-      },
+      // {
+      //   source: '/storage/v1/object/public/(.*)',
+      //   headers: [
+      //     {
+      //       key: 'X-Dummy-Header',
+      //       value: 'dummy',
+      //     },
+      //   ],
+      // },
     ];
   },
   experimental: {
