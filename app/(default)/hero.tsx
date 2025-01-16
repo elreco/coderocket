@@ -6,8 +6,6 @@ import {
   SiSvelte,
 } from "@icons-pack/react-simple-icons";
 import {
-  Lock,
-  Unlock,
   Image as LucideImage,
   X,
   Wand,
