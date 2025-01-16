@@ -2,19 +2,19 @@
 const nextConfig = {
   async headers() {
     return [
-      {
-        source: '/components/((?!api/storage).*)',
-        headers: [
-          {
-            key: 'Cross-Origin-Embedder-Policy',
-            value: 'require-corp',
-          },
-          {
-            key: 'Cross-Origin-Opener-Policy',
-            value: 'same-origin',
-          },
-        ],
-      },
+      // {
+      //   source: '/components/(.*)',
+      //   headers: [
+      //     {
+      //       key: 'Cross-Origin-Embedder-Policy',
+      //       value: 'require-corp',
+      //     },
+      //     {
+      //       key: 'Cross-Origin-Opener-Policy',
+      //       value: 'same-origin',
+      //     },
+      //   ],
+      // },
       {
         source: '/storage/v1/object/public/(.*)',
         headers: [
