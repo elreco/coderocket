@@ -148,7 +148,7 @@ export default function ComponentSidebar({
             </Avatar>
             <div className="flex w-full flex-col gap-2">
               {streamingChunks.map((chunk, index) => (
-                <div key={index}>
+                <div className="w-full overflow-x-auto text-sm" key={index}>
                   {chunk.type === "text" && (
                     <Markdown>{chunk.content}</Markdown>
                   )}
