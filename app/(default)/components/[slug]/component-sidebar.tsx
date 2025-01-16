@@ -150,9 +150,7 @@ export default function ComponentSidebar({
               {streamingChunks.map((chunk, index) => (
                 <div key={index}>
                   {chunk.type === "text" && (
-                    <div className="text-sm">
-                      <Markdown>{chunk.content}</Markdown>
-                    </div>
+                    <Markdown>{chunk.content}</Markdown>
                   )}
                 </div>
               ))}

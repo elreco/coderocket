@@ -236,7 +236,7 @@ export default function ComponentChatFiles({
             )}
           </div>
         ) : (
-          <div className="flex w-full flex-col gap-2">
+          <div className="flex w-full flex-col gap-2 overflow-x-auto text-sm">
             <h2
               className={cn(
                 "text-lg font-semibold transition-all group-hover:text-primary",
@@ -308,7 +308,7 @@ export default function ComponentChatFiles({
                                 handleFileClick(message.version, file)
                               }
                             >
-                              <div className="flex items-center">
+                              <div className="flex max-w-full items-center">
                                 <FileIcon
                                   className={cn(
                                     "mr-2 size-4",
@@ -317,7 +317,7 @@ export default function ComponentChatFiles({
                                 />
                                 <div
                                   className={cn(
-                                    "font-mono text-sm font-medium text-border",
+                                    "font-mono whitespace-pre-wrap text-sm font-medium text-border",
                                     file.isDelete &&
                                       "text-red-500 group-hover:text-red-500",
                                     activeTab === file.name &&

@@ -66,7 +66,7 @@ export default function RenderHtmlComponent({ files }: { files: ChatFile[] }) {
       iframe.removeEventListener("load", onLoad);
     };
   }, [files]);
-  console.log(testContent);
+
   return (
     <iframe
       srcDoc={testContent}
