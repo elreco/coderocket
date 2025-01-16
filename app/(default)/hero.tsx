@@ -1,5 +1,11 @@
 "use client";
 import {
+  SiHtml5,
+  SiReact,
+  SiVuedotjs,
+  SiSvelte,
+} from "@icons-pack/react-simple-icons";
+import {
   Lock,
   Unlock,
   Image as LucideImage,
@@ -17,12 +23,20 @@ import { AnimatedGridPattern } from "@/components/ui/animated-grid-pattern";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Sheet,
   SheetContent,
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Spotlight } from "@/components/ui/spotlight";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Tooltip,
@@ -64,8 +78,8 @@ export default function Hero() {
   const [prompt, setPrompt] = useState("");
   const [isVisible, setVisible] = useState(true);
   const [selectedTheme, setSelectedTheme] = useState(defaultTheme);
+  const [selectedFramework, setSelectedFramework] = useState("react");
   const [loading, setLoading] = useState(false);
-  const [loadingVisibility, setLoadingVisibility] = useState(false);
   const [image, setImage] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
@@ -106,6 +120,7 @@ export default function Hero() {
     }
     formData.append("isVisible", isVisible.toString());
     formData.append("theme", selectedTheme);
+    formData.append("framework", selectedFramework);
     const { slug, error } = await createChat(prompt, formData);
     if (error) {
       toast({
@@ -139,7 +154,6 @@ export default function Hero() {
   };
 
   const handleVisibility = async () => {
-    setLoadingVisibility(true);
     const { data } = await supabase.auth.getSession();
     if (!data?.session?.user?.id) {
       toast({
@@ -149,7 +163,6 @@ export default function Hero() {
           "You are not logged in, the visibility cannot be changed. Please login and upgrade to premium and try again.",
         duration: 5000,
       });
-      setLoadingVisibility(false);
       return;
     }
     const { data: subscription } = await supabase
@@ -170,7 +183,6 @@ export default function Hero() {
         duration: 5000,
       });
     }
-    setLoadingVisibility(false);
   };
 
   return (
@@ -201,7 +213,7 @@ export default function Hero() {
       </div>
       <form
         id="generate-form"
-        className="group relative z-10 flex w-full flex-col items-center justify-center gap-x-0 space-y-3 rounded-lg border border-primary/35 bg-secondary p-3 text-center transition-all duration-300 hover:shadow-2xl hover:shadow-primary/35 xl:w-2/3"
+        className="group relative z-10 flex w-full flex-col items-center justify-center gap-x-0 space-y-3 rounded-lg border border-primary/35 bg-secondary p-3 text-center transition-all duration-300 hover:shadow-2xl hover:shadow-primary/35 xl:w-3/4"
         onSubmit={handleSubmit}
       >
         <div className="flex w-full flex-col items-end">
@@ -264,35 +276,33 @@ export default function Hero() {
 
           <div className="flex w-full flex-col items-center justify-between space-y-2 sm:flex-row sm:space-y-0">
             <div className="flex w-full items-center space-x-2">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="background"
-                    onClick={handleVisibility}
-                    className="flex w-full items-center sm:w-auto"
-                    loading={loadingVisibility}
+              <Tabs
+                defaultValue="public"
+                value={isVisible ? "public" : "private"}
+                onValueChange={(value) => {
+                  if (value === "public" && !isVisible) handleVisibility();
+                  if (value === "private" && isVisible) handleVisibility();
+                }}
+                className="w-full sm:w-auto"
+              >
+                <TabsList isReverse={true} className="grid w-full grid-cols-2">
+                  <TabsTrigger
+                    isReverse={true}
+                    value="public"
                     disabled={loading}
-                    type="button"
-                    size="sm"
                   >
-                    {isVisible ? (
-                      <>
-                        <Unlock className="size-3" />
-                        <span>Public</span>
-                      </>
-                    ) : (
-                      <>
-                        <Lock className="size-3" />
-                        <span>Private</span>
-                      </>
-                    )}
-                  </Button>
-                </TooltipTrigger>
+                    Public
+                  </TabsTrigger>
+                  <TabsTrigger
+                    isReverse={true}
+                    value="private"
+                    disabled={loading}
+                  >
+                    Private
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
 
-                <TooltipContent side="right">
-                  <p>{isVisible ? "Set private" : "Set public"}</p>
-                </TooltipContent>
-              </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
@@ -311,59 +321,124 @@ export default function Hero() {
                   <p>Upload an image to generate a component with it</p>
                 </TooltipContent>
               </Tooltip>
-              <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-                <SheetTrigger asChild>
-                  <Button
-                    disabled={loading}
-                    variant="background"
-                    size="sm"
-                    className="w-full sm:w-auto"
-                  >
-                    <Paintbrush className="size-4" />
-                    <span className="first-letter:uppercase">
-                      {selectedTheme}
-                    </span>
-                  </Button>
-                </SheetTrigger>
-                <SheetContent className="overflow-auto">
-                  <SheetTitle className="mb-4">Component Theme</SheetTitle>
-                  <div>
-                    <h3 className="mb-1 text-base font-semibold">
-                      Set theme for the component
-                    </h3>
-                    <h4 className="mb-4 text-sm">
-                      Selected theme:{" "}
-                      <span className="text-primary">{selectedTheme}</span>
-                    </h4>
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-3 gap-4">
-                        {themes.map((theme) => (
-                          <div
-                            key={theme}
-                            className={cn(
-                              "relative aspect-video cursor-pointer rounded-md items-center justify-center border-2 opacity-75 hover:border-2 hover:border-primary hover:opacity-100 overflow-hidden",
-                              {
-                                "border-primary opacity-100":
-                                  selectedTheme === theme,
-                              },
-                            )}
-                            onClick={() => {
-                              setSelectedTheme(theme);
-                              setSheetOpen(false);
-                            }}
-                          >
-                            <img
-                              src={`/daisy-themes/${theme}.png`}
-                              alt="Theme"
-                              className="size-full scale-110 object-cover"
-                            />
-                          </div>
-                        ))}
+              {selectedFramework === "html" && (
+                <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+                  <SheetTrigger asChild>
+                    <Button
+                      disabled={loading}
+                      variant="background"
+                      size="sm"
+                      className="w-full sm:w-auto"
+                    >
+                      <Paintbrush className="size-4" />
+                      <span className="first-letter:uppercase">
+                        {selectedTheme}
+                      </span>
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent className="overflow-auto">
+                    <SheetTitle className="mb-4">Component Theme</SheetTitle>
+                    <div>
+                      <h3 className="mb-1 text-base font-semibold">
+                        Set theme for the component
+                      </h3>
+                      <h4 className="mb-4 text-sm">
+                        Selected theme:{" "}
+                        <span className="text-primary">{selectedTheme}</span>
+                      </h4>
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-3 gap-4">
+                          {themes.map((theme) => (
+                            <div
+                              key={theme}
+                              className={cn(
+                                "relative aspect-video cursor-pointer rounded-md items-center justify-center border-2 opacity-75 hover:border-2 hover:border-primary hover:opacity-100 overflow-hidden",
+                                {
+                                  "border-primary opacity-100":
+                                    selectedTheme === theme,
+                                },
+                              )}
+                              onClick={() => {
+                                setSelectedTheme(theme);
+                                setSheetOpen(false);
+                              }}
+                            >
+                              <img
+                                src={`/daisy-themes/${theme}.png`}
+                                alt="Theme"
+                                className="size-full scale-110 object-cover"
+                              />
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </SheetContent>
-              </Sheet>
+                  </SheetContent>
+                </Sheet>
+              )}
+              <Select
+                disabled={loading}
+                defaultValue="react"
+                onValueChange={setSelectedFramework}
+              >
+                <SelectTrigger className="w-full border-background sm:w-auto">
+                  <SelectValue
+                    className="mr-2"
+                    placeholder="Select a framework"
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="react" className="cursor-pointer">
+                    <div className="mr-2 flex w-full flex-row items-center justify-between">
+                      <div className="flex items-center">
+                        <SiReact className="mr-2 size-3" />
+                        <span className="text-sm">React</span>
+                      </div>
+                      <Badge variant="secondary" className="mr-1 text-xs">
+                        Beta
+                      </Badge>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="html" className="cursor-pointer">
+                    <div className="mr-2 flex cursor-pointer flex-row items-center">
+                      <SiHtml5 className="mr-2 size-3" />
+                      <span className="text-sm">HTML</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem
+                    value="svelte"
+                    className="cursor-not-allowed opacity-50"
+                    disabled
+                    onSelect={(e) => e.preventDefault()}
+                  >
+                    <div className="pointer-events-none mr-2 flex w-full flex-row items-center justify-between">
+                      <div className="flex items-center">
+                        <SiSvelte className="mr-2 size-3" />
+                        <span className="text-sm">Svelte</span>
+                      </div>
+                      <Badge variant="outline" className="ml-2 text-xs">
+                        Soon
+                      </Badge>
+                    </div>
+                  </SelectItem>
+                  <SelectItem
+                    value="vue"
+                    className="cursor-not-allowed opacity-50"
+                    disabled
+                    onSelect={(e) => e.preventDefault()}
+                  >
+                    <div className="pointer-events-none mr-2 flex w-full flex-row items-center justify-between">
+                      <div className="flex items-center">
+                        <SiVuedotjs className="mr-2 size-3" />
+                        <span className="text-sm">Vue</span>
+                      </div>
+                      <Badge variant="outline" className="ml-0.5 mr-1 text-xs">
+                        Soon
+                      </Badge>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div className="flex w-full items-center justify-end space-x-0 sm:space-x-2">
               <input

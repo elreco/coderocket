@@ -27,9 +27,10 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { Tables } from "@/types_db";
 import {
+  ChatFile,
   ContentChunk,
   extractDataTheme,
-  handleAIcompletionForHTML,
+  extractFilesFromCompletion,
   hasArtifacts,
   splitContentIntoChunks,
 } from "@/utils/completion-parser";
@@ -38,10 +39,14 @@ import { getRelativeDate } from "@/utils/date";
 import { getFileConfig } from "@/utils/file-extensions";
 import { getInitials, formatFileSize } from "@/utils/helpers";
 
+import { Markdown } from "../markdown";
+
 import { deleteVersionByMessageId } from "./actions";
 import { useComponentContext } from "./component-context";
 
-export default function ComponentFiles({
+import "katex/dist/katex.min.css";
+
+export default function ComponentChatFiles({
   message,
 }: {
   message: Tables<"messages"> & {
@@ -61,14 +66,10 @@ export default function ComponentFiles({
     activeTab,
     handleVersionSelect,
     refreshChatData,
+    selectedFramework,
   } = useComponentContext();
 
-  const [files, setFiles] = useState<
-    {
-      name: string | null;
-      content: string;
-    }[]
-  >([]);
+  const [files, setFiles] = useState<ChatFile[]>([]);
   const [chunks, setChunks] = useState<ContentChunk[]>([]);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isAlertOpen, setIsAlertOpen] = useState(false);
@@ -79,7 +80,7 @@ export default function ComponentFiles({
     const prepareContent = async () => {
       const hasArtifactResult = hasArtifacts(message.content);
       setFiles(
-        hasArtifactResult ? handleAIcompletionForHTML(message.content) : [],
+        hasArtifactResult ? extractFilesFromCompletion(message.content) : [],
       );
       setChunks(splitContentIntoChunks(message.content));
     };
@@ -89,11 +90,8 @@ export default function ComponentFiles({
 
   const isSelectedVersion = selectedVersion === message.version && !isLoading;
 
-  const handleFileClick = (
-    version: number,
-    file?: { name: string | null; content: string },
-  ) => {
-    if (isLoading) {
+  const handleFileClick = (version: number, file?: ChatFile) => {
+    if (isLoading || file?.isDelete) {
       return;
     }
     handleVersionSelect(version, file?.name || undefined);
@@ -238,7 +236,7 @@ export default function ComponentFiles({
             )}
           </div>
         ) : (
-          <div className="flex w-full flex-col gap-2">
+          <div className="flex w-full flex-col gap-2 overflow-x-auto text-sm">
             <h2
               className={cn(
                 "text-lg font-semibold transition-all group-hover:text-primary",
@@ -251,10 +249,8 @@ export default function ComponentFiles({
               Version #{message.version}
             </h2>
             {chunks.map((chunk, index) => (
-              <div key={index}>
-                {chunk.type === "text" && (
-                  <p className="whitespace-pre-line text-sm">{chunk.content}</p>
-                )}
+              <div key={index} className="text-sm">
+                {chunk.type === "text" && <Markdown>{chunk.content}</Markdown>}
                 {chunk.type === "artifact" && (
                   <div className="w-full space-y-2">
                     <div
@@ -268,22 +264,24 @@ export default function ComponentFiles({
                         <h3 className="text-xs font-semibold">
                           {files.length === 1 ? "Output File" : "Output Files"}
                         </h3>
-                        <Tooltip>
-                          <TooltipTrigger>
-                            <Badge
-                              variant="secondary"
-                              className="cursor-default border border-border"
-                            >
-                              <Paintbrush className="mr-1 size-3" />{" "}
-                              <span className="first-letter:uppercase">
-                                {extractDataTheme(files[0].content)}
-                              </span>
-                            </Badge>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Theme</p>
-                          </TooltipContent>
-                        </Tooltip>
+                        {selectedFramework === "html" && (
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <Badge
+                                variant="secondary"
+                                className="cursor-default border border-border"
+                              >
+                                <Paintbrush className="mr-1 size-3" />{" "}
+                                <span className="first-letter:uppercase">
+                                  {extractDataTheme(files[0].content)}
+                                </span>
+                              </Badge>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Theme</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
                       </div>
                       <div className="space-y-2">
                         {files.map((file, index) => {
@@ -296,10 +294,11 @@ export default function ComponentFiles({
                             <div
                               key={index}
                               className={cn(
-                                "flex items-center justify-between rounded p-1",
-                                `${fileConfig.color} bg-foreground`,
+                                "flex items-center justify-between rounded p-1 bg-foreground",
                                 "hover:bg-gradient-to-l from-emerald-400 via-emerald-500 to-emerald-600 hover:text-foreground",
-                                isLoading ? "cursor-default" : "cursor-pointer",
+                                isLoading || file.isDelete
+                                  ? "cursor-not-allowed opacity-50"
+                                  : "cursor-pointer",
                                 activeTab === file.name &&
                                   isSelectedVersion &&
                                   !isCanvas &&
@@ -309,13 +308,28 @@ export default function ComponentFiles({
                                 handleFileClick(message.version, file)
                               }
                             >
-                              <div className="flex items-center">
-                                <FileIcon className="mr-2 size-4" />
-                                <div className="font-mono text-sm">
+                              <div className="flex max-w-full items-center">
+                                <FileIcon
+                                  className={cn(
+                                    "mr-2 size-4",
+                                    fileConfig.color,
+                                  )}
+                                />
+                                <div
+                                  className={cn(
+                                    "font-mono whitespace-pre-wrap text-sm font-medium text-border",
+                                    file.isDelete &&
+                                      "text-red-500 group-hover:text-red-500",
+                                    activeTab === file.name &&
+                                      isSelectedVersion &&
+                                      !isCanvas &&
+                                      "text-foreground",
+                                  )}
+                                >
                                   {file.name || "untitled.html"}
                                 </div>
                               </div>
-                              <div className="text-xs opacity-75">
+                              <div className="text-xs text-border opacity-75">
                                 {formatFileSize(new Blob([file.content]).size)}
                               </div>
                             </div>

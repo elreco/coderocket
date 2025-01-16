@@ -1,6 +1,7 @@
 import { createContext, useContext } from "react";
 
 import { Tables } from "@/types_db";
+import { ChatFile } from "@/utils/completion-parser";
 
 type ChatMessage = Tables<"messages"> & {
   chats: {
@@ -15,7 +16,7 @@ interface ComponentContextType {
   isLoading: boolean;
   setCompletion: (value: string) => void;
   selectedVersion: number;
-  componentFiles: Array<{
+  chatFiles: Array<{
     name: string | null;
     content: string;
   }>;
@@ -23,11 +24,13 @@ interface ComponentContextType {
   editorValue: string;
   handleVersionSelect: (version: number, tabName?: string) => void;
   authorized: boolean;
+  iframeSrc: string | null;
+  setIframeSrc: (value: string | null) => void;
   handleSubmitToAI: (input: string) => void;
   completion: string;
   messages: ChatMessage[];
   user: Tables<"users"> | null;
-  handleComponentFiles: (
+  handleChatFiles: (
     completion: string,
     isFirstRun?: boolean,
     tabName?: string,
@@ -37,7 +40,11 @@ interface ComponentContextType {
   setVisible: (value: boolean) => void;
   input: string;
   setInput: (value: string) => void;
+  artifactCode: string;
+  setArtifactCode: (value: string) => void;
+  artifactFiles: ChatFile[];
   chatId: string;
+  selectedFramework: string;
 }
 
 export const ComponentContext = createContext<ComponentContextType | undefined>(

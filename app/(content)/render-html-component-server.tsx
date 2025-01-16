@@ -1,10 +1,12 @@
 "use server";
 
+import { ChatFile } from "@/utils/completion-parser";
+
 export default async function RenderHtmlComponentServer({
   files,
   style,
 }: {
-  files: { name: string | null; content: string }[];
+  files: ChatFile[];
   style?: React.CSSProperties;
 }) {
   const initialContent = files[0]?.content || "";

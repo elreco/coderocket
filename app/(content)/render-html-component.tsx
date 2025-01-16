@@ -2,11 +2,9 @@
 
 import React, { useEffect, useState } from "react";
 
-export default function RenderHtmlComponent({
-  files,
-}: {
-  files: { name: string | null; content: string }[];
-}) {
+import type { ChatFile } from "@/utils/completion-parser";
+
+export default function RenderHtmlComponent({ files }: { files: ChatFile[] }) {
   const [testContent, setContent] = useState(files[0]?.content || "");
   useEffect(() => {
     setContent(files[0]?.content || "");

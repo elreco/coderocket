@@ -5,6 +5,76 @@ const TAILWIND_SCRIPT_CDN =
 const DAISYUI_CDN =
   '<link href="https://cdn.jsdelivr.net/npm/daisyui@latest/dist/full.css" rel="stylesheet">';
 
+// Ajoutez cette nouvelle interface et fonction
+export interface ContentChunk {
+  type: "text" | "artifact";
+  content: string;
+}
+
+export interface ChatFile {
+  name: string | null;
+  content: string;
+  isDelete?: boolean;
+}
+
+export const getUpdatedArtifactCode = (
+  completion: string,
+  artifactCode: string,
+): string => {
+  // Parser les fichiers existants de artifactCode
+  const allFiles = new Map();
+  const filesToDelete = new Set();
+  const existingFileRegex =
+    /<tailwindaiFile.*?name=["']([^"']*?)["'].*?>([\s\S]*?)<\/tailwindaiFile>/g;
+
+  let existingMatch;
+  while ((existingMatch = existingFileRegex.exec(artifactCode)) !== null) {
+    const fileName = existingMatch[1];
+    const content = existingMatch[2].trim();
+    allFiles.set(fileName, content);
+  }
+
+  // Modifier pour gérer les fichiers partiels
+  const fileStartRegex =
+    /<tailwindaiFile.*?name=["']([^"']*?)["'].*?(?:action=["']([^"']*?)["'].*?)?>/g;
+  let match;
+
+  while ((match = fileStartRegex.exec(completion)) !== null) {
+    const fileName = match[1];
+    const action = match[2];
+    const startIndex = match.index + match[0].length;
+
+    // Prendre tout le contenu après l'ouverture du tag, même s'il n'est pas fermé
+    const content = completion
+      .slice(startIndex)
+      .replace(/<\/tailwindaiFile>.*$/g, "")
+      .replace(/<tailwindaiFile.*$/g, "") // Arrêter au prochain début de fichier
+      .replace(/<\/tailwindaiArtifact>.*$/g, "")
+      .trim();
+
+    if (action === "delete") {
+      filesToDelete.add(fileName);
+    } else if (content) {
+      const existingContent = allFiles.get(fileName) || "";
+      // Si le contenu est plus long que l'existant, on met à jour
+      if (content.length > existingContent.length) {
+        allFiles.set(fileName, content);
+      }
+    }
+  }
+
+  // Construire le résultat progressif
+  let mergedArtifact = "<tailwindaiArtifact>\n";
+  allFiles.forEach((content, fileName) => {
+    if (!filesToDelete.has(fileName)) {
+      mergedArtifact += `<tailwindaiFile name="${fileName}">\n${content}\n</tailwindaiFile>\n`;
+    }
+  });
+  mergedArtifact += "</tailwindaiArtifact>";
+
+  return mergedArtifact;
+};
+
 export const ensureCDNsPresent = (htmlContent: string): string => {
   let updatedContent = htmlContent;
 
@@ -19,52 +89,70 @@ export const ensureCDNsPresent = (htmlContent: string): string => {
   return updatedContent;
 };
 
-export const handleAIcompletionForHTML = (completion: string) => {
+export const extractFilesFromCompletion = (
+  completion: string,
+  isHtml: boolean = false,
+) => {
   if (!completion) return [];
 
-  const filesArray: { name: string | null; content: string }[] = [];
+  const filesArray: ChatFile[] = [];
+  const artifactRegex = /<tailwindaiArtifact>[\s\S]*?<\/tailwindaiArtifact>/g;
+  const artifacts = Array.from(completion.matchAll(artifactRegex));
 
-  // Chercher la dernière balise ouvrante d'artifact complète
-  const artifactStartIndex = completion.lastIndexOf("<tailwindaiArtifact");
-  if (artifactStartIndex === -1) return [];
+  if (artifacts.length === 0) return [];
 
-  // Trouver la fin de la balise ouvrante
-  const artifactOpenEndIndex = completion.indexOf(">", artifactStartIndex);
-  if (artifactOpenEndIndex === -1) return [];
+  // Traiter chaque artifact trouvé
+  artifacts.forEach((artifactMatch) => {
+    const artifactContent = artifactMatch[0];
+    const fileRegex =
+      /<tailwindaiFile.*?name=["']([^"']*?)["'].*?(?:action=["']([^"']*?)["'].*?)?>([\s\S]*?)(?=<\/tailwindaiFile>|<tailwindaiFile|$)/g;
 
-  // Extraire le contenu après la balise ouvrante
-  const contentAfterArtifact = completion.slice(artifactOpenEndIndex + 1);
+    let match;
+    while ((match = fileRegex.exec(artifactContent)) !== null) {
+      const fileName = match[1];
+      const action = match[2];
+      let content = match[3].trim();
 
-  // Regex pour trouver les balises de fichier
-  const fileRegex =
-    /<tailwindaiFile.*?name=["']([^"']*?)["'][^>]*>([\s\S]*?)(?=<\/tailwindaiFile>|<tailwindaiFile|$)/g;
+      // Si on trouve une balise fermante pour ce fichier, on l'utilise comme limite
+      const closeTagIndex = content.indexOf("</tailwindaiFile>");
+      if (closeTagIndex !== -1) {
+        content = content.slice(0, closeTagIndex);
+      }
 
-  let match;
-  while ((match = fileRegex.exec(contentAfterArtifact)) !== null) {
-    const fileName = match[1];
-    let content = match[2];
+      // Nettoyer le contenu et ajuster l'indentation
+      content = content
+        .replace(/<\/tailwindaiFile>/g, "")
+        .replace(/<\/tailwindaiArtifact>/g, "")
+        .replace(/^\n/, "");
 
-    // Si on trouve une balise fermante pour ce fichier, on l'utilise comme limite
-    const closeTagIndex = content.indexOf("</tailwindaiFile>");
-    if (closeTagIndex !== -1) {
-      content = content.slice(0, closeTagIndex);
+      // Trouver l'indentation minimale commune
+      const lines = content.split("\n");
+      const nonEmptyLines = lines.filter((line) => line.trim().length > 0);
+      const indentations = nonEmptyLines.map((line) => {
+        const match = line.match(/^[ \t]*/);
+        return match ? match[0].length : 0;
+      });
+      const minIndent = Math.min(...indentations);
+
+      // Retirer l'indentation minimale commune de chaque ligne
+      content = lines
+        .map((line) => line.slice(minIndent))
+        .join("\n")
+        .trim();
+
+      // Assurez-vous que les CDNs sont présents
+      if (isHtml) {
+        content = ensureCDNsPresent(content);
+      }
+
+      // Ajouter le fichier au tableau, permettant les doublons
+      filesArray.push({
+        name: fileName || null,
+        content: content || completion,
+        isDelete: action === "delete",
+      });
     }
-
-    // Nettoyer le contenu sans affecter l'indentation
-    content = content
-      .replace(/<\/tailwindaiFile>/g, "")
-      .replace(/<\/tailwindaiArtifact>/g, "")
-      // Supprimer la première ligne si elle est vide
-      .replace(/^\n/, "");
-
-    // Assurez-vous que les CDN sont présents
-    content = ensureCDNsPresent(content);
-
-    filesArray.push({
-      name: fileName || null,
-      content: content || completion,
-    });
-  }
+  });
 
   return filesArray;
 };
@@ -110,12 +198,6 @@ export const hasArtifacts = (completion: string): boolean => {
 export const hasFiles = (completion: string): boolean => {
   return /<tailwindaiFile/i.test(completion);
 };
-
-// Ajoutez cette nouvelle interface et fonction
-export interface ContentChunk {
-  type: "text" | "artifact";
-  content: string;
-}
 
 export const splitContentIntoChunks = (completion: string): ContentChunk[] => {
   const chunks: ContentChunk[] = [];
@@ -185,4 +267,54 @@ export const setDataTheme = (completion: string, theme: string): string => {
     /data-theme=["'][^"']*["']/,
     `data-theme="${theme}"`,
   );
+};
+
+export const extractFilesFromArtifact = (artifactCode: string): ChatFile[] => {
+  if (!artifactCode) return [];
+
+  const filesArray: ChatFile[] = [];
+  const fileRegex =
+    /<tailwindaiFile.*?name=["']([^"']*?)["'].*?(?:action=["']([^"']*?)["'].*?)?>([\s\S]*?)(?=<\/tailwindaiFile>|<tailwindaiFile|$)/g;
+
+  let match;
+  while ((match = fileRegex.exec(artifactCode)) !== null) {
+    const fileName = match[1];
+    const action = match[2];
+    let content = match[3].trim();
+
+    // Si on trouve une balise fermante pour ce fichier, on l'utilise comme limite
+    const closeTagIndex = content.indexOf("</tailwindaiFile>");
+    if (closeTagIndex !== -1) {
+      content = content.slice(0, closeTagIndex);
+    }
+
+    // Nettoyer le contenu
+    content = content
+      .replace(/<\/tailwindaiFile>/g, "")
+      .replace(/<\/tailwindaiArtifact>/g, "")
+      .replace(/^\n/, "");
+
+    // Trouver l'indentation minimale commune
+    const lines = content.split("\n");
+    const nonEmptyLines = lines.filter((line) => line.trim().length > 0);
+    const indentations = nonEmptyLines.map((line) => {
+      const match = line.match(/^[ \t]*/);
+      return match ? match[0].length : 0;
+    });
+    const minIndent = Math.min(...indentations);
+
+    // Retirer l'indentation minimale commune de chaque ligne
+    content = lines
+      .map((line) => line.slice(minIndent))
+      .join("\n")
+      .trim();
+
+    filesArray.push({
+      name: fileName || null,
+      content: content,
+      isDelete: action === "delete",
+    });
+  }
+
+  return filesArray;
 };

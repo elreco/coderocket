@@ -11,7 +11,11 @@ import {
 import { getSubscription } from "@/app/supabase-server";
 import { Tables } from "@/types_db";
 import { takeScreenshot } from "@/utils/capture-screenshot";
-import { extractDataTheme, hasArtifacts } from "@/utils/completion-parser";
+import {
+  extractDataTheme,
+  getUpdatedArtifactCode,
+  hasArtifacts,
+} from "@/utils/completion-parser";
 import {
   anthropicModel,
   MAX_GENERATIONS,
@@ -21,6 +25,7 @@ import {
 // import { promptEnhancer } from "@/utils/prompt-enhancer";
 import { createClient } from "@/utils/supabase/server";
 import { htmlSystemPrompt } from "@/utils/system-prompts/html";
+import { reactSystemPrompt } from "@/utils/system-prompts/react";
 
 export async function POST(req: Request) {
   try {
@@ -31,7 +36,7 @@ export async function POST(req: Request) {
     const { prompt }: { prompt: string } = await req.json();
     if (!prompt) throw new Error("No prompt");
 
-    const { messagesFromDatabase, imageUrl, subscription } =
+    const { messagesFromDatabase, imageUrl, subscription, framework } =
       await validateRequest(id);
 
     // const enhancedPrompt = await promptEnhancer(prompt);
@@ -49,11 +54,14 @@ export async function POST(req: Request) {
           ? "claude-3-5-sonnet-20240620"
           : "claude-3-5-sonnet-20240620",
       ),
-      system: htmlSystemPrompt(
-        messagesFromDatabase.length === 1
-          ? messagesFromDatabase[0]?.theme
-          : null,
-      ),
+      system:
+        framework === "html"
+          ? htmlSystemPrompt(
+              messagesFromDatabase.length === 1
+                ? messagesFromDatabase[0]?.theme
+                : null,
+            )
+          : reactSystemPrompt(),
       toolChoice: "none",
       maxTokens: 8192,
       onFinish: async ({ text }) => {
@@ -90,18 +98,19 @@ const buildMessagesToOpenAi = async (
     selectedVersion !== undefined
       ? messages.filter((m) => m.version <= selectedVersion)
       : messages;
+  const messagesToOpenAI = filteredMessages.map((m) => {
+    const content =
+      messages.length === 1 && m.role === "user"
+        ? `NEW PROJECT TAILWIND AI - ${m.content}`
+        : m.content;
 
-  // Limiter aux derniers messages pour obtenir un nombre pair
-  const limitedMessages = filteredMessages.slice(-12);
-
-  // Mapper les messages au format requis par OpenAI
-  const messagesToOpenAI = limitedMessages.map((m) => {
     return {
       role: m.role as "user" | "assistant" | "tool" | "system",
-      content: m.content,
+      content,
     };
   }) as CoreMessage[];
 
+  // Si c'est le premier message, ajouter le préfixe au prompt
   if (messagesToOpenAI.length === 1 && imageUrl) {
     messagesToOpenAI[0].content = [
       {
@@ -200,6 +209,7 @@ const validateRequest = async (id: string) => {
     messagesFromDatabase,
     imageUrl,
     subscription,
+    framework: chat.framework,
   };
 };
 
@@ -210,21 +220,19 @@ const updateDataAfterCompletion = async (
 ) => {
   const supabase = await createClient();
 
+  const chat = await fetchChatById(chatId);
+  if (!chat) return console.error("Could not get chat data");
+
   const lastUserMessage = await fetchLastUserMessageByChatId(chatId);
   if (!lastUserMessage) return console.error("Could not get chat messages");
   const newMessages = [];
 
   if (!text) return console.error("No completion");
 
-  const version = lastUserMessage.version + 1;
+  const version = chat.artifact_code ? lastUserMessage.version + 1 : 0;
+  const artifactCode = getUpdatedArtifactCode(text, chat.artifact_code || "");
 
-  if (lastUserMessage.version === -1) {
-    lastUserMessage.version = 0;
-    await supabase
-      .from("messages")
-      .update({ version: 0 })
-      .eq("id", lastUserMessage.id);
-  } else {
+  if (chat.artifact_code) {
     newMessages.push({
       chat_id: chatId,
       screenshot: null,
@@ -233,6 +241,12 @@ const updateDataAfterCompletion = async (
       role: "user",
     });
   }
+
+  await supabase
+    .from("chats")
+    .update({ artifact_code: artifactCode })
+    .eq("id", chatId);
+
   const theme = extractDataTheme(text);
   newMessages.push({
     chat_id: chatId,
@@ -245,7 +259,7 @@ const updateDataAfterCompletion = async (
 
   await supabase.from("messages").insert(newMessages).eq("chat_id", chatId);
   const hasArtifactResult = hasArtifacts(text);
-  if (hasArtifactResult) {
+  if (hasArtifactResult && chat.framework === "html") {
     after(async () => {
       await takeScreenshot(chatId, version, theme);
     });

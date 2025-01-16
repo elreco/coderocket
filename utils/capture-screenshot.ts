@@ -1,4 +1,6 @@
-import { screenshotApiUrl } from "./config";
+"use server";
+
+import { defaultTheme, screenshotApiUrl } from "./config";
 import { createClient } from "./supabase/server";
 
 export async function captureScreenshot(url: string, maxRetries = 5) {
@@ -32,12 +34,31 @@ export async function captureScreenshot(url: string, maxRetries = 5) {
 export const takeScreenshot = async (
   chatId: string,
   version: number,
-  theme: string,
+  theme: string = defaultTheme,
+  url?: string,
 ) => {
   const supabase = await createClient();
+
+  // Vérifier d'abord si l'image existe déjà
+  const { data: existingMessage } = await supabase
+    .from("messages")
+    .select("screenshot")
+    .eq("chat_id", chatId)
+    .eq("version", version)
+    .eq("role", "assistant")
+    .single();
+
+  // Si l'image existe déjà, on arrête là
+  if (existingMessage?.screenshot) {
+    console.log("Screenshot already exists, skipping capture");
+    return;
+  }
+
+  // Si l'image n'existe pas, utiliser screenshotBase64 ou faire la capture d'écran
   const screenshot = await captureScreenshot(
-    `https://www.tailwindai.dev/content/${chatId}`,
+    url || `https://www.tailwindai.dev/content/${chatId}`,
   );
+
   const { error, data } = await supabase.storage
     .from("chat-images")
     .upload(`${chatId}/${version}-${theme}`, screenshot, {

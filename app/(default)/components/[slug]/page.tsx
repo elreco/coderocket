@@ -56,14 +56,12 @@ export default async function Components({ params }: Props) {
   const connectedUser = userData.data.user;
   const chat = await fetchChatById(slug);
   const isNotFound = chat.is_private && chat.user?.id !== connectedUser?.id;
-
   if (!chat || isNotFound) {
     return notFound();
   }
   const lastAssistantMessage = await fetchLastAssistantMessageByChatId(chat.id);
   const lastUserMessage = await fetchLastUserMessageByChatId(chat.id);
   const messages = await fetchMessagesByChatId(chat.id);
-
   if (!lastUserMessage || !messages) {
     return notFound();
   }

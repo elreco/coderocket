@@ -6,12 +6,18 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { UserMessage } from "@/components/user-message";
 import { cn } from "@/lib/utils";
+import {
+  ContentChunk,
+  splitContentIntoChunks,
+} from "@/utils/completion-parser";
 import { getRelativeDate } from "@/utils/date";
 import { getInitials } from "@/utils/helpers";
 
+import { Markdown } from "../markdown";
+
 import ComponentTheme from "./(settings)/component-theme";
+import ComponentChatFiles from "./component-chat-files";
 import { useComponentContext } from "./component-context";
-import ComponentFiles from "./component-files";
 import { ComponentSidebarSkeleton } from "./component-sidebar-skeleton";
 
 export default function ComponentSidebar({
@@ -28,10 +34,13 @@ export default function ComponentSidebar({
     handleSubmitToAI,
     input,
     setInput,
+    selectedFramework,
+    completion,
   } = useComponentContext();
 
   const [isLoaderVisible, setLoaderVisible] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
+  const [streamingChunks, setStreamingChunks] = useState<ContentChunk[]>([]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -66,6 +75,15 @@ export default function ComponentSidebar({
 
   const isIterationVisible = selectedVersion !== null && selectedVersion > -1;
 
+  useEffect(() => {
+    if (isLoading && completion) {
+      const newChunks = splitContentIntoChunks(completion);
+      setStreamingChunks(newChunks);
+    } else {
+      setStreamingChunks([]);
+    }
+  }, [completion, isLoading]);
+
   return (
     <div
       className={cn(
@@ -83,7 +101,7 @@ export default function ComponentSidebar({
           </div>
         )}
         {messages.map((m) => (
-          <ComponentFiles message={m} key={m.id} />
+          <ComponentChatFiles message={m} key={m.id} />
         ))}
         <div
           className={cn(
@@ -128,7 +146,20 @@ export default function ComponentSidebar({
               <AvatarImage src="/logo-white.png" />
               <AvatarFallback>T</AvatarFallback>
             </Avatar>
-            <p className="animate-pulse text-sm">Generating...</p>
+            <div className="flex w-full flex-col gap-2">
+              {streamingChunks.map((chunk, index) => (
+                <div key={index}>
+                  {chunk.type === "text" && (
+                    <Markdown>{chunk.content}</Markdown>
+                  )}
+                </div>
+              ))}
+              <div className="flex gap-1">
+                <span className="size-2 animate-[typing_1s_ease-in-out_infinite] rounded-full bg-foreground/50"></span>
+                <span className="size-2 animate-[typing_1s_ease-in-out_infinite] rounded-full bg-foreground/50 delay-300"></span>
+                <span className="delay-[600ms] size-2 animate-[typing_1s_ease-in-out_infinite] rounded-full bg-foreground/50"></span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -152,7 +183,7 @@ export default function ComponentSidebar({
                 )}
               </div>
 
-              {authorized && (
+              {authorized && selectedFramework === "html" && (
                 <div className="text-sm font-semibold">
                   <ComponentTheme>
                     <Button
