@@ -1,3 +1,5 @@
+"use client";
+
 import { DirectoryNode, FileSystemTree, WebContainer } from "@webcontainer/api";
 
 import { ChatFile } from "@/utils/completion-parser";

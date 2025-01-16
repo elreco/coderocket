@@ -1,6 +1,7 @@
-import { auth } from "@webcontainer/api";
+"use client";
+
 import { Rubik } from "next/font/google";
-import { PropsWithChildren } from "react";
+import { PropsWithChildren, useEffect } from "react";
 
 // eslint-disable-next-line import/order
 import { SandPackCSS } from "@/components/sandpack-styles";
@@ -10,6 +11,9 @@ import "@/styles/main.css";
 
 import { cn } from "@/lib/utils";
 
+// eslint-disable-next-line import/order
+import { auth } from "@webcontainer/api";
+
 const rubik = Rubik({
   subsets: ["latin"],
   display: "swap",
@@ -17,10 +21,12 @@ const rubik = Rubik({
 });
 
 export default function RootLayout({ children }: PropsWithChildren) {
-  auth.init({
-    clientId: "wc_api_elreco_626e67a60beb190de73c04873753f3d4",
-    scope: "",
-  });
+  useEffect(() => {
+    auth.init({
+      clientId: "wc_api_elreco_626e67a60beb190de73c04873753f3d4",
+      scope: "",
+    });
+  }, []);
   return (
     <html className={cn("dark size-full antialiased", rubik.variable)}>
       <head>
