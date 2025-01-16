@@ -75,31 +75,7 @@ export default function RenderHtmlComponent({ files }: { files: ChatFile[] }) {
         height: "100%",
         border: "none",
       }}
-      sandbox="allow-scripts allow-same-origin allow-popups"
-      onLoad={() => {
-        const iframe = document.querySelector("iframe");
-        if (iframe) {
-          const iframeDocument =
-            iframe.contentDocument || iframe.contentWindow?.document;
-          if (iframeDocument) {
-            const links = iframeDocument.querySelectorAll("a");
-            links.forEach((link) => {
-              link.addEventListener("click", (event) => {
-                event.preventDefault();
-                const target = event.target as HTMLAnchorElement;
-                const href = target.getAttribute("href");
-                if (href?.startsWith("#")) {
-                  const anchorId = href.substring(1);
-                  const anchorElement = iframeDocument.getElementById(anchorId);
-                  if (anchorElement) {
-                    anchorElement.scrollIntoView({ behavior: "smooth" });
-                  }
-                }
-              });
-            });
-          }
-        }
-      }}
+      sandbox="allow-scripts allow-same-origin"
     />
   );
 }

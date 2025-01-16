@@ -6,7 +6,7 @@
   },
   "headers": [
     {
-      "source": "/(.*)",
+      "source": "/components/(.*)",
       "headers": [
         {
           "key": "Cross-Origin-Embedder-Policy",
@@ -15,6 +15,15 @@
         {
           "key": "Cross-Origin-Opener-Policy",
           "value": "same-origin"
+        }
+      ]
+    },
+    {
+      "source": "/storage/v1/object/public/(.*)",
+      "headers": [
+        {
+          "key": "X-Dummy-Header",
+          "value": "dummy"
         }
       ]
     }
