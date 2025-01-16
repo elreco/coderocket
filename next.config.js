@@ -16,7 +16,7 @@ const nextConfig = {
         ],
       },
       {
-        source: '/storage/v1/object/public/**',
+        source: '/storage/v1/object/public/(.*)',
         headers: [],
       },
     ];
