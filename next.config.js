@@ -17,7 +17,12 @@ const nextConfig = {
       },
       {
         source: '/storage/v1/object/public/(.*)',
-        headers: [],
+        headers: [
+          {
+            key: 'X-Dummy-Header',
+            value: 'dummy',
+          },
+        ],
       },
     ];
   },
