@@ -3,27 +3,27 @@ const nextConfig = {
   async headers() {
     return [
       {
-        source: '/components/(.*)',
-        headers: [
+        "source": "/storage/v1/object/public/(.*)",
+        "headers": [
           {
-            key: 'Cross-Origin-Embedder-Policy',
-            value: 'require-corp',
-          },
-          {
-            key: 'Cross-Origin-Opener-Policy',
-            value: 'same-origin',
-          },
-        ],
+            "key": "X-Dummy-Header",
+            "value": "dummy"
+          }
+        ]
       },
       {
-        source: '/storage/v1/object/public/(.*)',
-        headers: [
+        "source": "/(.*)",
+        "headers": [
           {
-            key: 'X-Dummy-Header',
-            value: 'dummy',
+            "key": "Cross-Origin-Embedder-Policy",
+            "value": "credentialless"
           },
-        ],
-      },
+          {
+            "key": "Cross-Origin-Opener-Policy",
+            "value": "same-origin"
+          }
+        ]
+      }
     ];
   },
   experimental: {
