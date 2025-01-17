@@ -35,69 +35,105 @@ import {
 import { crispWebsiteId } from "@/utils/config";
 import { createClient } from "@/utils/supabase/client";
 
-import { fetchChatById, fetchMessagesByChatId } from "../actions";
+import {
+  fetchChatById,
+  fetchLastAssistantMessageByChatId,
+  fetchLastUserMessageByChatId,
+  fetchMessagesByChatId,
+} from "../actions";
 
 import ComponentSettings from "./(settings)/component-settings";
 import CodePreview from "./code-preview";
-import { ComponentContext } from "./component-context";
+import { ChatMessage, ComponentContext } from "./component-context";
 import ComponentSidebar from "./component-sidebar";
 
 interface Props {
-  fetchedChat: Tables<"chats"> & { user: Tables<"users"> | null };
+  chatId: string;
   authorized: boolean;
-  fetchedMessages: (Tables<"messages"> & {
-    chats: { user: Tables<"users">; prompt_image: string | null };
-  })[];
   user: Tables<"users"> | null;
-  lastAssistantMessage: Tables<"messages"> | null;
-  lastUserMessage: Tables<"messages">;
 }
 
 export default function ComponentCompletion({
-  fetchedChat,
-  fetchedMessages,
+  chatId,
   authorized,
   user,
-  lastAssistantMessage,
-  lastUserMessage,
 }: Props) {
   const supabase = createClient();
   const [, copy] = useCopyToClipboard();
   const { toast } = useToast();
   const router = useRouter();
   const pathname = usePathname();
-
-  const [messages, setMessages] = useState(fetchedMessages);
-
-  const [selectedVersion, setSelectedVersion] = useState(
-    lastUserMessage.version,
-  );
-  const [title, setTitle] = useState<string>(
-    lastUserMessage.content?.toString() || "",
-  );
+  const [selectedVersion, setSelectedVersion] = useState(0);
+  const [title, setTitle] = useState<string>("");
   const [isCanvas, setCanvas] = useState(true);
-  const [isVisible, setVisible] = useState(!fetchedChat.is_private);
+  const [isVisible, setVisible] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editorValue, setEditorValue] = useState("");
 
   const [chatFiles, setChatFiles] = useState<ChatFile[]>([]);
   const [artifactFiles, setArtifactFiles] = useState<ChatFile[]>([]);
 
-  const [artifactCode, setArtifactCode] = useState(
-    fetchedChat.artifact_code || "",
-  );
+  const [artifactCode, setArtifactCode] = useState("");
 
   const [activeTab, setActiveTab] = useState("");
   const [iframeSrc, setIframeSrc] = useState<string | null>(null);
 
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const [fetchedChat, setFetchedChat] = useState<Tables<"chats"> | null>(null);
+  const [lastAssistantMessage, setLastAssistantMessage] =
+    useState<Tables<"messages"> | null>(null);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+
+  useEffect(() => {
+    const loadInitialData = async () => {
+      const [chat, assistantMsg, userMsg, msgs] = await Promise.all([
+        fetchChatById(chatId),
+        fetchLastAssistantMessageByChatId(chatId),
+        fetchLastUserMessageByChatId(chatId),
+        fetchMessagesByChatId(chatId),
+      ]);
+      setIsLoading(false);
+
+      setFetchedChat(chat);
+      setLastAssistantMessage(assistantMsg);
+      setMessages(msgs || []);
+      setSelectedVersion(userMsg?.version || 0);
+      setTitle(userMsg?.content?.toString() || "");
+      setVisible(!chat.is_private);
+      setArtifactCode(chat.artifact_code || "");
+
+      if (msgs?.length === 1 && chat?.framework === "html") {
+        setCanvas(false);
+        complete(userMsg?.content || "");
+        setIsLoading(true);
+        return;
+      }
+
+      if (chat?.framework === "react" && !chat.artifact_code) {
+        setIsLoading(true);
+        setCanvas(false);
+        complete(userMsg?.content || "");
+        return;
+      }
+
+      if (chat?.framework === "react" && chat.artifact_code) {
+        const newArtifactFiles = extractFilesFromArtifact(chat.artifact_code);
+        setArtifactFiles(newArtifactFiles);
+      }
+      if (chat?.framework === "html" && assistantMsg?.content) {
+        handleChatFiles(assistantMsg.content, true);
+      }
+    };
+    loadInitialData();
+  }, [chatId]);
 
   const { completion, stop, complete, setCompletion, input, setInput } =
     useCompletion({
       api: "/api/components",
       headers: {
         "X-Custom-Header": JSON.stringify({
-          id: fetchedChat.id,
+          id: chatId,
           selectedVersion,
         }),
       },
@@ -196,10 +232,10 @@ export default function ComponentCompletion({
   };
 
   const refreshChatData = async () => {
-    const refreshedChatMessages = await fetchMessagesByChatId(fetchedChat.id);
+    const refreshedChatMessages = await fetchMessagesByChatId(chatId);
     if (!refreshedChatMessages) return;
     setMessages(refreshedChatMessages);
-    const refreshedChat = await fetchChatById(fetchedChat.id);
+    const refreshedChat = await fetchChatById(chatId);
     if (!refreshedChat) return;
     setArtifactCode(refreshedChat.artifact_code || "");
     return refreshedChatMessages;
@@ -281,32 +317,10 @@ export default function ComponentCompletion({
 
   useEffect(() => {
     if (isLoading) {
+      console.log("completion", completion);
       handleChatFiles(completion);
     }
   }, [completion]);
-
-  useEffect(() => {
-    if (lastAssistantMessage?.content) {
-      handleChatFiles(lastAssistantMessage.content, true);
-      //handleVersionSelect(lastAssistantMessage.version);
-    }
-    if (fetchedChat.framework === "react" && !artifactCode) {
-      setCanvas(false);
-      complete(lastUserMessage.content);
-      setIsLoading(true);
-    }
-    if (
-      !lastAssistantMessage?.content &&
-      !isLoading &&
-      messages.length === 1 &&
-      lastUserMessage.content &&
-      fetchedChat.framework === "html"
-    ) {
-      setCanvas(false);
-      complete(lastUserMessage.content);
-      setIsLoading(true);
-    }
-  }, []);
 
   useEffect(() => {
     Crisp.configure(crispWebsiteId);
@@ -347,9 +361,9 @@ export default function ComponentCompletion({
     setArtifactCode,
     iframeSrc,
     setIframeSrc,
-    chatId: fetchedChat.id,
+    chatId,
     artifactFiles,
-    selectedFramework: fetchedChat.framework || "react",
+    selectedFramework: fetchedChat?.framework || "react",
   };
 
   useEffect(() => {
@@ -361,7 +375,7 @@ export default function ComponentCompletion({
           event: "UPDATE",
           schema: "public",
           table: "messages",
-          filter: `chat_id=eq.${fetchedChat.id}`,
+          filter: `chat_id=eq.${chatId}`,
         },
         async (payload) => {
           if (payload.old?.screenshot !== payload.new.screenshot) {
@@ -384,7 +398,7 @@ export default function ComponentCompletion({
     return () => {
       channel.unsubscribe();
     };
-  }, [fetchedChat.id]);
+  }, []);
 
   return (
     <ComponentContext.Provider value={contextValue}>
@@ -426,8 +440,8 @@ export default function ComponentCompletion({
                   </TabsList>
                 </Tabs>
                 {chatFiles.length > 0 &&
-                  (fetchedChat.framework === "html" ||
-                    (iframeSrc && fetchedChat.framework === "react")) && (
+                  (fetchedChat?.framework === "html" ||
+                    (iframeSrc && fetchedChat?.framework === "react")) && (
                     <>
                       <Tooltip>
                         <TooltipTrigger asChild>

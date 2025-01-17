@@ -3,7 +3,7 @@ import { createContext, useContext } from "react";
 import { Tables } from "@/types_db";
 import { ChatFile } from "@/utils/completion-parser";
 
-type ChatMessage = Tables<"messages"> & {
+export type ChatMessage = Tables<"messages"> & {
   chats: {
     user: Tables<"users">;
     prompt_image: string | null;

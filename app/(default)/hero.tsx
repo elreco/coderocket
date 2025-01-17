@@ -4,6 +4,7 @@ import {
   SiReact,
   SiVuedotjs,
   SiSvelte,
+  SiNextdotjs,
 } from "@icons-pack/react-simple-icons";
 import {
   Image as LucideImage,
@@ -406,6 +407,22 @@ export default function Hero() {
                     <div className="mr-2 flex cursor-pointer flex-row items-center">
                       <SiHtml5 className="mr-2 size-3" />
                       <span className="text-sm">HTML</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem
+                    value="nextjs"
+                    className="cursor-not-allowed opacity-50"
+                    disabled
+                    onSelect={(e) => e.preventDefault()}
+                  >
+                    <div className="pointer-events-none mr-2 flex w-full flex-row items-center justify-between">
+                      <div className="flex items-center">
+                        <SiNextdotjs className="mr-2 size-3" />
+                        <span className="text-sm">Next.js</span>
+                      </div>
+                      <Badge variant="outline" className="ml-0.5 mr-1 text-xs">
+                        Soon
+                      </Badge>
                     </div>
                   </SelectItem>
                   <SelectItem

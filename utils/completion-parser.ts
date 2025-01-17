@@ -21,12 +21,13 @@ export const getUpdatedArtifactCode = (
   completion: string,
   artifactCode: string,
 ): string => {
-  // Parser les fichiers existants de artifactCode
+  // Parse existing files from artifactCode
   const allFiles = new Map();
   const filesToDelete = new Set();
+
+  // Extract existing files
   const existingFileRegex =
     /<tailwindaiFile.*?name=["']([^"']*?)["'].*?>([\s\S]*?)<\/tailwindaiFile>/g;
-
   let existingMatch;
   while ((existingMatch = existingFileRegex.exec(artifactCode)) !== null) {
     const fileName = existingMatch[1];
@@ -34,36 +35,36 @@ export const getUpdatedArtifactCode = (
     allFiles.set(fileName, content);
   }
 
-  // Modifier pour gérer les fichiers partiels
-  const fileStartRegex =
-    /<tailwindaiFile.*?name=["']([^"']*?)["'].*?(?:action=["']([^"']*?)["'].*?)?>/g;
+  // Extract new/updated files from completion, including partial ones
+  const completionFiles = new Map();
+  const fileRegex =
+    /<tailwindaiFile.*?name=["']([^"']*?)["'].*?(?:action=["']([^"']*?)["'].*?)?>([\s\S]*?)(?=<\/tailwindaiFile|<tailwindaiFile|$)/g;
   let match;
 
-  while ((match = fileStartRegex.exec(completion)) !== null) {
+  while ((match = fileRegex.exec(completion)) !== null) {
     const fileName = match[1];
     const action = match[2];
-    const startIndex = match.index + match[0].length;
+    let content = match[3].trim();
 
-    // Prendre tout le contenu après l'ouverture du tag, même s'il n'est pas fermé
-    const content = completion
-      .slice(startIndex)
+    // Clean up content from any partial closing tags
+    content = content
       .replace(/<\/tailwindaiFile>.*$/g, "")
-      .replace(/<tailwindaiFile.*$/g, "") // Arrêter au prochain début de fichier
       .replace(/<\/tailwindaiArtifact>.*$/g, "")
       .trim();
 
     if (action === "delete") {
       filesToDelete.add(fileName);
     } else if (content) {
-      const existingContent = allFiles.get(fileName) || "";
-      // Si le contenu est plus long que l'existant, on met à jour
-      if (content.length > existingContent.length) {
-        allFiles.set(fileName, content);
-      }
+      completionFiles.set(fileName, content);
     }
   }
 
-  // Construire le résultat progressif
+  // Merge files, giving priority to completion files
+  completionFiles.forEach((content, fileName) => {
+    allFiles.set(fileName, content);
+  });
+
+  // Build result
   let mergedArtifact = "<tailwindaiArtifact>\n";
   allFiles.forEach((content, fileName) => {
     if (!filesToDelete.has(fileName)) {

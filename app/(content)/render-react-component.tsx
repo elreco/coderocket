@@ -70,7 +70,7 @@ export default function RenderReactComponent({
 
       try {
         const webcontainer = await setupProject(files);
-
+        console.log("files", files);
         webcontainer.on("error", (error) => {
           console.error("WebContainer error:", error);
           setError(`WebContainer error: ${error.message}`);
@@ -120,37 +120,11 @@ export default function RenderReactComponent({
         setLoadingState("starting");
         serverProcess.current = await webcontainer.spawn("npm", ["run", "dev"]);
 
-        const outputStream = new WritableStream({
-          write(data) {
-            console.log("Server output:", data);
-            if (data.trim()) {
-              /* const htmlOutput = converter.toHtml(data);
-              setConsoleOutput((prev) => [...prev, htmlOutput]); */
-            }
-            if (data.includes("Error:") || data.includes("SyntaxError:")) {
-              setError(data);
-              setLoadingState("error");
-            }
-          },
+        webcontainer.on("server-ready", async (port, url) => {
+          onServerReady(url);
+          setIframeSrc(url);
+          setLoadingState(null);
         });
-
-        serverProcess.current.output.pipeTo(outputStream).catch(console.error);
-
-        await Promise.race([
-          new Promise<void>((resolve) => {
-            webcontainer.on("server-ready", async (port, url) => {
-              onServerReady(url);
-              setIframeSrc(url);
-              setTimeout(() => {
-                setLoadingState(null);
-              }, 6000);
-              resolve();
-            });
-          }),
-          new Promise((_, reject) =>
-            setTimeout(() => reject(new Error("Server start timeout")), 30000),
-          ),
-        ]);
       } catch (error) {
         console.error("Setup failed:", error);
         setError(error instanceof Error ? error.message : "Setup failed");
@@ -227,8 +201,6 @@ export default function RenderReactComponent({
         </div>
       )}
       {loadingState && <LoadingState state={loadingState} />}
-      {/*       <div className="grid h-full grid-rows-[1fr,200px] gap-4">
-       */}
       <iframe
         src={iframeSrc || undefined}
         className={`size-full border-none ${
@@ -236,18 +208,6 @@ export default function RenderReactComponent({
         }`}
         sandbox="allow-forms allow-modals allow-pointer-lock allow-popups allow-same-origin allow-scripts"
       />
-      {/* <ScrollArea className="h-[200px] w-full rounded-md border bg-secondary p-4">
-          <div className="font-mono text-sm">
-            {consoleOutput.map((line, i) => (
-              <div
-                key={i}
-                className="whitespace-pre-wrap"
-                dangerouslySetInnerHTML={{ __html: line }}
-              />
-            ))}
-          </div>
-        </ScrollArea>
-      </div> */}
       {!isLoading && !error && !loadingState && !iframeSrc && (
         <LoadingState state={loadingState} />
       )}

@@ -59,7 +59,6 @@ export default async function Components({ params }: Props) {
   if (!chat || isNotFound) {
     return notFound();
   }
-  const lastAssistantMessage = await fetchLastAssistantMessageByChatId(chat.id);
   const lastUserMessage = await fetchLastUserMessageByChatId(chat.id);
   const messages = await fetchMessagesByChatId(chat.id);
   if (!lastUserMessage || !messages) {
@@ -70,13 +69,6 @@ export default async function Components({ params }: Props) {
   const user = chat?.user;
 
   return (
-    <ComponentCompletion
-      fetchedChat={chat}
-      fetchedMessages={messages}
-      authorized={authorized}
-      user={user}
-      lastAssistantMessage={lastAssistantMessage}
-      lastUserMessage={lastUserMessage}
-    />
+    <ComponentCompletion chatId={chat.id} authorized={authorized} user={user} />
   );
 }
