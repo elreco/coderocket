@@ -70,20 +70,13 @@ export default function RenderReactComponent({
 
       try {
         const webcontainer = await setupProject(files);
-        console.log("files", files);
         webcontainer.on("error", (error) => {
           console.error("WebContainer error:", error);
           setError(`WebContainer error: ${error.message}`);
           setLoadingState("error");
         });
 
-        webcontainer.on("port", (port) => {
-          console.log("WebContainer port:", port);
-        });
-
         webcontainer.on("preview-message", (message) => {
-          console.log("WebContainer preview message:", message);
-
           switch (message.type) {
             case PreviewMessageType.UncaughtException:
               setError(
@@ -134,9 +127,7 @@ export default function RenderReactComponent({
     };
 
     setupEnvironment();
-    console.log("Starting server");
     return () => {
-      console.log("Stopping server");
       stopServer();
     };
   }, [files, isLoading]);

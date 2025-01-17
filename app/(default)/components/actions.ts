@@ -280,7 +280,6 @@ export const getAllPublicChats = async () => {
     .is("is_private", false)
     .eq("framework", "html")
     .limit(24);
-  console.log(data);
   return data;
 };
 

@@ -317,7 +317,6 @@ export default function ComponentCompletion({
 
   useEffect(() => {
     if (isLoading) {
-      console.log("completion", completion);
       handleChatFiles(completion);
     }
   }, [completion]);
