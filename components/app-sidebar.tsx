@@ -55,8 +55,8 @@ const data = {
       icon: Rocket,
     },
     {
-      title: "Discord (Coming Soon)",
-      url: "#",
+      title: "Discord (NEW)",
+      url: "https://discord.gg/t7dQgcYJ5t",
       icon: SiDiscord,
     },
   ],

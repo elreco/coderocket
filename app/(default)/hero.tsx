@@ -11,6 +11,8 @@ import {
   Wand,
   Terminal,
   Paintbrush,
+  Globe,
+  Lock,
 } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -250,7 +252,7 @@ export default function Hero() {
             line
           </div>
         </div>
-        <div className="flex w-full flex-1 items-center justify-between sm:flex-row">
+        <div className="flex w-full flex-1 items-center justify-between lg:flex-row">
           {image && (
             <div className="mr-2 size-12">
               <div className="relative size-12">
@@ -273,7 +275,7 @@ export default function Hero() {
             </div>
           )}
 
-          <div className="flex w-full flex-col items-center justify-between space-y-2 sm:flex-row sm:space-y-0">
+          <div className="flex w-full flex-col items-center justify-between space-y-2 lg:flex-row lg:space-y-0">
             <div className="flex w-full items-center space-x-2">
               <Tabs
                 defaultValue="public"
@@ -282,7 +284,7 @@ export default function Hero() {
                   if (value === "public" && !isVisible) handleVisibility();
                   if (value === "private" && isVisible) handleVisibility();
                 }}
-                className="w-full sm:w-auto"
+                className="w-full lg:w-auto"
               >
                 <TabsList isReverse={true} className="grid w-full grid-cols-2">
                   <TabsTrigger
@@ -290,14 +292,16 @@ export default function Hero() {
                     value="public"
                     disabled={loading}
                   >
-                    Public
+                    <Globe className="block size-4 lg:hidden" />
+                    <span className="hidden lg:block">Public</span>
                   </TabsTrigger>
                   <TabsTrigger
                     isReverse={true}
                     value="private"
                     disabled={loading}
                   >
-                    Private
+                    <Lock className="block size-4 lg:hidden" />
+                    <span className="hidden lg:block">Private</span>
                   </TabsTrigger>
                 </TabsList>
               </Tabs>
@@ -306,7 +310,7 @@ export default function Hero() {
                 <TooltipTrigger asChild>
                   <Button
                     variant="background"
-                    className="w-full sm:w-auto"
+                    className="w-full lg:w-auto"
                     size="sm"
                     type="button"
                     disabled={loading}
@@ -439,7 +443,7 @@ export default function Hero() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex w-full items-center justify-end space-x-0 sm:space-x-2">
+            <div className="flex w-full items-center justify-end space-x-0 lg:space-x-2">
               <input
                 ref={fileInputRef}
                 className="sr-only"
@@ -451,7 +455,7 @@ export default function Hero() {
                 type="submit"
                 size="sm"
                 variant="default"
-                className="w-full sm:w-auto"
+                className="w-full lg:w-auto"
                 loading={loading}
               >
                 <Wand className="size-3" />
