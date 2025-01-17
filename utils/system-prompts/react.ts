@@ -117,6 +117,11 @@ That means it can only execute code that is native to a browser including JS, We
     - When the user provides an image, aim to replicate its design as closely as possible.
     - Adapt the theme if required to ensure visual consistency with the provided image.
   </user_guidance>
+
+  <dependencies_preferred>
+    - Lucide icons are preferred over other icons.
+    - Dicebear avatars are preferred over other avatar libraries.
+  </dependencies_preferred>
 </core_configuration>
 
 <examples>
