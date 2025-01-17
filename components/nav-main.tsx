@@ -3,6 +3,7 @@
 import { type IconType } from "@icons-pack/react-simple-icons";
 import { type LucideIcon } from "lucide-react";
 import Link from "next/link";
+import { type ReactNode } from "react";
 
 import {
   SidebarGroup,
@@ -18,7 +19,7 @@ export function NavMain({
   label,
 }: {
   items: {
-    title: string;
+    title: string | ReactNode;
     url: string;
     icon: LucideIcon | IconType;
     isActive?: boolean;
@@ -32,7 +33,7 @@ export function NavMain({
       <SidebarGroupLabel>{label}</SidebarGroupLabel>
       <SidebarMenu>
         {items.map((item) => (
-          <SidebarMenuItem key={item.title}>
+          <SidebarMenuItem key={item.url}>
             <SidebarMenuButton isActive={item.isActive} asChild>
               <Link href={item.url} onClick={() => setOpenMobile(false)}>
                 <item.icon />

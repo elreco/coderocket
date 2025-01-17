@@ -8,6 +8,7 @@ import * as React from "react";
 
 import { NavMain } from "@/components/nav-main";
 import { NavUser } from "@/components/nav-user";
+import { Badge } from "@/components/ui/badge";
 import {
   Sidebar,
   SidebarContent,
@@ -55,7 +56,14 @@ const data = {
       icon: Rocket,
     },
     {
-      title: "Discord (NEW)",
+      title: (
+        <div className="flex items-center gap-2">
+          Discord
+          <Badge variant="outline" className="h-5">
+            New
+          </Badge>
+        </div>
+      ),
       url: "https://discord.gg/t7dQgcYJ5t",
       icon: SiDiscord,
     },
