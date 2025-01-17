@@ -117,9 +117,21 @@ export default function ComponentCompletion({
         return;
       }
 
-      if (chat?.framework === "react" && chat.artifact_code) {
+      if (
+        chat?.framework === "react" &&
+        chat.artifact_code &&
+        assistantMsg?.content
+      ) {
         const newArtifactFiles = extractFilesFromArtifact(chat.artifact_code);
         setArtifactFiles(newArtifactFiles);
+        const firstFile = newArtifactFiles[0];
+        if (!firstFile) {
+          setEditorValue("");
+          setActiveTab("");
+          return;
+        }
+        setEditorValue(firstFile.content);
+        setActiveTab(firstFile.name || "");
       }
       if (chat?.framework === "html" && assistantMsg?.content) {
         handleChatFiles(assistantMsg.content, true);
