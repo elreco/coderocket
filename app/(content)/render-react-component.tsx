@@ -1,14 +1,14 @@
 "use client";
 
-import { WebContainerProcess, PreviewMessageType } from "@webcontainer/api";
-import { Loader2, AlertCircle, RefreshCcw } from "lucide-react";
+import { WebContainerProcess } from "@webcontainer/api";
+import { Loader2, AlertCircle } from "lucide-react";
 import React, { useEffect, useState, useRef, useCallback } from "react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
+import { takeScreenshot } from "@/utils/capture-screenshot";
 import { ChatFile } from "@/utils/completion-parser";
 
-import { getWebContainer, setupProject } from "./webcontainer";
+import { setupProject } from "./webcontainer";
 
 type LoadingState = "initializing" | "starting" | "error" | null;
 
@@ -35,23 +35,21 @@ export default function RenderReactComponent({
   files,
   isLoading,
   onServerReady,
+  chatId,
+  selectedVersion,
 }: {
   files: ChatFile[];
   isLoading: boolean;
   onServerReady: (url: string) => void;
+  chatId?: string;
+  selectedVersion?: number;
 }) {
   const [iframeSrc, setIframeSrc] = useState<string | null>(null);
   const [loadingState, setLoadingState] =
     useState<LoadingState>("initializing");
   const [error, setError] = useState<string | null>(null);
   const serverProcess = useRef<WebContainerProcess | null>(null);
-
-  /* const converter = new Convert({
-    fg: "#fff",
-    bg: "#000",
-    newline: true,
-    escapeXML: true,
-  }); */
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   const stopServer = useCallback(async () => {
     if (serverProcess.current) {
@@ -59,6 +57,13 @@ export default function RenderReactComponent({
       serverProcess.current = null;
     }
   }, []);
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const handleScreenshot = async (url: string) => {
+    if (chatId && selectedVersion !== undefined) {
+      await takeScreenshot(chatId, selectedVersion, undefined, url);
+    }
+  };
 
   useEffect(() => {
     if (isLoading || files.length === 0) return;
@@ -70,52 +75,22 @@ export default function RenderReactComponent({
 
       try {
         const webcontainer = await setupProject(files);
-        webcontainer.on("error", (error) => {
-          console.error("WebContainer error:", error);
-          setError(`WebContainer error: ${error.message}`);
-          setLoadingState("error");
-        });
-
-        webcontainer.on("preview-message", (message) => {
-          switch (message.type) {
-            case PreviewMessageType.UncaughtException:
-              setError(
-                `Uncaught Exception: ${message.message}\n${message.stack || ""}`,
-              );
-              setLoadingState("error");
-              break;
-
-            case PreviewMessageType.UnhandledRejection:
-              setError(
-                `Unhandled Rejection: ${message.message}\n${message.stack || ""}`,
-              );
-              setLoadingState("error");
-              break;
-
-            case PreviewMessageType.ConsoleError: {
-              const errorMessage = message.args
-                .map((arg) =>
-                  typeof arg === "string" ? arg : JSON.stringify(arg),
-                )
-                .join(" ");
-              if (
-                errorMessage.includes("SyntaxError:") ||
-                errorMessage.includes("Error:")
-              ) {
-                setError(`Console Error: ${errorMessage}\n${message.stack}`);
-                setLoadingState("error");
-              }
-              break;
-            }
-          }
-        });
 
         setLoadingState("starting");
         serverProcess.current = await webcontainer.spawn("npm", ["run", "dev"]);
 
+        webcontainer.on("error", (error) => {
+          setError(`WebContainer error: ${error.message}`);
+          setLoadingState("error");
+        });
+
         webcontainer.on("server-ready", async (port, url) => {
           onServerReady(url);
           setIframeSrc(url);
+          /* if (chatId && selectedVersion !== undefined) {
+            await handleScreenshot(url);
+          } */
+
           setLoadingState(null);
         });
       } catch (error) {
@@ -130,75 +105,35 @@ export default function RenderReactComponent({
     return () => {
       stopServer();
     };
-  }, [files, isLoading]);
+  }, [files, isLoading, onServerReady, stopServer]);
 
-  const handleRetry = useCallback(async () => {
-    try {
-      const webcontainer = await getWebContainer();
-      setLoadingState("starting");
-      setError(null);
-
-      serverProcess.current = await webcontainer.spawn("npm", ["run", "dev"]);
-
-      const errorStream = new WritableStream({
-        write(data) {
-          if (data.includes("Error:")) {
-            setError(data);
-            setLoadingState("error");
-          }
-        },
-      });
-
-      serverProcess.current.output.pipeTo(errorStream).catch(console.error);
-
-      await Promise.race([
-        new Promise<void>((resolve) => {
-          webcontainer.on("server-ready", (port, url) => {
-            onServerReady(url);
-            setLoadingState(null);
-            setIframeSrc(url);
-            resolve();
-          });
-        }),
-        new Promise((_, reject) =>
-          setTimeout(() => reject(new Error("Server start timeout")), 30000),
-        ),
-      ]);
-    } catch (error) {
-      setError(error instanceof Error ? error.message : "Server start failed");
-      setLoadingState("error");
-      await stopServer();
-    }
-  }, [stopServer]);
-
+  // ------------------------------------------------------------------
+  // 5. Rendu du composant
+  // ------------------------------------------------------------------
   return (
     <>
       {isLoading && <LoadingState state="initializing" />}
+
       {error && (
         <div className="mx-4 flex items-center justify-center">
           <Alert variant="destructive" className="bg-secondary px-12">
             <AlertCircle className="size-4" />
             <AlertDescription>{error}</AlertDescription>
-            <Button
-              variant="outline"
-              size="sm"
-              className="ml-auto text-center"
-              onClick={handleRetry}
-            >
-              <RefreshCcw className="mr-2 size-4 text-center" />
-              Reload server
-            </Button>
           </Alert>
         </div>
       )}
+
       {loadingState && <LoadingState state={loadingState} />}
+
       <iframe
+        ref={iframeRef}
         src={iframeSrc || undefined}
         className={`size-full border-none ${
           !iframeSrc || isLoading || error || loadingState ? "hidden" : ""
         }`}
         sandbox="allow-forms allow-modals allow-pointer-lock allow-popups allow-same-origin allow-scripts"
       />
+
       {!isLoading && !error && !loadingState && !iframeSrc && (
         <LoadingState state={loadingState} />
       )}

@@ -1,36 +1,52 @@
 "use server";
 
-import { defaultTheme, screenshotApiUrl } from "./config";
+import puppeteer from "puppeteer";
+
+import { defaultTheme } from "./config";
 import { createClient } from "./supabase/server";
 
-export async function captureScreenshot(url: string, maxRetries = 5) {
-  const apiUrl = `${screenshotApiUrl}${encodeURIComponent(url)}`;
-  let lastError: Error | null = null;
+/**
+ * Lance Puppeteer pour prendre un screenshot d'une URL.
+ * @param url L'adresse complète de la page à capturer (ex: https://<hash>.webcontainer.io).
+ * @returns Buffer d'image PNG.
+ */
+export async function captureScreenshot(url: string) {
+  // Lance un navigateur headless
+  const browser = await puppeteer.launch({
+    headless: true, // ou true selon la version de Puppeteer
+    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+  });
+  const page = await browser.newPage();
+  await page.setExtraHTTPHeaders({
+    "Cross-Origin-Opener-Policy": "same-origin",
+    "Cross-Origin-Embedder-Policy": "credentialless",
+  });
+  // Configure la taille de la fenêtre
+  await page.setViewport({
+    width: 1200,
+    height: 630,
+    deviceScaleFactor: 1,
+  });
 
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      const response = await fetch(apiUrl);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch screenshot: ${response.statusText}`);
-      }
-      const arrayBuffer = await response.arrayBuffer();
-      return Buffer.from(arrayBuffer);
-    } catch (error) {
-      lastError = error as Error;
-      console.error(`Tentative ${attempt}/${maxRetries} échouée:`, error);
+  // Ou bien lors du goto :
+  await page.goto(url, {
+    waitUntil: "networkidle0",
+  });
 
-      if (attempt < maxRetries) {
-        // Attendre un délai croissant entre chaque tentative (exponential backoff)
-        await new Promise((resolve) => setTimeout(resolve, attempt * 1000));
-        continue;
-      }
-    }
-  }
+  // Prend la capture d'écran au format PNG (renvoie un Buffer)
+  const screenshot = await page.screenshot({
+    type: "png",
+  });
 
-  console.error(`Échec après ${maxRetries} tentatives`);
-  throw lastError;
+  await browser.close();
+  return screenshot;
 }
 
+/**
+ * Vérifie en base si on a déjà un screenshot pour (chatId, version).
+ * Si oui, on ne fait rien.
+ * Sinon, on appelle `captureScreenshot` pour générer l'image et la stocke dans Supabase.
+ */
 export const takeScreenshot = async (
   chatId: string,
   version: number,
@@ -48,29 +64,38 @@ export const takeScreenshot = async (
     .eq("role", "assistant")
     .single();
 
-  // Si l'image existe déjà, on arrête là
   if (existingMessage?.screenshot) {
     console.log("Screenshot already exists, skipping capture");
     return;
   }
 
-  // Si l'image n'existe pas, utiliser screenshotBase64 ou faire la capture d'écran
-  const screenshot = await captureScreenshot(
-    url || `https://www.tailwindai.dev/content/${chatId}`,
-  );
+  // Sinon, on génère un screenshot.
+  // Si `url` n'est pas fourni, on utilise un fallback (ex: votre site)
+  const finalUrl = url || `https://www.tailwindai.dev/content/${chatId}`;
+  const screenshot = await captureScreenshot(finalUrl);
 
-  const { error, data } = await supabase.storage
+  // On stocke l'image dans le bucket "chat-images" de Supabase
+  const uploadPath = `${chatId}/${version}-${theme}`;
+  const { data: uploadData, error: uploadError } = await supabase.storage
     .from("chat-images")
-    .upload(`${chatId}/${version}-${theme}`, screenshot, {
+    .upload(uploadPath, screenshot, {
       contentType: "image/png",
       upsert: true,
     });
-  if (error) {
-    throw new Error("Failed to upload image to Supabase: " + error.message);
+  if (uploadError) {
+    throw new Error(
+      "Failed to upload image to Supabase: " + uploadError.message,
+    );
   }
-  const { data: imageData } = supabase.storage
+
+  // Récupérer l'URL publique du fichier
+  const { data: publicUrlData } = supabase.storage
     .from("chat-images")
-    .getPublicUrl(data.path);
+    .getPublicUrl(uploadData.path);
+
+  const publicUrl = publicUrlData.publicUrl;
+
+  // On met à jour le message "assistant" pour y ajouter l'URL du screenshot
   const { data: messagesData } = await supabase
     .from("messages")
     .select("*")
@@ -81,11 +106,15 @@ export const takeScreenshot = async (
     (m) => m.role === "assistant",
   );
 
-  if (!findAssistantMessage)
+  if (!findAssistantMessage) {
     return console.error("Could not find assistant message");
-  findAssistantMessage.screenshot = imageData.publicUrl;
+  }
+
+  // On met à jour la colonne "screenshot" pour ce message
   await supabase
     .from("messages")
-    .update({ screenshot: imageData.publicUrl })
+    .update({ screenshot: publicUrl })
     .eq("id", findAssistantMessage.id);
+
+  console.log("Screenshot captured and stored successfully:", publicUrl);
 };

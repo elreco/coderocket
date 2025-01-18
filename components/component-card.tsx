@@ -1,3 +1,4 @@
+import { SiHtml5, SiReact } from "@icons-pack/react-simple-icons";
 import { Paintbrush, TerminalIcon } from "lucide-react";
 import Link from "next/link";
 
@@ -8,6 +9,7 @@ import { UserWidget } from "./user-widget";
 type GetComponentsReturnType = {
   chat_id: string;
   user_id: string;
+  framework: string;
   user_full_name: string;
   user_avatar_url: string;
   is_featured: boolean;
@@ -24,6 +26,9 @@ export default function ComponentCard({
 }: {
   chat: GetComponentsReturnType;
 }) {
+  const FrameworkIcon =
+    chat.framework.toLowerCase() === "react" ? SiReact : SiHtml5;
+
   return (
     <Link
       key={chat.chat_id}
@@ -54,19 +59,34 @@ export default function ComponentCard({
           </span>
         </div>
         <div className="flex w-full items-center justify-between gap-2">
-          <Tooltip>
-            <TooltipTrigger>
-              <Badge className="hover:bg-primary">
-                <Paintbrush className="mr-1 size-3" />{" "}
-                <span className="first-letter:uppercase">
-                  {chat.last_assistant_message_theme}
-                </span>
-              </Badge>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Theme</p>
-            </TooltipContent>
-          </Tooltip>
+          <div className="flex gap-2">
+            <Tooltip>
+              <TooltipTrigger>
+                <Badge className="hover:bg-primary">
+                  <Paintbrush className="mr-1 size-3" />
+                  <span className="first-letter:uppercase">
+                    {chat.last_assistant_message_theme}
+                  </span>
+                </Badge>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Theme</p>
+              </TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger>
+                <Badge className="hover:bg-primary">
+                  <FrameworkIcon className="mr-1 size-3" />
+                  <span className="first-letter:uppercase">
+                    {chat.framework}
+                  </span>
+                </Badge>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Framework</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
           <UserWidget
             createdAt={chat.created_at}
             userAvatarUrl={chat.user_avatar_url}

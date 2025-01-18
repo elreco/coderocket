@@ -25,17 +25,10 @@ function buildFileSystemTree(files: ChatFile[]): FileSystemTree {
 
 let webcontainerInstance: WebContainer | null = null;
 
-export async function getWebContainer() {
+async function getWebContainer() {
   if (webcontainerInstance) return webcontainerInstance;
   webcontainerInstance = await WebContainer.boot();
   return webcontainerInstance;
-}
-
-export function teardownWebContainer() {
-  if (webcontainerInstance) {
-    webcontainerInstance.teardown();
-    webcontainerInstance = null;
-  }
 }
 
 export async function setupProject(files: ChatFile[]) {
