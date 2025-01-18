@@ -214,7 +214,7 @@ export default function Hero() {
       </div>
       <form
         id="generate-form"
-        className="group relative z-10 flex w-full flex-col items-center justify-center gap-x-0 space-y-3 rounded-lg border border-primary/35 bg-secondary p-3 text-center transition-all duration-300 hover:shadow-2xl hover:shadow-primary/35 xl:w-3/4"
+        className="group relative z-10 flex w-full flex-col items-center justify-center gap-x-0 space-y-3 rounded-lg border border-primary/40 bg-secondary p-3 text-center transition-all duration-300 hover:shadow-lg hover:shadow-primary/20 xl:w-3/4"
         onSubmit={handleSubmit}
       >
         <div className="flex w-full flex-col items-end">
