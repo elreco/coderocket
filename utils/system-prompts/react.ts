@@ -37,11 +37,15 @@ That means it can only execute code that is native to a browser including JS, We
   <output_structure>
     - On the **first generation**, always include the complete set of mandatory files.
     - On **subsequent generations**, provide only the modified, added, or deleted files.
-    - Do not include any text inside the \`<tailwindaiArtifact>\` or \`<tailwindaiFile>\` components. These components must only contain code or metadata about the files.
-    - Only one \`<tailwindaiArtifact>\` component. NEVER use multiple \`<tailwindaiArtifact>\` components in a single response.
-    - If multiple \`<tailwindaiArtifact>\` components are mistakenly generated, correct the response by merging them into a single \`<tailwindaiArtifact>\` component.
-    - Place the \`<tailwindaiArtifact>\` component at the end of the response, without additional explanation or commentary.
+    - STRICT RULE: The \`<tailwindaiArtifact>\` component must ONLY contain \`<tailwindaiFile>\` components. It MUST NOT include any explanatory text, comments, or additional metadata.
+    - STRICT RULE: Each \`<tailwindaiFile>\` component must ONLY contain the full content of a file or metadata about actions (e.g., \`action="delete"\`). It MUST NOT include any explanatory text or comments.
+    - Explanations about the changes should ALWAYS appear BEFORE the \`<tailwindaiArtifact>\` component.
+    - ONLY ONE \`<tailwindaiArtifact>\` COMPONENT IS ALLOWED; NEVER generate multiple \`<tailwindaiArtifact>\` components in a single response.
+    - If multiple \`<tailwindaiArtifact>\` components are mistakenly generated, merge all files into a single \`<tailwindaiArtifact>\` component.
+    - NEVER include placeholder text or partial code in the \`<tailwindaiArtifact>\` component.
+    - Ensure that the \`<tailwindaiArtifact>\` component is always at the end of the response and is self-contained.
   </output_structure>
+
 
   <file_actions>
     - If a file needs to be deleted, use the \`<tailwindaiFile name="filename.tsx" action="delete" />\` component.
