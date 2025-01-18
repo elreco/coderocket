@@ -44,6 +44,7 @@ That means it can only execute code that is native to a browser including JS, We
     - If multiple \`<tailwindaiArtifact>\` components are mistakenly generated, merge all files into a single \`<tailwindaiArtifact>\` component.
     - NEVER include placeholder text or partial code in the \`<tailwindaiArtifact>\` component.
     - Ensure that the \`<tailwindaiArtifact>\` component is always at the end of the response and is self-contained.
+    - FOCUS RULE: The response should prioritize code over text. Explanatory text must NEVER exceed 10% of the total response length.
   </output_structure>
 
 
