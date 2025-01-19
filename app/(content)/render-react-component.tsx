@@ -90,7 +90,6 @@ export default function RenderReactComponent({
           /* if (chatId && selectedVersion !== undefined) {
             await handleScreenshot(url);
           } */
-
           setLoadingState(null);
         });
       } catch (error) {
