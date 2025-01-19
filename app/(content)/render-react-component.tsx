@@ -1,14 +1,13 @@
 "use client";
 
-import { WebContainerProcess } from "@webcontainer/api";
+import { WebContainer, WebContainerProcess } from "@webcontainer/api";
 import { Loader2, AlertCircle } from "lucide-react";
 import React, { useEffect, useState, useRef, useCallback } from "react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { takeScreenshot } from "@/utils/capture-screenshot";
 import { ChatFile } from "@/utils/completion-parser";
-
-import { setupProject } from "./webcontainer";
+import { buildFileSystemTree } from "@/utils/webcontainer";
 
 type LoadingState = "initializing" | "starting" | "error" | null;
 
@@ -48,13 +47,37 @@ export default function RenderReactComponent({
   const [loadingState, setLoadingState] =
     useState<LoadingState>("initializing");
   const [error, setError] = useState<string | null>(null);
-  const serverProcess = useRef<WebContainerProcess | null>(null);
+  const [serverProcess, setServerProcess] =
+    useState<WebContainerProcess | null>(null);
+  const [webcontainer, setWebcontainer] = useState<WebContainer | null>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [isIframeLoaded, setIsIframeLoaded] = useState(false);
+
+  async function getWebContainer() {
+    if (webcontainer) return webcontainer;
+    return await WebContainer.boot();
+  }
+
+  async function setupProject(files: ChatFile[]) {
+    const webcontainer = await getWebContainer();
+
+    const fileSystemTree = buildFileSystemTree(files);
+    await webcontainer?.mount(fileSystemTree);
+
+    const installProcess = await webcontainer?.spawn("npm", ["install"]);
+    await installProcess?.exit;
+
+    return webcontainer;
+  }
 
   const stopServer = useCallback(async () => {
-    if (serverProcess.current) {
-      serverProcess.current.kill();
-      serverProcess.current = null;
+    if (serverProcess) {
+      serverProcess.kill();
+      setServerProcess(null);
+    }
+    if (webcontainer) {
+      webcontainer.teardown();
+      setWebcontainer(null);
     }
   }, []);
 
@@ -64,6 +87,17 @@ export default function RenderReactComponent({
       await takeScreenshot(chatId, selectedVersion, undefined, url);
     }
   };
+
+  const handleIframeLoad = useCallback(() => {
+    try {
+      const iframeDocument = iframeRef.current?.contentWindow?.document;
+      if (iframeDocument?.body) {
+        setIsIframeLoaded(true);
+      }
+    } catch {
+      setIsIframeLoaded(true);
+    }
+  }, []);
 
   useEffect(() => {
     if (isLoading || files.length === 0) return;
@@ -75,9 +109,10 @@ export default function RenderReactComponent({
 
       try {
         const webcontainer = await setupProject(files);
-
+        setWebcontainer(webcontainer);
         setLoadingState("starting");
-        serverProcess.current = await webcontainer.spawn("npm", ["run", "dev"]);
+        const serverProcess = await webcontainer.spawn("npm", ["run", "dev"]);
+        setServerProcess(serverProcess);
 
         webcontainer.on("error", (error) => {
           setError(`WebContainer error: ${error.message}`);
@@ -106,9 +141,6 @@ export default function RenderReactComponent({
     };
   }, [files, isLoading, onServerReady, stopServer]);
 
-  // ------------------------------------------------------------------
-  // 5. Rendu du composant
-  // ------------------------------------------------------------------
   return (
     <>
       {isLoading && <LoadingState state="initializing" />}
@@ -128,14 +160,20 @@ export default function RenderReactComponent({
         ref={iframeRef}
         src={iframeSrc || undefined}
         className={`size-full border-none bg-white ${
-          !iframeSrc || isLoading || error || loadingState ? "hidden" : ""
+          !iframeSrc || isLoading || error || loadingState || !isIframeLoaded
+            ? "hidden"
+            : ""
         }`}
         sandbox="allow-forms allow-modals allow-pointer-lock allow-popups allow-same-origin allow-scripts"
+        onLoad={handleIframeLoad}
       />
 
-      {!isLoading && !error && !loadingState && !iframeSrc && (
-        <LoadingState state={loadingState} />
-      )}
+      {!isLoading &&
+        !error &&
+        !loadingState &&
+        (!iframeSrc || !isIframeLoaded) && (
+          <LoadingState state={loadingState} />
+        )}
     </>
   );
 }
