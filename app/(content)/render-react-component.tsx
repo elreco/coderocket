@@ -1,14 +1,13 @@
 "use client";
 
-import { WebContainerProcess, PreviewMessageType } from "@webcontainer/api";
-import { Loader2, AlertCircle, RefreshCcw } from "lucide-react";
+import { WebContainer, WebContainerProcess } from "@webcontainer/api";
+import { Loader2, AlertCircle } from "lucide-react";
 import React, { useEffect, useState, useRef, useCallback } from "react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
+import { takeScreenshot } from "@/utils/capture-screenshot";
 import { ChatFile } from "@/utils/completion-parser";
-
-import { getWebContainer, setupProject } from "./webcontainer";
+import { buildFileSystemTree } from "@/utils/webcontainer";
 
 type LoadingState = "initializing" | "starting" | "error" | null;
 
@@ -35,28 +34,68 @@ export default function RenderReactComponent({
   files,
   isLoading,
   onServerReady,
+  chatId,
+  selectedVersion,
 }: {
   files: ChatFile[];
   isLoading: boolean;
   onServerReady: (url: string) => void;
+  chatId?: string;
+  selectedVersion?: number;
 }) {
   const [iframeSrc, setIframeSrc] = useState<string | null>(null);
   const [loadingState, setLoadingState] =
     useState<LoadingState>("initializing");
   const [error, setError] = useState<string | null>(null);
-  const serverProcess = useRef<WebContainerProcess | null>(null);
+  const [serverProcess, setServerProcess] =
+    useState<WebContainerProcess | null>(null);
+  const [webcontainer, setWebcontainer] = useState<WebContainer | null>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [isIframeLoaded, setIsIframeLoaded] = useState(false);
 
-  /* const converter = new Convert({
-    fg: "#fff",
-    bg: "#000",
-    newline: true,
-    escapeXML: true,
-  }); */
+  async function getWebContainer() {
+    if (webcontainer) return webcontainer;
+    return await WebContainer.boot();
+  }
+
+  async function setupProject(files: ChatFile[]) {
+    const webcontainer = await getWebContainer();
+
+    const fileSystemTree = buildFileSystemTree(files);
+    await webcontainer?.mount(fileSystemTree);
+
+    const installProcess = await webcontainer?.spawn("npm", ["install"]);
+    await installProcess?.exit;
+
+    return webcontainer;
+  }
 
   const stopServer = useCallback(async () => {
-    if (serverProcess.current) {
-      serverProcess.current.kill();
-      serverProcess.current = null;
+    if (serverProcess) {
+      serverProcess.kill();
+      setServerProcess(null);
+    }
+    if (webcontainer) {
+      webcontainer.teardown();
+      setWebcontainer(null);
+    }
+  }, []);
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const handleScreenshot = async (url: string) => {
+    if (chatId && selectedVersion !== undefined) {
+      await takeScreenshot(chatId, selectedVersion, undefined, url);
+    }
+  };
+
+  const handleIframeLoad = useCallback(() => {
+    try {
+      const iframeDocument = iframeRef.current?.contentWindow?.document;
+      if (iframeDocument?.body) {
+        setIsIframeLoaded(true);
+      }
+    } catch {
+      setIsIframeLoaded(true);
     }
   }, []);
 
@@ -70,52 +109,22 @@ export default function RenderReactComponent({
 
       try {
         const webcontainer = await setupProject(files);
+        setWebcontainer(webcontainer);
+        setLoadingState("starting");
+        const serverProcess = await webcontainer.spawn("npm", ["run", "dev"]);
+        setServerProcess(serverProcess);
+
         webcontainer.on("error", (error) => {
-          console.error("WebContainer error:", error);
           setError(`WebContainer error: ${error.message}`);
           setLoadingState("error");
         });
 
-        webcontainer.on("preview-message", (message) => {
-          switch (message.type) {
-            case PreviewMessageType.UncaughtException:
-              setError(
-                `Uncaught Exception: ${message.message}\n${message.stack || ""}`,
-              );
-              setLoadingState("error");
-              break;
-
-            case PreviewMessageType.UnhandledRejection:
-              setError(
-                `Unhandled Rejection: ${message.message}\n${message.stack || ""}`,
-              );
-              setLoadingState("error");
-              break;
-
-            case PreviewMessageType.ConsoleError: {
-              const errorMessage = message.args
-                .map((arg) =>
-                  typeof arg === "string" ? arg : JSON.stringify(arg),
-                )
-                .join(" ");
-              if (
-                errorMessage.includes("SyntaxError:") ||
-                errorMessage.includes("Error:")
-              ) {
-                setError(`Console Error: ${errorMessage}\n${message.stack}`);
-                setLoadingState("error");
-              }
-              break;
-            }
-          }
-        });
-
-        setLoadingState("starting");
-        serverProcess.current = await webcontainer.spawn("npm", ["run", "dev"]);
-
         webcontainer.on("server-ready", async (port, url) => {
           onServerReady(url);
           setIframeSrc(url);
+          /* if (chatId && selectedVersion !== undefined) {
+            await handleScreenshot(url);
+          } */
           setLoadingState(null);
         });
       } catch (error) {
@@ -130,78 +139,41 @@ export default function RenderReactComponent({
     return () => {
       stopServer();
     };
-  }, [files, isLoading]);
-
-  const handleRetry = useCallback(async () => {
-    try {
-      const webcontainer = await getWebContainer();
-      setLoadingState("starting");
-      setError(null);
-
-      serverProcess.current = await webcontainer.spawn("npm", ["run", "dev"]);
-
-      const errorStream = new WritableStream({
-        write(data) {
-          if (data.includes("Error:")) {
-            setError(data);
-            setLoadingState("error");
-          }
-        },
-      });
-
-      serverProcess.current.output.pipeTo(errorStream).catch(console.error);
-
-      await Promise.race([
-        new Promise<void>((resolve) => {
-          webcontainer.on("server-ready", (port, url) => {
-            onServerReady(url);
-            setLoadingState(null);
-            setIframeSrc(url);
-            resolve();
-          });
-        }),
-        new Promise((_, reject) =>
-          setTimeout(() => reject(new Error("Server start timeout")), 30000),
-        ),
-      ]);
-    } catch (error) {
-      setError(error instanceof Error ? error.message : "Server start failed");
-      setLoadingState("error");
-      await stopServer();
-    }
-  }, [stopServer]);
+  }, [files, isLoading, onServerReady, stopServer]);
 
   return (
     <>
       {isLoading && <LoadingState state="initializing" />}
+
       {error && (
         <div className="mx-4 flex items-center justify-center">
           <Alert variant="destructive" className="bg-secondary px-12">
             <AlertCircle className="size-4" />
             <AlertDescription>{error}</AlertDescription>
-            <Button
-              variant="outline"
-              size="sm"
-              className="ml-auto text-center"
-              onClick={handleRetry}
-            >
-              <RefreshCcw className="mr-2 size-4 text-center" />
-              Reload server
-            </Button>
           </Alert>
         </div>
       )}
+
       {loadingState && <LoadingState state={loadingState} />}
+
       <iframe
+        ref={iframeRef}
         src={iframeSrc || undefined}
-        className={`size-full border-none ${
-          !iframeSrc || isLoading || error || loadingState ? "hidden" : ""
+        className={`size-full border-none bg-white ${
+          !iframeSrc || isLoading || error || loadingState || !isIframeLoaded
+            ? "hidden"
+            : ""
         }`}
         sandbox="allow-forms allow-modals allow-pointer-lock allow-popups allow-same-origin allow-scripts"
+        onLoad={handleIframeLoad}
       />
-      {!isLoading && !error && !loadingState && !iframeSrc && (
-        <LoadingState state={loadingState} />
-      )}
+
+      {!isLoading &&
+        !error &&
+        !loadingState &&
+        (!iframeSrc || !isIframeLoaded) && (
+          <LoadingState state={loadingState} />
+        )}
     </>
   );
 }

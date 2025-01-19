@@ -31,12 +31,16 @@ const RenderContent = React.memo(
     selectedFramework,
     artifactFiles,
     setIframeSrc,
+    chatId,
+    selectedVersion,
   }: {
     isLoading: boolean;
     chatFiles: ChatFile[];
     selectedFramework: string;
     artifactFiles: ChatFile[];
     setIframeSrc: (url: string) => void;
+    chatId?: string;
+    selectedVersion?: number;
   }) => {
     if (isLoading && chatFiles.length === 0) {
       return (
@@ -55,6 +59,8 @@ const RenderContent = React.memo(
           isLoading={isLoading}
           files={artifactFiles}
           onServerReady={(url) => setIframeSrc(url)}
+          chatId={chatId}
+          selectedVersion={selectedVersion}
         />
       );
     }
@@ -95,6 +101,8 @@ export default function CodePreview() {
     artifactFiles,
     selectedFramework,
     setIframeSrc,
+    chatId,
+    selectedVersion,
   } = useComponentContext();
   const [, copy] = useCopyToClipboard();
   const codeMirrorRef = useRef<ReactCodeMirrorRef>(null);
@@ -178,6 +186,8 @@ export default function CodePreview() {
           selectedFramework={selectedFramework}
           artifactFiles={artifactFiles}
           setIframeSrc={setIframeSrc}
+          chatId={chatId}
+          selectedVersion={selectedVersion}
         />
       </div>
       <div

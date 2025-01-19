@@ -61,6 +61,7 @@ That means it can only execute code that is native to a browser including JS, We
       - src/App.tsx
       - src/components/ui/**
       - src/lib/**
+      - public/vite.svg
       - index.html
       - package.json
       - tailwind.config.js
@@ -184,6 +185,14 @@ That means it can only execute code that is native to a browser including JS, We
         </tailwindaiFile>
 
         <tailwindaiFile name="src/components/ui/button.tsx">
+          ...
+        </tailwindaiFile>
+
+        <tailwindaiFile name="src/lib/utils.ts">
+          ...
+        </tailwindaiFile>
+
+        <tailwindaiFile name="public/vite.svg">
           ...
         </tailwindaiFile>
 
