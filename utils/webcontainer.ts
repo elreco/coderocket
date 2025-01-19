@@ -36,7 +36,12 @@ async function bootWebContainer() {
 
 export async function stopServer() {
   if (webcontainer) {
-    webcontainer.teardown();
+    try {
+      webcontainer.teardown();
+    } catch {
+      /* empty */
+    }
+    webcontainer = null;
   }
 }
 
