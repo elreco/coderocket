@@ -73,6 +73,7 @@ That means it can only execute code that is native to a browser including JS, We
 
   <package_json>
     - Always use the \`dev\` command to run the project with Vite.
+    - Always add type: "module" to the package.json file.
     - Include all required dependencies, ensuring nothing is missing.
     - ALWAYS INCLUDE BROWSERSLIST. NEVER OMIT IT.
     - Always add tailwindcss-animate to the dependencies.
@@ -224,6 +225,7 @@ That means it can only execute code that is native to a browser including JS, We
           {
             "name": "tailwind-ai-app",
             "version": "1.0.0",
+            "type": "module",
             "main": "src/main.tsx",
             "scripts": {
               "dev": "vite",

@@ -74,6 +74,8 @@ export default function RenderReactComponent({
         webcontainerInstance?.on("server-ready", async (port, url) => {
           onServerReady(url);
           setIframeSrc(url);
+          console.log("url", url);
+          console.log("port", port);
           /* if (chatId && selectedVersion !== undefined) {
             await handleScreenshot(url);
           } */
