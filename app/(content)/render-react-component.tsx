@@ -128,7 +128,7 @@ export default function RenderReactComponent({
       <iframe
         ref={iframeRef}
         src={iframeSrc || undefined}
-        className={`size-full border-none ${
+        className={`size-full border-none bg-white ${
           !iframeSrc || isLoading || error || loadingState ? "hidden" : ""
         }`}
         sandbox="allow-forms allow-modals allow-pointer-lock allow-popups allow-same-origin allow-scripts"
