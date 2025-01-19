@@ -6,13 +6,13 @@ import React, { useEffect, useState, useRef } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { takeScreenshot } from "@/utils/capture-screenshot";
 import { ChatFile } from "@/utils/completion-parser";
-import { setupProject, stopServer } from "@/utils/webcontainer";
+import { setupProject, stopWebContainer } from "@/utils/webcontainer";
 
 type LoadingState = "initializing" | "starting" | "error" | null;
 
 function LoadingState({ state }: { state: LoadingState }) {
   return (
-    <div className="flex flex-col items-center justify-center space-y-4 p-8 text-center">
+    <div className="flex size-full flex-col items-center justify-center space-y-4 p-8 text-center">
       <Loader2 className="size-8 animate-spin text-primary" />
       <div className="space-y-2">
         <h3 className="font-semibold">
@@ -60,7 +60,6 @@ export default function RenderReactComponent({
     if (isLoading || files.length === 0) return;
 
     const setupEnvironment = async () => {
-      await stopServer();
       setLoadingState("initializing");
       setError(null);
       try {
@@ -83,13 +82,13 @@ export default function RenderReactComponent({
       } catch (error) {
         setError(error instanceof Error ? error.message : "Setup failed");
         setLoadingState("error");
-        await stopServer();
+        stopWebContainer();
       }
     };
 
     setupEnvironment();
     return () => {
-      stopServer();
+      stopWebContainer();
     };
   }, [files, isLoading]);
 

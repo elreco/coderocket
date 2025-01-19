@@ -34,7 +34,7 @@ async function bootWebContainer() {
   webcontainer = await WebContainer.boot();
 }
 
-export async function stopServer() {
+export function stopWebContainer() {
   if (webcontainer) {
     try {
       webcontainer.teardown();
