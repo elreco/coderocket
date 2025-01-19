@@ -1,13 +1,12 @@
 "use client";
 
-import { WebContainer, WebContainerProcess } from "@webcontainer/api";
 import { Loader2, AlertCircle } from "lucide-react";
-import React, { useEffect, useState, useRef, useCallback } from "react";
+import React, { useEffect, useState, useRef } from "react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { takeScreenshot } from "@/utils/capture-screenshot";
 import { ChatFile } from "@/utils/completion-parser";
-import { buildFileSystemTree } from "@/utils/webcontainer";
+import { setupProject, stopServer } from "@/utils/webcontainer";
 
 type LoadingState = "initializing" | "starting" | "error" | null;
 
@@ -47,39 +46,8 @@ export default function RenderReactComponent({
   const [loadingState, setLoadingState] =
     useState<LoadingState>("initializing");
   const [error, setError] = useState<string | null>(null);
-  const [serverProcess, setServerProcess] =
-    useState<WebContainerProcess | null>(null);
-  const [webcontainer, setWebcontainer] = useState<WebContainer | null>(null);
+
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const [isIframeLoaded, setIsIframeLoaded] = useState(false);
-
-  async function getWebContainer() {
-    if (webcontainer) return webcontainer;
-    return await WebContainer.boot();
-  }
-
-  async function setupProject(files: ChatFile[]) {
-    const webcontainer = await getWebContainer();
-
-    const fileSystemTree = buildFileSystemTree(files);
-    await webcontainer?.mount(fileSystemTree);
-
-    const installProcess = await webcontainer?.spawn("npm", ["install"]);
-    await installProcess?.exit;
-
-    return webcontainer;
-  }
-
-  const stopServer = useCallback(async () => {
-    if (serverProcess) {
-      serverProcess.kill();
-      setServerProcess(null);
-    }
-    if (webcontainer) {
-      webcontainer.teardown();
-      setWebcontainer(null);
-    }
-  }, []);
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleScreenshot = async (url: string) => {
@@ -88,17 +56,6 @@ export default function RenderReactComponent({
     }
   };
 
-  const handleIframeLoad = useCallback(() => {
-    try {
-      const iframeDocument = iframeRef.current?.contentWindow?.document;
-      if (iframeDocument?.body) {
-        setIsIframeLoaded(true);
-      }
-    } catch {
-      setIsIframeLoaded(true);
-    }
-  }, []);
-
   useEffect(() => {
     if (isLoading || files.length === 0) return;
 
@@ -106,20 +63,16 @@ export default function RenderReactComponent({
       await stopServer();
       setLoadingState("initializing");
       setError(null);
-
       try {
-        const webcontainer = await setupProject(files);
-        setWebcontainer(webcontainer);
+        const webcontainerInstance = await setupProject(files);
         setLoadingState("starting");
-        const serverProcess = await webcontainer.spawn("npm", ["run", "dev"]);
-        setServerProcess(serverProcess);
 
-        webcontainer.on("error", (error) => {
+        webcontainerInstance?.on("error", (error) => {
           setError(`WebContainer error: ${error.message}`);
           setLoadingState("error");
         });
 
-        webcontainer.on("server-ready", async (port, url) => {
+        webcontainerInstance?.on("server-ready", async (port, url) => {
           onServerReady(url);
           setIframeSrc(url);
           /* if (chatId && selectedVersion !== undefined) {
@@ -128,7 +81,6 @@ export default function RenderReactComponent({
           setLoadingState(null);
         });
       } catch (error) {
-        console.error("Setup failed:", error);
         setError(error instanceof Error ? error.message : "Setup failed");
         setLoadingState("error");
         await stopServer();
@@ -139,7 +91,7 @@ export default function RenderReactComponent({
     return () => {
       stopServer();
     };
-  }, [files, isLoading, onServerReady, stopServer]);
+  }, [files, isLoading]);
 
   return (
     <>
@@ -160,20 +112,13 @@ export default function RenderReactComponent({
         ref={iframeRef}
         src={iframeSrc || undefined}
         className={`size-full border-none bg-white ${
-          !iframeSrc || isLoading || error || loadingState || !isIframeLoaded
-            ? "hidden"
-            : ""
+          !iframeSrc || isLoading || error || loadingState ? "hidden" : ""
         }`}
-        sandbox="allow-forms allow-modals allow-pointer-lock allow-popups allow-same-origin allow-scripts"
-        onLoad={handleIframeLoad}
       />
 
-      {!isLoading &&
-        !error &&
-        !loadingState &&
-        (!iframeSrc || !isIframeLoaded) && (
-          <LoadingState state={loadingState} />
-        )}
+      {!isLoading && !error && !loadingState && !iframeSrc && (
+        <LoadingState state={loadingState} />
+      )}
     </>
   );
 }

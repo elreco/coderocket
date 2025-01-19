@@ -1,6 +1,6 @@
 "use client";
 
-import { DirectoryNode, FileSystemTree } from "@webcontainer/api";
+import { DirectoryNode, FileSystemTree, WebContainer } from "@webcontainer/api";
 
 import { ChatFile } from "@/utils/completion-parser";
 
@@ -21,4 +21,31 @@ export function buildFileSystemTree(files: ChatFile[]): FileSystemTree {
 
     return tree;
   }, {});
+}
+
+let webcontainer: WebContainer | null = null;
+
+async function bootWebContainer() {
+  if (webcontainer) return webcontainer;
+  /* auth.init({
+    clientId: "wc_api_elreco_626e67a60beb190de73c04873753f3d4",
+    scope: "",
+  }); */
+  webcontainer = await WebContainer.boot();
+}
+
+export async function stopServer() {
+  if (webcontainer) {
+    webcontainer.teardown();
+  }
+}
+
+export async function setupProject(files: ChatFile[]) {
+  await bootWebContainer();
+  const fileSystemTree = buildFileSystemTree(files);
+  await webcontainer?.mount(fileSystemTree);
+  const installProcess = await webcontainer?.spawn("npm", ["install"]);
+  await installProcess?.exit;
+  await webcontainer?.spawn("npm", ["run", "dev"]);
+  return webcontainer;
 }
