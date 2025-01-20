@@ -31,7 +31,10 @@ async function bootWebContainer() {
     clientId: "wc_api_elreco_626e67a60beb190de73c04873753f3d4",
     scope: "",
   }); */
-  webcontainer = await WebContainer.boot();
+  webcontainer = await WebContainer.boot({
+    coep: "credentialless",
+    forwardPreviewErrors: true, // Enable error forwarding from iframes
+  });
 }
 
 export function stopWebContainer() {

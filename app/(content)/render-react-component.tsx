@@ -1,9 +1,10 @@
 "use client";
 
 import { Loader2, AlertCircle } from "lucide-react";
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { WebContainerRender } from "@/components/webcontainer-render";
 import { takeScreenshot } from "@/utils/capture-screenshot";
 import { ChatFile } from "@/utils/completion-parser";
 import { setupProject, stopWebContainer } from "@/utils/webcontainer";
@@ -29,6 +30,19 @@ function LoadingState({ state }: { state: LoadingState }) {
   );
 }
 
+const getPreviewId = (url: string) => {
+  const match = url.match(
+    /^https?:\/\/([^.]+)\.local-credentialless\.webcontainer-api\.io/,
+  );
+
+  if (match) {
+    const previewId = match[1];
+    return previewId;
+  } else {
+    console.warn("[Preview] Invalid WebContainer URL:", url);
+  }
+};
+
 export default function RenderReactComponent({
   files,
   isLoading,
@@ -43,16 +57,18 @@ export default function RenderReactComponent({
   selectedVersion?: number;
 }) {
   const [iframeSrc, setIframeSrc] = useState<string | null>(null);
+  const [previewId, setPreviewId] = useState<string | undefined>(undefined);
   const [loadingState, setLoadingState] =
     useState<LoadingState>("initializing");
   const [error, setError] = useState<string | null>(null);
 
-  const iframeRef = useRef<HTMLIFrameElement>(null);
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const handleScreenshot = async (url: string) => {
+  const handleScreenshot = async (previewId: string) => {
     if (chatId && selectedVersion !== undefined) {
-      await takeScreenshot(chatId, selectedVersion, undefined, url);
+      try {
+        await takeScreenshot(chatId, selectedVersion, undefined, previewId);
+      } catch (error) {
+        console.error("Error taking screenshot", error);
+      }
     }
   };
 
@@ -61,6 +77,7 @@ export default function RenderReactComponent({
 
     const setupEnvironment = async () => {
       setLoadingState("initializing");
+      setPreviewId(undefined);
       setError(null);
       try {
         const webcontainerInstance = await setupProject(files);
@@ -74,11 +91,11 @@ export default function RenderReactComponent({
         webcontainerInstance?.on("server-ready", async (port, url) => {
           onServerReady(url);
           setIframeSrc(url);
-          console.log("url", url);
-          console.log("port", port);
-          /* if (chatId && selectedVersion !== undefined) {
-            await handleScreenshot(url);
-          } */
+          const previewId = getPreviewId(url);
+          setPreviewId(previewId);
+          if (previewId) {
+            await handleScreenshot(previewId);
+          }
           setLoadingState(null);
         });
       } catch (error) {
@@ -108,14 +125,9 @@ export default function RenderReactComponent({
       )}
 
       {loadingState && <LoadingState state={loadingState} />}
-
-      <iframe
-        ref={iframeRef}
-        src={iframeSrc || undefined}
-        className={`size-full border-none bg-white ${
-          !iframeSrc || isLoading || error || loadingState ? "hidden" : ""
-        }`}
-      />
+      {previewId && !isLoading && !error && !loadingState && (
+        <WebContainerRender previewId={previewId} />
+      )}
 
       {!isLoading && !error && !loadingState && !iframeSrc && (
         <LoadingState state={loadingState} />
