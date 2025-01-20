@@ -111,9 +111,7 @@ That means it can only execute code that is native to a browser including JS, We
   </user_guidance>
 
   <dependencies_preferred>
-    - Install the dependecies in the package.json file.
     - Lucide icons are preferred over other icons.
-    - Dicebear avatars are preferred over other avatar libraries using the npm package dicebear.
   </dependencies_preferred>
 </core_configuration>
 
