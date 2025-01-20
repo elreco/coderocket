@@ -49,6 +49,34 @@ export default function ComponentCard({
             }
           />
         </div>
+        <div className="absolute right-0 top-0 m-2 flex items-start justify-start gap-2">
+          {chat.framework === "html" && (
+            <Tooltip>
+              <TooltipTrigger>
+                <Badge className="hover:bg-primary">
+                  <Paintbrush className="mr-1 size-3" />
+                  <span className="first-letter:uppercase">
+                    {chat.last_assistant_message_theme}
+                  </span>
+                </Badge>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Theme</p>
+              </TooltipContent>
+            </Tooltip>
+          )}
+          <Tooltip>
+            <TooltipTrigger>
+              <Badge className="hover:bg-primary">
+                <FrameworkIcon className="mr-1 size-3" />
+                <span className="first-letter:uppercase">{chat.framework}</span>
+              </Badge>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Framework</p>
+            </TooltipContent>
+          </Tooltip>
+        </div>
       </div>
 
       <div className="flex flex-1 flex-col items-start rounded-b-lg border-t bg-secondary px-2 pb-2 pt-1.5 transition-all duration-300 group-hover:border-t-primary">
@@ -59,36 +87,6 @@ export default function ComponentCard({
           </span>
         </div>
         <div className="flex w-full items-center justify-between gap-2">
-          <div className="flex flex-col items-start justify-start gap-2">
-            {chat.framework === "html" && (
-              <Tooltip>
-                <TooltipTrigger>
-                  <Badge className="hover:bg-primary">
-                    <Paintbrush className="mr-1 size-3" />
-                    <span className="first-letter:uppercase">
-                      {chat.last_assistant_message_theme}
-                    </span>
-                  </Badge>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Theme</p>
-                </TooltipContent>
-              </Tooltip>
-            )}
-            <Tooltip>
-              <TooltipTrigger>
-                <Badge className="hover:bg-primary">
-                  <FrameworkIcon className="mr-1 size-3" />
-                  <span className="first-letter:uppercase">
-                    {chat.framework}
-                  </span>
-                </Badge>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Framework</p>
-              </TooltipContent>
-            </Tooltip>
-          </div>
           <UserWidget
             createdAt={chat.created_at}
             userAvatarUrl={chat.user_avatar_url}
