@@ -10,59 +10,38 @@ import { createClient } from "./supabase/server";
  * @param url L'adresse complète de la page à capturer (ex: https://<hash>.webcontainer.io).
  * @returns Buffer d'image PNG.
  */
-const captureScreenshot = async (url: string) => {
-  try {
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: [
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-web-security",
-        "--disable-features=IsolateOrigins,site-per-process",
-        "--remote-debugging-port=9222", // Port de débogage
-        "--preview", // Mode prévisualisation (pour gérer les onglets séparés)
-      ],
-    });
 
-    const page = await browser.newPage();
+export async function captureScreenshot(url: string) {
+  // Lance un navigateur headless
+  const browser = await puppeteer.launch({
+    headless: true, // ou true selon la version de Puppeteer
+    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+  });
+  const page = await browser.newPage();
+  await page.setExtraHTTPHeaders({
+    "Cross-Origin-Opener-Policy": "same-origin",
+    "Cross-Origin-Embedder-Policy": "credentialless",
+  });
+  // Configure la taille de la fenêtre
+  await page.setViewport({
+    width: 1200,
+    height: 630,
+    deviceScaleFactor: 1,
+  });
 
-    // Définir la taille de la fenêtre à 1920x1080
-    await page.setViewport({
-      width: 1920,
-      height: 1080,
-    });
+  // Ou bien lors du goto :
+  await page.goto(url, {
+    waitUntil: "networkidle0",
+  });
+  // Prend la capture d'écran au format PNG (renvoie un Buffer)
+  await new Promise((resolve) => setTimeout(resolve, 10000));
+  const screenshot = await page.screenshot({
+    type: "png",
+  });
 
-    // Configurer l'interception des requêtes pour ajouter les en-têtes
-    await page.setRequestInterception(true);
-    page.on("request", (request) => {
-      if (request.resourceType() === "document") {
-        request.continue({
-          headers: {
-            ...request.headers(),
-            "Cross-Origin-Embedder-Policy": "credentialless",
-            "Cross-Origin-Opener-Policy": "same-origin",
-          },
-        });
-      } else {
-        request.continue();
-      }
-    });
-
-    // Accéder à l'URL de l'iframe (WebContainer)
-    await page.goto(url, { waitUntil: "networkidle2" });
-
-    // Prendre un screenshot
-    const screenshotBuffer = await page.screenshot();
-
-    // Fermer le navigateur
-    await browser.close();
-
-    return screenshotBuffer;
-  } catch (error) {
-    console.error("Erreur lors de la capture du screenshot : ", error);
-    throw new Error("Échec de la capture");
-  }
-};
+  await browser.close();
+  return screenshot;
+}
 
 /**
  * Vérifie en base si on a déjà un screenshot pour (chatId, version).
@@ -96,6 +75,7 @@ export const takeScreenshot = async (
   const finalUrl = previewId
     ? `https://www.tailwindai.dev/webcontainer/${previewId}`
     : `https://www.tailwindai.dev/content/${chatId}`;
+  console.log("finalUrl", finalUrl);
   const screenshot = await captureScreenshot(finalUrl);
   if (!screenshot) {
     throw new Error("Failed to capture screenshot");

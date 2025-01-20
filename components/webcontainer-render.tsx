@@ -2,22 +2,26 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { cn } from "@/lib/utils";
+
 const PREVIEW_CHANNEL = "preview-updates";
 
 interface WebContainerPreviewProps {
   previewId: string;
+  className?: string;
 }
 
-export function WebContainerRender({ previewId }: WebContainerPreviewProps) {
+export function WebContainerRender({
+  className,
+  previewId,
+}: WebContainerPreviewProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const broadcastChannelRef = useRef<BroadcastChannel>();
   const [previewUrl, setPreviewUrl] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
 
   // Handle preview refresh
   const handleRefresh = useCallback(() => {
     if (iframeRef.current && previewUrl) {
-      setIsLoading(true);
       // Force a clean reload
       iframeRef.current.src = "";
       requestAnimationFrame(() => {
@@ -79,12 +83,7 @@ export function WebContainerRender({ previewId }: WebContainerPreviewProps) {
   }, [previewId, handleRefresh, notifyPreviewReady]);
 
   return (
-    <div className="relative size-full">
-      {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-background/80">
-          <div className="size-8 animate-spin rounded-full border-b-2 border-primary" />
-        </div>
-      )}
+    <div className={cn("relative size-full", className)}>
       <iframe
         ref={iframeRef}
         title="WebContainer Preview"
@@ -93,7 +92,6 @@ export function WebContainerRender({ previewId }: WebContainerPreviewProps) {
         allow="cross-origin-isolated"
         loading="eager"
         onLoad={() => {
-          setIsLoading(false);
           notifyPreviewReady();
         }}
       />

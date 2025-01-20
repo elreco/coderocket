@@ -62,9 +62,9 @@ export default function RenderReactComponent({
     useState<LoadingState>("initializing");
   const [error, setError] = useState<string | null>(null);
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleScreenshot = async (previewId: string) => {
     if (chatId && selectedVersion !== undefined) {
+      setLoadingState(null);
       try {
         await takeScreenshot(chatId, selectedVersion, undefined, previewId);
       } catch (error) {
@@ -93,11 +93,12 @@ export default function RenderReactComponent({
           onServerReady(url);
           setIframeSrc(url);
           const previewId = getPreviewId(url);
-          setPreviewId(previewId);
-          if (previewId) {
-            //await handleScreenshot(previewId);
-          }
           setLoadingState(null);
+          if (previewId) {
+            setPreviewId(previewId);
+            await new Promise((resolve) => setTimeout(resolve, 5000));
+            await handleScreenshot(previewId);
+          }
         });
       } catch (error) {
         setError(error instanceof Error ? error.message : "Setup failed");
@@ -126,8 +127,11 @@ export default function RenderReactComponent({
       )}
 
       {loadingState && <LoadingState state={loadingState} />}
-      {previewId && !isLoading && !error && !loadingState && (
-        <WebContainerRender previewId={previewId} />
+      {previewId && !isLoading && !error && (
+        <WebContainerRender
+          previewId={previewId}
+          className={loadingState ? "hidden" : "flex"}
+        />
       )}
 
       {!isLoading && !error && !loadingState && !iframeSrc && (
