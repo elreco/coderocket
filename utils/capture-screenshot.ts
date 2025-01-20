@@ -21,6 +21,8 @@ async function getBrowser() {
       "--disable-features=CookiesWithoutSameSiteMustBeSecure", // Permet les cookies tiers non sécurisés
       "--disable-site-isolation-trials", // Désactive l'isolement des sites
       "--disable-blink-features=BlockCredentialedSubresources", // Autorise les ressources avec des credentials
+      "--disable-popup-blocking", // Désactive le blocage des popups
+      "--disable-infobars", // Supprime les infobars qui avertissent des popups
     ],
     defaultViewport: chromium.defaultViewport,
     executablePath,
