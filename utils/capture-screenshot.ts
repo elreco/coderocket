@@ -1,20 +1,20 @@
 "use server";
 
-import puppeteer from "puppeteer";
+import chromium from "@sparticuz/chromium";
+import puppeteerCore from "puppeteer-core";
 
 import { defaultTheme } from "./config";
 import { createClient } from "./supabase/server";
-
 /**
  * Lance Puppeteer pour prendre un screenshot d'une URL.
  * @param url L'adresse complète de la page à capturer (ex: https://<hash>.webcontainer.io).
  * @returns Buffer d'image PNG.
  */
 
-export async function captureScreenshot(url: string) {
-  // Lance un navigateur headless
-  const browser = await puppeteer.launch({
-    headless: true, // ou true selon la version de Puppeteer
+async function getBrowser() {
+  const executablePath = await chromium.executablePath();
+
+  const browser = await puppeteerCore.launch({
     args: [
       "--no-sandbox",
       "--disable-setuid-sandbox",
@@ -25,7 +25,16 @@ export async function captureScreenshot(url: string) {
       "--disable-blink-features=AutomationControlled",
       "--preview",
     ],
+    defaultViewport: chromium.defaultViewport,
+    executablePath,
+    headless: chromium.headless,
   });
+  return browser;
+}
+
+export async function captureScreenshot(url: string) {
+  // Lance un navigateur headless
+  const browser = await getBrowser();
   const page = await browser.newPage();
   await page.setExtraHTTPHeaders({
     "Cross-Origin-Opener-Policy": "same-origin",
