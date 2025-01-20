@@ -96,7 +96,7 @@ export default function RenderReactComponent({
           setLoadingState(null);
           if (previewId) {
             setPreviewId(previewId);
-            await new Promise((resolve) => setTimeout(resolve, 5000));
+            await new Promise((resolve) => setTimeout(resolve, 10000));
             await handleScreenshot(previewId);
           }
         });
