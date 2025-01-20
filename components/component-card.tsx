@@ -60,19 +60,21 @@ export default function ComponentCard({
         </div>
         <div className="flex w-full items-center justify-between gap-2">
           <div className="flex flex-col items-start justify-start gap-2">
-            <Tooltip>
-              <TooltipTrigger>
-                <Badge className="hover:bg-primary">
-                  <Paintbrush className="mr-1 size-3" />
-                  <span className="first-letter:uppercase">
-                    {chat.last_assistant_message_theme}
-                  </span>
-                </Badge>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Theme</p>
-              </TooltipContent>
-            </Tooltip>
+            {chat.framework === "html" && (
+              <Tooltip>
+                <TooltipTrigger>
+                  <Badge className="hover:bg-primary">
+                    <Paintbrush className="mr-1 size-3" />
+                    <span className="first-letter:uppercase">
+                      {chat.last_assistant_message_theme}
+                    </span>
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Theme</p>
+                </TooltipContent>
+              </Tooltip>
+            )}
             <Tooltip>
               <TooltipTrigger>
                 <Badge className="hover:bg-primary">
