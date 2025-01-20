@@ -59,7 +59,7 @@ export default function ComponentCard({
           </span>
         </div>
         <div className="flex w-full items-center justify-between gap-2">
-          <div className="flex gap-2">
+          <div className="flex flex-col items-start justify-start gap-2">
             <Tooltip>
               <TooltipTrigger>
                 <Badge className="hover:bg-primary">

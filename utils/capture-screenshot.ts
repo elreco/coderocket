@@ -15,7 +15,16 @@ export async function captureScreenshot(url: string) {
   // Lance un navigateur headless
   const browser = await puppeteer.launch({
     headless: true, // ou true selon la version de Puppeteer
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    args: [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage",
+      "--disable-web-security",
+      "--disable-features=IsolateOrigins",
+      "--disable-site-isolation-trials",
+      "--disable-blink-features=AutomationControlled",
+      "--preview",
+    ],
   });
   const page = await browser.newPage();
   await page.setExtraHTTPHeaders({
@@ -34,7 +43,6 @@ export async function captureScreenshot(url: string) {
     waitUntil: "networkidle0",
   });
   // Prend la capture d'écran au format PNG (renvoie un Buffer)
-  await new Promise((resolve) => setTimeout(resolve, 10000));
   const screenshot = await page.screenshot({
     type: "png",
   });

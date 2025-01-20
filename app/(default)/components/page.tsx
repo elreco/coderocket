@@ -10,7 +10,8 @@ import { getAllPublicChats } from "./actions";
 
 export const metadata = {
   title: `Public components - Tailwind AI`,
-  description: "Last Tailwind components generated with AI by our users",
+  description:
+    "Last Tailwind components generated with AI by our users with React and HTML",
 };
 
 export default async function Featured() {
