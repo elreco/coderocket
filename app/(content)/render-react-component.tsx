@@ -62,6 +62,7 @@ export default function RenderReactComponent({
     useState<LoadingState>("initializing");
   const [error, setError] = useState<string | null>(null);
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleScreenshot = async (previewId: string) => {
     if (chatId && selectedVersion !== undefined) {
       setLoadingState(null);
@@ -96,8 +97,8 @@ export default function RenderReactComponent({
           setLoadingState(null);
           if (previewId) {
             setPreviewId(previewId);
-            await new Promise((resolve) => setTimeout(resolve, 20000));
-            await handleScreenshot(previewId);
+            // await new Promise((resolve) => setTimeout(resolve, 20000));
+            // await handleScreenshot(previewId);
           }
         });
       } catch (error) {
