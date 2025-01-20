@@ -51,7 +51,7 @@ export default function ComponentCard({
         </div>
       </div>
 
-      <div className="flex flex-col items-start rounded-b-lg border-t bg-secondary px-2 pb-2 pt-1.5 transition-all duration-300 group-hover:border-t-primary">
+      <div className="flex flex-1 flex-col items-start rounded-b-lg border-t bg-secondary px-2 pb-2 pt-1.5 transition-all duration-300 group-hover:border-t-primary">
         <div className="mb-1 flex w-full items-center truncate pt-4 text-left text-sm font-medium transition-all duration-300 first-letter:uppercase group-hover:text-primary md:mb-2 md:pt-4 lg:pt-0 lg:text-base">
           <TerminalIcon className="mr-1.5 size-5 shrink-0 font-semibold" />
           <span className="truncate first-letter:uppercase">
