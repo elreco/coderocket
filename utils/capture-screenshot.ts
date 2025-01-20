@@ -15,16 +15,7 @@ async function getBrowser() {
   const executablePath = await chromium.executablePath();
 
   const browser = await puppeteerCore.launch({
-    args: [
-      "--no-sandbox",
-      "--disable-setuid-sandbox",
-      "--disable-dev-shm-usage",
-      "--disable-web-security",
-      "--disable-features=IsolateOrigins",
-      "--disable-site-isolation-trials",
-      "--disable-blink-features=AutomationControlled",
-      "--preview",
-    ],
+    args: chromium.args,
     defaultViewport: chromium.defaultViewport,
     executablePath,
     headless: chromium.headless,
