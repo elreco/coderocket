@@ -248,7 +248,7 @@ export const createChat = async (prompt: string, formData: FormData) => {
   return { slug: data.slug };
 };
 
-export const getChatsFromUser = async () => {
+export const getHTMLChatsFromUser = async () => {
   const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
   const user = userData.user;
@@ -257,7 +257,23 @@ export const getChatsFromUser = async () => {
   const { data } = await supabase
     .rpc("get_all_components")
     .eq("user_id", user.id)
-    .limit(100);
+    .eq("framework", "html")
+    .limit(99);
+
+  return data;
+};
+
+export const getReactChatsFromUser = async () => {
+  const supabase = await createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  const user = userData.user;
+
+  if (!user) throw Error("Could not get user");
+  const { data } = await supabase
+    .rpc("get_all_components")
+    .eq("user_id", user.id)
+    .eq("framework", "react")
+    .limit(99);
 
   return data;
 };
@@ -272,17 +288,6 @@ export const getFeaturedChats = async () => {
   return data;
 };
 
-export const getAllHTMLPublicChats = async () => {
-  const supabase = await createClient();
-
-  const { data } = await supabase
-    .rpc("get_all_components")
-    .is("is_private", false)
-    .eq("framework", "html")
-    .limit(24);
-  return data;
-};
-
 export const getAllReactPublicChats = async () => {
   const supabase = await createClient();
 
@@ -290,6 +295,17 @@ export const getAllReactPublicChats = async () => {
     .rpc("get_all_components")
     .is("is_private", false)
     .eq("framework", "react")
+    .limit(24);
+  return data;
+};
+
+export const getAllHTMLPublicChats = async () => {
+  const supabase = await createClient();
+
+  const { data } = await supabase
+    .rpc("get_all_components")
+    .is("is_private", false)
+    .eq("framework", "html")
     .limit(24);
   return data;
 };

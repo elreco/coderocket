@@ -1,7 +1,13 @@
 "use client";
 
 import { SiDiscord } from "@icons-pack/react-simple-icons";
-import { CreditCard, Globe, Rocket, SquareTerminal } from "lucide-react";
+import {
+  CreditCard,
+  Globe,
+  Rocket,
+  SquareTerminal,
+  UserCircle2,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import * as React from "react";
@@ -103,14 +109,40 @@ export function AppSidebar({
 
   const navComponentsItems = data.navComponents.map((item) => ({
     ...item,
-    isActive:
-      item.items?.some((subItem) => pathname === subItem.url) ||
-      pathname === item.url,
     items: item.items?.map((subItem) => ({
       ...subItem,
       isActive: pathname === subItem.url,
     })),
   }));
+
+  // Ajout du nouvel élément si l'utilisateur est connecté
+  const finalNavComponentsItems = user
+    ? [
+        ...navComponentsItems,
+        {
+          title: "My Components",
+          url: "#",
+          icon: UserCircle2,
+          isActive: true,
+          items: [
+            {
+              title: "My React Components",
+              url: "/account/components/react",
+            },
+            {
+              title: "My HTML Components",
+              url: "/account/components",
+            },
+          ],
+        },
+      ].map((item) => ({
+        ...item,
+        items: item.items?.map((subItem) => ({
+          ...subItem,
+          isActive: pathname === subItem.url,
+        })),
+      }))
+    : navComponentsItems;
 
   const { setOpenMobile } = useSidebar();
 
@@ -146,7 +178,7 @@ export function AppSidebar({
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={navMainItems} label="Tailwind AI" />
-        <NavComponents items={navComponentsItems} />
+        <NavComponents items={finalNavComponentsItems} />
         <NavMain items={navCommunityItems} label="Community" />
       </SidebarContent>
       <SidebarFooter>

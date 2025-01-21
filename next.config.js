@@ -30,8 +30,8 @@ const nextConfig = {
     serverActions: {
       bodySizeLimit: "2mb",
     },
-    serverComponentsExternalPackages: ["puppeteer-core", "@sparticuz/chromium"],
   },
+  serverComponentsExternalPackages: ["puppeteer-core", "@sparticuz/chromium"],
   reactStrictMode: false,
   images: {
     remotePatterns: [

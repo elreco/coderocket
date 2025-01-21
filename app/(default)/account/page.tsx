@@ -2,13 +2,10 @@ import Link from "next/link";
 import { ReactNode, Suspense } from "react";
 
 import { getUserDetails, getSubscription } from "@/app/supabase-server";
-import ComponentCard from "@/components/component-card";
 import { Container } from "@/components/container";
 import { PageTitle } from "@/components/page-title";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-
-import { getChatsFromUser } from "../components/actions";
 
 import { getUser, updateEmail, updateName } from "./actions";
 import ManageSubscriptionButton from "./manage-subscription-button";
@@ -35,15 +32,13 @@ export default async function Account() {
       currency: subscription?.prices?.currency!,
       minimumFractionDigits: 0,
     }).format((subscription?.prices?.unit_amount || 0) / 100);
-
-  const chatsFromUser = await getChatsFromUser();
   return (
     <Container>
       <PageTitle
         title="My Account"
         subtitle="Manage your account and billing."
       />
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
+      <div className="flex flex-col gap-4 pb-10">
         <Card
           title="Your Plan"
           description={
@@ -113,28 +108,6 @@ export default async function Account() {
                 className="bg-background"
               />
             </form>
-          </div>
-        </Card>
-      </div>
-      <div className="mt-3 pb-20">
-        <Card
-          title="Your Components"
-          description="Your generated components"
-          footer={
-            <div className="flex w-full items-center justify-between">
-              <Link href="/">
-                <Button variant="background">Generate component</Button>
-              </Link>
-              <Link href="/components/featured">
-                <Button>View featured components</Button>
-              </Link>
-            </div>
-          }
-        >
-          <div className="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-            {chatsFromUser?.map((chat) => (
-              <ComponentCard key={chat.chat_id} chat={chat} />
-            ))}
           </div>
         </Card>
       </div>
