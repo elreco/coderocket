@@ -91,9 +91,11 @@ export default function ComponentCard({
             : "rounded-lg",
         )}
       >
-        <div className="flex w-full flex-1 items-start pt-4 text-left text-sm font-medium transition-all duration-300 first-letter:uppercase group-hover:text-primary md:mb-2 md:pt-4 lg:pt-0 lg:text-base">
-          <TerminalIcon className="mr-1.5 size-5 shrink-0 font-semibold" />
-          <span className="line-clamp-2">{chat.first_user_message}</span>
+        <div className="flex w-full flex-1 items-start pt-1 text-left text-sm font-medium transition-all duration-300 first-letter:uppercase group-hover:text-primary md:mb-2 lg:pt-0 lg:text-base">
+          <div className="flex items-center">
+            <TerminalIcon className="mr-1.5 size-5 shrink-0 font-semibold" />
+            <span className="line-clamp-2">{chat.first_user_message}</span>
+          </div>
         </div>
         <div className="flex w-full items-center justify-between gap-2">
           {chat.framework.toLowerCase() !== "html" && (
