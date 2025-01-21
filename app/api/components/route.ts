@@ -232,7 +232,7 @@ const updateDataAfterCompletion = async (
   const version = lastUserMessage.version > 0 ? lastUserMessage.version + 1 : 0;
   const artifactCode = getUpdatedArtifactCode(text, chat.artifact_code || "");
 
-  if (version > 0) {
+  if (lastUserMessage.version > 0) {
     newMessages.push({
       chat_id: chatId,
       screenshot: null,
