@@ -3,7 +3,13 @@
 import { SiHtml5, SiReact } from "@icons-pack/react-simple-icons";
 import { useCompletion } from "ai/react";
 import { Crisp } from "crisp-sdk-web";
-import { Fullscreen, Layers, LoaderCircle, Settings } from "lucide-react";
+import {
+  Fullscreen,
+  Layers,
+  LoaderCircle,
+  Settings,
+  ExternalLink,
+} from "lucide-react";
 import { Share } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -107,17 +113,10 @@ export default function ComponentCompletion({
       setVisible(!chat.is_private);
       setArtifactCode(chat.artifact_code || "");
 
-      if (msgs?.length === 1 && chat?.framework === "html") {
+      if (msgs?.length === 1) {
         setCanvas(false);
         complete(userMsg?.content || "");
         setIsLoading(true);
-        return;
-      }
-
-      if (chat?.framework === "react" && !chat.artifact_code) {
-        setIsLoading(true);
-        setCanvas(false);
-        complete(userMsg?.content || "");
         return;
       }
 
@@ -475,6 +474,29 @@ export default function ComponentCompletion({
                         <p>Display in fullscreen</p>
                       </TooltipContent>
                     </Tooltip>
+                    {iframeSrc && fetchedChat?.framework === "react" && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() =>
+                              window.open(
+                                `/webcontainer/${getPreviewId(iframeSrc)}`,
+                                "_blank",
+                              )
+                            }
+                            className="flex items-center"
+                            disabled={isLoading}
+                          >
+                            <ExternalLink className="w-5" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Open in a new tab</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
                     <Dialog
                       open={isModalOpen}
                       onOpenChange={handleFullscreenToggle}

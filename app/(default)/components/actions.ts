@@ -4,6 +4,7 @@ import { nanoid } from "nanoid";
 
 import { getSubscription } from "@/app/supabase-server";
 import { defaultTheme, MAX_GENERATIONS } from "@/utils/config";
+import { defaultArtifactCode } from "@/utils/default-artifact-code";
 import { createClient } from "@/utils/supabase/server";
 
 export const fetchChatById = async (idOrSlug: string) => {
@@ -226,6 +227,8 @@ export const createChat = async (prompt: string, formData: FormData) => {
         ...(imageUrl && { prompt_image: imageUrl }),
         is_private,
         framework,
+        artifact_code:
+          defaultArtifactCode[framework as keyof typeof defaultArtifactCode],
         slug: uniqueSlug,
       },
     ])
