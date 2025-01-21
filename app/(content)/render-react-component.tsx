@@ -15,6 +15,13 @@ import {
 
 type LoadingState = "initializing" | "starting" | "error" | null;
 
+// Ajout du type pour les erreurs de preview
+type PreviewError = {
+  title: string;
+  description: string;
+  content: string;
+};
+
 function LoadingState({ state }: { state: LoadingState }) {
   return (
     <div className="flex size-full flex-col items-center justify-center space-y-4 p-8 text-center">
@@ -52,6 +59,7 @@ export default function RenderReactComponent({
   const [loadingState, setLoadingState] =
     useState<LoadingState>("initializing");
   const [error, setError] = useState<string | null>(null);
+  const [previewError, setPreviewError] = useState<PreviewError | null>(null);
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleScreenshot = async (previewId: string) => {
@@ -72,6 +80,7 @@ export default function RenderReactComponent({
       setLoadingState("initializing");
       setPreviewId(undefined);
       setError(null);
+      setPreviewError(null);
       try {
         const webcontainerInstance = await setupProject(files);
         setLoadingState("starting");
@@ -79,6 +88,22 @@ export default function RenderReactComponent({
         webcontainerInstance?.on("error", (error) => {
           setError(`WebContainer error: ${error.message}`);
           setLoadingState("error");
+        });
+
+        webcontainerInstance?.on("preview-message", (message) => {
+          if (
+            message.type === "PREVIEW_UNCAUGHT_EXCEPTION" ||
+            message.type === "PREVIEW_UNHANDLED_REJECTION"
+          ) {
+            const isPromise = message.type === "PREVIEW_UNHANDLED_REJECTION";
+            setPreviewError({
+              title: isPromise
+                ? "Unhandled Promise Rejection"
+                : "Uncaught Exception",
+              description: message.message,
+              content: `Error occurred at ${message.pathname}${message.search}${message.hash}`,
+            });
+          }
         });
 
         webcontainerInstance?.on("server-ready", async (port, url) => {
@@ -118,8 +143,21 @@ export default function RenderReactComponent({
         </div>
       )}
 
+      {previewError && !isLoading && (
+        <div className="mx-4 flex items-center justify-center">
+          <Alert variant="destructive" className="bg-secondary px-12">
+            <AlertCircle className="size-4" />
+            <AlertDescription className="flex flex-col gap-2">
+              <strong>{previewError.title}</strong>
+              <span>{previewError.description}</span>
+              <span className="text-xs opacity-75">{previewError.content}</span>
+            </AlertDescription>
+          </Alert>
+        </div>
+      )}
+
       {loadingState && <LoadingState state={loadingState} />}
-      {previewId && !isLoading && !error && (
+      {previewId && !isLoading && !error && !previewError && (
         <WebContainerRender
           previewId={previewId}
           className={loadingState ? "hidden" : "flex"}
