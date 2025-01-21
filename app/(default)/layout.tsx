@@ -67,6 +67,8 @@ export const metadata = {
   },
 };
 
+export const fetchCache = "force-no-store";
+
 export default async function RootLayout({ children }: PropsWithChildren) {
   const cookieStore = await cookies();
   const defaultOpen = cookieStore.get("sidebar:state")?.value === "true";
