@@ -23,37 +23,45 @@ export function buildFileSystemTree(files: ChatFile[]): FileSystemTree {
   }, {});
 }
 
-let webcontainer: WebContainer | null = null;
+class WebContainerInstance {
+  private static instance: WebContainer | null = null;
 
-async function bootWebContainer() {
-  if (webcontainer) return webcontainer;
-  /* auth.init({
-    clientId: "wc_api_elreco_626e67a60beb190de73c04873753f3d4",
-    scope: "",
-  }); */
-  webcontainer = await WebContainer.boot({
-    coep: "credentialless",
-    forwardPreviewErrors: true, // Enable error forwarding from iframes
-  });
-}
-
-export function stopWebContainer() {
-  if (webcontainer) {
-    try {
-      webcontainer.teardown();
-    } catch {
-      /* empty */
+  static async getInstance(): Promise<WebContainer> {
+    if (typeof window === "undefined") {
+      throw new Error("WebContainer ne peut être utilisé que côté client");
     }
-    webcontainer = null;
+
+    if (!this.instance) {
+      this.instance = await WebContainer.boot({
+        coep: "credentialless",
+        forwardPreviewErrors: true,
+      });
+    }
+    return this.instance;
+  }
+
+  static teardown() {
+    if (this.instance) {
+      try {
+        this.instance.teardown();
+      } catch {
+        /* empty */
+      }
+      this.instance = null;
+    }
   }
 }
 
 export async function setupProject(files: ChatFile[]) {
-  await bootWebContainer();
+  const webcontainer = await WebContainerInstance.getInstance();
   const fileSystemTree = buildFileSystemTree(files);
-  await webcontainer?.mount(fileSystemTree);
-  const installProcess = await webcontainer?.spawn("npm", ["install"]);
-  await installProcess?.exit;
-  await webcontainer?.spawn("npm", ["run", "dev"]);
+  await webcontainer.mount(fileSystemTree);
+  const installProcess = await webcontainer.spawn("npm", ["install"]);
+  await installProcess.exit;
+  await webcontainer.spawn("npm", ["run", "dev"]);
   return webcontainer;
+}
+
+export function stopWebContainer() {
+  WebContainerInstance.teardown();
 }
