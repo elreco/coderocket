@@ -1,7 +1,3 @@
-export const maxDuration = 300;
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
-
 import { Analytics } from "@vercel/analytics/react";
 import { Rubik } from "next/font/google";
 import { cookies } from "next/headers";
@@ -66,8 +62,6 @@ export const metadata = {
     images: meta.twitter.images,
   },
 };
-
-export const fetchCache = "force-no-store";
 
 export default async function RootLayout({ children }: PropsWithChildren) {
   const cookieStore = await cookies();

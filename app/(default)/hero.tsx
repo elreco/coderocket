@@ -301,8 +301,8 @@ export default function Hero() {
                     value="private"
                     disabled={loading}
                   >
-                    <Lock className="block size-4 lg:hidden" />
-                    <span className="hidden lg:block">Private</span>
+                    <Lock className="block size-4 xl:hidden" />
+                    <span className="hidden xl:block">Private</span>
                   </TabsTrigger>
                 </TabsList>
               </Tabs>
