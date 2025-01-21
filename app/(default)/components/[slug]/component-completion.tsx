@@ -1,5 +1,6 @@
 "use client";
 
+import { SiHtml5, SiReact } from "@icons-pack/react-simple-icons";
 import { useCompletion } from "ai/react";
 import { Crisp } from "crisp-sdk-web";
 import { Fullscreen, Layers, LoaderCircle, Settings } from "lucide-react";
@@ -10,6 +11,7 @@ import { useCopyToClipboard } from "usehooks-ts";
 
 import RenderHtmlComponent from "@/app/(content)/render-html-component";
 import { Container } from "@/components/container";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -411,12 +413,14 @@ export default function ComponentCompletion({
     };
   }, []);
 
+  const FrameworkIcon = fetchedChat?.framework === "html" ? SiHtml5 : SiReact;
+
   return (
     <ComponentContext.Provider value={contextValue}>
       <Container className="!p-0 lg:overflow-hidden">
         <div className="grid size-full max-h-full grid-cols-1 justify-center lg:grid-cols-3 lg:flex-row xl:grid-cols-4">
           <div className="col-span-1 flex size-full min-h-full flex-col lg:col-span-2 xl:col-span-3 xl:mb-0">
-            <div className="flex flex-col items-center justify-start border-b py-1.5 pr-2 xl:flex-row xl:justify-between xl:pl-11">
+            <div className="relative flex flex-col items-center justify-start border-b py-1.5 pr-2 xl:flex-row xl:justify-between xl:pl-11">
               <h1 className="mb-2 flex min-w-0 max-w-full flex-1 items-center font-medium lg:mb-0">
                 {isLoading || !title ? (
                   <span className="flex items-center">
@@ -533,7 +537,15 @@ export default function ComponentCompletion({
                 </Sheet>
               </div>
             </div>
-            <div className="m-0 flex h-full max-h-full flex-1 flex-col border-b lg:border-b-0">
+            <div className="relative m-0 flex h-full max-h-full flex-1 flex-col border-b lg:border-b-0">
+              {(!isLoading || !fetchedChat) && (
+                <Badge className="absolute right-0 top-0 z-10 m-2 hover:bg-primary">
+                  <FrameworkIcon className="mr-1 size-3" />
+                  <span className="first-letter:uppercase">
+                    {fetchedChat?.framework}
+                  </span>
+                </Badge>
+              )}
               <CodePreview />
             </div>
           </div>

@@ -293,8 +293,8 @@ export default function Hero() {
                     value="public"
                     disabled={loading}
                   >
-                    <Globe className="block size-4 lg:hidden" />
-                    <span className="hidden lg:block">Public</span>
+                    <Globe className="block size-4 xl:hidden" />
+                    <span className="hidden xl:block">Public</span>
                   </TabsTrigger>
                   <TabsTrigger
                     isReverse={true}
