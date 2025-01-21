@@ -68,10 +68,26 @@ export default function ComponentSidebar({
   };
 
   useEffect(() => {
-    if (containerRef.current) {
-      containerRef.current.scrollTop = containerRef.current.scrollHeight;
+    if (isLoading && containerRef.current) {
+      const scrollToBottom = () => {
+        containerRef.current!.scrollTop = containerRef.current!.scrollHeight;
+      };
+
+      // Scroll immédiatement
+      scrollToBottom();
+
+      // Créer un observateur pour détecter les changements de contenu
+      const observer = new MutationObserver(scrollToBottom);
+
+      // Observer les changements dans le conteneur
+      observer.observe(containerRef.current, {
+        childList: true,
+        subtree: true,
+      });
+
+      return () => observer.disconnect();
     }
-  }, [isLoading, messages]);
+  }, [isLoading]);
 
   const isIterationVisible = selectedVersion !== null && selectedVersion > -1;
 
