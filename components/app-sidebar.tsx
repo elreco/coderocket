@@ -66,7 +66,9 @@ const data = {
       title: (
         <div className="flex items-center gap-2">
           Discord
-          <Badge className="h-5">New</Badge>
+          <Badge variant="secondary" className="h-5 text-primary">
+            New
+          </Badge>
         </div>
       ),
       url: "https://discord.gg/t7dQgcYJ5t",
