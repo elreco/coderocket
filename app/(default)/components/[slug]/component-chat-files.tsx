@@ -283,58 +283,62 @@ export default function ComponentChatFiles({
                           </Tooltip>
                         )}
                       </div>
-                      <div className="space-y-2">
-                        {files.map((file, index) => {
-                          const fileConfig = getFileConfig(
-                            file.name || "untitled.html",
-                          );
-                          const FileIcon = fileConfig.icon;
+                      <div className="space-y-2 overflow-x-auto">
+                        <div className="flex w-fit flex-col space-y-2">
+                          {files.map((file, index) => {
+                            const fileConfig = getFileConfig(
+                              file.name || "untitled.html",
+                            );
+                            const FileIcon = fileConfig.icon;
 
-                          return (
-                            <div
-                              key={index}
-                              className={cn(
-                                "flex items-center justify-between rounded p-1 bg-foreground",
-                                "hover:bg-gradient-to-l from-emerald-400 via-emerald-500 to-emerald-600 hover:text-foreground",
-                                isLoading || file.isDelete
-                                  ? "cursor-not-allowed opacity-50"
-                                  : "cursor-pointer",
-                                activeTab === file.name &&
-                                  isSelectedVersion &&
-                                  !isCanvas &&
-                                  "bg-gradient-to-l from-emerald-400 via-emerald-500 to-emerald-600 text-foreground",
-                              )}
-                              onClick={() =>
-                                handleFileClick(message.version, file)
-                              }
-                            >
-                              <div className="flex max-w-full items-center">
-                                <FileIcon
-                                  className={cn(
-                                    "mr-2 size-4",
-                                    fileConfig.color,
+                            return (
+                              <div
+                                key={index}
+                                className={cn(
+                                  "flex items-center justify-between rounded p-1 bg-foreground w-full",
+                                  "hover:bg-gradient-to-l from-emerald-400 via-emerald-500 to-emerald-600 hover:text-foreground",
+                                  isLoading || file.isDelete
+                                    ? "cursor-not-allowed opacity-50"
+                                    : "cursor-pointer",
+                                  activeTab === file.name &&
+                                    isSelectedVersion &&
+                                    !isCanvas &&
+                                    "bg-gradient-to-l from-emerald-400 via-emerald-500 to-emerald-600 text-foreground",
+                                )}
+                                onClick={() =>
+                                  handleFileClick(message.version, file)
+                                }
+                              >
+                                <div className="flex max-w-full items-center">
+                                  <FileIcon
+                                    className={cn(
+                                      "mr-2 size-4",
+                                      fileConfig.color,
+                                    )}
+                                  />
+                                  <div
+                                    className={cn(
+                                      "font-mono whitespace-pre-wrap text-sm font-medium text-border",
+                                      file.isDelete &&
+                                        "text-red-500 group-hover:text-red-500",
+                                      activeTab === file.name &&
+                                        isSelectedVersion &&
+                                        !isCanvas &&
+                                        "text-foreground",
+                                    )}
+                                  >
+                                    {file.name || "untitled.html"}
+                                  </div>
+                                </div>
+                                <div className="whitespace-nowrap text-xs text-border opacity-75">
+                                  {formatFileSize(
+                                    new Blob([file.content]).size,
                                   )}
-                                />
-                                <div
-                                  className={cn(
-                                    "font-mono whitespace-pre-wrap text-sm font-medium text-border",
-                                    file.isDelete &&
-                                      "text-red-500 group-hover:text-red-500",
-                                    activeTab === file.name &&
-                                      isSelectedVersion &&
-                                      !isCanvas &&
-                                      "text-foreground",
-                                  )}
-                                >
-                                  {file.name || "untitled.html"}
                                 </div>
                               </div>
-                              <div className="text-xs text-border opacity-75">
-                                {formatFileSize(new Blob([file.content]).size)}
-                              </div>
-                            </div>
-                          );
-                        })}
+                            );
+                          })}
+                        </div>
                       </div>
                     </div>
                   </div>
