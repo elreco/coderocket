@@ -538,7 +538,7 @@ export default function ComponentCompletion({
               </div>
             </div>
             <div className="relative m-0 flex h-full max-h-full flex-1 flex-col border-b lg:border-b-0">
-              {(!isLoading || !fetchedChat) && (
+              {!isLoading && fetchedChat?.framework && (
                 <Badge className="absolute right-0 top-0 z-10 m-2 hover:bg-primary">
                   <FrameworkIcon className="mr-1 size-3" />
                   <span className="first-letter:uppercase">
