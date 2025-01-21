@@ -72,26 +72,12 @@ export const takeScreenshot = async (
 ) => {
   const supabase = await createClient();
 
-  // Vérifier d'abord si l'image existe déjà
-  const { data: existingMessage } = await supabase
-    .from("messages")
-    .select("screenshot")
-    .eq("chat_id", chatId)
-    .eq("version", version)
-    .eq("role", "assistant")
-    .single();
-
-  if (existingMessage?.screenshot) {
-    console.log("Screenshot already exists, skipping capture");
-    return;
-  }
-
   // Sinon, on génère un screenshot.
   // Si `url` n'est pas fourni, on utilise un fallback (ex: votre site)
   const finalUrl = previewId
     ? `https://www.tailwindai.dev/webcontainer/${previewId}`
     : `https://www.tailwindai.dev/content/${chatId}`;
-  console.log("finalUrl", finalUrl);
+
   const screenshot = await captureScreenshot(finalUrl);
   if (!screenshot) {
     throw new Error("Failed to capture screenshot");
