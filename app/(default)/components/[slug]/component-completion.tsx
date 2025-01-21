@@ -26,6 +26,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { WebContainerRender } from "@/components/webcontainer-render";
 import { useToast } from "@/hooks/use-toast";
 import { Tables } from "@/types_db";
 import {
@@ -36,6 +37,7 @@ import {
 } from "@/utils/completion-parser";
 import { crispWebsiteId } from "@/utils/config";
 import { createClient } from "@/utils/supabase/client";
+import { getPreviewId } from "@/utils/webcontainer";
 
 import {
   fetchChatById,
@@ -454,48 +456,44 @@ export default function ComponentCompletion({
                     <TabsTrigger value="code">Code</TabsTrigger>
                   </TabsList>
                 </Tabs>
-                {chatFiles.length > 0 &&
-                  (fetchedChat?.framework === "html" ||
-                    (iframeSrc && fetchedChat?.framework === "react")) && (
-                    <>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            onClick={() => setIsModalOpen(true)}
-                            className="flex items-center"
-                            disabled={isLoading}
-                          >
-                            <Fullscreen className="w-5" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Display in fullscreen</p>
-                        </TooltipContent>
-                      </Tooltip>
-                      <Dialog
-                        open={isModalOpen}
-                        onOpenChange={handleFullscreenToggle}
-                      >
-                        <DialogContent className="z-[9999] h-[98%] max-w-[98%] rounded-none p-10">
-                          <DialogTitle className="hidden">
-                            Fullscreen
-                          </DialogTitle>
-                          <DialogDescription className="z-[9999]">
-                            {fetchedChat.framework === "react" && iframeSrc ? (
-                              <iframe
-                                src={iframeSrc}
-                                className="size-full rounded-md border-none"
-                              />
-                            ) : (
-                              <RenderHtmlComponent files={chatFiles} />
-                            )}
-                          </DialogDescription>
-                        </DialogContent>
-                      </Dialog>
-                    </>
-                  )}
+                {(fetchedChat?.framework === "html" ||
+                  (iframeSrc && fetchedChat?.framework === "react")) && (
+                  <>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => setIsModalOpen(true)}
+                          className="flex items-center"
+                          disabled={isLoading}
+                        >
+                          <Fullscreen className="w-5" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Display in fullscreen</p>
+                      </TooltipContent>
+                    </Tooltip>
+                    <Dialog
+                      open={isModalOpen}
+                      onOpenChange={handleFullscreenToggle}
+                    >
+                      <DialogContent className="z-[9999] h-[98%] max-w-[98%] rounded-none p-10">
+                        <DialogTitle className="hidden">Fullscreen</DialogTitle>
+                        <DialogDescription className="z-[9999]">
+                          {fetchedChat.framework === "react" && iframeSrc ? (
+                            <WebContainerRender
+                              previewId={getPreviewId(iframeSrc) || ""}
+                            />
+                          ) : (
+                            <RenderHtmlComponent files={chatFiles} />
+                          )}
+                        </DialogDescription>
+                      </DialogContent>
+                    </Dialog>
+                  </>
+                )}
                 {isVisible && (
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -539,7 +537,7 @@ export default function ComponentCompletion({
             </div>
             <div className="relative m-0 flex h-full max-h-full flex-1 flex-col border-b lg:border-b-0">
               {!isLoading && fetchedChat?.framework && (
-                <Badge className="absolute right-0 top-0 z-10 m-2 hover:bg-primary">
+                <Badge className="absolute right-0 top-0 z-[9999] m-2 hover:bg-primary">
                   <FrameworkIcon className="mr-1 size-3" />
                   <span className="first-letter:uppercase">
                     {fetchedChat?.framework}

@@ -1,5 +1,6 @@
 "use client";
 
+import { Loader2 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { cn } from "@/lib/utils";
@@ -18,6 +19,7 @@ export function WebContainerRender({
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const broadcastChannelRef = useRef<BroadcastChannel>();
   const [previewUrl, setPreviewUrl] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
 
   // Handle preview refresh
   const handleRefresh = useCallback(() => {
@@ -87,11 +89,15 @@ export function WebContainerRender({
       <iframe
         ref={iframeRef}
         title="WebContainer Preview"
-        className="size-full border-none"
+        className="z-50 size-full border-none"
         onLoad={() => {
+          setIsLoading(false);
           notifyPreviewReady();
         }}
       />
+      <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/80">
+        <Loader2 className="size-8 animate-spin text-primary" />
+      </div>
     </div>
   );
 }

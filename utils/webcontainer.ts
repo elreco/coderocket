@@ -52,6 +52,19 @@ class WebContainerInstance {
   }
 }
 
+export const getPreviewId = (url: string) => {
+  const match = url.match(
+    /^https?:\/\/([^.]+)\.local-credentialless\.webcontainer-api\.io/,
+  );
+
+  if (match) {
+    const previewId = match[1];
+    return previewId;
+  } else {
+    console.warn("[Preview] Invalid WebContainer URL:", url);
+  }
+};
+
 export async function setupProject(files: ChatFile[]) {
   const webcontainer = await WebContainerInstance.getInstance();
   const fileSystemTree = buildFileSystemTree(files);
