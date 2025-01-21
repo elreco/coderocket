@@ -163,7 +163,10 @@ export const createChat = async (prompt: string, formData: FormData) => {
     .eq("user_id", user?.id);
   const isVisible = formData.get("isVisible");
   const theme = formData.get("theme")?.toString() || defaultTheme;
-  const framework = formData.get("framework")?.toString() || "react";
+  const frameworkInput = formData.get("framework")?.toString() || "react";
+  const framework = ["html", "react"].includes(frameworkInput)
+    ? frameworkInput
+    : "html";
   const is_private = isVisible === "false";
 
   if (!subscription && is_private) {
