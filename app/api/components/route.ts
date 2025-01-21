@@ -229,10 +229,10 @@ const updateDataAfterCompletion = async (
 
   if (!text) return console.error("No completion");
 
-  const version = lastUserMessage.version > 0 ? lastUserMessage.version + 1 : 0;
+  const version = lastUserMessage.version + 1;
   const artifactCode = getUpdatedArtifactCode(text, chat.artifact_code || "");
 
-  if (lastUserMessage.version > 0) {
+  if (version > 0) {
     newMessages.push({
       chat_id: chatId,
       screenshot: null,
@@ -240,6 +240,12 @@ const updateDataAfterCompletion = async (
       content: prompt,
       role: "user",
     });
+  } else {
+    await supabase
+      .from("messages")
+      .update({ version })
+      .eq("chat_id", chatId)
+      .eq("version", -1);
   }
 
   await supabase
