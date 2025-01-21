@@ -12,6 +12,11 @@ export default async function RenderHtmlComponentServer({
   const initialContent = files[0]?.content || "";
 
   return (
-    <iframe srcDoc={initialContent} style={style} sandbox="allow-scripts" />
+    <iframe
+      srcDoc={initialContent}
+      style={style}
+      sandbox="allow-scripts"
+      className="bg-white"
+    />
   );
 }

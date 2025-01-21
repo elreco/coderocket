@@ -75,6 +75,7 @@ export default function RenderHtmlComponent({ files }: { files: ChatFile[] }) {
         height: "100%",
         border: "none",
       }}
+      className="bg-white"
       sandbox="allow-scripts allow-same-origin"
     />
   );
