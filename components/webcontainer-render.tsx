@@ -19,7 +19,6 @@ export function WebContainerRender({
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const broadcastChannelRef = useRef<BroadcastChannel>();
   const [previewUrl, setPreviewUrl] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
 
   // Handle preview refresh
   const handleRefresh = useCallback(() => {
@@ -91,7 +90,6 @@ export function WebContainerRender({
         title="WebContainer Preview"
         className="z-50 size-full border-none"
         onLoad={() => {
-          setIsLoading(false);
           notifyPreviewReady();
         }}
       />

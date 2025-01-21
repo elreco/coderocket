@@ -7,7 +7,11 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { WebContainerRender } from "@/components/webcontainer-render";
 import { takeScreenshot } from "@/utils/capture-screenshot";
 import { ChatFile } from "@/utils/completion-parser";
-import { setupProject, stopWebContainer } from "@/utils/webcontainer";
+import {
+  getPreviewId,
+  setupProject,
+  stopWebContainer,
+} from "@/utils/webcontainer";
 
 type LoadingState = "initializing" | "starting" | "error" | null;
 
@@ -29,19 +33,6 @@ function LoadingState({ state }: { state: LoadingState }) {
     </div>
   );
 }
-
-const getPreviewId = (url: string) => {
-  const match = url.match(
-    /^https?:\/\/([^.]+)\.local-credentialless\.webcontainer-api\.io/,
-  );
-
-  if (match) {
-    const previewId = match[1];
-    return previewId;
-  } else {
-    console.warn("[Preview] Invalid WebContainer URL:", url);
-  }
-};
 
 export default function RenderReactComponent({
   files,
