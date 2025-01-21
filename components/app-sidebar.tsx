@@ -24,9 +24,28 @@ import { Tables } from "@/types_db";
 
 import Logo from "./icons/logo";
 import { NavAuth } from "./nav-auth";
+import { NavComponents } from "./nav-components";
 
 // This is sample data.
 const data = {
+  navComponents: [
+    {
+      title: "Browse Components",
+      url: "#",
+      icon: Globe,
+      isActive: true,
+      items: [
+        {
+          title: "React Components",
+          url: "/components/react",
+        },
+        {
+          title: "HTML Components",
+          url: "/components",
+        },
+      ],
+    },
+  ],
   navMain: [
     {
       title: "Generate",
@@ -39,14 +58,19 @@ const data = {
       icon: Star,
     }, */
     {
-      title: "Browse Components",
-      url: "/components",
-      icon: Globe,
-    },
-    {
       title: "Pricing",
       url: "/pricing",
       icon: CreditCard,
+    },
+    {
+      title: (
+        <div className="flex items-center gap-2">
+          Discord
+          <Badge className="h-5">New</Badge>
+        </div>
+      ),
+      url: "https://discord.gg/t7dQgcYJ5t",
+      icon: SiDiscord,
     },
   ],
   community: [
@@ -54,18 +78,6 @@ const data = {
       title: "Changelog",
       url: "/changelog",
       icon: Rocket,
-    },
-    {
-      title: (
-        <div className="flex items-center gap-2">
-          Discord
-          <Badge variant="outline" className="h-5">
-            New
-          </Badge>
-        </div>
-      ),
-      url: "https://discord.gg/t7dQgcYJ5t",
-      icon: SiDiscord,
     },
   ],
 };
@@ -85,6 +97,17 @@ export function AppSidebar({
   const navCommunityItems = data.community.map((item) => ({
     ...item,
     isActive: pathname === item.url,
+  }));
+
+  const navComponentsItems = data.navComponents.map((item) => ({
+    ...item,
+    isActive:
+      item.items?.some((subItem) => pathname === subItem.url) ||
+      pathname === item.url,
+    items: item.items?.map((subItem) => ({
+      ...subItem,
+      isActive: pathname === subItem.url,
+    })),
   }));
 
   const { setOpenMobile } = useSidebar();
@@ -120,7 +143,8 @@ export function AppSidebar({
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={navMainItems} label="Components" />
+        <NavMain items={navMainItems} label="Tailwind AI" />
+        <NavComponents items={navComponentsItems} />
         <NavMain items={navCommunityItems} label="Community" />
       </SidebarContent>
       <SidebarFooter>

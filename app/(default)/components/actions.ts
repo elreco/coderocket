@@ -272,12 +272,24 @@ export const getFeaturedChats = async () => {
   return data;
 };
 
-export const getAllPublicChats = async () => {
+export const getAllHTMLPublicChats = async () => {
   const supabase = await createClient();
 
   const { data } = await supabase
     .rpc("get_all_components")
     .is("is_private", false)
+    .eq("framework", "html")
+    .limit(24);
+  return data;
+};
+
+export const getAllReactPublicChats = async () => {
+  const supabase = await createClient();
+
+  const { data } = await supabase
+    .rpc("get_all_components")
+    .is("is_private", false)
+    .eq("framework", "react")
     .limit(24);
   return data;
 };
