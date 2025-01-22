@@ -130,7 +130,7 @@ export default function RenderReactComponent({
 
   return (
     <>
-      {isLoading && <LoadingState state="initializing" />}
+      {isLoading && !error && <LoadingState state="initializing" />}
 
       {error && (
         <div className="mx-4 flex size-full items-center justify-center">
@@ -154,7 +154,7 @@ export default function RenderReactComponent({
         </div>
       )}
 
-      {loadingState && <LoadingState state={loadingState} />}
+      {loadingState && !error && <LoadingState state={loadingState} />}
       {previewId && !isLoading && !error && !previewError && (
         <WebContainerRender
           previewId={previewId}
