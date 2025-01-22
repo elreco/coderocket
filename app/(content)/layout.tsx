@@ -6,8 +6,8 @@ import { PropsWithChildren } from "react";
 // eslint-disable-next-line import/order
 import { SandPackCSS } from "@/components/sandpack-styles";
 
-import "@/styles/chrome-bug.css";
-import "@/styles/main.css";
+import "styles/chrome-bug.css";
+import "styles/main.css";
 
 import { cn } from "@/lib/utils";
 

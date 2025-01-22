@@ -54,7 +54,6 @@ export default function RenderReactComponent({
   chatId?: string;
   selectedVersion?: number;
 }) {
-  const [iframeSrc, setIframeSrc] = useState<string | null>(null);
   const [previewId, setPreviewId] = useState<string | undefined>(undefined);
   const [loadingState, setLoadingState] =
     useState<LoadingState>("initializing");
@@ -108,7 +107,6 @@ export default function RenderReactComponent({
 
         webcontainerInstance?.on("server-ready", async (port, url) => {
           onServerReady(url);
-          setIframeSrc(url);
           const previewId = getPreviewId(url);
           setLoadingState(null);
           if (previewId) {
@@ -135,8 +133,8 @@ export default function RenderReactComponent({
       {isLoading && <LoadingState state="initializing" />}
 
       {error && (
-        <div className="mx-4 flex items-center justify-center">
-          <Alert variant="destructive" className="bg-secondary px-12">
+        <div className="mx-4 flex size-full items-center justify-center">
+          <Alert variant="destructive" className="px-12">
             <AlertCircle className="size-4" />
             <AlertDescription>{error}</AlertDescription>
           </Alert>
@@ -162,10 +160,6 @@ export default function RenderReactComponent({
           previewId={previewId}
           className={loadingState ? "hidden" : "flex"}
         />
-      )}
-
-      {!isLoading && !error && !loadingState && !iframeSrc && (
-        <LoadingState state={loadingState} />
       )}
     </>
   );
