@@ -92,9 +92,9 @@ export default function ComponentCard({
         )}
       >
         <div className="flex w-full flex-1 items-start pt-1 text-left text-sm font-medium transition-all duration-300 first-letter:uppercase group-hover:text-primary md:mb-2 lg:pt-0 lg:text-base">
-          <div className="flex items-center">
+          <div className="flex w-full items-center">
             <TerminalIcon className="mr-1.5 size-5 shrink-0 font-semibold" />
-            <span className="line-clamp-2 max-w-full whitespace-pre-line">
+            <span className="line-clamp-2 max-w-full whitespace-pre-wrap">
               {chat.first_user_message}
             </span>
           </div>
