@@ -59,14 +59,19 @@ export default function Pricing({ user, products, subscription }: Props) {
       return router.push("/account");
     }
     try {
-      const { sessionId } = await postData({
+      const data = await postData({
         url: "/api/create-checkout-session",
         data: { price },
       });
 
       const stripe = await getStripe();
-      stripe?.redirectToCheckout({ sessionId });
+
+      const result = await stripe?.redirectToCheckout({
+        sessionId: data.sessionId,
+      });
+      console.log("price", result);
     } catch (error) {
+      console.error("Error creating checkout session:", error);
       return alert((error as Error)?.message);
     } finally {
       setPriceIdLoading(undefined);
