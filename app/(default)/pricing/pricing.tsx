@@ -10,7 +10,6 @@ import { useToast } from "@/hooks/use-toast";
 import { Database } from "@/types_db";
 import { MAX_GENERATIONS, MAX_ITERATIONS } from "@/utils/config";
 import { postData } from "@/utils/helpers";
-import { getStripe } from "@/utils/stripe-client";
 
 type Subscription = Database["public"]["Tables"]["subscriptions"]["Row"];
 type Product = Database["public"]["Tables"]["products"]["Row"];
@@ -63,8 +62,6 @@ export default function Pricing({ user, products, subscription }: Props) {
         url: "/api/create-checkout-session",
         data: { price },
       });
-      console.log("data", data);
-      const stripe = await getStripe();
 
       if (data.sessionUrl) {
         window.location.href = data.sessionUrl;
