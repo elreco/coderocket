@@ -69,9 +69,8 @@ export async function POST(req: Request) {
           cancel_url: `https://www.tailwindai.dev/`,
         });
       }
-
       if (session) {
-        return new Response(JSON.stringify({ sessionId: session.id }), {
+        return new Response(JSON.stringify({ sessionUrl: session.url }), {
           status: 200,
         });
       } else {

@@ -63,13 +63,12 @@ export default function Pricing({ user, products, subscription }: Props) {
         url: "/api/create-checkout-session",
         data: { price },
       });
-
+      console.log("data", data);
       const stripe = await getStripe();
 
-      const result = await stripe?.redirectToCheckout({
-        sessionId: data.sessionId,
-      });
-      console.log("price", result);
+      if (data.sessionUrl) {
+        window.location.href = data.sessionUrl;
+      }
     } catch (error) {
       console.error("Error creating checkout session:", error);
       return alert((error as Error)?.message);
