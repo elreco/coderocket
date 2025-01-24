@@ -7,12 +7,12 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { useComponentContext } from "@/context/component-context";
 import { cn } from "@/lib/utils";
 import { extractDataTheme, setDataTheme } from "@/utils/completion-parser";
 import { themes } from "@/utils/config";
 
 import { updateTheme } from "../actions";
-import { useComponentContext } from "../component-context";
 
 export default function ComponentSettings({
   children,

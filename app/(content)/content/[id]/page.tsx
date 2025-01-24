@@ -1,9 +1,9 @@
-import RenderHtmlComponentServer from "@/app/(content)/render-html-component-server";
-import RenderReactComponent from "@/app/(content)/render-react-component";
 import {
   fetchChatById,
   fetchLastAssistantMessageByChatId,
 } from "@/app/(default)/components/actions";
+import RenderHtmlComponentServer from "@/components/renders/render-html-component-server";
+import RenderReactComponent from "@/components/renders/render-react-component";
 import {
   extractFilesFromArtifact,
   extractFilesFromCompletion,
@@ -31,10 +31,6 @@ export default async function Content({
       style={{ width: "100%", height: "100%", border: "none" }}
     />
   ) : (
-    <RenderReactComponent
-      isLoading={false}
-      files={artifactFiles}
-      onServerReady={() => {}}
-    />
+    <RenderReactComponent files={artifactFiles} />
   );
 }

@@ -35,7 +35,6 @@ export const postData = async ({
 
     throw Error(res.statusText);
   }
-
   return res.json();
 };
 

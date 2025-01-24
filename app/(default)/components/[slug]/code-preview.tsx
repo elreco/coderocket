@@ -12,16 +12,17 @@ import { useRef, useEffect } from "react";
 import React from "react";
 import { useCopyToClipboard } from "usehooks-ts";
 
-import RenderHtmlComponent from "@/app/(content)/render-html-component";
-import RenderReactComponent from "@/app/(content)/render-react-component";
+import RenderHtmlComponent from "@/components/renders/render-html-component";
+import RenderReactComponent from "@/components/renders/render-react-component";
 import { Button } from "@/components/ui/button";
+import { WebContainerTerminal } from "@/components/webcontainers/webcontainer-terminal";
+import { useComponentContext } from "@/context/component-context";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { ChatFile } from "@/utils/completion-parser";
 import { getLanguageExtension } from "@/utils/file-extensions";
 
 import { CodePreviewFileTree } from "./code-preview-filetree";
-import { useComponentContext } from "./component-context";
 import ChatSkeleton from "./component-skeleton";
 
 const RenderContent = React.memo(
@@ -30,17 +31,11 @@ const RenderContent = React.memo(
     chatFiles,
     selectedFramework,
     artifactFiles,
-    setIframeSrc,
-    chatId,
-    selectedVersion,
   }: {
     isLoading: boolean;
     chatFiles: ChatFile[];
     selectedFramework: string;
     artifactFiles: ChatFile[];
-    setIframeSrc: (url: string) => void;
-    chatId?: string;
-    selectedVersion?: number;
   }) => {
     if (isLoading && chatFiles.length === 0) {
       return (
@@ -55,13 +50,10 @@ const RenderContent = React.memo(
 
     if (selectedFramework === "react") {
       return (
-        <RenderReactComponent
-          isLoading={isLoading}
-          files={artifactFiles}
-          onServerReady={(url) => setIframeSrc(url)}
-          chatId={chatId}
-          selectedVersion={selectedVersion}
-        />
+        <>
+          <RenderReactComponent files={artifactFiles} />
+          <WebContainerTerminal />
+        </>
       );
     }
 
@@ -100,9 +92,6 @@ export default function CodePreview() {
     editorValue,
     artifactFiles,
     selectedFramework,
-    setIframeSrc,
-    chatId,
-    selectedVersion,
   } = useComponentContext();
   const [, copy] = useCopyToClipboard();
   const codeMirrorRef = useRef<ReactCodeMirrorRef>(null);
@@ -185,9 +174,6 @@ export default function CodePreview() {
           chatFiles={chatFiles}
           selectedFramework={selectedFramework}
           artifactFiles={artifactFiles}
-          setIframeSrc={setIframeSrc}
-          chatId={chatId}
-          selectedVersion={selectedVersion}
         />
       </div>
       <div

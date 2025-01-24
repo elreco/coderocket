@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { UserMessage } from "@/components/user-message";
+import { useComponentContext } from "@/context/component-context";
 import { cn } from "@/lib/utils";
 import {
   ContentChunk,
@@ -17,7 +18,6 @@ import { Markdown } from "../markdown";
 
 import ComponentTheme from "./(settings)/component-theme";
 import ComponentChatFiles from "./component-chat-files";
-import { useComponentContext } from "./component-context";
 import { ComponentSidebarSkeleton } from "./component-sidebar-skeleton";
 
 export default function ComponentSidebar({

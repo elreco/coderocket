@@ -93,7 +93,7 @@ const Changelog = () => {
 
           <Accordion
             type="single"
-            defaultValue="1.2.1"
+            defaultValue="1.2.2"
             className="mt-8 space-y-4"
           >
             <AccordionItem value="1.2.2" className="rounded-lg border bg-card">
@@ -120,8 +120,7 @@ const Changelog = () => {
                   </li>
                   <li>
                     <b>React Support:</b> Added the ability to generate React
-                    components, allowing better integration with existing React
-                    projects.
+                    components.
                   </li>
                 </ul>
               </AccordionContent>

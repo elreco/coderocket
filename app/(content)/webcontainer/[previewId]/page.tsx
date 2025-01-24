@@ -2,7 +2,7 @@
 
 import { useParams } from "next/navigation";
 
-import { WebContainerRender } from "@/components/webcontainer-render";
+import { WebContainerRender } from "@/components/webcontainers/webcontainer-render";
 
 export default function WebContainerPreview() {
   const params = useParams();

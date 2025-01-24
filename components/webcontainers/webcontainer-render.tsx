@@ -18,11 +18,11 @@ export function WebContainerRender({
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const broadcastChannelRef = useRef<BroadcastChannel>();
   const [previewUrl, setPreviewUrl] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
   // Handle preview refresh
   const handleRefresh = useCallback(() => {
     if (iframeRef.current && previewUrl) {
-      // Force a clean reload
       iframeRef.current.src = "";
       requestAnimationFrame(() => {
         if (iframeRef.current) {
@@ -44,13 +44,26 @@ export function WebContainerRender({
     }
   }, [previewId, previewUrl]);
 
+  // Gestionnaire d'erreurs pour l'iframe
+  const handleIframeError = useCallback((event: MessageEvent) => {
+    console.log("event", event.data);
+    if (event.data.type === "error") {
+      setError(event.data.error);
+      console.error("Erreur WebContainer:", event.data.error);
+    }
+  }, []);
+
   useEffect(() => {
+    console.log("previewId", previewId);
     if (!previewId) {
-      throw new Error("Preview ID is required");
+      return;
     }
 
     // Initialize broadcast channel
     broadcastChannelRef.current = new BroadcastChannel(PREVIEW_CHANNEL);
+
+    // Écouter les messages d'erreur de l'iframe
+    window.addEventListener("message", handleIframeError);
 
     // Listen for preview updates
     broadcastChannelRef.current.onmessage = (event) => {
@@ -70,6 +83,7 @@ export function WebContainerRender({
 
     // Set the iframe src
     if (iframeRef.current) {
+      console.log("url", url);
       iframeRef.current.src = url;
     }
 
@@ -79,15 +93,23 @@ export function WebContainerRender({
     // Cleanup
     return () => {
       broadcastChannelRef.current?.close();
+      window.removeEventListener("message", handleIframeError);
     };
-  }, [previewId, handleRefresh, notifyPreviewReady]);
+  }, [previewId, handleRefresh, notifyPreviewReady, handleIframeError]);
 
   return (
     <div className={cn("relative size-full", className)}>
+      {error && (
+        <div className="absolute inset-x-0 top-0 z-50 bg-red-100 p-2 text-red-700">
+          {error}
+        </div>
+      )}
       <iframe
         ref={iframeRef}
         title="WebContainer Preview"
-        className="relative z-50 size-full border-none bg-white"
+        className="relative z-40 size-full border-none bg-white"
+        sandbox="allow-scripts allow-forms allow-popups allow-modals allow-storage-access-by-user-activation allow-same-origin"
+        allow="cross-origin-isolated"
         onLoad={() => {
           notifyPreviewReady();
         }}

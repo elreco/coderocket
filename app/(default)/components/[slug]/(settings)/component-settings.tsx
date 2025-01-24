@@ -8,10 +8,10 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Switch } from "@/components/ui/switch";
+import { useComponentContext } from "@/context/component-context";
 import { toast } from "@/hooks/use-toast";
 
 import { changeVisibilityByChatId } from "../actions";
-import { useComponentContext } from "../component-context";
 
 export default function ComponentSettings({
   children,

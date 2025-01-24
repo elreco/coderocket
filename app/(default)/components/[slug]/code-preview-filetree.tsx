@@ -11,10 +11,9 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useComponentContext } from "@/context/component-context";
 import { cn } from "@/lib/utils";
 import { getFileConfig } from "@/utils/file-extensions";
-
-import { useComponentContext } from "./component-context";
 
 interface File {
   name: string | null;

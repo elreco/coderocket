@@ -24,8 +24,6 @@ interface ComponentContextType {
   editorValue: string;
   handleVersionSelect: (version: number, tabName?: string) => void;
   authorized: boolean;
-  iframeSrc: string | null;
-  setIframeSrc: (value: string | null) => void;
   handleSubmitToAI: (input: string) => void;
   completion: string;
   messages: ChatMessage[];
@@ -42,6 +40,8 @@ interface ComponentContextType {
   setInput: (value: string) => void;
   artifactCode: string;
   setArtifactCode: (value: string) => void;
+  previewId: string | undefined;
+  setPreviewId: (value: string | undefined) => void;
   artifactFiles: ChatFile[];
   chatId: string;
   selectedFramework: string;

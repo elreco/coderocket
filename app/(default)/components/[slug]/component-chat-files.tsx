@@ -23,6 +23,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { UserMessage } from "@/components/user-message";
+import { useComponentContext } from "@/context/component-context";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { Tables } from "@/types_db";
@@ -42,7 +43,6 @@ import { getInitials, formatFileSize } from "@/utils/helpers";
 import { Markdown } from "../markdown";
 
 import { deleteVersionByMessageId } from "./actions";
-import { useComponentContext } from "./component-context";
 
 import "katex/dist/katex.min.css";
 
@@ -284,7 +284,7 @@ export default function ComponentChatFiles({
                         )}
                       </div>
                       <div className="space-y-2 overflow-x-auto">
-                        <div className="flex w-fit flex-col space-y-2">
+                        <div className="flex w-fit min-w-full flex-col space-y-2">
                           {files.map((file, index) => {
                             const fileConfig = getFileConfig(
                               file.name || "untitled.html",

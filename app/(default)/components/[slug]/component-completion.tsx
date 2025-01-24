@@ -1,6 +1,5 @@
 "use client";
 
-import { SiHtml5, SiReact } from "@icons-pack/react-simple-icons";
 import { useCompletion } from "ai/react";
 import { Crisp } from "crisp-sdk-web";
 import {
@@ -15,9 +14,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useCopyToClipboard } from "usehooks-ts";
 
-import RenderHtmlComponent from "@/app/(content)/render-html-component";
 import { Container } from "@/components/container";
-import { Badge } from "@/components/ui/badge";
+import RenderHtmlComponent from "@/components/renders/render-html-component";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -32,7 +30,9 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { WebContainerRender } from "@/components/webcontainer-render";
+import { WebContainerRender } from "@/components/webcontainers/webcontainer-render";
+import { ChatMessage, ComponentContext } from "@/context/component-context";
+import { WebContainerProvider } from "@/context/webcontainer-context";
 import { useToast } from "@/hooks/use-toast";
 import { Tables } from "@/types_db";
 import {
@@ -43,7 +43,6 @@ import {
 } from "@/utils/completion-parser";
 import { crispWebsiteId } from "@/utils/config";
 import { createClient } from "@/utils/supabase/client";
-import { getPreviewId } from "@/utils/webcontainer";
 
 import {
   fetchChatById,
@@ -54,7 +53,6 @@ import {
 
 import ComponentSettings from "./(settings)/component-settings";
 import CodePreview from "./code-preview";
-import { ChatMessage, ComponentContext } from "./component-context";
 import ComponentSidebar from "./component-sidebar";
 
 interface Props {
@@ -79,6 +77,7 @@ export default function ComponentCompletion({
   const [isVisible, setVisible] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editorValue, setEditorValue] = useState("");
+  const [previewId, setPreviewId] = useState<string | undefined>(undefined);
 
   const [chatFiles, setChatFiles] = useState<ChatFile[]>([]);
   const [artifactFiles, setArtifactFiles] = useState<ChatFile[]>([]);
@@ -86,7 +85,6 @@ export default function ComponentCompletion({
   const [artifactCode, setArtifactCode] = useState("");
 
   const [activeTab, setActiveTab] = useState("");
-  const [iframeSrc, setIframeSrc] = useState<string | null>(null);
 
   const [isLoading, setIsLoading] = useState(true);
 
@@ -196,7 +194,7 @@ export default function ComponentCompletion({
   const handleSubmitToAI = (input: string) => {
     setCompletion("");
     setArtifactFiles([]);
-    setIframeSrc(null);
+    setPreviewId(undefined);
     setChatFiles([]);
     setCanvas(false);
     setIsLoading(true);
@@ -373,11 +371,11 @@ export default function ComponentCompletion({
     setCompletion,
     artifactCode,
     setArtifactCode,
-    iframeSrc,
-    setIframeSrc,
     chatId,
     artifactFiles,
     selectedFramework: fetchedChat?.framework || "react",
+    previewId,
+    setPreviewId,
   };
 
   useEffect(() => {
@@ -413,8 +411,6 @@ export default function ComponentCompletion({
       channel.unsubscribe();
     };
   }, []);
-
-  const FrameworkIcon = fetchedChat?.framework === "html" ? SiHtml5 : SiReact;
 
   return (
     <ComponentContext.Provider value={contextValue}>
@@ -456,7 +452,7 @@ export default function ComponentCompletion({
                   </TabsList>
                 </Tabs>
                 {(fetchedChat?.framework === "html" ||
-                  (iframeSrc && fetchedChat?.framework === "react")) && (
+                  (previewId && fetchedChat?.framework === "react")) && (
                   <>
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -474,7 +470,7 @@ export default function ComponentCompletion({
                         <p>Display in fullscreen</p>
                       </TooltipContent>
                     </Tooltip>
-                    {iframeSrc && fetchedChat?.framework === "react" && (
+                    {previewId && fetchedChat?.framework === "react" && (
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Button
@@ -482,7 +478,7 @@ export default function ComponentCompletion({
                             size="sm"
                             onClick={() =>
                               window.open(
-                                `/webcontainer/${getPreviewId(iframeSrc)}`,
+                                `/webcontainer/${previewId}`,
                                 "_blank",
                               )
                             }
@@ -504,10 +500,8 @@ export default function ComponentCompletion({
                       <DialogContent className="z-[9999] h-[98%] max-w-[98%] rounded-none p-10">
                         <DialogTitle className="hidden">Fullscreen</DialogTitle>
                         <DialogDescription className="z-[9999]">
-                          {fetchedChat.framework === "react" && iframeSrc ? (
-                            <WebContainerRender
-                              previewId={getPreviewId(iframeSrc) || ""}
-                            />
+                          {fetchedChat.framework === "react" && previewId ? (
+                            <WebContainerRender previewId={previewId} />
                           ) : (
                             <RenderHtmlComponent files={chatFiles} />
                           )}
@@ -558,15 +552,9 @@ export default function ComponentCompletion({
               </div>
             </div>
             <div className="relative m-0 flex h-full max-h-full flex-1 flex-col border-b lg:border-b-0">
-              {!isLoading && fetchedChat?.framework && (
-                <Badge className="absolute bottom-0 left-0 z-[9999] m-2 hover:bg-primary">
-                  <FrameworkIcon className="mr-1 size-3" />
-                  <span className="first-letter:uppercase">
-                    {fetchedChat?.framework}
-                  </span>
-                </Badge>
-              )}
-              <CodePreview />
+              <WebContainerProvider>
+                <CodePreview />
+              </WebContainerProvider>
             </div>
           </div>
           <ComponentSidebar className="hidden lg:flex" />

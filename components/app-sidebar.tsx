@@ -37,19 +37,18 @@ const data = {
   navComponents: [
     {
       title: "Browse Components",
-      url: "#",
+      url: "/components",
       icon: Globe,
-      isActive: true,
-      items: [
-        {
-          title: "React Components",
-          url: "/components/react",
-        },
-        {
-          title: "HTML Components",
-          url: "/components",
-        },
-      ],
+      // items: [
+      //   {
+      //     title: "React Components",
+      //     url: "/components/react",
+      //   },
+      //   {
+      //     title: "HTML Components",
+      //     url: "/components",
+      //   },
+      // ],
     },
   ],
   navMain: [
@@ -109,16 +108,12 @@ export function AppSidebar({
 
   const navComponentsItems = data.navComponents.map((item) => ({
     ...item,
-    items: item.items?.map((subItem) => ({
-      ...subItem,
-      isActive: pathname === subItem.url,
-    })),
+    isActive: pathname === item.url,
   }));
 
   // Ajout du nouvel élément si l'utilisateur est connecté
   const finalNavComponentsItems = user
     ? [
-        ...navComponentsItems,
         {
           title: "My Components",
           url: "#",
@@ -142,7 +137,7 @@ export function AppSidebar({
           isActive: pathname === subItem.url,
         })),
       }))
-    : navComponentsItems;
+    : null;
 
   const { setOpenMobile } = useSidebar();
 
@@ -178,7 +173,10 @@ export function AppSidebar({
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={navMainItems} label="Tailwind AI" />
-        <NavComponents items={finalNavComponentsItems} />
+        <NavMain items={navComponentsItems} label="Browse" />
+        {finalNavComponentsItems && (
+          <NavComponents items={finalNavComponentsItems} />
+        )}
         <NavMain items={navCommunityItems} label="Community" />
       </SidebarContent>
       <SidebarFooter>
