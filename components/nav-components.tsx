@@ -35,7 +35,7 @@ export function NavComponents({
 }) {
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>My account</SidebarGroupLabel>
+      <SidebarGroupLabel>My Generated Components</SidebarGroupLabel>
       <SidebarMenu>
         {items.map((item) => (
           <Collapsible

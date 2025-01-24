@@ -79,8 +79,6 @@ const data = {
       url: "https://discord.gg/t7dQgcYJ5t",
       icon: SiDiscord,
     },
-  ],
-  community: [
     {
       title: "Changelog",
       url: "/changelog",
@@ -97,11 +95,6 @@ export function AppSidebar({
   const pathname = usePathname();
 
   const navMainItems = data.navMain.map((item) => ({
-    ...item,
-    isActive: pathname === item.url,
-  }));
-
-  const navCommunityItems = data.community.map((item) => ({
     ...item,
     isActive: pathname === item.url,
   }));
@@ -173,11 +166,10 @@ export function AppSidebar({
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={navMainItems} label="Tailwind AI" />
-        <NavMain items={navComponentsItems} label="Browse" />
+        <NavMain items={navComponentsItems} label="Public Components" />
         {finalNavComponentsItems && (
           <NavComponents items={finalNavComponentsItems} />
         )}
-        <NavMain items={navCommunityItems} label="Community" />
       </SidebarContent>
       <SidebarFooter>
         {user ? <NavUser user={user} /> : <NavAuth />}
