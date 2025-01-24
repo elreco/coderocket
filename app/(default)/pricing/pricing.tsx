@@ -74,17 +74,41 @@ export default function Pricing({ user, products, subscription }: Props) {
     }
   };
 
-  if (products.length === 1)
+  // Fonction pour calculer l'économie en pourcentage
+  const calculateSavings = (currentPrice: number, referencePrice: number) => {
+    return Math.round(((referencePrice - currentPrice) / referencePrice) * 100);
+  };
+
+  // Fonction pour formater le prix
+  const formatPrice = (price: number, currency: string) => {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: currency,
+      minimumFractionDigits: 0,
+    }).format(price / 100);
+  };
+
+  if (products.length === 1) {
+    const prices = products[0].prices || [];
+    const weeklyPrice = prices.find((price) => price.interval === "week");
+
     return (
       <div className="flex items-center">
         <div className="my-4 size-full items-center space-y-4 sm:my-4 sm:grid sm:grid-cols-2 sm:gap-6 sm:space-y-0 lg:mx-auto lg:max-w-4xl xl:mx-0 xl:max-w-none xl:grid-cols-4 xl:space-y-0">
-          <div className="flex h-full flex-col divide-y divide-zinc-600 rounded-lg border bg-card p-3">
+          {/* Plan Trial */}
+          <div className="flex h-full flex-col divide-y divide-border rounded-lg border bg-card p-3">
+            <h3 className="mb-4 pl-3 text-lg font-bold text-white">Trial</h3>
             <div className="grow p-3">
+              <div className="mb-4 h-6"></div>{" "}
+              {/* Espace ajusté pour l'alignement */}
               <p>
-                <span className="text-5xl font-bold text-primary">Free</span>
+                <span className="text-5xl font-bold text-primary">€0</span>
+                <span className="text-base font-medium text-white">/week</span>
               </p>
               <p className="mt-4 ">
-                Experience the full potential of Tailwind AI in your workflow
+                <span className="font-bold">Start for free!</span> No payment
+                required. Explore Tailwind AI and see how it can boost your
+                workflow.
               </p>
               <p className="mt-4 flex items-center text-sm font-medium ">
                 <Check className="mr-2 size-4 text-emerald-500" />{" "}
@@ -95,14 +119,14 @@ export default function Pricing({ user, products, subscription }: Props) {
                 {MAX_ITERATIONS} versions
               </p>
               <p className="mt-4 flex items-center text-sm font-medium ">
-                <XIcon className="mr-2 size-4 text-red-500" /> Generate with
+                <XIcon className="mr-2 size-4 text-border" /> Generate with
                 Image
               </p>
               <p className="mt-4 flex items-center text-sm font-medium ">
-                <XIcon className="mr-2 size-4 text-red-500" /> AI Full Power
+                <XIcon className="mr-2 size-4 text-border" /> AI Full Power
               </p>
               <p className="mt-4 flex items-center text-sm font-medium ">
-                <XIcon className="mr-2 size-4 text-red-500" /> Extended support
+                <XIcon className="mr-2 size-4 text-border" /> Support
               </p>
             </div>
             <Button
@@ -118,30 +142,99 @@ export default function Pricing({ user, products, subscription }: Props) {
             </Button>
           </div>
 
-          {products[0].prices?.map((price) => {
-            const priceString =
-              price.unit_amount &&
-              new Intl.NumberFormat("en-US", {
-                style: "currency",
-                currency: price.currency!,
-                minimumFractionDigits: 0,
-              }).format(price.unit_amount / 100);
+          {/* Plans payants */}
+          {prices.map((price) => {
+            const priceString = formatPrice(
+              price.unit_amount || 0,
+              price.currency!,
+            );
+
+            // Calculer l'économie par rapport au tarif hebdomadaire
+            const savings =
+              weeklyPrice?.unit_amount && price.interval !== "week"
+                ? calculateSavings(
+                    price.unit_amount || 0,
+                    weeklyPrice.unit_amount *
+                      (price.interval === "month" ? 4 : 52),
+                  )
+                : null;
+
+            // Titre du plan
+            const planTitle =
+              price.interval === "week"
+                ? "Starter Plan"
+                : price.interval === "month"
+                  ? "Pro Plan"
+                  : "Supporter Plan";
+
+            // Description personnalisée
+            const planDescription =
+              price.interval === "week" ? (
+                <p className="mt-4 ">
+                  <span className="font-bold">Perfect for starters!</span>{" "}
+                  Unlimited components and versions. Generate with Image
+                  included.
+                </p>
+              ) : price.interval === "month" ? (
+                <p className="mt-4 ">
+                  <span className="font-bold">Go Pro!</span> Unlock advanced
+                  features like AI Full Power for seamless workflows.
+                </p>
+              ) : (
+                <p className="mt-4 ">
+                  <span className="font-bold">❤️ Support Tailwind AI</span>
+                  &apos;s development while enjoying the best value!
+                </p>
+              );
 
             return (
               <div
                 key={price.interval}
-                className="flex h-full flex-col divide-y divide-zinc-600 rounded-lg border bg-card p-3"
+                className="flex h-full flex-col divide-y divide-border rounded-lg border bg-card p-3"
               >
+                <h3 className="mb-4 pl-3 text-lg font-bold text-white">
+                  {planTitle}
+                </h3>
                 <div className="grow p-3">
+                  <div className="mb-4 flex items-center justify-between">
+                    {savings && (
+                      <>
+                        <span className="rounded-full bg-white px-3 py-1 text-sm font-bold text-[#6467f2]">
+                          Save {savings}%
+                        </span>
+                        <p className="text-sm text-border">
+                          <span className="line-through">
+                            {formatPrice(
+                              (weeklyPrice?.unit_amount ?? 0) *
+                                (price.interval === "month" ? 4 : 52),
+                              weeklyPrice?.currency ?? "usd",
+                            )}
+                          </span>{" "}
+                          <span className="font-bold text-[#6467f2]">
+                            {priceString}
+                          </span>
+                        </p>
+                      </>
+                    )}
+                    {!savings && <div className="h-6"></div>}{" "}
+                    {/* Espace ajusté pour l'alignement */}
+                  </div>
                   <p>
                     <span className="text-5xl font-bold text-primary">
-                      {priceString}
+                      {price.interval === "week"
+                        ? formatPrice(price.unit_amount || 0, price.currency!)
+                        : price.interval === "month"
+                          ? formatPrice(price.unit_amount || 0, price.currency!)
+                          : formatPrice(
+                              price.unit_amount || 0,
+                              price.currency!,
+                            )}
                     </span>
-                    <span className="text-base font-medium ">
+                    <span className="text-base font-medium text-white">
                       /{price.interval}
                     </span>
                   </p>
-                  <p className="mt-4 ">{price.description}</p>
+                  {planDescription}
                   <p className="mt-4 flex items-center text-sm font-medium ">
                     <Check className="mr-2 size-4 text-emerald-500" /> Unlimited
                     components
@@ -154,14 +247,33 @@ export default function Pricing({ user, products, subscription }: Props) {
                     <Check className="mr-2 size-4 text-emerald-500" /> Generate
                     with Image
                   </p>
-                  <p className="mt-4 flex items-center text-sm font-medium ">
-                    <Check className="mr-2 size-4 text-emerald-500" />
-                    AI Full Power
-                  </p>
-                  <p className="mt-4 flex items-center text-sm font-medium ">
-                    <Check className="mr-2 size-4 text-emerald-500" />
-                    Extended support
-                  </p>
+                  {price.interval === "week" ? (
+                    <>
+                      <p className="mt-4 flex items-center text-sm font-medium ">
+                        <Check className="mr-2 size-4 text-emerald-500" />{" "}
+                        Support
+                      </p>
+                      <p className="mt-4 flex items-center text-sm font-medium ">
+                        <XIcon className="mr-2 size-4 text-border" /> AI Full
+                        Power
+                      </p>
+                      <p className="mt-4 flex items-center text-sm font-medium ">
+                        <XIcon className="mr-2 size-4 text-border" /> Extended
+                        support
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="mt-4 flex items-center text-sm font-medium ">
+                        <Check className="mr-2 size-4 text-emerald-500" />{" "}
+                        Extended support
+                      </p>
+                      <p className="mt-4 flex items-center text-sm font-medium ">
+                        <Check className="mr-2 size-4 text-emerald-500" /> AI
+                        Full Power
+                      </p>
+                    </>
+                  )}
                 </div>
                 <Button
                   variant="default"
@@ -181,4 +293,5 @@ export default function Pricing({ user, products, subscription }: Props) {
         </div>
       </div>
     );
+  }
 }
