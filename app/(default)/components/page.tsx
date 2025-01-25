@@ -9,9 +9,9 @@ import { PageTitle } from "@/components/page-title";
 import { getAllHTMLPublicChats } from "./actions";
 
 export const metadata = {
-  title: `Public HTML components - Tailwind AI`,
+  title: `Public components - Tailwind AI`,
   description:
-    "Last Tailwind HTML components generated with AI by our users with React and HTML",
+    "Last Tailwind components generated with AI by our users with React and HTML",
 };
 
 export default async function Components() {

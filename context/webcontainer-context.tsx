@@ -120,31 +120,33 @@ export const WebContainerProvider = ({ children }: { children: ReactNode }) => {
   }, [files, isLoading]);
 
   useEffect(() => {
-    webcontainerPromise.then((webcontainer) => {
-      webcontainer.on("preview-message", (message) => {
-        if (
-          message.type === "PREVIEW_UNCAUGHT_EXCEPTION" ||
-          message.type === "PREVIEW_UNHANDLED_REJECTION"
-        ) {
-          const isPromise = message.type === "PREVIEW_UNHANDLED_REJECTION";
-          setPreviewError({
-            title: isPromise
-              ? "Unhandled Promise Rejection"
-              : "Uncaught Exception",
-            description: message.message,
-            content: `Error occurred at ${message.pathname}${message.search}${message.hash}`,
-          });
-        }
-      });
+    if (selectedFramework !== "html") {
+      webcontainerPromise.then((webcontainer) => {
+        webcontainer.on("preview-message", (message) => {
+          if (
+            message.type === "PREVIEW_UNCAUGHT_EXCEPTION" ||
+            message.type === "PREVIEW_UNHANDLED_REJECTION"
+          ) {
+            const isPromise = message.type === "PREVIEW_UNHANDLED_REJECTION";
+            setPreviewError({
+              title: isPromise
+                ? "Unhandled Promise Rejection"
+                : "Uncaught Exception",
+              description: message.message,
+              content: `Error occurred at ${message.pathname}${message.search}${message.hash}`,
+            });
+          }
+        });
 
-      webcontainer.on("server-ready", async (port, url) => {
-        const newPreviewId = getPreviewId(url);
-        if (newPreviewId) {
-          setLoadingState(null);
-          setPreviewId(newPreviewId);
-        }
+        webcontainer.on("server-ready", async (port, url) => {
+          const newPreviewId = getPreviewId(url);
+          if (newPreviewId) {
+            setLoadingState(null);
+            setPreviewId(newPreviewId);
+          }
+        });
       });
-    });
+    }
   }, []);
 
   return (
