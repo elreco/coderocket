@@ -204,6 +204,7 @@ module.exports = {
   "dependencies": {
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "clsx": "^2.1.1",
     "tailwindcss-animate": "^1.0.6"
   },
   "devDependencies": {
