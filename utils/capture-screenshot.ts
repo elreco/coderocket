@@ -53,7 +53,7 @@ export async function captureScreenshot(url: string, framework?: string) {
 
   // Attendre 60 secondes si ce n'est pas le framework HTML
   if (framework !== "html") {
-    await new Promise((resolve) => setTimeout(resolve, 30000));
+    await new Promise((resolve) => setTimeout(resolve, 45000));
   }
 
   // Prend la capture d'écran au format PNG (renvoie un Buffer)

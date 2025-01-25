@@ -54,7 +54,8 @@ That means it can only execute code that is native to a browser including JS, We
       - tsconfig.app.json
       - tsconfig.node.json
       - vite.config.ts
-    IMPORTANT: You don't need to generate these files unless you really need to modify them.
+    - IMPORTANT: You don't need to generate these files unless you really need to modify them.
+    - For the **first generation**, modify the App.tsx file to adapt the project to the user's request.
   </default_files>
 
   <global_code_generation_rules>
