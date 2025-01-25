@@ -81,7 +81,6 @@ export function WebContainerRender({
     // Set the iframe src
     if (iframeRef.current) {
       iframeRef.current.src = url;
-      reloadPreview(iframeRef.current);
     }
 
     // Notify other tabs that this preview is ready
@@ -93,6 +92,12 @@ export function WebContainerRender({
       window.removeEventListener("message", handleIframeError);
     };
   }, [previewId, handleRefresh, notifyPreviewReady, handleIframeError]);
+
+  useEffect(() => {
+    if (iframeRef.current && previewId) {
+      reloadPreview(iframeRef.current);
+    }
+  }, [previewId, iframeRef]);
 
   return (
     <div className={cn("relative size-full", className)}>
