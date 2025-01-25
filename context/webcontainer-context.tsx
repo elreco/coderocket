@@ -67,6 +67,7 @@ export const WebContainerProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
       const newTerminal = new Terminal();
+      newTerminal.clear();
       setTerminal(newTerminal);
       if (!newTerminal) {
         throw new Error("Instance or terminal not found");
