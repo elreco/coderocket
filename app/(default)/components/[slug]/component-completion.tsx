@@ -377,7 +377,7 @@ export default function ComponentCompletion({
     setArtifactCode,
     chatId,
     artifactFiles,
-    selectedFramework: fetchedChat?.framework || undefined,
+    selectedFramework: fetchedChat?.framework || "react",
     previewId,
     setPreviewId,
   };

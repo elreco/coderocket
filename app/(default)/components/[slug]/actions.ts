@@ -113,9 +113,9 @@ export const updateTheme = async (
 
   if (!user) throw new Error("Could not get user");
 
-  const { error: chatError } = await supabase
+  const { data: chat, error: chatError } = await supabase
     .from("chats")
-    .select("id")
+    .select("id, framework")
     .eq("id", chatId)
     .eq("user_id", user.id)
     .single();
@@ -133,7 +133,7 @@ export const updateTheme = async (
   const hasArtifactResult = hasArtifacts(completion);
   if (hasArtifactResult) {
     after(async () => {
-      await takeScreenshot(chatId, version, theme);
+      await takeScreenshot(chatId, version, theme, chat?.framework || "react");
     });
   }
 };

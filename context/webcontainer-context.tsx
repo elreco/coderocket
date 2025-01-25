@@ -9,7 +9,6 @@ import React, {
   ReactNode,
 } from "react";
 
-import { takeScreenshot } from "@/utils/capture-screenshot";
 import { ChatFile } from "@/utils/completion-parser";
 import { buildFileSystemTree, getPreviewId } from "@/utils/webcontainer";
 import { webcontainer as webcontainerPromise } from "@/utils/webcontainer-instance";
@@ -49,14 +48,7 @@ export const WebContainerProvider = ({ children }: { children: ReactNode }) => {
   const [files, setFiles] = useState<ChatFile[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [previewError, setPreviewError] = useState<PreviewError | null>(null);
-  const [isScreenshotting, setIsScreenshotting] = useState(false);
-  const {
-    setPreviewId,
-    selectedFramework,
-    isLoading,
-    chatId,
-    selectedVersion,
-  } = useComponentContext();
+  const { setPreviewId, selectedFramework, isLoading } = useComponentContext();
 
   useEffect(() => {
     setPreviewId(undefined);
@@ -66,7 +58,7 @@ export const WebContainerProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const setupProject = async () => {
       setLoadingState("initializing");
-      if (selectedFramework === "html" || isLoading || !selectedFramework) {
+      if (selectedFramework === "html" || isLoading) {
         return;
       }
       const webcontainer = await webcontainerPromise;
@@ -147,18 +139,13 @@ export const WebContainerProvider = ({ children }: { children: ReactNode }) => {
 
       webcontainer.on("server-ready", async (port, url) => {
         const newPreviewId = getPreviewId(url);
-        if (newPreviewId && !isScreenshotting) {
+        if (newPreviewId) {
           setLoadingState(null);
           setPreviewId(newPreviewId);
-          if (selectedVersion !== undefined) {
-            setIsScreenshotting(true);
-            await takeScreenshot(chatId, selectedVersion, undefined, "react");
-            setIsScreenshotting(false);
-          }
         }
       });
     });
-  }, [selectedVersion, selectedFramework]);
+  }, []);
 
   return (
     <WebContainerContext.Provider

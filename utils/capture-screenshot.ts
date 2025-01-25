@@ -74,7 +74,7 @@ export const takeScreenshot = async (
   chatId: string,
   version: number,
   theme: string = defaultTheme,
-  framework?: string,
+  framework: string,
 ) => {
   const supabase = await createClient();
   console.log("version", version);

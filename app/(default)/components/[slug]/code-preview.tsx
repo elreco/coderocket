@@ -34,7 +34,7 @@ const RenderContent = React.memo(
   }: {
     isLoading: boolean;
     chatFiles: ChatFile[];
-    selectedFramework: string | undefined;
+    selectedFramework: string;
     artifactFiles: ChatFile[];
   }) => {
     if (isLoading && chatFiles.length === 0) {
