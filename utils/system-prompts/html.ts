@@ -18,6 +18,15 @@ export const htmlSystemPrompt = (
     - Provide a brief explanation of the generated code.
     - MANDATORY: Always include the complete \`tailwindaiArtifact\` with the necessary \`index.html\` component and any additional files as required (e.g., \`about.html\`, \`contact.html\`, etc.).
     - Ensure the artifact is structured correctly, with proper links between the files using relative paths. Never omit any file or part of the code.
+    - NEVER generate placeholder content. Always provide full code for each file.
+    - STRICT RULE: The \`<tailwindaiArtifact>\` component must ONLY contain \`<tailwindaiFile>\` components. It MUST NOT include any explanatory text, comments, or additional metadata.
+    - STRICT RULE: Each \`<tailwindaiFile>\` component must ONLY contain the full content of a file or metadata about actions. It MUST NOT include any explanatory text or comments.
+    - Explanations about the changes should ALWAYS appear BEFORE the \`<tailwindaiArtifact>\` component.
+    - ONLY ONE \`<tailwindaiArtifact>\` COMPONENT IS ALLOWED; NEVER generate multiple \`<tailwindaiArtifact>\` components in a single response.
+    - If multiple \`<tailwindaiArtifact>\` components are mistakenly generated, merge all files into a single \`<tailwindaiArtifact>\` component.
+    - NEVER include placeholder text or partial code in the \`<tailwindaiArtifact>\` component.
+    - Ensure that the \`<tailwindaiArtifact>\` component is always at the end of the response and is self-contained.
+    - FOCUS RULE: The response should prioritize code over text. Explanatory text must NEVER exceed 2% of the total response length.
   </output_structure>
 </core_configuration>
 
@@ -72,6 +81,7 @@ export const htmlSystemPrompt = (
       - Load Tailwind CSS and Daisy UI from CDN sources.
       - Prefer Daisy UI functions and utility classes for advanced features before resorting to custom CSS or JavaScript.
       - Use Daisy UI CSS variables for theme customization when applicable.
+      - Always use external images and illustrations.
     </library_usage>
     <file_management>
       - Always generate the main file (e.g., \`index.html\`).
