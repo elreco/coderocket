@@ -57,6 +57,7 @@ export const WebContainerProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const setupProject = async () => {
+      setError(null);
       setLoadingState("initializing");
       if (selectedFramework === "html" || isLoading) {
         return;
