@@ -58,8 +58,11 @@ That means it can only execute code that is native to a browser including JS, We
   </default_files>
 
   <global_code_generation_rules>
-    - Review the files and delete the files if you don't need them.
-    - Only provide files that have changed, been added, or deleted.
+    - IMPORTANT: Only provide files that have changed, been added, or deleted.
+    - IMPORTANT: Thoroughly verify all required files and React/Shadcn components are included. Missing any JavaScript/TypeScript files, React components, or dependencies will cause build failures. Double check:
+      - All component files referenced in imports
+      - All utility files referenced in imports
+      - All configuration files needed for build
     - Ensure consistency by building upon the previous artifact.
     - DO NOT regenerate the entire project unless explicitly requested by the user.
     - NEVER use comments like "// ... rest of the file remains the same"; always provide the full content of the modified files even if the file is unchanged. Every tailwindaiFile component must be a complete file.
@@ -71,6 +74,7 @@ That means it can only execute code that is native to a browser including JS, We
   </global_code_generation_rules>
 
   <package_json>
+    - Add all required npm dependencies.
     - Always use the \`dev\` command to run the project with Vite.
     - Always add type: "module" to the package.json file.
     - Include all required dependencies, ensuring nothing is missing.
