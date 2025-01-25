@@ -77,6 +77,22 @@ export const takeScreenshot = async (
   framework?: string,
 ) => {
   const supabase = await createClient();
+  console.log("version", version);
+  // Si framework n'est pas html, on vérifie d'abord si un screenshot existe déjà
+  if (framework !== "html") {
+    const { data: existingMessage } = await supabase
+      .from("messages")
+      .select("screenshot")
+      .eq("chat_id", chatId)
+      .eq("version", version)
+      .eq("role", "assistant")
+      .single();
+
+    if (existingMessage?.screenshot) {
+      console.log("Screenshot already exists, skipping capture");
+      return;
+    }
+  }
 
   // Sinon, on génère un screenshot.
   // Si `url` n'est pas fourni, on utilise un fallback (ex: votre site)

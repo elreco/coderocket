@@ -170,7 +170,7 @@ export function CodePreviewFileTree() {
           folder={organizedFiles.root}
           path=""
           isLoading={isLoading}
-          selectedVersion={selectedVersion}
+          selectedVersion={selectedVersion ?? 0}
           handleVersionSelect={handleVersionSelect}
         />
       </DropdownMenuContent>

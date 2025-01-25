@@ -150,13 +150,15 @@ export const WebContainerProvider = ({ children }: { children: ReactNode }) => {
         if (newPreviewId && !isScreenshotting) {
           setLoadingState(null);
           setPreviewId(newPreviewId);
-          setIsScreenshotting(true);
-          await takeScreenshot(chatId, selectedVersion, undefined, "react");
-          setIsScreenshotting(false);
+          if (selectedVersion !== undefined) {
+            setIsScreenshotting(true);
+            await takeScreenshot(chatId, selectedVersion, undefined, "react");
+            setIsScreenshotting(false);
+          }
         }
       });
     });
-  }, []);
+  }, [selectedVersion]);
 
   return (
     <WebContainerContext.Provider

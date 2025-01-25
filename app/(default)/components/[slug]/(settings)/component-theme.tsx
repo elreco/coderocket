@@ -35,7 +35,7 @@ export default function ComponentSettings({
     if (isSettingLoading || theme === extractDataTheme(completion)) return;
     setIsSettingLoading(theme);
     const completionWithTheme = setDataTheme(completion, theme);
-    await updateTheme(chatId, theme, selectedVersion, completionWithTheme);
+    await updateTheme(chatId, theme, selectedVersion ?? 0, completionWithTheme);
     if (refreshChatData !== undefined) {
       await refreshChatData();
     }

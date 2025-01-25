@@ -71,7 +71,9 @@ export default function ComponentCompletion({
   const { toast } = useToast();
   const router = useRouter();
   const pathname = usePathname();
-  const [selectedVersion, setSelectedVersion] = useState(0);
+  const [selectedVersion, setSelectedVersion] = useState<number | undefined>(
+    undefined,
+  );
   const [title, setTitle] = useState<string>("");
   const [isCanvas, setCanvas] = useState(true);
   const [isVisible, setVisible] = useState(true);
@@ -377,7 +379,7 @@ export default function ComponentCompletion({
     previewId,
     setPreviewId,
   };
-
+  /*
   useEffect(() => {
     const channel = supabase
       .channel("schema-db-changes")
@@ -390,6 +392,7 @@ export default function ComponentCompletion({
           filter: `chat_id=eq.${chatId}`,
         },
         async (payload) => {
+          console.log(payload);
           if (payload.old?.screenshot !== payload.new.screenshot) {
             setMessages((prevMessages) =>
               prevMessages.map((message) => {
@@ -410,7 +413,7 @@ export default function ComponentCompletion({
     return () => {
       channel.unsubscribe();
     };
-  }, []);
+  }, []); */
 
   return (
     <ComponentContext.Provider value={contextValue}>

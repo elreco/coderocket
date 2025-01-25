@@ -76,10 +76,24 @@ const RenderContent = React.memo(
           file.content === next[index].content,
       );
     };
-    return (
-      areFilesEqual(prevProps.chatFiles, nextProps.chatFiles) &&
-      areFilesEqual(prevProps.artifactFiles, nextProps.artifactFiles)
-    );
+
+    // Compare chatFiles only if framework is html
+    if (
+      nextProps.selectedFramework === "html" &&
+      !areFilesEqual(prevProps.chatFiles, nextProps.chatFiles)
+    ) {
+      return false;
+    }
+
+    // Always compare artifactFiles for react framework
+    if (
+      nextProps.selectedFramework === "react" &&
+      !areFilesEqual(prevProps.artifactFiles, nextProps.artifactFiles)
+    ) {
+      return false;
+    }
+
+    return true;
   },
 );
 

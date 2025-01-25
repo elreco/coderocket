@@ -15,7 +15,7 @@ interface ComponentContextType {
   setCanvas: (value: boolean) => void;
   isLoading: boolean;
   setCompletion: (value: string) => void;
-  selectedVersion: number;
+  selectedVersion: number | undefined;
   chatFiles: Array<{
     name: string | null;
     content: string;

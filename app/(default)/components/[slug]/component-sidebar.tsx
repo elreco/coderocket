@@ -51,6 +51,7 @@ export default function ComponentSidebar({
   }, []);
 
   useEffect(() => {
+    console.log("useEffect messages", messages);
     const timer = setTimeout(() => {
       if (containerRef.current && messages.length > 0) {
         containerRef.current.scrollTop = containerRef.current.scrollHeight;
@@ -70,6 +71,7 @@ export default function ComponentSidebar({
   useEffect(() => {
     if (isLoading && containerRef.current) {
       const scrollToBottom = () => {
+        console.log("Scrolling to bottom 2");
         containerRef.current!.scrollTop = containerRef.current!.scrollHeight;
       };
 
@@ -89,7 +91,8 @@ export default function ComponentSidebar({
     }
   }, [isLoading]);
 
-  const isIterationVisible = selectedVersion !== null && selectedVersion > -1;
+  const isIterationVisible =
+    selectedVersion !== undefined && selectedVersion > -1;
 
   useEffect(() => {
     if (isLoading && completion) {

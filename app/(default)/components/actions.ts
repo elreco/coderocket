@@ -311,7 +311,6 @@ export const getAllHTMLPublicChats = async () => {
   const { data } = await supabase
     .rpc("get_all_components")
     .is("is_private", false)
-    .eq("framework", "html")
     .limit(24);
   return data;
 };
