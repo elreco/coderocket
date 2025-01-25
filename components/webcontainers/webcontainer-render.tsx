@@ -48,7 +48,6 @@ export function WebContainerRender({
   const handleIframeError = useCallback((event: MessageEvent) => {
     console.log("event", event.data);
     if (event.data.type === "error") {
-      setError(event.data.error);
       console.error("Erreur WebContainer:", event.data.error);
     }
   }, []);
