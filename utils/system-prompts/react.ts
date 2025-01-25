@@ -41,6 +41,7 @@ That means it can only execute code that is native to a browser including JS, We
     </typescript_and_aliases>
     <dependencies>
       - Always include required dependencies in package.json, including tailwindcss-animate.
+      - Always include the necessary dependencies for shadcn/ui components (e.g., @radix-ui/react-label).
       - Add a browserslist entry to package.json. Never omit it.
       - Ensure no missing dependencies cause runtime or build errors.
       - Always use the dev command to run the project with Vite.
