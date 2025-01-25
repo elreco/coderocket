@@ -105,13 +105,6 @@ export const WebContainerProvider = ({ children }: { children: ReactNode }) => {
           write(data) {
             if (data) {
               newTerminal.write(data);
-              if (data.includes("ERROR") || data.includes("Error")) {
-                setError(
-                  "Tailwind AI can't execute this code, check the terminal and ask AI to fix it.",
-                );
-              } else {
-                setError(null);
-              }
             }
           },
         }),
