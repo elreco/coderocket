@@ -15,7 +15,7 @@ interface ComponentContextType {
   setCanvas: (value: boolean) => void;
   isLoading: boolean;
   setCompletion: (value: string) => void;
-  selectedVersion: number;
+  selectedVersion: number | undefined;
   chatFiles: Array<{
     name: string | null;
     content: string;
@@ -33,7 +33,7 @@ interface ComponentContextType {
     isFirstRun?: boolean,
     tabName?: string,
   ) => void;
-  refreshChatData: () => Promise<ChatMessage[] | undefined>;
+  refreshChatData?: () => Promise<ChatMessage[] | undefined>;
   isVisible: boolean;
   setVisible: (value: boolean) => void;
   input: string;

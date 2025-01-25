@@ -1,3 +1,5 @@
+"use client";
+
 import { Terminal } from "@xterm/xterm";
 import React, {
   createContext,
@@ -7,6 +9,7 @@ import React, {
   ReactNode,
 } from "react";
 
+import { takeScreenshot } from "@/utils/capture-screenshot";
 import { ChatFile } from "@/utils/completion-parser";
 import { buildFileSystemTree, getPreviewId } from "@/utils/webcontainer";
 import { webcontainer as webcontainerPromise } from "@/utils/webcontainer-instance";
@@ -46,7 +49,14 @@ export const WebContainerProvider = ({ children }: { children: ReactNode }) => {
   const [files, setFiles] = useState<ChatFile[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [previewError, setPreviewError] = useState<PreviewError | null>(null);
-  const { setPreviewId, selectedFramework, isLoading } = useComponentContext();
+  const [isScreenshotting, setIsScreenshotting] = useState(false);
+  const {
+    setPreviewId,
+    selectedFramework,
+    isLoading,
+    chatId,
+    selectedVersion,
+  } = useComponentContext();
 
   useEffect(() => {
     setPreviewId(undefined);
@@ -74,7 +84,6 @@ export const WebContainerProvider = ({ children }: { children: ReactNode }) => {
         new WritableStream({
           write(data) {
             newTerminal.write(data);
-            console.log("data written to terminal:", data);
           },
         }),
       );
@@ -83,7 +92,6 @@ export const WebContainerProvider = ({ children }: { children: ReactNode }) => {
 
       newTerminal.onData((data) => {
         input.write(data);
-        console.log("data sent to shell process:", data);
       });
       const fileSystemTree = buildFileSystemTree(files);
       await webcontainer.mount(fileSystemTree);
@@ -114,36 +122,6 @@ export const WebContainerProvider = ({ children }: { children: ReactNode }) => {
         }),
       );
       await devProcess.exit;
-
-      // webcontainer.on("error", (error) => {
-      //   setError(`WebContainer error: ${error.message}`);
-      //   setLoadingState("error");
-      // });
-
-      // webcontainer.on("preview-message", (message) => {
-      //   console.log("preview-message", message);
-      //   if (
-      //     message.type === "PREVIEW_UNCAUGHT_EXCEPTION" ||
-      //     message.type === "PREVIEW_UNHANDLED_REJECTION"
-      //   ) {
-      //     const isPromise = message.type === "PREVIEW_UNHANDLED_REJECTION";
-      //     setPreviewError({
-      //       title: isPromise
-      //         ? "Unhandled Promise Rejection"
-      //         : "Uncaught Exception",
-      //       description: message.message,
-      //       content: `Error occurred at ${message.pathname}${message.search}${message.hash}`,
-      //     });
-      //   }
-      // });
-
-      // webcontainer.on("server-ready", async (port, url) => {
-      //   const newPreviewId = getPreviewId(url);
-      //   if (newPreviewId) {
-      //     setLoadingState(null);
-      //     setPreviewId(newPreviewId);
-      //   }
-      // });
     };
 
     setupProject();
@@ -169,13 +147,18 @@ export const WebContainerProvider = ({ children }: { children: ReactNode }) => {
 
       webcontainer.on("server-ready", async (port, url) => {
         const newPreviewId = getPreviewId(url);
-        if (newPreviewId) {
+        if (newPreviewId && !isScreenshotting) {
           setLoadingState(null);
           setPreviewId(newPreviewId);
+          if (selectedVersion !== undefined) {
+            setIsScreenshotting(true);
+            await takeScreenshot(chatId, selectedVersion, undefined, "react");
+            setIsScreenshotting(false);
+          }
         }
       });
     });
-  }, []);
+  }, [selectedVersion]);
 
   return (
     <WebContainerContext.Provider

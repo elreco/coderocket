@@ -31,7 +31,7 @@ async function getBrowser() {
   return browser;
 }
 
-export async function captureScreenshot(url: string) {
+export async function captureScreenshot(url: string, framework?: string) {
   // Lance un navigateur headless
   const browser = await getBrowser();
   const page = await browser.newPage();
@@ -50,6 +50,12 @@ export async function captureScreenshot(url: string) {
   await page.goto(url, {
     waitUntil: "networkidle0",
   });
+
+  // Attendre 60 secondes si ce n'est pas le framework HTML
+  if (framework !== "html") {
+    await new Promise((resolve) => setTimeout(resolve, 30000));
+  }
+
   // Prend la capture d'écran au format PNG (renvoie un Buffer)
   const screenshot = await page.screenshot({
     type: "png",
@@ -68,17 +74,34 @@ export const takeScreenshot = async (
   chatId: string,
   version: number,
   theme: string = defaultTheme,
-  previewId?: string,
+  framework?: string,
 ) => {
   const supabase = await createClient();
+  console.log("version", version);
+  // Si framework n'est pas html, on vérifie d'abord si un screenshot existe déjà
+  if (framework !== "html") {
+    const { data: existingMessage } = await supabase
+      .from("messages")
+      .select("screenshot")
+      .eq("chat_id", chatId)
+      .eq("version", version)
+      .eq("role", "assistant")
+      .single();
+
+    if (existingMessage?.screenshot) {
+      console.log("Screenshot already exists, skipping capture");
+      return;
+    }
+  }
 
   // Sinon, on génère un screenshot.
   // Si `url` n'est pas fourni, on utilise un fallback (ex: votre site)
-  const finalUrl = previewId
-    ? `https://www.tailwindai.dev/webcontainer/${previewId}`
-    : `https://www.tailwindai.dev/content/${chatId}`;
+  const finalUrl =
+    framework === "html"
+      ? `https://www.tailwindai.dev/content/${chatId}`
+      : `https://dev-tailwind-ai.vercel.app/webcontainer-preview/${chatId}`;
 
-  const screenshot = await captureScreenshot(finalUrl);
+  const screenshot = await captureScreenshot(finalUrl, framework);
   if (!screenshot) {
     throw new Error("Failed to capture screenshot");
   }

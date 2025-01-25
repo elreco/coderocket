@@ -27,7 +27,7 @@ export function WebContainerTerminal() {
     const setupTerminal = async () => {
       if (isMounted && terminalRef.current && terminal) {
         terminal.open(terminalRef.current);
-        const { FitAddon } = await import("xterm-addon-fit");
+        const { FitAddon } = await import("@xterm/addon-fit");
         const fitAddon = new FitAddon();
         terminal.loadAddon(fitAddon);
         window.addEventListener("resize", () => {

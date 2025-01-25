@@ -101,7 +101,8 @@ export default function ComponentChatFiles({
     try {
       setIsDeleting(true);
       await deleteVersionByMessageId(messageId);
-      const refreshedChatMessages = await refreshChatData();
+      const refreshedChatMessages =
+        refreshChatData !== undefined ? await refreshChatData() : [];
       if (refreshedChatMessages) {
         const refreshedLastAssistantMessage = refreshedChatMessages.reduce(
           (prev, current) => (prev.version > current.version ? prev : current),
