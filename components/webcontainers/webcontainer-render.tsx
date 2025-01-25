@@ -1,5 +1,6 @@
 "use client";
 
+import { reloadPreview } from "@webcontainer/api";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { cn } from "@/lib/utils";
@@ -80,6 +81,7 @@ export function WebContainerRender({
     // Set the iframe src
     if (iframeRef.current) {
       iframeRef.current.src = url;
+      reloadPreview(iframeRef.current);
     }
 
     // Notify other tabs that this preview is ready

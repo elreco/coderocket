@@ -109,6 +109,8 @@ export const WebContainerProvider = ({ children }: { children: ReactNode }) => {
                 setError(
                   "Tailwind AI can't execute this code, check the terminal and ask AI to fix it.",
                 );
+              } else {
+                setError(null);
               }
             }
           },
