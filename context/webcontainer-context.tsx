@@ -66,7 +66,7 @@ export const WebContainerProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const setupProject = async () => {
       setLoadingState("initializing");
-      if (selectedFramework === "html" || isLoading) {
+      if (selectedFramework === "html" || isLoading || !selectedFramework) {
         return;
       }
       const webcontainer = await webcontainerPromise;
@@ -158,7 +158,7 @@ export const WebContainerProvider = ({ children }: { children: ReactNode }) => {
         }
       });
     });
-  }, [selectedVersion]);
+  }, [selectedVersion, selectedFramework]);
 
   return (
     <WebContainerContext.Provider

@@ -44,7 +44,7 @@ interface ComponentContextType {
   setPreviewId: (value: string | undefined) => void;
   artifactFiles: ChatFile[];
   chatId: string;
-  selectedFramework: string;
+  selectedFramework: string | undefined;
 }
 
 export const ComponentContext = createContext<ComponentContextType | undefined>(

@@ -99,7 +99,7 @@ export const takeScreenshot = async (
   const finalUrl =
     framework === "html"
       ? `https://www.tailwindai.dev/content/${chatId}`
-      : `https://dev-tailwind-ai.vercel.app/webcontainer-preview/${chatId}`;
+      : `https://www.tailwindai.dev/webcontainer-preview/${chatId}`;
 
   const screenshot = await captureScreenshot(finalUrl, framework);
   if (!screenshot) {

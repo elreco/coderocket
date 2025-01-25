@@ -44,7 +44,7 @@ export function WebContainerTerminal() {
     setIsVisible(!isVisible);
   };
   const FrameworkIcon =
-    selectedFramework.toLowerCase() === "react" ? SiReact : SiHtml5;
+    selectedFramework?.toLowerCase() === "react" ? SiReact : SiHtml5;
   return (
     <div className="flex w-full flex-col items-center justify-center">
       <Collapsible open={isVisible} className="max-h-[200px] w-full">
