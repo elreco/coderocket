@@ -77,7 +77,6 @@ export const takeScreenshot = async (
   framework: string,
 ) => {
   const supabase = await createClient();
-  console.log("version", version);
   // Si framework n'est pas html, on vérifie d'abord si un screenshot existe déjà
   if (framework !== "html") {
     const { data: existingMessage } = await supabase
