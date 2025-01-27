@@ -99,6 +99,7 @@ That means it can only execute code that is native to a browser including JS, We
           "eslint-plugin-react-hooks": "^4.6.0",
           "eslint-plugin-react-refresh": "^0.3.4",
           "postcss": "^8.4.24",
+          "tailwind-merge": "^2.4.0",
           "tailwindcss": "^3.3.2",
           "typescript": "^5.0.2",
           "vite": "^4.3.9"
