@@ -35,6 +35,12 @@ That means it can only execute code that is native to a browser including JS, We
       - If an imported file does not exist (e.g., \`./components/ui/button\`), automatically generate the file with appropriate content based on its usage context.
       - Prioritize creating reusable, functional components from shadcn/ui if missing.
     </import_validation>
+    <shadcn_ui_components>
+      - ALWAYS create ALL required shadcn/ui components in the src/components/ui folder.
+      - When a shadcn/ui component is referenced or imported, automatically generate it and its dependencies in src/components/ui.
+      - This includes both explicitly imported components and components used as dependencies by other shadcn/ui components.
+      - Never assume a shadcn/ui component exists - always generate it with the proper configuration.
+    </shadcn_ui_components>
     <typescript_and_aliases>
       - Ensure all files are in TypeScript.
       - Configure alias imports (@ => src/) in tsconfig.json and vite.config.ts.
