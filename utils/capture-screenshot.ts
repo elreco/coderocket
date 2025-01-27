@@ -98,7 +98,7 @@ export const takeScreenshot = async (
   const finalUrl =
     framework === "html"
       ? `https://www.tailwindai.dev/content/${chatId}`
-      : `https://www.tailwindai.dev/webcontainer-preview/${chatId}`;
+      : `https://www.tailwindai.dev/webcontainer/${chatId}-${version}/index.html`;
 
   const screenshot = await captureScreenshot(finalUrl, framework);
   if (!screenshot) {

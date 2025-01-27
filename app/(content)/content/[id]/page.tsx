@@ -4,7 +4,7 @@ import {
 } from "@/app/(default)/components/actions";
 import RenderHtmlComponentServer from "@/components/renders/render-html-component-server";
 import RenderReactComponent from "@/components/renders/render-react-component";
-import { WebContainerProvider } from "@/context/webcontainer-context";
+import { WebcontainerProvider } from "@/context/webcontainer-context";
 import {
   extractFilesFromArtifact,
   extractFilesFromCompletion,
@@ -32,8 +32,8 @@ export default async function Content({
       style={{ width: "100%", height: "100%", border: "none" }}
     />
   ) : (
-    <WebContainerProvider>
+    <WebcontainerProvider>
       <RenderReactComponent files={artifactFiles} />
-    </WebContainerProvider>
+    </WebcontainerProvider>
   );
 }

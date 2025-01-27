@@ -40,8 +40,8 @@ interface ComponentContextType {
   setInput: (value: string) => void;
   artifactCode: string;
   setArtifactCode: (value: string) => void;
-  previewId: string | undefined;
-  setPreviewId: (value: string | undefined) => void;
+  isWebcontainerReady: boolean;
+  setWebcontainerReady: (value: boolean) => void;
   artifactFiles: ChatFile[];
   chatId: string;
   selectedFramework: string;

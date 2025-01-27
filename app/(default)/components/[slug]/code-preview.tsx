@@ -15,7 +15,7 @@ import { useCopyToClipboard } from "usehooks-ts";
 import RenderHtmlComponent from "@/components/renders/render-html-component";
 import RenderReactComponent from "@/components/renders/render-react-component";
 import { Button } from "@/components/ui/button";
-import { WebContainerTerminal } from "@/components/webcontainers/webcontainer-terminal";
+// import { WebContainerTerminal } from "@/components/webcontainers/webcontainer-terminal";
 import { useComponentContext } from "@/context/component-context";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -52,7 +52,7 @@ const RenderContent = React.memo(
       return (
         <>
           <RenderReactComponent files={artifactFiles} />
-          <WebContainerTerminal />
+          {/* <WebContainerTerminal /> */}
         </>
       );
     }

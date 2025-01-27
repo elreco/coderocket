@@ -1,6 +1,5 @@
 "use client";
 
-import { Terminal } from "@xterm/xterm";
 import React, {
   createContext,
   useContext,
@@ -10,164 +9,206 @@ import React, {
 } from "react";
 
 import { ChatFile } from "@/utils/completion-parser";
-import { buildFileSystemTree, getPreviewId } from "@/utils/webcontainer";
-import { webcontainer as webcontainerPromise } from "@/utils/webcontainer-instance";
 
 import { useComponentContext } from "./component-context";
 
-type PreviewError = {
+type BuildError = {
   title: string;
   description: string;
   content: string;
 };
 
-interface WebContainerContextType {
-  terminal: Terminal | null;
+interface WebcontainerContextType {
   files: ChatFile[];
   setFiles: (files: ChatFile[]) => void;
   error: string | null;
-  loadingState: WebContainerLoadingState;
-  setLoadingState: (state: WebContainerLoadingState) => void;
-  previewError: PreviewError | null;
+  loadingState: WebcontainerLoadingState;
+  setLoadingState: (state: WebcontainerLoadingState) => void;
+  buildError: BuildError | null;
+  progressMessages: string[];
 }
 
-const WebContainerContext = createContext<WebContainerContextType | undefined>(
+const WebcontainerContext = createContext<WebcontainerContextType | undefined>(
   undefined,
 );
 
-export type WebContainerLoadingState =
+export type WebcontainerLoadingState =
   | "initializing"
-  | "starting"
+  | "deploying"
   | "error"
   | null;
 
-export const WebContainerProvider = ({ children }: { children: ReactNode }) => {
+export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
   const [loadingState, setLoadingState] =
-    useState<WebContainerLoadingState>(null);
-  const [terminal, setTerminal] = useState<Terminal | null>(null);
+    useState<WebcontainerLoadingState>(null);
   const [files, setFiles] = useState<ChatFile[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [previewError, setPreviewError] = useState<PreviewError | null>(null);
-  const { setPreviewId, selectedFramework, isLoading } = useComponentContext();
+  const [buildError, setBuildError] = useState<BuildError | null>(null);
+  const [progressMessages, setProgressMessages] = useState<string[]>([]);
+  const {
+    setWebcontainerReady,
+    selectedFramework,
+    selectedVersion,
+    chatId,
+    isLoading,
+  } = useComponentContext();
 
   useEffect(() => {
-    setPreviewId(undefined);
+    setWebcontainerReady(false);
     setError(null);
+    setProgressMessages([]); // Reset messages on component mount
   }, []);
 
   useEffect(() => {
-    const setupProject = async () => {
+    const deployToWebcontainer = async () => {
       setError(null);
       setLoadingState("initializing");
-      if (selectedFramework === "html" || isLoading) {
+
+      if (
+        selectedFramework === "html" ||
+        isLoading ||
+        files.length === 0 ||
+        selectedVersion === undefined
+      ) {
         return;
       }
-      const webcontainer = await webcontainerPromise;
-      if (files.length === 0 || !webcontainer) {
-        return;
-      }
-      const newTerminal = new Terminal();
-      newTerminal.clear();
-      setTerminal(newTerminal);
-      if (!newTerminal) {
-        throw new Error("Instance or terminal not found");
-      }
-      const shellProcess = await webcontainer.spawn("jsh");
 
-      shellProcess.output.pipeTo(
-        new WritableStream({
-          write(data) {
-            newTerminal.write(data);
+      try {
+        setLoadingState("initializing");
+        setProgressMessages([]); // Reset progress messages
+
+        // Step 1: Make a POST request to the deployment API
+        const response = await fetch("/api/webcontainers", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
           },
-        }),
-      );
+          body: JSON.stringify({
+            chatId,
+            version: selectedVersion,
+            files,
+          }),
+        });
 
-      const input = shellProcess.input.getWriter();
+        if (!response.ok) {
+          throw new Error("Failed to start deployment");
+        }
 
-      newTerminal.onData((data) => {
-        input.write(data);
-      });
-      const fileSystemTree = buildFileSystemTree(files);
-      await webcontainer.mount(fileSystemTree);
+        // Step 2: Listen for Server-Sent Events (SSE) from the API
+        const eventSource = new EventSource("/api/webcontainers");
 
-      const installProcess = await webcontainer.spawn("npm", ["install"]);
-      installProcess.output.pipeTo(
-        new WritableStream({
-          write(data) {
-            newTerminal.write(data);
-          },
-        }),
-      );
-      await installProcess.exit;
-      const devProcess = await webcontainer.spawn("npm", ["run", "dev"]);
-      setLoadingState("starting");
-      devProcess.output.pipeTo(
-        new WritableStream({
-          write(data) {
-            if (data) {
-              newTerminal.write(data);
+        eventSource.onmessage = (event) => {
+          // Append new progress messages
+          setProgressMessages((prev) => [...prev, event.data]);
+          eventSource.onmessage = (event) => {
+            if (!event.data) return;
+
+            try {
+              const payload = JSON.parse(event.data);
+              // Vérifie les différents types d'événements
+              switch (payload.event) {
+                case "error":
+                  // => C'est un message d'erreur
+                  setBuildError({
+                    title: "Deployment error",
+                    description: payload.details,
+                    content: payload.message,
+                  });
+                  setLoadingState("error");
+
+                  // Fermer explicitement la connexion SSE pour éviter le déclenchement par défaut de onerror
+                  eventSource.close();
+                  break;
+
+                case "end":
+                  // => Déploiement terminé avec succès
+                  setProgressMessages(() => [payload.details]);
+                  setWebcontainerReady(true);
+                  setLoadingState(null);
+                  eventSource.close();
+                  break;
+
+                default:
+                  if (payload.details !== "all-files-deployed") {
+                    // => C'est probablement un message "normal" de progression
+                    setProgressMessages(() => [payload.details]);
+                  } else {
+                    setWebcontainerReady(true);
+                    setLoadingState(null);
+                  }
+                  break;
+              }
+            } catch {
+              // Si la donnée reçue n'est pas du JSON, on la logge simplement
+              setProgressMessages((prev) => [...prev, event.data]);
             }
-          },
-        }),
-      );
-      await devProcess.exit;
+          };
+
+          eventSource.onerror = () => {
+            // Parfois appelé lorsque le flux se ferme côté serveur, même sans « vraie » erreur
+            // Mais si tu as géré le flux avec `event: "error"` et `event: "end"`, tu peux décider d'y mettre un fallback
+            setWebcontainerReady(true);
+            setLoadingState(null);
+            // Mécanique de fallback, si jamais rien n'a été envoyé côté serveur
+            // ...
+            eventSource.close();
+          };
+        };
+
+        eventSource.onerror = (error) => {
+          console.error("Error in eventSource:", error);
+
+          if (eventSource.readyState === EventSource.CLOSED) {
+            console.log("Connection closed by server.");
+            eventSource.close();
+            return;
+          }
+
+          setError("An error occurred while deploying.");
+          setLoadingState("error");
+          eventSource.close();
+        };
+
+        eventSource.addEventListener("close", () => {
+          setWebcontainerReady(true);
+          setLoadingState(null); // Deployment complete
+          eventSource.close();
+        });
+      } catch (e: unknown) {
+        setBuildError({
+          title: "Deployment error",
+          description: "An error occurred during deployment.",
+          content: (e as Error).message,
+        });
+        setLoadingState("error");
+      }
     };
 
-    setupProject();
+    deployToWebcontainer();
   }, [files, isLoading]);
 
-  useEffect(() => {
-    if (selectedFramework !== "html") {
-      webcontainerPromise.then((webcontainer) => {
-        webcontainer.on("preview-message", (message) => {
-          if (
-            message.type === "PREVIEW_UNCAUGHT_EXCEPTION" ||
-            message.type === "PREVIEW_UNHANDLED_REJECTION"
-          ) {
-            const isPromise = message.type === "PREVIEW_UNHANDLED_REJECTION";
-            setPreviewError({
-              title: isPromise
-                ? "Unhandled Promise Rejection"
-                : "Uncaught Exception",
-              description: message.message,
-              content: `Error occurred at ${message.pathname}${message.search}${message.hash}`,
-            });
-          }
-        });
-
-        webcontainer.on("server-ready", async (port, url) => {
-          const newPreviewId = getPreviewId(url);
-          if (newPreviewId) {
-            setLoadingState(null);
-            setPreviewId(newPreviewId);
-          }
-        });
-      });
-    }
-  }, []);
-
   return (
-    <WebContainerContext.Provider
+    <WebcontainerContext.Provider
       value={{
-        terminal,
         files,
         setFiles,
         error,
         loadingState,
         setLoadingState,
-        previewError,
+        buildError,
+        progressMessages,
       }}
     >
       {children}
-    </WebContainerContext.Provider>
+    </WebcontainerContext.Provider>
   );
 };
 
-export const useWebContainer = (): WebContainerContextType => {
-  const context = useContext(WebContainerContext);
+export const useWebcontainer = (): WebcontainerContextType => {
+  const context = useContext(WebcontainerContext);
   if (!context) {
     throw new Error(
-      "useWebContainer must be used within a WebContainerProvider",
+      "useWebcontainer must be used within a WebcontainerProvider",
     );
   }
   return context;

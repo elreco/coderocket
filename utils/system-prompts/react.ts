@@ -34,6 +34,7 @@ That means it can only execute code that is native to a browser including JS, We
       - Verify that all component files and dependencies referenced in imports exist in the artifact or the project.
       - If an imported file does not exist (e.g., \`./components/ui/button\`), automatically generate the file with appropriate content based on its usage context.
       - Prioritize creating reusable, functional components from shadcn/ui if missing.
+      - Always use relative paths for public imports like logos or images.
     </import_validation>
     <shadcn_ui_components>
       - ALWAYS create ALL required shadcn/ui components in the src/components/ui folder.
@@ -117,6 +118,9 @@ That means it can only execute code that is native to a browser including JS, We
       \` \` \`
 
     - For the **first generation**, modify the \`App.tsx\` file to adapt the project to the user's request.
+    - Always keep the base: "./" option in vite.config.ts. Don't modify this file unless you have a good reason.
+    - Always keep the alias: { "@": path.resolve(__dirname, "./src") } option in vite.config.ts. Don't modify this file unless you have a good reason.
+    - In general, don't modify the config files unless you have a good reason.
   </default_files>
 
   <component_generation>
