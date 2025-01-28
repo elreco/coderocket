@@ -4,9 +4,6 @@ import { Loader2, AlertCircle } from "lucide-react";
 import React, { useEffect } from "react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 import { useComponentContext } from "@/context/component-context";
 import {
   WebcontainerLoadingState,
@@ -35,25 +32,15 @@ function LoadingStateComponent({ state }: { state: WebcontainerLoadingState }) {
 
 function ProgressMessagesComponent({ messages }: { messages: string[] }) {
   return (
-    <Card className="mx-auto mt-8 w-full max-w-xl shadow-md">
-      <CardHeader>
-        <CardTitle className="text-center text-primary">
-          Deployment Progress
-        </CardTitle>
-      </CardHeader>
-      <Separator />
-      <CardContent>
-        <ScrollArea className="h-48 w-full p-10">
-          <ul className="space-y-2">
-            {messages.map((message, index) => (
-              <li key={index} className="text-sm text-muted-foreground">
-                {message}
-              </li>
-            ))}
-          </ul>
-        </ScrollArea>
-      </CardContent>
-    </Card>
+    <div className="mx-auto mt-4 w-full max-w-xl text-center">
+      <ul className="space-y-1">
+        {messages.map((message, index) => (
+          <li key={index} className="text-sm text-muted-foreground">
+            {message}
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
@@ -101,7 +88,7 @@ export default function RenderReactComponent({ files }: { files: ChatFile[] }) {
         </div>
       )}
 
-      {loadingState && !error && (
+      {loadingState && !error && !buildError && (
         <div className="flex flex-col items-center">
           <LoadingStateComponent state={loadingState} />
           {progressMessages.length > 0 && (

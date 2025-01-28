@@ -1,5 +1,8 @@
 export const maxDuration = 300;
 import { spawn } from "child_process";
+import fs from "fs/promises";
+import os from "os";
+import path from "path";
 
 import { head, put } from "@vercel/blob";
 import mime from "mime-types";
@@ -20,7 +23,7 @@ let progressStream: ReadableStream<Uint8Array> | null = null;
 export async function POST(request: Request) {
   const { chatId, version, files }: DeployFilesPayload = await request.json();
 
-  const tempDir = `/tmp/${chatId}-${version}`;
+  const tempDir = path.join(os.tmpdir(), `${chatId}-${version}`);
 
   const storagePath = `${chatId}-${version}`;
   const encoder = new TextEncoder();
@@ -152,10 +155,13 @@ async function prepareEnvironment(
   tempDir: string,
   sendProgress: (message: string, progress?: number) => void,
 ) {
-  const fs = await import("fs/promises");
-  const path = await import("path");
+  try {
+    await fs.mkdir(tempDir, { recursive: true });
+  } catch (error) {
+    console.error("Failed to create temporary directory:", error);
+    throw error;
+  }
 
-  await fs.mkdir(tempDir, { recursive: true });
   const totalFiles = files.length;
   let filesProcessed = 0;
 
@@ -175,9 +181,14 @@ async function prepareEnvironment(
   sendProgress("Installing dependencies...", 30);
 
   // Run `npm install` in the temporary directory
-  await runCommandWithStreaming("npm", ["install"], tempDir, (message) => {
-    sendProgress(`npm install: ${message.trim()}`, 30);
-  });
+  await runCommandWithStreaming(
+    "npm",
+    ["install", "--cache", "/tmp/.npm", "--loglevel", "verbose"],
+    tempDir,
+    (message) => {
+      sendProgress(`npm install: ${message.trim()}`, 30);
+    },
+  );
 
   sendProgress("Dependencies installed successfully.", 40);
 }
@@ -195,6 +206,11 @@ async function compileReactApp(
       ["vite", "build"],
       tempDir,
       (message) => sendProgress(`Vite: ${message.trim()}`, 50),
+      {
+        HOME: "/tmp",
+        NPM_CONFIG_CACHE: "/tmp/.npm",
+        NPM_CONFIG_LOGLEVEL: "verbose",
+      },
     );
   } catch (error) {
     sendProgress("Vite build failed.", 40);
@@ -262,18 +278,26 @@ async function runCommandWithStreaming(
   args: string[],
   cwd: string,
   onMessage: (message: string) => void,
+  customEnv?: Record<string, string>,
 ) {
   return new Promise<void>((resolve, reject) => {
-    const process = spawn(command, args, { cwd, shell: true });
+    const child = spawn(command, args, {
+      cwd,
+      shell: true,
+      env: {
+        ...process.env,
+        ...customEnv, // merges your custom environment variables
+      },
+    });
 
-    process.stdout.on("data", (data) => onMessage(data.toString()));
-    process.stderr.on("data", (data) => onMessage(data.toString()));
+    child.stdout.on("data", (data) => onMessage(data.toString()));
+    child.stderr.on("data", (data) => onMessage(data.toString()));
 
-    process.on("close", (code) => {
+    child.on("close", (code) => {
       if (code === 0) resolve();
       else reject(new Error(`Command "${command}" failed with code ${code}`));
     });
 
-    process.on("error", (error) => reject(error));
+    child.on("error", (error) => reject(error));
   });
 }
