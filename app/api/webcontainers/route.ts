@@ -273,26 +273,18 @@ async function runCommandWithStreaming(
   args: string[],
   cwd: string,
   onMessage: (message: string) => void,
-  customEnv?: Record<string, string>,
 ) {
   return new Promise<void>((resolve, reject) => {
-    const child = spawn(command, args, {
-      cwd,
-      shell: true,
-      env: {
-        ...process.env,
-        ...customEnv, // merges your custom environment variables
-      },
-    });
+    const process = spawn(command, args, { cwd, shell: true });
 
-    child.stdout.on("data", (data) => onMessage(data.toString()));
-    child.stderr.on("data", (data) => onMessage(data.toString()));
+    process.stdout.on("data", (data) => onMessage(data.toString()));
+    process.stderr.on("data", (data) => onMessage(data.toString()));
 
-    child.on("close", (code) => {
+    process.on("close", (code) => {
       if (code === 0) resolve();
       else reject(new Error(`Command "${command}" failed with code ${code}`));
     });
 
-    child.on("error", (error) => reject(error));
+    process.on("error", (error) => reject(error));
   });
 }
