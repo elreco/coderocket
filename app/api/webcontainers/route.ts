@@ -202,15 +202,10 @@ async function compileReactApp(
 
   try {
     await runCommandWithStreaming(
-      "npx",
-      ["vite", "build"],
+      "npm",
+      ["run", "build", "--cache", "/tmp/.npm", "--loglevel", "verbose"],
       tempDir,
-      (message) => sendProgress(`Vite: ${message.trim()}`, 50),
-      {
-        HOME: "/tmp",
-        NPM_CONFIG_CACHE: "/tmp/.npm",
-        NPM_CONFIG_LOGLEVEL: "verbose",
-      },
+      (message) => sendProgress(`Build: ${message.trim()}`, 50),
     );
   } catch (error) {
     sendProgress("Vite build failed.", 40);
