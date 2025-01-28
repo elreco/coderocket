@@ -183,7 +183,7 @@ async function prepareEnvironment(
   // Run `npm install` in the temporary directory
   await runCommandWithStreaming(
     "npm",
-    ["install", "--cache", "/tmp/.npm", "--loglevel", "verbose"],
+    ["install", "--include=dev", "--cache", "/tmp/.npm"],
     tempDir,
     (message) => {
       sendProgress(`npm install: ${message.trim()}`, 30);
@@ -200,16 +200,33 @@ async function compileReactApp(
 ) {
   sendProgress("Starting Vite build process...", 40);
 
+  let buildError = "";
+
   try {
     await runCommandWithStreaming(
       "npm",
-      ["run", "build", "--cache", "/tmp/.npm", "--loglevel", "verbose"],
+      ["run", "build", "--cache", "/tmp/.npm"],
       tempDir,
-      (message) => sendProgress(`Build: ${message.trim()}`, 50),
+      (message, isError) => {
+        if (isError) {
+          buildError += "\n" + message;
+          sendProgress(`🔴 Build Error: ${message.trim()}`, 40);
+        } else {
+          if (message.includes("Error") || message.includes("error")) {
+            buildError += "\n" + message;
+            sendProgress(`🔴 Build Error: ${message.trim()}`, 40);
+          } else {
+            sendProgress(`Build: ${message.trim()}`, 50);
+          }
+        }
+      },
     );
   } catch (error) {
-    sendProgress("Vite build failed.", 40);
-    throw error;
+    console.error("Build error:", error);
+  }
+
+  if (buildError) {
+    throw new Error(buildError);
   }
 
   sendProgress("Vite build completed successfully.", 70);
@@ -272,19 +289,28 @@ async function runCommandWithStreaming(
   command: string,
   args: string[],
   cwd: string,
-  onMessage: (message: string) => void,
+  onMessage: (message: string, isError?: boolean) => void,
 ) {
   return new Promise<void>((resolve, reject) => {
     const process = spawn(command, args, { cwd, shell: true });
 
-    process.stdout.on("data", (data) => onMessage(data.toString()));
-    process.stderr.on("data", (data) => onMessage(data.toString()));
+    process.stdout.on("data", (data) => onMessage(data.toString(), false));
+    process.stderr.on("data", (data) => onMessage(data.toString(), true));
 
     process.on("close", (code) => {
-      if (code === 0) resolve();
-      else reject(new Error(`Command "${command}" failed with code ${code}`));
+      if (code === 0) {
+        resolve();
+      } else {
+        const errorMessage = `La commande "${command} ${args.join(" ")}" a échoué avec le code ${code}`;
+        onMessage(errorMessage, true);
+        reject(new Error(errorMessage));
+      }
     });
 
-    process.on("error", (error) => reject(error));
+    process.on("error", (error) => {
+      const errorMessage = `Erreur d'exécution: ${error.message}`;
+      onMessage(errorMessage, true);
+      reject(error);
+    });
   });
 }
