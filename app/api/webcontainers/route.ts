@@ -20,7 +20,7 @@ let progressStream: ReadableStream<Uint8Array> | null = null;
 export async function POST(request: Request) {
   const { chatId, version, files }: DeployFilesPayload = await request.json();
 
-  const tempDir = `${process.cwd()}/${chatId}-${version}`;
+  const tempDir = `/tmp/${chatId}-${version}`;
 
   const storagePath = `${chatId}-${version}`;
   const encoder = new TextEncoder();
