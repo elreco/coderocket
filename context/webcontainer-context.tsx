@@ -52,6 +52,7 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
     chatId,
     isLoading,
   } = useComponentContext();
+  const [isDeploying, setIsDeploying] = useState(false);
 
   useEffect(() => {
     setWebcontainerReady(false);
@@ -61,6 +62,11 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const deployToWebcontainer = async () => {
+      if (isDeploying) {
+        console.log("Deployment already in progress, skipping...");
+        return;
+      }
+
       setError(null);
       setLoadingState("initializing");
       if (
@@ -73,8 +79,9 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
       }
 
       try {
+        setIsDeploying(true);
         setLoadingState("initializing");
-        setProgressMessages([]); // Reset progress messages
+        setProgressMessages([]);
 
         // Step 1: Make a POST request to the deployment API
         const response = await fetch("/api/webcontainers", {
@@ -183,6 +190,8 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
           content: (e as Error).message,
         });
         setLoadingState("error");
+      } finally {
+        setIsDeploying(false);
       }
     };
 
