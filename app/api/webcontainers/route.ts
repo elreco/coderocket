@@ -155,11 +155,29 @@ async function prepareEnvironment(
   tempDir: string,
   sendProgress: (message: string, progress?: number) => void,
 ) {
+  let sanitizedTempDir: string;
+
   try {
-    await fs.mkdir(tempDir, { recursive: true });
+    // Vérifier si le chemin est valide
+    if (!tempDir || typeof tempDir !== "string") {
+      throw new Error("Invalid temporary directory path");
+    }
+
+    // Nettoyer le chemin pour éviter les caractères problématiques
+    sanitizedTempDir = path.resolve(tempDir);
+
+    // Créer le répertoire avec des permissions explicites
+    await fs.mkdir(sanitizedTempDir, {
+      recursive: true,
+      mode: 0o755, // Ajouter des permissions explicites
+    });
+
+    sendProgress(`Created temporary directory: ${sanitizedTempDir}`, 20);
   } catch (error) {
     console.error("Failed to create temporary directory:", error);
-    throw error;
+    throw new Error(
+      `Failed to create temporary directory: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
   }
 
   const totalFiles = files.length;
@@ -167,7 +185,7 @@ async function prepareEnvironment(
 
   for (const file of files) {
     if (file.name && file.content) {
-      const filePath = path.join(tempDir, file.name);
+      const filePath = path.join(sanitizedTempDir, file.name);
       const dir = path.dirname(filePath);
       await fs.mkdir(dir, { recursive: true });
       await fs.writeFile(filePath, file.content, "utf-8");
@@ -183,8 +201,8 @@ async function prepareEnvironment(
   // Run `npm install` in the temporary directory
   await runCommandWithStreaming(
     "npm",
-    ["install", "--include=dev", "--cache", "/tmp/.npm"],
-    tempDir,
+    ["install", "--include=dev", "--cache", "/tmp/.npm", "--verbose"],
+    sanitizedTempDir,
     (message) => {
       sendProgress(`npm install: ${message.trim()}`, 30);
     },

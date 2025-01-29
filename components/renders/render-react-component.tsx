@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2, AlertCircle } from "lucide-react";
+import { Loader2, AlertCircle, WandSparkles } from "lucide-react";
 import React, { useEffect } from "react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -93,11 +93,12 @@ export default function RenderReactComponent({ files }: { files: ChatFile[] }) {
             {authorized && (
               <Button
                 variant="outline"
-                className="w-full"
+                className="mt-2 w-full"
                 onClick={() =>
                   setInput("Fix the following error: " + buildError.content)
                 }
               >
+                <WandSparkles className="size-4" />
                 Ask Tailwind AI to fix it
               </Button>
             )}
