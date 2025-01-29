@@ -200,7 +200,8 @@ async function compileReactApp(
 ) {
   sendProgress("Starting Vite build process...", 40);
 
-  let buildError = "";
+  const buildErrors: string[] = [];
+  let currentError = "";
 
   try {
     await runCommandWithStreaming(
@@ -208,25 +209,61 @@ async function compileReactApp(
       ["run", "build", "--cache", "/tmp/.npm"],
       tempDir,
       (message, isError) => {
-        if (isError) {
-          buildError += "\n" + message;
-          sendProgress(`🔴 Build Error: ${message.trim()}`, 40);
+        if (isError || message.includes("error")) {
+          // Filtrer les erreurs pertinentes
+          const line = message.trim();
+
+          // Ignorer les lignes non pertinentes
+          if (
+            line.startsWith("node_modules/") ||
+            line.includes("@ module") ||
+            line.includes("npm ERR!") ||
+            line === ""
+          ) {
+            return;
+          }
+
+          // Nouvelle erreur commence par "error" ou "Error"
+          if (line.match(/^error|^Error/i)) {
+            if (currentError) {
+              buildErrors.push(currentError);
+            }
+            currentError = line;
+          }
+          // Ligne de détail d'erreur (position du fichier, suggestion, etc.)
+          else if (currentError && !line.includes("warning")) {
+            currentError += "\n" + line;
+          }
+
+          sendProgress(`🔴 ${line}`, 40);
         } else {
-          if (message.includes("Error") || message.includes("error")) {
-            buildError += "\n" + message;
-            sendProgress(`🔴 Build Error: ${message.trim()}`, 40);
-          } else {
+          // Pour les messages normaux, n'afficher que les étapes importantes
+          if (message.includes("building") || message.includes("completed")) {
             sendProgress(`Build: ${message.trim()}`, 50);
           }
         }
       },
     );
+
+    // Ajouter la dernière erreur si elle existe
+    if (currentError) {
+      buildErrors.push(currentError);
+    }
   } catch (error) {
     console.error("Build error:", error);
   }
 
-  if (buildError) {
-    throw new Error(buildError);
+  if (buildErrors.length > 0) {
+    // Formater le message d'erreur final
+    const errorSummary =
+      buildErrors
+        .slice(0, 3) // Limiter à 3 erreurs maximum
+        .join("\n\n") +
+      (buildErrors.length > 3
+        ? `\n\n... et ${buildErrors.length - 3} autres erreurs`
+        : "");
+
+    throw new Error(errorSummary);
   }
 
   sendProgress("Vite build completed successfully.", 70);
