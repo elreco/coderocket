@@ -484,7 +484,7 @@ export default function ComponentCompletion({
                               size="sm"
                               onClick={() =>
                                 window.open(
-                                  `/webcontainer/${chatId}-${selectedVersion}/index.html`,
+                                  `https://${chatId}-${selectedVersion}.dev.tailwindai.dev`,
                                   "_blank",
                                 )
                               }
@@ -509,7 +509,7 @@ export default function ComponentCompletion({
                           {fetchedChat.framework === "react" &&
                           isWebcontainerReady ? (
                             <iframe
-                              src={`/webcontainer/${chatId}-${selectedVersion}/index.html`}
+                              src={`https://${chatId}-${selectedVersion}.dev.tailwindai.dev`}
                               className="size-full"
                             />
                           ) : (

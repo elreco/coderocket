@@ -27,5 +27,11 @@
         }
       ]
     }
+  ],
+  "rewrites": [
+    {
+      "source": "/:prefix.tailwindai.dev/:slug*",
+      "destination": "/webcontainer/:prefix/:slug*"
+    }
   ]
 }

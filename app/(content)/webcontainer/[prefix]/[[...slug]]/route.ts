@@ -11,7 +11,28 @@ export async function GET(
   request: NextRequest,
   context: { params: Promise<{ prefix: string; slug?: string[] }> },
 ) {
-  const { prefix, slug = [] } = await context.params;
+  // Récupérer le hostname de la requête
+  const hostname = request.headers.get("host");
+  const pathname = new URL(request.url).pathname;
+
+  let prefix: string;
+  let slug: string[] = [];
+
+  if (hostname?.includes("tailwindai.dev")) {
+    // Format: prefix.tailwindai.dev/slug
+    prefix = hostname.split(".")[0];
+    // Récupère le slug depuis le pathname
+    if (pathname !== "/") {
+      // Enlève le premier slash et split le reste du chemin
+      slug = pathname.slice(1).split("/");
+    }
+  } else {
+    // Garder le comportement original pour les autres cas
+    const params = await context.params;
+    prefix = params.prefix;
+    slug = params.slug || [];
+  }
+
   // `prefix` = e7ff9bcc-7d89-401a-97a8-67cd5e13bf97-0
   // `slug`   = ["assets","main.js"] ou [] si rien
 
@@ -41,7 +62,7 @@ export async function GET(
     }
   }
 
-  // On récupère l’URL publique du blob et on "re-télécharge" son contenu
+  // On récupère l'URL publique du blob et on "re-télécharge" son contenu
   const blobResp = await fetch(matchedBlob.url);
   if (!blobResp.ok) {
     return new NextResponse("Erreur de fetch sur le blob", { status: 500 });
@@ -49,8 +70,8 @@ export async function GET(
 
   const data = await blobResp.arrayBuffer();
 
-  // Détermine le type MIME depuis l’extension
-  // (ou matchedBlob.contentType si tu l’as renseigné à l’upload)
+  // Détermine le type MIME depuis l'extension
+  // (ou matchedBlob.contentType si tu l'as renseigné à l'upload)
   const extension = "." + (filePath.split(".").pop() ?? "");
   const mimeType = mime.lookup(extension) || "application/octet-stream";
 

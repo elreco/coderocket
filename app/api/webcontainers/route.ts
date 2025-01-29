@@ -202,6 +202,7 @@ async function compileReactApp(
 
   const buildErrors: string[] = [];
   let currentError = "";
+  let buildFailed = false;
 
   try {
     await runCommandWithStreaming(
@@ -209,35 +210,33 @@ async function compileReactApp(
       ["run", "build", "--cache", "/tmp/.npm"],
       tempDir,
       (message, isError) => {
-        if (isError || message.includes("error")) {
-          // Filtrer les erreurs pertinentes
-          const line = message.trim();
+        const line = message.trim();
 
-          // Ignorer les lignes non pertinentes
-          if (
-            line.startsWith("node_modules/") ||
-            line.includes("@ module") ||
-            line.includes("npm ERR!") ||
-            line === ""
-          ) {
-            return;
-          }
+        // Ignorer certaines lignes non pertinentes
+        if (
+          line.startsWith("node_modules/") ||
+          line.includes("@ module") ||
+          line.includes("npm ERR!") ||
+          line === ""
+        ) {
+          return;
+        }
 
-          // Nouvelle erreur commence par "error" ou "Error"
-          if (line.match(/^error|^Error/i)) {
+        // Si c'est une erreur ou si la ligne contient "error"
+        if (isError || /\berror\b/i.test(line)) {
+          buildFailed = true;
+          // Si c'est une nouvelle erreur
+          if (!currentError || /\berror\b/i.test(line)) {
             if (currentError) {
-              buildErrors.push(currentError);
+              buildErrors.push(currentError.trim());
             }
             currentError = line;
-          }
-          // Ligne de détail d'erreur (position du fichier, suggestion, etc.)
-          else if (currentError && !line.includes("warning")) {
+          } else {
+            // Ajouter la ligne à l'erreur en cours
             currentError += "\n" + line;
           }
-
           sendProgress(`🔴 ${line}`, 40);
         } else {
-          // Pour les messages normaux, n'afficher que les étapes importantes
           if (message.includes("building") || message.includes("completed")) {
             sendProgress(`Build: ${message.trim()}`, 50);
           }
@@ -247,26 +246,33 @@ async function compileReactApp(
 
     // Ajouter la dernière erreur si elle existe
     if (currentError) {
-      buildErrors.push(currentError);
+      buildErrors.push(currentError.trim());
     }
+
+    // Si des erreurs ont été détectées pendant le build
+    if (buildFailed) {
+      const errorSummary =
+        buildErrors.slice(0, 3).join("\n\n") +
+        (buildErrors.length > 3
+          ? `\n\n... and ${buildErrors.length - 3} other errors`
+          : "");
+      throw new Error(errorSummary);
+    }
+
+    sendProgress("Vite build completed successfully.", 70);
   } catch (error) {
-    console.error("Build error:", error);
+    // Si nous avons déjà collecté des erreurs de build, utilisons-les
+    if (buildErrors.length > 0) {
+      const errorSummary =
+        buildErrors.slice(0, 3).join("\n\n") +
+        (buildErrors.length > 3
+          ? `\n\n... et ${buildErrors.length - 3} autres erreurs`
+          : "");
+      throw new Error(errorSummary);
+    }
+    // Sinon, relancer l'erreur originale
+    throw error;
   }
-
-  if (buildErrors.length > 0) {
-    // Formater le message d'erreur final
-    const errorSummary =
-      buildErrors
-        .slice(0, 3) // Limiter à 3 erreurs maximum
-        .join("\n\n") +
-      (buildErrors.length > 3
-        ? `\n\n... et ${buildErrors.length - 3} autres erreurs`
-        : "");
-
-    throw new Error(errorSummary);
-  }
-
-  sendProgress("Vite build completed successfully.", 70);
 }
 
 // Helper function: Upload files to Webcontainer Storage

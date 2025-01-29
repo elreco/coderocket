@@ -11,6 +11,8 @@ import {
 } from "@/context/webcontainer-context";
 import { ChatFile } from "@/utils/completion-parser";
 
+import { Button } from "../ui/button";
+
 function LoadingStateComponent({ state }: { state: WebcontainerLoadingState }) {
   return (
     <div className="flex size-full flex-col items-center justify-center space-y-4 p-8 text-center">
@@ -47,7 +49,8 @@ function ProgressMessagesComponent({ messages }: { messages: string[] }) {
 export default function RenderReactComponent({ files }: { files: ChatFile[] }) {
   const { loadingState, buildError, error, setFiles, progressMessages } =
     useWebcontainer();
-  const { chatId, selectedVersion, isLoading } = useComponentContext();
+  const { chatId, selectedVersion, isLoading, authorized, setInput } =
+    useComponentContext();
 
   useEffect(() => {
     if (!isLoading && files.length > 0) {
@@ -77,13 +80,27 @@ export default function RenderReactComponent({ files }: { files: ChatFile[] }) {
 
       {buildError && !isLoading && (
         <div className="mx-4 flex items-center justify-center">
-          <Alert variant="destructive" className="bg-secondary px-12">
-            <AlertCircle className="size-4" />
+          <Alert
+            variant="destructive"
+            className="bg-destructive px-12 text-foreground"
+          >
+            <AlertCircle className="size-4 fill-foreground text-foreground" />
             <AlertDescription className="flex flex-col gap-2">
               <strong>{buildError.title}</strong>
               <span>{buildError.description}</span>
               <span className="text-xs opacity-75">{buildError.content}</span>
             </AlertDescription>
+            {authorized && (
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() =>
+                  setInput("Fix the following error: " + buildError.content)
+                }
+              >
+                Ask Tailwind AI to fix it
+              </Button>
+            )}
           </Alert>
         </div>
       )}
@@ -104,7 +121,7 @@ export default function RenderReactComponent({ files }: { files: ChatFile[] }) {
         !buildError &&
         !loadingState && (
           <iframe
-            src={`/webcontainer/${chatId}-${selectedVersion}/index.html`}
+            src={`https://${chatId}-${selectedVersion}.dev.tailwindai.dev`}
             className="size-full border-none"
           />
         )}
