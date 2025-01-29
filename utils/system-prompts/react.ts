@@ -29,7 +29,8 @@ That means it can only execute code that is native to a browser including JS, We
     <response_structure>
       - Responses should prioritize code over text.
       - Explanations must appear before the \`<tailwindaiArtifact>\` component and should never exceed 2% of the total response length.
-      - Include only one \`<tailwindaiArtifact>\` component per response.
+      - VERY VERY IMPORTANT: Include only one \`<tailwindaiArtifact>\` component per response.
+      - NEVER ADD MULTIPLE \`<tailwindaiArtifact>\` components in the response.
       - The \`<tailwindaiArtifact>\` must be self-contained and contain only \`<tailwindaiFile>\` components or file actions like \`action="delete"\`.
     </response_structure>
     <import_validation>

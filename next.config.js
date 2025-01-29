@@ -22,16 +22,7 @@ const nextConfig = {
         pathname: '/**',
       },
     ],
-  },
-  async rewrites() {
-    return [
-      {
-        source: "/:slug*",
-        has: [{ type: "host", value: "(?<prefix>.+)\\.dev\\.tailwindai\\.dev" }],
-        destination: "/webcontainer/:prefix/:slug*",
-      },
-    ];
-  },
+  }
 };
 
 module.exports = nextConfig;

@@ -6,7 +6,7 @@ import path from "path";
 
 import { head, put } from "@vercel/blob";
 import mime from "mime-types";
-import { after, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
 import { takeScreenshot } from "@/utils/capture-screenshot";
 import { ChatFile } from "@/utils/completion-parser";
@@ -49,7 +49,15 @@ export async function POST(request: Request) {
       try {
         const existingUrl = await checkExistingBuild(storagePath);
         if (existingUrl) {
-          sendProgress("all-files-deployed", 100);
+          const alreadyDeployedPayload = {
+            event: "already-deployed",
+            details: "The project is already deployed.",
+          };
+          controller.enqueue(
+            encoder.encode(
+              `data: ${JSON.stringify(alreadyDeployedPayload)}\n\n`,
+            ),
+          );
           controller.close();
           return;
         }
@@ -88,9 +96,7 @@ export async function POST(request: Request) {
         );
 
         controller.close();
-        after(async () => {
-          await takeScreenshot(chatId, version, undefined, "react");
-        });
+        await takeScreenshot(chatId, version, undefined, "react");
       } catch (error) {
         console.error("Deployment error:", error);
         sendProgress("An error occurred during the deployment process.", 0);
@@ -341,7 +347,6 @@ async function uploadToWebcontainerStorage(
 
 // Helper function: Delete the temporary directory
 async function deleteTemporaryDirectory(tempDir: string) {
-  const fs = await import("fs/promises");
   await fs.rm(tempDir, { recursive: true, force: true });
 }
 

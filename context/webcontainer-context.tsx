@@ -63,7 +63,6 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
     const deployToWebcontainer = async () => {
       setError(null);
       setLoadingState("initializing");
-
       if (
         selectedFramework === "html" ||
         isLoading ||
@@ -89,6 +88,8 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
             files,
           }),
         });
+
+        console.log("response", response.body);
 
         if (!response.ok) {
           throw new Error("Failed to start deployment");
@@ -120,6 +121,13 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
                   eventSource.close();
                   break;
 
+                case "already-deployed":
+                  setWebcontainerReady(true);
+                  setLoadingState(null);
+                  setError(null);
+                  setBuildError(null);
+                  break;
+
                 case "end":
                   // => Déploiement terminé avec succès
                   setProgressMessages(() => [payload.details]);
@@ -129,13 +137,7 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
                   break;
 
                 default:
-                  if (payload.details !== "all-files-deployed") {
-                    // => C'est probablement un message "normal" de progression
-                    setProgressMessages(() => [payload.details]);
-                  } else {
-                    setWebcontainerReady(true);
-                    setLoadingState(null);
-                  }
+                  setProgressMessages(() => [payload.details]);
                   break;
               }
             } catch {
