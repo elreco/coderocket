@@ -265,9 +265,9 @@ const updateDataAfterCompletion = async (
 
   await supabase.from("messages").insert(newMessages).eq("chat_id", chatId);
   const hasArtifactResult = hasArtifacts(text);
-  if (hasArtifactResult) {
+  if (hasArtifactResult && chat.framework === "html") {
     after(async () => {
-      await takeScreenshot(chatId, version, theme, chat.framework || "react");
+      await takeScreenshot(chatId, version, theme, "html");
     });
   }
 };

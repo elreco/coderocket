@@ -37,7 +37,6 @@ That means it can only execute code that is native to a browser including JS, We
       - Verify that all component files and dependencies referenced in imports exist in the artifact or the project.
       - If an imported file does not exist (e.g., \`./components/ui/button\`), automatically generate the file with appropriate content based on its usage context.
       - Prioritize creating reusable, functional components from shadcn/ui if missing.
-      - Always use relative paths for public imports like logos or images.
     </import_validation>
     <shadcn_ui_components>
       - ALWAYS create ALL required shadcn/ui components in the src/components/ui folder.

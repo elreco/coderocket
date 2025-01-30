@@ -1,9 +1,10 @@
-import { NextRequest } from "next/server";
+import { after, NextRequest } from "next/server";
 
 import {
   fetchChatById,
   fetchLastAssistantMessageByChatId,
 } from "@/app/(default)/components/actions";
+import { takeScreenshot } from "@/utils/capture-screenshot";
 import { extractFilesFromArtifact } from "@/utils/completion-parser";
 import { extractFilesFromCompletion } from "@/utils/completion-parser";
 
@@ -119,6 +120,10 @@ export async function GET(request: NextRequest) {
         const responseData = await builderResponse.json();
         await sendStatus("complete", {
           message: responseData.message || "Build completed",
+        });
+
+        after(async () => {
+          await takeScreenshot(chatId, parseInt(version), undefined, "react");
         });
 
         controller.close();

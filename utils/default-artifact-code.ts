@@ -205,7 +205,10 @@ module.exports = {
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "clsx": "^2.1.1",
-    "tailwindcss-animate": "^1.0.6"
+    "tailwindcss-animate": "^1.0.6",
+    "class-variance-authority": "^0.7.1",
+    "tailwindcss": "^3.3.2",
+    "tailwind-merge": "^2.4.0"
   },
   "devDependencies": {
     "@types/node": "^20.3.1",
@@ -215,12 +218,10 @@ module.exports = {
     "@typescript-eslint/parser": "^5.59.0",
     "@vitejs/plugin-react": "^4.0.0",
     "autoprefixer": "^10.4.14",
-    "tailwind-merge": "^2.4.0",
     "eslint": "^8.38.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.3.4",
     "postcss": "^8.4.24",
-    "tailwindcss": "^3.3.2",
     "typescript": "^5.0.2",
     "vite": "^4.3.9"
   },
