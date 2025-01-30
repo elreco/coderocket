@@ -109,7 +109,6 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
 
         newEventSource.onmessage = (event) => {
           const data = JSON.parse(event.data);
-          console.log(data.event);
           switch (data.event) {
             case "init":
             case "processing":

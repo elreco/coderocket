@@ -118,6 +118,13 @@ export async function GET(request: NextRequest) {
         clearInterval(updateInterval);
 
         const responseData = await builderResponse.json();
+        if (responseData.errors) {
+          await sendStatus("error", {
+            message: responseData.errors.join("\n"),
+          });
+          controller.close();
+          return;
+        }
         await sendStatus("complete", {
           message: responseData.message || "Build completed",
         });
