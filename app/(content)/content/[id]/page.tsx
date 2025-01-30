@@ -3,12 +3,7 @@ import {
   fetchLastAssistantMessageByChatId,
 } from "@/app/(default)/components/actions";
 import RenderHtmlComponentServer from "@/components/renders/render-html-component-server";
-import RenderReactComponent from "@/components/renders/render-react-component";
-import { WebcontainerProvider } from "@/context/webcontainer-context";
-import {
-  extractFilesFromArtifact,
-  extractFilesFromCompletion,
-} from "@/utils/completion-parser";
+import { extractFilesFromCompletion } from "@/utils/completion-parser";
 
 export default async function Content({
   params,
@@ -24,16 +19,11 @@ export default async function Content({
   }
 
   const files = extractFilesFromCompletion(lastAssistantMessage.content);
-  const artifactFiles = extractFilesFromArtifact(chat.artifact_code || "");
 
   return chat.framework === "html" ? (
     <RenderHtmlComponentServer
       files={files}
       style={{ width: "100%", height: "100%", border: "none" }}
     />
-  ) : (
-    <WebcontainerProvider>
-      <RenderReactComponent files={artifactFiles} />
-    </WebcontainerProvider>
-  );
+  ) : null;
 }

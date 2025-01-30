@@ -1,7 +1,7 @@
 "use client";
 
 import { Loader2, AlertCircle, WandSparkles } from "lucide-react";
-import React, { useEffect } from "react";
+import React from "react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useComponentContext } from "@/context/component-context";
@@ -9,7 +9,6 @@ import {
   WebcontainerLoadingState,
   useWebcontainer,
 } from "@/context/webcontainer-context";
-import { ChatFile } from "@/utils/completion-parser";
 
 import { Button } from "../ui/button";
 
@@ -25,7 +24,7 @@ function LoadingStateComponent({ state }: { state: WebcontainerLoadingState }) {
         <p className="text-sm text-muted-foreground">
           {state === "initializing" &&
             "Setting up your development environment."}
-          {state === "deploying" && "Almost ready to show your application."}
+          {state === "deploying" && "It may take a few minutes."}
         </p>
       </div>
     </div>
@@ -46,17 +45,20 @@ function ProgressMessagesComponent({ messages }: { messages: string[] }) {
   );
 }
 
-export default function RenderReactComponent({ files }: { files: ChatFile[] }) {
-  const { loadingState, buildError, error, setFiles, progressMessages } =
+export default function RenderReactComponent() {
+  const { loadingState, buildError, error, progressMessages } =
     useWebcontainer();
   const { chatId, selectedVersion, isLoading, authorized, setInput } =
     useComponentContext();
+  const [iframeLoading, setIframeLoading] = React.useState(true);
 
-  useEffect(() => {
-    if (!isLoading && files.length > 0) {
-      setFiles(files);
-    }
-  }, [files, isLoading]);
+  const handleIframeLoad = () => {
+    setIframeLoading(false);
+  };
+
+  React.useEffect(() => {
+    setIframeLoading(true);
+  }, [chatId, selectedVersion]);
 
   return (
     <>
@@ -121,10 +123,14 @@ export default function RenderReactComponent({ files }: { files: ChatFile[] }) {
         !error &&
         !buildError &&
         !loadingState && (
-          <iframe
-            src={`https://${chatId}-${selectedVersion}.dev.tailwindai.dev`}
-            className="size-full border-none"
-          />
+          <>
+            {iframeLoading && <LoadingStateComponent state="initializing" />}
+            <iframe
+              src={`https://${chatId}-${selectedVersion}.dev.tailwindai.dev`}
+              className={`size-full border-none ${iframeLoading ? "hidden" : ""}`}
+              onLoad={handleIframeLoad}
+            />
+          </>
         )}
     </>
   );

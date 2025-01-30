@@ -6,9 +6,8 @@ import React, {
   useState,
   useEffect,
   ReactNode,
+  useCallback,
 } from "react";
-
-import { ChatFile } from "@/utils/completion-parser";
 
 import { useComponentContext } from "./component-context";
 
@@ -19,13 +18,12 @@ type BuildError = {
 };
 
 interface WebcontainerContextType {
-  files: ChatFile[];
-  setFiles: (files: ChatFile[]) => void;
   error: string | null;
   loadingState: WebcontainerLoadingState;
   setLoadingState: (state: WebcontainerLoadingState) => void;
   buildError: BuildError | null;
   progressMessages: string[];
+  cancelDeployment: () => void;
 }
 
 const WebcontainerContext = createContext<WebcontainerContextType | undefined>(
@@ -41,10 +39,14 @@ export type WebcontainerLoadingState =
 export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
   const [loadingState, setLoadingState] =
     useState<WebcontainerLoadingState>(null);
-  const [files, setFiles] = useState<ChatFile[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [buildError, setBuildError] = useState<BuildError | null>(null);
   const [progressMessages, setProgressMessages] = useState<string[]>([]);
+  const [eventSource, setEventSource] = useState<EventSource | null>(null);
+  const [currentDeployment, setCurrentDeployment] = useState<{
+    chatId: string;
+    version: number | undefined;
+  } | null>(null);
   const {
     setWebcontainerReady,
     selectedFramework,
@@ -52,137 +54,122 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
     chatId,
     isLoading,
   } = useComponentContext();
-  const [isDeploying, setIsDeploying] = useState(false);
+
+  const cancelDeployment = useCallback(() => {
+    if (eventSource) {
+      eventSource.close();
+      setEventSource(null);
+      setLoadingState(null);
+      setCurrentDeployment(null);
+    }
+  }, [eventSource]);
 
   useEffect(() => {
     setWebcontainerReady(false);
     setError(null);
-    setProgressMessages([]); // Reset messages on component mount
+    setProgressMessages([]);
+    return () => {
+      cancelDeployment();
+    };
   }, []);
 
   useEffect(() => {
     const deployToWebcontainer = async () => {
-      if (isDeploying) {
-        console.log("Deployment already in progress, skipping...");
-        return;
-      }
-
-      setError(null);
-      setLoadingState("initializing");
+      console.log("deployToWebcontainer");
       if (
         selectedFramework === "html" ||
         isLoading ||
-        files.length === 0 ||
         selectedVersion === undefined
       ) {
         return;
       }
 
+      if (
+        currentDeployment?.chatId === chatId &&
+        currentDeployment?.version === selectedVersion
+      ) {
+        return;
+      }
+
+      if (eventSource) {
+        cancelDeployment();
+      }
+
       try {
-        setIsDeploying(true);
+        setError(null);
         setLoadingState("initializing");
         setProgressMessages([]);
+        setBuildError(null);
 
-        // Step 1: Make a POST request to the deployment API
-        const response = await fetch("/api/webcontainers", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            chatId,
-            version: selectedVersion,
-            files,
-          }),
-        });
+        const newEventSource = new EventSource(
+          `/api/webcontainers?chatId=${chatId}&version=${selectedVersion}`,
+        );
+        setEventSource(newEventSource);
+        setCurrentDeployment({ chatId, version: selectedVersion });
 
-        console.log("response", response.body);
+        newEventSource.onmessage = (event) => {
+          const data = JSON.parse(event.data);
+          console.log(data.event);
+          switch (data.event) {
+            case "init":
+            case "processing":
+              setLoadingState("initializing");
+              setProgressMessages((prev) => [...prev, data.message]);
+              break;
 
-        if (!response.ok) {
-          throw new Error("Failed to start deployment");
-        }
+            case "deploying":
+            case "building":
+            case "uploading":
+              setLoadingState("deploying");
+              setProgressMessages((prev) => [...prev, data.message]);
+              break;
 
-        // Step 2: Listen for Server-Sent Events (SSE) from the API
-        const eventSource = new EventSource("/api/webcontainers");
+            case "error":
+              setBuildError({
+                title: "Deployment error",
+                description: "An error occurred during deployment.",
+                content: data.message,
+              });
+              setLoadingState("error");
+              newEventSource.close();
+              setEventSource(null);
+              setCurrentDeployment(null);
+              break;
 
-        eventSource.onmessage = (event) => {
-          // Append new progress messages
-          setProgressMessages((prev) => [...prev, event.data]);
-          eventSource.onmessage = (event) => {
-            if (!event.data) return;
+            case "cancelled":
+              setProgressMessages((prev) => [...prev, "Deployment cancelled"]);
+              setLoadingState(null);
+              newEventSource.close();
+              setEventSource(null);
+              setCurrentDeployment(null);
+              break;
 
-            try {
-              const payload = JSON.parse(event.data);
-              // Vérifie les différents types d'événements
-              switch (payload.event) {
-                case "error":
-                  // => C'est un message d'erreur
-                  setBuildError({
-                    title: "Deployment error",
-                    description: payload.details,
-                    content: payload.message,
-                  });
-                  setLoadingState("error");
+            case "success":
+              setProgressMessages((prev) => [
+                ...prev,
+                "Deployment completed successfully!",
+              ]);
+              setWebcontainerReady(true);
+              setLoadingState(null);
+              newEventSource.close();
+              setEventSource(null);
+              break;
 
-                  // Fermer explicitement la connexion SSE pour éviter le déclenchement par défaut de onerror
-                  eventSource.close();
-                  break;
-
-                case "already-deployed":
-                  setWebcontainerReady(true);
-                  setLoadingState(null);
-                  setError(null);
-                  setBuildError(null);
-                  break;
-
-                case "end":
-                  // => Déploiement terminé avec succès
-                  setProgressMessages(() => [payload.details]);
-                  setWebcontainerReady(true);
-                  setLoadingState(null);
-                  eventSource.close();
-                  break;
-
-                default:
-                  setProgressMessages(() => [payload.details]);
-                  break;
-              }
-            } catch {
-              // Si la donnée reçue n'est pas du JSON, on la logge simplement
-              setProgressMessages((prev) => [...prev, event.data]);
-            }
-          };
-
-          eventSource.onerror = () => {
-            // Parfois appelé lorsque le flux se ferme côté serveur, même sans « vraie » erreur
-            // Mais si tu as géré le flux avec `event: "error"` et `event: "end"`, tu peux décider d'y mettre un fallback
-            setWebcontainerReady(true);
-            setLoadingState(null);
-            // Mécanique de fallback, si jamais rien n'a été envoyé côté serveur
-            // ...
-            eventSource.close();
-          };
-        };
-
-        eventSource.onerror = (error) => {
-          console.error("Error in eventSource:", error);
-
-          if (eventSource.readyState === EventSource.CLOSED) {
-            console.log("Connection closed by server.");
-            eventSource.close();
-            return;
+            case "already-deployed":
+              setWebcontainerReady(true);
+              setLoadingState(null);
+              newEventSource.close();
+              setEventSource(null);
+              break;
           }
-
-          setError("An error occurred while deploying.");
-          setLoadingState("error");
-          eventSource.close();
         };
 
-        eventSource.addEventListener("close", () => {
+        newEventSource.onerror = () => {
           setWebcontainerReady(true);
-          setLoadingState(null); // Deployment complete
-          eventSource.close();
-        });
+          setLoadingState(null);
+          newEventSource.close();
+          setEventSource(null);
+        };
       } catch (e: unknown) {
         setBuildError({
           title: "Deployment error",
@@ -190,24 +177,22 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
           content: (e as Error).message,
         });
         setLoadingState("error");
-      } finally {
-        setIsDeploying(false);
+        setCurrentDeployment(null);
       }
     };
 
     deployToWebcontainer();
-  }, [files, isLoading]);
+  }, [isLoading, selectedFramework, selectedVersion, chatId]);
 
   return (
     <WebcontainerContext.Provider
       value={{
-        files,
-        setFiles,
         error,
         loadingState,
         setLoadingState,
         buildError,
         progressMessages,
+        cancelDeployment,
       }}
     >
       {children}
