@@ -11,7 +11,9 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import * as React from "react";
+import { useEffect, useState } from "react";
 
+import { getUserDetails } from "@/app/supabase-server";
 import { NavMain } from "@/components/nav-main";
 import { NavUser } from "@/components/nav-user";
 import { Badge } from "@/components/ui/badge";
@@ -86,13 +88,21 @@ const data = {
     },
   ],
 };
-export function AppSidebar({
-  user,
-  ...props
-}: React.ComponentProps<typeof Sidebar> & {
-  user: (Tables<"users"> & { email: string | null }) | null;
-}) {
+export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const [user, setUser] = useState<
+    (Tables<"users"> & { email: string | null }) | null
+  >(null);
+  const [isLoading, setIsLoading] = useState(true);
   const pathname = usePathname();
+
+  useEffect(() => {
+    const fetchUserDetails = async () => {
+      const userDetails = await getUserDetails();
+      setUser(userDetails);
+      setIsLoading(false);
+    };
+    fetchUserDetails();
+  }, []);
 
   const navMainItems = data.navMain.map((item) => ({
     ...item,
@@ -172,7 +182,7 @@ export function AppSidebar({
         )}
       </SidebarContent>
       <SidebarFooter>
-        {user ? <NavUser user={user} /> : <NavAuth />}
+        {isLoading ? null : user ? <NavUser user={user} /> : <NavAuth />}
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>
