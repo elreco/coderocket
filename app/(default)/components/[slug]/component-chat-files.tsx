@@ -157,76 +157,26 @@ export default function ComponentChatFiles({
       )}
     >
       <div className="flex w-full gap-2">
-        {message.role === "assistant" ? (
-          <div className="mr-2 flex flex-col items-center justify-start space-y-2">
-            <Avatar
-              className="size-10 cursor-pointer rounded-none"
-              onClick={() => handleFileClick(message.version)}
-            >
-              <AvatarImage src="/logo-white.png" />
-              <AvatarFallback>T</AvatarFallback>
-            </Avatar>
-            {messages.length > 2 && authorized && (
-              <AlertDialog
-                open={isAlertOpen || isDeleting}
-                onOpenChange={setIsAlertOpen}
-              >
-                <AlertDialogTrigger asChild>
-                  <Button
-                    variant="destructive"
-                    size="icon"
-                    disabled={isLoading}
-                  >
-                    <Trash2 className="size-4" />
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Delete Version</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Are you sure you want to delete this version?
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel disabled={isDeleting}>
-                      Cancel
-                    </AlertDialogCancel>
-                    <AlertDialogAction asChild>
-                      <Button
-                        onClick={() => handleDeleteVersion(message.id)}
-                        disabled={isDeleting}
-                        loading={isDeleting}
-                        variant="destructive"
-                      >
-                        Delete
-                      </Button>
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            )}
-          </div>
-        ) : (
-          <Avatar className="mr-2 size-10">
-            <AvatarImage
-              src={message.chats.user.avatar_url || undefined}
-              alt={message.chats.user.full_name || undefined}
-            />
-            <AvatarFallback className="bg-background">
-              <span className="text-xs">
-                {getInitials(message.chats.user.full_name || "")}
-              </span>
-            </AvatarFallback>
-          </Avatar>
-        )}
-
         {message.role === "user" ? (
           <div className="flex w-full flex-col gap-2">
-            {message.chats.user?.full_name && (
-              <h2 className="text-lg font-semibold">
-                {message.chats.user.full_name}
-              </h2>
-            )}
+            <div className="flex items-center justify-start">
+              <Avatar className="mr-2 size-10">
+                <AvatarImage
+                  src={message.chats.user.avatar_url || undefined}
+                  alt={message.chats.user.full_name || undefined}
+                />
+                <AvatarFallback className="bg-background">
+                  <span className="text-xs">
+                    {getInitials(message.chats.user.full_name || "")}
+                  </span>
+                </AvatarFallback>
+              </Avatar>
+              {message.chats.user?.full_name && (
+                <h2 className="text-lg font-semibold">
+                  {message.chats.user.full_name}
+                </h2>
+              )}
+            </div>
             <UserMessage>{message.content}</UserMessage>
             {message.chats.prompt_image && (
               <img
@@ -238,17 +188,68 @@ export default function ComponentChatFiles({
           </div>
         ) : (
           <div className="flex w-full flex-col gap-2 overflow-x-auto text-sm">
-            <h2
-              className={cn(
-                "text-lg font-semibold transition-all group-hover:text-primary",
-                isSelectedVersion &&
-                  "text-foreground group-hover:text-foreground",
-                isLoading ? "cursor-default" : "cursor-pointer",
+            <div className="flex items-center justify-between">
+              <div className="mr-2 flex items-center">
+                <Avatar
+                  className="size-10 cursor-pointer rounded-none"
+                  onClick={() => handleFileClick(message.version)}
+                >
+                  <AvatarImage src="/logo-white.png" />
+                  <AvatarFallback>T</AvatarFallback>
+                </Avatar>
+
+                <h2
+                  className={cn(
+                    "text-lg ml-2 font-semibold transition-all group-hover:text-primary",
+                    isSelectedVersion &&
+                      "text-foreground group-hover:text-foreground",
+                    isLoading ? "cursor-default" : "cursor-pointer",
+                  )}
+                  onClick={() => handleFileClick(message.version)}
+                >
+                  Version #{message.version}
+                </h2>
+              </div>
+              {messages.length > 2 && authorized && (
+                <AlertDialog
+                  open={isAlertOpen || isDeleting}
+                  onOpenChange={setIsAlertOpen}
+                >
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      disabled={isLoading}
+                    >
+                      <Trash2 className="size-4" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete Version</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Are you sure you want to delete this version?
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel disabled={isDeleting}>
+                        Cancel
+                      </AlertDialogCancel>
+                      <AlertDialogAction asChild>
+                        <Button
+                          onClick={() => handleDeleteVersion(message.id)}
+                          disabled={isDeleting}
+                          loading={isDeleting}
+                          variant="destructive"
+                        >
+                          Delete
+                        </Button>
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               )}
-              onClick={() => handleFileClick(message.version)}
-            >
-              Version #{message.version}
-            </h2>
+            </div>
             {chunks.map((chunk, index) => (
               <div key={index} className="text-sm">
                 {chunk.type === "text" && <Markdown>{chunk.content}</Markdown>}

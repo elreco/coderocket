@@ -200,6 +200,7 @@ export default function ComponentCompletion({
     setWebcontainerReady(false);
     setChatFiles([]);
     setCanvas(false);
+    setTitle(input);
     setIsLoading(true);
     complete(input);
   };

@@ -60,7 +60,8 @@ export async function GET(request: NextRequest) {
         );
         if (!extractedFiles.length) {
           await sendStatus("error", {
-            message: "Tailwind AI didn't generate any files.",
+            message:
+              "Tailwind AI didn't generate any files. Continue the prompt if you stopped the generation or try to generate again.",
           });
           controller.close();
           return;
