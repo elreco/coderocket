@@ -75,13 +75,6 @@ export async function GET(
   const extension = "." + (filePath.split(".").pop() ?? "");
   const mimeType = mime.lookup(extension) || "application/octet-stream";
 
-  // Renvoie le fichier avec "inline" pour ne pas forcer le download
-  // Si la requête n'a pas de slug du tout ( = /blob/<prefix> ) et ne finit pas par un slash
-  console.log("request.url", request.url);
-  if ((!slug || slug.length === 0) && !request.url.endsWith("/")) {
-    // Redirige vers la même URL + "/"
-    //return NextResponse.redirect(request.url + "/", 308);
-  }
   return new NextResponse(data, {
     headers: {
       "Content-Type": mimeType,

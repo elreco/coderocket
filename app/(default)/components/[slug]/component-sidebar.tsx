@@ -222,7 +222,7 @@ export default function ComponentSidebar({
           className={cn(
             "flex flex-col px-2 py-6 sm:px-4",
             "transition-all duration-200",
-            isLoading ? "block" : "hidden",
+            isLoading && input ? "block" : "hidden",
           )}
         >
           <div className="flex flex-col gap-2 rounded-lg border border-border bg-background p-5">
@@ -248,7 +248,6 @@ export default function ComponentSidebar({
             {getRelativeDate(new Date().toISOString())}
           </p>
         </div>
-
         <div
           className={cn(
             "flex flex-col px-2 py-6 sm:px-4",
@@ -257,7 +256,7 @@ export default function ComponentSidebar({
           )}
         >
           <div className="flex flex-col items-start justify-start">
-            {messages.length > 1 && (
+            {input && (
               <div className="flex items-center">
                 <Avatar className="mr-2 size-10 rounded-none">
                   <AvatarImage src="/logo-white.png" />
