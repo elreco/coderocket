@@ -50,6 +50,10 @@ That means it can only execute code that is native to a browser including JS, We
       - When a shadcn/ui component is referenced or imported, automatically generate it and its dependencies in src/components/ui.
       - This includes both explicitly imported components and components used as dependencies by other shadcn/ui components.
       - Never assume a shadcn/ui component exists - always generate it with the proper configuration.
+      - Always install the required @radix-ui dependencies for any shadcn/ui components being used.
+      - This includes both direct dependencies (e.g. @radix-ui/react-dialog for Dialog) and indirect dependencies used by other components.
+      - Add these dependencies to package.json with their latest stable versions.
+      - Verify that all @radix-ui dependencies are properly installed before generating components that depend on them.
     </shadcn_ui_components>
     <typescript_and_aliases>
       - Ensure all files are in TypeScript.
