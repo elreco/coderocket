@@ -11,6 +11,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
+import { getUserDetails } from "../supabase-server";
+
 const rubik = Rubik({
   subsets: ["latin"],
   display: "swap",
@@ -64,6 +66,7 @@ export const metadata = {
 export default async function RootLayout({ children }: PropsWithChildren) {
   const cookieStore = await cookies();
   const defaultOpen = cookieStore.get("sidebar:state")?.value === "true";
+  const user = await getUserDetails();
 
   return (
     <html
@@ -72,7 +75,7 @@ export default async function RootLayout({ children }: PropsWithChildren) {
     >
       <body className="size-full bg-background">
         <SidebarProvider defaultOpen={defaultOpen} className="size-full">
-          <AppSidebar />
+          <AppSidebar defaultUser={user} />
           <main className="relative size-full">
             <SidebarTrigger className="fixed z-50 m-2" />
             <TooltipProvider>{children}</TooltipProvider>
