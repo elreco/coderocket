@@ -55,7 +55,7 @@ export const fetchMessagesByChatId = async (chatId: string) => {
     `,
     )
     .eq("chat_id", chatId)
-    .order("version", { ascending: true })
+    .order("version", { ascending: false })
     .order("role", { ascending: false });
   return data;
 };

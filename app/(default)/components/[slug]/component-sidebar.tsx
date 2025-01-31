@@ -1,8 +1,16 @@
-import { CircleFadingArrowUp, Paintbrush } from "lucide-react";
+import {
+  BookOpen,
+  ChevronsRight,
+  CircleFadingArrowUp,
+  MessageSquare,
+  Paintbrush,
+} from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { UserMessage } from "@/components/user-message";
 import { useComponentContext } from "@/context/component-context";
@@ -36,11 +44,13 @@ export default function ComponentSidebar({
     setInput,
     selectedFramework,
     completion,
+    handleVersionSelect,
   } = useComponentContext();
 
   const [isLoaderVisible, setLoaderVisible] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
   const [streamingChunks, setStreamingChunks] = useState<ContentChunk[]>([]);
+  const [activeTab, setActiveTab] = useState("chat");
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -62,9 +72,14 @@ export default function ComponentSidebar({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     handleSubmitToAI(input);
+    setActiveTab("chat");
     if (containerRef.current) {
       containerRef.current.scrollTop = containerRef.current.scrollHeight;
     }
+  };
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
   };
 
   useEffect(() => {
@@ -101,6 +116,14 @@ export default function ComponentSidebar({
     }
   }, [completion, isLoading]);
 
+  const handleFileClick = (version: number) => {
+    if (isLoading) {
+      return;
+    }
+    setActiveTab("chat");
+    handleVersionSelect(version, undefined);
+  };
+
   return (
     <div
       className={cn(
@@ -108,6 +131,26 @@ export default function ComponentSidebar({
         className,
       )}
     >
+      <Tabs
+        value={activeTab}
+        onValueChange={(value) => {
+          if (!isLoading) {
+            handleTabChange(value);
+          }
+        }}
+        className="w-full rounded-none lg:w-auto"
+      >
+        <TabsList className="grid w-full grid-cols-2 rounded-none">
+          <TabsTrigger value="chat" disabled={isLoading}>
+            <MessageSquare className="block size-4 xl:hidden" />
+            <span className="hidden xl:block">Chat</span>
+          </TabsTrigger>
+          <TabsTrigger value="history" disabled={isLoading}>
+            <BookOpen className="block size-4 xl:hidden" />
+            <span className="hidden xl:block">History</span>
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
       <div
         ref={containerRef}
         className="flex size-full max-h-full flex-col overflow-y-auto overflow-x-hidden scroll-smooth"
@@ -117,17 +160,72 @@ export default function ComponentSidebar({
             <ComponentSidebarSkeleton />
           </div>
         )}
-        {messages.map((m) => (
-          <ComponentChatFiles message={m} key={m.id} />
-        ))}
+        {activeTab === "chat" &&
+          !isLoading &&
+          messages
+            .filter((m) => m.version === selectedVersion)
+            .map((m) => <ComponentChatFiles message={m} key={m.id} />)}
+        {!isLoading && activeTab === "history" && (
+          <div className="flex flex-col gap-4 p-4">
+            {messages
+              .filter((m) => m.role === "user")
+              .map((m) => (
+                <div
+                  key={m.id}
+                  onClick={() =>
+                    m.version !== selectedVersion && handleFileClick(m.version)
+                  }
+                  className={cn(
+                    "rounded-lg border bg-background p-4 shadow-sm",
+                    m.version === selectedVersion
+                      ? "cursor-default hover:bg-background"
+                      : "cursor-pointer hover:bg-secondary",
+                  )}
+                >
+                  <div className="flex w-full items-center justify-between gap-2">
+                    <div className="flex w-full items-center gap-2">
+                      <Avatar className="size-8">
+                        <AvatarImage
+                          src={user?.avatar_url || undefined}
+                          alt={user?.full_name || undefined}
+                        />
+                        <AvatarFallback className="bg-secondary text-xs">
+                          {getInitials(user?.full_name || "")}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium">
+                          {user?.full_name}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          Version #{m.version}
+                        </span>
+                      </div>
+                    </div>
+                    {m.version === selectedVersion ? (
+                      <Badge variant="outline" className="rounded-full">
+                        Current
+                      </Badge>
+                    ) : (
+                      <ChevronsRight className="size-4" />
+                    )}
+                  </div>
+                  <p className="mt-2 truncate text-sm">{m.content}</p>
+                  <p className="mt-2 text-right text-xs text-muted-foreground">
+                    {getRelativeDate(m.created_at)}
+                  </p>
+                </div>
+              ))}
+          </div>
+        )}
         <div
           className={cn(
             "flex flex-col px-2 py-6 sm:px-4",
             "transition-all duration-200",
-            isLoading && messages.length > 1 ? "block" : "hidden",
+            isLoading ? "block" : "hidden",
           )}
         >
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 rounded-lg border border-border bg-background p-5">
             <div className="flex items-center">
               <Avatar className="mr-2 size-10">
                 <AvatarImage
@@ -146,7 +244,7 @@ export default function ComponentSidebar({
             </div>
             <UserMessage>{input}</UserMessage>
           </div>
-          <p className="mt-2 text-right text-xs font-semibold text-primary">
+          <p className="mt-2 text-right text-xs font-semibold text-muted-foreground">
             {getRelativeDate(new Date().toISOString())}
           </p>
         </div>
@@ -159,19 +257,21 @@ export default function ComponentSidebar({
           )}
         >
           <div className="flex flex-col items-start justify-start">
-            <div className="flex items-center">
-              <Avatar className="mr-2 size-10 rounded-none">
-                <AvatarImage src="/logo-white.png" />
-                <AvatarFallback>T</AvatarFallback>
-              </Avatar>
-              <h2
-                className={cn(
-                  "text-lg ml-2 font-semibold transition-all group-hover:text-primary",
-                )}
-              >
-                Version #{selectedVersion ? selectedVersion + 1 : 0}
-              </h2>
-            </div>
+            {messages.length > 1 && (
+              <div className="flex items-center">
+                <Avatar className="mr-2 size-10 rounded-none">
+                  <AvatarImage src="/logo-white.png" />
+                  <AvatarFallback>T</AvatarFallback>
+                </Avatar>
+                <h2
+                  className={cn(
+                    "text-lg ml-2 font-semibold transition-all group-hover:text-primary",
+                  )}
+                >
+                  Version #{selectedVersion ? selectedVersion + 1 : 0}
+                </h2>
+              </div>
+            )}
             {streamingChunks.map((chunk, index) => (
               <div className="w-full overflow-x-auto text-sm" key={index}>
                 {chunk.type === "text" && <Markdown>{chunk.content}</Markdown>}

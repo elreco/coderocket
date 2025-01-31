@@ -117,6 +117,7 @@ export default function ComponentCompletion({
       if (msgs?.length === 1) {
         setCanvas(false);
         complete(userMsg?.content || "");
+        setInput(userMsg?.content || "");
         setIsLoading(true);
         return;
       }
@@ -563,7 +564,7 @@ export default function ComponentCompletion({
               </div>
             </div>
             <div className="relative m-0 flex h-full max-h-full flex-1 flex-col border-b lg:border-b-0">
-              {!isLoading && fetchedChat?.framework === "html" && (
+              {!isLoading && (
                 <Badge className="absolute bottom-0 left-0 z-[9999] m-2 hover:bg-primary">
                   <SiHtml5 className="mr-1 size-3" />
                   <span className="first-letter:uppercase">

@@ -148,24 +148,18 @@ export default function ComponentChatFiles({
     <div
       ref={messageRef}
       data-message-id={message.id}
-      className={cn(
-        "group flex px-2 py-6 flex-col sm:px-4 hover:bg-primary/10 transition-all",
-        message.role === "user" && "bg-background/50 hover:bg-background/50",
-        isSelectedVersion &&
-          message.role === "assistant" &&
-          "bg-primary hover:bg-primary cursor-auto",
-      )}
+      className={cn("group flex px-2 py-6 flex-col sm:px-4 transition-all")}
     >
       <div className="flex w-full gap-2">
         {message.role === "user" ? (
-          <div className="flex w-full flex-col gap-2">
+          <div className="flex w-full flex-col gap-2 rounded-lg border border-border bg-background p-5">
             <div className="flex items-center justify-start">
               <Avatar className="mr-2 size-10">
                 <AvatarImage
                   src={message.chats.user.avatar_url || undefined}
                   alt={message.chats.user.full_name || undefined}
                 />
-                <AvatarFallback className="bg-background">
+                <AvatarFallback>
                   <span className="text-xs">
                     {getInitials(message.chats.user.full_name || "")}
                   </span>
@@ -190,23 +184,12 @@ export default function ComponentChatFiles({
           <div className="flex w-full flex-col gap-2 overflow-x-auto text-sm">
             <div className="flex items-center justify-between">
               <div className="mr-2 flex items-center">
-                <Avatar
-                  className="size-10 cursor-pointer rounded-none"
-                  onClick={() => handleFileClick(message.version)}
-                >
+                <Avatar className="size-10 cursor-pointer rounded-none">
                   <AvatarImage src="/logo-white.png" />
                   <AvatarFallback>T</AvatarFallback>
                 </Avatar>
 
-                <h2
-                  className={cn(
-                    "text-lg ml-2 font-semibold transition-all group-hover:text-primary",
-                    isSelectedVersion &&
-                      "text-foreground group-hover:text-foreground",
-                    isLoading ? "cursor-default" : "cursor-pointer",
-                  )}
-                  onClick={() => handleFileClick(message.version)}
-                >
+                <h2 className={cn("text-lg ml-2 font-semibold")}>
                   Version #{message.version}
                 </h2>
               </div>
@@ -258,8 +241,6 @@ export default function ComponentChatFiles({
                     <div
                       className={cn(
                         "rounded-lg border bg-background p-2 text-foreground",
-                        !isSelectedVersion &&
-                          "group-hover:border-primary/50 group-hover:shadow-primary/35 group-hover:shadow-2xl",
                       )}
                     >
                       <div className="mb-3 flex items-center justify-between">
@@ -354,8 +335,6 @@ export default function ComponentChatFiles({
                 className={cn(
                   "size-full max-w-full cursor-pointer rounded-md border transition-all duration-300",
                   isLoading ? "cursor-default" : "cursor-pointer",
-                  !isSelectedVersion &&
-                    "group-hover:border-primary/50 group-hover:shadow-primary/35 group-hover:shadow-2xl",
                 )}
                 onClick={() => handleFileClick(message.version)}
               />
@@ -365,10 +344,7 @@ export default function ComponentChatFiles({
       </div>
       <p
         className={cn(
-          "mt-2 text-right text-xs font-semibold text-primary",
-          isSelectedVersion &&
-            message.role === "assistant" &&
-            "text-foreground",
+          "mt-2 text-right text-muted-foreground text-xs font-semibold",
         )}
       >
         {getRelativeDate(message.created_at)}
