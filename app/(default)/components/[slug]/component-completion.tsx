@@ -513,7 +513,7 @@ export default function ComponentCompletion({
                           {fetchedChat.framework === "react" &&
                           isWebcontainerReady ? (
                             <iframe
-                              src={`https://${chatId}-${selectedVersion}.preview.tailwindai.dev`}
+                              src={`https://${chatId}-${selectedVersion}.webcontainer.tailwindai.dev`}
                               className="size-full"
                             />
                           ) : (

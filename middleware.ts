@@ -9,18 +9,21 @@ export async function middleware(request: NextRequest) {
   // Récupération du host pour gérer les sous-domaines
   const hostname = request.headers.get("host");
 
-  // Vérifie si on est dans un contexte [prefix].tailwindai.dev
-  if (hostname?.endsWith(".preview.tailwindai.dev")) {
-    const prefix = hostname.split(".")[0]; // Extrait le "prefix"
-    const pathname = request.nextUrl.pathname; // Récupère le chemin
+  // Configuration des sous-domaines et leurs redirections
+  const subdomainConfig = {
+    "preview.tailwindai.dev": "preview",
+    "webcontainer.tailwindai.dev": "webcontainer",
+  } as const;
 
-    // Réécrit la requête en interne vers /webcontainer/[prefix]/[[...slug]]
-    const newUrl = new URL(
-      `/webcontainer/${prefix}${pathname}`,
-      request.nextUrl,
-    );
+  // Vérifie si on est dans un contexte de sous-domaine
+  for (const [domain, path] of Object.entries(subdomainConfig)) {
+    if (hostname?.endsWith(`.${domain}`)) {
+      const prefix = hostname.split(".")[0];
+      const pathname = request.nextUrl.pathname;
+      const newUrl = new URL(`/${path}/${prefix}${pathname}`, request.nextUrl);
 
-    return NextResponse.rewrite(newUrl, response);
+      return NextResponse.rewrite(newUrl, response);
+    }
   }
 
   return response; // Continue normalement si pas de sous-domaine concerné

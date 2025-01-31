@@ -114,7 +114,6 @@ export async function GET(request: NextRequest) {
             }),
           },
         );
-        console.log(builderResponse);
         // Arrêter les messages de mise à jour une fois la réponse reçue
         clearInterval(updateInterval);
 

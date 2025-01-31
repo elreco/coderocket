@@ -1,11 +1,5 @@
-"use client";
-
 import { Rubik } from "next/font/google";
 import { PropsWithChildren } from "react";
-
-// eslint-disable-next-line import/order
-import { SandPackCSS } from "@/components/sandpack-styles";
-
 import "styles/chrome-bug.css";
 import "styles/main.css";
 
@@ -17,13 +11,26 @@ const rubik = Rubik({
   variable: "--font-rubik",
 });
 
+const meta = {
+  title: "Tailwind AI - Preview",
+  description: "Preview your Tailwind AI application.",
+  cardImage: "https://www.tailwindai.dev/og.png",
+  robots: "index, follow",
+  favicon: "/favicon.ico",
+};
+
+export const metadata = {
+  title: meta.title,
+  description: meta.description,
+  cardImage: meta.cardImage,
+  robots: meta.robots,
+  favicon: meta.favicon,
+};
+
 export default function RootLayout({ children }: PropsWithChildren) {
   return (
-    <html className={cn("dark size-full antialiased", rubik.variable)}>
-      <head>
-        <SandPackCSS />
-      </head>
-      <body className="size-full">{children}</body>
+    <html className={cn("dark size-full antialiased bg-white", rubik.variable)}>
+      <body className="relative size-full bg-white">{children}</body>
     </html>
   );
 }

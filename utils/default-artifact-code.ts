@@ -207,8 +207,7 @@ module.exports = {
     "clsx": "^2.1.1",
     "tailwindcss-animate": "^1.0.6",
     "class-variance-authority": "^0.7.1",
-    "tailwindcss": "^3.3.2",
-    "tailwind-merge": "^2.4.0"
+    "lucide-react": "^0.294.0"
   },
   "devDependencies": {
     "@types/node": "^20.3.1",
@@ -223,6 +222,9 @@ module.exports = {
     "eslint-plugin-react-refresh": "^0.3.4",
     "postcss": "^8.4.24",
     "typescript": "^5.0.2",
+    "tailwindcss": "^3.3.2",
+    "tailwind-merge": "^2.4.0",
+    "tailwindcss-animate": "^1.0.7",
     "vite": "^4.3.9"
   },
   "browserslist": [
