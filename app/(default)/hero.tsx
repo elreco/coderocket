@@ -208,8 +208,11 @@ export default function Hero() {
         >
           Create. <span className="text-primary">Refine.</span> Deliver.
         </h2>
-        <p className="font-normal">
-          Design UI with Tailwind from basic text prompts and images.
+        <p className="text-center font-normal">
+          Build fully responsive{" "}
+          <span className="font-semibold">Tailwind apps</span> effortlessly
+          using <span className="font-semibold">AI-powered</span> text prompts
+          and image inputs.
         </p>
       </div>
       <form

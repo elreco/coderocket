@@ -301,6 +301,7 @@ export const getAllReactPublicChats = async () => {
     .rpc("get_all_components")
     .is("is_private", false)
     .eq("framework", "react")
+    .not("last_assistant_message", "is", null)
     .limit(24);
   return data;
 };
@@ -311,6 +312,7 @@ export const getAllHTMLPublicChats = async () => {
   const { data } = await supabase
     .rpc("get_all_components")
     .is("is_private", false)
+    .not("last_assistant_message", "is", null)
     .limit(24);
   return data;
 };
