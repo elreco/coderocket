@@ -127,7 +127,7 @@ export default function RenderReactComponent() {
           <>
             {iframeLoading && <LoadingStateComponent state="initializing" />}
             <iframe
-              src={`https://${chatId}-${selectedVersion}.dev.tailwindai.dev`}
+              src={`https://${chatId}-${selectedVersion}.tailwindai.dev`}
               className={`size-full border-none ${iframeLoading ? "hidden" : ""}`}
               onLoad={handleIframeLoad}
             />

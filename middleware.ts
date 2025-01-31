@@ -9,7 +9,7 @@ export async function middleware(request: NextRequest) {
   // Récupération du host pour gérer les sous-domaines
   const hostname = request.headers.get("host");
 
-  // Vérifie si on est dans un contexte [prefix].dev.tailwindai.dev
+  // Vérifie si on est dans un contexte [prefix].tailwindai.dev
   if (hostname?.endsWith(".dev.tailwindai.dev")) {
     const prefix = hostname.split(".")[0]; // Extrait le "prefix"
     const pathname = request.nextUrl.pathname; // Récupère le chemin
