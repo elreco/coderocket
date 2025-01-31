@@ -20,6 +20,7 @@ import {
   anthropicModel,
   MAX_GENERATIONS,
   MAX_ITERATIONS,
+  mistralModel,
   storageUrl,
 } from "@/utils/config";
 // import { promptEnhancer } from "@/utils/prompt-enhancer";
@@ -36,7 +37,7 @@ export async function POST(req: Request) {
     const { prompt }: { prompt: string } = await req.json();
     if (!prompt) throw new Error("No prompt");
 
-    const { messagesFromDatabase, imageUrl, subscription, framework } =
+    const { messagesFromDatabase, imageUrl, framework } =
       await validateRequest(id);
 
     // const enhancedPrompt = await promptEnhancer(prompt);
@@ -49,11 +50,11 @@ export async function POST(req: Request) {
     );
     const stream = streamText({
       messages,
-      model: anthropicModel(
-        subscription
-          ? "claude-3-5-sonnet-20240620"
-          : "claude-3-5-sonnet-20240620",
-      ),
+      model: imageUrl
+        ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (anthropicModel("claude-3-5-sonnet-latest") as any)
+        : // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (mistralModel("pixtral-large-latest") as any),
       system:
         framework === "html"
           ? htmlSystemPrompt(

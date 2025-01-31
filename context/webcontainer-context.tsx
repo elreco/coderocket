@@ -33,6 +33,7 @@ const WebcontainerContext = createContext<WebcontainerContextType | undefined>(
 export type WebcontainerLoadingState =
   | "initializing"
   | "deploying"
+  | "processing"
   | "error"
   | null;
 
@@ -75,7 +76,6 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const deployToWebcontainer = async () => {
-      console.log("deployToWebcontainer");
       if (
         selectedFramework === "html" ||
         isLoading ||
@@ -112,7 +112,7 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
           switch (data.event) {
             case "init":
             case "processing":
-              setLoadingState("initializing");
+              setLoadingState("processing");
               setProgressMessages((prev) => [...prev, data.message]);
               break;
 

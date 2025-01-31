@@ -25,6 +25,7 @@ function LoadingStateComponent({ state }: { state: WebcontainerLoadingState }) {
           {state === "initializing" &&
             "Setting up your development environment."}
           {state === "deploying" && "It may take a few minutes."}
+          {state === "processing" && "Analyzing and generating your component."}
         </p>
       </div>
     </div>
