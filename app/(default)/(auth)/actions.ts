@@ -48,13 +48,13 @@ export async function register(formData: FormData) {
   if (!returnedData.user?.id) {
     return { error: "User not found" };
   }
-  const { error: updateError } = await supabase
-    .from("users")
-    .update({ full_name: formData.get("full_name") as string })
-    .eq("id", returnedData.user.id);
-
-  if (updateError) {
-    return { error: updateError.message };
+  try {
+    await supabase
+      .from("users")
+      .update({ full_name: formData.get("full_name") as string })
+      .eq("id", returnedData.user.id);
+  } catch (e) {
+    console.error(e);
   }
 
   if (returnedData.user?.id && returnedData.user?.email) {

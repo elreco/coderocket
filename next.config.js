@@ -1,31 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  async headers() {
-    return [
-      {
-        "source": "/storage/v1/object/public/(.*)",
-        "headers": [
-          {
-            "key": "X-Dummy-Header",
-            "value": "dummy"
-          }
-        ]
-      },
-      {
-        "source": "/(.*)",
-        "headers": [
-          {
-            "key": "Cross-Origin-Embedder-Policy",
-            "value": "credentialless"
-          },
-          {
-            "key": "Cross-Origin-Opener-Policy",
-            "value": "same-origin"
-          }
-        ]
-      }
-    ];
-  },
   experimental: {
     serverActions: {
       bodySizeLimit: "2mb",
@@ -48,7 +22,7 @@ const nextConfig = {
         pathname: '/**',
       },
     ],
-  },
+  }
 };
 
 module.exports = nextConfig;

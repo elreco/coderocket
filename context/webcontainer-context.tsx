@@ -1,173 +1,209 @@
 "use client";
 
-import { Terminal } from "@xterm/xterm";
 import React, {
   createContext,
   useContext,
   useState,
   useEffect,
   ReactNode,
+  useCallback,
 } from "react";
-
-import { ChatFile } from "@/utils/completion-parser";
-import { buildFileSystemTree, getPreviewId } from "@/utils/webcontainer";
-import { webcontainer as webcontainerPromise } from "@/utils/webcontainer-instance";
 
 import { useComponentContext } from "./component-context";
 
-type PreviewError = {
+type BuildError = {
   title: string;
   description: string;
   content: string;
 };
 
-interface WebContainerContextType {
-  terminal: Terminal | null;
-  files: ChatFile[];
-  setFiles: (files: ChatFile[]) => void;
+interface WebcontainerContextType {
   error: string | null;
-  loadingState: WebContainerLoadingState;
-  setLoadingState: (state: WebContainerLoadingState) => void;
-  previewError: PreviewError | null;
+  loadingState: WebcontainerLoadingState;
+  setLoadingState: (state: WebcontainerLoadingState) => void;
+  buildError: BuildError | null;
+  progressMessages: string[];
+  cancelDeployment: () => void;
 }
 
-const WebContainerContext = createContext<WebContainerContextType | undefined>(
+const WebcontainerContext = createContext<WebcontainerContextType | undefined>(
   undefined,
 );
 
-export type WebContainerLoadingState =
+export type WebcontainerLoadingState =
   | "initializing"
-  | "starting"
+  | "deploying"
+  | "processing"
   | "error"
   | null;
 
-export const WebContainerProvider = ({ children }: { children: ReactNode }) => {
+export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
   const [loadingState, setLoadingState] =
-    useState<WebContainerLoadingState>(null);
-  const [terminal, setTerminal] = useState<Terminal | null>(null);
-  const [files, setFiles] = useState<ChatFile[]>([]);
+    useState<WebcontainerLoadingState>(null);
   const [error, setError] = useState<string | null>(null);
-  const [previewError, setPreviewError] = useState<PreviewError | null>(null);
-  const { setPreviewId, selectedFramework, isLoading } = useComponentContext();
+  const [buildError, setBuildError] = useState<BuildError | null>(null);
+  const [progressMessages, setProgressMessages] = useState<string[]>([]);
+  const [eventSource, setEventSource] = useState<EventSource | null>(null);
+  const [currentDeployment, setCurrentDeployment] = useState<{
+    chatId: string;
+    version: number | undefined;
+  } | null>(null);
+  const {
+    setWebcontainerReady,
+    selectedFramework,
+    selectedVersion,
+    chatId,
+    isLoading,
+  } = useComponentContext();
+
+  const cancelDeployment = useCallback(() => {
+    if (eventSource) {
+      eventSource.close();
+      setEventSource(null);
+      setLoadingState(null);
+      setCurrentDeployment(null);
+    }
+  }, [eventSource]);
 
   useEffect(() => {
-    setPreviewId(undefined);
+    setWebcontainerReady(false);
     setError(null);
+    setProgressMessages([]);
+    return () => {
+      cancelDeployment();
+    };
   }, []);
 
   useEffect(() => {
-    const setupProject = async () => {
-      setError(null);
-      setLoadingState("initializing");
-      if (selectedFramework === "html" || isLoading) {
+    const deployToWebcontainer = async () => {
+      if (
+        selectedFramework === "html" ||
+        isLoading ||
+        selectedVersion === undefined
+      ) {
         return;
       }
-      const webcontainer = await webcontainerPromise;
-      if (files.length === 0 || !webcontainer) {
+
+      if (
+        currentDeployment?.chatId === chatId &&
+        currentDeployment?.version === selectedVersion
+      ) {
         return;
       }
-      const newTerminal = new Terminal();
-      newTerminal.clear();
-      setTerminal(newTerminal);
-      if (!newTerminal) {
-        throw new Error("Instance or terminal not found");
+
+      if (eventSource) {
+        cancelDeployment();
       }
-      const shellProcess = await webcontainer.spawn("jsh");
 
-      shellProcess.output.pipeTo(
-        new WritableStream({
-          write(data) {
-            newTerminal.write(data);
-          },
-        }),
-      );
+      try {
+        setError(null);
+        setLoadingState("initializing");
+        setProgressMessages([]);
+        setBuildError(null);
 
-      const input = shellProcess.input.getWriter();
+        const newEventSource = new EventSource(
+          `/api/webcontainers?chatId=${chatId}&version=${selectedVersion}`,
+        );
+        setEventSource(newEventSource);
+        setCurrentDeployment({ chatId, version: selectedVersion });
 
-      newTerminal.onData((data) => {
-        input.write(data);
-      });
-      const fileSystemTree = buildFileSystemTree(files);
-      await webcontainer.mount(fileSystemTree);
+        newEventSource.onmessage = (event) => {
+          const data = JSON.parse(event.data);
+          switch (data.event) {
+            case "init":
+            case "processing":
+              setLoadingState("processing");
+              setProgressMessages((prev) => [...prev, data.message]);
+              break;
 
-      const installProcess = await webcontainer.spawn("npm", ["install"]);
-      installProcess.output.pipeTo(
-        new WritableStream({
-          write(data) {
-            newTerminal.write(data);
-          },
-        }),
-      );
-      await installProcess.exit;
-      const devProcess = await webcontainer.spawn("npm", ["run", "dev"]);
-      setLoadingState("starting");
-      devProcess.output.pipeTo(
-        new WritableStream({
-          write(data) {
-            if (data) {
-              newTerminal.write(data);
-            }
-          },
-        }),
-      );
-      await devProcess.exit;
+            case "deploying":
+            case "building":
+            case "uploading":
+              setLoadingState("deploying");
+              setProgressMessages((prev) => [...prev, data.message]);
+              break;
+
+            case "error":
+              setBuildError({
+                title: "Deployment error",
+                description: "An error occurred during deployment.",
+                content: data.message,
+              });
+              setLoadingState("error");
+              newEventSource.close();
+              setEventSource(null);
+              setCurrentDeployment(null);
+              break;
+
+            case "cancelled":
+              setProgressMessages((prev) => [...prev, "Deployment cancelled"]);
+              setLoadingState(null);
+              newEventSource.close();
+              setEventSource(null);
+              setCurrentDeployment(null);
+              break;
+
+            case "success":
+              setProgressMessages((prev) => [
+                ...prev,
+                "Deployment completed successfully!",
+              ]);
+              setWebcontainerReady(true);
+              setLoadingState(null);
+              newEventSource.close();
+              setEventSource(null);
+              break;
+
+            case "already-deployed":
+              setWebcontainerReady(true);
+              setLoadingState(null);
+              newEventSource.close();
+              setEventSource(null);
+              break;
+          }
+        };
+
+        newEventSource.onerror = () => {
+          setWebcontainerReady(true);
+          setLoadingState(null);
+          newEventSource.close();
+          setEventSource(null);
+        };
+      } catch (e: unknown) {
+        setBuildError({
+          title: "Deployment error",
+          description: "An error occurred during deployment.",
+          content: (e as Error).message,
+        });
+        setLoadingState("error");
+        setCurrentDeployment(null);
+      }
     };
 
-    setupProject();
-  }, [files, isLoading]);
-
-  useEffect(() => {
-    if (selectedFramework !== "html") {
-      webcontainerPromise.then((webcontainer) => {
-        webcontainer.on("preview-message", (message) => {
-          if (
-            message.type === "PREVIEW_UNCAUGHT_EXCEPTION" ||
-            message.type === "PREVIEW_UNHANDLED_REJECTION"
-          ) {
-            const isPromise = message.type === "PREVIEW_UNHANDLED_REJECTION";
-            setPreviewError({
-              title: isPromise
-                ? "Unhandled Promise Rejection"
-                : "Uncaught Exception",
-              description: message.message,
-              content: `Error occurred at ${message.pathname}${message.search}${message.hash}`,
-            });
-          }
-        });
-
-        webcontainer.on("server-ready", async (port, url) => {
-          const newPreviewId = getPreviewId(url);
-          if (newPreviewId) {
-            setLoadingState(null);
-            setPreviewId(newPreviewId);
-          }
-        });
-      });
-    }
-  }, []);
+    deployToWebcontainer();
+  }, [isLoading, selectedFramework, selectedVersion, chatId]);
 
   return (
-    <WebContainerContext.Provider
+    <WebcontainerContext.Provider
       value={{
-        terminal,
-        files,
-        setFiles,
         error,
         loadingState,
         setLoadingState,
-        previewError,
+        buildError,
+        progressMessages,
+        cancelDeployment,
       }}
     >
       {children}
-    </WebContainerContext.Provider>
+    </WebcontainerContext.Provider>
   );
 };
 
-export const useWebContainer = (): WebContainerContextType => {
-  const context = useContext(WebContainerContext);
+export const useWebcontainer = (): WebcontainerContextType => {
+  const context = useContext(WebcontainerContext);
   if (!context) {
     throw new Error(
-      "useWebContainer must be used within a WebContainerProvider",
+      "useWebcontainer must be used within a WebcontainerProvider",
     );
   }
   return context;

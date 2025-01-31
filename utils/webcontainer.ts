@@ -29,8 +29,8 @@ export const getPreviewId = (url: string) => {
   );
 
   if (match) {
-    const previewId = match[1];
-    return previewId;
+    const isWebcontainerReady = match[1];
+    return isWebcontainerReady;
   } else {
     console.warn("[Preview] Invalid WebContainer URL:", url);
   }

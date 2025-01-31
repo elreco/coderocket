@@ -32,9 +32,8 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { WebContainerRender } from "@/components/webcontainers/webcontainer-render";
 import { ChatMessage, ComponentContext } from "@/context/component-context";
-import { WebContainerProvider } from "@/context/webcontainer-context";
+import { WebcontainerProvider } from "@/context/webcontainer-context";
 import { useToast } from "@/hooks/use-toast";
 import { Tables } from "@/types_db";
 import {
@@ -81,7 +80,7 @@ export default function ComponentCompletion({
   const [isVisible, setVisible] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editorValue, setEditorValue] = useState("");
-  const [previewId, setPreviewId] = useState<string | undefined>(undefined);
+  const [isWebcontainerReady, setWebcontainerReady] = useState(false);
 
   const [chatFiles, setChatFiles] = useState<ChatFile[]>([]);
   const [artifactFiles, setArtifactFiles] = useState<ChatFile[]>([]);
@@ -198,9 +197,10 @@ export default function ComponentCompletion({
   const handleSubmitToAI = (input: string) => {
     setCompletion("");
     setArtifactFiles([]);
-    setPreviewId(undefined);
+    setWebcontainerReady(false);
     setChatFiles([]);
     setCanvas(false);
+    setTitle(input);
     setIsLoading(true);
     complete(input);
   };
@@ -378,8 +378,8 @@ export default function ComponentCompletion({
     chatId,
     artifactFiles,
     selectedFramework: fetchedChat?.framework || "react",
-    previewId,
-    setPreviewId,
+    isWebcontainerReady,
+    setWebcontainerReady,
   };
   /*
   useEffect(() => {
@@ -457,7 +457,8 @@ export default function ComponentCompletion({
                   </TabsList>
                 </Tabs>
                 {(fetchedChat?.framework === "html" ||
-                  (previewId && fetchedChat?.framework === "react")) && (
+                  (isWebcontainerReady &&
+                    fetchedChat?.framework === "react")) && (
                   <>
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -475,29 +476,30 @@ export default function ComponentCompletion({
                         <p>Display in fullscreen</p>
                       </TooltipContent>
                     </Tooltip>
-                    {previewId && fetchedChat?.framework === "react" && (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            onClick={() =>
-                              window.open(
-                                `/webcontainer/${previewId}`,
-                                "_blank",
-                              )
-                            }
-                            className="flex items-center"
-                            disabled={isLoading}
-                          >
-                            <ExternalLink className="w-5" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Open in a new tab</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    )}
+                    {isWebcontainerReady &&
+                      fetchedChat?.framework === "react" && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={() =>
+                                window.open(
+                                  `https://${chatId}-${selectedVersion}.dev.tailwindai.dev`,
+                                  "_blank",
+                                )
+                              }
+                              className="flex items-center"
+                              disabled={isLoading}
+                            >
+                              <ExternalLink className="w-5" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Open in a new tab</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
                     <Dialog
                       open={isModalOpen}
                       onOpenChange={handleFullscreenToggle}
@@ -505,8 +507,12 @@ export default function ComponentCompletion({
                       <DialogContent className="z-[9999] h-[98%] max-w-[98%] rounded-none p-10">
                         <DialogTitle className="hidden">Fullscreen</DialogTitle>
                         <DialogDescription className="z-[9999]">
-                          {fetchedChat.framework === "react" && previewId ? (
-                            <WebContainerRender previewId={previewId} />
+                          {fetchedChat.framework === "react" &&
+                          isWebcontainerReady ? (
+                            <iframe
+                              src={`https://${chatId}-${selectedVersion}.dev.tailwindai.dev`}
+                              className="size-full"
+                            />
                           ) : (
                             <RenderHtmlComponent files={chatFiles} />
                           )}
@@ -565,9 +571,9 @@ export default function ComponentCompletion({
                   </span>
                 </Badge>
               )}
-              <WebContainerProvider>
+              <WebcontainerProvider>
                 <CodePreview />
-              </WebContainerProvider>
+              </WebcontainerProvider>
             </div>
           </div>
           <ComponentSidebar className="hidden lg:flex" />

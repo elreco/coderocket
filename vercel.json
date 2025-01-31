@@ -3,29 +3,5 @@
     "env": {
       "PLAYWRIGHT_BROWSERS_PATH": "0"
     }
-  },
-  "headers": [
-    {
-      "source": "/storage/v1/object/public/(.*)",
-      "headers": [
-        {
-          "key": "X-Dummy-Header",
-          "value": "dummy"
-        }
-      ]
-    },
-    {
-      "source": "/(.*)",
-      "headers": [
-        {
-          "key": "Cross-Origin-Embedder-Policy",
-          "value": "credentialless"
-        },
-        {
-          "key": "Cross-Origin-Opener-Policy",
-          "value": "same-origin"
-        }
-      ]
-    }
-  ]
+  }
 }

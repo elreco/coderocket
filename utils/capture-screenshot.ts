@@ -15,15 +15,7 @@ async function getBrowser() {
   const executablePath = await chromium.executablePath();
 
   const browser = await puppeteerCore.launch({
-    args: [
-      ...chromium.args,
-      "--disable-features=SameSiteByDefaultCookies", // Désactive les restrictions des cookies SameSite
-      "--disable-features=CookiesWithoutSameSiteMustBeSecure", // Permet les cookies tiers non sécurisés
-      "--disable-site-isolation-trials", // Désactive l'isolement des sites
-      "--disable-blink-features=BlockCredentialedSubresources", // Autorise les ressources avec des credentials
-      "--disable-popup-blocking", // Désactive le blocage des popups
-      "--disable-infobars", // Supprime les infobars qui avertissent des popups
-    ],
+    args: [...chromium.args],
     defaultViewport: chromium.defaultViewport,
     executablePath,
     headless: chromium.headless,
@@ -31,14 +23,10 @@ async function getBrowser() {
   return browser;
 }
 
-export async function captureScreenshot(url: string, framework?: string) {
+export async function captureScreenshot(url: string) {
   // Lance un navigateur headless
   const browser = await getBrowser();
   const page = await browser.newPage();
-  await page.setExtraHTTPHeaders({
-    "Cross-Origin-Opener-Policy": "same-origin",
-    "Cross-Origin-Embedder-Policy": "credentialless",
-  });
   // Configure la taille de la fenêtre
   await page.setViewport({
     width: 1200,
@@ -50,11 +38,6 @@ export async function captureScreenshot(url: string, framework?: string) {
   await page.goto(url, {
     waitUntil: "networkidle0",
   });
-
-  // Attendre 60 secondes si ce n'est pas le framework HTML
-  if (framework !== "html") {
-    await new Promise((resolve) => setTimeout(resolve, 45000));
-  }
 
   // Prend la capture d'écran au format PNG (renvoie un Buffer)
   const screenshot = await page.screenshot({
@@ -98,9 +81,9 @@ export const takeScreenshot = async (
   const finalUrl =
     framework === "html"
       ? `https://www.tailwindai.dev/content/${chatId}`
-      : `https://www.tailwindai.dev/webcontainer-preview/${chatId}`;
-
-  const screenshot = await captureScreenshot(finalUrl, framework);
+      : `https://${chatId}-${version}.dev.tailwindai.dev`;
+  console.log("finalUrl", finalUrl);
+  const screenshot = await captureScreenshot(finalUrl);
   if (!screenshot) {
     throw new Error("Failed to capture screenshot");
   }

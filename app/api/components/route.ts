@@ -17,9 +17,9 @@ import {
   hasArtifacts,
 } from "@/utils/completion-parser";
 import {
-  anthropicModel,
   MAX_GENERATIONS,
   MAX_ITERATIONS,
+  anthropicModel,
   storageUrl,
 } from "@/utils/config";
 // import { promptEnhancer } from "@/utils/prompt-enhancer";
@@ -36,7 +36,7 @@ export async function POST(req: Request) {
     const { prompt }: { prompt: string } = await req.json();
     if (!prompt) throw new Error("No prompt");
 
-    const { messagesFromDatabase, imageUrl, subscription, framework } =
+    const { messagesFromDatabase, imageUrl, framework } =
       await validateRequest(id);
 
     // const enhancedPrompt = await promptEnhancer(prompt);
@@ -49,11 +49,7 @@ export async function POST(req: Request) {
     );
     const stream = streamText({
       messages,
-      model: anthropicModel(
-        subscription
-          ? "claude-3-5-sonnet-20240620"
-          : "claude-3-5-sonnet-20240620",
-      ),
+      model: anthropicModel("claude-3-5-sonnet-latest"),
       system:
         framework === "html"
           ? htmlSystemPrompt(
@@ -265,9 +261,9 @@ const updateDataAfterCompletion = async (
 
   await supabase.from("messages").insert(newMessages).eq("chat_id", chatId);
   const hasArtifactResult = hasArtifacts(text);
-  if (hasArtifactResult) {
+  if (hasArtifactResult && chat.framework === "html") {
     after(async () => {
-      await takeScreenshot(chatId, version, theme, chat.framework || "react");
+      await takeScreenshot(chatId, version, theme, "html");
     });
   }
 };

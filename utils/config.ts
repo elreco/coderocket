@@ -1,4 +1,5 @@
 import { createAnthropic } from "@ai-sdk/anthropic";
+import { createMistral } from "@ai-sdk/mistral";
 import { createOpenAI } from "@ai-sdk/openai";
 
 export const storageUrl =
@@ -24,6 +25,10 @@ export const openAINewModel = createOpenAI({
 export const anthropicModel = createAnthropic({
   apiKey:
     "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",
+});
+
+export const mistralModel = createMistral({
+  apiKey: "wPtmvPqjeiUcBxX1aTg5eYtd9PGk5ZcM",
 });
 
 export const crispWebsiteId = "2f740c23-7cfa-40ff-ba55-581ff73c5a67";

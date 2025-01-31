@@ -1,47 +1,71 @@
 "use client";
 
-import { Loader2, AlertCircle } from "lucide-react";
-import React, { useEffect } from "react";
+import { Loader2, AlertCircle, WandSparkles } from "lucide-react";
+import React from "react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { WebContainerRender } from "@/components/webcontainers/webcontainer-render";
 import { useComponentContext } from "@/context/component-context";
-import { useWebContainer } from "@/context/webcontainer-context";
-import { WebContainerLoadingState } from "@/context/webcontainer-context";
-import { ChatFile } from "@/utils/completion-parser";
+import {
+  WebcontainerLoadingState,
+  useWebcontainer,
+} from "@/context/webcontainer-context";
 
-function LoadingStateComponent({ state }: { state: WebContainerLoadingState }) {
+import { Button } from "../ui/button";
+
+function LoadingStateComponent({ state }: { state: WebcontainerLoadingState }) {
   return (
     <div className="flex size-full flex-col items-center justify-center space-y-4 p-8 text-center">
       <Loader2 className="size-8 animate-spin text-primary" />
       <div className="space-y-2">
         <h3 className="font-semibold">
           {state === "initializing" && "Initializing WebContainer..."}
-          {state === "starting" && "Starting development server..."}
+          {state === "deploying" && "Deploying your application..."}
         </h3>
         <p className="text-sm text-muted-foreground">
           {state === "initializing" &&
-            "Setting up your development environment"}
-          {state === "starting" && "Almost ready to show your application"}
+            "Setting up your development environment."}
+          {state === "deploying" && "It may take a few minutes."}
+          {state === "processing" && "Analyzing and generating your component."}
         </p>
       </div>
     </div>
   );
 }
 
-export default function RenderReactComponent({ files }: { files: ChatFile[] }) {
-  const { loadingState, previewError, error, setFiles } = useWebContainer();
-  const { previewId, isLoading } = useComponentContext();
+function ProgressMessagesComponent({ messages }: { messages: string[] }) {
+  return (
+    <div className="mx-auto mt-4 w-full max-w-xl text-center">
+      <ul className="space-y-1">
+        {messages.map((message, index) => (
+          <li key={index} className="text-sm text-muted-foreground">
+            {message}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
 
-  useEffect(() => {
-    if (!isLoading && files.length > 0) {
-      setFiles(files);
-    }
-  }, [files, isLoading]);
+export default function RenderReactComponent() {
+  const { loadingState, buildError, error, progressMessages } =
+    useWebcontainer();
+  const { chatId, selectedVersion, isLoading, authorized, setInput } =
+    useComponentContext();
+  const [iframeLoading, setIframeLoading] = React.useState(true);
+
+  const handleIframeLoad = () => {
+    setIframeLoading(false);
+  };
+
+  React.useEffect(() => {
+    setIframeLoading(true);
+  }, [chatId, selectedVersion]);
 
   return (
     <>
-      {isLoading && !error && <LoadingStateComponent state="initializing" />}
+      {isLoading && !buildError && !error && (
+        <LoadingStateComponent state="initializing" />
+      )}
 
       {error && (
         <div className="flex size-full items-center justify-center px-4">
@@ -57,22 +81,58 @@ export default function RenderReactComponent({ files }: { files: ChatFile[] }) {
         </div>
       )}
 
-      {previewError && !isLoading && (
+      {buildError && !isLoading && (
         <div className="mx-4 flex items-center justify-center">
-          <Alert variant="destructive" className="bg-secondary px-12">
-            <AlertCircle className="size-4" />
+          <Alert
+            variant="destructive"
+            className="bg-destructive px-12 text-foreground"
+          >
+            <AlertCircle className="size-4 fill-foreground text-foreground" />
             <AlertDescription className="flex flex-col gap-2">
-              <strong>{previewError.title}</strong>
-              <span>{previewError.description}</span>
-              <span className="text-xs opacity-75">{previewError.content}</span>
+              <strong>{buildError.title}</strong>
+              <span>{buildError.description}</span>
+              <span className="text-xs opacity-75">{buildError.content}</span>
             </AlertDescription>
+            {authorized && (
+              <Button
+                variant="outline"
+                className="mt-2 w-full"
+                onClick={() =>
+                  setInput("Fix the following error: " + buildError.content)
+                }
+              >
+                <WandSparkles className="size-4" />
+                Ask Tailwind AI to fix it
+              </Button>
+            )}
           </Alert>
         </div>
       )}
-      {loadingState && !error && <LoadingStateComponent state={loadingState} />}
-      {previewId && !isLoading && !error && !previewError && !loadingState && (
-        <WebContainerRender previewId={previewId} />
+
+      {loadingState && !error && !buildError && (
+        <div className="flex flex-col items-center">
+          <LoadingStateComponent state={loadingState} />
+          {progressMessages.length > 0 && (
+            <ProgressMessagesComponent messages={progressMessages} />
+          )}
+        </div>
       )}
+
+      {chatId &&
+        selectedVersion !== undefined &&
+        !isLoading &&
+        !error &&
+        !buildError &&
+        !loadingState && (
+          <>
+            {iframeLoading && <LoadingStateComponent state="initializing" />}
+            <iframe
+              src={`https://${chatId}-${selectedVersion}.dev.tailwindai.dev`}
+              className={`size-full border-none ${iframeLoading ? "hidden" : ""}`}
+              onLoad={handleIframeLoad}
+            />
+          </>
+        )}
     </>
   );
 }

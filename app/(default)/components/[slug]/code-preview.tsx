@@ -15,7 +15,6 @@ import { useCopyToClipboard } from "usehooks-ts";
 import RenderHtmlComponent from "@/components/renders/render-html-component";
 import RenderReactComponent from "@/components/renders/render-react-component";
 import { Button } from "@/components/ui/button";
-import { WebContainerTerminal } from "@/components/webcontainers/webcontainer-terminal";
 import { useComponentContext } from "@/context/component-context";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -30,12 +29,10 @@ const RenderContent = React.memo(
     isLoading,
     chatFiles,
     selectedFramework,
-    artifactFiles,
   }: {
     isLoading: boolean;
     chatFiles: ChatFile[];
     selectedFramework: string;
-    artifactFiles: ChatFile[];
   }) => {
     if (isLoading && chatFiles.length === 0) {
       return (
@@ -49,12 +46,7 @@ const RenderContent = React.memo(
     }
 
     if (selectedFramework === "react") {
-      return (
-        <>
-          <RenderReactComponent files={artifactFiles} />
-          <WebContainerTerminal />
-        </>
-      );
+      return <RenderReactComponent />;
     }
 
     return (
@@ -81,14 +73,6 @@ const RenderContent = React.memo(
     if (
       nextProps.selectedFramework === "html" &&
       !areFilesEqual(prevProps.chatFiles, nextProps.chatFiles)
-    ) {
-      return false;
-    }
-
-    // Always compare artifactFiles for react framework
-    if (
-      nextProps.selectedFramework === "react" &&
-      !areFilesEqual(prevProps.artifactFiles, nextProps.artifactFiles)
     ) {
       return false;
     }
@@ -187,7 +171,6 @@ export default function CodePreview() {
           isLoading={isLoading}
           chatFiles={chatFiles}
           selectedFramework={selectedFramework}
-          artifactFiles={artifactFiles}
         />
       </div>
       <div

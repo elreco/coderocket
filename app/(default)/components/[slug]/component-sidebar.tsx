@@ -127,24 +127,24 @@ export default function ComponentSidebar({
             isLoading && messages.length > 1 ? "block" : "hidden",
           )}
         >
-          <div className="flex items-center">
-            <Avatar className="mr-2 size-10">
-              <AvatarImage
-                src={user?.avatar_url || undefined}
-                alt={user?.full_name || undefined}
-              />
-              <AvatarFallback className="bg-background">
-                <span className="text-xs">
-                  {getInitials(user?.full_name || "")}
-                </span>
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center">
+              <Avatar className="mr-2 size-10">
+                <AvatarImage
+                  src={user?.avatar_url || undefined}
+                  alt={user?.full_name || undefined}
+                />
+                <AvatarFallback className="bg-background">
+                  <span className="text-xs">
+                    {getInitials(user?.full_name || "")}
+                  </span>
+                </AvatarFallback>
+              </Avatar>
               {user?.full_name && (
                 <h2 className="text-lg font-semibold">{user.full_name}</h2>
               )}
-              <UserMessage>{input}</UserMessage>
             </div>
+            <UserMessage>{input}</UserMessage>
           </div>
           <p className="mt-2 text-right text-xs font-semibold text-primary">
             {getRelativeDate(new Date().toISOString())}
@@ -158,24 +158,29 @@ export default function ComponentSidebar({
             isLoading ? "block" : "hidden",
           )}
         >
-          <div className="flex items-start gap-2">
-            <Avatar className="mr-2 size-10 rounded-none">
-              <AvatarImage src="/logo-white.png" />
-              <AvatarFallback>T</AvatarFallback>
-            </Avatar>
-            <div className="flex w-full flex-col gap-2">
-              {streamingChunks.map((chunk, index) => (
-                <div className="w-full overflow-x-auto text-sm" key={index}>
-                  {chunk.type === "text" && (
-                    <Markdown>{chunk.content}</Markdown>
-                  )}
-                </div>
-              ))}
-              <div className="flex gap-1">
-                <span className="size-2 animate-[typing_1s_ease-in-out_infinite] rounded-full bg-foreground/50"></span>
-                <span className="size-2 animate-[typing_1s_ease-in-out_infinite] rounded-full bg-foreground/50 delay-300"></span>
-                <span className="delay-[600ms] size-2 animate-[typing_1s_ease-in-out_infinite] rounded-full bg-foreground/50"></span>
+          <div className="flex flex-col items-start justify-start">
+            <div className="flex items-center">
+              <Avatar className="mr-2 size-10 rounded-none">
+                <AvatarImage src="/logo-white.png" />
+                <AvatarFallback>T</AvatarFallback>
+              </Avatar>
+              <h2
+                className={cn(
+                  "text-lg ml-2 font-semibold transition-all group-hover:text-primary",
+                )}
+              >
+                Version #{selectedVersion ? selectedVersion + 1 : 0}
+              </h2>
+            </div>
+            {streamingChunks.map((chunk, index) => (
+              <div className="w-full overflow-x-auto text-sm" key={index}>
+                {chunk.type === "text" && <Markdown>{chunk.content}</Markdown>}
               </div>
+            ))}
+            <div className="mt-2 flex gap-1">
+              <span className="size-2 animate-[typing_1s_ease-in-out_infinite] rounded-full bg-foreground/50"></span>
+              <span className="size-2 animate-[typing_1s_ease-in-out_infinite] rounded-full bg-foreground/50 delay-300"></span>
+              <span className="delay-[600ms] size-2 animate-[typing_1s_ease-in-out_infinite] rounded-full bg-foreground/50"></span>
             </div>
           </div>
         </div>
