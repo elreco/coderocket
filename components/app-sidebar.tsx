@@ -1,13 +1,7 @@
 "use client";
 
-import { SiDiscord } from "@icons-pack/react-simple-icons";
-import {
-  CreditCard,
-  Globe,
-  Rocket,
-  SquareTerminal,
-  UserCircle2,
-} from "lucide-react";
+import { SiDiscord, SiHtml5, SiReact } from "@icons-pack/react-simple-icons";
+import { CreditCard, Globe, Rocket, SquareTerminal } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import * as React from "react";
@@ -32,7 +26,6 @@ import { Tables } from "@/types_db";
 
 import Logo from "./icons/logo";
 import { NavAuth } from "./nav-auth";
-import { NavComponents } from "./nav-components";
 
 // This is sample data.
 const data = {
@@ -51,6 +44,18 @@ const data = {
       //     url: "/components",
       //   },
       // ],
+    },
+  ],
+  myComponents: [
+    {
+      title: "My React Components",
+      url: "/account/components/react",
+      icon: SiReact,
+    },
+    {
+      title: "My HTML Components",
+      url: "/account/components",
+      icon: SiHtml5,
     },
   ],
   navMain: [
@@ -88,10 +93,15 @@ const data = {
     },
   ],
 };
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+export function AppSidebar({
+  defaultUser,
+  ...props
+}: React.ComponentProps<typeof Sidebar> & {
+  defaultUser: (Tables<"users"> & { email: string | null }) | null;
+}) {
   const [user, setUser] = useState<
     (Tables<"users"> & { email: string | null }) | null
-  >(null);
+  >(defaultUser);
   const [isLoading, setIsLoading] = useState(true);
   const pathname = usePathname();
 
@@ -104,6 +114,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     fetchUserDetails();
   }, []);
 
+  useEffect(() => {
+    setUser(defaultUser);
+  }, [defaultUser]);
+
   const navMainItems = data.navMain.map((item) => ({
     ...item,
     isActive: pathname === item.url,
@@ -114,33 +128,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     isActive: pathname === item.url,
   }));
 
-  // Ajout du nouvel élément si l'utilisateur est connecté
-  const finalNavComponentsItems = user
-    ? [
-        {
-          title: "My Components",
-          url: "#",
-          icon: UserCircle2,
-          isActive: true,
-          items: [
-            {
-              title: "My React Components",
-              url: "/account/components/react",
-            },
-            {
-              title: "My HTML Components",
-              url: "/account/components",
-            },
-          ],
-        },
-      ].map((item) => ({
+  const myComponentsItems = user
+    ? data.myComponents.map((item) => ({
         ...item,
-        items: item.items?.map((subItem) => ({
-          ...subItem,
-          isActive: pathname === subItem.url,
-        })),
+        isActive: pathname === item.url,
       }))
-    : null;
+    : [];
 
   const { setOpenMobile } = useSidebar();
 
@@ -177,9 +170,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarContent>
         <NavMain items={navMainItems} label="Tailwind AI" />
         <NavMain items={navComponentsItems} label="Public Components" />
-        {finalNavComponentsItems && (
-          <NavComponents items={finalNavComponentsItems} />
-        )}
+        {user && <NavMain items={myComponentsItems} label="My Components" />}
       </SidebarContent>
       <SidebarFooter>
         {isLoading ? null : user ? <NavUser user={user} /> : <NavAuth />}

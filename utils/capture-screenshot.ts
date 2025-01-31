@@ -38,7 +38,7 @@ export async function captureScreenshot(url: string) {
   await page.goto(url, {
     waitUntil: "networkidle0",
   });
-
+  await new Promise((resolve) => setTimeout(resolve, 2000));
   // Prend la capture d'écran au format PNG (renvoie un Buffer)
   const screenshot = await page.screenshot({
     type: "png",
