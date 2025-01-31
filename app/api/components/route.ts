@@ -17,10 +17,9 @@ import {
   hasArtifacts,
 } from "@/utils/completion-parser";
 import {
-  anthropicModel,
   MAX_GENERATIONS,
   MAX_ITERATIONS,
-  mistralModel,
+  anthropicModel,
   storageUrl,
 } from "@/utils/config";
 // import { promptEnhancer } from "@/utils/prompt-enhancer";
@@ -50,11 +49,7 @@ export async function POST(req: Request) {
     );
     const stream = streamText({
       messages,
-      model: imageUrl
-        ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (anthropicModel("claude-3-5-sonnet-latest") as any)
-        : // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (mistralModel("pixtral-large-latest") as any),
+      model: anthropicModel("claude-3-5-sonnet-latest"),
       system:
         framework === "html"
           ? htmlSystemPrompt(

@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
         );
         if (!extractedFiles.length) {
           await sendStatus("error", {
-            message: "No files found in completion.",
+            message: "Tailwind AI didn't generate any files.",
           });
           controller.close();
           return;
@@ -113,7 +113,7 @@ export async function GET(request: NextRequest) {
             }),
           },
         );
-
+        console.log(builderResponse);
         // Arrêter les messages de mise à jour une fois la réponse reçue
         clearInterval(updateInterval);
 
