@@ -4,6 +4,7 @@ import {
   CircleFadingArrowUp,
   MessageSquare,
   Paintbrush,
+  WandSparkles,
 } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 
@@ -14,6 +15,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { UserMessage } from "@/components/user-message";
 import { useComponentContext } from "@/context/component-context";
+import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import {
   ContentChunk,
@@ -25,6 +27,7 @@ import { getInitials } from "@/utils/helpers";
 import { Markdown } from "../markdown";
 
 import ComponentTheme from "./(settings)/component-theme";
+import { improvePromptByChatId } from "./actions";
 import ComponentChatFiles from "./component-chat-files";
 import { ComponentSidebarSkeleton } from "./component-sidebar-skeleton";
 
@@ -34,6 +37,7 @@ export default function ComponentSidebar({
   className?: string;
 }) {
   const {
+    chatId,
     authorized,
     messages,
     isLoading,
@@ -51,6 +55,8 @@ export default function ComponentSidebar({
   const containerRef = useRef<HTMLDivElement>(null);
   const [streamingChunks, setStreamingChunks] = useState<ContentChunk[]>([]);
   const [activeTab, setActiveTab] = useState("chat");
+  const [hasImproved, setHasImproved] = useState(false);
+  const [isImprovingLoading, setIsImprovingLoading] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -80,6 +86,34 @@ export default function ComponentSidebar({
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
+  };
+
+  const handleImprovePrompt = async () => {
+    if (isImprovingLoading) return;
+    if (!input) {
+      toast({
+        variant: "destructive",
+        title: "Prompt is empty",
+        description: "Please add a prompt to improve",
+        duration: 5000,
+      });
+      return;
+    }
+    try {
+      setIsImprovingLoading(true);
+      const improvedPrompt = await improvePromptByChatId(chatId, input);
+      setInput(improvedPrompt);
+      setHasImproved(true);
+      setIsImprovingLoading(false);
+    } catch {
+      toast({
+        variant: "destructive",
+        title: "Premium account required",
+        description:
+          "You are not premium, the visibility cannot be changed. Please upgrade to premium and try again.",
+        duration: 5000,
+      });
+    }
   };
 
   useEffect(() => {
@@ -353,15 +387,32 @@ export default function ComponentSidebar({
                 <kbd className="rounded-sm bg-secondary p-1">Return</kbd> for a
                 new line
               </div>
-              <Button
-                size="sm"
-                loading={isLoading}
-                type="submit"
-                className="flex w-full items-center"
-              >
-                <CircleFadingArrowUp className="size-3" />
-                <span>Iterate</span>
-              </Button>
+              <div className="flex w-full items-center">
+                <Button
+                  size="sm"
+                  loading={isLoading}
+                  type="submit"
+                  className="flex w-full items-center"
+                >
+                  <CircleFadingArrowUp className="size-3" />
+                  <span>Iterate</span>
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  className="w-full hover:bg-background lg:w-auto"
+                  disabled={isLoading || isImprovingLoading || hasImproved}
+                  onClick={handleImprovePrompt}
+                >
+                  <WandSparkles className="size-3" />
+                  {isImprovingLoading
+                    ? "Improving prompt..."
+                    : hasImproved
+                      ? "Prompt improved"
+                      : "Improve prompt"}
+                </Button>
+              </div>
             </div>
           </div>
         )}

@@ -9,11 +9,12 @@ import {
 import {
   Image as LucideImage,
   X,
-  Wand,
   Terminal,
   Paintbrush,
   Globe,
   Lock,
+  WandSparkles,
+  Rocket,
 } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -46,7 +47,13 @@ import {
 } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { defaultTheme, maxImageSize, themes } from "@/utils/config";
+import {
+  AvailableFramework,
+  defaultTheme,
+  maxImageSize,
+  themes,
+} from "@/utils/config";
+import { promptEnhancer } from "@/utils/prompt-enhancer";
 import { createClient } from "@/utils/supabase/client";
 
 import { createChat } from "./components/actions";
@@ -79,13 +86,18 @@ export default function Hero() {
   const [prompt, setPrompt] = useState("");
   const [isVisible, setVisible] = useState(true);
   const [selectedTheme, setSelectedTheme] = useState(defaultTheme);
-  const [selectedFramework, setSelectedFramework] = useState("react");
+  const [selectedFramework, setSelectedFramework] =
+    useState<AvailableFramework>("react");
   const [loading, setLoading] = useState(false);
+  const [loadingAction, setLoadingAction] = useState<
+    "generate" | "improve" | null
+  >(null);
   const [image, setImage] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
   const router = useRouter();
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [hasImproved, setHasImproved] = useState(false);
 
   useEffect(() => {
     if (inputRef.current) {
@@ -115,6 +127,7 @@ export default function Hero() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setLoadingAction("generate");
     const formData = new FormData();
     if (image) {
       formData.append("file", image as File);
@@ -131,6 +144,7 @@ export default function Hero() {
         duration: 5000,
       });
       setLoading(false);
+      setLoadingAction(null);
       return;
     }
     router.push(`/components/${slug}`);
@@ -184,6 +198,62 @@ export default function Hero() {
         duration: 5000,
       });
     }
+  };
+
+  const handleImprovePrompt = async () => {
+    if (!prompt) {
+      toast({
+        variant: "destructive",
+        title: "Prompt required",
+        description: "Please enter a prompt to improve.",
+        duration: 5000,
+      });
+      return;
+    }
+    const { data } = await supabase.auth.getSession();
+    if (!data?.session?.user?.id) {
+      toast({
+        variant: "destructive",
+        title: "Premium account required",
+        description:
+          "You are not logged in, the prompt cannot be improved. Please login and upgrade to premium and try again.",
+        duration: 5000,
+      });
+      return;
+    }
+    setLoading(true);
+    setLoadingAction("improve");
+    const { data: subscription } = await supabase
+      .from("subscriptions")
+      .select("*, prices(*, products(*))")
+      .in("status", ["trialing", "active"])
+      .eq("user_id", data.session.user.id)
+      .maybeSingle();
+
+    if (subscription) {
+      try {
+        const improvedPrompt = await promptEnhancer(prompt, selectedFramework);
+        setPrompt(improvedPrompt);
+        setHasImproved(true);
+      } catch {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "An error occurred while improving the prompt.",
+          duration: 5000,
+        });
+      }
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Premium account required",
+        description:
+          "You are not premium, the prompt cannot be improved. Please upgrade to premium and try again.",
+        duration: 5000,
+      });
+    }
+    setLoading(false);
+    setLoadingAction(null);
   };
 
   return (
@@ -386,7 +456,9 @@ export default function Hero() {
               <Select
                 disabled={loading}
                 defaultValue="react"
-                onValueChange={setSelectedFramework}
+                onValueChange={(value) =>
+                  setSelectedFramework(value as AvailableFramework)
+                }
               >
                 <SelectTrigger className="w-full border-background sm:w-auto">
                   <SelectValue
@@ -472,14 +544,29 @@ export default function Hero() {
                 onChange={handleImageChange}
               />
               <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                className="w-full hover:bg-background lg:w-auto"
+                disabled={loading || hasImproved}
+                onClick={handleImprovePrompt}
+              >
+                <WandSparkles className="size-3" />
+                {loadingAction === "improve"
+                  ? "Improving prompt..."
+                  : hasImproved
+                    ? "Prompt improved"
+                    : "Improve prompt"}
+              </Button>
+              <Button
                 type="submit"
                 size="sm"
                 variant="default"
                 className="w-full lg:w-auto"
-                loading={loading}
+                disabled={loading}
               >
-                <Wand className="size-3" />
-                Generate
+                <Rocket className="size-3" />
+                {loadingAction === "generate" ? "Generating..." : "Generate"}
               </Button>
             </div>
           </div>

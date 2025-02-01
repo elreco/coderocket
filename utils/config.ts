@@ -63,3 +63,5 @@ export const themes = [
   "business",
   "cmyk",
 ];
+
+export type AvailableFramework = "react" | "html";

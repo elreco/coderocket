@@ -42,7 +42,7 @@ import {
   extractFilesFromCompletion,
   getUpdatedArtifactCode,
 } from "@/utils/completion-parser";
-import { crispWebsiteId } from "@/utils/config";
+import { AvailableFramework, crispWebsiteId } from "@/utils/config";
 import { createClient } from "@/utils/supabase/client";
 
 import {
@@ -378,7 +378,8 @@ export default function ComponentCompletion({
     setArtifactCode,
     chatId,
     artifactFiles,
-    selectedFramework: fetchedChat?.framework || "react",
+    selectedFramework: (fetchedChat?.framework ||
+      "react") as AvailableFramework,
     isWebcontainerReady,
     setWebcontainerReady,
   };

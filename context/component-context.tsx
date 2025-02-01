@@ -2,6 +2,7 @@ import { createContext, useContext } from "react";
 
 import { Tables } from "@/types_db";
 import { ChatFile } from "@/utils/completion-parser";
+import { AvailableFramework } from "@/utils/config";
 
 export type ChatMessage = Tables<"messages"> & {
   chats: {
@@ -44,7 +45,7 @@ interface ComponentContextType {
   setWebcontainerReady: (value: boolean) => void;
   artifactFiles: ChatFile[];
   chatId: string;
-  selectedFramework: string;
+  selectedFramework: AvailableFramework;
 }
 
 export const ComponentContext = createContext<ComponentContextType | undefined>(

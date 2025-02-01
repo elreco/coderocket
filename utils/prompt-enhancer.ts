@@ -1,11 +1,18 @@
+"use server";
+
 import { generateText } from "ai";
 
-import { anthropicModel } from "./config";
+import { anthropicModel, AvailableFramework } from "./config";
 import { stripIndents } from "./strip-indents";
 import { htmlSystemPrompt } from "./system-prompts/html";
+import { reactSystemPrompt } from "./system-prompts/react";
 
-export const promptEnhancer = async (prompt: string): Promise<string> => {
-  const contentMd = htmlSystemPrompt();
+export const promptEnhancer = async (
+  prompt: string,
+  framework: AvailableFramework,
+): Promise<string> => {
+  const contentMd =
+    framework === "react" ? reactSystemPrompt() : htmlSystemPrompt();
   const { text } = await generateText({
     messages: [
       {

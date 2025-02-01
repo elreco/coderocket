@@ -19,6 +19,7 @@ import { useComponentContext } from "@/context/component-context";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { ChatFile } from "@/utils/completion-parser";
+import { AvailableFramework } from "@/utils/config";
 import { getLanguageExtension } from "@/utils/file-extensions";
 
 import { CodePreviewFileTree } from "./code-preview-filetree";
@@ -32,7 +33,7 @@ const RenderContent = React.memo(
   }: {
     isLoading: boolean;
     chatFiles: ChatFile[];
-    selectedFramework: string;
+    selectedFramework: AvailableFramework;
   }) => {
     if (isLoading && chatFiles.length === 0) {
       return (

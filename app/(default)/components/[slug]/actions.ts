@@ -5,6 +5,8 @@ import { after } from "next/server";
 import { getSubscription } from "@/app/supabase-server";
 import { takeScreenshot } from "@/utils/capture-screenshot";
 import { hasArtifacts } from "@/utils/completion-parser";
+import { AvailableFramework } from "@/utils/config";
+import { promptEnhancer } from "@/utils/prompt-enhancer";
 import { createClient } from "@/utils/supabase/server";
 
 export const changeVisibilityByChatId = async (
@@ -30,6 +32,28 @@ export const changeVisibilityByChatId = async (
   if (error) {
     throw new Error(`Failed to update visibility: ${error.message}`);
   }
+};
+
+export const improvePromptByChatId = async (chatId: string, prompt: string) => {
+  const supabase = await createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  const user = userData?.user;
+
+  if (!user) throw new Error("Could not get user");
+  const subscription = await getSubscription();
+  if (!subscription) {
+    throw new Error("payment-required");
+  }
+  const { data: chat, error: chatError } = await supabase
+    .from("chats")
+    .select("id, framework")
+    .eq("id", chatId)
+    .eq("user_id", user.id)
+    .single();
+  if (chatError) {
+    throw new Error(`Failed to fetch chat: ${chatError.message}`);
+  }
+  return await promptEnhancer(prompt, chat?.framework as AvailableFramework);
 };
 
 export const deleteVersionByMessageId = async (messageId: number) => {
