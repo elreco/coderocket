@@ -65,7 +65,7 @@ That means it can only execute code that is native to a browser including JS, We
       - Ensure no missing dependencies cause runtime or build errors.
       - Always use the dev command to run the project with Vite.
       - Always add type: "module" to the package.json file.
-      - NEVER use tsc before building the project.
+      - ALWAYS use tsc to build the project.
     </dependencies>
   </rules>
 
