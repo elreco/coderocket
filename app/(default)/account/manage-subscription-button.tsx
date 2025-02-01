@@ -20,8 +20,7 @@ export default function ManageSubscriptionButton() {
 
   return (
     <div className="flex w-full flex-col items-start justify-between sm:flex-row sm:items-center">
-      <p className="pb-4 sm:pb-0">Manage subscription.</p>
-      <Button onClick={redirectToCustomerPortal}>Open customer portal</Button>
+      <Button onClick={redirectToCustomerPortal}>Upgrade your plan</Button>
     </div>
   );
 }
