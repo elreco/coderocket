@@ -17,10 +17,7 @@ interface ComponentContextType {
   isLoading: boolean;
   setCompletion: (value: string) => void;
   selectedVersion: number | undefined;
-  chatFiles: Array<{
-    name: string | null;
-    content: string;
-  }>;
+  chatFiles: ChatFile[];
   activeTab: string;
   editorValue: string;
   handleVersionSelect: (version: number, tabName?: string) => void;
