@@ -480,30 +480,32 @@ export default function ComponentCompletion({
                         <p>Display in fullscreen</p>
                       </TooltipContent>
                     </Tooltip>
-                    {isWebcontainerReady &&
-                      fetchedChat?.framework === "react" && (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="secondary"
-                              size="sm"
-                              onClick={() =>
-                                window.open(
-                                  `https://${chatId}-${selectedVersion}.preview.tailwindai.dev`,
-                                  "_blank",
-                                )
-                              }
-                              className="flex items-center"
-                              disabled={isLoading}
-                            >
-                              <ExternalLink className="w-5" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Open in a new tab</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      )}
+                    {(isWebcontainerReady ||
+                      fetchedChat?.framework === "html") && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() =>
+                              window.open(
+                                fetchedChat?.framework === "react"
+                                  ? `https://${chatId}-${selectedVersion}.preview.tailwindai.dev`
+                                  : `https://www.tailwindai.dev/content/${chatId}/${selectedVersion}`,
+                                "_blank",
+                              )
+                            }
+                            className="flex items-center"
+                            disabled={isLoading}
+                          >
+                            <ExternalLink className="w-5" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Open in a new tab</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
                     <Dialog
                       open={isModalOpen}
                       onOpenChange={handleFullscreenToggle}

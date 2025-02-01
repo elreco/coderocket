@@ -1,6 +1,6 @@
 import {
+  fetchAssistantMessageByChatIdAndVersion,
   fetchChatById,
-  fetchLastAssistantMessageByChatId,
 } from "@/app/(default)/components/actions";
 import RenderHtmlComponentServer from "@/components/renders/render-html-component-server";
 import { extractFilesFromCompletion } from "@/utils/completion-parser";
@@ -8,11 +8,14 @@ import { extractFilesFromCompletion } from "@/utils/completion-parser";
 export default async function Content({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ id: string; version: string }>;
 }) {
-  const { id } = await params;
+  const { id, version } = await params;
   const chat = await fetchChatById(id);
-  const lastAssistantMessage = await fetchLastAssistantMessageByChatId(id);
+  const lastAssistantMessage = await fetchAssistantMessageByChatIdAndVersion(
+    id,
+    parseInt(version),
+  );
 
   if (!lastAssistantMessage) {
     return <div>No content found</div>;
