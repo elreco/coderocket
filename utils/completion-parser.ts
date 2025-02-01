@@ -15,7 +15,11 @@ export interface ChatFile {
   name: string | null;
   content: string;
   isDelete?: boolean;
+  isActive: boolean;
 }
+
+let previousFiles = new Map<string, string>(); // Pour stocker l'état précédent
+let lastActiveFile: string | null = null; // Pour stocker le nom du dernier fichier actif
 
 export const getUpdatedArtifactCode = (
   completion: string,
@@ -151,6 +155,7 @@ export const extractFilesFromCompletion = (
         name: fileName || null,
         content: content || completion,
         isDelete: action === "delete",
+        isActive: false,
       });
     }
   });
@@ -273,7 +278,10 @@ export const setDataTheme = (completion: string, theme: string): string => {
 export const extractFilesFromArtifact = (artifactCode: string): ChatFile[] => {
   if (!artifactCode) return [];
 
+  const currentFiles = new Map<string, string>();
   const filesArray: ChatFile[] = [];
+  let newActiveFile: string | null = null;
+
   const fileRegex =
     /<tailwindaiFile.*?name=["']([^"']*?)["'].*?(?:action=["']([^"']*?)["'].*?)?>([\s\S]*?)(?=<\/tailwindaiFile>|<tailwindaiFile|$)/g;
 
@@ -310,12 +318,37 @@ export const extractFilesFromArtifact = (artifactCode: string): ChatFile[] => {
       .join("\n")
       .trim();
 
+    // Stocker le contenu actuel
+    currentFiles.set(fileName, content);
+
+    // Si le contenu a changé, c'est le nouveau fichier actif
+    if (
+      previousFiles.has(fileName) &&
+      previousFiles.get(fileName) !== content
+    ) {
+      newActiveFile = fileName;
+    }
+
     filesArray.push({
       name: fileName || null,
       content: content,
       isDelete: action === "delete",
+      isActive: false, // On mettra à jour après la boucle
     });
   }
+
+  // Mettre à jour le fichier actif
+  lastActiveFile = newActiveFile || lastActiveFile;
+
+  // Mettre à jour isActive pour le fichier actif
+  filesArray.forEach((file) => {
+    if (file.name === lastActiveFile) {
+      file.isActive = true;
+    }
+  });
+
+  // Mettre à jour previousFiles pour la prochaine comparaison
+  previousFiles = currentFiles;
 
   return filesArray;
 };

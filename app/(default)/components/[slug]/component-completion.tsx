@@ -305,15 +305,15 @@ export default function ComponentCompletion({
       setActiveTab("");
       return;
     }
-    const lastFile = newArtifactFiles[newArtifactFiles.length - 1];
+    const activeFile = newArtifactFiles.find((file) => file.isActive);
 
-    if (!lastFile) {
+    if (!activeFile) {
       setEditorValue("");
       setActiveTab("");
       return;
     }
-    setEditorValue(lastFile.content);
-    setActiveTab(lastFile.name || "");
+    setEditorValue(activeFile.content);
+    setActiveTab(activeFile.name || "");
     if (!isLoading) {
       setCanvas(true);
     }
