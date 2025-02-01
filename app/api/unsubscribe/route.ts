@@ -9,10 +9,17 @@ export async function POST(req: Request) {
   try {
     const formData = await req.json();
 
+    // Add submission date and ensure email is included
+    const submissionData = {
+      ...formData,
+      submission_date: new Date().toISOString(), // Add current date
+      email: formData.email, // Ensure email is included
+    };
+
     // Save form data to the database
     const { error: insertError } = await supabase
       .from('unsubscribe_surveys')
-      .insert([{ ...formData }]);
+      .insert([submissionData]);
 
     if (insertError) {
       console.error('Insert Error:', insertError);

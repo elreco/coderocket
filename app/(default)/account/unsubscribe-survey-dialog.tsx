@@ -1,6 +1,5 @@
 "use client";
 import { useState, useEffect } from 'react';
-import { useRouter } from "next/navigation";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -12,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { createClient } from "@/utils/supabase/client"; // Import Supabase client
 
 const UnsubscribeSurveyDialog = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -23,22 +23,43 @@ const UnsubscribeSurveyDialog = () => {
   });
   const [email, setEmail] = useState('');
   const [portalUrl, setPortalUrl] = useState('');
-  const router = useRouter();
 
   useEffect(() => {
     const fetchUserData = async () => {
-      const userResponse = await fetch('/api/get-user');
-      const userData = await userResponse.json();
-      setEmail(userData.email);
+      try {
+        // Initialize Supabase client
+        const supabase = createClient();
 
-      const portalResponse = await fetch('/api/create-portal-link', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      const portalData = await portalResponse.json();
-      setPortalUrl(portalData.url);
+        // Fetch the logged-in user's details
+        const { data: { user }, error } = await supabase.auth.getUser();
+
+        if (error || !user) {
+          throw new Error('User not authenticated');
+        }
+
+        // Set the user's email
+        if (user.email) {
+          setEmail(user.email);
+          console.log("Fetched Email:", user.email); // Log the email for debugging
+        } else {
+          throw new Error('Email not found for the user');
+        }
+
+        // Fetch the Stripe portal URL (optional for now)
+        const portalResponse = await fetch('/api/create-portal-link', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        const portalData = await portalResponse.json();
+        if (!portalData.url) {
+          throw new Error('Failed to fetch portal URL');
+        }
+        setPortalUrl(portalData.url);
+      } catch (error) {
+        console.error('Error fetching user data or portal URL:', error);
+      }
     };
 
     fetchUserData();
@@ -49,13 +70,21 @@ const UnsubscribeSurveyDialog = () => {
     setLoading(true);
 
     try {
+      // Include email in the form data
+      const surveyData = {
+        ...formData,
+        email, // Use the email fetched from Supabase Auth
+      };
+
+      console.log("Submitting Survey Data:", surveyData); // Log the data for debugging
+
       // Log the unsubscribe reason
       const response = await fetch('/api/unsubscribe', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ ...formData, email }),
+        body: JSON.stringify(surveyData),
       });
 
       if (!response.ok) {
@@ -63,8 +92,12 @@ const UnsubscribeSurveyDialog = () => {
         throw new Error(errorData.error || 'Failed to submit survey');
       }
 
-      // Redirect to the Stripe portal URL
-      router.push(portalUrl);
+      // Redirect to the Stripe portal URL (optional for now)
+      if (portalUrl) {
+        window.location.href = portalUrl;
+      } else {
+        throw new Error('Portal URL not found');
+      }
     } catch (error) {
       console.error('Error:', error);
       setLoading(false);
@@ -93,32 +126,38 @@ const UnsubscribeSurveyDialog = () => {
               className="space-y-2"
             >
               <div className="flex items-center">
-                <RadioGroupItem value="too-expensive" id="too-expensive" />
-                <Label htmlFor="too-expensive" className="ml-2">Too expensive</Label>
-              </div>
-              <div className="flex items-center">
                 <RadioGroupItem value="missing-features" id="missing-features" />
                 <Label htmlFor="missing-features" className="ml-2">Missing features</Label>
               </div>
               <div className="flex items-center">
-                <RadioGroupItem value="not-useful" id="not-useful" />
-                <Label htmlFor="not-useful" className="ml-2">Not useful enough for my workflow</Label>
+                <RadioGroupItem value="too-expensive" id="too-expensive" />
+                <Label htmlFor="too-expensive" className="ml-2">Too expensive</Label>
               </div>
               <div className="flex items-center">
-                <RadioGroupItem value="component-quality" id="component-quality" />
-                <Label htmlFor="component-quality" className="ml-2">Component quality</Label>
+                <RadioGroupItem value="switched-to-better-tool" id="switched-to-better-tool" />
+                <Label htmlFor="switched-to-better-tool" className="ml-2">Switched to a better tool</Label>
+              </div>
+              <div className="flex items-center">
+                <RadioGroupItem value="dont-need-it-anymore" id="dont-need-it-anymore" />
+                <Label htmlFor="dont-need-it-anymore" className="ml-2">Don’t need it anymore</Label>
+              </div>
+              <div className="flex items-center">
+                <RadioGroupItem value="components-didnt-meet-expectations" id="components-didnt-meet-expectations" />
+                <Label htmlFor="components-didnt-meet-expectations" className="ml-2">Components didn’t meet expectations</Label>
               </div>
               <div className="flex items-center">
                 <RadioGroupItem value="other" id="other" />
                 <Label htmlFor="other" className="ml-2">Other</Label>
               </div>
             </RadioGroup>
+
+            {/* Show the text box only after a reason is selected */}
             {formData.mainreason && (
               <Textarea
                 value={formData.otherreason}
                 onChange={(e) => setFormData({ ...formData, otherreason: e.target.value })}
-                className="h-20 mt-2"
-                placeholder="More information"
+                className="h-20 mt-4"
+                placeholder="Any detail is greatly appreciated 🙏"
               />
             )}
           </div>
@@ -129,6 +168,7 @@ const UnsubscribeSurveyDialog = () => {
               value={formData.improvementsuggestion}
               onChange={(e) => setFormData({ ...formData, improvementsuggestion: e.target.value })}
               className="h-20"
+              placeholder="We truly value your feedback and take it seriously. Your thoughts help us improve. 🙏"
             />
           </div>
 
@@ -145,7 +185,7 @@ const UnsubscribeSurveyDialog = () => {
               variant="destructive"
               disabled={loading}
             >
-              {loading ? "Processing..." : "Confirm Unsubscribe"}
+              {loading ? "Processing..." : "Submit"}
             </Button>
           </div>
         </form>
