@@ -301,7 +301,7 @@ export default function ComponentSidebar({
                     "text-lg ml-2 font-semibold transition-all group-hover:text-primary",
                   )}
                 >
-                  Version #{selectedVersion ? selectedVersion + 1 : 0}
+                  Generating version...
                 </h2>
               </div>
             )}
