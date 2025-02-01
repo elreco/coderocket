@@ -102,7 +102,7 @@ export default function ComponentCompletion({
         fetchChatById(chatId),
         fetchLastAssistantMessageByChatId(chatId),
         fetchLastUserMessageByChatId(chatId),
-        fetchMessagesByChatId(chatId),
+        fetchMessagesByChatId(chatId, false),
       ]);
       setIsLoading(false);
 
@@ -250,7 +250,7 @@ export default function ComponentCompletion({
   };
 
   const refreshChatData = async () => {
-    const refreshedChatMessages = await fetchMessagesByChatId(chatId);
+    const refreshedChatMessages = await fetchMessagesByChatId(chatId, false);
     if (!refreshedChatMessages) return;
     setMessages(refreshedChatMessages);
     const refreshedChat = await fetchChatById(chatId);

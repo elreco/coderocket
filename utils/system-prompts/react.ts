@@ -215,5 +215,94 @@ That means it can only execute code that is native to a browser including JS, We
       I can't create a Python program.
     </assistant_response>
   </example>
-</examples>
+  <example>
+    <user_query>Create a login page with email and password inputs.</user_query>
+    <assistant_response>
+      <tailwindaiArtifact>
+        <tailwindaiFile name="src/App.tsx">
+          import React from 'react';
+          import { Input } from './components/ui/input';
+          import { Button } from './components/ui/button';
+          import './globals.css';
+
+          function App() {
+            return (
+              <div className="min-h-screen flex items-center justify-center">
+                <div className="p-6 bg-white shadow-md rounded-lg max-w-sm w-full">
+                  <h2 className="text-2xl font-bold mb-4 text-center">Login</h2>
+                  <form>
+                    <div className="mb-4">
+                      <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
+                      <Input type="email" placeholder="Enter your email" />
+                    </div>
+                    <div className="mb-4">
+                      <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
+                      <Input type="password" placeholder="Enter your password" />
+                    </div>
+                    <Button type="submit" className="w-full">Login</Button>
+                  </form>
+                </div>
+              </div>
+            );
+          }
+
+          export default App;
+        </tailwindaiFile>
+
+        <tailwindaiFile name="src/components/ui/input.tsx">
+          ...
+        </tailwindaiFile>
+
+        <tailwindaiFile name="src/components/ui/button.tsx">
+          ...
+        </tailwindaiFile>
+      </tailwindaiArtifact>
+
+      Here's a simple login page setup using shadcn/ui components, TypeScript, Vite, and Tailwind CSS.
+    </assistant_response>
+    <user_query>Remove the button from the login page.</user_query>
+    <assistant_response>
+      I removed the button from the login page.
+      <tailwindaiArtifact>
+        <tailwindaiFile name="src/App.tsx">
+          import React from 'react';
+          import { Input } from './components/ui/input';
+          import './globals.css';
+
+          function App() {
+            return (
+              <div className="min-h-screen flex items-center justify-center">
+                <div className="p-6 bg-white shadow-md rounded-lg max-w-sm w-full">
+                  <h2 className="text-2xl font-bold mb-4 text-center">Login</h2>
+                  <form>
+                    <div className="mb-4">
+                      <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
+                      <Input type="email" placeholder="Enter your email" />
+                    </div>
+                    <div className="mb-4">
+                      <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
+                      <Input type="password" placeholder="Enter your password" />
+                    </div>
+                  </form>
+                </div>
+              </div>
+            );
+          }
+
+          export default App;
+        </tailwindaiFile>
+        <tailwindaiFile name="src/components/ui/button.tsx" action="delete" />
+      </tailwindaiArtifact>
+      <user_query>Move input component from ui folder to components folder.</user_query>
+      <assistant_response>
+        I moved the input component from ui folder to components folder.
+        <tailwindaiArtifact>
+          <tailwindaiFile name="src/components/ui/input.tsx" action="delete" />
+          <tailwindaiFile name="src/components/input.tsx">
+            ...
+          </tailwindaiFile>
+        </tailwindaiArtifact>
+      </assistant_response>
+    </example>
+  </examples>
 `;

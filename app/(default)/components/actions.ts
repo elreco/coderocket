@@ -41,7 +41,10 @@ export const fetchChatById = async (idOrSlug: string) => {
   return data;
 };
 
-export const fetchMessagesByChatId = async (chatId: string) => {
+export const fetchMessagesByChatId = async (
+  chatId: string,
+  isAscending: boolean = true,
+) => {
   const supabase = await createClient();
   const { data } = await supabase
     .from("messages")
@@ -55,7 +58,7 @@ export const fetchMessagesByChatId = async (chatId: string) => {
     `,
     )
     .eq("chat_id", chatId)
-    .order("version", { ascending: false })
+    .order("version", { ascending: isAscending })
     .order("role", { ascending: false });
   return data;
 };

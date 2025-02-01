@@ -119,6 +119,9 @@ export default function Pricing({ user, products, subscription }: Props) {
                 {MAX_ITERATIONS} versions
               </p>
               <p className="mt-4 flex items-center text-sm font-medium ">
+                <XIcon className="mr-2 size-4 text-border" /> Improve prompt
+              </p>
+              <p className="mt-4 flex items-center text-sm font-medium ">
                 <XIcon className="mr-2 size-4 text-border" /> Generate with
                 Image
               </p>
@@ -246,6 +249,10 @@ export default function Pricing({ user, products, subscription }: Props) {
                   <p className="mt-4 flex items-center text-sm font-medium ">
                     <Check className="mr-2 size-4 text-emerald-500" /> Generate
                     with Image
+                  </p>
+                  <p className="mt-4 flex items-center text-sm font-medium ">
+                    <Check className="mr-2 size-4 text-emerald-500" /> Improve
+                    prompt
                   </p>
                   {price.interval === "week" ? (
                     <>
