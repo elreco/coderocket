@@ -108,7 +108,7 @@ const UnsubscribeSurveyDialog = () => {
   return (
     <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
       <AlertDialogTrigger asChild>
-        <Button variant="destructive">Unsubscribe</Button>
+        <Button variant="destructive">Cancel subscription</Button>
       </AlertDialogTrigger>
       <AlertDialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <AlertDialogHeader>
@@ -119,7 +119,7 @@ const UnsubscribeSurveyDialog = () => {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-4">
-            <Label className="font-medium">What's the main reason for unsubscribing?</Label>
+            <Label className="font-medium">What's the main reason for cancelling your subscription?</Label>
             <RadioGroup
               value={formData.mainreason}
               onValueChange={(value) => setFormData({ ...formData, mainreason: value })}
