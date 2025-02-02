@@ -280,7 +280,7 @@ export default function Hero() {
         </h2>
         <p className="text-center font-normal">
           Build fully responsive{" "}
-          <span className="font-semibold">Tailwind apps</span> effortlessly
+          <span className="font-semibold">Tailwind websites</span> effortlessly
           using <span className="font-semibold">AI-powered</span> text prompts
           and image inputs.
         </p>

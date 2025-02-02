@@ -13,16 +13,26 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { UserMessage } from "@/components/user-message";
 import { useComponentContext } from "@/context/component-context";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import {
+  ChatFile,
   ContentChunk,
+  extractDataTheme,
+  extractFilesFromCompletion,
+  hasArtifacts,
   splitContentIntoChunks,
 } from "@/utils/completion-parser";
 import { getRelativeDate } from "@/utils/date";
-import { getInitials } from "@/utils/helpers";
+import { getFileConfig } from "@/utils/file-extensions";
+import { formatFileSize, getInitials } from "@/utils/helpers";
 
 import { Markdown } from "../markdown";
 
@@ -57,6 +67,7 @@ export default function ComponentSidebar({
   const [activeTab, setActiveTab] = useState("chat");
   const [hasImproved, setHasImproved] = useState(false);
   const [isImprovingLoading, setIsImprovingLoading] = useState(false);
+  const [files, setFiles] = useState<ChatFile[]>([]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -145,6 +156,12 @@ export default function ComponentSidebar({
     if (isLoading && completion) {
       const newChunks = splitContentIntoChunks(completion);
       setStreamingChunks(newChunks);
+      const hasArtifactResult = hasArtifacts(completion);
+      if (hasArtifactResult) {
+        setFiles(extractFilesFromCompletion(completion));
+      } else {
+        setFiles([]);
+      }
     } else {
       setStreamingChunks([]);
     }
@@ -306,8 +323,94 @@ export default function ComponentSidebar({
               </div>
             )}
             {streamingChunks.map((chunk, index) => (
-              <div className="w-full overflow-x-auto text-sm" key={index}>
+              <div
+                className="flex w-full flex-col gap-2 overflow-x-auto text-sm"
+                key={index}
+              >
                 {chunk.type === "text" && <Markdown>{chunk.content}</Markdown>}
+                {chunk.type === "artifact" && (
+                  <div className="w-full space-y-2">
+                    <div
+                      className={cn(
+                        "rounded-lg border bg-background p-2 text-foreground",
+                      )}
+                    >
+                      <div className="mb-3 flex items-center justify-between">
+                        <h3 className="text-xs font-semibold">
+                          {files.length === 1 ? "Output File" : "Output Files"}
+                        </h3>
+                        {selectedFramework === "html" && (
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <Badge
+                                variant="secondary"
+                                className="cursor-default border border-border"
+                              >
+                                <Paintbrush className="mr-1 size-3" />{" "}
+                                <span className="first-letter:uppercase">
+                                  {extractDataTheme(files[0].content)}
+                                </span>
+                              </Badge>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Theme</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
+                      </div>
+                      <div className="space-y-2 overflow-x-auto">
+                        <div className="flex w-fit min-w-full flex-col space-y-2">
+                          {files.map((file, index) => {
+                            const fileConfig = getFileConfig(
+                              file.name || "untitled.html",
+                            );
+                            const FileIcon = fileConfig.icon;
+
+                            return (
+                              <div
+                                key={index}
+                                className={cn(
+                                  "flex items-center justify-between rounded p-1 bg-foreground w-full",
+                                  "hover:bg-gradient-to-l from-emerald-400 via-emerald-500 to-emerald-600 hover:text-foreground",
+                                  isLoading || file.isDelete
+                                    ? "cursor-not-allowed opacity-50"
+                                    : "cursor-pointer",
+                                  activeTab === file.name &&
+                                    "bg-gradient-to-l from-emerald-400 via-emerald-500 to-emerald-600 text-foreground",
+                                )}
+                              >
+                                <div className="flex max-w-full items-center">
+                                  <FileIcon
+                                    className={cn(
+                                      "mr-2 size-4",
+                                      fileConfig.color,
+                                    )}
+                                  />
+                                  <div
+                                    className={cn(
+                                      "font-mono whitespace-pre-wrap text-sm font-medium text-border",
+                                      file.isDelete &&
+                                        "text-red-500 group-hover:text-red-500",
+                                      activeTab === file.name &&
+                                        "text-foreground",
+                                    )}
+                                  >
+                                    {file.name || "untitled.html"}
+                                  </div>
+                                </div>
+                                <div className="whitespace-nowrap text-xs text-border opacity-75">
+                                  {formatFileSize(
+                                    new Blob([file.content]).size,
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
             <div className="mt-2 flex gap-1">

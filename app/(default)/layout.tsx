@@ -20,10 +20,10 @@ const rubik = Rubik({
 });
 
 const meta = {
-  title: "Tailwind AI - Build Stunning Tailwind Apps with AI",
+  title: "Tailwind AI - Build Stunning Tailwind Websites with AI",
   metadataBase: new URL("https://www.tailwindai.dev"),
   description:
-    "Create high-quality, AI-powered Tailwind applications effortlessly. Tailwind AI simplifies your workflow, generating sleek, responsive designs in seconds.",
+    "Create high-quality, AI-powered Tailwind websites and components effortlessly. Tailwind AI simplifies your workflow, generating sleek, responsive designs in seconds.",
   cardImage: "https://www.tailwindai.dev/og.png",
   robots: "index, follow",
   favicon: "/favicon.ico",
@@ -33,7 +33,7 @@ const meta = {
     card: "summary_large_image",
     title: "Tailwind AI - AI-Powered Tailwind App Builder",
     description:
-      "Design and build stunning Tailwind applications with AI. Automate your UI development and create responsive, production-ready apps faster than ever.",
+      "Design and build stunning Tailwind websites and components with AI. Automate your UI development and create responsive, production-ready websites faster than ever.",
     images: ["https://www.tailwindai.dev/og.png"],
   },
 };
