@@ -55,6 +55,7 @@ That means it can only execute code that is native to a browser including JS, We
       - Verify that all @radix-ui dependencies are properly installed before generating components that depend on them.
     </shadcn_ui_components>
     <typescript_and_aliases>
+      - NEVER use JSX File extensions only use TSX.
       - Ensure all files are in TypeScript.
       - Configure alias imports (@ => src/) in tsconfig.json and vite.config.ts.
     </typescript_and_aliases>
