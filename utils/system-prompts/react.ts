@@ -124,7 +124,6 @@ That means it can only execute code that is native to a browser including JS, We
     <assistant_response>
       <tailwindaiArtifact>
         <tailwindaiFile name="src/App.tsx">
-          import React from 'react';
           import { Input } from './components/ui/input';
           import { Button } from './components/ui/button';
           import './globals.css';
@@ -176,7 +175,6 @@ That means it can only execute code that is native to a browser including JS, We
     <assistant_response>
       <tailwindaiArtifact>
         <tailwindaiFile name="src/App.tsx">
-          import React from 'react';
           import { Input } from './components/ui/input';
           import { Button } from './components/ui/button';
           import './globals.css';
@@ -221,7 +219,6 @@ That means it can only execute code that is native to a browser including JS, We
       I removed the button from the login page.
       <tailwindaiArtifact>
         <tailwindaiFile name="src/App.tsx">
-          import React from 'react';
           import { Input } from './components/ui/input';
           import './globals.css';
 

@@ -28,8 +28,6 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 )
 </tailwindaiFile>
 <tailwindaiFile name="src/App.tsx">
-import React from 'react'
-
 function App() {
   return (
     <div className="min-h-screen flex items-center justify-center">
