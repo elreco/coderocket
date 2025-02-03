@@ -8,7 +8,7 @@ import {
 } from "@icons-pack/react-simple-icons";
 import {
   Image as LucideImage,
-  X,
+  X as XIcon,
   Terminal,
   Paintbrush,
   Globe,
@@ -83,7 +83,12 @@ const previewButtons = [
 export default function Hero() {
   const supabase = createClient();
   const { toast } = useToast();
-  const [prompt, setPrompt] = useState("");
+  const [prompt, setPrompt] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("lastPrompt") || "";
+    }
+    return "";
+  });
   const [isVisible, setVisible] = useState(true);
   const [selectedTheme, setSelectedTheme] = useState(defaultTheme);
   const [selectedFramework, setSelectedFramework] =
@@ -102,8 +107,16 @@ export default function Hero() {
   useEffect(() => {
     if (inputRef.current) {
       inputRef.current.focus();
+      const length = inputRef.current.value.length;
+      inputRef.current.setSelectionRange(length, length);
     }
   }, []);
+
+  useEffect(() => {
+    if (prompt) {
+      localStorage.setItem("lastPrompt", prompt);
+    }
+  }, [prompt]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files?.[0]) {
@@ -147,6 +160,8 @@ export default function Hero() {
       setLoadingAction(null);
       return;
     }
+    setPrompt("");
+    localStorage.removeItem("lastPrompt");
     router.push(`/components/${slug}`);
     return;
   };
@@ -293,27 +308,46 @@ export default function Hero() {
         <div className="flex w-full flex-col items-end">
           <div className="flex w-full items-start">
             <Terminal className="mx-2 my-3 size-4" />
-            <Textarea
-              ref={inputRef}
-              placeholder="Start generating a beautiful Tailwind component"
-              autoFocus={true}
-              required
-              value={prompt}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") {
-                  if (event.shiftKey) {
-                    return;
+            <div className="relative w-full">
+              <Textarea
+                ref={inputRef}
+                placeholder="Start generating a beautiful Tailwind component"
+                autoFocus={true}
+                required
+                value={prompt}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    if (event.shiftKey) {
+                      return;
+                    }
+
+                    event.preventDefault();
+
+                    handleSubmit(event);
                   }
-
-                  event.preventDefault();
-
-                  handleSubmit(event);
-                }
-              }}
-              translate="no"
-              onChange={(e) => setPrompt(e.target.value)}
-              className="max-h-[400px] min-h-[76px] bg-secondary pl-1 focus-visible:ring-0 focus-visible:ring-offset-0"
-            />
+                }}
+                translate="no"
+                onChange={(e) => {
+                  setPrompt(e.target.value);
+                  localStorage.setItem("lastPrompt", e.target.value);
+                }}
+                className="max-h-[400px] min-h-[76px] bg-secondary pl-1 focus-visible:ring-0 focus-visible:ring-offset-0"
+              />
+              {prompt && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-2 top-2 size-6 p-0"
+                  onClick={() => {
+                    setPrompt("");
+                    localStorage.removeItem("lastPrompt");
+                  }}
+                >
+                  <XIcon className="size-4" />
+                  <span className="sr-only">Clear input</span>
+                </Button>
+              )}
+            </div>
           </div>
           <div
             className={cn(
@@ -343,7 +377,7 @@ export default function Hero() {
                   className="absolute right-0 top-0 cursor-pointer rounded-full bg-black/50 p-1"
                   onClick={handleImageRemove}
                 >
-                  <X className="size-4 text-white" />
+                  <XIcon className="size-4 text-white" />
                 </button>
               </div>
             </div>
