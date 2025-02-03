@@ -131,10 +131,6 @@ const buildMessagesToOpenAi = async (
           type: "text",
           text: prompt,
         },
-        {
-          type: "image",
-          image: new URL(`${storageUrl}/${imageUrl}`),
-        },
       ],
     });
   }
