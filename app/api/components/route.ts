@@ -49,7 +49,9 @@ export async function POST(req: Request) {
     );
     const stream = streamText({
       messages,
-      model: anthropicModel("claude-3-5-sonnet-latest"),
+      model: imageUrl
+        ? anthropicModel("claude-3-5-sonnet-latest")
+        : anthropicModel("claude-3-5-haiku-latest"),
       system:
         framework === "html"
           ? htmlSystemPrompt(
