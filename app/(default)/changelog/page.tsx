@@ -10,6 +10,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
+import { discordLink } from "@/utils/config";
 
 const Changelog = () => {
   useEffect(() => {
@@ -109,7 +110,7 @@ const Changelog = () => {
                     server for better communication with our community. Join us
                     on{" "}
                     <a
-                      href="https://discord.gg/t7dQgcYJ5t"
+                      href={discordLink}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-primary underline hover:text-primary/80"

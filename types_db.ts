@@ -109,6 +109,36 @@ export type Database = {
           },
         ];
       };
+      notification: {
+        Row: {
+          button_label: string | null;
+          button_link: string | null;
+          created_at: string;
+          description: string;
+          id: number;
+          is_active: boolean;
+          title: string;
+        };
+        Insert: {
+          button_label?: string | null;
+          button_link?: string | null;
+          created_at?: string;
+          description: string;
+          id?: number;
+          is_active: boolean;
+          title: string;
+        };
+        Update: {
+          button_label?: string | null;
+          button_link?: string | null;
+          created_at?: string;
+          description?: string;
+          id?: number;
+          is_active?: boolean;
+          title?: string;
+        };
+        Relationships: [];
+      };
       prices: {
         Row: {
           active: boolean | null;
@@ -251,6 +281,33 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
+      };
+      unsubscribe_surveys: {
+        Row: {
+          email: string | null;
+          id: number;
+          improvementsuggestion: string | null;
+          mainreason: string | null;
+          otherreason: string | null;
+          submission_date: string | null;
+        };
+        Insert: {
+          email?: string | null;
+          id?: number;
+          improvementsuggestion?: string | null;
+          mainreason?: string | null;
+          otherreason?: string | null;
+          submission_date?: string | null;
+        };
+        Update: {
+          email?: string | null;
+          id?: number;
+          improvementsuggestion?: string | null;
+          mainreason?: string | null;
+          otherreason?: string | null;
+          submission_date?: string | null;
+        };
+        Relationships: [];
       };
       users: {
         Row: {

@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import * as React from "react";
 import { useEffect, useState } from "react";
 
+import { getNotification } from "@/app/(default)/actions";
 import { getUserDetails } from "@/app/supabase-server";
 import { NavMain } from "@/components/nav-main";
 import { NavUser } from "@/components/nav-user";
@@ -23,9 +24,11 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Tables } from "@/types_db";
+import { discordLink } from "@/utils/config";
 
 import Logo from "./icons/logo";
 import { NavAuth } from "./nav-auth";
+import { SidebarNotification } from "./sidebar-notification";
 
 // This is sample data.
 const data = {
@@ -83,7 +86,7 @@ const data = {
           </Badge>
         </div>
       ),
-      url: "https://discord.gg/t7dQgcYJ5t",
+      url: discordLink,
       icon: SiDiscord,
     },
     {
@@ -104,6 +107,8 @@ export function AppSidebar({
   >(defaultUser);
   const [isLoading, setIsLoading] = useState(true);
   const pathname = usePathname();
+  const [notification, setNotification] =
+    useState<Tables<"notification"> | null>(null);
 
   useEffect(() => {
     const fetchUserDetails = async () => {
@@ -112,6 +117,14 @@ export function AppSidebar({
       setIsLoading(false);
     };
     fetchUserDetails();
+  }, []);
+
+  useEffect(() => {
+    const fetchNotification = async () => {
+      const notification = await getNotification();
+      setNotification(notification);
+    };
+    fetchNotification();
   }, []);
 
   useEffect(() => {
@@ -173,6 +186,16 @@ export function AppSidebar({
         {user && <NavMain items={myComponentsItems} label="My Components" />}
       </SidebarContent>
       <SidebarFooter>
+        <div className="p-1">
+          {notification?.is_active && (
+            <SidebarNotification
+              title={notification.title}
+              description={notification.description}
+              buttonLink={notification.button_link ?? undefined}
+              buttonLabel={notification.button_label ?? undefined}
+            />
+          )}
+        </div>
         {isLoading ? null : user ? <NavUser user={user} /> : <NavAuth />}
       </SidebarFooter>
       <SidebarRail />

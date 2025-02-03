@@ -8,6 +8,8 @@ export const storageUrl =
 export const screenshotApiUrl =
   "https://screenshot-api-elreco.vercel.app/api?url=";
 
+export const discordLink = "https://discord.gg/t7dQgcYJ5t";
+
 export const maxImageSize = 1 * 1024 * 1024; // 1 Mo
 
 export const MAX_ITERATIONS = 4;
