@@ -148,7 +148,7 @@ export function AppSidebar({
       }))
     : [];
 
-  const { setOpenMobile } = useSidebar();
+  const { open, setOpenMobile } = useSidebar();
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -186,16 +186,16 @@ export function AppSidebar({
         {user && <NavMain items={myComponentsItems} label="My Components" />}
       </SidebarContent>
       <SidebarFooter>
-        <div className="p-1">
-          {notification?.is_active && (
+        {notification?.is_active && open && (
+          <div className="p-1">
             <SidebarNotification
               title={notification.title}
               description={notification.description}
               buttonLink={notification.button_link ?? undefined}
               buttonLabel={notification.button_label ?? undefined}
             />
-          )}
-        </div>
+          </div>
+        )}
         {isLoading ? null : user ? <NavUser user={user} /> : <NavAuth />}
       </SidebarFooter>
       <SidebarRail />

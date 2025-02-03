@@ -42,17 +42,6 @@ export default function Faq() {
         </AccordionContent>
       </AccordionItem>
       <AccordionItem value="item-3">
-        <AccordionTrigger>How much does it cost?</AccordionTrigger>
-        <AccordionContent>
-          <p>Check out our this section for more information.</p>{" "}
-          <p>
-            You can copy paste its code, or refine it further. To refine, you
-            can fine tune your creation. When you are ready, you can copy,
-            paste, and ship.
-          </p>
-        </AccordionContent>
-      </AccordionItem>
-      <AccordionItem value="item-4">
         <AccordionTrigger>
           What are the limitations of a free account?
         </AccordionTrigger>
