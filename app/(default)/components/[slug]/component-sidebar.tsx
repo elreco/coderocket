@@ -329,7 +329,7 @@ export default function ComponentSidebar({
               >
                 {chunk.type === "text" && <Markdown>{chunk.content}</Markdown>}
                 {chunk.type === "artifact" && (
-                  <div className="w-full space-y-2">
+                  <div className="w-full py-2">
                     <div
                       className={cn(
                         "rounded-lg border bg-background p-2 text-foreground",
