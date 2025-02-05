@@ -43,7 +43,7 @@ import {
   getUpdatedArtifactCode,
 } from "@/utils/completion-parser";
 import {
-  AvailableFramework,
+  Framework,
   crispWebsiteId,
   PREMIUM_MESSAGES_PER_PERIOD,
 } from "@/utils/config";
@@ -127,7 +127,7 @@ export default function ComponentCompletion({
       }
 
       if (
-        chat?.framework === "react" &&
+        chat?.framework !== Framework.HTML &&
         chat.artifact_code &&
         assistantMsg?.content
       ) {
@@ -142,7 +142,7 @@ export default function ComponentCompletion({
         setEditorValue(firstFile.content);
         setActiveTab(firstFile.name || "");
       }
-      if (chat?.framework === "html" && assistantMsg?.content) {
+      if (chat?.framework === Framework.HTML && assistantMsg?.content) {
         handleChatFiles(assistantMsg.content, true);
       }
     };
@@ -407,13 +407,13 @@ export default function ComponentCompletion({
     setArtifactCode,
     chatId,
     artifactFiles,
-    selectedFramework: (fetchedChat?.framework ||
-      "react") as AvailableFramework,
+    selectedFramework: (fetchedChat?.framework || "react") as Framework,
     isWebcontainerReady,
     setWebcontainerReady,
   };
 
-  const FrameworkIcon = fetchedChat?.framework === "html" ? SiHtml5 : SiReact;
+  const FrameworkIcon =
+    fetchedChat?.framework === Framework.HTML ? SiHtml5 : SiReact;
   /*
   useEffect(() => {
     const channel = supabase
@@ -489,9 +489,9 @@ export default function ComponentCompletion({
                     <TabsTrigger value="code">Code</TabsTrigger>
                   </TabsList>
                 </Tabs>
-                {(fetchedChat?.framework === "html" ||
+                {(fetchedChat?.framework === Framework.HTML ||
                   (isWebcontainerReady &&
-                    fetchedChat?.framework === "react")) && (
+                    fetchedChat?.framework !== Framework.HTML)) && (
                   <>
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -510,7 +510,7 @@ export default function ComponentCompletion({
                       </TooltipContent>
                     </Tooltip>
                     {(isWebcontainerReady ||
-                      fetchedChat?.framework === "html") && (
+                      fetchedChat?.framework === Framework.HTML) && (
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Button
@@ -518,9 +518,9 @@ export default function ComponentCompletion({
                             size="sm"
                             onClick={() =>
                               window.open(
-                                fetchedChat?.framework === "react"
-                                  ? `https://${chatId}-${selectedVersion}.preview.tailwindai.dev`
-                                  : `https://www.tailwindai.dev/content/${chatId}/${selectedVersion}`,
+                                fetchedChat?.framework === Framework.HTML
+                                  ? `https://www.tailwindai.dev/content/${chatId}/${selectedVersion}`
+                                  : `https://${chatId}-${selectedVersion}.preview.tailwindai.dev`,
                                 "_blank",
                               )
                             }
@@ -542,7 +542,7 @@ export default function ComponentCompletion({
                       <DialogContent className="z-50 h-[98%] max-w-[98%] rounded-none p-10">
                         <DialogTitle className="hidden">Fullscreen</DialogTitle>
                         <DialogDescription className="z-50">
-                          {fetchedChat.framework === "react" &&
+                          {fetchedChat?.framework !== Framework.HTML &&
                           isWebcontainerReady ? (
                             <iframe
                               src={`https://${chatId}-${selectedVersion}.webcontainer.tailwindai.dev`}

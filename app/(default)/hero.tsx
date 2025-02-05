@@ -4,7 +4,6 @@ import {
   SiReact,
   SiVuedotjs,
   SiSvelte,
-  SiNextdotjs,
 } from "@icons-pack/react-simple-icons";
 import {
   Image as LucideImage,
@@ -47,12 +46,8 @@ import {
 } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import {
-  AvailableFramework,
-  defaultTheme,
-  maxImageSize,
-  themes,
-} from "@/utils/config";
+import { Framework } from "@/utils/config";
+import { defaultTheme, maxImageSize, themes } from "@/utils/config";
 import { promptEnhancer } from "@/utils/prompt-enhancer";
 import { createClient } from "@/utils/supabase/client";
 
@@ -80,6 +75,14 @@ const previewButtons = [
   },
 ];
 
+// Ajoutez cette constante pour gérer les badges et les états désactivés
+const frameworkConfig = {
+  [Framework.REACT]: { icon: SiReact, badge: null, disabled: false },
+  [Framework.VUE]: { icon: SiVuedotjs, badge: "Beta", disabled: false },
+  [Framework.HTML]: { icon: SiHtml5, badge: null, disabled: false },
+  [Framework.SVELTE]: { icon: SiSvelte, badge: "Soon", disabled: true },
+};
+
 export default function Hero() {
   const supabase = createClient();
   const { toast } = useToast();
@@ -91,8 +94,9 @@ export default function Hero() {
   });
   const [isVisible, setVisible] = useState(true);
   const [selectedTheme, setSelectedTheme] = useState(defaultTheme);
-  const [selectedFramework, setSelectedFramework] =
-    useState<AvailableFramework>("react");
+  const [selectedFramework, setSelectedFramework] = useState<Framework>(
+    Framework.REACT,
+  );
   const [loading, setLoading] = useState(false);
   const [loadingAction, setLoadingAction] = useState<
     "generate" | "improve" | null
@@ -432,7 +436,7 @@ export default function Hero() {
                   <p>Upload an image to generate a component with it</p>
                 </TooltipContent>
               </Tooltip>
-              {selectedFramework === "html" && (
+              {selectedFramework === Framework.HTML && (
                 <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
                   <SheetTrigger asChild>
                     <Button
@@ -491,7 +495,7 @@ export default function Hero() {
                 disabled={loading}
                 defaultValue="react"
                 onValueChange={(value) =>
-                  setSelectedFramework(value as AvailableFramework)
+                  setSelectedFramework(value as Framework)
                 }
               >
                 <SelectTrigger className="w-full border-background sm:w-auto">
@@ -501,68 +505,57 @@ export default function Hero() {
                   />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="react" className="cursor-pointer">
-                    <div className="mr-2 flex w-full flex-row items-center justify-between">
-                      <div className="flex items-center">
-                        <SiReact className="mr-2 size-3" />
-                        <span className="text-sm">React</span>
-                      </div>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="html" className="cursor-pointer">
-                    <div className="mr-2 flex cursor-pointer flex-row items-center">
-                      <SiHtml5 className="mr-2 size-3" />
-                      <span className="text-sm">HTML</span>
-                    </div>
-                  </SelectItem>
-                  <SelectItem
-                    value="nextjs"
-                    className="cursor-not-allowed opacity-50"
-                    disabled
-                    onSelect={(e) => e.preventDefault()}
-                  >
-                    <div className="pointer-events-none mr-2 flex w-full flex-row items-center justify-between">
-                      <div className="flex items-center">
-                        <SiNextdotjs className="mr-2 size-3" />
-                        <span className="text-sm">Next.js</span>
-                      </div>
-                      <Badge variant="outline" className="ml-0.5 mr-1 text-xs">
-                        Soon
-                      </Badge>
-                    </div>
-                  </SelectItem>
-                  <SelectItem
-                    value="svelte"
-                    className="cursor-not-allowed opacity-50"
-                    disabled
-                    onSelect={(e) => e.preventDefault()}
-                  >
-                    <div className="pointer-events-none mr-2 flex w-full flex-row items-center justify-between">
-                      <div className="flex items-center">
-                        <SiSvelte className="mr-2 size-3" />
-                        <span className="text-sm">Svelte</span>
-                      </div>
-                      <Badge variant="outline" className="ml-2 text-xs">
-                        Soon
-                      </Badge>
-                    </div>
-                  </SelectItem>
-                  <SelectItem
-                    value="vue"
-                    className="cursor-not-allowed opacity-50"
-                    disabled
-                    onSelect={(e) => e.preventDefault()}
-                  >
-                    <div className="pointer-events-none mr-2 flex w-full flex-row items-center justify-between">
-                      <div className="flex items-center">
-                        <SiVuedotjs className="mr-2 size-3" />
-                        <span className="text-sm">Vue</span>
-                      </div>
-                      <Badge variant="outline" className="ml-0.5 mr-1 text-xs">
-                        Soon
-                      </Badge>
-                    </div>
-                  </SelectItem>
+                  {Object.values(Framework).map((framework) => {
+                    const config = frameworkConfig[framework];
+                    const Icon = config.icon;
+
+                    return (
+                      <SelectItem
+                        key={framework}
+                        value={framework}
+                        className={cn(
+                          "cursor-pointer",
+                          config.disabled && "cursor-not-allowed opacity-50",
+                        )}
+                        disabled={config.disabled}
+                        onSelect={
+                          config.disabled
+                            ? (e) => e.preventDefault()
+                            : undefined
+                        }
+                      >
+                        <div
+                          className={cn(
+                            "mr-2 flex w-full flex-row items-center justify-between",
+                            config.disabled && "pointer-events-none",
+                          )}
+                        >
+                          <div className="flex items-center">
+                            <Icon className="mr-2 size-3" />
+                            <span className="text-sm">
+                              {framework.charAt(0).toUpperCase() +
+                                framework.slice(1)}
+                            </span>
+                          </div>
+                          {config.badge && (
+                            <Badge
+                              variant={
+                                config.badge === "Soon"
+                                  ? "outline"
+                                  : "secondary"
+                              }
+                              className={cn(
+                                "text-xs",
+                                config.badge === "Soon" ? "ml-2" : "mr-1",
+                              )}
+                            >
+                              {config.badge}
+                            </Badge>
+                          )}
+                        </div>
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
             </div>

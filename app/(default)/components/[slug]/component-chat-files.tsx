@@ -35,7 +35,7 @@ import {
   hasArtifacts,
   splitContentIntoChunks,
 } from "@/utils/completion-parser";
-import { storageUrl } from "@/utils/config";
+import { Framework, storageUrl } from "@/utils/config";
 import { getRelativeDate } from "@/utils/date";
 import { getFileConfig } from "@/utils/file-extensions";
 import { getInitials, formatFileSize } from "@/utils/helpers";
@@ -247,7 +247,7 @@ export default function ComponentChatFiles({
                         <h3 className="text-xs font-semibold">
                           {files.length === 1 ? "Output File" : "Output Files"}
                         </h3>
-                        {selectedFramework === "html" && (
+                        {selectedFramework === Framework.HTML && (
                           <Tooltip>
                             <TooltipTrigger>
                               <Badge

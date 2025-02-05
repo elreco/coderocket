@@ -17,6 +17,7 @@ import {
   hasArtifacts,
 } from "@/utils/completion-parser";
 import {
+  Framework,
   MAX_GENERATIONS,
   MAX_ITERATIONS,
   PREMIUM_MESSAGES_PER_PERIOD,
@@ -26,8 +27,8 @@ import {
 // import { promptEnhancer } from "@/utils/prompt-enhancer";
 import { formatToTimestamp } from "@/utils/date";
 import { createClient } from "@/utils/supabase/server";
+import { systemPrompt } from "@/utils/system-prompts";
 import { htmlSystemPrompt } from "@/utils/system-prompts/html";
-import { reactSystemPrompt } from "@/utils/system-prompts/react";
 
 export async function POST(req: Request) {
   try {
@@ -56,13 +57,13 @@ export async function POST(req: Request) {
           ? anthropicModel("claude-3-5-sonnet-latest")
           : anthropicModel("claude-3-5-haiku-latest"),
       system:
-        framework === "html"
+        framework === Framework.HTML
           ? htmlSystemPrompt(
               messagesFromDatabase.length === 1
                 ? messagesFromDatabase[0]?.theme
                 : null,
             )
-          : reactSystemPrompt(),
+          : systemPrompt(framework as Framework),
       toolChoice: "none",
       maxTokens: 8192,
       onFinish: async ({ text, usage, finishReason }) => {
@@ -323,9 +324,9 @@ const updateDataAfterCompletion = async (
 
   await supabase.from("messages").insert(newMessages).eq("chat_id", chatId);
   const hasArtifactResult = hasArtifacts(text);
-  if (hasArtifactResult && chat.framework === "html") {
+  if (hasArtifactResult && chat.framework === Framework.HTML) {
     after(async () => {
-      await takeScreenshot(chatId, version, theme, "html");
+      await takeScreenshot(chatId, version, theme, Framework.HTML);
     });
   }
 };

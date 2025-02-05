@@ -46,7 +46,7 @@ function ProgressMessagesComponent({ messages }: { messages: string[] }) {
   );
 }
 
-export default function RenderReactComponent() {
+export default function RenderComponent() {
   const { loadingState, buildError, error, progressMessages } =
     useWebcontainer();
   const { chatId, selectedVersion, isLoading, authorized, setInput } =
