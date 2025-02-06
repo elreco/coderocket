@@ -203,9 +203,9 @@ module.exports = {
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "clsx": "^2.1.1",
-    "tailwindcss-animate": "^1.0.6",
     "class-variance-authority": "^0.7.1",
-    "lucide-react": "^0.294.0"
+    "lucide-react": "^0.294.0",
+    "radix-ui": "^1.1.2"
   },
   "devDependencies": {
     "@types/node": "^20.3.1",
