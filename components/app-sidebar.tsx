@@ -186,8 +186,14 @@ export function AppSidebar({
         {user && <NavMain items={myComponentsItems} label="My Components" />}
       </SidebarContent>
       <SidebarFooter>
-        {notification?.is_active && open && (
-          <div className="p-1">
+        {notification?.is_active && (
+          <div
+            className={`p-1 ${
+              open
+                ? "opacity-100 transition-opacity delay-200 duration-500"
+                : "opacity-0"
+            }`}
+          >
             <SidebarNotification
               title={notification.title}
               description={notification.description}
