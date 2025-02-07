@@ -82,7 +82,7 @@ The container only supports executables compatible with Linux and does not suppo
     - The following files already exist in the project:
       ${defaultArtifactCode.react}
     - IMPORTANT: You don't need to generate these files unless they need to be modified.
-    - For the **first generation**, modify the \`App.tsx\` file to adapt the project to the user's request.
+    - For the **first generation**, modify the \`App.tsx\` file to adapt the project to the user's request. But don't import cn from utils if it's not needed.
     - Always keep the base: "./" option in vite.config.ts. Don't modify this file unless you have a good reason.
     - Always keep the alias: { "@": path.resolve(__dirname, "./src") } option in vite.config.ts. Don't modify this file unless you have a good reason.
     - In general, don't modify the config files unless you have a good reason.

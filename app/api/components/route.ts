@@ -1,5 +1,5 @@
 export const maxDuration = 300;
-import { CoreMessage, streamText } from "ai";
+import { CoreMessage, LanguageModelUsage, streamText } from "ai";
 import { after } from "next/server";
 
 import {
@@ -64,9 +64,9 @@ export async function POST(req: Request) {
           : reactSystemPrompt(),
       toolChoice: "none",
       maxTokens: 8192,
-      onFinish: async ({ text }) => {
+      onFinish: async ({ text, usage }) => {
         try {
-          await updateDataAfterCompletion(id, text, prompt);
+          await updateDataAfterCompletion(id, text, prompt, usage);
         } catch (e) {
           console.error(e);
         }
@@ -265,6 +265,7 @@ const updateDataAfterCompletion = async (
   chatId: string,
   text: string | undefined,
   prompt: string,
+  usage: LanguageModelUsage,
 ) => {
   const supabase = await createClient();
 
@@ -287,11 +288,12 @@ const updateDataAfterCompletion = async (
       version,
       content: prompt,
       role: "user",
+      totalTokens: usage.promptTokens,
     });
   } else {
     await supabase
       .from("messages")
-      .update({ version })
+      .update({ version, totalTokens: usage.promptTokens })
       .eq("chat_id", chatId)
       .eq("version", -1);
   }
@@ -309,6 +311,7 @@ const updateDataAfterCompletion = async (
     content: text,
     theme,
     role: "assistant",
+    totalTokens: usage.completionTokens,
   });
 
   await supabase.from("messages").insert(newMessages).eq("chat_id", chatId);

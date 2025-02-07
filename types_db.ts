@@ -77,6 +77,7 @@ export type Database = {
           role: string;
           screenshot: string | null;
           theme: string | null;
+          totalTokens: number | null;
           version: number;
         };
         Insert: {
@@ -87,6 +88,7 @@ export type Database = {
           role: string;
           screenshot?: string | null;
           theme?: string | null;
+          totalTokens?: number | null;
           version: number;
         };
         Update: {
@@ -97,6 +99,7 @@ export type Database = {
           role?: string;
           screenshot?: string | null;
           theme?: string | null;
+          totalTokens?: number | null;
           version?: number;
         };
         Relationships: [
