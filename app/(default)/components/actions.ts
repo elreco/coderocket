@@ -8,6 +8,7 @@ import {
   MAX_GENERATIONS,
   PREMIUM_MESSAGES_PER_PERIOD,
 } from "@/utils/config";
+import { formatToTimestamp } from "@/utils/date";
 import { defaultArtifactCode } from "@/utils/default-artifact-code";
 import { createClient } from "@/utils/supabase/server";
 
@@ -207,7 +208,7 @@ export const createChat = async (prompt: string, formData: FormData) => {
       .from("messages")
       .select("*, chats!inner(*)", { count: "exact", head: true })
       .eq("chats.user_id", user.id)
-      .gte("created_at", currentMonthStart); // Use currentMonthStart for monthly limit
+      .gte("created_at", formatToTimestamp(currentMonthStart)); // Use currentMonthStart for monthly limit
     if (count && count >= PREMIUM_MESSAGES_PER_PERIOD) {
       return {
         error: {
@@ -227,12 +228,24 @@ export const createChat = async (prompt: string, formData: FormData) => {
       };
     }
   } else {
+    const currentPeriodStart = new Date(subscription.current_period_start);
+    const currentDate = new Date();
+    const currentMonthStart = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth(),
+      currentPeriodStart.getDate(),
+    );
+
+    // Adjust the month if the current date is before the current period start date
+    if (currentDate < currentMonthStart) {
+      currentMonthStart.setMonth(currentMonthStart.getMonth() - 1);
+    }
     // Vérifier la limite mensuelle pour les abonnés
     const { count } = await supabase
       .from("messages")
       .select("*, chats!inner(*)", { count: "exact", head: true })
       .eq("chats.user_id", user.id)
-      .gte("created_at", subscription.current_period_start);
+      .gte("created_at", formatToTimestamp(currentMonthStart));
     if (count && count >= PREMIUM_MESSAGES_PER_PERIOD) {
       return {
         error: {

@@ -24,6 +24,7 @@ import {
   storageUrl,
 } from "@/utils/config";
 // import { promptEnhancer } from "@/utils/prompt-enhancer";
+import { formatToTimestamp } from "@/utils/date";
 import { createClient } from "@/utils/supabase/server";
 import { htmlSystemPrompt } from "@/utils/system-prompts/html";
 import { reactSystemPrompt } from "@/utils/system-prompts/react";
@@ -199,7 +200,8 @@ const validateRequest = async (id: string) => {
       .from("messages")
       .select("*, chats!inner(*)", { count: "exact", head: true })
       .eq("chats.user_id", user.id)
-      .gte("created_at", currentMonthStart); // Use currentMonthStart for monthly limit
+      .gte("created_at", formatToTimestamp(currentMonthStart)); // Use currentMonthStart for monthly limit
+
     if (count && count >= PREMIUM_MESSAGES_PER_PERIOD) {
       throw new Error("limit-exceeded", {
         cause: `You have reached your limit of ${PREMIUM_MESSAGES_PER_PERIOD} messages for this billing period.`,
@@ -225,7 +227,7 @@ const validateRequest = async (id: string) => {
       .from("messages")
       .select("*, chats!inner(*)", { count: "exact", head: true })
       .eq("chats.user_id", user.id)
-      .gte("created_at", currentMonthStart); // Use currentMonthStart for monthly limit
+      .gte("created_at", formatToTimestamp(currentMonthStart)); // Use currentMonthStart for monthly limit
     if (count && count >= PREMIUM_MESSAGES_PER_PERIOD) {
       throw new Error("limit-exceeded", {
         cause: `You have reached your limit of ${PREMIUM_MESSAGES_PER_PERIOD} messages for this billing period.`,

@@ -68,4 +68,4 @@ export const themes = [
 
 export type AvailableFramework = "react" | "html";
 
-export const PREMIUM_MESSAGES_PER_PERIOD = 1000;
+export const PREMIUM_MESSAGES_PER_PERIOD = 250;
