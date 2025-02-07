@@ -190,7 +190,7 @@ export default function ComponentCompletion({
           toast({
             variant: "destructive",
             title: "You have reached the limit of your plan",
-            description: `You have reached your limit of ${PREMIUM_MESSAGES_PER_PERIOD} messages for this billing period. Your limit will reset on your next billing period.`,
+            description: `You have reached your limit of ${PREMIUM_MESSAGES_PER_PERIOD} messages for today. This limit will reset at midnight (UTC).`,
             duration: 5000,
           });
           return;

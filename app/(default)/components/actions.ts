@@ -191,31 +191,25 @@ export const createChat = async (prompt: string, formData: FormData) => {
   }
 
   if (!subscription) {
-    // Calculate the start of the current month based on user.created_at
-    const userCreatedAt = new Date(user.created_at);
+    // Calculate the start of the current billing month based on current_period_start
     const currentDate = new Date();
-    const currentMonthStart = new Date(
+    const currentDayStart = new Date(
       currentDate.getFullYear(),
       currentDate.getMonth(),
-      userCreatedAt.getDate(),
+      currentDate.getDate(),
     );
-
-    // Adjust the month if the current date is before the user creation date in the current month
-    if (currentDate < currentMonthStart) {
-      currentMonthStart.setMonth(currentMonthStart.getMonth() - 1);
-    }
 
     // Vérifier la limite mensuelle pour les non-abonnés
     const { count } = await supabase
       .from("messages")
       .select("*, chats!inner(*)", { count: "exact", head: true })
       .eq("chats.user_id", user.id)
-      .gte("created_at", formatToTimestamp(currentMonthStart)); // Use currentMonthStart for monthly limit
+      .gte("created_at", formatToTimestamp(currentDayStart));
     if (count && count >= PREMIUM_MESSAGES_PER_PERIOD) {
       return {
         error: {
           title: "You have reached the limit of your free plan.",
-          description: `You have reached your limit of ${PREMIUM_MESSAGES_PER_PERIOD} messages for this billing period.`,
+          description: `You have reached your limit of ${PREMIUM_MESSAGES_PER_PERIOD} messages for today. This limit will reset at midnight (UTC).`,
         },
       };
     }
@@ -224,35 +218,30 @@ export const createChat = async (prompt: string, formData: FormData) => {
       return {
         error: {
           title: "You have reached the limit of your free plan.",
-          description:
-            "Please upgrade to continue. Your limit will reset next month.",
+          description: "Please upgrade to continue.",
         },
       };
     }
   } else {
-    const currentPeriodStart = new Date(subscription.current_period_start);
+    // Calculate the start of the current billing month based on current_period_start
     const currentDate = new Date();
-    const currentMonthStart = new Date(
+    const currentDayStart = new Date(
       currentDate.getFullYear(),
       currentDate.getMonth(),
-      currentPeriodStart.getDate(),
+      currentDate.getDate(),
     );
-
-    // Adjust the month if the current date is before the current period start date
-    if (currentDate < currentMonthStart) {
-      currentMonthStart.setMonth(currentMonthStart.getMonth() - 1);
-    }
     // Vérifier la limite mensuelle pour les abonnés
     const { count } = await supabase
       .from("messages")
       .select("*, chats!inner(*)", { count: "exact", head: true })
       .eq("chats.user_id", user.id)
-      .gte("created_at", formatToTimestamp(currentMonthStart));
+      .gte("created_at", formatToTimestamp(currentDayStart));
+
     if (count && count >= PREMIUM_MESSAGES_PER_PERIOD) {
       return {
         error: {
           title: "You have reached the limit of your plan",
-          description: `You have reached your limit of ${PREMIUM_MESSAGES_PER_PERIOD} messages for this billing period.`,
+          description: `You have reached your limit of ${PREMIUM_MESSAGES_PER_PERIOD} messages for today. This limit will reset at midnight (UTC).`,
         },
       };
     }
