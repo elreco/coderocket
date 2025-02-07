@@ -4,65 +4,70 @@ import { NextRequest, NextResponse } from "next/server";
 
 /**
  * Cette route sert les fichiers d’un dossier (prefix) stocké dans Vercel Blob.
- *   - /blob/:prefix/     => renvoie index.html (si existe)
- *   - /blob/:prefix/:slug... => renvoie le fichier correspondant, sinon fallback index.html
+ *   - /blob/:prefix/             => renvoie index.html (si existe)
+ *   - /blob/:prefix/:slug...     => renvoie le fichier correspondant
+ *   - Fallback SPA sur index.html si aucun fichier trouvé OU slug sans extension (routing client)
  */
 export async function GET(
   request: NextRequest,
   context: { params: Promise<{ prefix: string; slug?: string[] }> },
 ) {
-  // Récupérer le hostname de la requête
+  // 1. Déterminer le prefix et le slug depuis l’URL
   const hostname = request.headers.get("host");
-  const pathname = new URL(request.url).pathname;
+  const { pathname } = new URL(request.url);
 
   let prefix: string;
   let slug: string[] = [];
 
   if (hostname?.includes("tailwindai.dev")) {
-    // Format: prefix.tailwindai.dev/slug
-    prefix = hostname.split(".")[0];
-    // Récupère le slug depuis le pathname
+    // Format : prefix.tailwindai.dev/slug...
+    prefix = hostname.split(".")[0]; // Ex: e7ff9bcc-7d89-401a-97a8-67cd5e13bf97-0
     if (pathname !== "/") {
-      // Enlève le premier slash et split le reste du chemin
+      // Enlève le "/" initial et split : "/dashboard" => ["dashboard"]
       slug = pathname.slice(1).split("/");
     }
   } else {
-    // Garder le comportement original pour les autres cas
+    // Cas normal /blob/:prefix/:slug...
     const params = await context.params;
     prefix = params.prefix;
     slug = params.slug || [];
   }
 
-  // `prefix` = e7ff9bcc-7d89-401a-97a8-67cd5e13bf97-0
-  // `slug`   = ["assets","main.js"] ou [] si rien
-
-  // Construit le chemin complet dans Blob
-  // Si on n'a pas de slug => on vise "index.html" par défaut
+  // 2. Construit le chemin complet dans le storage
+  //    Si on n'a pas de slug => index.html
   const fileSubPath = slug.join("/");
   const filePath = fileSubPath
     ? `${prefix}/${fileSubPath}`
     : `${prefix}/index.html`;
 
-  // On liste les blobs qui commencent par le prefix
-  // pour filtrer un peu et ne pas tout charger
+  // 3. Liste les blobs commençant par le prefix
   const { blobs } = await list({ prefix: `${prefix}/` });
-  // Exemple de pathname : "e7ff9bcc-7d89-401a-97a8-67cd5e13bf97-0/assets/main.js"
 
-  // Recherche du fichier exact
+  // 4. Recherche du fichier exact
   let matchedBlob = blobs.find((b) => b.pathname === filePath);
 
-  // --- Fallback SPA ---
-  // Si on n'a rien trouvé, on retente "index.html" pour gérer un routing client-side
-  // (ex: /blob/:prefix/dashboard => renvoie quand même index.html)
+  // 5. Forcer le fallback si le slug n’a pas d’extension
+  //    => Cas typique d’une route client-side ex: /dashboard, /profile, etc.
+  const lastSegment = slug[slug.length - 1];
+  const hasExtension = lastSegment?.includes(".");
+
+  // Si on a un slug (exclure la page d’accueil) et aucune extension => Fallback
+  if (slug.length > 0 && !hasExtension) {
+    matchedBlob = undefined;
+  }
+
+  // 6. Fallback SPA : si le fichier n’existe pas OU slug sans extension
   if (!matchedBlob) {
     const fallbackPath = `${prefix}/index.html`;
     matchedBlob = blobs.find((b) => b.pathname === fallbackPath);
+
+    // Si on n’a pas d’index.html non plus => 404
     if (!matchedBlob) {
       return new NextResponse("Not found", { status: 404 });
     }
   }
 
-  // On récupère l'URL publique du blob et on "re-télécharge" son contenu
+  // 7. Récupère le contenu du Blob et le renvoie
   const blobResp = await fetch(matchedBlob.url);
   if (!blobResp.ok) {
     return new NextResponse("Erreur de fetch sur le blob", { status: 500 });
@@ -70,8 +75,7 @@ export async function GET(
 
   const data = await blobResp.arrayBuffer();
 
-  // Détermine le type MIME depuis l'extension
-  // (ou matchedBlob.contentType si tu l'as renseigné à l'upload)
+  // 8. Détermine le type MIME
   const extension = "." + (filePath.split(".").pop() ?? "");
   const mimeType = mime.lookup(extension) || "application/octet-stream";
 
