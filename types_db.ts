@@ -15,8 +15,10 @@ export type Database = {
           created_at: string | null;
           framework: string | null;
           id: string;
+          input_tokens: number | null;
           is_featured: boolean | null;
           is_private: boolean | null;
+          output_tokens: number | null;
           prompt_image: string | null;
           slug: string | null;
           user_id: string;
@@ -26,8 +28,10 @@ export type Database = {
           created_at?: string | null;
           framework?: string | null;
           id?: string;
+          input_tokens?: number | null;
           is_featured?: boolean | null;
           is_private?: boolean | null;
+          output_tokens?: number | null;
           prompt_image?: string | null;
           slug?: string | null;
           user_id: string;
@@ -37,8 +41,10 @@ export type Database = {
           created_at?: string | null;
           framework?: string | null;
           id?: string;
+          input_tokens?: number | null;
           is_featured?: boolean | null;
           is_private?: boolean | null;
+          output_tokens?: number | null;
           prompt_image?: string | null;
           slug?: string | null;
           user_id?: string;
@@ -77,7 +83,6 @@ export type Database = {
           role: string;
           screenshot: string | null;
           theme: string | null;
-          totalTokens: number | null;
           version: number;
         };
         Insert: {
@@ -88,7 +93,6 @@ export type Database = {
           role: string;
           screenshot?: string | null;
           theme?: string | null;
-          totalTokens?: number | null;
           version: number;
         };
         Update: {
@@ -99,7 +103,6 @@ export type Database = {
           role?: string;
           screenshot?: string | null;
           theme?: string | null;
-          totalTokens?: number | null;
           version?: number;
         };
         Relationships: [

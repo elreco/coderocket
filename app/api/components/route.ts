@@ -301,19 +301,22 @@ const updateDataAfterCompletion = async (
       version,
       content: prompt,
       role: "user",
-      totalTokens: usage.promptTokens,
     });
   } else {
     await supabase
       .from("messages")
-      .update({ version, totalTokens: usage.promptTokens })
+      .update({ version })
       .eq("chat_id", chatId)
       .eq("version", -1);
   }
 
   await supabase
     .from("chats")
-    .update({ artifact_code: artifactCode })
+    .update({
+      artifact_code: artifactCode,
+      input_tokens: usage.promptTokens,
+      output_tokens: usage.completionTokens,
+    })
     .eq("id", chatId);
 
   const theme = extractDataTheme(text);
@@ -324,7 +327,6 @@ const updateDataAfterCompletion = async (
     content: text,
     theme,
     role: "assistant",
-    totalTokens: usage.completionTokens,
   });
 
   await supabase.from("messages").insert(newMessages).eq("chat_id", chatId);
