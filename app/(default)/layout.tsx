@@ -71,7 +71,7 @@ export default async function RootLayout({ children }: PropsWithChildren) {
   return (
     <html
       lang="en"
-      className={cn("dark size-full antialiased", rubik.variable)}
+      className={cn("dark size-full antialiased", rubik.className)}
     >
       <body className="size-full bg-background">
         <SidebarProvider defaultOpen={defaultOpen} className="size-full">

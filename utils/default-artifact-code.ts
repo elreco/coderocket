@@ -195,8 +195,7 @@ module.exports = {
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
-    "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "build": "vite build",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -211,23 +210,15 @@ module.exports = {
     "@types/node": "^20.3.1",
     "@types/react": "^18.0.37",
     "@types/react-dom": "^18.0.11",
-    "@typescript-eslint/eslint-plugin": "^5.59.0",
-    "@typescript-eslint/parser": "^5.59.0",
     "@vitejs/plugin-react": "^4.0.0",
     "autoprefixer": "^10.4.14",
-    "eslint": "^8.38.0",
-    "eslint-plugin-react-hooks": "^4.6.0",
-    "eslint-plugin-react-refresh": "^0.3.4",
     "postcss": "^8.4.24",
     "typescript": "^5.0.2",
     "tailwindcss": "^3.3.2",
     "tailwind-merge": "^2.4.0",
     "tailwindcss-animate": "^1.0.7",
     "vite": "^4.3.9"
-  },
-  "browserslist": [
-    "defaults"
-  ]
+  }
 }
 </tailwindaiFile>
 <tailwindaiFile name="tsconfig.json">
@@ -315,9 +306,16 @@ import path from 'path'
 export default defineConfig({
   plugins: [react()],
   base: "./",
+  build: {
+    minify: false,
+    sourcemap: false,
+    cssCodeSplit: false,
+    target: "esnext",
+    ssr: false,
+  },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
+      "@": path.resolve(__dirname, "./src"),
     },
   },
 })

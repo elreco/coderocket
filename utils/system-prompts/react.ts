@@ -70,7 +70,6 @@ The container only supports executables compatible with Linux and does not suppo
     <dependencies>
       - Always include required dependencies in package.json.
       - Always include the necessary dependencies for shadcn/ui components (e.g., @radix-ui/react-label or @radix-ui/react-slot).
-      - Never delete the browserslist entry.
       - Ensure no missing dependencies cause runtime or build errors.
       - Always use the dev command to run the project with Vite.
     </dependencies>
