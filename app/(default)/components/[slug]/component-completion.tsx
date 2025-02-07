@@ -196,6 +196,8 @@ export default function ComponentCompletion({
           return;
         }
         if (error.message) {
+          setIsLoading(false);
+          setCanvas(true);
           toast({
             variant: "destructive",
             title: "Something went wrong",
