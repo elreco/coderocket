@@ -1,25 +1,24 @@
 import Link from "next/link";
 import { ReactNode, Suspense } from "react";
+
 import { getUserDetails, getSubscription } from "@/app/supabase-server";
 import { Container } from "@/components/container";
 import { PageTitle } from "@/components/page-title";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+
 import { getUser, updateEmail, updateName } from "./actions";
 import ManageSubscriptionButton from "./manage-subscription-button";
 import UnsubscribeSurveyDialog from "./unsubscribe-survey-dialog";
 
 // Définir l'action du formulaire comme une fonction serveur
 async function handleUserInfoUpdate(formData: FormData) {
-  'use server'
+  "use server";
 
   try {
-    await Promise.all([
-      updateName(formData),
-      updateEmail(formData)
-    ]);
+    await Promise.all([updateName(formData), updateEmail(formData)]);
   } catch (error) {
-    console.error('Error updating user info:', error);
+    console.error("Error updating user info:", error);
     throw error;
   }
 }
@@ -95,7 +94,7 @@ export default async function Account() {
           <form
             id="userInfoForm"
             action={handleUserInfoUpdate}
-            className="space-y-6 mb-4 mt-8"
+            className="mb-4 mt-8 space-y-6"
           >
             <div className="space-y-2">
               <label className="text-sm font-medium">Full Name</label>
@@ -107,7 +106,9 @@ export default async function Account() {
                 placeholder="Your name"
                 maxLength={64}
               />
-              <p className="text-sm text-muted-foreground">64 characters maximum</p>
+              <p className="text-sm text-muted-foreground">
+                64 characters maximum
+              </p>
             </div>
 
             <div className="space-y-2">
