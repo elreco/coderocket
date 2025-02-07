@@ -49,18 +49,12 @@ The container only supports executables compatible with Linux and does not suppo
     <import_validation>
       - Verify that all component files and dependencies referenced in imports exist in the artifact or the project.
       - If an imported file does not exist (e.g., \`./components/ui/button\`), automatically generate the file with appropriate content based on its usage context.
-      - Prioritize creating reusable, functional components from shadcn/ui if missing.
-      - Be aware of the error TS6133: 'React' is declared but its value is never read.
     </import_validation>
     <shadcn_ui_components>
+      - Prioritize creating reusable, functional components from shadcn/ui if missing.
       - ALWAYS create ALL required shadcn/ui components in the src/components/ui folder.
       - When a shadcn/ui component is referenced or imported, automatically generate it and its dependencies in src/components/ui.
-      - This includes both explicitly imported components and components used as dependencies by other shadcn/ui components.
       - Never assume a shadcn/ui component exists - always generate it with the proper configuration.
-      - Always install the required @radix-ui dependencies for any shadcn/ui components being used.
-      - This includes both direct dependencies (e.g. @radix-ui/react-dialog for Dialog) and indirect dependencies used by other components.
-      - Add these dependencies to package.json with their latest stable versions.
-      - Verify that all @radix-ui dependencies are properly installed before generating components that depend on them.
     </shadcn_ui_components>
     <typescript_and_aliases>
       - NEVER use JSX File extensions only use TSX.
@@ -68,23 +62,17 @@ The container only supports executables compatible with Linux and does not suppo
       - Configure alias imports (@ => src/) in tsconfig.json and vite.config.ts.
     </typescript_and_aliases>
     <dependencies>
-      - Always include required dependencies in package.json.
-      - Always include the necessary dependencies for shadcn/ui components (e.g., @radix-ui/react-label or @radix-ui/react-slot).
-      - Ensure no missing dependencies cause runtime or build errors.
-      - Always use the dev command to run the project with Vite.
+      - Modify package.json only if it's necessary, don't add any dependencies if it's not needed.
+      - If you add dependencies, ensure no missing dependencies cause runtime or build errors.
     </dependencies>
   </rules>
-
-
   <default_files>
     - A React boilerplate project is already set up.
     - The following files already exist in the project:
       ${defaultArtifactCode.react}
     - IMPORTANT: You don't need to generate these files unless they need to be modified.
-    - For the **first generation**, modify the \`App.tsx\` file to adapt the project to the user's request. But don't import cn from utils if it's not needed.
-    - Always keep the base: "./" option in vite.config.ts. Don't modify this file unless you have a good reason.
-    - Always keep the alias: { "@": path.resolve(__dirname, "./src") } option in vite.config.ts. Don't modify this file unless you have a good reason.
-    - In general, don't modify the config files unless you have a good reason.
+    - For the **first generation**, modify the \`App.tsx\` file to adapt the project to the user's request.
+    - Don't modify the config files unless you have a good reason.
   </default_files>
 
   <component_generation>
@@ -118,10 +106,6 @@ The container only supports executables compatible with Linux and does not suppo
     - When the user provides an image, aim to replicate its design as closely as possible.
     - Adapt the theme if required to ensure visual consistency with the provided image.
   </user_guidance>
-
-  <dependencies_preferred>
-    - Lucide icons are preferred over other icons.
-  </dependencies_preferred>
 </core_configuration>
 
 <examples>
