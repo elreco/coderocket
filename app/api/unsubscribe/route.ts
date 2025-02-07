@@ -1,5 +1,5 @@
-import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from "@supabase/supabase-js";
+import { NextResponse } from "next/server";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -18,26 +18,26 @@ export async function POST(req: Request) {
 
     // Save form data to the database
     const { error: insertError } = await supabase
-      .from('unsubscribe_surveys')
+      .from("unsubscribe_surveys")
       .insert([submissionData]);
 
     if (insertError) {
-      console.error('Insert Error:', insertError);
+      console.error("Insert Error:", insertError);
       return NextResponse.json(
-        { error: 'Failed to save survey data' },
-        { status: 500 }
+        { error: "Failed to save survey data" },
+        { status: 500 },
       );
     }
 
     return NextResponse.json(
-      { message: 'Unsubscribe reason logged successfully' },
-      { status: 200 }
+      { message: "Unsubscribe reason logged successfully" },
+      { status: 200 },
     );
   } catch (error) {
-    console.error('Error:', error);
+    console.error("Error:", error);
     return NextResponse.json(
-      { error: 'Failed to log unsubscribe reason' },
-      { status: 500 }
+      { error: "Failed to log unsubscribe reason" },
+      { status: 500 },
     );
   }
 }
