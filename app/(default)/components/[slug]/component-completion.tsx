@@ -42,7 +42,11 @@ import {
   extractFilesFromCompletion,
   getUpdatedArtifactCode,
 } from "@/utils/completion-parser";
-import { AvailableFramework, crispWebsiteId } from "@/utils/config";
+import {
+  AvailableFramework,
+  crispWebsiteId,
+  PREMIUM_MESSAGES_PER_PERIOD,
+} from "@/utils/config";
 import { createClient } from "@/utils/supabase/client";
 
 import {
@@ -163,7 +167,8 @@ export default function ComponentCompletion({
           toast({
             variant: "destructive",
             title: "You have reached the limit of your free plan",
-            description: "Please upgrade to continue.",
+            description:
+              "Please upgrade to continue. Your limit will reset next month.",
             duration: 5000,
           });
           return;
@@ -174,7 +179,7 @@ export default function ComponentCompletion({
           toast({
             variant: "destructive",
             title: "You have reached the limit of your plan",
-            description: "Wait for the next billing period to continue.",
+            description: `You have reached your limit of ${PREMIUM_MESSAGES_PER_PERIOD} messages for this billing period. Your limit will reset on your next billing period.`,
             duration: 5000,
           });
           return;

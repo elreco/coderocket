@@ -180,26 +180,53 @@ export const createChat = async (prompt: string, formData: FormData) => {
   if (!subscription && is_private) {
     return {
       error: {
-        title: "You have reached the limit of your free plan",
-        description: "Please upgrade to continue.",
+        title: "You have reached the limit of your free plan.",
+        description:
+          "Please upgrade to continue. Your limit will reset next month.",
       },
     };
   }
 
-  if (
-    !subscription &&
-    existingChats &&
-    existingChats?.length > MAX_GENERATIONS
-  ) {
-    return {
-      error: {
-        title: "You have reached the limit of your free plan",
-        description: "Please upgrade to continue.",
-      },
-    };
-  }
+  if (!subscription) {
+    // Calculate the start of the current month based on user.created_at
+    const userCreatedAt = new Date(user.created_at);
+    const currentDate = new Date();
+    const currentMonthStart = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth(),
+      userCreatedAt.getDate(),
+    );
 
-  if (subscription) {
+    // Adjust the month if the current date is before the user creation date in the current month
+    if (currentDate < currentMonthStart) {
+      currentMonthStart.setMonth(currentMonthStart.getMonth() - 1);
+    }
+
+    // Vérifier la limite mensuelle pour les non-abonnés
+    const { count } = await supabase
+      .from("messages")
+      .select("*, chats!inner(*)", { count: "exact", head: true })
+      .eq("chats.user_id", user.id)
+      .gte("created_at", currentMonthStart); // Use currentMonthStart for monthly limit
+    if (count && count >= PREMIUM_MESSAGES_PER_PERIOD) {
+      return {
+        error: {
+          title: "You have reached the limit of your free plan.",
+          description: `You have reached your limit of ${PREMIUM_MESSAGES_PER_PERIOD} messages for this billing period.`,
+        },
+      };
+    }
+
+    if (existingChats && existingChats?.length > MAX_GENERATIONS) {
+      return {
+        error: {
+          title: "You have reached the limit of your free plan.",
+          description:
+            "Please upgrade to continue. Your limit will reset next month.",
+        },
+      };
+    }
+  } else {
     // Vérifier la limite mensuelle pour les abonnés
     const { count } = await supabase
       .from("messages")
@@ -210,7 +237,7 @@ export const createChat = async (prompt: string, formData: FormData) => {
       return {
         error: {
           title: "You have reached the limit of your plan",
-          description: "Wait for the next billing period to continue.",
+          description: `You have reached your limit of ${PREMIUM_MESSAGES_PER_PERIOD} messages for this billing period.`,
         },
       };
     }

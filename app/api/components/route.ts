@@ -169,19 +169,58 @@ const validateRequest = async (id: string) => {
   const subscription = await getSubscription();
 
   if (subscription) {
+    // Calculate the start of the current billing month based on current_period_start
+    const currentPeriodStart = new Date(subscription.current_period_start);
+    const currentDate = new Date();
+    const currentMonthStart = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth(),
+      currentPeriodStart.getDate(),
+    );
+
+    // Adjust the month if the current date is before the current period start date
+    if (currentDate < currentMonthStart) {
+      currentMonthStart.setMonth(currentMonthStart.getMonth() - 1);
+    }
+
     // Vérifier la limite mensuelle pour les abonnés
     const { count } = await supabase
       .from("messages")
       .select("*, chats!inner(*)", { count: "exact", head: true })
       .eq("chats.user_id", user.id)
-      .gte("created_at", subscription.current_period_start);
+      .gte("created_at", currentMonthStart); // Use currentMonthStart for monthly limit
     if (count && count >= PREMIUM_MESSAGES_PER_PERIOD) {
       throw new Error("limit-exceeded", {
         cause: `You have reached your limit of ${PREMIUM_MESSAGES_PER_PERIOD} messages for this billing period.`,
       });
     }
   } else {
-    // Vérifications originales pour les non-abonnés
+    // Calculate the start of the current month based on user.created_at
+    const userCreatedAt = new Date(user.created_at);
+    const currentDate = new Date();
+    const currentMonthStart = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth(),
+      userCreatedAt.getDate(),
+    );
+
+    // Adjust the month if the current date is before the user creation date in the current month
+    if (currentDate < currentMonthStart) {
+      currentMonthStart.setMonth(currentMonthStart.getMonth() - 1);
+    }
+
+    // Vérifier la limite mensuelle pour les non-abonnés
+    const { count } = await supabase
+      .from("messages")
+      .select("*, chats!inner(*)", { count: "exact", head: true })
+      .eq("chats.user_id", user.id)
+      .gte("created_at", currentMonthStart); // Use currentMonthStart for monthly limit
+    if (count && count >= PREMIUM_MESSAGES_PER_PERIOD) {
+      throw new Error("limit-exceeded", {
+        cause: `You have reached your limit of ${PREMIUM_MESSAGES_PER_PERIOD} messages for this billing period.`,
+      });
+    }
+
     const generations = chatsFromDatabase?.length ?? 0;
     if (generations > MAX_GENERATIONS) {
       throw new Error("payment-required", {
