@@ -173,6 +173,17 @@ export default function ComponentCompletion({
           });
           return;
         }
+        if (error.message === "length") {
+          setIsLoading(false);
+          setCanvas(true);
+          toast({
+            variant: "destructive",
+            title: "You have reached the limit of our AI",
+            description: `Our AI has reached the maximum number of tokens it can generate. Please create a new component.`,
+            duration: 5000,
+          });
+          return;
+        }
         if (error.message === "limit-exceeded") {
           setIsLoading(false);
           setCanvas(true);
