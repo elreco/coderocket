@@ -64,7 +64,10 @@ export async function POST(req: Request) {
           : reactSystemPrompt(),
       toolChoice: "none",
       maxTokens: 8192,
-      onFinish: async ({ text, usage }) => {
+      onFinish: async ({ text, usage, finishReason }) => {
+        if (finishReason === "length") {
+          throw new Error("length");
+        }
         try {
           await updateDataAfterCompletion(id, text, prompt, usage);
         } catch (e) {
