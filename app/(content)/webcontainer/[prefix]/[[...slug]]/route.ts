@@ -12,6 +12,8 @@ export async function GET(
   request: NextRequest,
   context: { params: Promise<{ prefix: string; slug?: string[] }> },
 ) {
+  console.log("API Route: Reçu requête pour", request.url);
+
   // 1. Déterminer le prefix et le slug depuis l’URL
   const hostname = request.headers.get("host");
   const { pathname } = new URL(request.url);
@@ -23,7 +25,6 @@ export async function GET(
     // Format : prefix.tailwindai.dev/slug...
     prefix = hostname.split(".")[0]; // Ex: e7ff9bcc-7d89-401a-97a8-67cd5e13bf97-0
     if (pathname !== "/") {
-      // Enlève le "/" initial et split : "/dashboard" => ["dashboard"]
       slug = pathname.slice(1).split("/");
     }
   } else {
@@ -33,12 +34,15 @@ export async function GET(
     slug = params.slug || [];
   }
 
+  console.log("API Route: Prefix =", prefix, "| Slug =", slug);
+
   // 2. Construit le chemin complet dans le storage
-  //    Si on n'a pas de slug => index.html
   const fileSubPath = slug.join("/");
   const filePath = fileSubPath
     ? `${prefix}/${fileSubPath}`
     : `${prefix}/index.html`;
+
+  console.log("API Route: Recherche fichier", filePath);
 
   // 3. Liste les blobs commençant par le prefix
   const { blobs } = await list({ prefix: `${prefix}/` });
@@ -47,12 +51,13 @@ export async function GET(
   let matchedBlob = blobs.find((b) => b.pathname === filePath);
 
   // 5. Forcer le fallback si le slug n’a pas d’extension
-  //    => Cas typique d’une route client-side ex: /dashboard, /profile, etc.
   const lastSegment = slug[slug.length - 1];
   const hasExtension = lastSegment?.includes(".");
 
-  // Si on a un slug (exclure la page d’accueil) et aucune extension => Fallback
   if (slug.length > 0 && !hasExtension) {
+    console.log(
+      "API Route: Slug sans extension, fallback forcé vers index.html",
+    );
     matchedBlob = undefined;
   }
 
@@ -61,23 +66,36 @@ export async function GET(
     const fallbackPath = `${prefix}/index.html`;
     matchedBlob = blobs.find((b) => b.pathname === fallbackPath);
 
-    // Si on n’a pas d’index.html non plus => 404
     if (!matchedBlob) {
+      console.log("API Route: index.html non trouvé, retour 404");
       return new NextResponse("Not found", { status: 404 });
     }
   }
 
+  console.log("API Route: Fichier trouvé", matchedBlob.pathname);
+
   // 7. Récupère le contenu du Blob et le renvoie
   const blobResp = await fetch(matchedBlob.url);
   if (!blobResp.ok) {
+    console.log(
+      "API Route: Erreur lors de la récupération du blob",
+      blobResp.status,
+    );
     return new NextResponse("Erreur de fetch sur le blob", { status: 500 });
   }
 
   const data = await blobResp.arrayBuffer();
 
   // 8. Détermine le type MIME
-  const extension = "." + (filePath.split(".").pop() ?? "");
-  const mimeType = mime.lookup(extension) || "application/octet-stream";
+  let mimeType: string;
+  if (matchedBlob.pathname.endsWith("index.html")) {
+    mimeType = "text/html"; // 👈 Assure que index.html est servi correctement
+  } else {
+    const extension = "." + (filePath.split(".").pop() ?? "");
+    mimeType = mime.lookup(extension) || "application/octet-stream";
+  }
+
+  console.log("API Route: Servant fichier avec Content-Type", mimeType);
 
   return new NextResponse(data, {
     headers: {
