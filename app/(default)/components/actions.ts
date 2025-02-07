@@ -3,7 +3,11 @@
 import { nanoid } from "nanoid";
 
 import { getSubscription } from "@/app/supabase-server";
-import { defaultTheme, MAX_GENERATIONS } from "@/utils/config";
+import {
+  defaultTheme,
+  MAX_GENERATIONS,
+  PREMIUM_MESSAGES_PER_PERIOD,
+} from "@/utils/config";
 import { defaultArtifactCode } from "@/utils/default-artifact-code";
 import { createClient } from "@/utils/supabase/server";
 
@@ -193,6 +197,23 @@ export const createChat = async (prompt: string, formData: FormData) => {
         description: "Please upgrade to continue.",
       },
     };
+  }
+
+  if (subscription) {
+    // Vérifier la limite mensuelle pour les abonnés
+    const { count } = await supabase
+      .from("messages")
+      .select("*, chats!inner(*)", { count: "exact", head: true })
+      .eq("chats.user_id", user.id)
+      .gte("created_at", subscription.current_period_start);
+    if (count && count >= PREMIUM_MESSAGES_PER_PERIOD) {
+      return {
+        error: {
+          title: "You have reached the limit of your plan",
+          description: "Wait for the next billing period to continue.",
+        },
+      };
+    }
   }
 
   let imageUrl = null;

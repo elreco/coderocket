@@ -168,6 +168,17 @@ export default function ComponentCompletion({
           });
           return;
         }
+        if (error.message === "limit-exceeded") {
+          setIsLoading(false);
+          setCanvas(true);
+          toast({
+            variant: "destructive",
+            title: "You have reached the limit of your plan",
+            description: "Wait for the next billing period to continue.",
+            duration: 5000,
+          });
+          return;
+        }
         if (error.message) {
           toast({
             variant: "destructive",

@@ -19,6 +19,7 @@ import {
 import {
   MAX_GENERATIONS,
   MAX_ITERATIONS,
+  PREMIUM_MESSAGES_PER_PERIOD,
   anthropicModel,
   storageUrl,
 } from "@/utils/config";
@@ -147,7 +148,6 @@ const buildMessagesToOpenAi = async (
 
 const validateRequest = async (id: string) => {
   const supabase = await createClient();
-  // Fetch user
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -167,23 +167,37 @@ const validateRequest = async (id: string) => {
 
   // Check subscription
   const subscription = await getSubscription();
-  // Check if user has generated more than MAX_GENERATIONS components
-  const generations = chatsFromDatabase?.length ?? 0;
-  if (!subscription && generations > MAX_GENERATIONS) {
-    throw new Error("payment-required", {
-      cause: `You need to be subscribed to generate more than ${MAX_GENERATIONS} components`,
-    });
-  }
 
-  if (
-    !subscription &&
-    messagesFromDatabase &&
-    messagesFromDatabase.filter((m) => m.role === "assistant")?.length >=
-      MAX_ITERATIONS
-  ) {
-    throw new Error("payment-required", {
-      cause: `You need to be subscribed to generate more than ${MAX_ITERATIONS} versions`,
-    });
+  if (subscription) {
+    // Vérifier la limite mensuelle pour les abonnés
+    const { count } = await supabase
+      .from("messages")
+      .select("*, chats!inner(*)", { count: "exact", head: true })
+      .eq("chats.user_id", user.id)
+      .gte("created_at", subscription.current_period_start);
+    if (count && count >= PREMIUM_MESSAGES_PER_PERIOD) {
+      throw new Error("limit-exceeded", {
+        cause: `You have reached your limit of ${PREMIUM_MESSAGES_PER_PERIOD} messages for this billing period.`,
+      });
+    }
+  } else {
+    // Vérifications originales pour les non-abonnés
+    const generations = chatsFromDatabase?.length ?? 0;
+    if (generations > MAX_GENERATIONS) {
+      throw new Error("payment-required", {
+        cause: `You need to be subscribed to generate more than ${MAX_GENERATIONS} components`,
+      });
+    }
+
+    if (
+      messagesFromDatabase &&
+      messagesFromDatabase.filter((m) => m.role === "assistant")?.length >=
+        MAX_ITERATIONS
+    ) {
+      throw new Error("payment-required", {
+        cause: `You need to be subscribed to generate more than ${MAX_ITERATIONS} versions`,
+      });
+    }
   }
 
   const imageUrl = chat.prompt_image;
