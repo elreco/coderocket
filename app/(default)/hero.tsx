@@ -507,9 +507,6 @@ export default function Hero() {
                         <SiReact className="mr-2 size-3" />
                         <span className="text-sm">React</span>
                       </div>
-                      <Badge variant="secondary" className="mr-1 text-xs">
-                        Beta
-                      </Badge>
                     </div>
                   </SelectItem>
                   <SelectItem value="html" className="cursor-pointer">
