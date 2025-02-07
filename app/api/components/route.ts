@@ -183,6 +183,7 @@ const validateRequest = async (id: string) => {
 
   // Check subscription
   const subscription = await getSubscription();
+  let nextResetDate: Date;
 
   if (subscription) {
     // Calculate the start of the current billing month based on current_period_start
@@ -228,20 +229,26 @@ const validateRequest = async (id: string) => {
     }
 
     const generations = chatsFromDatabase?.length ?? 0;
-    if (generations > MAX_GENERATIONS) {
-      throw new Error("payment-required", {
-        cause: `You need to be subscribed to generate more than ${MAX_GENERATIONS} components`,
-      });
-    }
+    const monthsSinceCreation =
+      (new Date().getFullYear() - userCreatedAt.getFullYear()) * 12 +
+      (new Date().getMonth() - userCreatedAt.getMonth());
 
-    if (
-      messagesFromDatabase &&
-      messagesFromDatabase.filter((m) => m.role === "assistant")?.length >=
-        MAX_ITERATIONS
-    ) {
-      throw new Error("payment-required", {
-        cause: `You need to be subscribed to generate more than ${MAX_ITERATIONS} versions`,
-      });
+    if (monthsSinceCreation > 0) {
+      if (generations > MAX_GENERATIONS) {
+        throw new Error("payment-required", {
+          cause: `You need to be subscribed to generate more than ${MAX_GENERATIONS} components. You can regenerate components after ${nextResetDate.toLocaleDateString()}.`,
+        });
+      }
+
+      if (
+        messagesFromDatabase &&
+        messagesFromDatabase.filter((m) => m.role === "assistant")?.length >=
+          MAX_ITERATIONS
+      ) {
+        throw new Error("payment-required", {
+          cause: `You need to be subscribed to generate more than ${MAX_ITERATIONS} versions. You can regenerate components after ${nextResetDate.toLocaleDateString()}.`,
+        });
+      }
     }
   }
 
