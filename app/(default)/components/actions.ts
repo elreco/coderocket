@@ -32,6 +32,8 @@ export const fetchChatById = async (idOrSlug: string) => {
     is_featured,
     framework,
     prompt_image,
+    input_tokens,
+    output_tokens,
     user_id,
     slug,
     user:users (*)
