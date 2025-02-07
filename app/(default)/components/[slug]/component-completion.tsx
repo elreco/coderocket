@@ -539,9 +539,9 @@ export default function ComponentCompletion({
                       open={isModalOpen}
                       onOpenChange={handleFullscreenToggle}
                     >
-                      <DialogContent className="z-[9999] h-[98%] max-w-[98%] rounded-none p-10">
+                      <DialogContent className="z-50 h-[98%] max-w-[98%] rounded-none p-10">
                         <DialogTitle className="hidden">Fullscreen</DialogTitle>
-                        <DialogDescription className="z-[9999]">
+                        <DialogDescription className="z-50">
                           {fetchedChat.framework === "react" &&
                           isWebcontainerReady ? (
                             <iframe
@@ -599,7 +599,7 @@ export default function ComponentCompletion({
             </div>
             <div className="relative m-0 flex h-full max-h-full flex-1 flex-col border-b lg:border-b-0">
               {!isLoading && (
-                <Badge className="absolute bottom-0 left-0 z-[9999] m-2 hover:bg-primary">
+                <Badge className="absolute bottom-0 left-0 z-50 m-2 hover:bg-primary">
                   <FrameworkIcon className="mr-1 size-3" />
                   <span className="first-letter:uppercase">
                     {fetchedChat?.framework}
