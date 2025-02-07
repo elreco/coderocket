@@ -96,14 +96,22 @@ const buildMessagesToOpenAi = async (
   imageUrl?: string | null | undefined,
   selectedVersion?: number,
 ) => {
-  // Filtrer les messages en fonction de selectedVersion si fourni
+  // Filter messages based on selectedVersion if provided
   const filteredMessages =
     selectedVersion !== undefined
       ? messages.filter((m) => m.version <= selectedVersion)
       : messages;
-  const messagesToOpenAI = filteredMessages.map((m) => {
+
+  // Define the maximum number of messages to send
+  const maxMessages = 10; // Set your desired limit here
+
+  // Limit the number of messages
+  const limitedMessages = filteredMessages.slice(-maxMessages);
+
+  // Map messages to OpenAI format
+  const messagesToOpenAI = limitedMessages.map((m) => {
     const content =
-      messages.length === 1 && m.role === "user"
+      limitedMessages.length === 1 && m.role === "user"
         ? `NEW PROJECT TAILWIND AI - ${m.content}`
         : m.content;
 
@@ -113,7 +121,7 @@ const buildMessagesToOpenAi = async (
     };
   }) as CoreMessage[];
 
-  // Si c'est le premier message, ajouter le préfixe au prompt
+  // If it's the first message, add the prefix to the prompt
   if (messagesToOpenAI.length === 1 && imageUrl) {
     messagesToOpenAI[0].content = [
       {
