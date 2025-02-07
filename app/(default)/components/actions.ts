@@ -241,6 +241,33 @@ export const createChat = async (prompt: string, formData: FormData) => {
         },
       };
     }
+  } else {
+    // Calculate next reset date for non-subscribers
+    const userCreatedAt = new Date(user.created_at);
+    nextResetDate = new Date(userCreatedAt);
+    nextResetDate.setMonth(userCreatedAt.getMonth() + 1);
+
+    if (!subscription && is_private) {
+      return {
+        error: {
+          title: "You have reached the limit of your free plan",
+          description: `Please upgrade to continue. You can regenerate components after ${nextResetDate.toLocaleDateString()}.`,
+        },
+      };
+    }
+
+    if (
+      !subscription &&
+      existingChats &&
+      existingChats?.length > MAX_GENERATIONS
+    ) {
+      return {
+        error: {
+          title: "You have reached the limit of your free plan",
+          description: `Please upgrade to continue. You can regenerate components after ${nextResetDate.toLocaleDateString()}.`,
+        },
+      };
+    }
   }
 
   let imageUrl = null;
