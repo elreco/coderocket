@@ -1,6 +1,11 @@
 "use client";
 
-import { SiDiscord, SiHtml5, SiReact } from "@icons-pack/react-simple-icons";
+import {
+  SiDiscord,
+  SiHtml5,
+  SiReact,
+  SiVuedotjs,
+} from "@icons-pack/react-simple-icons";
 import { CreditCard, Globe, Rocket, SquareTerminal } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -54,6 +59,11 @@ const data = {
       title: "My React Components",
       url: "/account/components/react",
       icon: SiReact,
+    },
+    {
+      title: "My Vue Components",
+      url: "/account/components/vue",
+      icon: SiVuedotjs,
     },
     {
       title: "My HTML Components",

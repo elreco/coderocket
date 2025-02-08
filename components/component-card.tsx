@@ -1,4 +1,4 @@
-import { SiHtml5, SiReact } from "@icons-pack/react-simple-icons";
+import { SiHtml5, SiReact, SiVuedotjs } from "@icons-pack/react-simple-icons";
 import { Paintbrush, TerminalIcon } from "lucide-react";
 import Link from "next/link";
 
@@ -28,7 +28,12 @@ export default function ComponentCard({
 }: {
   chat: GetComponentsReturnType;
 }) {
-  const FrameworkIcon = chat.framework === Framework.REACT ? SiReact : SiHtml5;
+  const FrameworkIcon =
+    chat.framework === Framework.REACT
+      ? SiReact
+      : chat.framework === Framework.VUE
+        ? SiVuedotjs
+        : SiHtml5;
 
   return (
     <Link

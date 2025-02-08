@@ -1,6 +1,6 @@
 "use client";
 
-import { SiHtml5, SiReact } from "@icons-pack/react-simple-icons";
+import { SiHtml5, SiReact, SiVuedotjs } from "@icons-pack/react-simple-icons";
 import { useCompletion } from "ai/react";
 import { Crisp } from "crisp-sdk-web";
 import {
@@ -413,7 +413,11 @@ export default function ComponentCompletion({
   };
 
   const FrameworkIcon =
-    fetchedChat?.framework === Framework.HTML ? SiHtml5 : SiReact;
+    fetchedChat?.framework === Framework.HTML
+      ? SiHtml5
+      : fetchedChat?.framework === Framework.REACT
+        ? SiReact
+        : SiVuedotjs;
   /*
   useEffect(() => {
     const channel = supabase
