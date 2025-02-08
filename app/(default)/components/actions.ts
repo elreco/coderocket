@@ -343,6 +343,21 @@ export const getReactChatsFromUser = async () => {
   return data;
 };
 
+export const getVueChatsFromUser = async () => {
+  const supabase = await createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  const user = userData.user;
+
+  if (!user) throw Error("Could not get user");
+  const { data } = await supabase
+    .rpc("get_all_components")
+    .eq("user_id", user.id)
+    .eq("framework", "vue")
+    .limit(99);
+
+  return data;
+};
+
 export const getFeaturedChats = async () => {
   const supabase = await createClient();
 
@@ -362,6 +377,19 @@ export const getAllReactPublicChats = async () => {
     .eq("framework", "react")
     .not("last_assistant_message", "is", null)
     .limit(24);
+  return data;
+};
+
+export const getAllVuePublicChats = async () => {
+  const supabase = await createClient();
+
+  const { data } = await supabase
+    .rpc("get_all_components")
+    .is("is_private", false)
+    .eq("framework", "vue")
+    .not("last_assistant_message", "is", null)
+    .limit(24);
+
   return data;
 };
 

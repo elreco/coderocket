@@ -245,7 +245,7 @@ module.exports = {
     "strict": false,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
-    "noFallthroughCasesInSwitch": false
+    "noFallthroughCasesInSwitch": false,
 
     /* Aliases */
     "baseUrl": ".",
