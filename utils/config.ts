@@ -73,4 +73,4 @@ export enum Framework {
   SVELTE = "svelte",
 }
 
-export const PREMIUM_MESSAGES_PER_PERIOD = 200;
+export const PREMIUM_MESSAGES_PER_PERIOD = 50;

@@ -8,7 +8,11 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Database } from "@/types_db";
-import { MAX_GENERATIONS, MAX_ITERATIONS } from "@/utils/config";
+import {
+  MAX_GENERATIONS,
+  MAX_ITERATIONS,
+  PREMIUM_MESSAGES_PER_PERIOD,
+} from "@/utils/config";
 import { postData } from "@/utils/helpers";
 
 type Subscription = Database["public"]["Tables"]["subscriptions"]["Row"];
@@ -253,6 +257,12 @@ export default function Pricing({ user, products, subscription }: Props) {
                   <p className="mt-4 flex items-center text-sm font-medium ">
                     <Check className="mr-2 size-4 text-emerald-500" /> Improve
                     prompt
+                  </p>
+                  <p className="mt-4 flex items-center text-sm font-medium ">
+                    <Check className="mr-2 size-4 text-emerald-500" />
+                    {
+                      PREMIUM_MESSAGES_PER_PERIOD
+                    } messages per day
                   </p>
                   {price.interval === "week" ? (
                     <>
