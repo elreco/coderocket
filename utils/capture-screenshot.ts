@@ -3,7 +3,7 @@
 import chromium from "@sparticuz/chromium";
 import puppeteerCore from "puppeteer-core";
 
-import { defaultTheme } from "./config";
+import { defaultTheme, Framework } from "./config";
 import { createClient } from "./supabase/server";
 /**
  * Lance Puppeteer pour prendre un screenshot d'une URL.
@@ -61,7 +61,7 @@ export const takeScreenshot = async (
 ) => {
   const supabase = await createClient();
   // Si framework n'est pas html, on vérifie d'abord si un screenshot existe déjà
-  if (framework !== "html") {
+  if (framework !== Framework.HTML) {
     const { data: existingMessage } = await supabase
       .from("messages")
       .select("screenshot")
@@ -79,7 +79,7 @@ export const takeScreenshot = async (
   // Sinon, on génère un screenshot.
   // Si `url` n'est pas fourni, on utilise un fallback (ex: votre site)
   const finalUrl =
-    framework === "html"
+    framework === Framework.HTML
       ? `https://www.tailwindai.dev/content/${chatId}/${version}`
       : `https://${chatId}-${version}.webcontainer.tailwindai.dev`;
 

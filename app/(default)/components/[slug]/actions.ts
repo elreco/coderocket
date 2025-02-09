@@ -5,7 +5,7 @@ import { after } from "next/server";
 import { getSubscription } from "@/app/supabase-server";
 import { takeScreenshot } from "@/utils/capture-screenshot";
 import { hasArtifacts } from "@/utils/completion-parser";
-import { AvailableFramework } from "@/utils/config";
+import { Framework } from "@/utils/config";
 import { promptEnhancer } from "@/utils/prompt-enhancer";
 import { createClient } from "@/utils/supabase/server";
 
@@ -53,7 +53,7 @@ export const improvePromptByChatId = async (chatId: string, prompt: string) => {
   if (chatError) {
     throw new Error(`Failed to fetch chat: ${chatError.message}`);
   }
-  return await promptEnhancer(prompt, chat?.framework as AvailableFramework);
+  return await promptEnhancer(prompt, chat?.framework as Framework);
 };
 
 export const deleteVersionByMessageId = async (messageId: number) => {

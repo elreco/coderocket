@@ -2,6 +2,7 @@ import { css } from "@codemirror/lang-css";
 import { html } from "@codemirror/lang-html";
 import { javascript } from "@codemirror/lang-javascript";
 import { json } from "@codemirror/lang-json";
+import { vue } from "@codemirror/lang-vue";
 import {
   SiHtml5,
   SiTypescript,
@@ -85,7 +86,7 @@ export const getLanguageExtension = (filename: string) => {
     case "svelte":
       return javascript({ jsx: true });
     case "vue":
-      return javascript({ jsx: true });
+      return vue();
     default:
       return html();
   }

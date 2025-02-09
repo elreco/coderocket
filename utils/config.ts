@@ -66,6 +66,11 @@ export const themes = [
   "cmyk",
 ];
 
-export type AvailableFramework = "react" | "html";
+export enum Framework {
+  REACT = "react",
+  VUE = "vue",
+  HTML = "html",
+  SVELTE = "svelte",
+}
 
 export const PREMIUM_MESSAGES_PER_PERIOD = 200;

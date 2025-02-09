@@ -1,6 +1,8 @@
-import { SiHtml5, SiReact } from "@icons-pack/react-simple-icons";
+import { SiHtml5, SiReact, SiVuedotjs } from "@icons-pack/react-simple-icons";
 import { Paintbrush, TerminalIcon } from "lucide-react";
 import Link from "next/link";
+
+import { Framework } from "@/utils/config";
 
 import { Badge } from "./ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
@@ -27,7 +29,11 @@ export default function ComponentCard({
   chat: GetComponentsReturnType;
 }) {
   const FrameworkIcon =
-    chat.framework.toLowerCase() === "react" ? SiReact : SiHtml5;
+    chat.framework === Framework.REACT
+      ? SiReact
+      : chat.framework === Framework.VUE
+        ? SiVuedotjs
+        : SiHtml5;
 
   return (
     <Link
@@ -50,7 +56,7 @@ export default function ComponentCard({
           />
         </div>
         <div className="absolute right-0 top-0 m-2 flex items-start justify-start gap-2">
-          {chat.framework.toLowerCase() === "html" && (
+          {chat.framework === Framework.HTML && (
             <Tooltip>
               <TooltipTrigger>
                 <Badge className="hover:bg-primary">

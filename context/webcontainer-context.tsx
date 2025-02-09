@@ -9,6 +9,8 @@ import React, {
   useCallback,
 } from "react";
 
+import { Framework } from "@/utils/config";
+
 import { useComponentContext } from "./component-context";
 
 type BuildError = {
@@ -77,13 +79,12 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const deployToWebcontainer = async () => {
       if (
-        selectedFramework === "html" ||
+        selectedFramework === Framework.HTML ||
         isLoading ||
         selectedVersion === undefined
       ) {
         return;
       }
-
       if (
         currentDeployment?.chatId === chatId &&
         currentDeployment?.version === selectedVersion
@@ -100,7 +101,6 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
         setLoadingState("initializing");
         setProgressMessages([]);
         setBuildError(null);
-
         const newEventSource = new EventSource(
           `/api/webcontainers?chatId=${chatId}&version=${selectedVersion}`,
         );

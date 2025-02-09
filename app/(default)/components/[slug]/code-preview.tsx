@@ -12,14 +12,14 @@ import { useRef, useEffect } from "react";
 import React from "react";
 import { useCopyToClipboard } from "usehooks-ts";
 
+import RenderComponent from "@/components/renders/render-component";
 import RenderHtmlComponent from "@/components/renders/render-html-component";
-import RenderReactComponent from "@/components/renders/render-react-component";
 import { Button } from "@/components/ui/button";
 import { useComponentContext } from "@/context/component-context";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { ChatFile } from "@/utils/completion-parser";
-import { AvailableFramework } from "@/utils/config";
+import { Framework } from "@/utils/config";
 import { getLanguageExtension } from "@/utils/file-extensions";
 
 import { CodePreviewFileTree } from "./code-preview-filetree";
@@ -33,7 +33,7 @@ const RenderContent = React.memo(
   }: {
     isLoading: boolean;
     chatFiles: ChatFile[];
-    selectedFramework: AvailableFramework;
+    selectedFramework: Framework;
   }) => {
     if (isLoading && chatFiles.length === 0) {
       return (
@@ -42,13 +42,15 @@ const RenderContent = React.memo(
         </div>
       );
     }
-    if (!isLoading && chatFiles.length > 0 && selectedFramework === "html") {
+    if (
+      !isLoading &&
+      chatFiles.length > 0 &&
+      selectedFramework === Framework.HTML
+    ) {
       return <RenderHtmlComponent files={chatFiles} />;
     }
 
-    if (selectedFramework === "react") {
-      return <RenderReactComponent />;
-    }
+    return <RenderComponent />;
 
     return (
       <div className="flex size-full items-center justify-center">
@@ -72,7 +74,7 @@ const RenderContent = React.memo(
 
     // Compare chatFiles only if framework is html
     if (
-      nextProps.selectedFramework === "html" &&
+      nextProps.selectedFramework === Framework.HTML &&
       !areFilesEqual(prevProps.chatFiles, nextProps.chatFiles)
     ) {
       return false;
@@ -195,7 +197,7 @@ export default function CodePreview() {
                   },
                 })}
                 value={editorValue}
-                lang={activeTab.split(".").pop() || "html"}
+                lang={activeTab.split(".").pop() || Framework.HTML}
                 height="100%"
                 width="100%"
                 className={`size-full max-w-full ${

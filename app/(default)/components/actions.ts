@@ -4,6 +4,7 @@ import { nanoid } from "nanoid";
 
 import { getSubscription } from "@/app/supabase-server";
 import {
+  Framework,
   defaultTheme,
   MAX_GENERATIONS,
   PREMIUM_MESSAGES_PER_PERIOD,
@@ -175,9 +176,11 @@ export const createChat = async (prompt: string, formData: FormData) => {
   const isVisible = formData.get("isVisible");
   const theme = formData.get("theme")?.toString() || defaultTheme;
   const frameworkInput = formData.get("framework")?.toString() || "react";
-  const framework = ["html", "react"].includes(frameworkInput)
+  const framework = Object.values(Framework).includes(
+    frameworkInput as Framework,
+  )
     ? frameworkInput
-    : "html";
+    : Framework.HTML;
   const is_private = isVisible === "false";
 
   if (!subscription && is_private) {
@@ -319,7 +322,7 @@ export const getHTMLChatsFromUser = async () => {
   const { data } = await supabase
     .rpc("get_all_components")
     .eq("user_id", user.id)
-    .eq("framework", "html")
+    .eq("framework", Framework.HTML)
     .limit(99);
 
   return data;
@@ -335,6 +338,21 @@ export const getReactChatsFromUser = async () => {
     .rpc("get_all_components")
     .eq("user_id", user.id)
     .eq("framework", "react")
+    .limit(99);
+
+  return data;
+};
+
+export const getVueChatsFromUser = async () => {
+  const supabase = await createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  const user = userData.user;
+
+  if (!user) throw Error("Could not get user");
+  const { data } = await supabase
+    .rpc("get_all_components")
+    .eq("user_id", user.id)
+    .eq("framework", "vue")
     .limit(99);
 
   return data;
@@ -359,6 +377,19 @@ export const getAllReactPublicChats = async () => {
     .eq("framework", "react")
     .not("last_assistant_message", "is", null)
     .limit(24);
+  return data;
+};
+
+export const getAllVuePublicChats = async () => {
+  const supabase = await createClient();
+
+  const { data } = await supabase
+    .rpc("get_all_components")
+    .is("is_private", false)
+    .eq("framework", "vue")
+    .not("last_assistant_message", "is", null)
+    .limit(24);
+
   return data;
 };
 

@@ -2,17 +2,18 @@
 
 import { generateText } from "ai";
 
-import { anthropicModel, AvailableFramework } from "./config";
+import { anthropicModel } from "./config";
+import { Framework } from "./config";
 import { stripIndents } from "./strip-indents";
+import { systemPrompt } from "./system-prompts";
 import { htmlSystemPrompt } from "./system-prompts/html";
-import { reactSystemPrompt } from "./system-prompts/react";
 
 export const promptEnhancer = async (
   prompt: string,
-  framework: AvailableFramework,
+  framework: Framework,
 ): Promise<string> => {
   const contentMd =
-    framework === "react" ? reactSystemPrompt() : htmlSystemPrompt();
+    framework === Framework.HTML ? htmlSystemPrompt() : systemPrompt(framework);
   const { text } = await generateText({
     messages: [
       {

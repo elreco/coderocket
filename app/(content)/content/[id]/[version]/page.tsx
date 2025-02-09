@@ -4,6 +4,7 @@ import {
 } from "@/app/(default)/components/actions";
 import RenderHtmlComponentServer from "@/components/renders/render-html-component-server";
 import { extractFilesFromCompletion } from "@/utils/completion-parser";
+import { Framework } from "@/utils/config";
 
 export default async function Content({
   params,
@@ -23,7 +24,7 @@ export default async function Content({
 
   const files = extractFilesFromCompletion(lastAssistantMessage.content);
 
-  return chat.framework === "html" ? (
+  return chat.framework === Framework.HTML ? (
     <RenderHtmlComponentServer
       files={files}
       style={{ width: "100%", height: "100%", border: "none" }}

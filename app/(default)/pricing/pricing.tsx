@@ -139,7 +139,7 @@ export default function Pricing({ user, products, subscription }: Props) {
               onClick={() =>
                 user ? router.push("/account") : router.push("/register")
               }
-              className="mt-12 block w-full"
+              className="mt-12 block w-full rounded-full text-white"
             >
               {user ? "Manage" : "Sign up"}
             </Button>
@@ -288,7 +288,7 @@ export default function Pricing({ user, products, subscription }: Props) {
                   disabled={false}
                   loading={priceIdLoading === price.id}
                   onClick={() => handleCheckout(price)}
-                  className="block w-full"
+                  className="block w-full rounded-full text-white"
                 >
                   {products[0].name === subscription?.prices?.products?.name
                     ? "Manage"
