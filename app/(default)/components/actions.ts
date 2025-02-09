@@ -205,6 +205,7 @@ export const createChat = async (prompt: string, formData: FormData) => {
       .select("*, chats!inner(*)", { count: "exact", head: true })
       .eq("chats.user_id", user.id)
       .gte("created_at", formatToTimestamp(currentDayStart));
+    console.log("count for user", user.id, count);
     if (count && count >= PREMIUM_MESSAGES_PER_PERIOD) {
       return {
         error: {
@@ -236,7 +237,7 @@ export const createChat = async (prompt: string, formData: FormData) => {
       .select("*, chats!inner(*)", { count: "exact", head: true })
       .eq("chats.user_id", user.id)
       .gte("created_at", formatToTimestamp(currentDayStart));
-
+    console.log("count for user", user.id, count);
     if (count && count >= PREMIUM_MESSAGES_PER_PERIOD) {
       return {
         error: {

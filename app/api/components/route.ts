@@ -198,7 +198,7 @@ const validateRequest = async (id: string) => {
       .select("*, chats!inner(*)", { count: "exact", head: true })
       .eq("chats.user_id", user.id)
       .gte("created_at", formatToTimestamp(currentDayStart)); // Use currentDayStart for daily limit
-
+    console.log("count for user", user.id, count);
     if (count && count >= PREMIUM_MESSAGES_PER_PERIOD) {
       throw new Error("limit-exceeded", {
         cause: `You have reached your limit of ${PREMIUM_MESSAGES_PER_PERIOD} messages for today. This limit will reset at midnight (UTC).`,
@@ -219,6 +219,7 @@ const validateRequest = async (id: string) => {
       .select("*, chats!inner(*)", { count: "exact", head: true })
       .eq("chats.user_id", user.id)
       .gte("created_at", formatToTimestamp(currentDayStart)); // Use currentDayStart for daily limit
+    console.log("count for user", user.id, count);
     if (count && count >= PREMIUM_MESSAGES_PER_PERIOD) {
       throw new Error("limit-exceeded", {
         cause: `You have reached your limit of ${PREMIUM_MESSAGES_PER_PERIOD} messages for today. This limit will reset at midnight (UTC).`,
