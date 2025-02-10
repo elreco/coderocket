@@ -2,6 +2,8 @@ import { createAnthropic } from "@ai-sdk/anthropic";
 import { createMistral } from "@ai-sdk/mistral";
 import { createOpenAI } from "@ai-sdk/openai";
 
+import { Tables } from "@/types_db";
+
 export const storageUrl =
   "https://jojdwiugelqhcajbccxn.supabase.co/storage/v1/object/public/images";
 
@@ -73,4 +75,28 @@ export enum Framework {
   SVELTE = "svelte",
 }
 
-export const PREMIUM_MESSAGES_PER_PERIOD = 50;
+export const getMaxMessagesPerPeriod = (
+  subscription: Tables<"subscriptions"> & {
+    prices: Partial<Tables<"prices">> | null;
+  },
+) => {
+  if (subscription.custom_messages_per_period) {
+    return subscription.custom_messages_per_period;
+  }
+
+  switch (subscription.prices?.description) {
+    case "Starter Plan":
+      return STARTER_PLAN_MESSAGES_PER_PERIOD;
+    case "Pro Plan":
+      return PRO_PLAN_MESSAGES_PER_PERIOD;
+    case "Supporter Plan":
+      return SUPPORTER_PLAN_MESSAGES_PER_PERIOD;
+    default:
+      return DEFAULT_MESSAGES_PER_PERIOD;
+  }
+};
+
+export const STARTER_PLAN_MESSAGES_PER_PERIOD = 50;
+export const PRO_PLAN_MESSAGES_PER_PERIOD = 150;
+export const SUPPORTER_PLAN_MESSAGES_PER_PERIOD = 400;
+export const DEFAULT_MESSAGES_PER_PERIOD = 100;

@@ -7,7 +7,7 @@ import {
   Framework,
   defaultTheme,
   MAX_GENERATIONS,
-  PREMIUM_MESSAGES_PER_PERIOD,
+  getMaxMessagesPerPeriod,
 } from "@/utils/config";
 import { formatToTimestamp } from "@/utils/date";
 import { defaultArtifactCode } from "@/utils/default-artifact-code";
@@ -194,30 +194,6 @@ export const createChat = async (prompt: string, formData: FormData) => {
   }
 
   if (!subscription) {
-    // Calculate the start of the current billing month based on current_period_start
-    const currentDate = new Date();
-    const currentDayStart = new Date(
-      currentDate.getFullYear(),
-      currentDate.getMonth(),
-      currentDate.getDate(),
-    );
-
-    // Vérifier la limite mensuelle pour les non-abonnés
-    const { count } = await supabase
-      .from("messages")
-      .select("*, chats!inner(*)", { count: "exact", head: true })
-      .eq("chats.user_id", user.id)
-      .gte("created_at", formatToTimestamp(currentDayStart));
-    console.log("count for user", user.id, count);
-    if (count && count >= PREMIUM_MESSAGES_PER_PERIOD) {
-      return {
-        error: {
-          title: "You have reached the limit of your free plan.",
-          description: `You have reached your limit of ${PREMIUM_MESSAGES_PER_PERIOD} messages for today. This limit will reset at midnight (UTC).`,
-        },
-      };
-    }
-
     if (existingChats && existingChats?.length > MAX_GENERATIONS) {
       return {
         error: {
@@ -228,24 +204,28 @@ export const createChat = async (prompt: string, formData: FormData) => {
     }
   } else {
     // Calculate the start of the current billing month based on current_period_start
-    const currentDate = new Date();
-    const currentDayStart = new Date(
-      currentDate.getFullYear(),
-      currentDate.getMonth(),
-      currentDate.getDate(),
-    );
+    const currentPeriodStart = new Date(subscription.current_period_start);
+
     // Vérifier la limite mensuelle pour les abonnés
     const { count } = await supabase
       .from("messages")
       .select("*, chats!inner(*)", { count: "exact", head: true })
       .eq("chats.user_id", user.id)
-      .gte("created_at", formatToTimestamp(currentDayStart));
-    console.log("count for user", user.id, count);
-    if (count && count >= PREMIUM_MESSAGES_PER_PERIOD) {
+      .gte("created_at", formatToTimestamp(currentPeriodStart));
+
+    const maxMessagesPerPeriod = getMaxMessagesPerPeriod(subscription);
+
+    if (count && count >= maxMessagesPerPeriod) {
       return {
         error: {
           title: "You have reached the limit of your plan",
-          description: `You have reached your limit of ${PREMIUM_MESSAGES_PER_PERIOD} messages for today. This limit will reset at midnight (UTC).`,
+          description: `You have reached your limit of ${maxMessagesPerPeriod} messages for this ${subscription.prices?.interval}. This limit will reset on ${formatToTimestamp(
+            new Date(
+              currentPeriodStart.getFullYear(),
+              currentPeriodStart.getMonth() + 1,
+              1,
+            ),
+          )}.`,
         },
       };
     }

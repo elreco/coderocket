@@ -15,6 +15,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useCopyToClipboard } from "usehooks-ts";
 
+import { getSubscription } from "@/app/supabase-server";
 import { Container } from "@/components/container";
 import RenderHtmlComponent from "@/components/renders/render-html-component";
 import { Badge } from "@/components/ui/badge";
@@ -45,8 +46,9 @@ import {
 import {
   Framework,
   crispWebsiteId,
-  PREMIUM_MESSAGES_PER_PERIOD,
+  getMaxMessagesPerPeriod,
 } from "@/utils/config";
+import { formatToTimestamp } from "@/utils/date";
 import { createClient } from "@/utils/supabase/client";
 
 import {
@@ -185,14 +187,35 @@ export default function ComponentCompletion({
           return;
         }
         if (error.message === "limit-exceeded") {
+          const subscription = await getSubscription();
+          if (!subscription) {
+            toast({
+              variant: "destructive",
+              title: "You have reached the limit of your free plan",
+              description: "Please upgrade to continue.",
+              duration: 5000,
+            });
+            return;
+          }
+          const maxMessagesPerPeriod = getMaxMessagesPerPeriod(subscription);
+          const currentPeriodStart = new Date(
+            subscription.current_period_start,
+          );
           setIsLoading(false);
           setCanvas(true);
           toast({
             variant: "destructive",
             title: "You have reached the limit of your plan",
-            description: `You have reached your limit of ${PREMIUM_MESSAGES_PER_PERIOD} messages for today. This limit will reset at midnight (UTC).`,
+            description: `You have reached your limit of ${maxMessagesPerPeriod} messages for this month. This limit will reset on ${formatToTimestamp(
+              new Date(
+                currentPeriodStart.getFullYear(),
+                currentPeriodStart.getMonth() + 1,
+                1,
+              ),
+            )}`,
             duration: 5000,
           });
+
           return;
         }
         if (error.message) {

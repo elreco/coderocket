@@ -11,7 +11,9 @@ import { Database } from "@/types_db";
 import {
   MAX_GENERATIONS,
   MAX_ITERATIONS,
-  PREMIUM_MESSAGES_PER_PERIOD,
+  PRO_PLAN_MESSAGES_PER_PERIOD,
+  STARTER_PLAN_MESSAGES_PER_PERIOD,
+  SUPPORTER_PLAN_MESSAGES_PER_PERIOD,
 } from "@/utils/config";
 import { postData } from "@/utils/helpers";
 
@@ -78,9 +80,9 @@ export default function Pricing({ user, products, subscription }: Props) {
     }
   };
 
-  // Fonction pour calculer l'économie en pourcentage
-  const calculateSavings = (currentPrice: number, referencePrice: number) => {
-    return Math.round(((referencePrice - currentPrice) / referencePrice) * 100);
+  // Calculer l'économie par rapport au plan Starter
+  const calculateSavings = (currentPrice: number, starterPrice: number) => {
+    return Math.round(((starterPrice - currentPrice) / starterPrice) * 100);
   };
 
   // Fonction pour formater le prix
@@ -94,7 +96,6 @@ export default function Pricing({ user, products, subscription }: Props) {
 
   if (products.length === 1) {
     const prices = products[0].prices || [];
-    const weeklyPrice = prices.find((price) => price.interval === "week");
 
     return (
       <div className="flex items-center">
@@ -103,11 +104,9 @@ export default function Pricing({ user, products, subscription }: Props) {
           <div className="flex h-full flex-col divide-y divide-border rounded-lg border bg-card p-3">
             <h3 className="mb-4 pl-3 text-lg font-bold text-white">Trial</h3>
             <div className="grow p-3">
-              <div className="mb-4 h-6"></div>{" "}
-              {/* Espace ajusté pour l'alignement */}
               <p>
-                <span className="text-5xl font-bold text-primary">€0</span>
-                <span className="text-base font-medium text-white">/week</span>
+                <span className="text-5xl font-bold text-primary">$0</span>
+                <span className="text-base font-medium text-white">/month</span>
               </p>
               <p className="mt-4 ">
                 <span className="font-bold">Start for free!</span> No payment
@@ -116,7 +115,7 @@ export default function Pricing({ user, products, subscription }: Props) {
               </p>
               <p className="mt-4 flex items-center text-sm font-medium ">
                 <Check className="mr-2 size-4 text-emerald-500" />{" "}
-                {MAX_GENERATIONS} component
+                {MAX_GENERATIONS} components
               </p>
               <p className="mt-4 flex items-center text-sm font-medium ">
                 <Check className="mr-2 size-4 text-emerald-500" />{" "}
@@ -156,33 +155,21 @@ export default function Pricing({ user, products, subscription }: Props) {
               price.currency!,
             );
 
-            // Calculer l'économie par rapport au tarif hebdomadaire
+            /* // Calculer l'économie par rapport au plan Starter
+            const starterPrice = 180 * 100; // Convert to cents
             const savings =
-              weeklyPrice?.unit_amount && price.interval !== "week"
-                ? calculateSavings(
-                    price.unit_amount || 0,
-                    weeklyPrice.unit_amount *
-                      (price.interval === "month" ? 4 : 52),
-                  )
-                : null;
-
-            // Titre du plan
-            const planTitle =
-              price.interval === "week"
-                ? "Starter Plan"
-                : price.interval === "month"
-                  ? "Pro Plan"
-                  : "Supporter Plan";
+              price.description !== "Starter Plan"
+                ? calculateSavings(price.unit_amount || 0, starterPrice)
+                : null; */
 
             // Description personnalisée
             const planDescription =
-              price.interval === "week" ? (
+              price.description === "Starter Plan" ? (
                 <p className="mt-4 ">
                   <span className="font-bold">Perfect for starters!</span>{" "}
-                  Unlimited components and versions. Generate with Image
-                  included.
+                  Generate with Image included.
                 </p>
-              ) : price.interval === "month" ? (
+              ) : price.description === "Pro Plan" ? (
                 <p className="mt-4 ">
                   <span className="font-bold">Go Pro!</span> Unlock advanced
                   features like AI Full Power for seamless workflows.
@@ -200,56 +187,18 @@ export default function Pricing({ user, products, subscription }: Props) {
                 className="flex h-full flex-col divide-y divide-border rounded-lg border bg-card p-3"
               >
                 <h3 className="mb-4 pl-3 text-lg font-bold text-white">
-                  {planTitle}
+                  {price.description}
                 </h3>
                 <div className="grow p-3">
-                  <div className="mb-4 flex items-center justify-between">
-                    {savings && (
-                      <>
-                        <span className="rounded-full bg-white px-3 py-1 text-sm font-bold text-[#6467f2]">
-                          Save {savings}%
-                        </span>
-                        <p className="text-sm text-border">
-                          <span className="line-through">
-                            {formatPrice(
-                              (weeklyPrice?.unit_amount ?? 0) *
-                                (price.interval === "month" ? 4 : 52),
-                              weeklyPrice?.currency ?? "usd",
-                            )}
-                          </span>{" "}
-                          <span className="font-bold text-[#6467f2]">
-                            {priceString}
-                          </span>
-                        </p>
-                      </>
-                    )}
-                    {!savings && <div className="h-6"></div>}{" "}
-                    {/* Espace ajusté pour l'alignement */}
-                  </div>
                   <p>
                     <span className="text-5xl font-bold text-primary">
-                      {price.interval === "week"
-                        ? formatPrice(price.unit_amount || 0, price.currency!)
-                        : price.interval === "month"
-                          ? formatPrice(price.unit_amount || 0, price.currency!)
-                          : formatPrice(
-                              price.unit_amount || 0,
-                              price.currency!,
-                            )}
+                      {priceString}
                     </span>
                     <span className="text-base font-medium text-white">
                       /{price.interval}
                     </span>
                   </p>
                   {planDescription}
-                  <p className="mt-4 flex items-center text-sm font-medium ">
-                    <Check className="mr-2 size-4 text-emerald-500" /> Unlimited
-                    components
-                  </p>
-                  <p className="mt-4 flex items-center text-sm font-medium ">
-                    <Check className="mr-2 size-4 text-emerald-500" /> Unlimited
-                    versions
-                  </p>
                   <p className="mt-4 flex items-center text-sm font-medium ">
                     <Check className="mr-2 size-4 text-emerald-500" /> Generate
                     with Image
@@ -260,11 +209,15 @@ export default function Pricing({ user, products, subscription }: Props) {
                   </p>
                   <p className="mt-4 flex items-center text-sm font-medium ">
                     <Check className="mr-2 size-4 text-emerald-500" />
-                    {
-                      PREMIUM_MESSAGES_PER_PERIOD
-                    } messages per day
+                    {price.description === "Starter Plan"
+                      ? STARTER_PLAN_MESSAGES_PER_PERIOD
+                      : price.description === "Pro Plan"
+                        ? PRO_PLAN_MESSAGES_PER_PERIOD
+                        : SUPPORTER_PLAN_MESSAGES_PER_PERIOD}{" "}
+                    messages per month
                   </p>
-                  {price.interval === "week" ? (
+
+                  {price.description === "Starter Plan" ? (
                     <>
                       <p className="mt-4 flex items-center text-sm font-medium ">
                         <Check className="mr-2 size-4 text-emerald-500" />{" "}

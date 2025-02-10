@@ -20,8 +20,8 @@ import {
   Framework,
   MAX_GENERATIONS,
   MAX_ITERATIONS,
-  PREMIUM_MESSAGES_PER_PERIOD,
   anthropicModel,
+  getMaxMessagesPerPeriod,
   storageUrl,
 } from "@/utils/config";
 // import { promptEnhancer } from "@/utils/prompt-enhancer";
@@ -168,7 +168,6 @@ const validateRequest = async (id: string) => {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) throw new Error("Could not get user");
-
   // Fetch chat data
   const chat = await fetchChatById(id);
   if (!chat) throw new Error("Could not get chat data");
@@ -186,47 +185,28 @@ const validateRequest = async (id: string) => {
 
   if (subscription) {
     // Calculate the start of the current billing month based on current_period_start
-    const currentDate = new Date();
-    const currentDayStart = new Date(
-      currentDate.getFullYear(),
-      currentDate.getMonth(),
-      currentDate.getDate(),
-    );
+    const currentPeriodStart = new Date(subscription.current_period_start);
 
     // Vérifier la limite quotidienne
     const { count } = await supabase
       .from("messages")
-      .select("*, chats!inner(*)", { count: "exact", head: true })
+      .select("*, chats!inner(*), users!inner(*)")
       .eq("chats.user_id", user.id)
-      .gte("created_at", formatToTimestamp(currentDayStart)); // Use currentDayStart for daily limit
-    console.log("count for user", user.id, count);
-    if (count && count >= PREMIUM_MESSAGES_PER_PERIOD) {
+      .gte("created_at", formatToTimestamp(currentPeriodStart)); // Use currentDayStart for daily limit
+
+    const maxMessagesPerDay = getMaxMessagesPerPeriod(subscription);
+    if (count && count >= maxMessagesPerDay) {
       throw new Error("limit-exceeded", {
-        cause: `You have reached your limit of ${PREMIUM_MESSAGES_PER_PERIOD} messages for today. This limit will reset at midnight (UTC).`,
+        cause: `You have reached your limit of ${maxMessagesPerDay} messages for this ${subscription.prices?.interval}. This limit will reset on ${formatToTimestamp(
+          new Date(
+            currentPeriodStart.getFullYear(),
+            currentPeriodStart.getMonth() + 1,
+            1,
+          ),
+        )}`,
       });
     }
   } else {
-    // Calculate the start of the current billing month based on current_period_start
-    const currentDate = new Date();
-    const currentDayStart = new Date(
-      currentDate.getFullYear(),
-      currentDate.getMonth(),
-      currentDate.getDate(),
-    );
-
-    // Vérifier la limite mensuelle pour les non-abonnés
-    const { count } = await supabase
-      .from("messages")
-      .select("*, chats!inner(*)", { count: "exact", head: true })
-      .eq("chats.user_id", user.id)
-      .gte("created_at", formatToTimestamp(currentDayStart)); // Use currentDayStart for daily limit
-    console.log("count for user", user.id, count);
-    if (count && count >= PREMIUM_MESSAGES_PER_PERIOD) {
-      throw new Error("limit-exceeded", {
-        cause: `You have reached your limit of ${PREMIUM_MESSAGES_PER_PERIOD} messages for today. This limit will reset at midnight (UTC).`,
-      });
-    }
-
     const generations = chatsFromDatabase?.length ?? 0;
     if (generations > MAX_GENERATIONS) {
       throw new Error("payment-required", {
@@ -287,6 +267,31 @@ const updateDataAfterCompletion = async (
   const version = lastUserMessage.version + 1;
   const artifactCode = getUpdatedArtifactCode(text, chat.artifact_code || "");
 
+  // Fetch current tokens
+  const { data: currentChatData, error } = await supabase
+    .from("chats")
+    .select("input_tokens, output_tokens")
+    .eq("id", chatId)
+    .single();
+
+  if (error) {
+    console.error("Error fetching current tokens:", error);
+    return;
+  }
+
+  const currentInputTokens = currentChatData?.input_tokens || 0;
+  const currentOutputTokens = currentChatData?.output_tokens || 0;
+
+  // Update with the sum of previous and new tokens
+  await supabase
+    .from("chats")
+    .update({
+      artifact_code: artifactCode,
+      input_tokens: currentInputTokens + usage.promptTokens,
+      output_tokens: currentOutputTokens + usage.completionTokens,
+    })
+    .eq("id", chatId);
+
   if (version > 0) {
     newMessages.push({
       chat_id: chatId,
@@ -302,15 +307,6 @@ const updateDataAfterCompletion = async (
       .eq("chat_id", chatId)
       .eq("version", -1);
   }
-
-  await supabase
-    .from("chats")
-    .update({
-      artifact_code: artifactCode,
-      input_tokens: usage.promptTokens,
-      output_tokens: usage.completionTokens,
-    })
-    .eq("id", chatId);
 
   const theme = extractDataTheme(text);
   newMessages.push({
