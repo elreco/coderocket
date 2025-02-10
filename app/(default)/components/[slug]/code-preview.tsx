@@ -51,12 +51,6 @@ const RenderContent = React.memo(
     }
 
     return <RenderComponent />;
-
-    return (
-      <div className="flex size-full items-center justify-center">
-        <img src="/placeholder.svg" alt="No artifacts" />
-      </div>
-    );
   },
   (prevProps, nextProps) => {
     if (prevProps.selectedFramework !== nextProps.selectedFramework)

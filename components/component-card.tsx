@@ -1,5 +1,5 @@
 import { SiHtml5, SiReact, SiVuedotjs } from "@icons-pack/react-simple-icons";
-import { Paintbrush, TerminalIcon } from "lucide-react";
+import { TerminalIcon } from "lucide-react";
 import Link from "next/link";
 
 import { Framework } from "@/utils/config";
@@ -56,21 +56,6 @@ export default function ComponentCard({
           />
         </div>
         <div className="absolute right-0 top-0 m-2 flex items-start justify-start gap-2">
-          {chat.framework === Framework.HTML && (
-            <Tooltip>
-              <TooltipTrigger>
-                <Badge className="hover:bg-primary">
-                  <Paintbrush className="mr-1 size-3" />
-                  <span className="first-letter:uppercase">
-                    {chat.last_assistant_message_theme}
-                  </span>
-                </Badge>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Theme</p>
-              </TooltipContent>
-            </Tooltip>
-          )}
           <Tooltip>
             <TooltipTrigger>
               <Badge className="hover:bg-primary">

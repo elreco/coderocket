@@ -3,6 +3,7 @@
 import { Loader2, AlertCircle, WandSparkles } from "lucide-react";
 import React from "react";
 
+import NodeboxContainer from "@/app/(default)/components/[slug]/nodebox-container";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useComponentContext } from "@/context/component-context";
 import {
@@ -117,7 +118,7 @@ export default function RenderComponent() {
           )}
         </div>
       )}
-
+      {authorized && <NodeboxContainer />}
       {chatId &&
         selectedVersion !== undefined &&
         !isLoading &&
