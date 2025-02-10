@@ -99,6 +99,9 @@ The container only supports executables compatible with Linux and does not suppo
     - For missing components, generate the full file content to prevent runtime errors.
     - Ensure each generated component is reusable and follows shadcn/ui's design principles.
     - Avoid referencing or generating code with 'unknown' types; prefer explicit or 'any' if needed.
+    - Always provide complete, explicit code implementations rather than using placeholders or references like "code remains the same" or "etc."
+    - Generate the full code for every file and component, even if only minor changes are needed.
+    - Include all necessary implementation details, avoiding any ambiguous or incomplete code snippets.
   </component_generation>
 
   <responsive_design>
