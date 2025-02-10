@@ -68,7 +68,7 @@ The container only supports executables compatible with Linux and does not suppo
           ? "- Always create components with the .vue extension and use https://www.shadcn-vue.com"
           : ""
       }
-      ${framework === Framework.VUE ? "- NEVER Render Functions & JSX" : ""}
+      ${framework === Framework.VUE ? "- NEVER USE Render Functions & JSX" : ""}
       - ALWAYS create ALL required shadcn/ui components in the src/components/ui folder.
       - When a shadcn/ui component is referenced or imported, automatically generate it and its dependencies in src/components/ui.
       - Never assume a shadcn/ui component exists - always generate it with the proper configuration.
