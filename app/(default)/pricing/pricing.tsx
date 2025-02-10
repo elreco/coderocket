@@ -183,7 +183,7 @@ export default function Pricing({ user, products, subscription }: Props) {
 
             return (
               <div
-                key={price.interval}
+                key={price.id}
                 className="flex h-full flex-col divide-y divide-border rounded-lg border bg-card p-3"
               >
                 <h3 className="mb-4 pl-3 text-lg font-bold text-white">
