@@ -1,3 +1,4 @@
+export const revalidate = 0;
 import { after, NextRequest } from "next/server";
 
 import {
@@ -5,10 +6,7 @@ import {
   fetchLastAssistantMessageByChatId,
 } from "@/app/(default)/components/actions";
 import { takeScreenshot } from "@/utils/capture-screenshot";
-import {
-  extractFilesFromArtifact,
-  extractFilesFromCompletion,
-} from "@/utils/completion-parser";
+import { extractFilesFromCompletion } from "@/utils/completion-parser";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -79,10 +77,8 @@ export async function GET(request: NextRequest) {
         }
 
         // Extract files from the last assistant message
-        const extractedFiles = extractFilesFromCompletion(
-          lastAssistantMessage.content,
-        );
-        if (!extractedFiles.length) {
+        const files = extractFilesFromCompletion(lastAssistantMessage.content);
+        if (!files.length) {
           await sendStatus("error", {
             message:
               "Tailwind AI didn't generate any files. Continue the prompt if you stopped the generation or try to generate again.",
@@ -91,18 +87,9 @@ export async function GET(request: NextRequest) {
           return;
         }
 
-        // Extract files from the artifact_code property of the chat
-        const files = extractFilesFromArtifact(chat.artifact_code || "");
-        if (!files.length) {
-          await sendStatus("error", { message: "No files found in artifact." });
-          closeStream(controller);
-          return;
-        }
-
         await sendStatus("deploying", {
           message: "Starting build...",
         });
-
         // Messages de progression séquentiels
         const buildSteps = [
           "Installing dependencies...",
