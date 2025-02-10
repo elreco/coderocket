@@ -1,10 +1,11 @@
 import { list } from "@vercel/blob";
 import mime from "mime-types";
 import { NextRequest, NextResponse } from "next/server";
-
+export const revalidate = 0;
 /**
  * Cette route sert les fichiers d’un dossier (prefix) stocké dans Vercel Blob.
  *   - /blob/:prefix/             => renvoie index.html (si existe)
+
  *   - /blob/:prefix/:slug...     => renvoie le fichier correspondant
  *   - Fallback SPA sur index.html si aucun fichier trouvé OU slug sans extension (routing client)
  */
@@ -104,6 +105,10 @@ export async function GET(
     headers: {
       "Content-Type": mimeType,
       "Content-Disposition": "inline",
+      "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+      Pragma: "no-cache",
+      Expires: "0",
+      "Surrogate-Control": "no-store",
     },
   });
 }
