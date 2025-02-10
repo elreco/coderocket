@@ -189,7 +189,7 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
     };
 
     deployToWebcontainer();
-  }, [isLoading, selectedFramework, selectedVersion, chatId, forceBuild]);
+  }, [isLoading, selectedFramework, selectedVersion, chatId]);
 
   return (
     <WebcontainerContext.Provider

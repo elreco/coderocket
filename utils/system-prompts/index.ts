@@ -57,7 +57,7 @@ The container only supports executables compatible with Linux and does not suppo
       ${
         framework === Framework.REACT
           ? "- IMPORTANT: Always use the global 'radix-ui' import for radix UI components. (eg: import { Checkbox } from 'radix-ui')"
-          : "- IMPORTANT: Always use the global 'radix-vue' import for radix UI components. (eg: import { CheckboxIndicator, CheckboxRoot } from 'radix-vue')"
+          : ""
       }
     </import_validation>
     <shadcn_ui_components>
