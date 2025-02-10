@@ -6,7 +6,10 @@ import {
   fetchLastAssistantMessageByChatId,
 } from "@/app/(default)/components/actions";
 import { takeScreenshot } from "@/utils/capture-screenshot";
-import { extractFilesFromCompletion } from "@/utils/completion-parser";
+import {
+  extractFilesFromArtifact,
+  extractFilesFromCompletion,
+} from "@/utils/completion-parser";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -59,6 +62,7 @@ export async function GET(request: NextRequest) {
 
         const lastAssistantMessage =
           await fetchLastAssistantMessageByChatId(chatId);
+        console.log("lastAssistantMessage", lastAssistantMessage?.content);
         if (!lastAssistantMessage) {
           await sendStatus("error", { message: "No assistant message found." });
           closeStream(controller);
@@ -77,8 +81,10 @@ export async function GET(request: NextRequest) {
         }
 
         // Extract files from the last assistant message
-        const files = extractFilesFromCompletion(lastAssistantMessage.content);
-        if (!files.length) {
+        const extractedFiles = extractFilesFromCompletion(
+          lastAssistantMessage.content,
+        );
+        if (!extractedFiles.length) {
           await sendStatus("error", {
             message:
               "Tailwind AI didn't generate any files. Continue the prompt if you stopped the generation or try to generate again.",
@@ -87,9 +93,22 @@ export async function GET(request: NextRequest) {
           return;
         }
 
+        // Extract files from the artifact_code property of the chat
+        const files = extractFilesFromArtifact(chat.artifact_code || "");
+        if (!extractedFiles.length) {
+          await sendStatus("error", { message: "No files found in artifact." });
+          closeStream(controller);
+          return;
+        }
+
         await sendStatus("deploying", {
           message: "Starting build...",
         });
+        console.log(
+          "files",
+          files.find((f) => f.name === "src/App.tsx"),
+        );
+        console.log("chatId", chatId);
         // Messages de progression séquentiels
         const buildSteps = [
           "Installing dependencies...",
