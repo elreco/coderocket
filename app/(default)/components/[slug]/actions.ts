@@ -4,7 +4,10 @@ import { after } from "next/server";
 
 import { getSubscription } from "@/app/supabase-server";
 import { takeScreenshot } from "@/utils/capture-screenshot";
-import { hasArtifacts } from "@/utils/completion-parser";
+import {
+  getUpdatedArtifactCode,
+  hasArtifacts,
+} from "@/utils/completion-parser";
 import { Framework } from "@/utils/config";
 import { promptEnhancer } from "@/utils/prompt-enhancer";
 import { createClient } from "@/utils/supabase/server";
@@ -66,50 +69,38 @@ export const deleteVersionByMessageId = async (messageId: number) => {
   if (!subscription) {
     throw new Error("payment-required");
   }
-
   const { data: message, error: fetchError } = await supabase
     .from("messages")
     .select("id, chat_id, version, chats(id)")
     .eq("id", messageId)
     .eq("chats.user_id", user.id)
     .single();
-
   if (fetchError) {
     throw new Error(fetchError.message);
   }
-
   if (!message) {
     throw new Error("Message not found or user not authorized.");
   }
-
   // Suppression des messages avec la même version
   const { error: deleteError } = await supabase
     .from("messages")
     .delete()
     .eq("version", message.version)
     .eq("chat_id", message.chat_id);
-
   if (deleteError) {
     throw new Error(`Failed to delete messages: ${deleteError.message}`);
   }
-
   // Récupération des messages ayant une version supérieure
   const { data: messagesToUpdate, error: fetchMessagesError } = await supabase
     .from("messages")
     .select("id, version")
     .gt("version", message.version)
     .eq("chat_id", message.chat_id);
-
   if (fetchMessagesError) {
     throw new Error(
       `Failed to fetch messages for version update: ${fetchMessagesError.message}`,
     );
   }
-
-  if (!messagesToUpdate || messagesToUpdate.length === 0) {
-    return; // Aucun message à mettre à jour
-  }
-
   // Mise à jour des messages individuellement
   for (const msg of messagesToUpdate) {
     const { error: updateError } = await supabase
@@ -123,6 +114,35 @@ export const deleteVersionByMessageId = async (messageId: number) => {
       );
     }
   }
+  // get new messages
+  const { data: refreshedChatMessages } = await supabase
+    .from("messages")
+    .select("id, version, content, chat_id, role")
+    .order("version", { ascending: false })
+    .eq("role", "assistant")
+    .eq("chat_id", message.chat_id)
+    .single();
+  if (!refreshedChatMessages) {
+    throw new Error("No refreshed chat messages found");
+  }
+  // get chat
+  const { data: chat } = await supabase
+    .from("chats")
+    .select("id, artifact_code")
+    .eq("id", message.chat_id)
+    .single();
+
+  if (!chat) {
+    throw new Error("No chat found");
+  }
+  const artifactCode = getUpdatedArtifactCode(
+    refreshedChatMessages.content,
+    chat.artifact_code || "",
+  );
+  await supabase
+    .from("chats")
+    .update({ artifact_code: artifactCode })
+    .eq("id", message.chat_id);
 };
 
 export const updateTheme = async (

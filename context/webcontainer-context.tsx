@@ -80,9 +80,6 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const deployToWebcontainer = async () => {
-      console.log("selectedFramework", selectedFramework);
-      console.log("isLoading", isLoading);
-      console.log("selectedVersion", selectedVersion);
       if (
         selectedFramework === Framework.HTML ||
         isLoading ||

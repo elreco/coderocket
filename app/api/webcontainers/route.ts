@@ -62,7 +62,6 @@ export async function GET(request: NextRequest) {
 
         const lastAssistantMessage =
           await fetchLastAssistantMessageByChatId(chatId);
-        console.log("lastAssistantMessage", lastAssistantMessage?.content);
         if (!lastAssistantMessage) {
           await sendStatus("error", { message: "No assistant message found." });
           closeStream(controller);
@@ -104,11 +103,6 @@ export async function GET(request: NextRequest) {
         await sendStatus("deploying", {
           message: "Starting build...",
         });
-        console.log(
-          "files",
-          files.find((f) => f.name === "src/App.tsx"),
-        );
-        console.log("chatId", chatId);
         // Messages de progression séquentiels
         const buildSteps = [
           "Installing dependencies...",
@@ -138,9 +132,6 @@ export async function GET(request: NextRequest) {
         }, 3000);
 
         // Make the POST request to the builder API
-        console.log("forceBuild", forceBuild === "true");
-        console.log("chatId", chatId);
-        console.log("version", parseInt(version));
         const builderResponse = await fetch(
           "https://react-builder.fly.dev/build",
           {
