@@ -102,7 +102,7 @@ export default function ComponentChatFiles({
     try {
       setIsDeleting(true);
       await deleteVersionByMessageId(messageId);
-
+      setForceBuild(true);
       const refreshedChatMessages =
         refreshChatData !== undefined ? await refreshChatData() : [];
 
@@ -114,7 +114,6 @@ export default function ComponentChatFiles({
 
         if (refreshedLastAssistantMessage) {
           handleVersionSelect(refreshedLastAssistantMessage.version);
-          setForceBuild(true);
         }
       }
     } catch {

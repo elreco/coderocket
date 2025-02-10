@@ -92,8 +92,7 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
       }
       if (
         currentDeployment?.chatId === chatId &&
-        currentDeployment?.version === selectedVersion &&
-        !forceBuild
+        currentDeployment?.version === selectedVersion
       ) {
         return;
       }

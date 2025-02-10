@@ -5,8 +5,10 @@ import {
   fetchLastAssistantMessageByChatId,
 } from "@/app/(default)/components/actions";
 import { takeScreenshot } from "@/utils/capture-screenshot";
-import { extractFilesFromArtifact } from "@/utils/completion-parser";
-import { extractFilesFromCompletion } from "@/utils/completion-parser";
+import {
+  extractFilesFromArtifact,
+  extractFilesFromCompletion,
+} from "@/utils/completion-parser";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -24,16 +26,34 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  let updateInterval: NodeJS.Timeout | null = null; // We'll store the interval here
+  let isStreamClosed = false; // Track if the stream is already closed
+
+  // Helper to close the stream & clear the interval safely
+  const closeStream = (controller: ReadableStreamDefaultController) => {
+    if (isStreamClosed) return; // avoid multiple closes
+    isStreamClosed = true;
+
+    // Clear the interval if it's set
+    if (updateInterval) {
+      clearInterval(updateInterval);
+      updateInterval = null;
+    }
+
+    // Finally, close the stream
+    controller.close();
+  };
+
   // Configuration du streaming pour Next.js 15
   const stream = new ReadableStream({
     async pull(controller) {
       const encoder = new TextEncoder();
 
+      // Enqueue data into the stream if it's still open
       const sendStatus = async (event: string, data: { message: string }) => {
-        if (controller.desiredSize !== null) {
-          const message = `data: ${JSON.stringify({ event, ...data })}\n\n`;
-          controller.enqueue(encoder.encode(message));
-        }
+        if (isStreamClosed) return; // If we've closed already, don't enqueue
+        const message = `data: ${JSON.stringify({ event, ...data })}\n\n`;
+        controller.enqueue(encoder.encode(message));
       };
 
       try {
@@ -43,7 +63,7 @@ export async function GET(request: NextRequest) {
           await fetchLastAssistantMessageByChatId(chatId);
         if (!lastAssistantMessage) {
           await sendStatus("error", { message: "No assistant message found." });
-          controller.close();
+          closeStream(controller);
           return;
         }
 
@@ -54,10 +74,11 @@ export async function GET(request: NextRequest) {
         const chat = await fetchChatById(chatId);
         if (!chat) {
           await sendStatus("error", { message: "No chat found." });
-          controller.close();
+          closeStream(controller);
           return;
         }
 
+        // Extract files from the last assistant message
         const extractedFiles = extractFilesFromCompletion(
           lastAssistantMessage.content,
         );
@@ -66,14 +87,15 @@ export async function GET(request: NextRequest) {
             message:
               "Tailwind AI didn't generate any files. Continue the prompt if you stopped the generation or try to generate again.",
           });
-          controller.close();
+          closeStream(controller);
           return;
         }
 
+        // Extract files from the artifact_code property of the chat
         const files = extractFilesFromArtifact(chat.artifact_code || "");
         if (!files.length) {
           await sendStatus("error", { message: "No files found in artifact." });
-          controller.close();
+          closeStream(controller);
           return;
         }
 
@@ -91,17 +113,25 @@ export async function GET(request: NextRequest) {
         ];
 
         let currentStepIndex = 0;
-        // Afficher les messages de progression dans l'ordre
-        const updateInterval = setInterval(async () => {
-          if (currentStepIndex >= buildSteps.length) {
-            clearInterval(updateInterval);
+        // Send sequential progress messages every 3s
+        updateInterval = setInterval(async () => {
+          if (isStreamClosed) {
+            clearInterval(updateInterval!);
             return;
           }
+
+          if (currentStepIndex >= buildSteps.length) {
+            clearInterval(updateInterval!);
+            return;
+          }
+
           await sendStatus("building", {
             message: buildSteps[currentStepIndex],
           });
           currentStepIndex++;
         }, 3000);
+
+        // Make the POST request to the builder API
         console.log("forceBuild", forceBuild === "true");
         console.log("chatId", chatId);
         console.log("version", parseInt(version));
@@ -120,30 +150,38 @@ export async function GET(request: NextRequest) {
             }),
           },
         );
-        // Arrêter les messages de mise à jour une fois la réponse reçue
-        clearInterval(updateInterval);
 
+        // Stop sending sequential build messages
+        if (updateInterval) {
+          clearInterval(updateInterval);
+          updateInterval = null;
+        }
+
+        // Parse the response
         const responseData = await builderResponse.json();
         if (responseData.errors) {
           await sendStatus("error", {
             message: responseData.errors.join("\n"),
           });
-          controller.close();
+          closeStream(controller);
           return;
         }
+
+        // Build complete
         await sendStatus("complete", {
           message: responseData.message || "Build completed",
         });
 
+        // Take a screenshot after everything is done
         after(async () => {
           await takeScreenshot(chatId, parseInt(version), undefined, "react");
         });
 
-        controller.close();
+        closeStream(controller);
       } catch (error) {
         console.error("API error:", error);
         await sendStatus("error", { message: "Internal server error." });
-        controller.close();
+        closeStream(controller);
       }
     },
   });
