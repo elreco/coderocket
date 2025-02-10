@@ -3,6 +3,7 @@
 import { SiHtml5, SiReact, SiVuedotjs } from "@icons-pack/react-simple-icons";
 import { useCompletion } from "ai/react";
 import { Crisp } from "crisp-sdk-web";
+import { format } from "date-fns";
 import {
   Fullscreen,
   Layers,
@@ -48,7 +49,6 @@ import {
   crispWebsiteId,
   getMaxMessagesPerPeriod,
 } from "@/utils/config";
-import { formatToTimestamp } from "@/utils/date";
 import { createClient } from "@/utils/supabase/client";
 
 import {
@@ -202,18 +202,20 @@ export default function ComponentCompletion({
           const currentPeriodStart = new Date(
             subscription.current_period_start,
           );
+          const resetDate = format(
+            new Date(
+              currentPeriodStart.getFullYear(),
+              currentPeriodStart.getMonth() + 1,
+              1,
+            ),
+            "d MMMM yyyy",
+          );
           setIsLoading(false);
           setCanvas(true);
           toast({
             variant: "destructive",
             title: "You have reached the limit of your plan",
-            description: `You have reached your limit of ${maxMessagesPerPeriod} messages for this month. This limit will reset on ${formatToTimestamp(
-              new Date(
-                currentPeriodStart.getFullYear(),
-                currentPeriodStart.getMonth() + 1,
-                1,
-              ),
-            )}`,
+            description: `You have reached your limit of ${maxMessagesPerPeriod} messages for this month. This limit will reset on ${resetDate}.`,
             duration: 5000,
           });
 

@@ -1,5 +1,6 @@
 "use server";
 
+import { format } from "date-fns";
 import { nanoid } from "nanoid";
 
 import { getSubscription } from "@/app/supabase-server";
@@ -216,16 +217,19 @@ export const createChat = async (prompt: string, formData: FormData) => {
     const maxMessagesPerPeriod = getMaxMessagesPerPeriod(subscription);
 
     if (count && count >= maxMessagesPerPeriod) {
+      const resetDate = format(
+        new Date(
+          currentPeriodStart.getFullYear(),
+          currentPeriodStart.getMonth() + 1,
+          1,
+        ),
+        "d MMMM yyyy", // Format lisible, par exemple, "1er novembre 2023"
+      );
+
       return {
         error: {
           title: "You have reached the limit of your plan",
-          description: `You have reached your limit of ${maxMessagesPerPeriod} messages for this ${subscription.prices?.interval}. This limit will reset on ${formatToTimestamp(
-            new Date(
-              currentPeriodStart.getFullYear(),
-              currentPeriodStart.getMonth() + 1,
-              1,
-            ),
-          )}.`,
+          description: `You have reached your limit of ${maxMessagesPerPeriod} messages for this ${subscription.prices?.interval}. This limit will reset on ${resetDate}.`,
         },
       };
     }

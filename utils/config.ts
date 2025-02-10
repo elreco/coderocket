@@ -99,4 +99,4 @@ export const getMaxMessagesPerPeriod = (
 export const STARTER_PLAN_MESSAGES_PER_PERIOD = 50;
 export const PRO_PLAN_MESSAGES_PER_PERIOD = 150;
 export const SUPPORTER_PLAN_MESSAGES_PER_PERIOD = 400;
-export const DEFAULT_MESSAGES_PER_PERIOD = 100;
+export const DEFAULT_MESSAGES_PER_PERIOD = 75;
