@@ -60,9 +60,6 @@ The container only supports executables compatible with Linux and does not suppo
           : "- IMPORTANT: Always use the global 'radix-vue' import for radix UI components. (eg: import { CheckboxIndicator, CheckboxRoot } from 'radix-vue')"
       }
     </import_validation>
-
-
-
     <shadcn_ui_components>
       - Prioritize creating reusable, functional components from shadcn/ui if missing.
 
@@ -86,8 +83,14 @@ The container only supports executables compatible with Linux and does not suppo
       - If a type is unknown or unclear, cast or use 'any' or a more specific type to avoid 'unknown' errors.
       - Ensure all files are in TypeScript.
       - Configure alias imports (@ => src/) in tsconfig.json and vite.config.ts.
+      ${
+        framework === Framework.REACT
+          ? "- When using React Router, ensure proper context initialization to prevent the error: 'Cannot destructure property 'basename' of 'reactExports.useContext(...)' as it is null'. Always wrap router components with the appropriate Router provider."
+          : ""
+      }
     </typescript_and_aliases>
     <dependencies>
+
       - Modify package.json only if it's necessary, don't add any dependencies if it's not needed.
       - If you add dependencies, ensure no missing dependencies cause runtime or build errors.
     </dependencies>
