@@ -81,9 +81,9 @@ export default function Pricing({ user, products, subscription }: Props) {
   };
 
   // Calculer l'économie par rapport au plan Starter
-  const calculateSavings = (currentPrice: number, starterPrice: number) => {
+  /* const calculateSavings = (currentPrice: number, starterPrice: number) => {
     return Math.round(((starterPrice - currentPrice) / starterPrice) * 100);
-  };
+  }; */
 
   // Fonction pour formater le prix
   const formatPrice = (price: number, currency: string) => {
