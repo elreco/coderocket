@@ -15,6 +15,7 @@ export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const chatId = searchParams.get("chatId");
   const version = searchParams.get("version");
+  const forceBuild = searchParams.get("forceBuild");
 
   if (!chatId || !version) {
     return Response.json(
@@ -99,7 +100,9 @@ export async function GET(request: NextRequest) {
           });
           currentStepIndex++;
         }, 3000);
-
+        console.log("forceBuild", forceBuild);
+        console.log("chatId", chatId);
+        console.log("version", parseInt(version));
         const builderResponse = await fetch(
           "https://react-builder.fly.dev/build",
           {
@@ -111,6 +114,7 @@ export async function GET(request: NextRequest) {
               chatId,
               version: parseInt(version),
               files,
+              forceBuild: forceBuild === "true",
             }),
           },
         );

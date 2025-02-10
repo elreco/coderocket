@@ -67,6 +67,7 @@ export default function ComponentChatFiles({
     handleVersionSelect,
     refreshChatData,
     selectedFramework,
+    setForceBuild,
   } = useComponentContext();
 
   const [files, setFiles] = useState<ChatFile[]>([]);
@@ -101,13 +102,16 @@ export default function ComponentChatFiles({
     try {
       setIsDeleting(true);
       await deleteVersionByMessageId(messageId);
+      setForceBuild(true);
       const refreshedChatMessages =
         refreshChatData !== undefined ? await refreshChatData() : [];
+
       if (refreshedChatMessages) {
         const refreshedLastAssistantMessage = refreshedChatMessages.reduce(
           (prev, current) => (prev.version > current.version ? prev : current),
           { version: 0 },
         );
+
         if (refreshedLastAssistantMessage) {
           handleVersionSelect(refreshedLastAssistantMessage.version);
         }

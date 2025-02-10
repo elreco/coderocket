@@ -54,7 +54,8 @@ export async function GET(
   const lastSegment = slug[slug.length - 1];
   const hasExtension = lastSegment?.includes(".");
 
-  if (slug.length > 0 && !hasExtension) {
+  // Avoid fallback for JavaScript module requests
+  if (slug.length > 0 && !hasExtension && !lastSegment?.endsWith(".js")) {
     console.log(
       "API Route: Slug sans extension, fallback forcé vers index.html",
     );
@@ -90,6 +91,8 @@ export async function GET(
   let mimeType: string;
   if (matchedBlob.pathname.endsWith("index.html")) {
     mimeType = "text/html"; // 👈 Assure que index.html est servi correctement
+  } else if (matchedBlob.pathname.endsWith(".js")) {
+    mimeType = "application/javascript"; // 👈 Correct MIME type for JavaScript
   } else {
     const extension = "." + (filePath.split(".").pop() ?? "");
     mimeType = mime.lookup(extension) || "application/octet-stream";

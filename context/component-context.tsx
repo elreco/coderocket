@@ -38,6 +38,8 @@ interface ComponentContextType {
   setInput: (value: string) => void;
   artifactCode: string;
   setArtifactCode: (value: string) => void;
+  forceBuild: boolean;
+  setForceBuild: (value: boolean) => void;
   isWebcontainerReady: boolean;
   setWebcontainerReady: (value: boolean) => void;
   artifactFiles: ChatFile[];

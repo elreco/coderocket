@@ -96,6 +96,7 @@ export default function ComponentCompletion({
   const [activeTab, setActiveTab] = useState("");
 
   const [isLoading, setIsLoading] = useState(true);
+  const [forceBuild, setForceBuild] = useState(false);
 
   const [fetchedChat, setFetchedChat] = useState<Tables<"chats"> | null>(null);
   const [lastAssistantMessage, setLastAssistantMessage] =
@@ -248,6 +249,7 @@ export default function ComponentCompletion({
     });
 
   const handleSubmitToAI = (input: string) => {
+    setForceBuild(true);
     setCompletion("");
     setArtifactFiles([]);
     setWebcontainerReady(false);
@@ -433,6 +435,8 @@ export default function ComponentCompletion({
     selectedFramework: (fetchedChat?.framework || "react") as Framework,
     isWebcontainerReady,
     setWebcontainerReady,
+    forceBuild,
+    setForceBuild,
   };
 
   const FrameworkIcon =

@@ -56,6 +56,8 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
     selectedVersion,
     chatId,
     isLoading,
+    forceBuild,
+    setForceBuild,
   } = useComponentContext();
 
   const cancelDeployment = useCallback(() => {
@@ -78,6 +80,9 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const deployToWebcontainer = async () => {
+      console.log("selectedFramework", selectedFramework);
+      console.log("isLoading", isLoading);
+      console.log("selectedVersion", selectedVersion);
       if (
         selectedFramework === Framework.HTML ||
         isLoading ||
@@ -87,7 +92,8 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
       }
       if (
         currentDeployment?.chatId === chatId &&
-        currentDeployment?.version === selectedVersion
+        currentDeployment?.version === selectedVersion &&
+        !forceBuild
       ) {
         return;
       }
@@ -102,9 +108,10 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
         setProgressMessages([]);
         setBuildError(null);
         const newEventSource = new EventSource(
-          `/api/webcontainers?chatId=${chatId}&version=${selectedVersion}`,
+          `/api/webcontainers?chatId=${chatId}&version=${selectedVersion}&forceBuild=${forceBuild}`,
         );
         setEventSource(newEventSource);
+        setForceBuild(false);
         setCurrentDeployment({ chatId, version: selectedVersion });
 
         newEventSource.onmessage = (event) => {
@@ -148,6 +155,7 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
                 ...prev,
                 "Deployment completed successfully!",
               ]);
+              setForceBuild(false);
               setWebcontainerReady(true);
               setLoadingState(null);
               newEventSource.close();
@@ -181,7 +189,7 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
     };
 
     deployToWebcontainer();
-  }, [isLoading, selectedFramework, selectedVersion, chatId]);
+  }, [isLoading, selectedFramework, selectedVersion, chatId, forceBuild]);
 
   return (
     <WebcontainerContext.Provider
