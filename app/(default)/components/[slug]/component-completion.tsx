@@ -249,6 +249,7 @@ export default function ComponentCompletion({
     });
 
   const handleSubmitToAI = (input: string) => {
+    setForceBuild(true);
     setCompletion("");
     setArtifactFiles([]);
     setWebcontainerReady(false);
