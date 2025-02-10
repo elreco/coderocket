@@ -30,8 +30,10 @@ export async function GET(request: NextRequest) {
       const encoder = new TextEncoder();
 
       const sendStatus = async (event: string, data: { message: string }) => {
-        const message = `data: ${JSON.stringify({ event, ...data })}\n\n`;
-        controller.enqueue(encoder.encode(message));
+        if (controller.desiredSize !== null) {
+          const message = `data: ${JSON.stringify({ event, ...data })}\n\n`;
+          controller.enqueue(encoder.encode(message));
+        }
       };
 
       try {
@@ -100,7 +102,7 @@ export async function GET(request: NextRequest) {
           });
           currentStepIndex++;
         }, 3000);
-        console.log("forceBuild", forceBuild);
+        console.log("forceBuild", forceBuild === "true");
         console.log("chatId", chatId);
         console.log("version", parseInt(version));
         const builderResponse = await fetch(
