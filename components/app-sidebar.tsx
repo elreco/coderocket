@@ -200,8 +200,8 @@ export function AppSidebar({
           <div
             className={`p-1 ${
               open
-                ? "opacity-100 transition-opacity delay-200 duration-500"
-                : "opacity-0"
+                ? "h-auto opacity-100 transition-opacity delay-200 duration-500"
+                : "h-0 opacity-0"
             }`}
           >
             <SidebarNotification
