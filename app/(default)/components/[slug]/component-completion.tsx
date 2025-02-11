@@ -171,7 +171,7 @@ export default function ComponentCompletion({
             variant: "destructive",
             title: "You have reached the limit of your free plan",
             description:
-              "Please upgrade to continue. Your limit will reset next month.",
+              "Please upgrade to continue. Go to My Account to see your usage.",
             duration: 5000,
           });
           return;
@@ -193,7 +193,8 @@ export default function ComponentCompletion({
             toast({
               variant: "destructive",
               title: "You have reached the limit of your free plan",
-              description: "Please upgrade to continue.",
+              description:
+                "Please upgrade to continue. Go to My Account to see your usage.",
               duration: 5000,
             });
             return;
@@ -215,7 +216,7 @@ export default function ComponentCompletion({
           toast({
             variant: "destructive",
             title: "You have reached the limit of your plan",
-            description: `You have reached your limit of ${maxMessagesPerPeriod} messages for this month. This limit will reset on ${resetDate}.`,
+            description: `You have reached your limit of ${maxMessagesPerPeriod} messages for this month. This limit will reset on ${resetDate}. Go to My Account to see your usage.`,
             duration: 5000,
           });
 

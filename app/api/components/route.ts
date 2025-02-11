@@ -190,20 +190,20 @@ const validateRequest = async (id: string) => {
     // Vérifier la limite quotidienne
     const { count } = await supabase
       .from("messages")
-      .select("*, chats!inner(*), users!inner(*)")
+      .select("*, chats!inner(*)", { count: "exact", head: true })
       .eq("chats.user_id", user.id)
       .gte("created_at", formatToTimestamp(currentPeriodStart)); // Use currentDayStart for daily limit
 
-    const maxMessagesPerDay = getMaxMessagesPerPeriod(subscription);
-    if (count && count >= maxMessagesPerDay) {
+    const maxMessagesPerPeriod = getMaxMessagesPerPeriod(subscription);
+    if (count && count >= maxMessagesPerPeriod) {
       throw new Error("limit-exceeded", {
-        cause: `You have reached your limit of ${maxMessagesPerDay} messages for this ${subscription.prices?.interval}. This limit will reset on ${formatToTimestamp(
+        cause: `You have reached your limit of ${maxMessagesPerPeriod} messages for this ${subscription.prices?.interval}. This limit will reset on ${formatToTimestamp(
           new Date(
             currentPeriodStart.getFullYear(),
             currentPeriodStart.getMonth() + 1,
             1,
           ),
-        )}`,
+        )}. Go to My Account to see your usage.`,
       });
     }
   } else {
