@@ -1,5 +1,5 @@
 import { Analytics } from "@vercel/analytics/react";
-import { Rubik } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import { cookies } from "next/headers";
 import { PropsWithChildren } from "react";
 
@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 
 import { getUserDetails } from "../supabase-server";
 
-const rubik = Rubik({
+const rubik = Plus_Jakarta_Sans({
   subsets: ["latin"],
   display: "swap",
   variable: "--font-rubik",

@@ -1,11 +1,11 @@
-import { Rubik } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import { PropsWithChildren } from "react";
 import "styles/chrome-bug.css";
 import "styles/main.css";
 
 import { cn } from "@/lib/utils";
 
-const rubik = Rubik({
+const rubik = Plus_Jakarta_Sans({
   subsets: ["latin"],
   display: "swap",
   variable: "--font-rubik",
