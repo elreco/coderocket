@@ -301,6 +301,7 @@ const updateDataAfterCompletion = async (
       version,
       content: prompt,
       role: "user",
+      input_tokens: usage.promptTokens,
     });
   } else {
     await supabase
@@ -318,6 +319,7 @@ const updateDataAfterCompletion = async (
     content: text,
     theme,
     role: "assistant",
+    output_tokens: usage.completionTokens,
   });
 
   await supabase.from("messages").insert(newMessages).eq("chat_id", chatId);

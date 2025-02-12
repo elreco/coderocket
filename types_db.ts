@@ -80,6 +80,8 @@ export type Database = {
           content: string;
           created_at: string;
           id: number;
+          input_tokens: number | null;
+          output_tokens: number | null;
           role: string;
           screenshot: string | null;
           theme: string | null;
@@ -90,6 +92,8 @@ export type Database = {
           content: string;
           created_at?: string;
           id?: number;
+          input_tokens?: number | null;
+          output_tokens?: number | null;
           role: string;
           screenshot?: string | null;
           theme?: string | null;
@@ -100,6 +104,8 @@ export type Database = {
           content?: string;
           created_at?: string;
           id?: number;
+          input_tokens?: number | null;
+          output_tokens?: number | null;
           role?: string;
           screenshot?: string | null;
           theme?: string | null;
