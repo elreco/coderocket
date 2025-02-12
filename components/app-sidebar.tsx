@@ -13,7 +13,7 @@ import * as React from "react";
 import { useEffect, useState } from "react";
 
 import { getNotification } from "@/app/(default)/actions";
-import { getUserDetails } from "@/app/supabase-server";
+import { getUserDetails } from "@/app/supabase-client";
 import { NavMain } from "@/components/nav-main";
 import { NavUser } from "@/components/nav-user";
 import { Badge } from "@/components/ui/badge";
@@ -200,8 +200,8 @@ export function AppSidebar({
           <div
             className={`p-1 ${
               open
-                ? "h-auto opacity-100 transition-opacity delay-200 duration-500"
-                : "h-0 opacity-0"
+                ? "visible opacity-100 transition-opacity delay-200 duration-500"
+                : "invisible opacity-0"
             }`}
           >
             <SidebarNotification
