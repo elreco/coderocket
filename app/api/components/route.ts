@@ -306,7 +306,7 @@ const updateDataAfterCompletion = async (
   } else {
     await supabase
       .from("messages")
-      .update({ version })
+      .update({ version, input_tokens: usage.promptTokens })
       .eq("chat_id", chatId)
       .eq("version", -1);
   }
