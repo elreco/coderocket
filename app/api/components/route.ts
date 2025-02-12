@@ -50,12 +50,14 @@ export async function POST(req: Request) {
       imageUrl,
       selectedVersion,
     );
+    const model =
+      imageUrl && messagesFromDatabase.length === 1
+        ? "claude-3-5-sonnet-latest"
+        : "claude-3-5-haiku-latest";
+    console.log("model", model);
     const stream = streamText({
       messages,
-      model:
-        imageUrl && messagesFromDatabase.length === 1
-          ? anthropicModel("claude-3-5-sonnet-latest")
-          : anthropicModel("claude-3-5-haiku-latest"),
+      model: anthropicModel(model),
       system:
         framework === Framework.HTML
           ? htmlSystemPrompt(
