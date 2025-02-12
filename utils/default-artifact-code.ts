@@ -519,8 +519,7 @@ module.exports = {
   "version": "0.0.0",
   "scripts": {
     "dev": "vite",
-    "typecheck": "vue-tsc --noEmit",
-    "build": "npm run typecheck && vite build",
+    "build": "vue-tsc && vite build",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -529,7 +528,8 @@ module.exports = {
     "clsx": "^2.1.1",
     "class-variance-authority": "^0.7.1",
     "lucide-vue-next": "^0.474.0",
-    "radix-vue": "^1.9.13"
+    "radix-vue": "^1.9.13",
+    "vue-router": "^4.3.1"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^4.0.0",

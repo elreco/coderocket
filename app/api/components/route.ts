@@ -2,6 +2,7 @@ export const maxDuration = 300;
 import { CoreMessage, LanguageModelUsage, streamText } from "ai";
 import { after } from "next/server";
 
+import { buildComponent } from "@/app/(default)/components/[slug]/actions";
 import {
   fetchChatById,
   fetchLastUserMessageByChatId,
@@ -107,16 +108,10 @@ const buildMessagesToOpenAi = async (
       ? messages.filter((m) => m.version <= selectedVersion)
       : messages;
 
-  // Define the maximum number of messages to send
-  const maxMessages = 10; // Set your desired limit here
-
-  // Limit the number of messages
-  const limitedMessages = filteredMessages.slice(-maxMessages);
-
   // Map messages to OpenAI format
-  const messagesToOpenAI = limitedMessages.map((m) => {
+  const messagesToOpenAI = filteredMessages.map((m) => {
     const content =
-      limitedMessages.length === 1 && m.role === "user"
+      filteredMessages.length === 1 && m.role === "user"
         ? `NEW PROJECT TAILWIND AI - ${m.content}`
         : m.content;
 
@@ -310,9 +305,14 @@ const updateDataAfterCompletion = async (
 
   await supabase.from("messages").insert(newMessages).eq("chat_id", chatId);
   const hasArtifactResult = hasArtifacts(text);
-  if (hasArtifactResult && chat.framework === Framework.HTML) {
-    after(async () => {
-      await takeScreenshot(chatId, version, theme, Framework.HTML);
-    });
-  }
+
+  after(async () => {
+    if (chat.framework === Framework.HTML) {
+      takeScreenshot(chatId, version, theme, Framework.HTML);
+    }
+    if (hasArtifactResult && chat.framework !== Framework.HTML) {
+      await buildComponent(chatId, version);
+      takeScreenshot(chatId, version, theme, chat.framework || Framework.REACT);
+    }
+  });
 };

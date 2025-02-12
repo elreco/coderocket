@@ -88,6 +88,8 @@ export const getMaxMessagesPerPeriod = (
   }
 };
 
+export const builderApiUrl = "https://react-builder.fly.dev";
+
 export const STARTER_PLAN_MESSAGES_PER_PERIOD = 1000;
 export const PRO_PLAN_MESSAGES_PER_PERIOD = 2500;
 export const DEFAULT_MESSAGES_PER_PERIOD = 2500;

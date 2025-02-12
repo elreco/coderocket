@@ -3,15 +3,16 @@
 import { Loader2, AlertCircle, WandSparkles } from "lucide-react";
 import React from "react";
 
-import NodeboxContainer from "@/app/(default)/components/[slug]/nodebox-container";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { WebcontainerRender } from "@/components/webcontainer/webcontainer-render";
+import { WebcontainerTerminal } from "@/components/webcontainer/webcontainer-terminal";
 import { useComponentContext } from "@/context/component-context";
 import {
   WebcontainerLoadingState,
   useWebcontainer,
 } from "@/context/webcontainer-context";
 
-import { Button } from "../ui/button";
+import { Button } from "../../../../components/ui/button";
 
 function LoadingStateComponent({ state }: { state: WebcontainerLoadingState }) {
   return (
@@ -21,37 +22,32 @@ function LoadingStateComponent({ state }: { state: WebcontainerLoadingState }) {
         <h3 className="font-semibold">
           {state === "initializing" && "Initializing WebContainer..."}
           {state === "deploying" && "Deploying your application..."}
+          {state === "processing" && "Processing your application..."}
+          {state === "starting" && "Starting your application..."}
         </h3>
         <p className="text-sm text-muted-foreground">
           {state === "initializing" &&
             "Setting up your development environment."}
           {state === "deploying" && "It may take a few minutes."}
           {state === "processing" && "Analyzing and generating your component."}
+          {state === "starting" && "One moment, your application is starting."}
         </p>
       </div>
     </div>
   );
 }
 
-function ProgressMessagesComponent({ messages }: { messages: string[] }) {
-  return (
-    <div className="mx-auto mt-4 w-full max-w-xl text-center">
-      <ul className="space-y-1">
-        {messages.map((message, index) => (
-          <li key={index} className="text-sm text-muted-foreground">
-            {message}
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-export default function RenderComponent() {
-  const { loadingState, buildError, error, progressMessages } =
-    useWebcontainer();
-  const { chatId, selectedVersion, isLoading, authorized, setInput } =
-    useComponentContext();
+export default function ComponentPreview() {
+  const { loadingState, buildError, error } = useWebcontainer();
+  const {
+    chatId,
+    selectedVersion,
+    isLoading,
+    authorized,
+    setInput,
+    isWebcontainerReady,
+  } = useComponentContext();
+  const { previewId, terminal } = useWebcontainer();
   const [iframeLoading, setIframeLoading] = React.useState(true);
 
   const handleIframeLoad = () => {
@@ -64,8 +60,8 @@ export default function RenderComponent() {
 
   return (
     <>
-      {isLoading && !buildError && !error && (
-        <LoadingStateComponent state="initializing" />
+      {loadingState && !previewId && !isLoading && !buildError && !error && (
+        <LoadingStateComponent state={loadingState} />
       )}
 
       {error && (
@@ -84,10 +80,7 @@ export default function RenderComponent() {
 
       {buildError && !isLoading && (
         <div className="mx-4 flex items-center justify-center">
-          <Alert
-            variant="destructive"
-            className="bg-destructive px-12 text-foreground"
-          >
+          <Alert variant="default" className="px-12 text-foreground">
             <AlertCircle className="size-4 fill-foreground text-foreground" />
             <AlertDescription className="flex flex-col gap-2">
               <strong>{buildError.title}</strong>
@@ -109,22 +102,23 @@ export default function RenderComponent() {
           </Alert>
         </div>
       )}
-
-      {loadingState && !error && !buildError && (
-        <div className="flex flex-col items-center">
-          <LoadingStateComponent state={loadingState} />
-          {progressMessages.length > 0 && (
-            <ProgressMessagesComponent messages={progressMessages} />
-          )}
-        </div>
-      )}
-      {authorized && <NodeboxContainer />}
+      {!isWebcontainerReady &&
+        previewId &&
+        !error &&
+        !buildError &&
+        !isLoading && <WebcontainerRender previewId={previewId} />}
+      {!isWebcontainerReady &&
+        terminal &&
+        !buildError &&
+        !error &&
+        !isLoading && <WebcontainerTerminal />}
       {chatId &&
         selectedVersion !== undefined &&
         !isLoading &&
         !error &&
         !buildError &&
-        !loadingState && (
+        !loadingState &&
+        isWebcontainerReady && (
           <>
             {iframeLoading && <LoadingStateComponent state="initializing" />}
             <iframe

@@ -12,7 +12,7 @@ import { useRef, useEffect } from "react";
 import React from "react";
 import { useCopyToClipboard } from "usehooks-ts";
 
-import RenderComponent from "@/components/renders/render-component";
+import RenderComponent from "@/app/(default)/components/[slug]/component-preview";
 import RenderHtmlComponent from "@/components/renders/render-html-component";
 import { Button } from "@/components/ui/button";
 import { useComponentContext } from "@/context/component-context";
