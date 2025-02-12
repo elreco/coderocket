@@ -74,7 +74,7 @@ export const htmlSystemPrompt = (
     <asset_management>
       - **Tailwind CSS**: Load from https://cdn.tailwindcss.com.
       - **Daisy UI**: Load from https://cdn.jsdelivr.net/npm/daisyui@latest/dist/full.css.
-      - **Images**: Use external sources or placeholders like https://www.tailwindai.dev/placeholder.svg.
+      - **Images**: Use external sources like picsum.photos (always provide an id for the image e.g. https://picsum.photos/id/237/200/300) or placeholders like https://www.tailwindai.dev/placeholder.svg.
       - **Icons**: Use FontAwesome via CDN for icons.
       - **Avatars**: Use Dicebear API for avatar generation.
     </asset_management>

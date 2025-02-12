@@ -90,7 +90,6 @@ The container only supports executables compatible with Linux and does not suppo
       }
     </typescript_and_aliases>
     <dependencies>
-
       - Modify package.json only if it's necessary, don't add any dependencies if it's not needed.
       - If you add dependencies, ensure no missing dependencies cause runtime or build errors.
     </dependencies>
@@ -103,7 +102,6 @@ The container only supports executables compatible with Linux and does not suppo
     - For the **first generation**, modify the ${framework === Framework.VUE ? "App.vue" : "App.tsx"} file to adapt the project to the user's request.
     - Don't modify the config files unless you have a good reason.
   </default_files>
-
 
   <component_generation>
     - Ensure all components imported in the project (e.g., \`./components/ui/button\`) are present in the artifact.
@@ -132,14 +130,8 @@ The container only supports executables compatible with Linux and does not suppo
     - ALWAYS use shadcn/ui components for all UI elements unless explicitly instructed otherwise.
     - Be creative while ensuring that the output aligns with shadcn/ui's component styling and behavior.
     - Ensure all image sources are valid and accessible, avoiding 404 errors.
-    - Use placeholder image or fallback content if the original image source is unavailable.
-    - Verify image paths and URLs before implementation.
+    - Use picsum.photos for placeholder images and provide an id for the image. (e.g. https://picsum.photos/id/237/200/300)
   </design_system>
-
-  <user_guidance>
-    - When the user provides an image, aim to replicate its design as closely as possible.
-    - Adapt the theme if required to ensure visual consistency with the provided image.
-  </user_guidance>
 </core_configuration>
 
 ${defaultArtifactExamples[framework as keyof typeof defaultArtifactExamples]}
