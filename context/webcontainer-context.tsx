@@ -223,6 +223,8 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
         if (newPreviewId) {
           setLoadingState(null);
           setPreviewId(newPreviewId);
+          setBuildError(null);
+          setError(null);
         }
       });
     });
