@@ -90,12 +90,13 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
       setWebcontainerReady(false);
 
       if (
-        !selectedVersion ||
+        selectedVersion === undefined ||
         selectedFramework === Framework.HTML ||
         isLoading ||
         !selectedFramework ||
         artifactFiles.length === 0
       ) {
+        console.log("WebcontainerContext: setupProject: return");
         return;
       }
 
@@ -222,7 +223,6 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
         if (newPreviewId) {
           setLoadingState(null);
           setPreviewId(newPreviewId);
-          setWebcontainerReady(true);
         }
       });
     });
