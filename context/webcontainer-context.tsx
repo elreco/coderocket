@@ -228,7 +228,7 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
         }
       });
     });
-  }, [selectedVersion, selectedFramework, setWebcontainerReady]);
+  }, [selectedVersion, selectedFramework]);
 
   return (
     <WebcontainerContext.Provider

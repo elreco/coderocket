@@ -147,6 +147,10 @@ export const deleteVersionByMessageId = async (messageId: number) => {
     .from("chats")
     .update({ artifact_code: artifactCode })
     .eq("id", message.chat_id);
+
+  after(async () => {
+    await buildComponent(message.chat_id, message.version, true);
+  });
 };
 
 export const updateTheme = async (
