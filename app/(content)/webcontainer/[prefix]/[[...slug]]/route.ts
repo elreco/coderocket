@@ -109,6 +109,9 @@ export async function GET(
       Pragma: "no-cache",
       Expires: "0",
       "Surrogate-Control": "no-store",
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Credentials": "true",
+      "X-Frame-Options": "ALLOW-FROM *",
     },
   });
 }
