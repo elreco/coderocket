@@ -86,6 +86,7 @@
     "remark-gfm": "^4.0.0",
     "remark-math": "^6.0.0",
     "shiki": "^1.26.1",
+    "strip-ansi": "^7.1.0",
     "stripe": "17.5.0",
     "tailwind-merge": "^2.5.5",
     "tailwindcss": "^3.4.15",

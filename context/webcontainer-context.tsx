@@ -1,5 +1,6 @@
 "use client";
 
+import { WebContainerProcess } from "@webcontainer/api";
 import { Terminal } from "@xterm/xterm";
 import React, {
   createContext,
@@ -9,6 +10,7 @@ import React, {
   ReactNode,
   useRef,
 } from "react";
+import stripAnsi from "strip-ansi";
 
 import { checkExistingComponent } from "@/app/(default)/components/[slug]/actions";
 import { webcontainer as webcontainerPromise } from "@/lib/webcontainer";
@@ -47,7 +49,6 @@ export type WebcontainerLoadingState =
 export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
   const [loadingState, setLoadingState] =
     useState<WebcontainerLoadingState>(null);
-  const [terminal, setTerminal] = useState<Terminal | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [previewError, setPreviewError] = useState<PreviewError | null>(null);
   const [previewId, setPreviewId] = useState<string | undefined>(undefined);
@@ -62,8 +63,12 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
     artifactFiles,
   } = useComponentContext();
 
+  // Références pour stocker le terminal et les processus
+  const terminalRef = useRef<Terminal | null>(null);
+  const shellProcessRef = useRef<WebContainerProcess | null>(null); // Remplacez `any` par le type approprié
+  const devProcessRef = useRef<WebContainerProcess | null>(null); // Remplacez `any` par le type approprié
+
   // On stocke le contenu précédent de package.json pour le comparer.
-  // C'est un Ref pour garder la valeur persistante entre les rendus.
   const prevPackageJsonRef = useRef<string>("");
 
   // Permet de savoir si le dev process tourne déjà (ou a déjà tourné) dans cette session
@@ -83,6 +88,24 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
     setLoadingState(null);
     setWebcontainerReady(false);
   }, [setWebcontainerReady]);
+
+  // Nettoyer le terminal et les processus lors du démontage du composant
+  useEffect(() => {
+    return () => {
+      if (terminalRef.current) {
+        terminalRef.current.dispose();
+        terminalRef.current = null;
+      }
+      if (shellProcessRef.current) {
+        shellProcessRef.current.kill();
+        shellProcessRef.current = null;
+      }
+      if (devProcessRef.current) {
+        devProcessRef.current.kill();
+        devProcessRef.current = null;
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const setupProject = async () => {
@@ -113,24 +136,41 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
       const webcontainer = await webcontainerPromise;
       if (!webcontainer) return;
 
-      // Initialise le Terminal
-      const newTerminal = new Terminal();
-      setTerminal(newTerminal);
-      if (!newTerminal) {
-        throw new Error("Instance or terminal not found");
+      // Initialise le Terminal s'il n'existe pas déjà
+      if (!terminalRef.current) {
+        terminalRef.current = new Terminal();
       }
 
+      const terminal = terminalRef.current;
+
+      // Nettoie les processus existants
+      /* if (shellProcessRef.current) {
+        shellProcessRef.current.kill();
+        shellProcessRef.current = null;
+      }
+      if (devProcessRef.current) {
+        devProcessRef.current.kill();
+        devProcessRef.current = null;
+      } */
+
+      // Réinitialise le terminal
+      terminal.reset(); // Efface les anciens logs
+
       // Lance un shell jsh pour afficher la sortie
-      const shellProcess = await webcontainer.spawn("jsh");
-      shellProcess.output.pipeTo(
+      shellProcessRef.current = await webcontainer.spawn("jsh");
+      shellProcessRef.current.output.pipeTo(
         new WritableStream({
           write(data) {
-            newTerminal.write(data);
+            terminal.write(data);
+            const buildError = formatBuildError(data);
+            if (buildError) {
+              setBuildError(buildError); // Met à jour setBuildError uniquement si une erreur est détectée
+            }
           },
         }),
       );
-      const input = shellProcess.input.getWriter();
-      newTerminal.onData((data) => {
+      const input = shellProcessRef.current.input.getWriter();
+      terminal.onData((data) => {
         input.write(data);
       });
 
@@ -145,59 +185,50 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
       // Met à jour le "record" du package.json
       prevPackageJsonRef.current = currentPkg;
 
-      // S’il a changé ou si on n’a jamais fait de npm install, on l’exécute
+      // S'il a changé ou si on n'a jamais fait de npm install, on l'exécute
       if (hasPackageChanged) {
         setLoadingState("processing");
         const installProcess = await webcontainer.spawn("npm", ["install"]);
         installProcess.output.pipeTo(
           new WritableStream({
             write(data) {
-              newTerminal.write(data);
+              terminal.write(data);
+              const buildError = formatBuildError(data);
+              if (buildError) {
+                setBuildError(buildError); // Met à jour setBuildError uniquement si une erreur est détectée
+              }
             },
           }),
         );
         await installProcess.exit;
-      } else {
-        // On skip l'install
-        newTerminal.writeln(
-          "\r\n[Webcontainer] package.json inchangé, skip npm install.",
-        );
       }
 
-      // S’il a changé ou si on n’a jamais démarré npm run dev, on le lance
+      // S'il a changé ou si on n'a jamais démarré npm run dev, on le lance
       if (!devStarted || hasPackageChanged) {
         setLoadingState("starting");
-        const devProcess = await webcontainer.spawn("npm", ["run", "dev"]);
-        setDevStarted(true);
-        devProcess.output.pipeTo(
+        devProcessRef.current = await webcontainer.spawn("npm", ["run", "dev"]);
+      }
+      if (devProcessRef.current) {
+        devProcessRef.current.output.pipeTo(
           new WritableStream({
             write(data) {
               if (data) {
-                newTerminal.write(data);
-                if (data.includes("ERROR") || data.includes("Error")) {
-                  /* setBuildError({
-                    title: "Build Error",
-                    description:
-                      "Tailwind AI can't execute this code, check the terminal and ask AI to fix it.",
-                    content: data,
-                  }); */
+                terminal.write(data);
+                const buildError = formatBuildError(data);
+                if (buildError) {
+                  setBuildError(buildError); // Met à jour setBuildError uniquement si une erreur est détectée
                 }
               }
             },
           }),
         );
-        await devProcess.exit;
-      } else {
-        // On skip le dev s’il a déjà tourné et si le package.json n’a pas changé
-        newTerminal.writeln(
-          "\r\n[Webcontainer] package.json inchangé, skip npm run dev.",
-        );
+        setDevStarted(true);
+        await devProcessRef.current.exit;
       }
     };
 
     setupProject();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [artifactFiles, isLoading]);
+  }, [artifactFiles, isLoading, chatId]);
 
   // Gère les erreurs en mode 'preview' (messages envoyés par l'appli via le port)
   useEffect(() => {
@@ -223,7 +254,7 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
         if (newPreviewId) {
           setLoadingState(null);
           setPreviewId(newPreviewId);
-          setBuildError(null);
+          setBuildError(null); // Nettoie l'erreur de build si le serveur est prêt
           setError(null);
         }
       });
@@ -233,7 +264,7 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
   return (
     <WebcontainerContext.Provider
       value={{
-        terminal,
+        terminal: terminalRef.current,
         error,
         loadingState,
         setLoadingState,
@@ -256,3 +287,50 @@ export const useWebcontainer = (): WebcontainerContextType => {
   }
   return context;
 };
+
+function formatBuildError(data: string): PreviewError | null {
+  const cleanedData = stripAnsi(data);
+  const errorPatterns = [
+    "error",
+    "npm ERR!",
+    "Failed to compile",
+    "ERROR in",
+    "ENOENT",
+    "Cannot find module",
+    "Module not found",
+    "SyntaxError",
+    "Import error",
+    "webpack.config.js",
+    "fatal",
+    "Error:",
+    "error TS",
+    "Property '",
+    "RollupError",
+    "error during build",
+    "Could not resolve",
+    "Failed to load url", // Ajouté pour capturer les erreurs de chargement de fichier
+    "does the file exist", // Ajouté pour capturer les erreurs de fichier manquant
+  ];
+
+  let errorMessage = "";
+  let hasError = false;
+
+  errorPatterns.forEach((pattern) => {
+    if (cleanedData.toLowerCase().includes(pattern.toLowerCase())) {
+      errorMessage += `- ${pattern} detected\n`;
+      hasError = true;
+    }
+  });
+
+  if (!hasError) {
+    return null; // Retourne null si aucune erreur n'est détectée
+  }
+
+  console.log(errorMessage);
+
+  return {
+    title: "Build Error",
+    description: errorMessage,
+    content: cleanedData,
+  };
+}

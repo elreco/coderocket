@@ -71,7 +71,7 @@ export default function ComponentPreview() {
             className="bg-destructive px-12 text-foreground"
           >
             <AlertDescription className="m-0 flex items-center gap-2">
-              <AlertCircle className="size-4 !text-foreground" />
+              <AlertCircle className="size-4" />
               <p>{error}</p>
             </AlertDescription>
           </Alert>
@@ -79,26 +79,30 @@ export default function ComponentPreview() {
       )}
 
       {buildError && !isLoading && (
-        <div className="mx-4 flex items-center justify-center">
-          <Alert variant="default" className="px-12 text-foreground">
-            <AlertCircle className="size-4 fill-foreground text-foreground" />
-            <AlertDescription className="flex flex-col gap-2">
-              <strong>{buildError.title}</strong>
-              <span>{buildError.description}</span>
-              <span className="text-xs opacity-75">{buildError.content}</span>
+        <div className="flex size-full items-center justify-center px-4">
+          <Alert variant="default" className=" text-foreground">
+            <AlertCircle className="size-6" />
+            <AlertDescription className="flex flex-col !pl-12">
+              <p className="text-lg font-semibold">{buildError.title}</p>
+              <p className="mb-4 whitespace-pre-line text-sm">
+                {buildError.description}
+              </p>
+              <p className="whitespace-pre-line text-xs opacity-75">
+                {buildError.content}
+              </p>
+              {authorized && (
+                <Button
+                  variant="outline"
+                  className="mt-2 self-end"
+                  onClick={() =>
+                    setInput("Fix the following error: " + buildError.content)
+                  }
+                >
+                  <WandSparkles className="size-4" />
+                  Ask Tailwind AI to fix it
+                </Button>
+              )}
             </AlertDescription>
-            {authorized && (
-              <Button
-                variant="outline"
-                className="mt-2 w-full"
-                onClick={() =>
-                  setInput("Fix the following error: " + buildError.content)
-                }
-              >
-                <WandSparkles className="size-4" />
-                Ask Tailwind AI to fix it
-              </Button>
-            )}
           </Alert>
         </div>
       )}
@@ -107,11 +111,9 @@ export default function ComponentPreview() {
         !error &&
         !buildError &&
         !isLoading && <WebcontainerRender previewId={previewId} />}
-      {!isWebcontainerReady &&
-        terminal &&
-        !buildError &&
-        !error &&
-        !isLoading && <WebcontainerTerminal />}
+      {!isWebcontainerReady && terminal && !error && !isLoading && (
+        <WebcontainerTerminal />
+      )}
       {chatId &&
         selectedVersion !== undefined &&
         !isLoading &&

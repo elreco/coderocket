@@ -112,7 +112,6 @@ export default function ComponentCompletion({
         fetchLastUserMessageByChatId(chatId),
         fetchMessagesByChatId(chatId, false),
       ]);
-      setIsLoading(false);
 
       setFetchedChat(chat);
       setLastAssistantMessage(assistantMsg);
@@ -149,6 +148,8 @@ export default function ComponentCompletion({
       if (chat?.framework === Framework.HTML && assistantMsg?.content) {
         handleChatFiles(assistantMsg.content, true);
       }
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      setIsLoading(false);
     };
     loadInitialData();
   }, [chatId]);
@@ -244,9 +245,6 @@ export default function ComponentCompletion({
       },
       onFinish: async () => {
         const refreshedChatMessages = await refreshChatData();
-        setCanvas(true);
-        setInput("");
-        setIsLoading(false);
         if (refreshedChatMessages) {
           const refreshedLastAssistantMessage = refreshedChatMessages.reduce(
             (prev, current) =>
@@ -257,6 +255,10 @@ export default function ComponentCompletion({
             handleVersionSelect(refreshedLastAssistantMessage.version);
           }
         }
+        setCanvas(true);
+        setInput("");
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        setIsLoading(false);
       },
     });
 

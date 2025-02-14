@@ -88,9 +88,6 @@ export function WebcontainerRender({
         ref={iframeRef}
         title="WebContainer Preview"
         className="relative z-50 size-full border-none bg-white"
-        onLoad={() => {
-          notifyPreviewReady();
-        }}
       />
     </div>
   );
