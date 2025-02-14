@@ -122,6 +122,42 @@ export default function Hero() {
     }
   }, [prompt]);
 
+  useEffect(() => {
+    const handlePaste = (event: ClipboardEvent) => {
+      const clipboardItems = event.clipboardData?.items;
+      if (!clipboardItems) return;
+
+      for (let i = 0; i < clipboardItems.length; i++) {
+        const item = clipboardItems[i];
+        if (item.type.startsWith("image/")) {
+          const file = item.getAsFile();
+          if (file && file.size <= maxImageSize) {
+            setImage(file);
+          } else {
+            toast({
+              variant: "destructive",
+              title: "Image too large",
+              description: `The image must be less than ${maxImageSize / (1024 * 1024)} Mo.`,
+              duration: 5000,
+            });
+          }
+          break;
+        }
+      }
+    };
+
+    const textarea = inputRef.current;
+    if (textarea) {
+      textarea.addEventListener("paste", handlePaste);
+    }
+
+    return () => {
+      if (textarea) {
+        textarea.removeEventListener("paste", handlePaste);
+      }
+    };
+  }, [inputRef, toast]);
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files?.[0]) {
       return;
