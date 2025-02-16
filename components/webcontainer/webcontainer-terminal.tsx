@@ -11,15 +11,10 @@ export function WebcontainerTerminal() {
   const terminalRef = useRef<HTMLDivElement | null>(null);
   const { terminal } = useWebcontainer();
   const [isVisible, setIsVisible] = useState(true);
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
 
   useEffect(() => {
     const setupTerminal = async () => {
-      if (isMounted && terminalRef.current && terminal) {
+      if (terminalRef.current && terminal) {
         terminal.open(terminalRef.current);
         const { FitAddon } = await import("@xterm/addon-fit");
         const fitAddon = new FitAddon();
@@ -32,7 +27,7 @@ export function WebcontainerTerminal() {
       }
     };
     setupTerminal();
-  }, [terminal, isMounted]);
+  }, []);
 
   const toggleVisibility = () => {
     setIsVisible(!isVisible);

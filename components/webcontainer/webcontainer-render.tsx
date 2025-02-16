@@ -35,12 +35,12 @@ export function WebcontainerRender({
   // Notify other tabs that this preview is ready
   const notifyPreviewReady = useCallback(() => {
     if (broadcastChannelRef.current && previewUrl) {
-      broadcastChannelRef.current.postMessage({
+      /* broadcastChannelRef.current.postMessage({
         type: "preview-ready",
         previewId,
         url: previewUrl,
         timestamp: Date.now(),
-      });
+      }); */
     }
   }, [previewId, previewUrl]);
 
@@ -53,7 +53,7 @@ export function WebcontainerRender({
     broadcastChannelRef.current = new BroadcastChannel(PREVIEW_CHANNEL);
 
     // Listen for preview updates
-    broadcastChannelRef.current.onmessage = (event) => {
+    /* broadcastChannelRef.current.onmessage = (event) => {
       if (event.data.previewId === previewId) {
         if (
           event.data.type === "refresh-preview" ||
@@ -62,7 +62,7 @@ export function WebcontainerRender({
           handleRefresh();
         }
       }
-    };
+    }; */
 
     // Construct the WebContainer preview URL
     const url = `https://${previewId}.local-credentialless.webcontainer-api.io`;

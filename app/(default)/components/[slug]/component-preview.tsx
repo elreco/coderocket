@@ -48,15 +48,6 @@ export default function ComponentPreview() {
     isWebcontainerReady,
   } = useComponentContext();
   const { previewId, terminal } = useWebcontainer();
-  const [iframeLoading, setIframeLoading] = React.useState(true);
-
-  const handleIframeLoad = () => {
-    setIframeLoading(false);
-  };
-
-  React.useEffect(() => {
-    setIframeLoading(true);
-  }, [chatId, selectedVersion]);
 
   return (
     <>
@@ -121,14 +112,10 @@ export default function ComponentPreview() {
         !buildError &&
         !loadingState &&
         isWebcontainerReady && (
-          <>
-            {iframeLoading && <LoadingStateComponent state="initializing" />}
-            <iframe
-              src={`https://${chatId}-${selectedVersion}.webcontainer.tailwindai.dev`}
-              className={`size-full border-none ${iframeLoading ? "hidden" : ""}`}
-              onLoad={handleIframeLoad}
-            />
-          </>
+          <iframe
+            src={`https://${chatId}-${selectedVersion}.webcontainer.tailwindai.dev`}
+            className={`size-full border-none`}
+          />
         )}
     </>
   );

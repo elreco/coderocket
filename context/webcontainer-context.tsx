@@ -63,34 +63,19 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
     artifactFiles,
   } = useComponentContext();
 
-  // Références pour stocker le terminal et les processus
+  // References for processes and terminal
   const terminalRef = useRef<Terminal | null>(null);
-  const shellProcessRef = useRef<WebContainerProcess | null>(null); // Remplacez `any` par le type approprié
-  const devProcessRef = useRef<WebContainerProcess | null>(null); // Remplacez `any` par le type approprié
+  const shellProcessRef = useRef<WebContainerProcess | null>(null);
+  const devProcessRef = useRef<WebContainerProcess | null>(null);
 
-  // On stocke le contenu précédent de package.json pour le comparer.
-  const prevPackageJsonRef = useRef<string>("");
+  // Track first-time initialization
+  const [isProjectInitialized, setIsProjectInitialized] = useState(false);
 
-  // Permet de savoir si le dev process tourne déjà (ou a déjà tourné) dans cette session
-  const [devStarted, setDevStarted] = useState(false);
+  // Store the old artifact files to detect changes
+  const oldArtifactFilesRef = useRef<typeof artifactFiles>([]);
 
-  // Récupère le contenu texte du package.json dans la liste des fichiers.
-  const getPackageJsonContent = () => {
-    const pkgFile = artifactFiles.find((file) => file.name === "package.json");
-    return pkgFile?.content || "";
-  };
-
-  // Nettoyage initial
   useEffect(() => {
-    setPreviewId(undefined);
-    setError(null);
-    setBuildError(null);
-    setLoadingState(null);
-    setWebcontainerReady(false);
-  }, [setWebcontainerReady]);
-
-  // Nettoyer le terminal et les processus lors du démontage du composant
-  useEffect(() => {
+    // Clean up references when unmounting
     return () => {
       if (terminalRef.current) {
         terminalRef.current.dispose();
@@ -107,23 +92,59 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
     };
   }, []);
 
+  /**
+   * Compare artifact files to detect whether `package.json` content has changed.
+   * Returns true if `package.json` content differs (old vs new).
+   */
+  const hasPackageJsonChanged = (
+    oldFiles: typeof artifactFiles,
+    newFiles: typeof artifactFiles,
+  ) => {
+    const oldPkg = oldFiles.find((f) => f.name === "package.json");
+    const newPkg = newFiles.find((f) => f.name === "package.json");
+    if (!oldPkg && newPkg) return true;
+    if (!newPkg && oldPkg) return true;
+    if (!oldPkg && !newPkg) return false;
+    // Both exist; compare content
+    return oldPkg?.content !== newPkg?.content;
+  };
+
+  /**
+   * Write or update the files in the WebContainer.
+   * NOTE: We do not kill dev process — we rely on hot-reload from the dev server.
+   */
+  const updateFilesInWebContainer = async (
+    newFiles: typeof artifactFiles,
+    webcontainer: Awaited<typeof webcontainerPromise>,
+  ) => {
+    for (const file of newFiles) {
+      // For simplicity, just overwrite them all. If you want to optimize,
+      // you can compare old/new content and only write if changed.
+      try {
+        await webcontainer.fs.writeFile(file.name || "", file.content);
+      } catch (err) {
+        console.warn("Failed to write file:", file.name, err);
+      }
+    }
+  };
+
+  /**
+   * Main useEffect to handle initialization and subsequent file changes.
+   */
   useEffect(() => {
     const setupProject = async () => {
-      setLoadingState("initializing");
-      setWebcontainerReady(false);
-
+      // If basic conditions are not met, skip
       if (
         selectedVersion === undefined ||
-        selectedFramework === Framework.HTML ||
+        selectedFramework === Framework.HTML || // If HTML or no bundler, skip
         isLoading ||
         !selectedFramework ||
         artifactFiles.length === 0
       ) {
-        console.log("WebcontainerContext: setupProject: return");
         return;
       }
 
-      // Vérifie si on a déjà quelque chose d'existant côté serveur
+      // (Optional) Check if there's an existing server-side component
       const exists = await checkExistingComponent(chatId, selectedVersion);
       if (exists) {
         setLoadingState(null);
@@ -131,108 +152,137 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
         setPreviewId(undefined);
         return;
       }
-
-      // Instancie le Webcontainer
+      setWebcontainerReady(false);
+      // Grab the shared WebContainer instance
       const webcontainer = await webcontainerPromise;
       if (!webcontainer) return;
 
-      // Initialise le Terminal s'il n'existe pas déjà
+      // Initialize the terminal once
       if (!terminalRef.current) {
         terminalRef.current = new Terminal();
       }
-
       const terminal = terminalRef.current;
+      console.log("terminal", terminal);
+      // If the project is NOT initialized, do a full "mount + npm install + npm run dev"
+      if (!isProjectInitialized) {
+        setLoadingState("initializing");
 
-      // Nettoie les processus existants
-      /* if (shellProcessRef.current) {
-        shellProcessRef.current.kill();
-        shellProcessRef.current = null;
-      }
-      if (devProcessRef.current) {
-        devProcessRef.current.kill();
-        devProcessRef.current = null;
-      } */
+        // Show logs in the terminal
+        if (!shellProcessRef.current) {
+          // Start a shell to show logs
+          shellProcessRef.current = await webcontainer.spawn("jsh");
+          // Pipe shell output to the terminal
+          shellProcessRef.current.output.pipeTo(
+            new WritableStream({
+              write(data) {
+                terminal.write(data);
+                const possibleError = formatBuildError(data);
+                if (possibleError) {
+                  setBuildError(possibleError);
+                }
+              },
+            }),
+          );
+          // Pipe terminal input to the shell
+          const input = shellProcessRef.current.input.getWriter();
+          terminal.onData((data) => {
+            input.write(data);
+          });
+        }
 
-      // Réinitialise le terminal
-      terminal.reset(); // Efface les anciens logs
+        // 1) Mount the entire file system
+        const fileSystemTree = buildFileSystemTree(artifactFiles);
+        await webcontainer.mount(fileSystemTree);
 
-      // Lance un shell jsh pour afficher la sortie
-      shellProcessRef.current = await webcontainer.spawn("jsh");
-      shellProcessRef.current.output.pipeTo(
-        new WritableStream({
-          write(data) {
-            terminal.write(data);
-            const buildError = formatBuildError(data);
-            if (buildError) {
-              setBuildError(buildError); // Met à jour setBuildError uniquement si une erreur est détectée
-            }
-          },
-        }),
-      );
-      const input = shellProcessRef.current.input.getWriter();
-      terminal.onData((data) => {
-        input.write(data);
-      });
-
-      // Monte tous les fichiers (dont package.json)
-      const fileSystemTree = buildFileSystemTree(artifactFiles);
-      await webcontainer.mount(fileSystemTree);
-
-      // Compare la version actuelle du package.json
-      const currentPkg = getPackageJsonContent();
-      const hasPackageChanged = currentPkg !== prevPackageJsonRef.current;
-
-      // Met à jour le "record" du package.json
-      prevPackageJsonRef.current = currentPkg;
-
-      // S'il a changé ou si on n'a jamais fait de npm install, on l'exécute
-      if (hasPackageChanged) {
+        // 2) npm install
         setLoadingState("processing");
         const installProcess = await webcontainer.spawn("npm", ["install"]);
         installProcess.output.pipeTo(
           new WritableStream({
             write(data) {
               terminal.write(data);
-              const buildError = formatBuildError(data);
-              if (buildError) {
-                setBuildError(buildError); // Met à jour setBuildError uniquement si une erreur est détectée
+              const possibleError = formatBuildError(data);
+              if (possibleError) {
+                setBuildError(possibleError);
               }
             },
           }),
         );
         await installProcess.exit;
-      }
 
-      // S'il a changé ou si on n'a jamais démarré npm run dev, on le lance
-      if (!devStarted || hasPackageChanged) {
+        // 3) npm run dev
         setLoadingState("starting");
         devProcessRef.current = await webcontainer.spawn("npm", ["run", "dev"]);
-      }
-      if (devProcessRef.current) {
         devProcessRef.current.output.pipeTo(
           new WritableStream({
             write(data) {
-              if (data) {
-                terminal.write(data);
-                const buildError = formatBuildError(data);
-                if (buildError) {
-                  setBuildError(buildError); // Met à jour setBuildError uniquement si une erreur est détectée
-                }
+              terminal.write(data);
+              const possibleError = formatBuildError(data);
+              if (possibleError) {
+                setBuildError(possibleError);
               }
             },
           }),
         );
-        setDevStarted(true);
-        await devProcessRef.current.exit;
+
+        // Mark as initialized
+        setIsProjectInitialized(true);
+        oldArtifactFilesRef.current = artifactFiles;
+      } else {
+        //
+        // If the project IS already initialized, we only update changed files.
+        //
+        const packageHasChanged = hasPackageJsonChanged(
+          oldArtifactFilesRef.current,
+          artifactFiles,
+        );
+
+        // 1) Write file changes to the container
+        await updateFilesInWebContainer(artifactFiles, webcontainer);
+
+        // 2) If package.json changed, re-run npm install
+        if (packageHasChanged) {
+          setLoadingState("processing");
+          const installProcess = await webcontainer.spawn("npm", ["install"]);
+          installProcess.output.pipeTo(
+            new WritableStream({
+              write(data) {
+                terminal.write(data);
+                const possibleError = formatBuildError(data);
+                if (possibleError) {
+                  setBuildError(possibleError);
+                }
+              },
+            }),
+          );
+          await installProcess.exit;
+        }
+
+        // We do NOT kill `npm run dev`. We rely on its watcher/hot reload
+        // If your dev script uses Vite/Next/etc., it should pick up changes automatically.
+
+        oldArtifactFilesRef.current = artifactFiles;
       }
     };
 
     setupProject();
-  }, [artifactFiles, isLoading, chatId]);
+  }, [
+    artifactFiles,
+    chatId,
+    isLoading,
+    selectedVersion,
+    selectedFramework,
+    isProjectInitialized,
+  ]);
 
-  // Gère les erreurs en mode 'preview' (messages envoyés par l'appli via le port)
+  /**
+   * Handle messages from the "preview" environment (client runtime errors, etc.)
+   */
   useEffect(() => {
     webcontainerPromise.then((webcontainer) => {
+      if (!webcontainer) return;
+
+      // Listen for uncaught exceptions/rejections from your running code
       webcontainer.on("preview-message", (message) => {
         if (
           message.type === "PREVIEW_UNCAUGHT_EXCEPTION" ||
@@ -249,12 +299,13 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
         }
       });
 
+      // Called when the dev server is up and running
       webcontainer.on("server-ready", async (port, url) => {
         const newPreviewId = getPreviewId(url);
         if (newPreviewId) {
           setLoadingState(null);
           setPreviewId(newPreviewId);
-          setBuildError(null); // Nettoie l'erreur de build si le serveur est prêt
+          setBuildError(null);
           setError(null);
         }
       });
@@ -308,8 +359,8 @@ function formatBuildError(data: string): PreviewError | null {
     "RollupError",
     "error during build",
     "Could not resolve",
-    "Failed to load url", // Ajouté pour capturer les erreurs de chargement de fichier
-    "does the file exist", // Ajouté pour capturer les erreurs de fichier manquant
+    "Failed to load url",
+    "does the file exist",
   ];
 
   let errorMessage = "";
@@ -323,10 +374,8 @@ function formatBuildError(data: string): PreviewError | null {
   });
 
   if (!hasError) {
-    return null; // Retourne null si aucune erreur n'est détectée
+    return null;
   }
-
-  console.log(errorMessage);
 
   return {
     title: "Build Error",
