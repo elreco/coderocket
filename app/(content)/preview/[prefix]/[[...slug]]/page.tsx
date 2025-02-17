@@ -17,9 +17,9 @@ export default async function Page({
       <iframe
         className="size-full border-none"
         src={`https://${prefix}.webcontainer.tailwindai.dev/${slug ? slug.join("/") : ""}`}
-        sandbox="allow-scripts allow-forms allow-popups allow-modals allow-storage-access-by-user-activation allow-same-origin"
-        allow="credentialless"
-        loading="eager"
+        sandbox="" // ❌ Supprime toutes les restrictions
+        allow="*"
+        referrerPolicy="no-referrer"
       />
     </div>
   );

@@ -13,11 +13,11 @@ export default async function RenderHtmlComponentServer({
 
   return (
     <iframe
-      srcDoc={initialContent}
-      style={style}
-      sandbox="allow-scripts allow-forms allow-popups allow-modals allow-storage-access-by-user-activation allow-same-origin"
-      allow="credentialless"
-      loading="eager"
+      src={`https://${chatId}-${selectedVersion}.webcontainer.tailwindai.dev`}
+      className="size-full border-none"
+      sandbox="" // ❌ Supprime toutes les restrictions
+      allow="*"
+      referrerPolicy="no-referrer"
     />
   );
 }

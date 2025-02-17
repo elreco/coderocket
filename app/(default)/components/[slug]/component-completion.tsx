@@ -591,9 +591,9 @@ export default function ComponentCompletion({
                             <iframe
                               src={`https://${chatId}-${selectedVersion}.webcontainer.tailwindai.dev`}
                               className="size-full"
-                              sandbox="allow-scripts allow-forms allow-popups allow-modals allow-storage-access-by-user-activation allow-same-origin"
-                              allow="credentialless"
-                              loading="eager"
+                              sandbox="" // ❌ Supprime toutes les restrictions
+                              allow="*"
+                              referrerPolicy="no-referrer"
                             />
                           ) : (
                             <RenderHtmlComponent files={chatFiles} />
