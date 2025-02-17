@@ -110,19 +110,19 @@ export async function GET(
       Expires: "0",
       "Surrogate-Control": "no-store",
 
-      // 🔥 Désactive toutes les restrictions cross-origin
+      // 🔥 Supprime toutes les restrictions CORS
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Credentials": "true",
       "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
       "Access-Control-Allow-Headers": "*",
 
-      // 🔥 Autorise l'iframe sans restriction
+      // 🔥 Désactive la protection contre les iframes
       "X-Frame-Options": "ALLOWALL",
       "Content-Security-Policy": "frame-ancestors *",
 
-      // ❌ On ne force plus ces en-têtes pour éviter le conflit avec la config Next :
-      // "Cross-Origin-Embedder-Policy": "unsafe-none",
-      // "Cross-Origin-Opener-Policy": "unsafe-none",
+      // 🔥 Supprime les restrictions COEP et COOP
+      "Cross-Origin-Embedder-Policy": "unsafe-none",
+      "Cross-Origin-Opener-Policy": "unsafe-none",
     },
   });
 }
