@@ -240,12 +240,11 @@ export const buildComponent = async (
     if (responseData.errors) {
       throw new Error(responseData.errors);
     }
-    console.log("responseData", responseData);
     // update the message with the build status
     const supabase = await createClient();
     await supabase
       .from("messages")
-      .update({ is_built: responseData.exists })
+      .update({ is_built: responseData.event === "success" })
       .eq("chat_id", chatId)
       .eq("role", "assistant")
       .eq("version", version);
@@ -269,7 +268,7 @@ export const checkExistingComponent = async (
   );
 
   const responseData = await builderResponse.json();
-  console.log("responseData", responseData);
+
   if (responseData.errors) {
     return false;
   }

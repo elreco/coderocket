@@ -121,17 +121,15 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
       ) {
         return;
       }
-
+      setPreviewId(undefined);
+      setLoadingState("initializing");
+      setWebcontainerReady(false);
       if (isWebcontainerReady) {
         setLoadingState(null);
         setWebcontainerReady(true);
-        setPreviewId(undefined);
+
         return;
       }
-      setLoadingState("initializing");
-      // Always set "webcontainer not ready" until we've launched
-      setWebcontainerReady(false);
-
       // 1) Kill old processes
       if (shellProcessRef.current) {
         shellProcessRef.current.kill();
@@ -155,6 +153,33 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
       // 4) Grab the WebContainer instance
       const webcontainer = await webcontainerPromise;
       if (!webcontainer) return;
+
+      webcontainer.on("preview-message", (message) => {
+        if (
+          message.type === "PREVIEW_UNCAUGHT_EXCEPTION" ||
+          message.type === "PREVIEW_UNHANDLED_REJECTION"
+        ) {
+          const isPromise = message.type === "PREVIEW_UNHANDLED_REJECTION";
+          setPreviewError({
+            title: isPromise
+              ? "Unhandled Promise Rejection"
+              : "Uncaught Exception",
+            description: message.message,
+            content: `Error occurred at ${message.pathname}${message.search}${message.hash}`,
+          });
+        }
+      });
+
+      // The dev server is up and running
+      webcontainer.on("server-ready", async (port, url) => {
+        const newPreviewId = getPreviewId(url);
+        if (newPreviewId) {
+          setLoadingState(null);
+          setPreviewId(newPreviewId);
+          setBuildError(null);
+          setError(null);
+        }
+      });
 
       // 5) Spawn a new shell process to show logs
 
@@ -219,43 +244,6 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
 
     setupProject();
   }, [artifactFiles, isLoading, selectedFramework, selectedVersion, chatId]);
-
-  /**
-   * Listen for runtime errors and dev server readiness (preview).
-   */
-  useEffect(() => {
-    webcontainerPromise.then((webcontainer) => {
-      if (!webcontainer) return;
-
-      // Listen for runtime exceptions in the preview
-      webcontainer.on("preview-message", (message) => {
-        if (
-          message.type === "PREVIEW_UNCAUGHT_EXCEPTION" ||
-          message.type === "PREVIEW_UNHANDLED_REJECTION"
-        ) {
-          const isPromise = message.type === "PREVIEW_UNHANDLED_REJECTION";
-          setPreviewError({
-            title: isPromise
-              ? "Unhandled Promise Rejection"
-              : "Uncaught Exception",
-            description: message.message,
-            content: `Error occurred at ${message.pathname}${message.search}${message.hash}`,
-          });
-        }
-      });
-
-      // The dev server is up and running
-      webcontainer.on("server-ready", async (port, url) => {
-        const newPreviewId = getPreviewId(url);
-        if (newPreviewId) {
-          setLoadingState(null);
-          setPreviewId(newPreviewId);
-          setBuildError(null);
-          setError(null);
-        }
-      });
-    });
-  }, [selectedVersion, selectedFramework]);
 
   return (
     <WebcontainerContext.Provider

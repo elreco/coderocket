@@ -409,12 +409,6 @@ export default function ComponentCompletion({
   }, [completion]);
 
   useEffect(() => {
-    if (lastAssistantMessage?.is_built) {
-      setWebcontainerReady(true);
-    }
-  }, [lastAssistantMessage]);
-
-  useEffect(() => {
     Crisp.configure(crispWebsiteId);
 
     if (isModalOpen) {
@@ -479,7 +473,6 @@ export default function ComponentCompletion({
           filter: `chat_id=eq.${chatId}`,
         },
         async (payload) => {
-          console.log(payload);
           setMessages((prevMessages) =>
             prevMessages.map((message) =>
               message.id === payload.new.id
@@ -487,6 +480,10 @@ export default function ComponentCompletion({
                 : message,
             ),
           );
+
+          if (payload.new.is_built) {
+            setWebcontainerReady(true);
+          }
         },
       )
       .subscribe();
