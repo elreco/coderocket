@@ -89,7 +89,7 @@ export function WebcontainerRender({
         title="WebContainer Preview"
         className="relative z-50 size-full border-none bg-white"
         sandbox="allow-scripts allow-forms allow-popups allow-modals allow-storage-access-by-user-activation allow-same-origin"
-        allow="cross-origin-isolated"
+        allow="credentialless"
         loading="eager"
         onLoad={notifyPreviewReady}
       />

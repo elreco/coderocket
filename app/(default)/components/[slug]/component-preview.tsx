@@ -116,6 +116,9 @@ export default function ComponentPreview() {
           <iframe
             src={`https://${chatId}-${selectedVersion}.webcontainer.tailwindai.dev`}
             className={`size-full border-none`}
+            sandbox="allow-scripts allow-forms allow-popups allow-modals allow-storage-access-by-user-activation allow-same-origin"
+            allow="credentialless"
+            loading="eager"
           />
         )}
     </>

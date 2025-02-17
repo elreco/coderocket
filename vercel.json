@@ -6,7 +6,7 @@
   },
   "headers": [
     {
-      "source": "/components/(.*)",
+      "source": "/(.*)",
       "headers": [
         {
           "key": "Cross-Origin-Embedder-Policy",
