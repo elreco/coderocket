@@ -144,7 +144,7 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
       if (!filesChanged) {
         return;
       }
-
+      setBuildError(null);
       setPreviewId(undefined);
       setLoadingState("initializing");
       setWebcontainerReady(false);
