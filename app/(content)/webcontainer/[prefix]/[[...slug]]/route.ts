@@ -120,9 +120,9 @@ export async function GET(
       "X-Frame-Options": "ALLOWALL",
       "Content-Security-Policy": "frame-ancestors *",
 
-      // 🔥 Désactive COEP et COOP
-      "Cross-Origin-Embedder-Policy": "unsafe-none",
-      "Cross-Origin-Opener-Policy": "unsafe-none",
+      // ❌ On ne force plus ces en-têtes pour éviter le conflit avec la config Next :
+      // "Cross-Origin-Embedder-Policy": "unsafe-none",
+      // "Cross-Origin-Opener-Policy": "unsafe-none",
     },
   });
 }
