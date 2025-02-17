@@ -275,7 +275,6 @@ export const useWebcontainer = (): WebcontainerContextType => {
 // Utility to detect build errors
 function formatBuildError(data: string): PreviewError | null {
   const cleanedData = stripAnsi(data);
-  console.log("cleanedData", cleanedData);
 
   const errorPatterns = [
     "error",
@@ -298,6 +297,7 @@ function formatBuildError(data: string): PreviewError | null {
     "Could not resolve",
     "Failed to load url",
     "does the file exist",
+    "Missing script",
   ];
 
   let hasError = false;

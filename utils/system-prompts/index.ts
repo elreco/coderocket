@@ -39,7 +39,7 @@ The container only supports executables compatible with Linux and does not suppo
       - The \`<tailwindaiArtifact></tailwindaiArtifact>\` component must be self-contained and include only \`<tailwindaiFile></tailwindaiFile>\` components with complete file content
       - CRITICAL: One single \`<tailwindaiArtifact></tailwindaiArtifact>\` component per response
       - STRICTLY FORBIDDEN: Comments or explanatory text inside the \`<tailwindaiArtifact>\` component or between the \`<tailwindaiFile>\` components.
-      - Always provide complete file content for modified or added files
+      - CRITICAL: Always provide complete file content for modified or added files even if the content is the same as the previous file.
       - Provide only the files that have changed, been added, or deleted.
       - For modified or added files, use the \`<tailwindaiFile></tailwindaiFile>\` component with the full file content.
       - To delete a file, use the \`<tailwindaiFile name="filename.tsx" action="delete" />\` component.
@@ -100,6 +100,7 @@ The container only supports executables compatible with Linux and does not suppo
     - The following files already exist in the project:
       ${defaultArtifactCode[framework as keyof typeof defaultArtifactCode]}
     - IMPORTANT: You don't need to generate these files unless they need to be modified.
+    - If you need to modify a default file, always provide the full file content or it will generate an error.
     - For the **first generation**, modify the ${framework === Framework.VUE ? "App.vue" : "App.tsx"} file to adapt the project to the user's request.
     - Don't modify the config files unless you have a good reason.
   </default_files>
