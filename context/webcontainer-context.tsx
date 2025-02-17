@@ -12,7 +12,6 @@ import React, {
 } from "react";
 import stripAnsi from "strip-ansi";
 
-import { checkExistingComponent } from "@/app/(default)/components/[slug]/actions";
 import { webcontainer as webcontainerPromise } from "@/lib/webcontainer";
 import { Framework } from "@/utils/config";
 import { buildFileSystemTree, getPreviewId } from "@/utils/webcontainer";
@@ -61,6 +60,7 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
     setWebcontainerReady,
     chatId,
     artifactFiles,
+    isWebcontainerReady,
   } = useComponentContext();
 
   // References to hold the active processes and terminal
@@ -122,9 +122,7 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
-      // Optional: check if the component already exists on the server
-      const exists = await checkExistingComponent(chatId, selectedVersion);
-      if (exists) {
+      if (isWebcontainerReady) {
         setLoadingState(null);
         setWebcontainerReady(true);
         setPreviewId(undefined);

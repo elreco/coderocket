@@ -120,6 +120,7 @@ export default function ComponentCompletion({
       setTitle(userMsg?.content?.toString() || "");
       setVisible(!chat.is_private);
       setArtifactCode(chat.artifact_code || "");
+      setWebcontainerReady(assistantMsg?.is_built || false);
 
       if (msgs?.length === 1) {
         setCanvas(false);
@@ -406,6 +407,12 @@ export default function ComponentCompletion({
       handleChatFiles(completion);
     }
   }, [completion]);
+
+  useEffect(() => {
+    if (lastAssistantMessage?.is_built) {
+      setWebcontainerReady(true);
+    }
+  }, [lastAssistantMessage]);
 
   useEffect(() => {
     Crisp.configure(crispWebsiteId);

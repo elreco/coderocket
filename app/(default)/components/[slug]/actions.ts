@@ -240,6 +240,15 @@ export const buildComponent = async (
     if (responseData.errors) {
       throw new Error(responseData.errors);
     }
+    console.log("responseData", responseData);
+    // update the message with the build status
+    const supabase = await createClient();
+    await supabase
+      .from("messages")
+      .update({ is_built: responseData.exists })
+      .eq("chat_id", chatId)
+      .eq("role", "assistant")
+      .eq("version", version);
   } catch (error) {
     console.error("API error:", error);
   }
