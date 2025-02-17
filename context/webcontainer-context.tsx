@@ -63,19 +63,16 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
     artifactFiles,
   } = useComponentContext();
 
-  // References for processes and terminal
+  // References to hold the active processes and terminal
   const terminalRef = useRef<Terminal | null>(null);
   const shellProcessRef = useRef<WebContainerProcess | null>(null);
   const devProcessRef = useRef<WebContainerProcess | null>(null);
 
-  // Track first-time initialization
-  const [isProjectInitialized, setIsProjectInitialized] = useState(false);
-
-  // Store the old artifact files to detect changes
+  // Keep track of the old artifact files so we can detect if package.json changed
   const oldArtifactFilesRef = useRef<typeof artifactFiles>([]);
 
   useEffect(() => {
-    // Clean up references when unmounting
+    // Cleanup everything when unmounting
     return () => {
       if (terminalRef.current) {
         terminalRef.current.dispose();
@@ -94,7 +91,6 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
 
   /**
    * Compare artifact files to detect whether `package.json` content has changed.
-   * Returns true if `package.json` content differs (old vs new).
    */
   const hasPackageJsonChanged = (
     oldFiles: typeof artifactFiles,
@@ -105,38 +101,20 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
     if (!oldPkg && newPkg) return true;
     if (!newPkg && oldPkg) return true;
     if (!oldPkg && !newPkg) return false;
+
     // Both exist; compare content
     return oldPkg?.content !== newPkg?.content;
   };
 
   /**
-   * Write or update the files in the WebContainer.
-   * NOTE: We do not kill dev process — we rely on hot-reload from the dev server.
-   */
-  const updateFilesInWebContainer = async (
-    newFiles: typeof artifactFiles,
-    webcontainer: Awaited<typeof webcontainerPromise>,
-  ) => {
-    for (const file of newFiles) {
-      // For simplicity, just overwrite them all. If you want to optimize,
-      // you can compare old/new content and only write if changed.
-      try {
-        await webcontainer.fs.writeFile(file.name || "", file.content);
-      } catch (err) {
-        console.warn("Failed to write file:", file.name, err);
-      }
-    }
-  };
-
-  /**
-   * Main useEffect to handle initialization and subsequent file changes.
+   * The main effect that re-initializes everything whenever `artifactFiles` changes.
    */
   useEffect(() => {
     const setupProject = async () => {
-      // If basic conditions are not met, skip
+      // Basic checks
       if (
         selectedVersion === undefined ||
-        selectedFramework === Framework.HTML || // If HTML or no bundler, skip
+        selectedFramework === Framework.HTML || // If HTML or no bundler
         isLoading ||
         !selectedFramework ||
         artifactFiles.length === 0
@@ -144,7 +122,7 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
-      // (Optional) Check if there's an existing server-side component
+      // Optional: check if the component already exists on the server
       const exists = await checkExistingComponent(chatId, selectedVersion);
       if (exists) {
         setLoadingState(null);
@@ -152,137 +130,106 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
         setPreviewId(undefined);
         return;
       }
+      setLoadingState("initializing");
+      // Always set "webcontainer not ready" until we've launched
       setWebcontainerReady(false);
-      // Grab the shared WebContainer instance
+
+      // 1) Kill old processes
+      if (shellProcessRef.current) {
+        shellProcessRef.current.kill();
+        shellProcessRef.current = null;
+      }
+      if (devProcessRef.current) {
+        devProcessRef.current.kill();
+        devProcessRef.current = null;
+      }
+
+      // 2) Dispose old terminal
+      if (terminalRef.current) {
+        terminalRef.current.dispose();
+      }
+      terminalRef.current = null;
+
+      // 3) Create a new terminal
+      const newTerminal = new Terminal(/* { scrollback: 3000, etc. } */);
+      terminalRef.current = newTerminal;
+
+      // 4) Grab the WebContainer instance
       const webcontainer = await webcontainerPromise;
       if (!webcontainer) return;
 
-      // Initialize the terminal once
-      if (!terminalRef.current) {
-        terminalRef.current = new Terminal();
-      }
-      const terminal = terminalRef.current;
-      console.log("terminal", terminal);
-      // If the project is NOT initialized, do a full "mount + npm install + npm run dev"
-      if (!isProjectInitialized) {
-        setLoadingState("initializing");
+      // 5) Spawn a new shell process to show logs
 
-        // Show logs in the terminal
-        if (!shellProcessRef.current) {
-          // Start a shell to show logs
-          shellProcessRef.current = await webcontainer.spawn("jsh");
-          // Pipe shell output to the terminal
-          shellProcessRef.current.output.pipeTo(
-            new WritableStream({
-              write(data) {
-                terminal.write(data);
-                const possibleError = formatBuildError(data);
-                if (possibleError) {
-                  setBuildError(possibleError);
-                }
-              },
-            }),
-          );
-          // Pipe terminal input to the shell
-          const input = shellProcessRef.current.input.getWriter();
-          terminal.onData((data) => {
-            input.write(data);
-          });
-        }
+      shellProcessRef.current = await webcontainer.spawn("jsh");
+      shellProcessRef.current.output.pipeTo(
+        new WritableStream({
+          write(data) {
+            newTerminal.write(data);
+            const possibleError = formatBuildError(data);
+            if (possibleError) setBuildError(possibleError);
+          },
+        }),
+      );
+      // Pipe terminal input -> shell
+      const shellInput = shellProcessRef.current.input.getWriter();
+      newTerminal.onData((data) => {
+        shellInput.write(data);
+      });
 
-        // 1) Mount the entire file system
-        const fileSystemTree = buildFileSystemTree(artifactFiles);
-        await webcontainer.mount(fileSystemTree);
+      // 6) Mount/update all files
+      const fsTree = buildFileSystemTree(artifactFiles);
+      await webcontainer.mount(fsTree);
 
-        // 2) npm install
+      // 7) If package.json changed, run "npm install"
+      const packageChanged = hasPackageJsonChanged(
+        oldArtifactFilesRef.current,
+        artifactFiles,
+      );
+      if (packageChanged) {
         setLoadingState("processing");
         const installProcess = await webcontainer.spawn("npm", ["install"]);
         installProcess.output.pipeTo(
           new WritableStream({
             write(data) {
-              terminal.write(data);
+              newTerminal.write(data);
               const possibleError = formatBuildError(data);
-              if (possibleError) {
-                setBuildError(possibleError);
-              }
+              if (possibleError) setBuildError(possibleError);
             },
           }),
         );
         await installProcess.exit;
-
-        // 3) npm run dev
-        setLoadingState("starting");
-        devProcessRef.current = await webcontainer.spawn("npm", ["run", "dev"]);
-        devProcessRef.current.output.pipeTo(
-          new WritableStream({
-            write(data) {
-              terminal.write(data);
-              const possibleError = formatBuildError(data);
-              if (possibleError) {
-                setBuildError(possibleError);
-              }
-            },
-          }),
-        );
-
-        // Mark as initialized
-        setIsProjectInitialized(true);
-        oldArtifactFilesRef.current = artifactFiles;
-      } else {
-        //
-        // If the project IS already initialized, we only update changed files.
-        //
-        const packageHasChanged = hasPackageJsonChanged(
-          oldArtifactFilesRef.current,
-          artifactFiles,
-        );
-
-        // 1) Write file changes to the container
-        await updateFilesInWebContainer(artifactFiles, webcontainer);
-
-        // 2) If package.json changed, re-run npm install
-        if (packageHasChanged) {
-          setLoadingState("processing");
-          const installProcess = await webcontainer.spawn("npm", ["install"]);
-          installProcess.output.pipeTo(
-            new WritableStream({
-              write(data) {
-                terminal.write(data);
-                const possibleError = formatBuildError(data);
-                if (possibleError) {
-                  setBuildError(possibleError);
-                }
-              },
-            }),
-          );
-          await installProcess.exit;
-        }
-
-        // We do NOT kill `npm run dev`. We rely on its watcher/hot reload
-        // If your dev script uses Vite/Next/etc., it should pick up changes automatically.
-
-        oldArtifactFilesRef.current = artifactFiles;
       }
+
+      // 8) Always run "npm run dev"
+      setLoadingState("starting");
+      devProcessRef.current = await webcontainer.spawn("npm", ["run", "dev"]);
+      devProcessRef.current.output.pipeTo(
+        new WritableStream({
+          write(data) {
+            newTerminal.write(data);
+            const possibleError = formatBuildError(data);
+            if (possibleError) {
+              setBuildError(possibleError);
+            }
+          },
+        }),
+      );
+
+      // Save current files as "old" so we can detect package.json changes next time
+      oldArtifactFilesRef.current = artifactFiles;
     };
 
     setupProject();
-  }, [
-    artifactFiles,
-    chatId,
-    isLoading,
-    selectedVersion,
-    selectedFramework,
-    isProjectInitialized,
-  ]);
+  }, [artifactFiles, isLoading, selectedFramework, selectedVersion, chatId]);
 
   /**
-   * Handle messages from the "preview" environment (client runtime errors, etc.)
+   * Listen for runtime errors and dev server readiness (preview).
    */
   useEffect(() => {
     webcontainerPromise.then((webcontainer) => {
       if (!webcontainer) return;
 
-      // Listen for uncaught exceptions/rejections from your running code
+      // Listen for runtime exceptions in the preview
       webcontainer.on("preview-message", (message) => {
         if (
           message.type === "PREVIEW_UNCAUGHT_EXCEPTION" ||
@@ -299,7 +246,7 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
         }
       });
 
-      // Called when the dev server is up and running
+      // The dev server is up and running
       webcontainer.on("server-ready", async (port, url) => {
         const newPreviewId = getPreviewId(url);
         if (newPreviewId) {
@@ -339,6 +286,7 @@ export const useWebcontainer = (): WebcontainerContextType => {
   return context;
 };
 
+// Utility to detect build errors
 function formatBuildError(data: string): PreviewError | null {
   const cleanedData = stripAnsi(data);
   const errorPatterns = [
@@ -366,12 +314,12 @@ function formatBuildError(data: string): PreviewError | null {
   let errorMessage = "";
   let hasError = false;
 
-  errorPatterns.forEach((pattern) => {
+  for (const pattern of errorPatterns) {
     if (cleanedData.toLowerCase().includes(pattern.toLowerCase())) {
       errorMessage += `- ${pattern} detected\n`;
       hasError = true;
     }
-  });
+  }
 
   if (!hasError) {
     return null;

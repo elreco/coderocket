@@ -27,7 +27,7 @@ export function WebcontainerTerminal() {
       }
     };
     setupTerminal();
-  }, []);
+  }, [terminal]);
 
   const toggleVisibility = () => {
     setIsVisible(!isVisible);

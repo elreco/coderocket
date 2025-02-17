@@ -101,7 +101,8 @@ export default function ComponentPreview() {
         previewId &&
         !error &&
         !buildError &&
-        !isLoading && <WebcontainerRender previewId={previewId} />}
+        !isLoading &&
+        !loadingState && <WebcontainerRender previewId={previewId} />}
       {!isWebcontainerReady && terminal && !error && !isLoading && (
         <WebcontainerTerminal />
       )}
