@@ -5,7 +5,7 @@ import React from "react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { WebcontainerRender } from "@/components/webcontainer/webcontainer-render";
-import { WebcontainerTerminal } from "@/components/webcontainer/webcontainer-terminal";
+/* import { WebcontainerTerminal } from "@/components/webcontainer/webcontainer-terminal"; */
 import { useComponentContext } from "@/context/component-context";
 import {
   WebcontainerLoadingState,
@@ -47,7 +47,7 @@ export default function ComponentPreview() {
     setInput,
     isWebcontainerReady,
   } = useComponentContext();
-  const { previewId, terminal } = useWebcontainer();
+  const { previewId } = useWebcontainer();
 
   return (
     <>
@@ -103,9 +103,9 @@ export default function ComponentPreview() {
         !buildError &&
         !isLoading &&
         !loadingState && <WebcontainerRender previewId={previewId} />}
-      {!isWebcontainerReady && terminal && !error && !isLoading && (
+      {/* {!isWebcontainerReady && terminal && !error && !isLoading && (
         <WebcontainerTerminal />
-      )}
+      )} */}
       {chatId &&
         selectedVersion !== undefined &&
         !isLoading &&

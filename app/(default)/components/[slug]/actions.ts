@@ -119,13 +119,11 @@ export const deleteVersionByMessageId = async (messageId: number) => {
     }
   }
   // get new messages
-  const { data: refreshedChatMessages } = await supabase
-    .from("messages")
-    .select("id, version, content, chat_id, role")
-    .order("version", { ascending: false })
-    .eq("role", "assistant")
-    .eq("chat_id", message.chat_id)
-    .single();
+  const refreshedChatMessages = await fetchLastAssistantMessageByChatId(
+    message.chat_id,
+  );
+  console.log("refreshedChatMessages", refreshedChatMessages);
+  console.log("message.chat_id", message.chat_id);
   if (!refreshedChatMessages) {
     throw new Error("No refreshed chat messages found");
   }

@@ -71,6 +71,9 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
   // Keep track of the old artifact files so we can detect if package.json changed
   const oldArtifactFilesRef = useRef<typeof artifactFiles>([]);
 
+  // Reference to hold the previously built version
+  const previousVersionRef = useRef<number | undefined>(undefined);
+
   useEffect(() => {
     // Cleanup everything when unmounting
     return () => {
@@ -121,6 +124,24 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
       ) {
         return;
       }
+
+      // Check if the artifact files have changed based on their content
+      const filesChanged = !artifactFiles.every((file, index) => {
+        const oldFile = oldArtifactFilesRef.current[index];
+        return (
+          oldFile &&
+          file.name === oldFile.name &&
+          file.content === oldFile.content
+        );
+      });
+
+      if (!filesChanged) {
+        return;
+      }
+
+      // Update the previous version reference
+      previousVersionRef.current = selectedVersion;
+
       setPreviewId(undefined);
       setLoadingState("initializing");
       setWebcontainerReady(false);
