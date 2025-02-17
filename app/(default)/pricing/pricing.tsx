@@ -96,7 +96,7 @@ export default function Pricing({ user, products, subscription }: Props) {
   if (products.length >= 1) {
     return (
       <div className="flex items-center">
-        <div className="my-4 size-full items-center space-y-4 sm:my-4 sm:grid sm:grid-cols-2 sm:gap-6 sm:space-y-0 lg:mx-auto lg:max-w-4xl xl:mx-0 xl:max-w-none xl:grid-cols-4 xl:space-y-0">
+        <div className="my-4 size-full items-center space-y-4 sm:my-4 sm:grid sm:grid-cols-2 sm:gap-6 sm:space-y-0 lg:mx-auto lg:max-w-4xl xl:mx-0 xl:max-w-none xl:grid-cols-3 xl:space-y-0">
           {/* Plan Trial */}
           <div className="flex h-full flex-col divide-y divide-border rounded-lg border bg-card p-3">
             <h3 className="mb-4 pl-3 text-lg font-bold text-white">Trial</h3>
