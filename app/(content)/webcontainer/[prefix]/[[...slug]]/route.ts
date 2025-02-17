@@ -104,25 +104,26 @@ export async function GET(
   return new NextResponse(data, {
     headers: {
       "Content-Type": mimeType,
-      "Content-Disposition": "inline",
       "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
       Pragma: "no-cache",
       Expires: "0",
       "Surrogate-Control": "no-store",
 
-      // CORS (sans credentials pour éviter le conflit * + credentials)
+      // CORS (sans credentials + wildcard)
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
       "Access-Control-Allow-Headers": "*",
 
-      // Autorise l'iframe
+      // Iframe autorisé
       "X-Frame-Options": "ALLOWALL",
       "Content-Security-Policy": "frame-ancestors *",
 
-      // Cross-Origin Isolation: "same-origin" + "credentialless"
-      // Nécessaire pour l’attribut "credentialless" de l’iframe
+      // Cross-Origin Isolation (vous aviez déjà COEP: credentialless + COOP: same-origin)
       "Cross-Origin-Opener-Policy": "same-origin",
       "Cross-Origin-Embedder-Policy": "credentialless",
+
+      // Manquant auparavant : indique qu’on accepte d’être chargé cross-origin
+      "Cross-Origin-Resource-Policy": "cross-origin",
     },
   });
 }
