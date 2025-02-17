@@ -110,19 +110,19 @@ export async function GET(
       Expires: "0",
       "Surrogate-Control": "no-store",
 
-      // 🔥 Supprime toutes les restrictions CORS
+      // CORS (sans credentials pour éviter le conflit * + credentials)
       "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Credentials": "true",
       "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
       "Access-Control-Allow-Headers": "*",
 
-      // 🔥 Désactive la protection contre les iframes
+      // Autorise l'iframe
       "X-Frame-Options": "ALLOWALL",
       "Content-Security-Policy": "frame-ancestors *",
 
-      // 🔥 Supprime les restrictions COEP et COOP
-      "Cross-Origin-Embedder-Policy": "unsafe-none",
-      "Cross-Origin-Opener-Policy": "unsafe-none",
+      // Cross-Origin Isolation: "same-origin" + "credentialless"
+      // Nécessaire pour l’attribut "credentialless" de l’iframe
+      "Cross-Origin-Opener-Policy": "same-origin",
+      "Cross-Origin-Embedder-Policy": "credentialless",
     },
   });
 }
