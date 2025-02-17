@@ -109,10 +109,20 @@ export async function GET(
       Pragma: "no-cache",
       Expires: "0",
       "Surrogate-Control": "no-store",
+
+      // 🔥 Désactive toutes les restrictions cross-origin
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Credentials": "true",
-      "Cross-Origin-Embedder-Policy": "credentialless",
-      "Cross-Origin-Opener-Policy": "same-origin",
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Headers": "*",
+
+      // 🔥 Autorise l'iframe sans restriction
+      "X-Frame-Options": "ALLOWALL",
+      "Content-Security-Policy": "frame-ancestors *",
+
+      // 🔥 Désactive COEP et COOP
+      "Cross-Origin-Embedder-Policy": "unsafe-none",
+      "Cross-Origin-Opener-Policy": "unsafe-none",
     },
   });
 }
