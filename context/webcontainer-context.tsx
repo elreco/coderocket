@@ -152,33 +152,6 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
       const webcontainer = await webcontainerPromise;
       if (!webcontainer) return;
 
-      webcontainer.on("preview-message", (message) => {
-        if (
-          message.type === "PREVIEW_UNCAUGHT_EXCEPTION" ||
-          message.type === "PREVIEW_UNHANDLED_REJECTION"
-        ) {
-          const isPromise = message.type === "PREVIEW_UNHANDLED_REJECTION";
-          setPreviewError({
-            title: isPromise
-              ? "Unhandled Promise Rejection"
-              : "Uncaught Exception",
-            description: message.message,
-            content: `Error occurred at ${message.pathname}${message.search}${message.hash}`,
-          });
-        }
-      });
-
-      // The dev server is up and running
-      webcontainer.on("server-ready", async (port, url) => {
-        const newPreviewId = getPreviewId(url);
-        if (newPreviewId) {
-          setLoadingState(null);
-          setPreviewId(newPreviewId);
-          setBuildError(null);
-          setError(null);
-        }
-      });
-
       // 5) Spawn a new shell process to show logs
 
       shellProcessRef.current = await webcontainer.spawn("jsh");
@@ -227,6 +200,33 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
           },
         }),
       );
+
+      webcontainer.on("preview-message", (message) => {
+        if (
+          message.type === "PREVIEW_UNCAUGHT_EXCEPTION" ||
+          message.type === "PREVIEW_UNHANDLED_REJECTION"
+        ) {
+          const isPromise = message.type === "PREVIEW_UNHANDLED_REJECTION";
+          setPreviewError({
+            title: isPromise
+              ? "Unhandled Promise Rejection"
+              : "Uncaught Exception",
+            description: message.message,
+            content: `Error occurred at ${message.pathname}${message.search}${message.hash}`,
+          });
+        }
+      });
+
+      // The dev server is up and running
+      webcontainer.on("server-ready", async (port, url) => {
+        const newPreviewId = getPreviewId(url);
+        if (newPreviewId) {
+          setLoadingState(null);
+          setPreviewId(newPreviewId);
+          setBuildError(null);
+          setError(null);
+        }
+      });
 
       // Save current files as "old" so we can detect package.json changes next time
       oldArtifactFilesRef.current = artifactFiles;
