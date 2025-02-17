@@ -79,18 +79,15 @@ export const getMaxMessagesPerPeriod = (
   }
 
   switch (subscription.prices?.description) {
-    case "Starter Plan":
+    case "Starter":
       return STARTER_PLAN_MESSAGES_PER_PERIOD;
-    case "Pro Plan":
+    case "Pro":
       return PRO_PLAN_MESSAGES_PER_PERIOD;
-    case "Supporter Plan":
-      return SUPPORTER_PLAN_MESSAGES_PER_PERIOD;
     default:
       return DEFAULT_MESSAGES_PER_PERIOD;
   }
 };
 
-export const STARTER_PLAN_MESSAGES_PER_PERIOD = 1500;
-export const PRO_PLAN_MESSAGES_PER_PERIOD = 10000;
-export const SUPPORTER_PLAN_MESSAGES_PER_PERIOD = 22000;
-export const DEFAULT_MESSAGES_PER_PERIOD = 10000;
+export const STARTER_PLAN_MESSAGES_PER_PERIOD = 1000;
+export const PRO_PLAN_MESSAGES_PER_PERIOD = 2500;
+export const DEFAULT_MESSAGES_PER_PERIOD = 2500;

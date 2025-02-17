@@ -13,7 +13,6 @@ import {
   MAX_ITERATIONS,
   PRO_PLAN_MESSAGES_PER_PERIOD,
   STARTER_PLAN_MESSAGES_PER_PERIOD,
-  SUPPORTER_PLAN_MESSAGES_PER_PERIOD,
 } from "@/utils/config";
 import { postData } from "@/utils/helpers";
 
@@ -163,18 +162,18 @@ export default function Pricing({ user, products, subscription }: Props) {
               /* // Calculer l'économie par rapport au plan Starter
               const starterPrice = 180 * 100; // Convert to cents
               const savings =
-                price.description !== "Starter Plan"
+                price.description !== "Starter"
                   ? calculateSavings(price.unit_amount || 0, starterPrice)
                   : null; */
 
               // Description personnalisée basée sur le nom du produit
               const planDescription =
-                product.name === "Starter Plan" ? (
+                product.name === "Starter" ? (
                   <p className="mt-4 ">
                     <span className="font-bold">Perfect for starters!</span>{" "}
                     Generate with Image included.
                   </p>
-                ) : product.name === "Pro Plan" ? (
+                ) : product.name === "Pro" ? (
                   <p className="mt-4 ">
                     <span className="font-bold">Go Pro!</span> Unlock advanced
                     features like AI Full Power for seamless workflows.
@@ -214,11 +213,9 @@ export default function Pricing({ user, products, subscription }: Props) {
                     </p>
                     <p className="mt-4 flex items-center text-sm font-medium ">
                       <Check className="mr-2 size-4 text-emerald-500" />
-                      {product.name === "Starter Plan"
+                      {product.name === "Starter"
                         ? STARTER_PLAN_MESSAGES_PER_PERIOD
-                        : product.name === "Pro Plan"
-                          ? PRO_PLAN_MESSAGES_PER_PERIOD
-                          : SUPPORTER_PLAN_MESSAGES_PER_PERIOD}{" "}
+                        : PRO_PLAN_MESSAGES_PER_PERIOD}{" "}
                       messages per month
                     </p>
 
