@@ -9,10 +9,9 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Database } from "@/types_db";
 import {
-  MAX_GENERATIONS,
-  MAX_ITERATIONS,
   PRO_PLAN_MESSAGES_PER_PERIOD,
   STARTER_PLAN_MESSAGES_PER_PERIOD,
+  TRIAL_PLAN_MESSAGES_PER_DAY,
 } from "@/utils/config";
 import { postData } from "@/utils/helpers";
 
@@ -112,11 +111,7 @@ export default function Pricing({ user, products, subscription }: Props) {
               </p>
               <p className="mt-4 flex items-center text-sm font-medium ">
                 <Check className="mr-2 size-4 text-emerald-500" />{" "}
-                {MAX_GENERATIONS} components
-              </p>
-              <p className="mt-4 flex items-center text-sm font-medium ">
-                <Check className="mr-2 size-4 text-emerald-500" />{" "}
-                {MAX_ITERATIONS} versions
+                {TRIAL_PLAN_MESSAGES_PER_DAY} messages per day
               </p>
               <p className="mt-4 flex items-center text-sm font-medium ">
                 <XIcon className="mr-2 size-4 text-border" /> Improve prompt
