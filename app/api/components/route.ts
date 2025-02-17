@@ -307,14 +307,11 @@ const updateDataAfterCompletion = async (
   const hasArtifactResult = hasArtifacts(text);
 
   after(async () => {
-    console.log("after");
     if (chat.framework === Framework.HTML) {
       takeScreenshot(chatId, version, theme, Framework.HTML);
     }
     if (hasArtifactResult && chat.framework !== Framework.HTML) {
-      console.log("buildComponent");
-      await buildComponent(chatId, version);
-      takeScreenshot(chatId, version, theme, chat.framework || Framework.REACT);
+      buildComponent(chatId, version);
     }
   });
 };

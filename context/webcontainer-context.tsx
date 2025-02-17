@@ -91,9 +91,11 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
   ) => {
     const oldPkg = oldFiles.find((f) => f.name === "package.json");
     const newPkg = newFiles.find((f) => f.name === "package.json");
-    if (!oldPkg && newPkg) return true;
-    if (!newPkg && oldPkg) return true;
-    if (!oldPkg && !newPkg) return false;
+
+    // Handle cases where package.json might not exist in old or new files
+    if (!oldPkg && newPkg) return true; // New package.json added
+    if (!newPkg && oldPkg) return true; // package.json removed
+    if (!oldPkg && !newPkg) return false; // No package.json in either
 
     // Both exist; compare content
     return oldPkg?.content !== newPkg?.content;
