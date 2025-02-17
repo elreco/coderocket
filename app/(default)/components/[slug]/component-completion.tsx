@@ -459,7 +459,7 @@ export default function ComponentCompletion({
       : fetchedChat?.framework === Framework.REACT
         ? SiReact
         : SiVuedotjs;
-  /*
+
   useEffect(() => {
     const channel = supabase
       .channel("schema-db-changes")
@@ -473,19 +473,13 @@ export default function ComponentCompletion({
         },
         async (payload) => {
           console.log(payload);
-          if (payload.old?.screenshot !== payload.new.screenshot) {
-            setMessages((prevMessages) =>
-              prevMessages.map((message) => {
-                if (message.id === payload.new.id) {
-                  return {
-                    ...message,
-                    screenshot: payload.new.screenshot,
-                  };
-                }
-                return message;
-              }),
-            );
-          }
+          setMessages((prevMessages) =>
+            prevMessages.map((message) =>
+              message.id === payload.new.id
+                ? { ...message, ...payload.new }
+                : message,
+            ),
+          );
         },
       )
       .subscribe();
@@ -493,7 +487,7 @@ export default function ComponentCompletion({
     return () => {
       channel.unsubscribe();
     };
-  }, []); */
+  }, []);
 
   return (
     <ComponentContext.Provider value={contextValue}>
