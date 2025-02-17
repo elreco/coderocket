@@ -1,7 +1,6 @@
 "use client";
 
 import { WebContainerProcess } from "@webcontainer/api";
-import { Terminal } from "@xterm/xterm";
 import React, {
   createContext,
   useContext,
@@ -25,7 +24,6 @@ type PreviewError = {
 };
 
 interface WebcontainerContextType {
-  terminal: Terminal | null;
   error: string | null;
   loadingState: WebcontainerLoadingState;
   setLoadingState: (state: WebcontainerLoadingState) => void;
@@ -64,23 +62,15 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
   } = useComponentContext();
 
   // References to hold the active processes and terminal
-  const terminalRef = useRef<Terminal | null>(null);
   const shellProcessRef = useRef<WebContainerProcess | null>(null);
   const devProcessRef = useRef<WebContainerProcess | null>(null);
 
   // Keep track of the old artifact files so we can detect if package.json changed
   const oldArtifactFilesRef = useRef<typeof artifactFiles>([]);
 
-  // Reference to hold the previously built version
-  const previousVersionRef = useRef<number | undefined>(undefined);
-
   useEffect(() => {
     // Cleanup everything when unmounting
     return () => {
-      if (terminalRef.current) {
-        terminalRef.current.dispose();
-        terminalRef.current = null;
-      }
       if (shellProcessRef.current) {
         shellProcessRef.current.kill();
         shellProcessRef.current = null;
@@ -139,9 +129,6 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
-      // Update the previous version reference
-      previousVersionRef.current = selectedVersion;
-
       setPreviewId(undefined);
       setLoadingState("initializing");
       setWebcontainerReady(false);
@@ -160,16 +147,6 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
         devProcessRef.current.kill();
         devProcessRef.current = null;
       }
-
-      // 2) Dispose old terminal
-      if (terminalRef.current) {
-        terminalRef.current.dispose();
-      }
-      terminalRef.current = null;
-
-      // 3) Create a new terminal
-      const newTerminal = new Terminal(/* { scrollback: 3000, etc. } */);
-      terminalRef.current = newTerminal;
 
       // 4) Grab the WebContainer instance
       const webcontainer = await webcontainerPromise;
@@ -208,17 +185,11 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
       shellProcessRef.current.output.pipeTo(
         new WritableStream({
           write(data) {
-            newTerminal.write(data);
             const possibleError = formatBuildError(data);
             if (possibleError) setBuildError(possibleError);
           },
         }),
       );
-      // Pipe terminal input -> shell
-      const shellInput = shellProcessRef.current.input.getWriter();
-      newTerminal.onData((data) => {
-        shellInput.write(data);
-      });
 
       // 6) Mount/update all files
       const fsTree = buildFileSystemTree(artifactFiles);
@@ -235,7 +206,6 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
         installProcess.output.pipeTo(
           new WritableStream({
             write(data) {
-              newTerminal.write(data);
               const possibleError = formatBuildError(data);
               if (possibleError) setBuildError(possibleError);
             },
@@ -250,7 +220,6 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
       devProcessRef.current.output.pipeTo(
         new WritableStream({
           write(data) {
-            newTerminal.write(data);
             const possibleError = formatBuildError(data);
             if (possibleError) {
               setBuildError(possibleError);
@@ -269,7 +238,6 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
   return (
     <WebcontainerContext.Provider
       value={{
-        terminal: terminalRef.current,
         error,
         loadingState,
         setLoadingState,
