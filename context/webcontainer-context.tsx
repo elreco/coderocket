@@ -101,6 +101,20 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
     return oldPkg?.content !== newPkg?.content;
   };
 
+  const addToBuildError = (data: string) => {
+    const possibleError = formatBuildError(data);
+    if (possibleError) {
+      setBuildError((prevError) => {
+        if (!prevError) return possibleError;
+        return {
+          ...prevError,
+          description: prevError.description,
+          content: prevError.content + possibleError.content,
+        };
+      });
+    }
+  };
+
   /**
    * The main effect that re-initializes everything whenever `artifactFiles` changes.
    */
@@ -160,8 +174,7 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
       shellProcessRef.current.output.pipeTo(
         new WritableStream({
           write(data) {
-            const possibleError = formatBuildError(data);
-            if (possibleError) setBuildError(possibleError);
+            addToBuildError(data);
           },
         }),
       );
@@ -181,8 +194,7 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
         installProcess.output.pipeTo(
           new WritableStream({
             write(data) {
-              const possibleError = formatBuildError(data);
-              if (possibleError) setBuildError(possibleError);
+              addToBuildError(data);
             },
           }),
         );
@@ -195,10 +207,7 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
       devProcessRef.current.output.pipeTo(
         new WritableStream({
           write(data) {
-            const possibleError = formatBuildError(data);
-            if (possibleError) {
-              setBuildError(possibleError);
-            }
+            addToBuildError(data);
           },
         }),
       );
@@ -266,6 +275,8 @@ export const useWebcontainer = (): WebcontainerContextType => {
 // Utility to detect build errors
 function formatBuildError(data: string): PreviewError | null {
   const cleanedData = stripAnsi(data);
+  console.log("cleanedData", cleanedData);
+
   const errorPatterns = [
     "error",
     "npm ERR!",
@@ -282,19 +293,19 @@ function formatBuildError(data: string): PreviewError | null {
     "error TS",
     "Property '",
     "RollupError",
+    "Uncaught ReferenceError",
     "error during build",
     "Could not resolve",
     "Failed to load url",
     "does the file exist",
   ];
 
-  let errorMessage = "";
   let hasError = false;
 
   for (const pattern of errorPatterns) {
     if (cleanedData.toLowerCase().includes(pattern.toLowerCase())) {
-      errorMessage += `- ${pattern} detected\n`;
       hasError = true;
+      break;
     }
   }
 
@@ -302,9 +313,12 @@ function formatBuildError(data: string): PreviewError | null {
     return null;
   }
 
+  // Limiter l'affichage des erreurs à 5 lignes maximum
+  const truncatedContent = cleanedData.split("\n").slice(0, 20).join("\n");
+
   return {
     title: "Build Error",
-    description: errorMessage,
-    content: cleanedData,
+    description: "An error occurred during build.",
+    content: truncatedContent,
   };
 }

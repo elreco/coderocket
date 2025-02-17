@@ -194,7 +194,7 @@ module.exports = {
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "npm run typecheck && vite",
     "typecheck": "tsc --noEmit --isolatedModules",
     "build": "npm run typecheck && vite build",
     "preview": "vite preview"
@@ -518,7 +518,7 @@ module.exports = {
   "private": true,
   "version": "0.0.0",
   "scripts": {
-    "dev": "vite",
+    "dev": "vue-tsc && vite",
     "build": "vue-tsc && vite build",
     "preview": "vite preview"
   },

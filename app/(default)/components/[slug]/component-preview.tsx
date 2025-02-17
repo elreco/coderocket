@@ -4,6 +4,7 @@ import { Loader2, AlertCircle, WandSparkles } from "lucide-react";
 import React from "react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { WebcontainerRender } from "@/components/webcontainer/webcontainer-render";
 /* import { WebcontainerTerminal } from "@/components/webcontainer/webcontainer-terminal"; */
 import { useComponentContext } from "@/context/component-context";
@@ -11,8 +12,6 @@ import {
   WebcontainerLoadingState,
   useWebcontainer,
 } from "@/context/webcontainer-context";
-
-import { Button } from "../../../../components/ui/button";
 
 function LoadingStateComponent({ state }: { state: WebcontainerLoadingState }) {
   return (
