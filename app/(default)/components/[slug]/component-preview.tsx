@@ -5,6 +5,7 @@ import React from "react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { UserMessage } from "@/components/user-message";
 import { WebcontainerRender } from "@/components/webcontainer/webcontainer-render";
 /* import { WebcontainerTerminal } from "@/components/webcontainer/webcontainer-terminal"; */
 import { useComponentContext } from "@/context/component-context";
@@ -70,16 +71,14 @@ export default function ComponentPreview() {
 
       {buildError && !isLoading && (
         <div className="flex size-full items-center justify-center px-4">
-          <Alert variant="default" className=" text-foreground">
+          <Alert variant="default" className="bg-secondary text-foreground">
             <AlertCircle className="size-6" />
             <AlertDescription className="flex flex-col !pl-12">
               <p className="text-lg font-semibold">{buildError.title}</p>
               <p className="mb-4 whitespace-pre-line text-sm">
                 {buildError.description}
               </p>
-              <p className="whitespace-pre-line text-xs opacity-75">
-                {buildError.content}
-              </p>
+              <UserMessage>{buildError.content}</UserMessage>
               {authorized && (
                 <Button
                   variant="outline"
