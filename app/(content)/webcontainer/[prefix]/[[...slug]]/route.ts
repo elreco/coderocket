@@ -111,6 +111,8 @@ export async function GET(
       "Surrogate-Control": "no-store",
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Credentials": "true",
+      "Cross-Origin-Embedder-Policy": "credentialless",
+      "Cross-Origin-Opener-Policy": "same-origin",
     },
   });
 }
