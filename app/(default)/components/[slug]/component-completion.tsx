@@ -195,6 +195,8 @@ export default function ComponentCompletion({
             today.setHours(0, 0, 0, 0);
             const maxMessagesPerPeriod = TRIAL_PLAN_MESSAGES_PER_DAY;
             const resetDate = addDays(today, 1);
+            setIsLoading(false);
+            setCanvas(true);
             toast({
               variant: "destructive",
               title: "Daily message limit reached",
