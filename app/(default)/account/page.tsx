@@ -1,4 +1,4 @@
-import { format } from "date-fns";
+import { addDays, format } from "date-fns";
 import Link from "next/link";
 import { ReactNode, Suspense } from "react";
 
@@ -10,8 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import {
   getMaxMessagesPerPeriod,
-  MAX_GENERATIONS,
-  MAX_ITERATIONS,
+  TRIAL_PLAN_MESSAGES_PER_DAY,
 } from "@/utils/config";
 import { formatToTimestamp } from "@/utils/date";
 import { createClient } from "@/utils/supabase/server";
@@ -49,20 +48,10 @@ export default async function Account() {
 
   // Calculer l'utilisation et la date de réinitialisation
   let usage = 0;
-  let totalComponents = 0;
   let resetDate = null;
   let maxMessages = 0;
-  let maxGenerations = 0;
 
   if (user) {
-    // Compter le nombre de composants (chats) générés
-    const { count: componentsCount } = await supabase
-      .from("chats")
-      .select("*", { count: "exact", head: true })
-      .eq("user_id", user.id);
-
-    totalComponents = componentsCount || 0;
-
     if (subscription) {
       const currentPeriodStart = new Date(subscription.current_period_start);
       const { count } = await supabase
@@ -75,9 +64,19 @@ export default async function Account() {
       maxMessages = getMaxMessagesPerPeriod(subscription);
       resetDate = new Date(subscription.current_period_end);
     } else {
-      // Pour les utilisateurs gratuits
-      maxMessages = MAX_ITERATIONS;
-      maxGenerations = MAX_GENERATIONS;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      // Vérifier la limite mensuelle pour les abonnés
+      const { count } = await supabase
+        .from("messages")
+        .select("*, chats!inner(*)", { count: "exact", head: true })
+        .eq("chats.user_id", user.id)
+        .gte("created_at", formatToTimestamp(today));
+
+      usage = count || 0;
+      maxMessages = TRIAL_PLAN_MESSAGES_PER_DAY;
+      resetDate = addDays(today, 1);
     }
   }
 
@@ -114,68 +113,46 @@ export default async function Account() {
             {subscription ? (
               `${subscriptionPrice}/${subscription?.prices?.interval}`
             ) : (
-              <Link href="/pricing">Choose your plan</Link>
+              <div className="flex flex-col items-start gap-2">
+                <p className="text-2xl text-muted-foreground">Free plan</p>
+                <Link href="/pricing">Choose your plan</Link>
+              </div>
             )}
           </div>
         </Card>
 
-        {!subscription ? (
-          <Card title="Usage" description="Tracking your usage limits">
-            <div className="mb-4 mt-8 space-y-4">
-              <div className="grid gap-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">
-                    Components generated
-                  </span>
-                  <span className="font-medium">
-                    {totalComponents} / {maxGenerations} components
-                  </span>
-                </div>
+        <Card
+          title="Usage"
+          description={
+            subscription
+              ? "Tracking your usage for the current period"
+              : "Tracking your usage for the current day"
+          }
+        >
+          <div className="mb-4 mt-8 space-y-4">
+            <div className="grid gap-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">
+                  Components used
+                </span>
+                <span className="font-medium">
+                  {usage} / {maxMessages}
+                </span>
+              </div>
 
-                <Progress value={(totalComponents / maxGenerations) * 100} />
+              <Progress value={(usage / maxMessages) * 100} />
 
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">
-                    Free plan limits
-                  </span>
-                  <span className="font-medium">
-                    {maxGenerations} components / {maxMessages} versions per
-                    component
-                  </span>
-                </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">
+                  Reset date
+                </span>
+                <span className="font-medium">
+                  {resetDate ? format(resetDate, "d MMMM yyyy") : "N/A"}
+                </span>
               </div>
             </div>
-          </Card>
-        ) : (
-          <Card
-            title="Usage"
-            description="Tracking your usage for the current period"
-          >
-            <div className="mb-4 mt-8 space-y-4">
-              <div className="grid gap-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">
-                    Components used
-                  </span>
-                  <span className="font-medium">
-                    {usage} / {maxMessages}
-                  </span>
-                </div>
-
-                <Progress value={(usage / maxMessages) * 100} />
-
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">
-                    Reset date
-                  </span>
-                  <span className="font-medium">
-                    {resetDate ? format(resetDate, "d MMMM yyyy") : "N/A"}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </Card>
-        )}
+          </div>
+        </Card>
 
         <Card
           title="Your Information"

@@ -4,7 +4,6 @@ import { after } from "next/server";
 
 import {
   fetchChatById,
-  fetchChatsByUserId,
   fetchLastUserMessageByChatId,
   fetchMessagesByChatId,
 } from "@/app/(default)/components/actions";
@@ -18,8 +17,7 @@ import {
 } from "@/utils/completion-parser";
 import {
   Framework,
-  MAX_GENERATIONS,
-  MAX_ITERATIONS,
+  TRIAL_PLAN_MESSAGES_PER_DAY,
   anthropicModel,
   getMaxMessagesPerPeriod,
   storageUrl,
@@ -179,7 +177,6 @@ const validateRequest = async (id: string) => {
     throw new Error("User is not authorized to modify chat");
   }
   const messagesFromDatabase = await fetchMessagesByChatId(id);
-  const chatsFromDatabase = await fetchChatsByUserId(user.id);
   if (!messagesFromDatabase) throw new Error("Could not get chat messages");
 
   // Check subscription
@@ -198,32 +195,21 @@ const validateRequest = async (id: string) => {
 
     const maxMessagesPerPeriod = getMaxMessagesPerPeriod(subscription);
     if (count && count >= maxMessagesPerPeriod) {
-      throw new Error("limit-exceeded", {
-        cause: `You have reached your limit of ${maxMessagesPerPeriod} messages for this ${subscription.prices?.interval}. This limit will reset on ${formatToTimestamp(
-          new Date(
-            currentPeriodStart.getFullYear(),
-            currentPeriodStart.getMonth() + 1,
-            1,
-          ),
-        )}. Go to My Account to see your usage.`,
-      });
+      throw new Error("limit-exceeded");
     }
   } else {
-    const generations = chatsFromDatabase?.length ?? 0;
-    if (generations > MAX_GENERATIONS) {
-      throw new Error("payment-required", {
-        cause: `You need to be subscribed to generate more than ${MAX_GENERATIONS} components`,
-      });
-    }
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-    if (
-      messagesFromDatabase &&
-      messagesFromDatabase.filter((m) => m.role === "assistant")?.length >=
-        MAX_ITERATIONS
-    ) {
-      throw new Error("payment-required", {
-        cause: `You need to be subscribed to generate more than ${MAX_ITERATIONS} versions`,
-      });
+    // Vérifier la limite mensuelle pour les abonnés
+    const { count } = await supabase
+      .from("messages")
+      .select("*, chats!inner(*)", { count: "exact", head: true })
+      .eq("chats.user_id", user.id)
+      .gte("created_at", formatToTimestamp(today));
+
+    if (count && count >= TRIAL_PLAN_MESSAGES_PER_DAY) {
+      throw new Error("limit-exceeded");
     }
   }
 

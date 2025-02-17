@@ -3,7 +3,7 @@
 import { SiHtml5, SiReact, SiVuedotjs } from "@icons-pack/react-simple-icons";
 import { useCompletion } from "ai/react";
 import { Crisp } from "crisp-sdk-web";
-import { format } from "date-fns";
+import { addDays, format } from "date-fns";
 import {
   Fullscreen,
   Layers,
@@ -46,6 +46,7 @@ import {
 } from "@/utils/completion-parser";
 import {
   Framework,
+  TRIAL_PLAN_MESSAGES_PER_DAY,
   crispWebsiteId,
   getMaxMessagesPerPeriod,
 } from "@/utils/config";
@@ -190,11 +191,17 @@ export default function ComponentCompletion({
         if (error.message === "limit-exceeded") {
           const subscription = await getSubscription();
           if (!subscription) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const maxMessagesPerPeriod = TRIAL_PLAN_MESSAGES_PER_DAY;
+            const resetDate = addDays(today, 1);
             toast({
               variant: "destructive",
-              title: "You have reached the limit of your free plan",
-              description:
-                "Please upgrade to continue. Go to My Account to see your usage.",
+              title: "Daily message limit reached",
+              description: `You have reached your limit of ${maxMessagesPerPeriod} messages for today. This limit will reset tomorrow (${format(
+                resetDate,
+                "d MMMM yyyy",
+              )}). Upgrade to a paid plan to continue.`,
               duration: 5000,
             });
             return;
@@ -216,7 +223,7 @@ export default function ComponentCompletion({
           toast({
             variant: "destructive",
             title: "You have reached the limit of your plan",
-            description: `You have reached your limit of ${maxMessagesPerPeriod} messages for this month. This limit will reset on ${resetDate}. Go to My Account to see your usage.`,
+            description: `You have reached your limit of ${maxMessagesPerPeriod} messages for ${subscription.prices?.interval}. This limit will reset on ${resetDate}. Go to My Account to see your usage.`,
             duration: 5000,
           });
 

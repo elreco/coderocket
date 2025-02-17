@@ -1,13 +1,13 @@
 "use server";
 
-import { format } from "date-fns";
+import { addDays, format } from "date-fns";
 import { nanoid } from "nanoid";
 
 import { getSubscription } from "@/app/supabase-server";
 import {
   Framework,
+  TRIAL_PLAN_MESSAGES_PER_DAY,
   defaultTheme,
-  MAX_GENERATIONS,
   getMaxMessagesPerPeriod,
 } from "@/utils/config";
 import { formatToTimestamp } from "@/utils/date";
@@ -170,10 +170,6 @@ export const createChat = async (prompt: string, formData: FormData) => {
   }
 
   const subscription = await getSubscription();
-  const { data: existingChats } = await supabase
-    .from("chats")
-    .select()
-    .eq("user_id", user?.id);
   const isVisible = formData.get("isVisible");
   const theme = formData.get("theme")?.toString() || defaultTheme;
   const frameworkInput = formData.get("framework")?.toString() || "react";
@@ -195,12 +191,24 @@ export const createChat = async (prompt: string, formData: FormData) => {
   }
 
   if (!subscription) {
-    if (existingChats && existingChats?.length > MAX_GENERATIONS) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Vérifier la limite mensuelle pour les abonnés
+    const { count } = await supabase
+      .from("messages")
+      .select("*, chats!inner(*)", { count: "exact", head: true })
+      .eq("chats.user_id", user.id)
+      .gte("created_at", formatToTimestamp(today));
+
+    if (count && count >= TRIAL_PLAN_MESSAGES_PER_DAY) {
       return {
         error: {
-          title: "You have reached the limit of your free plan.",
-          description:
-            "Please upgrade to continue. Go to My Account to see your usage.",
+          title: "Daily message limit reached",
+          description: `You have reached your limit of ${TRIAL_PLAN_MESSAGES_PER_DAY} messages for today. Your limit will reset tomorrow (${format(
+            addDays(today, 1),
+            "d MMMM yyyy",
+          )}). Upgrade to a paid plan to continue.`,
         },
       };
     }
