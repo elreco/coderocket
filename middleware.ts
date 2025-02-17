@@ -15,16 +15,12 @@ export async function middleware(request: NextRequest) {
     "webcontainer.tailwindai.dev": "webcontainer",
   } as const;
 
-  console.log("Middleware: Reçu requête pour", request.url);
-
   // Vérifie si on est dans un contexte de sous-domaine
   for (const [domain, path] of Object.entries(subdomainConfig)) {
     if (hostname?.endsWith(`.${domain}`)) {
       const prefix = hostname.split(".")[0];
       const pathname = request.nextUrl.pathname;
       const newUrl = new URL(`/${path}/${prefix}${pathname}`, request.nextUrl);
-
-      console.log("Middleware: Redirection vers", newUrl.toString());
 
       return NextResponse.rewrite(newUrl, response);
     }

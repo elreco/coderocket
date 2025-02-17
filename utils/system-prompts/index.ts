@@ -91,6 +91,7 @@ The container only supports executables compatible with Linux and does not suppo
       }
     </typescript_and_aliases>
     <dependencies>
+      - ALWAYS Give the full content of the package.json file and don't delete any scripts commands or existing dependencies.
       - Modify package.json only if it's necessary, don't add any dependencies if it's not needed.
       - If you add dependencies, ensure no missing dependencies cause runtime or build errors.
     </dependencies>

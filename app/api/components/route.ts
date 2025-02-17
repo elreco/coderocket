@@ -53,7 +53,6 @@ export async function POST(req: Request) {
       imageUrl && messagesFromDatabase.length === 1
         ? "claude-3-5-sonnet-latest"
         : "claude-3-5-haiku-latest";
-    console.log("model", model);
     const stream = streamText({
       messages,
       model: anthropicModel(model),
@@ -307,12 +306,10 @@ const updateDataAfterCompletion = async (
   const hasArtifactResult = hasArtifacts(text);
 
   after(async () => {
-    console.log("hasArtifactResult", hasArtifactResult);
     if (chat.framework === Framework.HTML) {
       await takeScreenshot(chatId, version, theme, Framework.HTML);
     }
     if (hasArtifactResult && chat.framework !== Framework.HTML) {
-      console.log("buildComponent", chatId, version);
       await buildComponent(chatId, version);
     }
   });

@@ -69,18 +69,22 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
   const oldArtifactFilesRef = useRef<typeof artifactFiles>([]);
 
   useEffect(() => {
-    // Cleanup everything when unmounting
-    return () => {
-      if (shellProcessRef.current) {
-        shellProcessRef.current.kill();
-        shellProcessRef.current = null;
-      }
-      if (devProcessRef.current) {
-        devProcessRef.current.kill();
-        devProcessRef.current = null;
-      }
-    };
-  }, []);
+    if (shellProcessRef.current) {
+      shellProcessRef.current.kill();
+      shellProcessRef.current = null;
+    }
+    if (devProcessRef.current) {
+      devProcessRef.current.kill();
+      devProcessRef.current = null;
+    }
+    setBuildError(null);
+    setPreviewId(undefined);
+    setLoadingState("initializing");
+    setWebcontainerReady(false);
+    oldArtifactFilesRef.current = [];
+    setError(null);
+    setPreviewError(null);
+  }, [chatId]);
 
   /**
    * Compare artifact files to detect whether `package.json` content has changed.
