@@ -196,6 +196,7 @@ export const buildComponent = async (
   try {
     const lastAssistantMessage =
       await fetchLastAssistantMessageByChatId(chatId);
+    console.log("lastAssistantMessage", lastAssistantMessage);
     if (!lastAssistantMessage) {
       throw new Error("No last assistant message found");
     }
@@ -212,13 +213,13 @@ export const buildComponent = async (
     if (!extractedFiles.length) {
       throw new Error("No files found in completion");
     }
-
+    console.log("extractedFiles", extractedFiles);
     // Extract files from the artifact_code property of the chat
     const files = extractFilesFromArtifact(chat.artifact_code || "");
     if (!extractedFiles.length) {
       throw new Error("No files found in artifact_code");
     }
-
+    console.log("files", files);
     // Make the POST request to the builder API
     const builderResponse = await fetch(`${builderApiUrl}/build`, {
       method: "POST",
@@ -235,6 +236,7 @@ export const buildComponent = async (
 
     // Parse the response
     const responseData = await builderResponse.json();
+    console.log("responseData", responseData);
     if (responseData.errors) {
       throw new Error(responseData.errors);
     }
