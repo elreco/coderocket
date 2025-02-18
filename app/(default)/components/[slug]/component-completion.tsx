@@ -112,7 +112,6 @@ export default function ComponentCompletion({
         fetchLastUserMessageByChatId(chatId),
         fetchMessagesByChatId(chatId, false),
       ]);
-      setIsLoading(false);
 
       setFetchedChat(chat);
       setLastAssistantMessage(assistantMsg);
@@ -121,6 +120,7 @@ export default function ComponentCompletion({
       setTitle(userMsg?.content?.toString() || "");
       setVisible(!chat.is_private);
       setArtifactCode(chat.artifact_code || "");
+      setWebcontainerReady(assistantMsg?.is_built || false);
 
       if (msgs?.length === 1) {
         setCanvas(false);
@@ -149,6 +149,8 @@ export default function ComponentCompletion({
       if (chat?.framework === Framework.HTML && assistantMsg?.content) {
         handleChatFiles(assistantMsg.content, true);
       }
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      setIsLoading(false);
     };
     loadInitialData();
   }, [chatId]);
@@ -244,9 +246,6 @@ export default function ComponentCompletion({
       },
       onFinish: async () => {
         const refreshedChatMessages = await refreshChatData();
-        setCanvas(true);
-        setInput("");
-        setIsLoading(false);
         if (refreshedChatMessages) {
           const refreshedLastAssistantMessage = refreshedChatMessages.reduce(
             (prev, current) =>
@@ -257,6 +256,10 @@ export default function ComponentCompletion({
             handleVersionSelect(refreshedLastAssistantMessage.version);
           }
         }
+        setCanvas(true);
+        setInput("");
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        setIsLoading(false);
       },
     });
 
@@ -291,6 +294,7 @@ export default function ComponentCompletion({
     }
     setCompletion(selectedAssistantMessage.content);
     handleChatFiles(selectedAssistantMessage.content, false, tabName);
+    setWebcontainerReady(selectedAssistantMessage.is_built || false);
   };
 
   const copyPrompt = (prompt: string) => {
@@ -457,7 +461,7 @@ export default function ComponentCompletion({
       : fetchedChat?.framework === Framework.REACT
         ? SiReact
         : SiVuedotjs;
-  /*
+
   useEffect(() => {
     const channel = supabase
       .channel("schema-db-changes")
@@ -470,19 +474,16 @@ export default function ComponentCompletion({
           filter: `chat_id=eq.${chatId}`,
         },
         async (payload) => {
-          console.log(payload);
-          if (payload.old?.screenshot !== payload.new.screenshot) {
-            setMessages((prevMessages) =>
-              prevMessages.map((message) => {
-                if (message.id === payload.new.id) {
-                  return {
-                    ...message,
-                    screenshot: payload.new.screenshot,
-                  };
-                }
-                return message;
-              }),
-            );
+          setMessages((prevMessages) =>
+            prevMessages.map((message) =>
+              message.id === payload.new.id
+                ? { ...message, ...payload.new }
+                : message,
+            ),
+          );
+
+          if (payload.new.is_built) {
+            setWebcontainerReady(true);
           }
         },
       )
@@ -491,7 +492,7 @@ export default function ComponentCompletion({
     return () => {
       channel.unsubscribe();
     };
-  }, []); */
+  }, []);
 
   return (
     <ComponentContext.Provider value={contextValue}>
@@ -588,8 +589,11 @@ export default function ComponentCompletion({
                           {fetchedChat?.framework !== Framework.HTML &&
                           isWebcontainerReady ? (
                             <iframe
+                              className="size-full border-none"
                               src={`https://${chatId}-${selectedVersion}.webcontainer.tailwindai.dev`}
-                              className="size-full"
+                              sandbox="allow-scripts allow-forms allow-popups allow-modals allow-storage-access-by-user-activation allow-same-origin"
+                              allow="credentialless"
+                              loading="eager"
                             />
                           ) : (
                             <RenderHtmlComponent files={chatFiles} />
@@ -642,7 +646,7 @@ export default function ComponentCompletion({
             </div>
             <div className="relative m-0 flex h-full max-h-full flex-1 flex-col border-b lg:border-b-0">
               {!isLoading && (
-                <Badge className="absolute bottom-0 left-0 z-50 m-2 hover:bg-primary">
+                <Badge className="absolute bottom-0 right-0 z-[100] m-2 hover:bg-primary">
                   <FrameworkIcon className="mr-1 size-3" />
                   <span className="first-letter:uppercase">
                     {fetchedChat?.framework}

@@ -76,7 +76,9 @@ export default function RenderHtmlComponent({ files }: { files: ChatFile[] }) {
         border: "none",
       }}
       className="bg-white"
-      sandbox="allow-scripts allow-same-origin"
+      sandbox="allow-scripts allow-forms allow-popups allow-modals allow-storage-access-by-user-activation allow-same-origin"
+      allow="credentialless"
+      loading="eager"
     />
   );
 }

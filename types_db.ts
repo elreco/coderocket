@@ -81,6 +81,7 @@ export type Database = {
           created_at: string;
           id: number;
           input_tokens: number | null;
+          is_built: boolean | null;
           output_tokens: number | null;
           role: string;
           screenshot: string | null;
@@ -93,6 +94,7 @@ export type Database = {
           created_at?: string;
           id?: number;
           input_tokens?: number | null;
+          is_built?: boolean | null;
           output_tokens?: number | null;
           role: string;
           screenshot?: string | null;
@@ -105,6 +107,7 @@ export type Database = {
           created_at?: string;
           id?: number;
           input_tokens?: number | null;
+          is_built?: boolean | null;
           output_tokens?: number | null;
           role?: string;
           screenshot?: string | null;

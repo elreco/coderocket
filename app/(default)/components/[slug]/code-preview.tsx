@@ -12,7 +12,7 @@ import { useRef, useEffect } from "react";
 import React from "react";
 import { useCopyToClipboard } from "usehooks-ts";
 
-import RenderComponent from "@/components/renders/render-component";
+import RenderComponent from "@/app/(default)/components/[slug]/component-preview";
 import RenderHtmlComponent from "@/components/renders/render-html-component";
 import { Button } from "@/components/ui/button";
 import { useComponentContext } from "@/context/component-context";
@@ -51,12 +51,6 @@ const RenderContent = React.memo(
     }
 
     return <RenderComponent />;
-
-    return (
-      <div className="flex size-full items-center justify-center">
-        <img src="/placeholder.svg" alt="No artifacts" />
-      </div>
-    );
   },
   (prevProps, nextProps) => {
     if (prevProps.selectedFramework !== nextProps.selectedFramework)
