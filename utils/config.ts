@@ -19,6 +19,8 @@ export const MAX_GENERATIONS = 5;
 
 export const defaultTheme = "light";
 
+export const gaId = "G-0HBMKNN8MQ";
+
 export const openAINewModel = createOpenAI({
   name: "gpt-4o-mini",
   apiKey: process.env.OPEN_AI || "",

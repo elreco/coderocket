@@ -1,3 +1,4 @@
+import { GoogleAnalytics } from "@next/third-parties/google";
 import { Analytics } from "@vercel/analytics/react";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import { cookies } from "next/headers";
@@ -10,6 +11,7 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { gaId } from "@/utils/config";
 
 import { getUserDetails } from "../supabase-server";
 
@@ -85,6 +87,7 @@ export default async function RootLayout({ children }: PropsWithChildren) {
         <Toaster />
         <Analytics />
       </body>
+      <GoogleAnalytics gaId={gaId} />
     </html>
   );
 }

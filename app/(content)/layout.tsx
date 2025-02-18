@@ -1,9 +1,11 @@
+import { GoogleAnalytics } from "@next/third-parties/google";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import { PropsWithChildren } from "react";
 import "styles/chrome-bug.css";
 import "styles/main.css";
 
 import { cn } from "@/lib/utils";
+import { gaId } from "@/utils/config";
 
 const rubik = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -31,6 +33,7 @@ export default function RootLayout({ children }: PropsWithChildren) {
   return (
     <html className={cn("dark size-full antialiased bg-white", rubik.variable)}>
       <body className="relative size-full bg-white">{children}</body>
+      <GoogleAnalytics gaId={gaId} />
     </html>
   );
 }

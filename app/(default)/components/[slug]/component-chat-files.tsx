@@ -44,8 +44,6 @@ import { Markdown } from "../markdown";
 
 import { deleteVersionByMessageId } from "./actions";
 
-import "katex/dist/katex.min.css";
-
 export default function ComponentChatFiles({
   message,
 }: {
@@ -180,7 +178,7 @@ export default function ComponentChatFiles({
               <img
                 src={`${storageUrl}/${message.chats.prompt_image}`}
                 alt="screenshot"
-                className="size-full max-w-full rounded-md border border-foreground/10 shadow-md"
+                className="aspect-video w-full rounded-md border border-foreground/10 object-cover shadow-md"
               />
             )}
           </div>
