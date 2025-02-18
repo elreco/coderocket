@@ -2,6 +2,7 @@
 
 import { addDays, format } from "date-fns";
 import { nanoid } from "nanoid";
+import { after } from "next/server";
 
 import { getSubscription } from "@/app/supabase-server";
 import {
@@ -13,6 +14,8 @@ import {
 import { formatToTimestamp } from "@/utils/date";
 import { defaultArtifactCode } from "@/utils/default-artifact-code";
 import { createClient } from "@/utils/supabase/server";
+
+import { buildComponent } from "./[slug]/actions";
 
 export const fetchChatById = async (idOrSlug: string) => {
   const supabase = await createClient();
@@ -99,16 +102,24 @@ export const fetchFirstUserMessageByChatId = async (chatId: string) => {
   return data;
 };
 
-export const fetchLastAssistantMessageByChatId = async (chatId: string) => {
+export const fetchLastAssistantMessageByChatId = async (
+  chatId: string,
+  checkBuilt: boolean = false,
+) => {
   const supabase = await createClient();
   const { data } = await supabase
     .from("messages")
-    .select()
+    .select("*")
     .eq("chat_id", chatId)
     .eq("role", "assistant")
     .order("version", { ascending: false })
     .limit(1)
     .single();
+  if (data && !data?.is_built && checkBuilt) {
+    after(async () => {
+      await buildComponent(chatId, data.version);
+    });
+  }
   return data;
 };
 
