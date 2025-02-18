@@ -52,7 +52,7 @@ export async function POST(req: Request) {
     const model =
       imageUrl && messagesFromDatabase.length === 1
         ? "claude-3-5-sonnet-latest"
-        : "claude-3-5-haiku-latest";
+        : "claude-3-5-sonnet-latest";
     const stream = streamText({
       messages,
       model: anthropicModel(model),
