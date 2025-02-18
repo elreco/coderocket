@@ -13,7 +13,7 @@ const rubik = Plus_Jakarta_Sans({
 
 const meta = {
   title: "Tailwind AI - Preview",
-  description: "Preview your Tailwind AI application.",
+  description: "Component preview",
   cardImage: "https://www.tailwindai.dev/og.png",
   robots: "index, follow",
   favicon: "/favicon.ico",
