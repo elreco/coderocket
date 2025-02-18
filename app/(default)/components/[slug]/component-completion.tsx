@@ -589,6 +589,7 @@ export default function ComponentCompletion({
                           {fetchedChat?.framework !== Framework.HTML &&
                           isWebcontainerReady ? (
                             <iframe
+                              className="size-full border-none"
                               src={`https://${chatId}-${selectedVersion}.webcontainer.tailwindai.dev`}
                               sandbox="allow-scripts allow-forms allow-popups allow-modals allow-storage-access-by-user-activation allow-same-origin"
                               allow="credentialless"
@@ -645,7 +646,7 @@ export default function ComponentCompletion({
             </div>
             <div className="relative m-0 flex h-full max-h-full flex-1 flex-col border-b lg:border-b-0">
               {!isLoading && (
-                <Badge className="absolute bottom-0 right-0 z-[9999] m-2 hover:bg-primary">
+                <Badge className="absolute bottom-0 right-0 z-[100] m-2 hover:bg-primary">
                   <FrameworkIcon className="mr-1 size-3" />
                   <span className="first-letter:uppercase">
                     {fetchedChat?.framework}
