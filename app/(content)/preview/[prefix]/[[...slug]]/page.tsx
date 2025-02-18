@@ -20,7 +20,7 @@ export async function generateMetadata(
   const { prefix } = await params;
   const parts = prefix.split("-");
   const versionNumber = Number(parts.pop());
-  const id = parts.slice(0, -1).join("-");
+  const id = parts.join("-");
 
   const lastAssistantMessage = await fetchAssistantMessageByChatIdAndVersion(
     id,
@@ -47,7 +47,8 @@ export async function generateMetadata(
 export default async function Page({ params }: Props) {
   const { prefix, slug } = await params;
   const parts = prefix.split("-");
-  const id = parts.slice(0, -1).join("-");
+  parts.pop();
+  const id = parts.join("-");
   const chat = await fetchChatById(id);
   return (
     <div className="size-full">
