@@ -128,7 +128,6 @@ export default function ComponentCompletion({
         setIsLoading(true);
         return;
       }
-
       if (
         chat?.framework !== Framework.HTML &&
         chat.artifact_code &&
@@ -346,6 +345,7 @@ export default function ComponentCompletion({
     }
     if (tabName) {
       const file = newArtifactFiles.find((file) => file.name === tabName);
+
       if (!file) {
         setEditorValue("");
         setActiveTab("");
@@ -370,15 +370,11 @@ export default function ComponentCompletion({
       return;
     }
     if (!newArtifactFiles.length) {
-      setEditorValue("");
-      setActiveTab("");
       return;
     }
     const activeFile = newArtifactFiles.find((file) => file.isActive);
 
     if (!activeFile) {
-      setEditorValue("");
-      setActiveTab("");
       return;
     }
     setEditorValue(activeFile.content);
