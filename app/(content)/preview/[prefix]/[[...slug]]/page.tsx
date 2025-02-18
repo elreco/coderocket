@@ -1,17 +1,33 @@
 import { Metadata, ResolvingMetadata } from "next";
 
+import {
+  fetchAssistantMessageByChatIdAndVersion,
+  fetchFirstUserMessageByChatId,
+  fetchChatById,
+} from "@/app/(default)/components/actions";
 import { Watermark } from "@/components/watermark";
+import { capitalizeFirstLetter } from "@/utils/helpers";
+
+interface Props {
+  params: Promise<{ prefix: string; slug?: string[] }>;
+  searchParams: Promise<{ watermark?: string }>;
+}
 
 export async function generateMetadata(
   { params }: Props,
   parent: ResolvingMetadata,
 ): Promise<Metadata> {
-  const { slug } = await params;
-  const chat = await fetchAssistantMessageByChatIdAndVersion(slug);
+  const { prefix } = await params;
+  const parts = prefix.split("-");
+  const versionNumber = Number(parts.pop());
+  const id = parts.join("-");
 
-  const lastAssistantMessage = await fetchLastAssistantMessageByChatId(chat.id);
+  const lastAssistantMessage = await fetchAssistantMessageByChatIdAndVersion(
+    id,
+    versionNumber,
+  );
 
-  const firstUserMessage = await fetchFirstUserMessageByChatId(chat.id);
+  const firstUserMessage = await fetchFirstUserMessageByChatId(id);
 
   // optionally access and extend (rather than replace) parent metadata
   const previousImages = (await parent).openGraph?.images || [];
@@ -29,20 +45,15 @@ export async function generateMetadata(
   };
 }
 
-export default async function Page({
-  params,
-  searchParams,
-}: {
-  params: Promise<{ prefix: string; slug?: string[] }>;
-  searchParams: Promise<{ watermark?: string }>;
-}) {
+export default async function Page({ params }: Props) {
   const { prefix, slug } = await params;
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { watermark } = await searchParams;
+  const parts = prefix.split("-");
+  const id = parts.join("-");
+  const chat = await fetchChatById(id);
 
   return (
     <div className="size-full">
-      <Watermark />
+      {chat.slug && <Watermark slug={chat.slug} />}
       <iframe
         className="size-full border-none"
         src={`https://${prefix}.webcontainer.tailwindai.dev/${slug ? slug.join("/") : ""}`}
