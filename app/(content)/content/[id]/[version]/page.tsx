@@ -6,8 +6,8 @@ import {
   fetchFirstUserMessageByChatId,
 } from "@/app/(default)/components/actions";
 import RenderHtmlComponentServer from "@/components/renders/render-html-component-server";
+import { Watermark } from "@/components/watermark";
 import { extractFilesFromCompletion } from "@/utils/completion-parser";
-import { Framework } from "@/utils/config";
 import { capitalizeFirstLetter } from "@/utils/helpers";
 
 interface Props {
@@ -56,10 +56,13 @@ export default async function Content({ params }: Props) {
 
   const files = extractFilesFromCompletion(lastAssistantMessage.content);
 
-  return chat.framework === Framework.HTML ? (
-    <RenderHtmlComponentServer
-      files={files}
-      style={{ width: "100%", height: "100%", border: "none" }}
-    />
-  ) : null;
+  return (
+    <>
+      <Watermark slug={chat.slug || ""} />
+      <RenderHtmlComponentServer
+        files={files}
+        style={{ width: "100%", height: "100%", border: "none" }}
+      />
+    </>
+  );
 }
