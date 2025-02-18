@@ -2,7 +2,7 @@ import { Rocket } from "lucide-react";
 import Link from "next/link";
 import React from "react";
 
-export const Watermark = ({ slug }: { slug?: string }) => {
+export const Watermark = ({ slug }: { slug?: string | null }) => {
   return (
     <div className="absolute bottom-0 right-0 z-[9999] m-6">
       <Link
