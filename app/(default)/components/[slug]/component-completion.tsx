@@ -108,7 +108,7 @@ export default function ComponentCompletion({
     const loadInitialData = async () => {
       const [chat, assistantMsg, userMsg, msgs] = await Promise.all([
         fetchChatById(chatId),
-        fetchLastAssistantMessageByChatId(chatId),
+        fetchLastAssistantMessageByChatId(chatId, true),
         fetchLastUserMessageByChatId(chatId),
         fetchMessagesByChatId(chatId, false),
       ]);

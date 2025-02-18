@@ -14,7 +14,6 @@ import { takeScreenshot } from "@/utils/capture-screenshot";
 import {
   extractDataTheme,
   getUpdatedArtifactCode,
-  hasArtifacts,
 } from "@/utils/completion-parser";
 import {
   Framework,
@@ -303,14 +302,11 @@ const updateDataAfterCompletion = async (
   });
 
   await supabase.from("messages").insert(newMessages).eq("chat_id", chatId);
-  const hasArtifactResult = hasArtifacts(text);
 
   after(async () => {
     if (chat.framework === Framework.HTML) {
       await takeScreenshot(chatId, version, theme, Framework.HTML);
     }
-    if (hasArtifactResult && chat.framework !== Framework.HTML) {
-      await buildComponent(chatId, version);
-    }
+    await buildComponent(chatId, version);
   });
 };

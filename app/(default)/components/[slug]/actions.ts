@@ -6,7 +6,6 @@ import { getSubscription } from "@/app/supabase-server";
 import { takeScreenshot } from "@/utils/capture-screenshot";
 import {
   extractFilesFromArtifact,
-  extractFilesFromCompletion,
   getUpdatedArtifactCode,
   hasArtifacts,
 } from "@/utils/completion-parser";
@@ -14,7 +13,11 @@ import { builderApiUrl, Framework } from "@/utils/config";
 import { promptEnhancer } from "@/utils/prompt-enhancer";
 import { createClient } from "@/utils/supabase/server";
 
-import { fetchChatById, fetchLastAssistantMessageByChatId } from "../actions";
+import {
+  fetchAssistantMessageByChatIdAndVersion,
+  fetchChatById,
+  fetchLastAssistantMessageByChatId,
+} from "../actions";
 
 export const changeVisibilityByChatId = async (
   chatId: string,
@@ -128,7 +131,7 @@ export const deleteVersionByMessageId = async (messageId: number) => {
   // get chat
   const { data: chat } = await supabase
     .from("chats")
-    .select("id, artifact_code")
+    .select("id, artifact_code, framework")
     .eq("id", message.chat_id)
     .single();
 
@@ -143,7 +146,6 @@ export const deleteVersionByMessageId = async (messageId: number) => {
     .from("chats")
     .update({ artifact_code: artifactCode })
     .eq("id", message.chat_id);
-
   after(async () => {
     await buildComponent(message.chat_id, message.version, true);
   });
@@ -192,10 +194,16 @@ export const buildComponent = async (
   forceBuild?: boolean,
 ) => {
   try {
-    const lastAssistantMessage =
-      await fetchLastAssistantMessageByChatId(chatId);
+    const lastAssistantMessage = await fetchAssistantMessageByChatIdAndVersion(
+      chatId,
+      version,
+    );
     if (!lastAssistantMessage) {
       throw new Error("No last assistant message found");
+    }
+
+    if (lastAssistantMessage.is_built && !forceBuild) {
+      return;
     }
 
     const chat = await fetchChatById(chatId);
@@ -203,17 +211,17 @@ export const buildComponent = async (
       throw new Error("No chat found");
     }
 
-    // Extract files from the last assistant message
-    const extractedFiles = extractFilesFromCompletion(
-      lastAssistantMessage.content,
-    );
-    if (!extractedFiles.length) {
-      throw new Error("No files found in completion");
+    if (chat.framework === Framework.HTML) {
+      return;
     }
-    // Extract files from the artifact_code property of the chat
-    const files = extractFilesFromArtifact(chat.artifact_code || "");
-    if (!extractedFiles.length) {
-      throw new Error("No files found in artifact_code");
+    const newArtifactCode = getUpdatedArtifactCode(
+      lastAssistantMessage.content,
+      chat.artifact_code || "",
+    );
+    const newArtifactFiles = extractFilesFromArtifact(newArtifactCode);
+
+    if (!newArtifactFiles.length) {
+      throw new Error("No files found in completion");
     }
     // Make the POST request to the builder API
     const builderResponse = await fetch(`${builderApiUrl}/build`, {
@@ -224,7 +232,7 @@ export const buildComponent = async (
       body: JSON.stringify({
         chatId,
         version,
-        files,
+        files: newArtifactFiles,
         forceBuild,
       }),
     });

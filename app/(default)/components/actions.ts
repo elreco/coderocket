@@ -115,7 +115,7 @@ export const fetchLastAssistantMessageByChatId = async (
     .order("version", { ascending: false })
     .limit(1)
     .single();
-  if (data && !data?.is_built && checkBuilt) {
+  if (data && checkBuilt) {
     after(async () => {
       await buildComponent(chatId, data.version, true);
     });
