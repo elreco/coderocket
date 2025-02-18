@@ -2,10 +2,16 @@ import { Rocket } from "lucide-react";
 import Link from "next/link";
 import React from "react";
 
-export const Watermark = ({ slug }: { slug: string }) => {
+export const Watermark = ({ slug }: { slug?: string }) => {
   return (
     <div className="absolute bottom-0 right-0 z-[9999] m-6">
-      <Link href={`https://www.tailwindai.dev/components/${slug}`}>
+      <Link
+        href={
+          slug
+            ? `https://www.tailwindai.dev/components/${slug}`
+            : "https://www.tailwindai.dev"
+        }
+      >
         <div className="flex cursor-pointer items-center gap-2 rounded-lg bg-primary p-2 shadow-lg hover:bg-primary/90">
           <img
             src="https://www.tailwindai.dev/logo-white.png"
