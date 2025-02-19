@@ -1,16 +1,19 @@
 "use client";
 
-import { Loader2, ArrowDown } from "lucide-react";
+import { debounce } from "lodash";
+import { Loader2, ArrowDown, Search } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import useSWRInfinite from "swr/infinite";
 
 import ComponentCard from "@/components/component-card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 
 import { type GetComponentsReturnType, getAllPublicChats } from "./actions";
 
 const PAGE_SIZE = 17;
-const MAX_PAGES = 12; // Empêche de charger trop de données
+const MAX_PAGES = 12;
 
 export default function ComponentsInfiniteScroll({
   initialChats,
@@ -19,6 +22,8 @@ export default function ComponentsInfiniteScroll({
   initialChats: GetComponentsReturnType[] | null;
   initialPopularChats: GetComponentsReturnType[] | null;
 }) {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [isAtBottom, setIsAtBottom] = useState(false);
 
   const fetcher = async (key: string) => {
@@ -26,8 +31,8 @@ export default function ComponentsInfiniteScroll({
     return await getAllPublicChats(PAGE_SIZE, Number(offset), search);
   };
 
-  const { data, size, setSize, isValidating } = useSWRInfinite(
-    (index) => `chats-${index * PAGE_SIZE}`,
+  const { data, size, setSize, isValidating, mutate } = useSWRInfinite(
+    (index) => `chats-${index * PAGE_SIZE}-${debouncedSearch}`,
     fetcher,
     {
       initialSize: 1,
@@ -36,9 +41,11 @@ export default function ComponentsInfiniteScroll({
     },
   );
 
-  const chats = useMemo(() => data?.flat().filter(Boolean) || [], [data]);
+  const chats = useMemo(() => {
+    if (searchQuery !== debouncedSearch) return [];
+    return data?.flat().filter(Boolean) || [];
+  }, [data, searchQuery, debouncedSearch]);
 
-  // Détection du bas de page pour Auto Load
   useEffect(() => {
     const handleScroll = () => {
       const isBottom =
@@ -50,12 +57,11 @@ export default function ComponentsInfiniteScroll({
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Auto-chargement quand on atteint le bas
   useEffect(() => {
     if (isAtBottom && size < MAX_PAGES && !isValidating) {
-      setSize(size + 1);
+      loadMore();
     }
-  }, [isAtBottom, size, setSize, isValidating]);
+  }, [isAtBottom, size, isValidating]);
 
   const loadMore = useCallback(() => {
     if (size < MAX_PAGES && !isValidating) {
@@ -63,19 +69,25 @@ export default function ComponentsInfiniteScroll({
     }
   }, [size, setSize, isValidating]);
 
-  // Gestion de la recherche
-  /* const handleSearch = useCallback(
+  const handleSearch = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       setSearchQuery(event.target.value);
-      mutate(); // Recharge les données avec le nouveau filtre
     },
-    [mutate],
-  ); */
+    [],
+  );
+
+  useEffect(() => {
+    const handler = debounce(() => {
+      setDebouncedSearch(searchQuery);
+      mutate();
+    }, 500);
+    handler();
+    return () => handler.cancel();
+  }, [searchQuery, mutate]);
 
   return (
     <div>
-      {/* Champ de recherche unique ici */}
-      {/* <div className="mb-6 flex justify-start">
+      <div className="mb-6 flex justify-start">
         <div className="relative flex w-full max-w-md items-center rounded-md border border-border bg-secondary px-3 focus-within:border-primary">
           <Search className="mr-2 size-4 shrink-0 opacity-50" />
           <Input
@@ -87,27 +99,21 @@ export default function ComponentsInfiniteScroll({
             autoComplete="off"
           />
         </div>
-      </div> */}
+      </div>
 
-      {/* Grid des composants */}
       <div className="grid grid-cols-1 gap-x-4 gap-y-10 pb-20 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-        {initialPopularChats?.map((chat) => (
-          <ComponentCard isPopular key={chat.chat_id} chat={chat} />
-        ))}
-        {chats
-          .filter((chat) => chat)
-          .map((chat) => (
-            <ComponentCard key={chat!.chat_id} chat={chat!} />
+        {!debouncedSearch &&
+          initialPopularChats?.map((chat) => (
+            <ComponentCard isPopular key={chat.chat_id} chat={chat} />
           ))}
-
-        {/* Loader Spinner */}
-        {isValidating && (
-          <div className="col-span-full mt-6 flex justify-center">
-            <Loader2 className="size-6 animate-spin text-primary" />
-          </div>
-        )}
-
-        {/* Load More Button */}
+        {isValidating &&
+          chats.length === 0 &&
+          [...Array(6)].map((_, index) => (
+            <Skeleton key={index} className="h-32 w-full rounded-lg" />
+          ))}
+        {chats.map((chat) => (
+          <ComponentCard key={chat!.chat_id} chat={chat!} />
+        ))}
         {size < MAX_PAGES && (
           <div className="col-span-full mt-6 flex justify-center">
             <Button
@@ -123,13 +129,6 @@ export default function ComponentsInfiniteScroll({
               Load more
             </Button>
           </div>
-        )}
-
-        {/* Message si on atteint la limite */}
-        {size >= MAX_PAGES && (
-          <p className="col-span-full mt-6 text-center text-muted-foreground">
-            🎉 You&apos;ve seen it all!
-          </p>
         )}
       </div>
     </div>
