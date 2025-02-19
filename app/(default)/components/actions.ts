@@ -446,6 +446,7 @@ export const getAllPopularPublicChats = async (
     .rpc("get_components")
     .is("is_private", false)
     .not("last_assistant_message", "is", null)
+    .not("likes", "is", null)
     .order("likes", { ascending: false })
     .range(offset, offset + limit - 1);
   return data;
