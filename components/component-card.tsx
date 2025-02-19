@@ -1,32 +1,20 @@
 import { SiHtml5, SiReact, SiVuedotjs } from "@icons-pack/react-simple-icons";
-import { TerminalIcon } from "lucide-react";
+import { StarIcon, TerminalIcon } from "lucide-react";
 import Link from "next/link";
 
+import { GetComponentsReturnType } from "@/app/(default)/components/actions";
 import { Framework } from "@/utils/config";
 
 import { Badge } from "./ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import { UserWidget } from "./user-widget";
 
-type GetComponentsReturnType = {
-  chat_id: string;
-  user_id: string;
-  framework: string;
-  user_full_name: string;
-  user_avatar_url: string;
-  is_featured: boolean;
-  is_private: boolean;
-  created_at: string;
-  first_user_message: string;
-  last_assistant_message: string;
-  last_assistant_message_theme: string;
-  slug: string;
-};
-
 export default function ComponentCard({
   chat,
+  isPopular,
 }: {
   chat: GetComponentsReturnType;
+  isPopular?: boolean;
 }) {
   const FrameworkIcon =
     chat.framework === Framework.REACT
@@ -39,7 +27,11 @@ export default function ComponentCard({
     <Link
       key={chat.chat_id}
       href={`/components/${chat.slug || chat.chat_id}`}
-      className="group flex flex-col rounded-lg border transition-all duration-300 hover:border-primary hover:shadow-2xl hover:shadow-primary/35"
+      className={`group flex flex-col rounded-lg border transition-all duration-300 hover:shadow-2xl ${
+        isPopular
+          ? "border-amber-500 hover:border-amber-600 hover:shadow-amber-500/35"
+          : "border-border hover:border-primary hover:shadow-primary/35"
+      }`}
     >
       <div className="relative flex overflow-hidden text-clip rounded-t-lg">
         <div className="relative aspect-video size-full transition duration-300 md:group-hover:scale-110">
@@ -55,6 +47,21 @@ export default function ComponentCard({
             }
           />
         </div>
+        {isPopular && (
+          <div className="absolute left-0 top-0 m-2 flex items-start justify-start gap-2">
+            <Tooltip>
+              <TooltipTrigger>
+                <Badge className="bg-amber-500 text-white hover:bg-amber-500">
+                  <StarIcon className="mr-1 size-3" />
+                  <span className="first-letter:uppercase">Popular</span>
+                </Badge>
+              </TooltipTrigger>
+              <TooltipContent className="bg-amber-500 text-white">
+                <p>{chat.likes} likes</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
+        )}
         <div className="absolute right-0 top-0 m-2 flex items-start justify-start gap-2">
           <Tooltip>
             <TooltipTrigger>
@@ -75,7 +82,7 @@ export default function ComponentCard({
           <div className="flex w-full items-center">
             <TerminalIcon className="mr-1.5 size-5 shrink-0 font-semibold" />
             <span className="line-clamp-2 max-w-full whitespace-pre-wrap">
-              {chat.first_user_message}
+              {chat.title || chat.first_user_message}
             </span>
           </div>
         </div>

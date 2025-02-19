@@ -645,7 +645,7 @@ export const defaultArtifactExamples = {
   <example>
     <user_query>Create a login page with email and password inputs.</user_query>
     <assistant_response>
-      <tailwindaiArtifact>
+      <tailwindaiArtifact title="A login page with email and password inputs">
         <tailwindaiFile name="src/App.tsx">
           import { Input } from './components/ui/input';
           import { Button } from './components/ui/button';
@@ -696,7 +696,7 @@ export const defaultArtifactExamples = {
   <example>
     <user_query>Create a login page with email and password inputs.</user_query>
     <assistant_response>
-      <tailwindaiArtifact>
+      <tailwindaiArtifact title="A login page with email and password inputs">
         <tailwindaiFile name="src/App.tsx">
           import { Input } from './components/ui/input';
           import { Button } from './components/ui/button';
@@ -740,7 +740,7 @@ export const defaultArtifactExamples = {
     <user_query>Remove the button from the login page.</user_query>
     <assistant_response>
       I removed the button from the login page.
-      <tailwindaiArtifact>
+      <tailwindaiArtifact title="A login page with email and password inputs">
         <tailwindaiFile name="src/App.tsx">
           import { Input } from './components/ui/input';
           import './globals.css';
@@ -772,7 +772,7 @@ export const defaultArtifactExamples = {
       <user_query>Move input component from ui folder to components folder.</user_query>
       <assistant_response>
         I moved the input component from ui folder to components folder.
-        <tailwindaiArtifact>
+        <tailwindaiArtifact title="A login page with email and password inputs">
           <tailwindaiFile name="src/components/ui/ui/input.tsx" action="delete" />
           <tailwindaiFile name="src/components/ui/input.tsx">
             ...
@@ -785,7 +785,7 @@ export const defaultArtifactExamples = {
   <example>
     <user_query>Create a login page with email and password inputs.</user_query>
     <assistant_response>
-      <tailwindaiArtifact>
+      <tailwindaiArtifact title="A login page with email and password inputs">
         <tailwindaiFile name="src/App.vue">
           <template>
             <div class="min-h-screen flex items-center justify-center">
@@ -847,7 +847,7 @@ export const defaultArtifactExamples = {
   <example>
     <user_query>Create a login page with email and password inputs.</user_query>
     <assistant_response>
-      <tailwindaiArtifact>
+      <tailwindaiArtifact title="A login page with email and password inputs">
         <tailwindaiFile name="src/App.vue">
           <template>
             <div class="min-h-screen flex items-center justify-center">
@@ -897,7 +897,7 @@ export const defaultArtifactExamples = {
     <user_query>Remove the button from the login page.</user_query>
     <assistant_response>
       I removed the button from the login page.
-      <tailwindaiArtifact>
+      <tailwindaiArtifact title="A login page with email and password inputs">
         <tailwindaiFile name="src/App.vue">
           <template>
             <div class="min-h-screen flex items-center justify-center">
@@ -933,7 +933,7 @@ export const defaultArtifactExamples = {
     <user_query>Move input component from components folder to ui folder.</user_query>
     <assistant_response>
       I moved the input component from the components folder to the ui folder.
-      <tailwindaiArtifact>
+      <tailwindaiArtifact title="A login page with email and password inputs">
         <tailwindaiFile name="src/components/ui/Input.vue" action="delete" />
         <tailwindaiFile name="src/components/ui/ui/Input.vue">
           ...

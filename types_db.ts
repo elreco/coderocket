@@ -18,9 +18,11 @@ export type Database = {
           input_tokens: number | null;
           is_featured: boolean | null;
           is_private: boolean | null;
+          likes: number | null;
           output_tokens: number | null;
           prompt_image: string | null;
           slug: string | null;
+          title: string | null;
           user_id: string;
         };
         Insert: {
@@ -31,9 +33,11 @@ export type Database = {
           input_tokens?: number | null;
           is_featured?: boolean | null;
           is_private?: boolean | null;
+          likes?: number | null;
           output_tokens?: number | null;
           prompt_image?: string | null;
           slug?: string | null;
+          title?: string | null;
           user_id: string;
         };
         Update: {
@@ -44,9 +48,11 @@ export type Database = {
           input_tokens?: number | null;
           is_featured?: boolean | null;
           is_private?: boolean | null;
+          likes?: number | null;
           output_tokens?: number | null;
           prompt_image?: string | null;
           slug?: string | null;
+          title?: string | null;
           user_id?: string;
         };
         Relationships: [
@@ -374,6 +380,25 @@ export type Database = {
           last_assistant_message: string;
           last_assistant_message_theme: string;
           framework: string;
+        }[];
+      };
+      get_components: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          chat_id: string;
+          user_id: string;
+          user_full_name: string;
+          user_avatar_url: string;
+          is_featured: boolean;
+          is_private: boolean;
+          created_at: string;
+          slug: string;
+          first_user_message: string;
+          last_assistant_message: string;
+          last_assistant_message_theme: string;
+          framework: string;
+          title: string;
+          likes: number;
         }[];
       };
       get_components_with_theme_and_slug: {

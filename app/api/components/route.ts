@@ -13,6 +13,7 @@ import { Tables } from "@/types_db";
 import { takeScreenshot } from "@/utils/capture-screenshot";
 import {
   extractDataTheme,
+  extractTitle,
   getUpdatedArtifactCode,
 } from "@/utils/completion-parser";
 import {
@@ -268,6 +269,7 @@ const updateDataAfterCompletion = async (
     .from("chats")
     .update({
       artifact_code: artifactCode,
+      title: extractTitle(text),
       input_tokens: currentInputTokens + usage.promptTokens,
       output_tokens: currentOutputTokens + usage.completionTokens,
     })

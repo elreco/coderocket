@@ -25,6 +25,20 @@ export const getUpdatedArtifactCode = (
   completion: string,
   artifactCode: string,
 ): string => {
+  // Récupération du titre depuis l'artifact existant
+  const titleMatch = artifactCode.match(
+    /<tailwindaiArtifact\s+title=["']([^"']*?)["']/,
+  );
+  let artifactTitle = titleMatch ? titleMatch[1] : "Untitled"; // Valeur par défaut
+
+  // Extraction du titre depuis la nouvelle réponse si disponible
+  const newTitleMatch = completion.match(
+    /<tailwindaiArtifact\s+title=["']([^"']*?)["']/,
+  );
+  if (newTitleMatch) {
+    artifactTitle = newTitleMatch[1];
+  }
+
   // Parse existing files from artifactCode
   const allFiles = new Map();
   const filesToDelete = new Set();
@@ -50,7 +64,7 @@ export const getUpdatedArtifactCode = (
     const action = match[2];
     let content = match[3].trim();
 
-    // Clean up content from any partial closing tags
+    // Nettoyage du contenu
     content = content
       .replace(/<\/tailwindaiFile>.*$/g, "")
       .replace(/<\/tailwindaiArtifact>.*$/g, "")
@@ -63,13 +77,13 @@ export const getUpdatedArtifactCode = (
     }
   }
 
-  // Merge files, giving priority to completion files
+  // Fusion des fichiers en donnant la priorité aux nouveaux fichiers
   completionFiles.forEach((content, fileName) => {
     allFiles.set(fileName, content);
   });
 
-  // Build result
-  let mergedArtifact = "<tailwindaiArtifact>\n";
+  // Construction du nouvel artifact avec le titre
+  let mergedArtifact = `<tailwindaiArtifact title="${artifactTitle}">\n`;
   allFiles.forEach((content, fileName) => {
     if (!filesToDelete.has(fileName)) {
       mergedArtifact += `<tailwindaiFile name="${fileName}">\n${content}\n</tailwindaiFile>\n`;
@@ -101,7 +115,9 @@ export const extractFilesFromCompletion = (
   if (!completion) return [];
 
   const filesArray: ChatFile[] = [];
-  const artifactRegex = /<tailwindaiArtifact>[\s\S]*?<\/tailwindaiArtifact>/g;
+  const artifactRegex =
+    /<tailwindaiArtifact(?:\s+title=["']([^"']*?)["'])?>[\s\S]*?<\/tailwindaiArtifact>/g;
+
   const artifacts = Array.from(completion.matchAll(artifactRegex));
 
   if (artifacts.length === 0) return [];
@@ -124,7 +140,7 @@ export const extractFilesFromCompletion = (
         content = content.slice(0, closeTagIndex);
       }
 
-      // Nettoyer le contenu et ajuster l'indentation
+      // Nettoyage du contenu
       content = content
         .replace(/<\/tailwindaiFile>/g, "")
         .replace(/<\/tailwindaiArtifact>/g, "")
@@ -150,7 +166,7 @@ export const extractFilesFromCompletion = (
         content = ensureCDNsPresent(content);
       }
 
-      // Ajouter le fichier au tableau, permettant les doublons
+      // Ajouter le fichier au tableau
       filesArray.push({
         name: fileName || null,
         content: content || completion,
@@ -159,7 +175,6 @@ export const extractFilesFromCompletion = (
       });
     }
   });
-
   return filesArray;
 };
 
@@ -198,7 +213,9 @@ export const extractContent = (completion: string) => {
 };
 
 export const hasArtifacts = (completion: string): boolean => {
-  return /<tailwindaiArtifact>/i.test(completion);
+  return /<tailwindaiArtifact(?:\s+title=["']([^"']*?)["'])?>/i.test(
+    completion,
+  );
 };
 
 export const hasFiles = (completion: string): boolean => {
@@ -209,7 +226,9 @@ export const splitContentIntoChunks = (completion: string): ContentChunk[] => {
   const chunks: ContentChunk[] = [];
 
   // Ne traiter que les artifacts complets
-  const artifactRegex = /<tailwindaiArtifact>[\s\S]*?<\/tailwindaiArtifact>/g;
+  const artifactRegex =
+    /<tailwindaiArtifact(?:\s+title=["']([^"']*?)["'])?>[\s\S]*?<\/tailwindaiArtifact>/g;
+
   const artifactStartRegex = /<tailwindaiArtifact/i;
 
   // Si on a un début d'artifact sans fin, on ne traite pas le texte après
@@ -258,6 +277,13 @@ export const splitContentIntoChunks = (completion: string): ContentChunk[] => {
 export const extractDataTheme = (completion: string): string => {
   const match = completion.match(/data-theme=["']([^"']*?)["']/);
   return match ? match[1] : defaultTheme;
+};
+
+export const extractTitle = (completion: string): string | null => {
+  const match = completion.match(
+    /<tailwindaiArtifact\s+title=["']([^"']*?)["']/,
+  );
+  return match ? match[1] : null;
 };
 
 export const setDataTheme = (completion: string, theme: string): string => {

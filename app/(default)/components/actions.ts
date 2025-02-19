@@ -17,6 +17,23 @@ import { createClient } from "@/utils/supabase/server";
 
 import { buildComponent } from "./[slug]/actions";
 
+export type GetComponentsReturnType = {
+  chat_id: string;
+  user_id: string;
+  framework: string;
+  user_full_name: string;
+  user_avatar_url: string;
+  is_featured: boolean;
+  is_private: boolean;
+  created_at: string;
+  first_user_message: string;
+  title: string;
+  likes: number;
+  last_assistant_message: string;
+  last_assistant_message_theme: string;
+  slug: string;
+};
+
 export const fetchChatById = async (idOrSlug: string) => {
   const supabase = await createClient();
 
@@ -33,6 +50,8 @@ export const fetchChatById = async (idOrSlug: string) => {
     id,
     artifact_code,
     created_at,
+    title,
+    likes,
     is_private,
     is_featured,
     framework,
@@ -324,7 +343,7 @@ export const getHTMLChatsFromUser = async () => {
 
   if (!user) throw Error("Could not get user");
   const { data } = await supabase
-    .rpc("get_all_components")
+    .rpc("get_components")
     .eq("user_id", user.id)
     .eq("framework", Framework.HTML)
     .limit(99);
@@ -339,7 +358,7 @@ export const getReactChatsFromUser = async () => {
 
   if (!user) throw Error("Could not get user");
   const { data } = await supabase
-    .rpc("get_all_components")
+    .rpc("get_components")
     .eq("user_id", user.id)
     .eq("framework", "react")
     .limit(99);
@@ -354,7 +373,7 @@ export const getVueChatsFromUser = async () => {
 
   if (!user) throw Error("Could not get user");
   const { data } = await supabase
-    .rpc("get_all_components")
+    .rpc("get_components")
     .eq("user_id", user.id)
     .eq("framework", "vue")
     .limit(99);
@@ -366,7 +385,7 @@ export const getFeaturedChats = async () => {
   const supabase = await createClient();
 
   const { data } = await supabase
-    .rpc("get_all_components")
+    .rpc("get_components")
     .is("is_featured", true)
     .limit(50);
   return data;
@@ -376,7 +395,7 @@ export const getAllReactPublicChats = async () => {
   const supabase = await createClient();
 
   const { data } = await supabase
-    .rpc("get_all_components")
+    .rpc("get_components")
     .is("is_private", false)
     .eq("framework", "react")
     .not("last_assistant_message", "is", null)
@@ -388,7 +407,7 @@ export const getAllVuePublicChats = async () => {
   const supabase = await createClient();
 
   const { data } = await supabase
-    .rpc("get_all_components")
+    .rpc("get_components")
     .is("is_private", false)
     .eq("framework", "vue")
     .not("last_assistant_message", "is", null)
@@ -397,14 +416,38 @@ export const getAllVuePublicChats = async () => {
   return data;
 };
 
-export const getAllHTMLPublicChats = async () => {
+export const getAllPublicChats = async (
+  limit: number = 20,
+  offset: number = 0,
+  searchQuery?: string,
+) => {
+  const supabase = await createClient();
+
+  let query = supabase
+    .rpc("get_components")
+    .is("is_private", false)
+    .not("last_assistant_message", "is", null);
+
+  if (searchQuery) {
+    query = query.ilike("title", `%${searchQuery}%`); // Recherche insensible à la casse
+  }
+
+  const { data } = await query.range(offset, offset + limit - 1);
+  return data;
+};
+
+export const getAllPopularPublicChats = async (
+  limit: number = 2,
+  offset: number = 0,
+) => {
   const supabase = await createClient();
 
   const { data } = await supabase
-    .rpc("get_all_components")
+    .rpc("get_components")
     .is("is_private", false)
     .not("last_assistant_message", "is", null)
-    .limit(24);
+    .order("likes", { ascending: false })
+    .range(offset, offset + limit - 1);
   return data;
 };
 

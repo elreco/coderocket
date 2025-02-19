@@ -116,7 +116,10 @@ export default function ComponentCompletion({
       setLastAssistantMessage(assistantMsg);
       setMessages(msgs || []);
       setSelectedVersion(userMsg?.version || 0);
-      setTitle(userMsg?.content?.toString() || "");
+      setTitle(
+        chat.title ||
+          `Version #${userMsg?.version && userMsg.version > -1 ? userMsg.version : 0}`,
+      );
       setVisible(!chat.is_private);
       setArtifactCode(chat.artifact_code || "");
       setWebcontainerReady(assistantMsg?.is_built || false);
@@ -268,7 +271,6 @@ export default function ComponentCompletion({
     setWebcontainerReady(false);
     setChatFiles([]);
     setCanvas(false);
-    setTitle(input);
     setIsLoading(true);
     complete(input);
   };
@@ -278,10 +280,6 @@ export default function ComponentCompletion({
     const selectedMessages = messages.filter((m) => m.version == version);
     if (selectedMessages.length !== 2) {
       return;
-    }
-    const selectedUserMessage = selectedMessages.find((m) => m.role === "user");
-    if (selectedUserMessage) {
-      setTitle(selectedUserMessage.content?.toString() ?? "");
     }
 
     const selectedAssistantMessage = selectedMessages.find(
@@ -293,16 +291,6 @@ export default function ComponentCompletion({
     setCompletion(selectedAssistantMessage.content);
     handleChatFiles(selectedAssistantMessage.content, false, tabName);
     setWebcontainerReady(selectedAssistantMessage.is_built || false);
-  };
-
-  const copyPrompt = (prompt: string) => {
-    copy(prompt);
-    toast({
-      variant: "default",
-      title: "Successfully copied",
-      description: "The prompt has been successfully saved to your clipboard",
-      duration: 5000,
-    });
   };
 
   const share = () => {
@@ -324,6 +312,9 @@ export default function ComponentCompletion({
     const refreshedChat = await fetchChatById(chatId);
     if (!refreshedChat) return;
     setArtifactCode(refreshedChat.artifact_code || "");
+    const title = refreshedChat.title || `Version #${selectedVersion}`;
+    setTitle(title);
+    document.title = `${title} - Tailwind AI`;
     return refreshedChatMessages;
   };
 
@@ -496,25 +487,17 @@ export default function ComponentCompletion({
           <div className="col-span-1 flex size-full min-h-full flex-col lg:col-span-2 xl:col-span-3 xl:mb-0">
             <div className="relative flex flex-col items-center justify-start border-b py-1.5 pr-2 xl:flex-row xl:justify-between xl:pl-11">
               <h1 className="mb-2 flex min-w-0 max-w-full flex-1 items-center font-medium lg:mb-0">
-                {isLoading || !title ? (
+                {title ? (
+                  <p className="mx-10 min-w-0 max-w-full xl:mx-0">
+                    <span className="block truncate text-center first-letter:uppercase">
+                      {title}
+                    </span>
+                  </p>
+                ) : (
                   <span className="flex items-center">
                     <LoaderCircle className="mr-2 size-4 animate-spin" />
                     Loading
                   </span>
-                ) : (
-                  <Tooltip>
-                    <TooltipTrigger className="mx-10 min-w-0 max-w-full xl:mx-0">
-                      <span
-                        className="block truncate text-center first-letter:uppercase"
-                        onClick={() => copyPrompt(title)}
-                      >
-                        {title}
-                      </span>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Copy Prompt</p>
-                    </TooltipContent>
-                  </Tooltip>
                 )}
               </h1>
               <div className="ml-2 flex items-center gap-2">

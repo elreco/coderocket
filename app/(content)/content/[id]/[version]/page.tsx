@@ -12,6 +12,7 @@ import { capitalizeFirstLetter } from "@/utils/helpers";
 
 interface Props {
   params: Promise<{ id: string; version: string }>;
+  searchParams: Promise<{ noWatermark?: string }>;
 }
 
 export async function generateMetadata(
@@ -42,8 +43,9 @@ export async function generateMetadata(
   };
 }
 
-export default async function Content({ params }: Props) {
+export default async function Content({ params, searchParams }: Props) {
   const { id, version } = await params;
+  const { noWatermark } = await searchParams;
   const chat = await fetchChatById(id);
   const lastAssistantMessage = await fetchAssistantMessageByChatIdAndVersion(
     id,
@@ -58,7 +60,7 @@ export default async function Content({ params }: Props) {
 
   return (
     <>
-      <Watermark slug={chat.slug || ""} />
+      {!noWatermark && <Watermark slug={chat.slug || ""} />}
       <RenderHtmlComponentServer
         files={files}
         style={{ width: "100%", height: "100%", border: "none" }}

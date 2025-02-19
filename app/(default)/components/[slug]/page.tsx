@@ -3,7 +3,6 @@
 import type { Metadata, ResolvingMetadata } from "next";
 import { notFound } from "next/navigation";
 
-import { capitalizeFirstLetter } from "@/utils/helpers";
 import { createClient } from "@/utils/supabase/server";
 
 import "@/styles/crisp.css";
@@ -12,7 +11,6 @@ import {
   fetchMessagesByChatId,
   fetchLastAssistantMessageByChatId,
   fetchLastUserMessageByChatId,
-  fetchFirstUserMessageByChatId,
 } from "../actions";
 
 import ComponentCompletion from "./component-completion";
@@ -30,16 +28,13 @@ export async function generateMetadata(
 
   const lastAssistantMessage = await fetchLastAssistantMessageByChatId(chat.id);
 
-  const firstUserMessage = await fetchFirstUserMessageByChatId(chat.id);
-
   // optionally access and extend (rather than replace) parent metadata
   const previousImages = (await parent).openGraph?.images || [];
 
   return {
-    title: `${capitalizeFirstLetter(
-      firstUserMessage?.content?.toString() || "",
-      15,
-    )} - Tailwind AI`,
+    title: chat.title
+      ? `${chat.title} - Tailwind AI`
+      : `Component ${chat.slug} - Tailwind AI`,
     openGraph: {
       images: lastAssistantMessage?.screenshot
         ? [lastAssistantMessage.screenshot]
