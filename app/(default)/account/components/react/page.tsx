@@ -33,9 +33,9 @@ export default async function MyReactComponents() {
           </Link>
         </Button>
         <Button asChild variant="secondary">
-          <Link href="/components/react" className="flex items-center gap-2">
+          <Link href="/components" className="flex items-center gap-2">
             <Globe className="size-4" />
-            <span>Browse Public React Components</span>
+            <span>Browse Public Components</span>
           </Link>
         </Button>
       </div>

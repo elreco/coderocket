@@ -35,7 +35,7 @@ export default async function MyHTMLComponents() {
         <Button asChild variant="secondary">
           <Link href="/components" className="flex items-center gap-2">
             <Globe className="size-4" />
-            <span>Browse Public HTML Components</span>
+            <span>Browse Public Components</span>
           </Link>
         </Button>
       </div>
