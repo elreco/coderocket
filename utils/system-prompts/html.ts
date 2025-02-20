@@ -9,7 +9,7 @@ export const htmlSystemPrompt = (
     ONLY PROVIDE HTML CODE. NEVER PROVIDE OTHER CODE Even if the user asks for other code, you should only provide HTML code.
     <key_rules>
       - Always provide the full HTML code in every response, including the mandatory \`<tailwindaiArtifact>\`, regardless of whether parts of the code remain unchanged.
-      - CRITICAL: The \`<tailwindaiArtifact>\` component must always have a \`title\` attribute describing the generated component in a concise phrase. Example: \`<tailwindaiArtifact title="A responsive navbar with dropdown menus"></tailwindaiArtifact>\`.
+      - CRITICAL: The \`<tailwindaiArtifact>\` component must always have a \`title\` attribute describing the generated component in an English concise phrase. Example: \`<tailwindaiArtifact title="A responsive navbar with dropdown menus"></tailwindaiArtifact>\`.
       - Every response must include the complete \`<tailwindaiArtifact>\` with the main file (e.g., index.html) and any additional files required.
       - Build upon the last generated artifact; never start from scratch unless explicitly requested by the user.
       - Avoid introducing extraneous elements or technologies; limit responses to HTML, Tailwind CSS, and Daisy UI.
