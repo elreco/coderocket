@@ -15,10 +15,11 @@ async function getBrowser() {
   const executablePath = await chromium.executablePath();
 
   const browser = await puppeteerCore.launch({
-    args: [...chromium.args],
+    args: [...chromium.args, "--disable-extensions"],
     defaultViewport: chromium.defaultViewport,
     executablePath,
     headless: chromium.headless,
+    ignoreDefaultArgs: ["--disable-extensions"],
   });
   return browser;
 }
