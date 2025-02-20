@@ -252,7 +252,7 @@ const updateDataAfterCompletion = async (
   // Fetch current tokens
   const { data: currentChatData, error } = await supabase
     .from("chats")
-    .select("input_tokens, output_tokens")
+    .select("input_tokens, output_tokens, title")
     .eq("id", chatId)
     .single();
 
@@ -265,15 +265,26 @@ const updateDataAfterCompletion = async (
   const currentOutputTokens = currentChatData?.output_tokens || 0;
 
   // Update with the sum of previous and new tokens
-  await supabase
-    .from("chats")
-    .update({
-      artifact_code: artifactCode,
-      title: extractTitle(text),
-      input_tokens: currentInputTokens + usage.promptTokens,
-      output_tokens: currentOutputTokens + usage.completionTokens,
-    })
-    .eq("id", chatId);
+  if (currentChatData.title) {
+    await supabase
+      .from("chats")
+      .update({
+        artifact_code: artifactCode,
+        input_tokens: currentInputTokens + usage.promptTokens,
+        output_tokens: currentOutputTokens + usage.completionTokens,
+      })
+      .eq("id", chatId);
+  } else {
+    await supabase
+      .from("chats")
+      .update({
+        artifact_code: artifactCode,
+        title: extractTitle(text),
+        input_tokens: currentInputTokens + usage.promptTokens,
+        output_tokens: currentOutputTokens + usage.completionTokens,
+      })
+      .eq("id", chatId);
+  }
 
   if (version > 0) {
     newMessages.push({
