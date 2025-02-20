@@ -3,12 +3,10 @@ import { Metadata, ResolvingMetadata } from "next";
 import {
   fetchAssistantMessageByChatIdAndVersion,
   fetchChatById,
-  fetchFirstUserMessageByChatId,
 } from "@/app/(default)/components/actions";
 import RenderHtmlComponentServer from "@/components/renders/render-html-component-server";
 import { Watermark } from "@/components/watermark";
 import { extractFilesFromCompletion } from "@/utils/completion-parser";
-import { capitalizeFirstLetter } from "@/utils/helpers";
 
 interface Props {
   params: Promise<{ id: string; version: string }>;
@@ -26,15 +24,14 @@ export async function generateMetadata(
     parseInt(version),
   );
 
-  const firstUserMessage = await fetchFirstUserMessageByChatId(id);
+  const chat = await fetchChatById(id);
 
   // optionally access and extend (rather than replace) parent metadata
   const previousImages = (await parent).openGraph?.images || [];
   return {
-    title: `${capitalizeFirstLetter(
-      firstUserMessage?.content?.toString() || "",
-      15,
-    )} - Tailwind AI`,
+    title: chat.title
+      ? `${chat.title} - Tailwind AI`
+      : `Component ${chat.slug} - Tailwind AI`,
     openGraph: {
       images: lastAssistantMessage?.screenshot
         ? [lastAssistantMessage.screenshot]

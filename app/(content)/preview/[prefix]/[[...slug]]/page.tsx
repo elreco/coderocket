@@ -2,11 +2,9 @@ import { Metadata, ResolvingMetadata } from "next";
 
 import {
   fetchAssistantMessageByChatIdAndVersion,
-  fetchFirstUserMessageByChatId,
   fetchChatById,
 } from "@/app/(default)/components/actions";
 import { Watermark } from "@/components/watermark";
-import { capitalizeFirstLetter } from "@/utils/helpers";
 
 interface Props {
   params: Promise<{ prefix: string; slug?: string[] }>;
@@ -27,15 +25,14 @@ export async function generateMetadata(
     versionNumber,
   );
 
-  const firstUserMessage = await fetchFirstUserMessageByChatId(id);
+  const chat = await fetchChatById(id);
 
   // optionally access and extend (rather than replace) parent metadata
   const previousImages = (await parent).openGraph?.images || [];
   return {
-    title: `${capitalizeFirstLetter(
-      firstUserMessage?.content?.toString() || "",
-      15,
-    )} - Tailwind AI`,
+    title: chat.title
+      ? `${chat.title} - Tailwind AI`
+      : `Component ${chat.slug} - Tailwind AI`,
     openGraph: {
       images: lastAssistantMessage?.screenshot
         ? [lastAssistantMessage.screenshot]
