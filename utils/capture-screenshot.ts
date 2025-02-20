@@ -18,7 +18,7 @@ async function getBrowser() {
     args: [...chromium.args, "--disable-extensions"],
     defaultViewport: chromium.defaultViewport,
     executablePath,
-    headless: chromium.headless,
+    headless: true,
     ignoreDefaultArgs: ["--disable-extensions"],
   });
   return browser;
