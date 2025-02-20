@@ -311,11 +311,5 @@ const updateDataAfterCompletion = async (
       return;
     }
     await buildComponent(chatId, version);
-    await takeScreenshot(
-      chatId,
-      version,
-      undefined,
-      chat.framework || Framework.REACT,
-    );
   });
 };
