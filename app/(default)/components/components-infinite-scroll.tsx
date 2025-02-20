@@ -1,16 +1,23 @@
 "use client";
 
-import { Loader2, ArrowDown } from "lucide-react";
+import { Loader2, Search, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import useSWR from "swr";
 import useSWRInfinite from "swr/infinite";
 
 import ComponentCard from "@/components/component-card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 
-import { type GetComponentsReturnType, getAllPublicChats } from "./actions";
+import {
+  type GetComponentsReturnType,
+  getAllPublicChats,
+  getAllPopularPublicChats,
+} from "./actions";
 
 const PAGE_SIZE = 17;
-const MAX_PAGES = 12; // Empêche de charger trop de données
+const MAX_PAGES = 12;
 
 export default function ComponentsInfiniteScroll({
   initialChats,
@@ -19,16 +26,31 @@ export default function ComponentsInfiniteScroll({
   initialChats: GetComponentsReturnType[] | null;
   initialPopularChats: GetComponentsReturnType[] | null;
 }) {
-  const [isAtBottom, setIsAtBottom] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [submittedSearch, setSubmittedSearch] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const fetcher = async (key: string) => {
+  // Fetcher pour les chats publics
+  const fetcherPublic = async (key: string) => {
     const [, offset, search] = key.split("-");
     return await getAllPublicChats(PAGE_SIZE, Number(offset), search);
   };
 
-  const { data, size, setSize, isValidating } = useSWRInfinite(
-    (index) => `chats-${index * PAGE_SIZE}`,
-    fetcher,
+  // Fetcher pour les populaires
+  const fetcherPopular = async (search?: string) => {
+    return await getAllPopularPublicChats(2, 0, search);
+  };
+
+  // Requête paginée pour les chats publics
+  const {
+    data,
+    isValidating: isValidatingPublic,
+    mutate: mutatePublicChats,
+    size,
+    setSize,
+  } = useSWRInfinite(
+    (index) => `chats-${index * PAGE_SIZE}-${submittedSearch}`,
+    fetcherPublic,
     {
       initialSize: 1,
       revalidateOnFocus: false,
@@ -36,100 +58,163 @@ export default function ComponentsInfiniteScroll({
     },
   );
 
-  const chats = useMemo(() => data?.flat().filter(Boolean) || [], [data]);
+  // Requête simple pour les populaires
+  const {
+    data: popularChats,
+    isValidating: isValidatingPopular,
+    mutate: mutatePopularChats,
+  } = useSWR(
+    `popular-${submittedSearch}`,
+    () => fetcherPopular(submittedSearch),
+    {
+      fallbackData: initialPopularChats,
+      revalidateOnFocus: false,
+    },
+  );
 
-  // Détection du bas de page pour Auto Load
+  const chats = useMemo(() => data?.flat() || [], [data]);
+  const displayedPopularChats = useMemo(
+    () => popularChats || [],
+    [popularChats],
+  );
+
+  // ✅ Active `isLoading` uniquement si une recherche est en cours
+  useEffect(() => {
+    if (submittedSearch && (isValidatingPublic || isValidatingPopular)) {
+      setIsLoading(true);
+    } else {
+      setTimeout(() => setIsLoading(false), 300);
+    }
+  }, [isValidatingPublic, isValidatingPopular, submittedSearch]);
+
+  const handleSearchInput = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      setSearchQuery(event.target.value);
+    },
+    [],
+  );
+
+  const handleSubmitSearch = useCallback(() => {
+    if (!searchQuery.trim()) return; // Ne rien faire si le champ est vide
+    setSubmittedSearch(searchQuery);
+    setIsLoading(true);
+
+    Promise.all([
+      mutatePublicChats(undefined, { revalidate: true, populateCache: true }),
+      mutatePopularChats(),
+    ]);
+  }, [searchQuery, mutatePublicChats, mutatePopularChats]);
+
+  const handleClearSearch = useCallback(() => {
+    setSearchQuery("");
+    setSubmittedSearch("");
+    setIsLoading(false);
+
+    Promise.all([
+      mutatePublicChats(undefined, { revalidate: true, populateCache: true }),
+      mutatePopularChats(),
+    ]);
+  }, [mutatePublicChats, mutatePopularChats]);
+
+  const handleKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLInputElement>) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        handleSubmitSearch();
+      }
+    },
+    [handleSubmitSearch],
+  );
+
+  // Infinite scroll handler
+  const loadMore = useCallback(() => {
+    if (size < MAX_PAGES && !isValidatingPublic) {
+      setSize(size + 1);
+    }
+  }, [size, isValidatingPublic, setSize]);
+
+  // Ajouter un écouteur de défilement
   useEffect(() => {
     const handleScroll = () => {
-      const isBottom =
-        window.innerHeight + window.scrollY >= document.body.offsetHeight - 100;
-      setIsAtBottom(isBottom);
+      if (
+        window.innerHeight + document.documentElement.scrollTop >=
+        document.documentElement.offsetHeight - 100
+      ) {
+        loadMore();
+      }
     };
 
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  // Auto-chargement quand on atteint le bas
-  useEffect(() => {
-    if (isAtBottom && size < MAX_PAGES && !isValidating) {
-      setSize(size + 1);
-    }
-  }, [isAtBottom, size, setSize, isValidating]);
-
-  const loadMore = useCallback(() => {
-    if (size < MAX_PAGES && !isValidating) {
-      setSize(size + 1);
-    }
-  }, [size, setSize, isValidating]);
-
-  // Gestion de la recherche
-  /* const handleSearch = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      setSearchQuery(event.target.value);
-      mutate(); // Recharge les données avec le nouveau filtre
-    },
-    [mutate],
-  ); */
+  }, [loadMore]);
 
   return (
     <div>
-      {/* Champ de recherche unique ici */}
-      {/* <div className="mb-6 flex justify-start">
-        <div className="relative flex w-full max-w-md items-center rounded-md border border-border bg-secondary px-3 focus-within:border-primary">
+      {/* Barre de recherche */}
+      <div className="mb-6 flex items-center justify-start gap-2">
+        <div className="relative flex w-full max-w-xl items-center rounded-md border border-border bg-secondary pl-3 focus-within:border-primary">
           <Search className="mr-2 size-4 shrink-0 opacity-50" />
           <Input
             id="search"
             placeholder="Search a component..."
             value={searchQuery}
-            onChange={handleSearch}
-            className="flex h-10 w-full rounded-md border-none bg-transparent py-3 text-sm font-normal outline-none placeholder:text-muted-foreground focus:ring-0 focus-visible:ring-0 disabled:cursor-not-allowed disabled:opacity-50"
+            onKeyDown={handleKeyDown}
+            onChange={handleSearchInput}
+            className="flex w-full rounded-md border-none bg-transparent py-3 text-sm font-normal outline-none placeholder:text-muted-foreground focus:ring-0 focus-visible:ring-0 disabled:cursor-not-allowed disabled:opacity-50"
             autoComplete="off"
           />
-        </div>
-      </div> */}
-
-      {/* Grid des composants */}
-      <div className="grid grid-cols-1 gap-x-4 gap-y-10 pb-20 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-        {initialPopularChats?.map((chat) => (
-          <ComponentCard isPopular key={chat.chat_id} chat={chat} />
-        ))}
-        {chats
-          .filter((chat) => chat)
-          .map((chat) => (
-            <ComponentCard key={chat!.chat_id} chat={chat!} />
-          ))}
-
-        {/* Loader Spinner */}
-        {isValidating && (
-          <div className="col-span-full mt-6 flex justify-center">
-            <Loader2 className="size-6 animate-spin text-primary" />
-          </div>
-        )}
-
-        {/* Load More Button */}
-        {size < MAX_PAGES && (
-          <div className="col-span-full mt-6 flex justify-center">
-            <Button
-              onClick={loadMore}
-              disabled={isValidating}
-              variant="outline"
+          {searchQuery && (
+            <button
+              onClick={handleClearSearch}
+              className="ml-2 text-muted-foreground hover:text-primary"
             >
-              {isValidating ? (
-                <Loader2 className="mr-2 size-4 animate-spin" />
+              <X className="size-4" />
+            </button>
+          )}
+          <div className="flex items-center p-1">
+            <Button
+              onClick={handleSubmitSearch}
+              disabled={isLoading || isValidatingPublic || isValidatingPopular}
+              className="ml-1"
+            >
+              {isLoading || isValidatingPublic || isValidatingPopular ? (
+                <Loader2 className="size-4 animate-spin" />
               ) : (
-                <ArrowDown className="mr-2 size-4" />
+                "Search"
               )}
-              Load more
             </Button>
           </div>
-        )}
+        </div>
+      </div>
 
-        {/* Message si on atteint la limite */}
-        {size >= MAX_PAGES && (
-          <p className="col-span-full mt-6 text-center text-muted-foreground">
-            🎉 You&apos;ve seen it all!
-          </p>
+      {/* Liste des résultats */}
+      <div className="grid grid-cols-1 gap-x-4 gap-y-10 pb-20 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+        {/* ✅ Affichage du Skeleton UNIQUEMENT si `submittedSearch` n'est pas vide */}
+        {isLoading && submittedSearch ? (
+          [...Array(12)].map((_, index) => (
+            <Skeleton key={index} className="h-[320px] w-full rounded-lg" />
+          ))
+        ) : (
+          <>
+            {/* Affichage des populaires */}
+            {displayedPopularChats.map((chat) => (
+              <ComponentCard isPopular key={chat.chat_id} chat={chat} />
+            ))}
+
+            {/* Affichage des résultats normaux */}
+            {chats.map((chat) => (
+              <ComponentCard key={chat!.chat_id} chat={chat!} />
+            ))}
+
+            {/* Afficher un indicateur de chargement lors du chargement de plus de données */}
+            {isValidatingPublic &&
+              [...Array(PAGE_SIZE)].map((_, index) => (
+                <Skeleton
+                  key={`loading-${index}`}
+                  className="h-[320px] w-full rounded-lg"
+                />
+              ))}
+          </>
         )}
       </div>
     </div>
