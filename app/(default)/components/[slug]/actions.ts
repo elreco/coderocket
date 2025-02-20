@@ -148,6 +148,12 @@ export const deleteVersionByMessageId = async (messageId: number) => {
     .eq("id", message.chat_id);
   after(async () => {
     await buildComponent(message.chat_id, message.version, true);
+    await takeScreenshot(
+      message.chat_id,
+      message.version,
+      undefined,
+      chat.framework || Framework.REACT,
+    );
   });
 };
 
@@ -250,13 +256,6 @@ export const buildComponent = async (
       .eq("chat_id", chatId)
       .eq("role", "assistant")
       .eq("version", version);
-
-    await takeScreenshot(
-      chatId,
-      version,
-      undefined,
-      chat.framework || Framework.REACT,
-    );
   } catch (error) {
     console.error("API error:", error);
   }

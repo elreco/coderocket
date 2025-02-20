@@ -308,7 +308,14 @@ const updateDataAfterCompletion = async (
   after(async () => {
     if (chat.framework === Framework.HTML) {
       await takeScreenshot(chatId, version, theme, Framework.HTML);
+      return;
     }
     await buildComponent(chatId, version);
+    await takeScreenshot(
+      chatId,
+      version,
+      undefined,
+      chat.framework || Framework.REACT,
+    );
   });
 };

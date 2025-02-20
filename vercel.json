@@ -1,4 +1,9 @@
 {
+  "functions": {
+    "app/**/*": {
+      "maxDuration": 300
+    }
+  },
   "build": {
     "env": {
       "PLAYWRIGHT_BROWSERS_PATH": "0"
