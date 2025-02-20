@@ -439,16 +439,23 @@ export const getAllPublicChats = async (
 export const getAllPopularPublicChats = async (
   limit: number = 2,
   offset: number = 0,
+  searchQuery?: string,
 ) => {
   const supabase = await createClient();
 
-  const { data } = await supabase
+  let query = supabase
     .rpc("get_components")
     .is("is_private", false)
-    .not("last_assistant_message", "is", null)
-    .not("likes", "is", null)
-    .order("likes", { ascending: false })
-    .range(offset, offset + limit - 1);
+    .not("last_assistant_message", "is", null);
+
+  if (searchQuery) {
+    query = query.ilike("title", `%${searchQuery}%`); // Appliquer d'abord la recherche
+  }
+
+  query = query.gt("likes", 0).order("likes", { ascending: false });
+
+  const { data } = await query.range(offset, offset + limit - 1);
+  console.log("data", data);
   return data;
 };
 
