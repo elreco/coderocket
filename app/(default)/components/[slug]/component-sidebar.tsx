@@ -107,7 +107,7 @@ export default function ComponentSidebar({
         variant: "destructive",
         title: "Prompt is empty",
         description: "Please add a prompt to improve",
-        duration: 5000,
+        duration: 2000,
       });
       return;
     }
@@ -123,7 +123,7 @@ export default function ComponentSidebar({
         title: "Premium account required",
         description:
           "You are not premium, the visibility cannot be changed. Please upgrade to premium and try again.",
-        duration: 5000,
+        duration: 2000,
       });
     }
   };

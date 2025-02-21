@@ -436,7 +436,7 @@ export const getAllPublicChats = async (
 };
 
 export const getAllPopularPublicChats = async (
-  limit: number = 2,
+  limit: number = 4,
   offset: number = 0,
   searchQuery?: string,
 ) => {
@@ -477,4 +477,112 @@ export const generateUniqueNanoid = async () => {
   }
 
   return uniqueId;
+};
+
+export const toggleChatLike = async (chatId: string) => {
+  const supabase = await createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  const user = userData.user;
+
+  if (!user) {
+    return { error: "User not authenticated" };
+  }
+
+  // Vérifier si le like existe déjà
+  const { data: existingLike } = await supabase
+    .from("chat_likes")
+    .select("id")
+    .eq("chat_id", chatId)
+    .eq("user_id", user.id)
+    .single();
+
+  if (existingLike) {
+    // Si le like existe, le supprimer et décrémenter le compteur de likes
+    const { error: deleteError } = await supabase
+      .from("chat_likes")
+      .delete()
+      .eq("id", existingLike.id);
+
+    if (deleteError) {
+      console.error("Erreur lors de la suppression du like:", deleteError);
+      return { error: "Erreur lors de la suppression du like" };
+    }
+
+    const { data: chatData, error: chatDataError } = await supabase
+      .from("chats")
+      .select("likes")
+      .eq("id", chatId)
+      .single();
+
+    if (chatDataError) {
+      console.error(
+        "Erreur lors de la récupération des données du chat:",
+        chatDataError,
+      );
+      return { error: "Erreur lors de la récupération des données du chat" };
+    }
+
+    if (chatData) {
+      await supabase
+        .from("chats")
+        .update({ likes: chatData.likes ? chatData.likes - 1 : 0 })
+        .eq("id", chatId);
+    }
+
+    return { message: "Like removed" };
+  } else {
+    // Si le like n'existe pas, l'ajouter et incrémenter le compteur de likes
+    const { error: newLikeError } = await supabase.from("chat_likes").insert({
+      chat_id: chatId,
+      user_id: user.id,
+    });
+
+    if (newLikeError) {
+      console.error("Erreur lors de l'ajout du like:", newLikeError);
+      return { error: "Erreur lors de l'ajout du like" };
+    }
+
+    const { data: chatData, error: chatDataError } = await supabase
+      .from("chats")
+      .select("likes")
+      .eq("id", chatId)
+      .single();
+
+    if (chatDataError) {
+      console.error(
+        "Erreur lors de la récupération des données du chat:",
+        chatDataError,
+      );
+      return { error: "Erreur lors de la récupération des données du chat" };
+    }
+
+    if (chatData) {
+      await supabase
+        .from("chats")
+        .update({ likes: chatData.likes ? chatData.likes + 1 : 1 })
+        .eq("id", chatId);
+    }
+
+    return { message: "Like added" };
+  }
+};
+
+export const hasUserLikedChat = async (chatId: string) => {
+  const supabase = await createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  const user = userData.user;
+
+  if (!user) {
+    return false;
+  }
+
+  // Vérifier si le like existe pour l'utilisateur et le chat spécifiés
+  const { data: existingLike } = await supabase
+    .from("chat_likes")
+    .select("id")
+    .eq("chat_id", chatId)
+    .eq("user_id", user.id)
+    .single();
+
+  return !!existingLike; // Retourne true si le like existe, sinon false
 };

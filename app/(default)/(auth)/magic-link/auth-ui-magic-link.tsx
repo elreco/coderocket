@@ -23,7 +23,7 @@ export default function AuthUIMagicLink() {
         variant: "destructive",
         title: "Error",
         description: result.error,
-        duration: 5000,
+        duration: 2000,
       });
     }
     if (result?.url) {

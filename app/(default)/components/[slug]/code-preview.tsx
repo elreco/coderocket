@@ -111,7 +111,7 @@ export default function CodePreview() {
       title: "Successfully copied",
       description:
         "Your component has been successfully saved to your clipboard",
-      duration: 5000,
+      duration: 2000,
     });
   };
 

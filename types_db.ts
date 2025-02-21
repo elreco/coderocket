@@ -9,6 +9,42 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      chat_likes: {
+        Row: {
+          chat_id: string;
+          created_at: string;
+          id: number;
+          user_id: string;
+        };
+        Insert: {
+          chat_id: string;
+          created_at?: string;
+          id?: number;
+          user_id: string;
+        };
+        Update: {
+          chat_id?: string;
+          created_at?: string;
+          id?: number;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "chat_likes_chat_id_fkey";
+            columns: ["chat_id"];
+            isOneToOne: false;
+            referencedRelation: "chats";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "chat_likes_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       chats: {
         Row: {
           artifact_code: string | null;
@@ -393,12 +429,12 @@ export type Database = {
           is_private: boolean;
           created_at: string;
           slug: string;
+          title: string;
+          likes: number;
           first_user_message: string;
           last_assistant_message: string;
           last_assistant_message_theme: string;
           framework: string;
-          title: string;
-          likes: number;
         }[];
       };
       get_components_with_theme_and_slug: {

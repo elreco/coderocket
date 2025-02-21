@@ -4,15 +4,18 @@ import { SiHtml5, SiReact, SiVuedotjs } from "@icons-pack/react-simple-icons";
 import { useCompletion } from "ai/react";
 import { Crisp } from "crisp-sdk-web";
 import { addDays, format } from "date-fns";
+import { motion } from "framer-motion";
 import {
   Fullscreen,
   Layers,
   LoaderCircle,
   Settings,
   ExternalLink,
+  ThumbsUp,
+  Copy,
 } from "lucide-react";
 import { Share } from "lucide-react";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useCopyToClipboard } from "usehooks-ts";
 
@@ -27,6 +30,7 @@ import {
   DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -57,6 +61,8 @@ import {
   fetchLastAssistantMessageByChatId,
   fetchLastUserMessageByChatId,
   fetchMessagesByChatId,
+  hasUserLikedChat,
+  toggleChatLike,
 } from "../actions";
 
 import ComponentSettings from "./(settings)/component-settings";
@@ -78,7 +84,6 @@ export default function ComponentCompletion({
   const [, copy] = useCopyToClipboard();
   const { toast } = useToast();
   const router = useRouter();
-  const pathname = usePathname();
   const [selectedVersion, setSelectedVersion] = useState<number | undefined>(
     undefined,
   );
@@ -104,17 +109,24 @@ export default function ComponentCompletion({
     useState<Tables<"messages"> | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
 
+  const [isLiked, setIsLiked] = useState(false);
+
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [shareLink, setShareLink] = useState("");
+
   useEffect(() => {
     const loadInitialData = async () => {
-      const [chat, assistantMsg, userMsg, msgs] = await Promise.all([
+      const [chat, assistantMsg, userMsg, msgs, hasLiked] = await Promise.all([
         fetchChatById(chatId),
         fetchLastAssistantMessageByChatId(chatId),
         fetchLastUserMessageByChatId(chatId),
         fetchMessagesByChatId(chatId, false),
+        hasUserLikedChat(chatId),
       ]);
       if (!chat) {
         return;
       }
+      setIsLiked(hasLiked);
       setFetchedChat(chat);
       setLastAssistantMessage(assistantMsg);
       setMessages(msgs || []);
@@ -179,7 +191,7 @@ export default function ComponentCompletion({
             title: "You have reached the limit of your free plan",
             description:
               "Please upgrade to continue. Go to My Account to see your usage.",
-            duration: 5000,
+            duration: 2000,
           });
           return;
         }
@@ -190,7 +202,7 @@ export default function ComponentCompletion({
             variant: "destructive",
             title: "You have reached the limit of our AI",
             description: `Our AI has reached the maximum number of tokens it can generate. Please create a new component.`,
-            duration: 5000,
+            duration: 2000,
           });
           return;
         }
@@ -210,7 +222,7 @@ export default function ComponentCompletion({
                 resetDate,
                 "d MMMM yyyy",
               )}). Upgrade to a paid plan to continue.`,
-              duration: 5000,
+              duration: 2000,
             });
             return;
           }
@@ -232,7 +244,7 @@ export default function ComponentCompletion({
             variant: "destructive",
             title: "You have reached the limit of your plan",
             description: `You have reached your limit of ${maxMessagesPerPeriod} messages for ${subscription.prices?.interval}. This limit will reset on ${resetDate}. Go to My Account to see your usage.`,
-            duration: 5000,
+            duration: 2000,
           });
 
           return;
@@ -244,7 +256,7 @@ export default function ComponentCompletion({
             variant: "destructive",
             title: "Something went wrong",
             description: error.message,
-            duration: 5000,
+            duration: 2000,
           });
         }
       },
@@ -297,14 +309,18 @@ export default function ComponentCompletion({
   };
 
   const share = () => {
-    const protocol = window.location.protocol;
-    const host = window.location.host;
-    copy(`${protocol}//${host}${pathname}`);
+    const link =
+      fetchedChat?.framework === Framework.HTML
+        ? `https://www.tailwindai.dev/content/${chatId}/${selectedVersion}`
+        : `https://${chatId}-${selectedVersion}.preview.tailwindai.dev`;
+    setShareLink(link);
+    setIsShareModalOpen(true);
+    copy(link);
     toast({
       variant: "default",
       title: "Successfully copied",
       description: "The URL has been successfully saved to your clipboard",
-      duration: 5000,
+      duration: 2000,
     });
   };
 
@@ -410,6 +426,22 @@ export default function ComponentCompletion({
 
   const handleFullscreenToggle = (isOpen: boolean) => {
     setIsModalOpen(isOpen);
+  };
+
+  const handleLikeClick = async () => {
+    const { data: user, error } = await supabase.auth.getUser();
+
+    if (error || !user) {
+      toast({
+        title: "Can't like component",
+        description: "Please login to like a component",
+        duration: 2000,
+      });
+      return;
+    }
+
+    setIsLiked(!isLiked);
+    toggleChatLike(chatId);
   };
 
   const contextValue = {
@@ -636,12 +668,38 @@ export default function ComponentCompletion({
             </div>
             <div className="relative m-0 flex h-full max-h-full flex-1 flex-col border-b lg:border-b-0">
               {!isLoading && (
-                <Badge className="absolute bottom-0 right-0 z-[49] m-2 hover:bg-primary">
-                  <FrameworkIcon className="mr-1 size-3" />
-                  <span className="first-letter:uppercase">
-                    {fetchedChat?.framework}
-                  </span>
-                </Badge>
+                <div className="absolute bottom-0 right-0 z-[49] m-2 flex items-center">
+                  <Badge className="hover:bg-primary">
+                    <FrameworkIcon className="mr-1 size-3" />
+                    <span className="first-letter:uppercase">
+                      {fetchedChat?.framework}
+                    </span>
+                  </Badge>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <motion.div
+                        whileTap={{ scale: 0.9, rotate: 15 }}
+                        transition={{ type: "spring", stiffness: 300 }}
+                      >
+                        <Button
+                          onClick={handleLikeClick}
+                          variant="secondary"
+                          size="sm"
+                          className={`ml-2 rounded-full p-2 shadow-md transition-colors ${
+                            isLiked
+                              ? "bg-primary text-secondary hover:bg-primary"
+                              : "bg-green-300 text-green-700 hover:bg-green-200"
+                          }`}
+                        >
+                          <ThumbsUp className="size-5" />
+                        </Button>
+                      </motion.div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{isLiked ? "Unlike" : "Like"}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
               )}
               <WebcontainerProvider>
                 <CodePreview />
@@ -650,6 +708,38 @@ export default function ComponentCompletion({
           </div>
           <ComponentSidebar className="hidden lg:flex" />
         </div>
+        <Dialog open={isShareModalOpen} onOpenChange={setIsShareModalOpen}>
+          <DialogContent className="max-w-md sm:max-w-2xl">
+            <DialogTitle>Share Component</DialogTitle>
+            <DialogDescription>
+              <p className="mb-1">Here is your shareable link:</p>
+              <div className="flex items-center space-x-2">
+                <Input
+                  type="text"
+                  value={shareLink}
+                  readOnly
+                  className="flex-1"
+                />
+                <Button
+                  onClick={() => {
+                    copy(shareLink);
+                    toast({
+                      variant: "default",
+                      title: "Link copied",
+                      description:
+                        "The URL has been successfully copied to your clipboard",
+                      duration: 3000,
+                    });
+                  }}
+                  size="sm"
+                >
+                  <Copy className="size-4" />
+                  <span className="sr-only">Copy</span>
+                </Button>
+              </div>
+            </DialogDescription>
+          </DialogContent>
+        </Dialog>
       </Container>
     </ComponentContext.Provider>
   );

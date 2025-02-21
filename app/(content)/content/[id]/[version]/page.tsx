@@ -32,7 +32,7 @@ export async function generateMetadata(
   }
 
   const chat = await fetchChatById(id);
-  if (!chat || chat.is_private) {
+  if (!chat) {
     return {
       title: "Component not found",
     };
@@ -55,7 +55,7 @@ export default async function Content({ params, searchParams }: Props) {
   const { id, version } = await params;
   const { noWatermark } = await searchParams;
   const chat = await fetchChatById(id);
-  if (!chat || chat.is_private) {
+  if (!chat) {
     return notFound();
   }
   const lastAssistantMessage = await fetchAssistantMessageByChatIdAndVersion(

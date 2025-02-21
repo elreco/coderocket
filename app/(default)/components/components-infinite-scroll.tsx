@@ -38,7 +38,7 @@ export default function ComponentsInfiniteScroll({
 
   // Fetcher pour les populaires
   const fetcherPopular = async (search?: string) => {
-    return await getAllPopularPublicChats(2, 0, search);
+    return await getAllPopularPublicChats(4, 0, search);
   };
 
   // Requête paginée pour les chats publics

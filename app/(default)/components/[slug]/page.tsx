@@ -25,7 +25,7 @@ export async function generateMetadata(
 ): Promise<Metadata> {
   const { slug } = await params;
   const chat = await fetchChatById(slug);
-  if (!chat || chat.is_private) {
+  if (!chat) {
     return {
       title: "Component not found",
     };

@@ -46,7 +46,7 @@ export default function Pricing({ user, products, subscription }: Props) {
         variant: "destructive",
         title: "You must subscribe",
         description: error,
-        duration: 5000,
+        duration: 2000,
       });
     }
   }, [error]);
