@@ -667,7 +667,7 @@ export default function ComponentCompletion({
               </div>
             </div>
             <div className="relative m-0 flex h-full max-h-full flex-1 flex-col border-b lg:border-b-0">
-              {!isLoading && (
+              {!isLoading && isCanvas && (
                 <div className="absolute bottom-0 right-0 z-[49] m-2 flex items-center">
                   <Badge className="hover:bg-primary">
                     <FrameworkIcon className="mr-1 size-3" />
