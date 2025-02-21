@@ -25,8 +25,18 @@ export async function generateMetadata(
 ): Promise<Metadata> {
   const { slug } = await params;
   const chat = await fetchChatById(slug);
+  if (!chat) {
+    return {
+      title: "Component not found",
+    };
+  }
 
   const lastAssistantMessage = await fetchLastAssistantMessageByChatId(chat.id);
+  if (!lastAssistantMessage) {
+    return {
+      title: "Component not found",
+    };
+  }
 
   // optionally access and extend (rather than replace) parent metadata
   const previousImages = (await parent).openGraph?.images || [];

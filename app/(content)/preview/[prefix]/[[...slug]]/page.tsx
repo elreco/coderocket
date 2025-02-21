@@ -25,7 +25,18 @@ export async function generateMetadata(
     versionNumber,
   );
 
+  if (!lastAssistantMessage) {
+    return {
+      title: "Component not found",
+    };
+  }
+
   const chat = await fetchChatById(id);
+  if (!chat) {
+    return {
+      title: "Component not found",
+    };
+  }
 
   // optionally access and extend (rather than replace) parent metadata
   const previousImages = (await parent).openGraph?.images || [];
