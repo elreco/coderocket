@@ -584,19 +584,28 @@ export default function ComponentCompletion({
                     </Dialog>
                   </>
                 )}
-                {isVisible && (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button size="sm" variant="secondary" onClick={share}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={share}
+                        disabled={!isVisible}
+                        className={!isVisible ? "cursor-not-allowed" : ""}
+                      >
                         <Share className="w-5" />
                       </Button>
-                    </TooltipTrigger>
-
-                    <TooltipContent>
-                      <p>Share Component</p>
-                    </TooltipContent>
-                  </Tooltip>
-                )}
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>
+                      {isVisible
+                        ? "Share Component"
+                        : "Your component needs to be public to share it. You can make it public by clicking the settings button."}
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
                 {!isLoading && title && authorized && (
                   <ComponentSettings>
                     <Button
