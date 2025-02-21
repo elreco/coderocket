@@ -1,4 +1,5 @@
 import { Metadata, ResolvingMetadata } from "next";
+import { notFound } from "next/navigation";
 
 import {
   fetchAssistantMessageByChatIdAndVersion,
@@ -32,7 +33,7 @@ export async function generateMetadata(
   }
 
   const chat = await fetchChatById(id);
-  if (!chat) {
+  if (!chat || chat.is_private) {
     return {
       title: "Component not found",
     };
@@ -58,6 +59,9 @@ export default async function Page({ params }: Props) {
   parts.pop();
   const id = parts.join("-");
   const chat = await fetchChatById(id);
+  if (!chat || chat.is_private) {
+    return notFound();
+  }
   return (
     <div className="size-full">
       <Watermark slug={chat.slug} />

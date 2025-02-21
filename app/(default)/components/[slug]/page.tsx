@@ -25,7 +25,7 @@ export async function generateMetadata(
 ): Promise<Metadata> {
   const { slug } = await params;
   const chat = await fetchChatById(slug);
-  if (!chat) {
+  if (!chat || chat.is_private) {
     return {
       title: "Component not found",
     };
@@ -60,7 +60,7 @@ export default async function Components({ params }: Props) {
   const userData = await supabase.auth.getUser();
   const connectedUser = userData.data.user;
   const chat = await fetchChatById(slug);
-  const isNotFound = chat.is_private && chat.user?.id !== connectedUser?.id;
+  const isNotFound = chat?.is_private && chat?.user?.id !== connectedUser?.id;
   if (!chat || isNotFound) {
     return notFound();
   }

@@ -112,6 +112,9 @@ export default function ComponentCompletion({
         fetchLastUserMessageByChatId(chatId),
         fetchMessagesByChatId(chatId, false),
       ]);
+      if (!chat) {
+        return;
+      }
       setFetchedChat(chat);
       setLastAssistantMessage(assistantMsg);
       setMessages(msgs || []);

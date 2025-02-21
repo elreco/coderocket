@@ -66,8 +66,7 @@ export const fetchChatById = async (idOrSlug: string) => {
     .eq(isUuid ? "id" : "slug", idOrSlug)
     .single();
 
-  const { data, error } = await chatsWithUser;
-  if (error) throw error;
+  const { data } = await chatsWithUser;
 
   return data;
 };
