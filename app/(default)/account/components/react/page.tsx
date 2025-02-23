@@ -7,6 +7,7 @@ import Link from "next/link";
 
 import { getReactChatsFromUser } from "@/app/(default)/components/actions";
 import ComponentCard from "@/components/component-card";
+import { ComponentCardNew } from "@/components/component-card-new";
 import { Container } from "@/components/container";
 import { PageTitle } from "@/components/page-title";
 import { Button } from "@/components/ui/button";
@@ -40,6 +41,7 @@ export default async function MyReactComponents() {
         </Button>
       </div>
       <div className="grid grid-cols-1 gap-x-4 gap-y-10 pb-20 lg:grid-cols-2  xl:grid-cols-3 2xl:grid-cols-4">
+        <ComponentCardNew />
         {chats?.map((chat) => <ComponentCard key={chat.chat_id} chat={chat} />)}
       </div>
     </Container>

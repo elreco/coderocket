@@ -6,6 +6,7 @@ import useSWR from "swr";
 import useSWRInfinite from "swr/infinite";
 
 import ComponentCard from "@/components/component-card";
+import { ComponentCardNew } from "@/components/component-card-new";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -196,6 +197,9 @@ export default function ComponentsInfiniteScroll({
           ))
         ) : (
           <>
+            {displayedPopularChats.map((chat) => (
+              <ComponentCardNew isPopular key={chat.chat_id} chat={chat} />
+            ))}
             {/* Affichage des populaires */}
             {displayedPopularChats.map((chat) => (
               <ComponentCard isPopular key={chat.chat_id} chat={chat} />
