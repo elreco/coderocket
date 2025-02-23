@@ -13,22 +13,22 @@ export function UserWidget({
   userFullName: string;
 }) {
   return (
-    <div className="flex w-full items-center justify-end">
-      <div className="ml-auto flex items-center space-x-2">
-        <div className="flex flex-col">
-          <p className="text-right text-sm font-medium">
-            {userFullName || "Anonymous user"}
-          </p>
-          <p className="whitespace-nowrap text-right text-xs font-semibold text-primary">
-            {getRelativeDate(createdAt)}
-          </p>
-        </div>
+    <div className="flex w-full items-center justify-start">
+      <div className="flex items-center space-x-2">
         <Avatar>
           <AvatarImage src={userAvatarUrl || undefined} />
           <AvatarFallback className="bg-background">
             {userFullName ? getInitials(userFullName) : "?"}
           </AvatarFallback>
         </Avatar>
+        <div className="flex flex-col">
+          <p className="text-sm font-medium">
+            {userFullName || "Anonymous user"}
+          </p>
+          <p className="whitespace-nowrap text-xs font-semibold text-primary">
+            {getRelativeDate(createdAt)}
+          </p>
+        </div>
       </div>
     </div>
   );

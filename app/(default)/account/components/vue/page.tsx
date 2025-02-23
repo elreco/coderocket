@@ -6,8 +6,8 @@ import { Globe, Terminal } from "lucide-react";
 import Link from "next/link";
 
 import { getVueChatsFromUser } from "@/app/(default)/components/actions";
+import { ComponentCardNew } from "@/components/component-card";
 import ComponentCard from "@/components/component-card";
-import { ComponentCardNew } from "@/components/component-card-new";
 import { Container } from "@/components/container";
 import { PageTitle } from "@/components/page-title";
 import { Button } from "@/components/ui/button";
