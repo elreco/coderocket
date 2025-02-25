@@ -1,18 +1,53 @@
+import { Metadata } from "next";
+
+import { ComponentsInfiniteScroll } from "@/components/components-infinite-scroll";
 import { Container } from "@/components/container";
 import { PageTitle } from "@/components/page-title";
+import { Framework } from "@/utils/config";
 
-import { getAllPublicChats, getAllPopularPublicChats } from "./actions";
-import ComponentsInfiniteScroll from "./components-infinite-scroll";
+import { getAllPublicChats } from "./actions";
 
-export const metadata = {
-  title: "Public components - Tailwind AI",
-  description:
-    "Last Tailwind components generated with AI by our users with React and HTML",
-};
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams?: { search?: string };
+}): Promise<Metadata> {
+  const searchQuery = searchParams?.search || "";
+  return {
+    title: searchQuery
+      ? `Results for "${searchQuery}" - Public Components - Tailwind AI`
+      : "Public Components - Tailwind AI",
+    description: searchQuery
+      ? `Discover the latest AI components for "${searchQuery}".`
+      : "Last Tailwind components generated with AI by our users with React, Vue, and HTML",
+  };
+}
 
-export default async function Components() {
-  const initialChats = await getAllPublicChats();
-  const initialPopularChats = await getAllPopularPublicChats();
+export default async function Components({
+  searchParams,
+}: {
+  searchParams?: { search?: string; frameworks?: string };
+}) {
+  const searchQuery = searchParams?.search || "";
+  const initialSelectedFrameworks = searchParams?.frameworks
+    ? searchParams.frameworks
+        .split(",")
+        .map((framework) => framework as Framework)
+    : [];
+  const initialChats = await getAllPublicChats(
+    17,
+    0,
+    false,
+    searchQuery,
+    initialSelectedFrameworks,
+  );
+  const initialPopularChats = await getAllPublicChats(
+    4,
+    0,
+    true,
+    searchQuery,
+    initialSelectedFrameworks,
+  );
 
   return (
     <Container className="pr-2 sm:pr-11">
@@ -23,6 +58,8 @@ export default async function Components() {
       <ComponentsInfiniteScroll
         initialChats={initialChats}
         initialPopularChats={initialPopularChats}
+        initialSearchQuery={searchQuery}
+        initialSelectedFrameworks={initialSelectedFrameworks}
       />
     </Container>
   );

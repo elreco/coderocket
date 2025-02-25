@@ -5,26 +5,49 @@ export const maxDuration = 300;
 import { Terminal, Globe } from "lucide-react";
 import Link from "next/link";
 
-import { getHTMLChatsFromUser } from "@/app/(default)/components/actions";
-import ComponentCard from "@/components/component-card";
+import { getAllPublicChats } from "@/app/(default)/components/actions";
+import { ComponentsInfiniteScroll } from "@/components/components-infinite-scroll";
 import { Container } from "@/components/container";
 import { PageTitle } from "@/components/page-title";
 import { Button } from "@/components/ui/button";
+import { Framework } from "@/utils/config";
 
 export const metadata = {
-  title: `My HTML components - Tailwind AI`,
+  title: `My components - Tailwind AI`,
   description:
-    "My last Tailwind HTML components generated with AI by our users with React and HTML",
+    "My last Tailwind HTML components generated with AI by our users with React, Vue, and HTML",
 };
 
-export default async function MyHTMLComponents() {
-  const chats = await getHTMLChatsFromUser();
+export default async function AccountComponents({
+  searchParams,
+}: {
+  searchParams?: { search?: string; frameworks?: string };
+}) {
+  const searchQuery = searchParams?.search || "";
+  const initialSelectedFrameworks = searchParams?.frameworks
+    ? searchParams.frameworks
+        .split(",")
+        .map((framework) => framework as Framework)
+    : [];
+  const initialChats = await getAllPublicChats(
+    17,
+    0,
+    false,
+    searchQuery,
+    initialSelectedFrameworks,
+    true,
+  );
+  const initialPopularChats = await getAllPublicChats(
+    4,
+    0,
+    true,
+    searchQuery,
+    initialSelectedFrameworks,
+    true,
+  );
   return (
     <Container className="pr-2 sm:pr-11">
-      <PageTitle
-        title="My HTML Components"
-        subtitle="My generated HTML components"
-      />
+      <PageTitle title="My Components" subtitle="All my generated components" />
       <div className="mb-8 flex gap-4">
         <Button asChild>
           <Link href="/" className="flex items-center gap-2">
@@ -39,9 +62,13 @@ export default async function MyHTMLComponents() {
           </Link>
         </Button>
       </div>
-      <div className="grid grid-cols-1 gap-x-4 gap-y-10 pb-20 lg:grid-cols-2  xl:grid-cols-3 2xl:grid-cols-4">
-        {chats?.map((chat) => <ComponentCard key={chat.chat_id} chat={chat} />)}
-      </div>
+      <ComponentsInfiniteScroll
+        initialChats={initialChats}
+        initialPopularChats={initialPopularChats}
+        initialSearchQuery={searchQuery}
+        initialSelectedFrameworks={initialSelectedFrameworks}
+        isAccountPage={true}
+      />
     </Container>
   );
 }

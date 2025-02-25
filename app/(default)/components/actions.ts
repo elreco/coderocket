@@ -7,6 +7,7 @@ import { after } from "next/server";
 import { getSubscription } from "@/app/supabase-server";
 import {
   Framework,
+  MAX_SEARCH_LENGTH,
   TRIAL_PLAN_MESSAGES_PER_DAY,
   defaultTheme,
   getMaxMessagesPerPeriod,
@@ -389,73 +390,54 @@ export const getFeaturedChats = async () => {
     .limit(50);
   return data;
 };
-
-export const getAllReactPublicChats = async () => {
-  const supabase = await createClient();
-
-  const { data } = await supabase
-    .rpc("get_components")
-    .is("is_private", false)
-    .eq("framework", "react")
-    .not("last_assistant_message", "is", null)
-    .limit(24);
-  return data;
-};
-
-export const getAllVuePublicChats = async () => {
-  const supabase = await createClient();
-
-  const { data } = await supabase
-    .rpc("get_components")
-    .is("is_private", false)
-    .eq("framework", "vue")
-    .not("last_assistant_message", "is", null)
-    .limit(24);
-
-  return data;
-};
-
+/**
+ * 🔹 Récupère les composants publics avec pagination et recherche sécurisée.
+ */
 export const getAllPublicChats = async (
   limit: number = 20,
   offset: number = 0,
+  isPopular: boolean = false,
   searchQuery?: string,
+  selectedFrameworks?: Framework[],
+  isAccountPage?: boolean,
 ) => {
-  const supabase = await createClient();
+  try {
+    const supabase = await createClient();
+    const { data: userData } = await supabase.auth.getUser();
+    const user = userData.user;
 
-  let query = supabase
-    .rpc("get_components")
-    .is("is_private", false)
-    .not("last_assistant_message", "is", null);
+    let query = supabase
+      .rpc("get_components")
+      .is("is_private", false)
+      .not("last_assistant_message", "is", null);
 
-  if (searchQuery) {
-    query = query.ilike("title", `%${searchQuery}%`); // Recherche insensible à la casse
+    // 🔒 Sécuriser la requête de recherche
+    if (searchQuery) {
+      const sanitizedQuery = searchQuery.trim().slice(0, MAX_SEARCH_LENGTH);
+      query = query.ilike("title", `%${sanitizedQuery}%`);
+    }
+    if (selectedFrameworks?.length) {
+      query = query.in("framework", selectedFrameworks);
+    }
+
+    if (isAccountPage && user) {
+      query = query.eq("user_id", user.id);
+    }
+    if (isPopular) {
+      query = query.gt("likes", 0);
+    }
+
+    const { data, error } = await query.range(offset, offset + limit - 1);
+
+    if (error) {
+      console.error("Error fetching public chats:", error);
+      return [];
+    }
+    return data || [];
+  } catch (err) {
+    console.error("Unexpected error in getAllPublicChats:", err);
+    return [];
   }
-
-  const { data } = await query.range(offset, offset + limit - 1);
-  return data;
-};
-
-export const getAllPopularPublicChats = async (
-  limit: number = 4,
-  offset: number = 0,
-  searchQuery?: string,
-) => {
-  const supabase = await createClient();
-
-  let query = supabase
-    .rpc("get_components")
-    .is("is_private", false)
-    .not("last_assistant_message", "is", null);
-
-  if (searchQuery) {
-    query = query.ilike("title", `%${searchQuery}%`); // Appliquer d'abord la recherche
-  }
-
-  query = query.gt("likes", 0).order("likes", { ascending: false });
-
-  const { data } = await query.range(offset, offset + limit - 1);
-  console.log("data", data);
-  return data;
 };
 
 export const generateUniqueNanoid = async () => {

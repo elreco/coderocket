@@ -13,7 +13,7 @@ import { Badge } from "./ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import { UserWidget } from "./user-widget";
 
-export default function ComponentCard({
+export function ComponentCard({
   chat,
   isPopular,
 }: {
@@ -55,7 +55,7 @@ export default function ComponentCard({
           e.currentTarget.style.backgroundSize = "100%";
         }}
       >
-        <div className="absolute left-0 top-0 size-full bg-gradient-to-b from-black/45 via-black/20 to-black/45 transition duration-300 group-hover/card:opacity-0"></div>
+        <div className="absolute left-0 top-0 size-full bg-gradient-to-b from-black/35 via-black/15 to-black/35 transition duration-300 group-hover/card:opacity-0"></div>
         <div className="z-10 flex flex-row items-center space-x-4 opacity-100 transition-all duration-300 group-hover/card:-translate-y-full  group-hover/card:opacity-0">
           <UserWidget
             createdAt={chat.created_at}
