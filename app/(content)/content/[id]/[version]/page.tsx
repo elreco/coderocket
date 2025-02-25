@@ -20,6 +20,13 @@ export async function generateMetadata(
 ): Promise<Metadata> {
   const { id, version } = await params;
 
+  const chat = await fetchChatById(id);
+  if (!chat) {
+    return {
+      title: "Component not found",
+    };
+  }
+
   const lastAssistantMessage = await fetchAssistantMessageByChatIdAndVersion(
     id,
     parseInt(version),
@@ -27,14 +34,7 @@ export async function generateMetadata(
 
   if (!lastAssistantMessage) {
     return {
-      title: "Component not found",
-    };
-  }
-
-  const chat = await fetchChatById(id);
-  if (!chat) {
-    return {
-      title: "Component not found",
+      title: "Generating content...",
     };
   }
   // optionally access and extend (rather than replace) parent metadata

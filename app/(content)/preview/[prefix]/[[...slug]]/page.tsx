@@ -21,6 +21,13 @@ export async function generateMetadata(
   const versionNumber = Number(parts.pop());
   const id = parts.join("-");
 
+  const chat = await fetchChatById(id);
+  if (!chat) {
+    return {
+      title: "Component not found",
+    };
+  }
+
   const lastAssistantMessage = await fetchAssistantMessageByChatIdAndVersion(
     id,
     versionNumber,
@@ -28,14 +35,7 @@ export async function generateMetadata(
 
   if (!lastAssistantMessage) {
     return {
-      title: "Component not found",
-    };
-  }
-
-  const chat = await fetchChatById(id);
-  if (!chat) {
-    return {
-      title: "Component not found",
+      title: "Generating content...",
     };
   }
 

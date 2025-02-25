@@ -34,7 +34,7 @@ export async function generateMetadata(
   const lastAssistantMessage = await fetchLastAssistantMessageByChatId(chat.id);
   if (!lastAssistantMessage) {
     return {
-      title: "Component not found",
+      title: "Generating content...",
     };
   }
 
