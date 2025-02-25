@@ -13,7 +13,7 @@ import { Badge } from "./ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import { UserWidget } from "./user-widget";
 
-export default function ComponentCard({
+export function ComponentCard({
   chat,
   isPopular,
 }: {
