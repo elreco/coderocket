@@ -21,7 +21,7 @@ export const metadata = {
 export default async function AccountComponents({
   searchParams,
 }: {
-  searchParams?: { search?: string; frameworks?: string };
+  searchParams: { search?: string; frameworks?: string };
 }) {
   const searchQuery = searchParams?.search || "";
   const initialSelectedFrameworks = searchParams?.frameworks

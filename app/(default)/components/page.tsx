@@ -26,7 +26,7 @@ export async function generateMetadata({
 export default async function Components({
   searchParams,
 }: {
-  searchParams?: { search?: string; frameworks?: string };
+  searchParams: { search?: string; frameworks?: string };
 }) {
   const searchQuery = searchParams?.search || "";
   const initialSelectedFrameworks = searchParams?.frameworks
