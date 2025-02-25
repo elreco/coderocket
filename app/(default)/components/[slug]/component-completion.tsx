@@ -502,10 +502,6 @@ export default function ComponentCompletion({
                 : message,
             ),
           );
-
-          if (payload.new.is_built) {
-            setWebcontainerReady(true);
-          }
         },
       )
       .subscribe();

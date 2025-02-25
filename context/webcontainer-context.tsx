@@ -152,6 +152,9 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
       setPreviewId(undefined);
       setLoadingState("initializing");
       setWebcontainerReady(false);
+      setError(null);
+      setPreviewError(null);
+      setBuildError(null);
       if (isWebcontainerReady) {
         setLoadingState(null);
         setWebcontainerReady(true);
