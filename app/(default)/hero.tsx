@@ -1,10 +1,5 @@
 "use client";
-import {
-  SiHtml5,
-  SiReact,
-  SiVuedotjs,
-  SiSvelte,
-} from "@icons-pack/react-simple-icons";
+import { SiHtml5, SiReact, SiVuedotjs } from "@icons-pack/react-simple-icons";
 import {
   Image as LucideImage,
   X as XIcon,
@@ -80,7 +75,6 @@ const frameworkConfig = {
   [Framework.REACT]: { icon: SiReact, badge: null, disabled: false },
   [Framework.VUE]: { icon: SiVuedotjs, badge: "Beta", disabled: false },
   [Framework.HTML]: { icon: SiHtml5, badge: null, disabled: false },
-  [Framework.SVELTE]: { icon: SiSvelte, badge: "Soon", disabled: true },
 };
 
 export default function Hero() {

@@ -289,7 +289,7 @@ export function ComponentsInfiniteScroll({
   return (
     <div>
       {/* Search bar & frameworks filter */}
-      <div className="mb-6 flex items-center justify-start gap-2">
+      <div className="flex flex-col items-center justify-start gap-2 space-y-2 sm:flex-row sm:space-y-0">
         <div className="relative flex w-full max-w-xl items-center rounded-md border border-border bg-secondary pl-3 focus-within:border-primary">
           <Search className="mr-2 size-4 shrink-0 opacity-50" />
           <Input
@@ -331,7 +331,7 @@ export function ComponentsInfiniteScroll({
             <Button
               size="lg"
               variant="secondary"
-              className="ml-2 flex items-center gap-2 border border-border p-[21.5px]"
+              className="flex w-full items-center gap-2 border border-border p-[22px] sm:w-auto"
             >
               {selectedFrameworks.length > 0
                 ? selectedFrameworks.map((fw) => (
@@ -377,7 +377,7 @@ export function ComponentsInfiniteScroll({
 
       {/* Popular first, then Public */}
       {hasNoResults ? (
-        <div className="flex min-h-[400px] flex-col items-center justify-center rounded-lg border border-dashed border-border bg-secondary px-4 py-6 text-center">
+        <div className="mt-6 flex min-h-[400px] flex-col items-center justify-center rounded-lg border border-dashed border-border bg-secondary px-4 py-6 text-center">
           <SearchX className="size-12 text-muted-foreground" />
           <h3 className="mt-4 text-lg font-semibold">No components found</h3>
           <p className="mt-2 max-w-sm text-sm text-muted-foreground">
@@ -398,7 +398,7 @@ export function ComponentsInfiniteScroll({
           </Button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-x-4 gap-y-10 pb-5 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+        <div className="mt-6 grid grid-cols-1 gap-x-4 gap-y-10 pb-5 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
           {showSkeleton
             ? // Loading skeleton
               [...Array(12)].map((_, i) => (
