@@ -1,5 +1,6 @@
 import { Container } from "@/components/container";
 import { PageTitle } from "@/components/page-title";
+import { Framework } from "@/utils/config";
 
 import { getAllPublicChats, getAllPopularPublicChats } from "./actions";
 import ComponentsInfiniteScroll from "./components-infinite-scroll";
@@ -10,9 +11,19 @@ export const metadata = {
     "Last Tailwind components generated with AI by our users with React and HTML",
 };
 
-export default async function Components() {
-  const initialChats = await getAllPublicChats();
-  const initialPopularChats = await getAllPopularPublicChats();
+export default async function Components({
+  searchParams,
+}: {
+  searchParams?: { search?: string; frameworks?: string };
+}) {
+  const searchQuery = searchParams?.search || "";
+  const initialSelectedFrameworks = searchParams?.frameworks
+    ? searchParams.frameworks
+        .split(",")
+        .map((framework) => framework as Framework)
+    : [];
+  const initialChats = await getAllPublicChats(17, 0, searchQuery);
+  const initialPopularChats = await getAllPopularPublicChats(4, 0, searchQuery);
 
   return (
     <Container className="pr-2 sm:pr-11">
@@ -23,6 +34,8 @@ export default async function Components() {
       <ComponentsInfiniteScroll
         initialChats={initialChats}
         initialPopularChats={initialPopularChats}
+        initialSearchQuery={searchQuery}
+        initialSelectedFrameworks={initialSelectedFrameworks}
       />
     </Container>
   );

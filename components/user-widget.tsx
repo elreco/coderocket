@@ -21,11 +21,11 @@ export function UserWidget({
             {userFullName ? getInitials(userFullName) : "?"}
           </AvatarFallback>
         </Avatar>
-        <div className="flex flex-col">
-          <p className="text-sm font-medium">
+        <div className="flex flex-col justify-center">
+          <p className="text-base font-semibold">
             {userFullName || "Anonymous user"}
           </p>
-          <p className="whitespace-nowrap text-xs font-semibold text-primary">
+          <p className="whitespace-nowrap text-xs font-extrabold text-primary">
             {getRelativeDate(createdAt)}
           </p>
         </div>

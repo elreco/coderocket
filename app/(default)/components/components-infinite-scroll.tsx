@@ -1,14 +1,24 @@
 "use client";
 
-import { Loader2, Search, X } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { SiHtml5, SiReact, SiVuedotjs } from "@icons-pack/react-simple-icons";
+import { ChevronDown, Loader2, Search, X } from "lucide-react";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
 import useSWR from "swr";
 import useSWRInfinite from "swr/infinite";
 
 import ComponentCard from "@/components/component-card";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Framework, MAX_SEARCH_LENGTH } from "@/utils/config";
 
 import {
   type GetComponentsReturnType,
@@ -17,33 +27,74 @@ import {
 } from "./actions";
 
 const PAGE_SIZE = 17;
-const MAX_PAGES = 12;
+
+interface ComponentsInfiniteScrollProps {
+  initialChats: GetComponentsReturnType[] | null;
+  initialPopularChats: GetComponentsReturnType[] | null;
+  initialSearchQuery?: string;
+  initialSelectedFrameworks?: Framework[];
+}
 
 export default function ComponentsInfiniteScroll({
   initialChats,
   initialPopularChats,
-}: {
-  initialChats: GetComponentsReturnType[] | null;
-  initialPopularChats: GetComponentsReturnType[] | null;
-}) {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [submittedSearch, setSubmittedSearch] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  initialSearchQuery = "",
+  initialSelectedFrameworks = [],
+}: ComponentsInfiniteScrollProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
-  // Fetcher pour les chats publics
+  const [searchQuery, setSearchQuery] = useState<string>(initialSearchQuery);
+  const [submittedSearch, setSubmittedSearch] =
+    useState<string>(initialSearchQuery);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [showSkeleton, setShowSkeleton] = useState<boolean>(false);
+  const [selectedFrameworks, setSelectedFrameworks] = useState<Framework[]>(
+    initialSelectedFrameworks,
+  );
+  const [searchParamsString, setSearchParamsString] = useState(
+    searchParams.toString(),
+  );
+
+  const updateSearchQuery = useCallback(
+    (query: string, frameworks?: Framework[]) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (query) {
+        params.set("search", query);
+      } else {
+        params.delete("search");
+      }
+      if (frameworks.length > 0) {
+        params.set("frameworks", frameworks.join(","));
+      } else {
+        params.delete("frameworks");
+      }
+      setSearchParamsString(params.toString());
+    },
+    [router, pathname, searchParams],
+  );
+
+  useEffect(() => {
+    router.replace(`${pathname}?${searchParamsString}`, { scroll: false });
+  }, [searchParamsString, router, pathname]);
+
   const fetcherPublic = async (key: string) => {
     const [, offset, search] = key.split("-");
-    return await getAllPublicChats(PAGE_SIZE, Number(offset), search);
+    return getAllPublicChats(
+      PAGE_SIZE,
+      Number(offset),
+      search,
+      selectedFrameworks,
+    );
   };
 
-  // Fetcher pour les populaires
   const fetcherPopular = async (search?: string) => {
-    return await getAllPopularPublicChats(4, 0, search);
+    return getAllPopularPublicChats(4, 0, search, selectedFrameworks);
   };
 
-  // Requête paginée pour les chats publics
   const {
-    data,
+    data: publicChatsPages,
     isValidating: isValidatingPublic,
     mutate: mutatePublicChats,
     size,
@@ -54,67 +105,81 @@ export default function ComponentsInfiniteScroll({
     {
       initialSize: 1,
       revalidateOnFocus: false,
-      fallbackData: [initialChats],
+      fallbackData: [initialChats ?? []],
     },
   );
 
-  // Requête simple pour les populaires
   const {
-    data: popularChats,
+    data: popularChatsData,
     isValidating: isValidatingPopular,
     mutate: mutatePopularChats,
   } = useSWR(
     `popular-${submittedSearch}`,
     () => fetcherPopular(submittedSearch),
     {
-      fallbackData: initialPopularChats,
+      fallbackData: initialPopularChats ?? [],
       revalidateOnFocus: false,
     },
   );
 
-  const chats = useMemo(() => data?.flat() || [], [data]);
-  const displayedPopularChats = useMemo(
-    () => popularChats || [],
-    [popularChats],
+  // ✅ Assurer que les résultats sont des tableaux valides et filtrer les valeurs null
+  const publicChats = (publicChatsPages?.flat() ?? []).filter(Boolean);
+  const popularChats = (popularChatsData ?? []).filter(Boolean);
+
+  const filteredPublicChats = publicChats.filter(
+    (chat) =>
+      !popularChats.some((popularChat) => popularChat.chat_id === chat.chat_id),
   );
 
-  // ✅ Active `isLoading` uniquement si une recherche est en cours
+  const hasMore =
+    publicChatsPages &&
+    publicChatsPages[publicChatsPages.length - 1]?.length === PAGE_SIZE;
+
   useEffect(() => {
     if (submittedSearch && (isValidatingPublic || isValidatingPopular)) {
       setIsLoading(true);
+      setShowSkeleton(true);
     } else {
-      setTimeout(() => setIsLoading(false), 300);
+      setTimeout(() => {
+        setIsLoading(false);
+        setShowSkeleton(false);
+      }, 300);
     }
   }, [isValidatingPublic, isValidatingPopular, submittedSearch]);
 
   const handleSearchInput = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
-      setSearchQuery(event.target.value);
+      const value = event.target.value.slice(0, MAX_SEARCH_LENGTH);
+      setSearchQuery(value);
     },
     [],
   );
 
   const handleSubmitSearch = useCallback(() => {
-    if (!searchQuery.trim()) return; // Ne rien faire si le champ est vide
+    if (!searchQuery.trim()) return;
     setSubmittedSearch(searchQuery);
     setIsLoading(true);
+    setShowSkeleton(true);
+    updateSearchQuery(searchQuery, selectedFrameworks);
 
     Promise.all([
       mutatePublicChats(undefined, { revalidate: true, populateCache: true }),
       mutatePopularChats(),
     ]);
-  }, [searchQuery, mutatePublicChats, mutatePopularChats]);
+  }, [searchQuery, mutatePublicChats, mutatePopularChats, updateSearchQuery]);
 
   const handleClearSearch = useCallback(() => {
     setSearchQuery("");
     setSubmittedSearch("");
     setIsLoading(false);
+    setShowSkeleton(false);
+    updateSearchQuery("");
 
     Promise.all([
       mutatePublicChats(undefined, { revalidate: true, populateCache: true }),
       mutatePopularChats(),
     ]);
-  }, [mutatePublicChats, mutatePopularChats]);
+  }, [mutatePublicChats, mutatePopularChats, updateSearchQuery]);
 
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -126,14 +191,41 @@ export default function ComponentsInfiniteScroll({
     [handleSubmitSearch],
   );
 
-  // Infinite scroll handler
   const loadMore = useCallback(() => {
-    if (size < MAX_PAGES && !isValidatingPublic) {
+    if (hasMore && !isValidatingPublic) {
       setSize(size + 1);
     }
-  }, [size, isValidatingPublic, setSize]);
+  }, [size, isValidatingPublic, setSize, hasMore]);
 
-  // Ajouter un écouteur de défilement
+  const handleFrameworkSelection = useCallback(
+    (framework: Framework | null) => {
+      setIsLoading(true);
+      setShowSkeleton(true);
+
+      setSelectedFrameworks((prev) => {
+        const newFrameworks = framework
+          ? prev.includes(framework)
+            ? prev.filter((f) => f !== framework)
+            : [...prev, framework]
+          : [];
+
+        updateSearchQuery(submittedSearch, newFrameworks);
+
+        return newFrameworks;
+      });
+    },
+    [submittedSearch, updateSearchQuery],
+  );
+
+  useEffect(() => {
+    if (selectedFrameworks) {
+      Promise.all([
+        mutatePublicChats(undefined, { revalidate: true, populateCache: true }),
+        mutatePopularChats(),
+      ]);
+    }
+  }, [selectedFrameworks, mutatePublicChats, mutatePopularChats]);
+
   useEffect(() => {
     const handleScroll = () => {
       if (
@@ -148,9 +240,21 @@ export default function ComponentsInfiniteScroll({
     return () => window.removeEventListener("scroll", handleScroll);
   }, [loadMore]);
 
+  const FrameworkIcon = (framework: Framework) => {
+    switch (framework) {
+      case "react":
+        return <SiReact className="size-4" />;
+      case "html":
+        return <SiHtml5 className="size-4" />;
+      case "vue":
+        return <SiVuedotjs className="size-4" />;
+      default:
+        return null;
+    }
+  };
+
   return (
     <div>
-      {/* Barre de recherche */}
       <div className="mb-6 flex items-center justify-start gap-2">
         <div className="relative flex w-full max-w-xl items-center rounded-md border border-border bg-secondary pl-3 focus-within:border-primary">
           <Search className="mr-2 size-4 shrink-0 opacity-50" />
@@ -158,6 +262,7 @@ export default function ComponentsInfiniteScroll({
             id="search"
             placeholder="Search a component..."
             value={searchQuery}
+            maxLength={MAX_SEARCH_LENGTH}
             onKeyDown={handleKeyDown}
             onChange={handleSearchInput}
             className="flex w-full rounded-md border-none bg-transparent py-3 text-sm font-normal outline-none placeholder:text-muted-foreground focus:ring-0 focus-visible:ring-0 disabled:cursor-not-allowed disabled:opacity-50"
@@ -174,10 +279,10 @@ export default function ComponentsInfiniteScroll({
           <div className="flex items-center p-1">
             <Button
               onClick={handleSubmitSearch}
-              disabled={isLoading || isValidatingPublic || isValidatingPopular}
+              disabled={isLoading}
               className="ml-1"
             >
-              {isLoading || isValidatingPublic || isValidatingPopular ? (
+              {isLoading ? (
                 <Loader2 className="size-4 animate-spin" />
               ) : (
                 "Search"
@@ -185,37 +290,54 @@ export default function ComponentsInfiniteScroll({
             </Button>
           </div>
         </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="ml-2 flex items-center">
+              Filter <ChevronDown className="ml-1 size-4" />
+            </Button>
+          </DropdownMenuTrigger>
+
+          <DropdownMenuContent>
+            <DropdownMenuItem
+              key="all"
+              className="flex cursor-pointer items-center space-x-2 bg-primary/50 capitalize text-primary"
+              onClick={() => handleFrameworkSelection(null)}
+            >
+              Reset Frameworks Filters
+            </DropdownMenuItem>
+            {Object.values(Framework).map((framework) => (
+              <DropdownMenuCheckboxItem
+                key={framework}
+                checked={selectedFrameworks.includes(framework)}
+                className="flex cursor-pointer items-center space-x-2 capitalize"
+                onCheckedChange={() => handleFrameworkSelection(framework)}
+              >
+                {FrameworkIcon(framework)}
+                <span>{framework}</span>
+              </DropdownMenuCheckboxItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
-      {/* Liste des résultats */}
+      {/* Liste des résultats avec gestion des valeurs null */}
       <div className="grid grid-cols-1 gap-x-4 gap-y-10 pb-20 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-        {/* ✅ Affichage du Skeleton UNIQUEMENT si `submittedSearch` n'est pas vide */}
-        {isLoading && submittedSearch ? (
-          [...Array(12)].map((_, index) => (
-            <Skeleton key={index} className="h-[320px] w-full rounded-lg" />
-          ))
-        ) : (
-          <>
-            {/* Affichage des populaires */}
-            {displayedPopularChats.map((chat) => (
-              <ComponentCard isPopular key={chat.chat_id} chat={chat} />
-            ))}
-
-            {/* Affichage des résultats normaux */}
-            {chats.map((chat) => (
-              <ComponentCard key={chat!.chat_id} chat={chat!} />
-            ))}
-
-            {/* Afficher un indicateur de chargement lors du chargement de plus de données */}
-            {isValidatingPublic &&
-              [...Array(PAGE_SIZE)].map((_, index) => (
-                <Skeleton
-                  key={`loading-${index}`}
-                  className="h-[320px] w-full rounded-lg"
+        {showSkeleton
+          ? [...Array(12)].map((_, i) => (
+              <Skeleton key={i} className="h-[320px] w-full rounded-lg" />
+            ))
+          : [
+              ...popularChats.map((chat) => (
+                <ComponentCard
+                  key={`${chat.chat_id}-popular`}
+                  chat={chat}
+                  isPopular
                 />
-              ))}
-          </>
-        )}
+              )),
+              ...filteredPublicChats.map((chat) => (
+                <ComponentCard key={chat.chat_id} chat={chat} />
+              )),
+            ]}
       </div>
     </div>
   );
