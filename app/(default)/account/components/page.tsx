@@ -21,13 +21,12 @@ export const metadata = {
 export default async function AccountComponents({
   searchParams,
 }: {
-  searchParams: { search?: string; frameworks?: string };
+  searchParams: Promise<{ search?: string; frameworks?: string }>;
 }) {
-  const searchQuery = searchParams?.search || "";
-  const initialSelectedFrameworks = searchParams?.frameworks
-    ? searchParams.frameworks
-        .split(",")
-        .map((framework) => framework as Framework)
+  const { search, frameworks } = await searchParams;
+  const searchQuery = search || "";
+  const initialSelectedFrameworks = frameworks
+    ? frameworks.split(",").map((framework) => framework as Framework)
     : [];
   const initialChats = await getAllPublicChats(
     17,
