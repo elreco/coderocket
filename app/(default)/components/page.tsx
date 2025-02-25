@@ -1,5 +1,3 @@
-import { Metadata } from "next";
-
 import { ComponentsInfiniteScroll } from "@/components/components-infinite-scroll";
 import { Container } from "@/components/container";
 import { PageTitle } from "@/components/page-title";
@@ -10,9 +8,10 @@ import { getAllPublicChats } from "./actions";
 export async function generateMetadata({
   searchParams,
 }: {
-  searchParams?: { search?: string };
-}): Promise<Metadata> {
-  const searchQuery = searchParams?.search || "";
+  searchParams: Promise<{ search?: string }>;
+}) {
+  const { search } = await searchParams;
+  const searchQuery = search || "";
   return {
     title: searchQuery
       ? `Results for "${searchQuery}" - Public Components - Tailwind AI`
