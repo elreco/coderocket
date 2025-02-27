@@ -409,7 +409,9 @@ export const getAllPublicChats = async (
     let query = supabase
       .rpc("get_components")
       .is("is_private", false)
-      .not("last_assistant_message", "is", null);
+      .not("last_assistant_message", "is", null)
+      .order("likes", { ascending: false })
+      .order("created_at", { ascending: false });
 
     // 🔒 Sécuriser la requête de recherche
     if (searchQuery) {
