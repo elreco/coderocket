@@ -94,6 +94,6 @@ export const builderApiUrl = "https://react-builder.fly.dev";
 export const STARTER_PLAN_MESSAGES_PER_PERIOD = 1000;
 export const PRO_PLAN_MESSAGES_PER_PERIOD = 2500;
 export const DEFAULT_MESSAGES_PER_PERIOD = 2500;
-export const TRIAL_PLAN_MESSAGES_PER_DAY = 10;
+export const TRIAL_PLAN_MESSAGES_PER_DAY = 6;
 
 export const MAX_SEARCH_LENGTH = 50;
