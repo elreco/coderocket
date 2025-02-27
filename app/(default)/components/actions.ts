@@ -409,9 +409,7 @@ export const getAllPublicChats = async (
     let query = supabase
       .rpc("get_components")
       .is("is_private", false)
-      .not("last_assistant_message", "is", null)
-      .order("created_at", { ascending: false })
-      .order("likes", { ascending: false });
+      .not("last_assistant_message", "is", null);
     // 🔒 Sécuriser la requête de recherche
     if (searchQuery) {
       const sanitizedQuery = searchQuery.trim().slice(0, MAX_SEARCH_LENGTH);
@@ -425,7 +423,9 @@ export const getAllPublicChats = async (
       query = query.eq("user_id", user.id);
     }
     if (isPopular) {
-      query = query.gt("likes", 0);
+      query = query.gt("likes", 0).order("likes", { ascending: false });
+    } else {
+      query = query.order("created_at", { ascending: false });
     }
 
     const { data, error } = await query.range(offset, offset + limit - 1);
