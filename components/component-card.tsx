@@ -34,8 +34,7 @@ export function ComponentCard({
     >
       <div
         className={cn(
-          "w-full cursor-pointer overflow-hidden relative transition duration-300 card h-72 rounded-md hover:shadow-2xl mx-auto backgroundImage flex flex-col justify-between p-4",
-          "bg-center bg-cover",
+          "w-full cursor-pointer bg-center overflow-hidden bg-cover bg-no-repeat relative transition duration-300 card h-72 rounded-md hover:shadow-2xl mx-auto backgroundImage flex flex-col justify-between p-4",
           isPopular
             ? "hover:border-amber-600 hover:shadow-amber-500/35"
             : "hover:border-primary hover:shadow-primary/35",
@@ -45,14 +44,7 @@ export function ComponentCard({
             chat.last_assistant_message ||
             "https://www.tailwindai.dev/placeholder.svg"
           })`,
-          backgroundSize: "100%",
           transition: "background-size 0.3s ease-in-out",
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundSize = "110%";
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundSize = "100%";
         }}
       >
         <div className="absolute left-0 top-0 size-full bg-gradient-to-b from-black/35 via-black/15 to-black/35 transition duration-300 group-hover/card:opacity-0"></div>
