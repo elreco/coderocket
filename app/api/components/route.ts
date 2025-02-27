@@ -38,7 +38,7 @@ export async function POST(req: Request) {
     const { prompt }: { prompt: string } = await req.json();
     if (!prompt) throw new Error("No prompt");
 
-    const { messagesFromDatabase, imageUrl, framework } =
+    const { messagesFromDatabase, imageUrl, framework, artifactCode } =
       await validateRequest(id);
 
     // const enhancedPrompt = await promptEnhancer(prompt);
@@ -63,7 +63,7 @@ export async function POST(req: Request) {
                 ? messagesFromDatabase[0]?.theme
                 : null,
             )
-          : systemPrompt(framework as Framework),
+          : systemPrompt(framework as Framework, artifactCode),
       toolChoice: "none",
       maxTokens: 8192,
       onFinish: async ({ text, usage, finishReason }) => {
@@ -107,10 +107,17 @@ const buildMessagesToOpenAi = async (
       ? messages.filter((m) => m.version <= selectedVersion)
       : messages;
 
+  // Limiter le nombre de messages à envoyer à l'API (par exemple, les 10 derniers)
+  const maxMessagesToSend = 2;
+  const limitedMessages =
+    filteredMessages.length > maxMessagesToSend
+      ? filteredMessages.slice(-maxMessagesToSend)
+      : filteredMessages;
+
   // Map messages to OpenAI format
-  const messagesToOpenAI = filteredMessages.map((m) => {
+  const messagesToOpenAI = limitedMessages.map((m) => {
     const content =
-      filteredMessages.length === 1 && m.role === "user"
+      limitedMessages.length === 1 && m.role === "user"
         ? `NEW PROJECT TAILWIND AI - ${m.content}`
         : m.content;
 
@@ -226,6 +233,7 @@ const validateRequest = async (id: string) => {
     imageUrl,
     subscription,
     framework: chat.framework,
+    artifactCode: chat.artifact_code,
   };
 };
 
