@@ -410,9 +410,8 @@ export const getAllPublicChats = async (
       .rpc("get_components")
       .is("is_private", false)
       .not("last_assistant_message", "is", null)
-      .order("likes", { ascending: false })
-      .order("created_at", { ascending: false });
-
+      .order("created_at", { ascending: false })
+      .order("likes", { ascending: false });
     // 🔒 Sécuriser la requête de recherche
     if (searchQuery) {
       const sanitizedQuery = searchQuery.trim().slice(0, MAX_SEARCH_LENGTH);

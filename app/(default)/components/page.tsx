@@ -33,7 +33,7 @@ export default async function Components({
     ? frameworks.split(",").map((framework) => framework as Framework)
     : [];
   const initialChats = await getAllPublicChats(
-    17,
+    20,
     0,
     false,
     searchQuery,
