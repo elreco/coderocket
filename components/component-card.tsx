@@ -2,7 +2,7 @@
 import { SiHtml5 } from "@icons-pack/react-simple-icons";
 import { SiVuedotjs } from "@icons-pack/react-simple-icons";
 import { SiReact } from "@icons-pack/react-simple-icons";
-import { StarIcon, ThumbsUp } from "lucide-react";
+import { ThumbsUp } from "lucide-react";
 import Link from "next/link";
 
 import { GetComponentsReturnType } from "@/app/(default)/components/actions";
