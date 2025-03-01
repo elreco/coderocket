@@ -132,6 +132,10 @@ export function AppSidebar({
     setUser(defaultUser);
   }, [defaultUser]);
 
+  useEffect(() => {
+    setUser(defaultUser);
+  }, []);
+
   const navMainItems = data.navMain.map((item) => ({
     ...item,
     isActive: pathname === item.url,
