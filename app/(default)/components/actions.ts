@@ -423,7 +423,10 @@ export const getAllPublicChats = async (
       query = query.eq("user_id", user.id);
     }
     if (isPopular) {
-      query = query.gt("likes", 0).order("likes", { ascending: false });
+      query = query
+        .gt("likes", 0)
+        .order("likes", { ascending: false })
+        .order("created_at", { ascending: false });
     } else {
       query = query.order("created_at", { ascending: false });
     }
