@@ -96,6 +96,17 @@ export default function ComponentSidebar({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!input.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Empty input",
+        description: "Please enter a prompt before submitting",
+        duration: 2000,
+      });
+      return;
+    }
+
     handleSubmitToAI(input);
     setActiveTab("chat");
     if (containerRef.current) {
@@ -125,8 +136,9 @@ export default function ComponentSidebar({
     if (!input) {
       toast({
         variant: "destructive",
-        title: "Prompt is empty",
-        description: "Please add a prompt to improve",
+        title: "Premium account required",
+        description:
+          "You are not premium, the visibility cannot be changed. Please upgrade to premium and try again.",
         duration: 2000,
       });
       return;

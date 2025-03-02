@@ -171,6 +171,18 @@ export default function Hero() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Add validation for empty prompt
+    if (!prompt.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Prompt required",
+        description: "Please enter a prompt to generate a component.",
+        duration: 2000,
+      });
+      return;
+    }
+
     setLoading(true);
     setLoadingAction("generate");
     const formData = new FormData();
