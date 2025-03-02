@@ -114,6 +114,8 @@ export default function ComponentCompletion({
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [shareLink, setShareLink] = useState("");
 
+  const [image, setImage] = useState<File | null>(null);
+
   useEffect(() => {
     const loadInitialData = async () => {
       const [chat, assistantMsg, userMsg, msgs, hasLiked] = await Promise.all([
@@ -174,11 +176,24 @@ export default function ComponentCompletion({
   const { completion, stop, complete, setCompletion, input, setInput } =
     useCompletion({
       api: "/api/components",
-      headers: {
-        "X-Custom-Header": JSON.stringify({
-          id: chatId,
-          selectedVersion,
-        }),
+      fetch: async (url) => {
+        const formData = new FormData();
+        if (image) {
+          formData.append("image", image);
+        }
+        formData.append("id", chatId);
+        formData.append("selectedVersion", String(selectedVersion));
+        formData.append("prompt", input);
+        const response = await fetch(url, {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!response.ok) {
+          throw new Error(await response.text());
+        }
+
+        return response;
       },
       streamProtocol: "text",
       initialCompletion: lastAssistantMessage?.content,
@@ -191,6 +206,16 @@ export default function ComponentCompletion({
             title: "You have reached the limit of your free plan",
             description:
               "Please upgrade to continue. Go to My Account to see your usage.",
+            duration: 2000,
+          });
+          return;
+        }
+        if (error.message === "payment-required-for-image") {
+          router.push("/pricing");
+          toast({
+            variant: "destructive",
+            title: "You can't upload images with a free plan",
+            description: "Please upgrade to continue.",
             duration: 2000,
           });
           return;
@@ -274,6 +299,7 @@ export default function ComponentCompletion({
         }
         setCanvas(true);
         setInput("");
+        setImage(null);
         await new Promise((resolve) => setTimeout(resolve, 500));
         setIsLoading(false);
       },
@@ -474,6 +500,8 @@ export default function ComponentCompletion({
     setWebcontainerReady,
     forceBuild,
     setForceBuild,
+    image,
+    setImage,
   };
 
   const FrameworkIcon =

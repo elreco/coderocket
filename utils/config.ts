@@ -11,7 +11,7 @@ export const screenshotApiUrl =
 
 export const discordLink = "https://discord.gg/t7dQgcYJ5t";
 
-export const maxImageSize = 1 * 1024 * 1024; // 1 Mo
+export const maxImageSize = 2 * 1024 * 1024; // 2 Mo
 
 export const MAX_ITERATIONS = 4;
 

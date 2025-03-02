@@ -7,6 +7,7 @@ import {
   fetchChatById,
   fetchLastUserMessageByChatId,
   fetchMessagesByChatId,
+  fetchUserMessageByChatIdAndVersion,
 } from "@/app/(default)/components/actions";
 import { getSubscription } from "@/app/supabase-server";
 import { Tables } from "@/types_db";
@@ -31,31 +32,30 @@ import { htmlSystemPrompt } from "@/utils/system-prompts/html";
 
 export async function POST(req: Request) {
   try {
-    const headers = req.headers;
-    const { id, selectedVersion } = JSON.parse(
-      headers.get("X-Custom-Header") as string,
-    ) as { id: string; selectedVersion: number };
-    const { prompt }: { prompt: string } = await req.json();
-    if (!prompt) throw new Error("No prompt");
+    const formData = await req.formData();
+    const id = formData.get("id") as string;
+    const selectedVersion =
+      Number(formData.get("selectedVersion")) || undefined;
+    const image = formData.get("image") as File | null;
+    const prompt = formData.get("prompt") as string | null;
 
-    const { messagesFromDatabase, imageUrl, framework, artifactCode } =
-      await validateRequest(id);
+    const {
+      messagesFromDatabase,
+      framework,
+      artifactCode,
+      updatedPrompt,
+      updatedImage,
+    } = await validateRequest(id, image, prompt, selectedVersion);
 
-    // const enhancedPrompt = await promptEnhancer(prompt);
-    // Build messages for OpenAI
     const { messagesToOpenAI: messages } = await buildMessagesToOpenAi(
       messagesFromDatabase,
-      prompt,
-      imageUrl,
+      updatedPrompt,
+      updatedImage,
       selectedVersion,
     );
-    const model =
-      imageUrl && messagesFromDatabase.length === 1
-        ? "claude-3-7-sonnet-latest"
-        : "claude-3-7-sonnet-latest";
     const stream = streamText({
       messages,
-      model: anthropicModel(model),
+      model: anthropicModel("claude-3-7-sonnet-latest"),
       system:
         framework === Framework.HTML
           ? htmlSystemPrompt(
@@ -74,7 +74,13 @@ export async function POST(req: Request) {
           throw new Error("error");
         }
         try {
-          await updateDataAfterCompletion(id, text, prompt, usage);
+          await updateDataAfterCompletion(
+            id,
+            text,
+            updatedPrompt,
+            usage,
+            updatedImage,
+          );
         } catch (e) {
           console.error(e);
         }
@@ -97,8 +103,8 @@ export async function POST(req: Request) {
 
 const buildMessagesToOpenAi = async (
   messages: Tables<"messages">[],
-  prompt: string,
-  imageUrl?: string | null | undefined,
+  updatedPrompt: string,
+  updatedImage: string | null,
   selectedVersion?: number,
 ) => {
   // Filter messages based on selectedVersion if provided
@@ -116,54 +122,59 @@ const buildMessagesToOpenAi = async (
 
   // Map messages to OpenAI format
   const messagesToOpenAI = limitedMessages.map((m) => {
-    const content =
-      limitedMessages.length === 1 && m.role === "user"
-        ? `NEW PROJECT TAILWIND AI - ${m.content}`
-        : m.content;
+    if (m.role === "user" && m.prompt_image) {
+      return {
+        role: m.role as "user" | "assistant" | "tool" | "system",
+        content: [
+          {
+            type: "text",
+            text:
+              limitedMessages.length === 1
+                ? `NEW PROJECT TAILWIND AI - ${m.content}`
+                : m.content,
+          },
+          {
+            type: "image",
+            image: new URL(`${storageUrl}/${m.prompt_image}`),
+          },
+        ],
+      };
+    }
 
     return {
       role: m.role as "user" | "assistant" | "tool" | "system",
-      content,
+      content:
+        limitedMessages.length === 1 && m.role === "user"
+          ? `NEW PROJECT TAILWIND AI - ${m.content}`
+          : m.content,
     };
   }) as CoreMessage[];
 
-  // If it's the first message, add the prefix to the prompt
-  if (messagesToOpenAI.length === 1 && imageUrl) {
-    messagesToOpenAI[0].content = [
-      {
-        type: "text",
-        text: prompt,
-      },
-      {
-        type: "image",
-        image: new URL(`${storageUrl}/${imageUrl}`),
-      },
-    ];
-  }
-
-  if (messagesToOpenAI.length > 1 && imageUrl) {
-    messagesToOpenAI.push({
-      role: "user",
-      content: [
-        {
-          type: "text",
-          text: prompt,
-        },
-      ],
-    });
-  }
-
-  if (messagesToOpenAI.length > 1 && !imageUrl) {
-    messagesToOpenAI.push({
-      role: "user",
-      content: prompt,
-    });
-  }
+  messagesToOpenAI.push({
+    role: "user",
+    content: updatedImage
+      ? [
+          {
+            type: "text",
+            text: updatedPrompt,
+          },
+          {
+            type: "image",
+            image: new URL(`${storageUrl}/${updatedImage}`),
+          },
+        ]
+      : updatedPrompt,
+  });
 
   return { messagesToOpenAI };
 };
 
-const validateRequest = async (id: string) => {
+const validateRequest = async (
+  id: string,
+  image: File | null,
+  prompt: string | null,
+  selectedVersion?: number,
+) => {
   const supabase = await createClient();
   const {
     data: { user },
@@ -214,34 +225,60 @@ const validateRequest = async (id: string) => {
     }
   }
 
-  const imageUrl = chat.prompt_image;
-
-  if (!subscription && imageUrl) {
-    throw new Error("payment-required", {
-      cause: "You need to be subscribed to use this feature",
-    });
-  }
-
   if (
     messagesFromDatabase.filter((m) => m.role === "assistant")?.length > 200
   ) {
     throw new Error("You can't have more than 200 versions");
   }
 
+  if (!subscription && image) {
+    throw new Error("payment-required-for-image");
+  }
+
+  const lastUserMessage =
+    selectedVersion !== undefined
+      ? await fetchUserMessageByChatIdAndVersion(id, selectedVersion)
+      : await fetchLastUserMessageByChatId(id);
+  if (!lastUserMessage) throw new Error("No last user message");
+
+  let updatedPrompt = prompt || "";
+  let updatedImage = null;
+
+  if (!prompt) {
+    updatedPrompt = lastUserMessage.content || "";
+  }
+
+  if (image) {
+    const { data: imageData, error: imageError } = await supabase.storage
+      .from("images")
+      .upload(`${Date.now()}-${user?.id}`, image);
+    if (imageError) {
+      throw new Error("Failed to upload image");
+    }
+
+    updatedImage = imageData?.path;
+  }
+
+  if (lastUserMessage.version === -1 && lastUserMessage.prompt_image) {
+    updatedImage = lastUserMessage.prompt_image;
+  }
+
   return {
     messagesFromDatabase,
-    imageUrl,
     subscription,
     framework: chat.framework,
     artifactCode: chat.artifact_code,
+    updatedPrompt,
+    updatedImage,
   };
 };
 
 const updateDataAfterCompletion = async (
   chatId: string,
   text: string | undefined,
-  prompt: string,
+  updatedPrompt: string,
   usage: LanguageModelUsage,
+  updatedImage: string | null | undefined,
 ) => {
   const supabase = await createClient();
 
@@ -299,8 +336,9 @@ const updateDataAfterCompletion = async (
       chat_id: chatId,
       screenshot: null,
       version,
-      content: prompt,
+      content: updatedPrompt,
       role: "user",
+      prompt_image: updatedImage,
       input_tokens: usage.promptTokens,
     });
   } else {

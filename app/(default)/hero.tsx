@@ -1,7 +1,6 @@
 "use client";
 import { SiHtml5, SiReact, SiVuedotjs } from "@icons-pack/react-simple-icons";
 import {
-  Image as LucideImage,
   X as XIcon,
   Terminal,
   Paintbrush,
@@ -12,9 +11,10 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 
 import { Container } from "@/components/container";
+import { ImageSelector } from "@/components/image-selector";
 import { AnimatedGridPattern } from "@/components/ui/animated-grid-pattern";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -34,11 +34,6 @@ import {
 import { Spotlight } from "@/components/ui/spotlight";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { Framework } from "@/utils/config";
@@ -152,24 +147,27 @@ export default function Hero() {
     };
   }, [inputRef, toast]);
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files?.[0]) {
-      return;
-    }
-    const file = e.target.files[0];
+  const handleImageChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (!e.target.files?.[0]) {
+        return;
+      }
+      const file = e.target.files[0];
 
-    if (file.size > maxImageSize) {
-      toast({
-        variant: "destructive",
-        title: "Image too large",
-        description: `The image must be less than ${maxImageSize / (1024 * 1024)} Mo.`,
-        duration: 2000,
-      });
-      return;
-    }
+      if (file.size > maxImageSize) {
+        toast({
+          variant: "destructive",
+          title: "Image too large",
+          description: `The image must be less than ${maxImageSize / (1024 * 1024)} Mo.`,
+          duration: 2000,
+        });
+        return;
+      }
 
-    setImage(file);
-  };
+      setImage(file);
+    },
+    [toast],
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -204,11 +202,11 @@ export default function Hero() {
     setPrompt(input);
   };
 
-  const handleButtonClick = () => {
+  const handleButtonClick = useCallback(() => {
     if (fileInputRef.current) {
       fileInputRef.current.click();
     }
-  };
+  }, []);
 
   const handleImageRemove = () => {
     setImage(null);
@@ -447,25 +445,12 @@ export default function Hero() {
                   </TabsTrigger>
                 </TabsList>
               </Tabs>
-
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="background"
-                    className="w-full lg:w-auto"
-                    size="sm"
-                    type="button"
-                    disabled={loading}
-                    onClick={handleButtonClick}
-                  >
-                    <LucideImage className="size-3" />
-                    <span>Image</span>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="left">
-                  <p>Upload an image to generate a component with it</p>
-                </TooltipContent>
-              </Tooltip>
+              <ImageSelector
+                fileInputRef={fileInputRef}
+                disabled={loading}
+                handleButtonClick={handleButtonClick}
+                handleImageChange={handleImageChange}
+              />
               {selectedFramework === Framework.HTML && (
                 <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
                   <SheetTrigger asChild>
@@ -590,13 +575,6 @@ export default function Hero() {
               </Select>
             </div>
             <div className="flex w-full items-center justify-end space-x-0 lg:space-x-2">
-              <input
-                ref={fileInputRef}
-                className="sr-only"
-                type="file"
-                accept=".png, .jpeg, .jpg, .gif, .webp"
-                onChange={handleImageChange}
-              />
               <Button
                 type="button"
                 size="sm"

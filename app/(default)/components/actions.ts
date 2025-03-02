@@ -306,7 +306,6 @@ export const createChat = async (prompt: string, formData: FormData) => {
     .insert([
       {
         user_id: user.id,
-        ...(imageUrl && { prompt_image: imageUrl }),
         is_private,
         framework,
         artifact_code:
@@ -329,6 +328,7 @@ export const createChat = async (prompt: string, formData: FormData) => {
     chat_id: data.id,
     role: "user",
     theme,
+    ...(imageUrl && { prompt_image: imageUrl }),
     content: prompt,
     version: -1,
   });

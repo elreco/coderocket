@@ -5,9 +5,12 @@ import {
   MessageSquare,
   Paintbrush,
   WandSparkles,
+  XIcon,
 } from "lucide-react";
+import Image from "next/image";
 import { useEffect, useState, useRef } from "react";
 
+import { ImageSelector } from "@/components/image-selector";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -30,7 +33,7 @@ import {
   hasArtifacts,
   splitContentIntoChunks,
 } from "@/utils/completion-parser";
-import { Framework } from "@/utils/config";
+import { Framework, maxImageSize } from "@/utils/config";
 import { getRelativeDate } from "@/utils/date";
 import { getFileConfig } from "@/utils/file-extensions";
 import { formatFileSize, getInitials } from "@/utils/helpers";
@@ -60,6 +63,8 @@ export default function ComponentSidebar({
     selectedFramework,
     completion,
     handleVersionSelect,
+    image,
+    setImage,
   } = useComponentContext();
 
   const [isLoaderVisible, setLoaderVisible] = useState(true);
@@ -69,6 +74,8 @@ export default function ComponentSidebar({
   const [hasImproved, setHasImproved] = useState(false);
   const [isImprovingLoading, setIsImprovingLoading] = useState(false);
   const [files, setFiles] = useState<ChatFile[]>([]);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const inputRef = useRef<HTMLTextAreaElement | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -98,6 +105,19 @@ export default function ComponentSidebar({
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
+  };
+
+  const handleButtonClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleImageRemove = () => {
+    setImage(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   const handleImprovePrompt = async () => {
@@ -174,6 +194,61 @@ export default function ComponentSidebar({
     }
     setActiveTab("chat");
     handleVersionSelect(version, undefined);
+  };
+
+  useEffect(() => {
+    const handlePaste = (event: ClipboardEvent) => {
+      const clipboardItems = event.clipboardData?.items;
+      if (!clipboardItems) return;
+
+      for (let i = 0; i < clipboardItems.length; i++) {
+        const item = clipboardItems[i];
+        if (item.type.startsWith("image/")) {
+          const file = item.getAsFile();
+          if (file && file.size <= maxImageSize) {
+            setImage(file);
+          } else {
+            toast({
+              variant: "destructive",
+              title: "Image too large",
+              description: `The image must be less than ${maxImageSize / (1024 * 1024)} Mo.`,
+              duration: 2000,
+            });
+          }
+          break;
+        }
+      }
+    };
+
+    const textarea = inputRef.current;
+    if (textarea) {
+      textarea.addEventListener("paste", handlePaste);
+    }
+
+    return () => {
+      if (textarea) {
+        textarea.removeEventListener("paste", handlePaste);
+      }
+    };
+  }, [inputRef, toast]);
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files?.[0]) {
+      return;
+    }
+    const file = e.target.files[0];
+
+    if (file.size > maxImageSize) {
+      toast({
+        variant: "destructive",
+        title: "Image too large",
+        description: `The image must be less than ${maxImageSize / (1024 * 1024)} Mo.`,
+        duration: 2000,
+      });
+      return;
+    }
+
+    setImage(file);
   };
 
   return (
@@ -295,6 +370,15 @@ export default function ComponentSidebar({
               )}
             </div>
             <UserMessage>{input}</UserMessage>
+            {image && (
+              <div className="mt-2">
+                <img
+                  src={URL.createObjectURL(image)}
+                  alt="Uploaded"
+                  className="aspect-video w-full rounded-md border border-foreground/10 object-contain shadow-md"
+                />
+              </div>
+            )}
           </div>
           <p className="mt-2 text-right text-xs font-semibold text-muted-foreground">
             {getRelativeDate(new Date().toISOString())}
@@ -458,9 +542,42 @@ export default function ComponentSidebar({
                   </ComponentTheme>
                 </div>
               )}
+              <div className="flex items-center">
+                {authorized && image && (
+                  <div className="mr-2 size-12">
+                    <div className="relative size-12">
+                      <Image
+                        src={URL.createObjectURL(image)}
+                        alt="Uploaded"
+                        width={12}
+                        height={12}
+                        crossOrigin="anonymous"
+                        className="size-12 rounded-md object-contain"
+                      />
+                      <button
+                        type="button"
+                        className="absolute right-0 top-0 cursor-pointer rounded-full bg-black/50 p-1"
+                        onClick={handleImageRemove}
+                        disabled={isLoading}
+                      >
+                        <XIcon className="size-4 text-white" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+                {authorized && (
+                  <ImageSelector
+                    fileInputRef={fileInputRef}
+                    disabled={isLoading}
+                    handleButtonClick={handleButtonClick}
+                    handleImageChange={handleImageChange}
+                  />
+                )}
+              </div>
             </div>
             <div className="flex w-full flex-col items-start space-y-1 border-t p-2">
               <Textarea
+                ref={inputRef}
                 autoFocus
                 disabled={isLoading}
                 value={input}

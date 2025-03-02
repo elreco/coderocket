@@ -174,11 +174,11 @@ export default function ComponentChatFiles({
               )}
             </div>
             <UserMessage>{message.content}</UserMessage>
-            {message.chats.prompt_image && (
+            {message.prompt_image && (
               <img
-                src={`${storageUrl}/${message.chats.prompt_image}`}
+                src={`${storageUrl}/${message.prompt_image}`}
                 alt="screenshot"
-                className="aspect-video w-full rounded-md border border-foreground/10 object-cover shadow-md"
+                className="aspect-video w-full rounded-md border border-foreground/10 object-contain shadow-md"
               />
             )}
           </div>

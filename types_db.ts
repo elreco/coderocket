@@ -125,6 +125,7 @@ export type Database = {
           input_tokens: number | null;
           is_built: boolean | null;
           output_tokens: number | null;
+          prompt_image: string | null;
           role: string;
           screenshot: string | null;
           theme: string | null;
@@ -138,6 +139,7 @@ export type Database = {
           input_tokens?: number | null;
           is_built?: boolean | null;
           output_tokens?: number | null;
+          prompt_image?: string | null;
           role: string;
           screenshot?: string | null;
           theme?: string | null;
@@ -151,6 +153,7 @@ export type Database = {
           input_tokens?: number | null;
           is_built?: boolean | null;
           output_tokens?: number | null;
+          prompt_image?: string | null;
           role?: string;
           screenshot?: string | null;
           theme?: string | null;

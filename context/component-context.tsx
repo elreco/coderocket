@@ -45,6 +45,8 @@ interface ComponentContextType {
   artifactFiles: ChatFile[];
   chatId: string;
   selectedFramework: Framework;
+  image: File | null;
+  setImage: (image: File | null) => void;
 }
 
 export const ComponentContext = createContext<ComponentContextType | undefined>(
