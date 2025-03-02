@@ -22,6 +22,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { UserAvatar } from "@/components/user-avatar";
 import { UserMessage } from "@/components/user-message";
 import { useComponentContext } from "@/context/component-context";
 import { useToast } from "@/hooks/use-toast";
@@ -38,7 +39,7 @@ import {
 import { Framework, storageUrl } from "@/utils/config";
 import { getRelativeDate } from "@/utils/date";
 import { getFileConfig } from "@/utils/file-extensions";
-import { getInitials, formatFileSize } from "@/utils/helpers";
+import { formatFileSize } from "@/utils/helpers";
 
 import { Markdown } from "../markdown";
 
@@ -155,24 +156,10 @@ export default function ComponentChatFiles({
       <div className="flex w-full gap-2">
         {message.role === "user" ? (
           <div className="flex w-full flex-col gap-2 rounded-lg border border-border bg-background p-5">
-            <div className="flex items-center justify-start">
-              <Avatar className="mr-2 size-10">
-                <AvatarImage
-                  src={message.chats.user.avatar_url || undefined}
-                  alt={message.chats.user.full_name || undefined}
-                />
-                <AvatarFallback>
-                  <span className="text-xs">
-                    {getInitials(message.chats.user.full_name || "")}
-                  </span>
-                </AvatarFallback>
-              </Avatar>
-              {message.chats.user?.full_name && (
-                <h2 className="text-lg font-semibold">
-                  {message.chats.user.full_name}
-                </h2>
-              )}
-            </div>
+            <UserAvatar
+              avatarUrl={message.chats.user.avatar_url}
+              fullName={message.chats.user.full_name}
+            />
             <UserMessage>{message.content}</UserMessage>
             {message.prompt_image && (
               <img

@@ -21,6 +21,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { UserAvatar } from "@/components/user-avatar";
 import { UserMessage } from "@/components/user-message";
 import { useComponentContext } from "@/context/component-context";
 import { toast } from "@/hooks/use-toast";
@@ -365,22 +366,10 @@ export default function ComponentSidebar({
           )}
         >
           <div className="flex flex-col gap-2 rounded-lg border border-border bg-background p-5">
-            <div className="flex items-center">
-              <Avatar className="mr-2 size-10">
-                <AvatarImage
-                  src={user?.avatar_url || undefined}
-                  alt={user?.full_name || undefined}
-                />
-                <AvatarFallback className="bg-background">
-                  <span className="text-xs">
-                    {getInitials(user?.full_name || "")}
-                  </span>
-                </AvatarFallback>
-              </Avatar>
-              {user?.full_name && (
-                <h2 className="text-lg font-semibold">{user.full_name}</h2>
-              )}
-            </div>
+            <UserAvatar
+              avatarUrl={user?.avatar_url}
+              fullName={user?.full_name}
+            />
             <UserMessage>{input}</UserMessage>
             {image && (
               <div className="mt-2">
