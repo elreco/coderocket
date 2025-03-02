@@ -620,13 +620,13 @@ export default function ComponentCompletion({
                       open={isModalOpen}
                       onOpenChange={handleFullscreenToggle}
                     >
-                      <DialogContent className="z-50 h-[98%] max-w-[98%] rounded-none p-10">
+                      <DialogContent className="z-[9999] h-[98%] max-w-[98%] rounded-none p-10">
                         <DialogTitle className="hidden">Fullscreen</DialogTitle>
                         <DialogDescription className="z-50">
                           {fetchedChat?.framework !== Framework.HTML &&
                           isWebcontainerReady ? (
                             <iframe
-                              className="size-full border-none"
+                              className="size-full rounded-md border-none"
                               src={`https://${chatId}-${selectedVersion}.webcontainer.tailwindai.dev`}
                               sandbox="allow-scripts allow-forms allow-popups allow-modals allow-storage-access-by-user-activation allow-same-origin"
                               allow="credentialless"
