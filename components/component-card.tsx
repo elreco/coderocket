@@ -46,7 +46,7 @@ export function ComponentCard({
           })`,
         }}
       >
-        <div className="absolute inset-0 size-full bg-gradient-to-b from-black/35 via-black/15 to-black/35"></div>
+        <div className="absolute inset-0 size-full bg-gradient-to-b from-background/40 via-background/10 to-background/40"></div>
         <div className="z-10 flex flex-row items-center space-x-4 text-foreground transition-all duration-300">
           <UserWidget
             createdAt={chat.created_at}
