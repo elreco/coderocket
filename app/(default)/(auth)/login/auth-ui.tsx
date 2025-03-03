@@ -25,7 +25,7 @@ export default function AuthUI() {
         variant: "destructive",
         title: "Error",
         description: result.error,
-        duration: 2000,
+        duration: 4000,
       });
     }
     if (result?.url) {

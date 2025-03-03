@@ -33,7 +33,7 @@ export default function ComponentSettings({
         title: "Premium account required",
         description:
           "You are not premium, the visibility cannot be changed. Please upgrade to premium and try again.",
-        duration: 2000,
+        duration: 4000,
       });
     }
   };

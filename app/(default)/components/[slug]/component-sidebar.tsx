@@ -98,7 +98,7 @@ export default function ComponentSidebar({
         variant: "destructive",
         title: "Empty input",
         description: "Please enter a prompt before submitting",
-        duration: 2000,
+        duration: 4000,
       });
       return;
     }
@@ -135,7 +135,7 @@ export default function ComponentSidebar({
         title: "Premium account required",
         description:
           "You are not premium, the visibility cannot be changed. Please upgrade to premium and try again.",
-        duration: 2000,
+        duration: 4000,
       });
       return;
     }
@@ -151,7 +151,7 @@ export default function ComponentSidebar({
         title: "Premium account required",
         description:
           "You are not premium, the visibility cannot be changed. Please upgrade to premium and try again.",
-        duration: 2000,
+        duration: 4000,
       });
     }
   };
@@ -220,7 +220,7 @@ export default function ComponentSidebar({
               variant: "destructive",
               title: "Image too large",
               description: `The image must be less than ${maxImageSize / (1024 * 1024)} Mo.`,
-              duration: 2000,
+              duration: 4000,
             });
           }
           break;
@@ -251,7 +251,7 @@ export default function ComponentSidebar({
         variant: "destructive",
         title: "Image too large",
         description: `The image must be less than ${maxImageSize / (1024 * 1024)} Mo.`,
-        duration: 2000,
+        duration: 4000,
       });
       return;
     }

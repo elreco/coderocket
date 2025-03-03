@@ -109,7 +109,7 @@ export default function ComponentChatFiles({
         title: "Premium account required",
         description:
           "You are not premium, you can't delete a version. Please upgrade to premium and try again.",
-        duration: 2000,
+        duration: 4000,
       });
     } finally {
       setIsDeleting(false);

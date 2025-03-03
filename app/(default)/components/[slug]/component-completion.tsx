@@ -214,7 +214,7 @@ export default function ComponentCompletion({
             title: "You have reached the limit of your free plan",
             description:
               "Please upgrade to continue. Go to My Account to see your usage.",
-            duration: 2000,
+            duration: 4000,
           });
           return;
         }
@@ -224,7 +224,7 @@ export default function ComponentCompletion({
             variant: "destructive",
             title: "You can't upload images with a free plan",
             description: "Please upgrade to continue.",
-            duration: 2000,
+            duration: 4000,
           });
           return;
         }
@@ -235,7 +235,7 @@ export default function ComponentCompletion({
             variant: "destructive",
             title: "You have reached the limit of our AI",
             description: `Our AI has reached the maximum number of tokens it can generate. Please create a new component.`,
-            duration: 2000,
+            duration: 4000,
           });
           return;
         }
@@ -255,7 +255,7 @@ export default function ComponentCompletion({
                 resetDate,
                 "d MMMM yyyy",
               )}). Upgrade to a paid plan to continue.`,
-              duration: 2000,
+              duration: 4000,
             });
             return;
           }
@@ -277,7 +277,7 @@ export default function ComponentCompletion({
             variant: "destructive",
             title: "You have reached the limit of your plan",
             description: `You have reached your limit of ${maxMessagesPerPeriod} messages for ${subscription.prices?.interval}. This limit will reset on ${resetDate}. Go to My Account to see your usage.`,
-            duration: 2000,
+            duration: 4000,
           });
 
           return;
@@ -289,7 +289,7 @@ export default function ComponentCompletion({
             variant: "destructive",
             title: "Something went wrong",
             description: error.message,
-            duration: 2000,
+            duration: 4000,
           });
         }
       },
@@ -354,7 +354,7 @@ export default function ComponentCompletion({
       variant: "default",
       title: "Successfully copied",
       description: "The URL has been successfully saved to your clipboard",
-      duration: 2000,
+      duration: 4000,
     });
   };
 
@@ -469,7 +469,7 @@ export default function ComponentCompletion({
       toast({
         title: "Can't like component",
         description: "Please login to like a component",
-        duration: 2000,
+        duration: 4000,
       });
       return;
     }
