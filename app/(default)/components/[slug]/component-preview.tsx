@@ -5,7 +5,6 @@ import React from "react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { UserMessage } from "@/components/user-message";
 import { WebcontainerRender } from "@/components/webcontainer/webcontainer-render";
 /* import { WebcontainerTerminal } from "@/components/webcontainer/webcontainer-terminal"; */
 import { useComponentContext } from "@/context/component-context";
@@ -13,6 +12,8 @@ import {
   WebcontainerLoadingState,
   useWebcontainer,
 } from "@/context/webcontainer-context";
+
+import { Markdown } from "./markdown";
 
 function LoadingStateComponent({ state }: { state: WebcontainerLoadingState }) {
   return (
@@ -78,7 +79,7 @@ export default function ComponentPreview() {
               <p className="mb-4 whitespace-pre-line text-sm">
                 {buildError.description}
               </p>
-              <UserMessage>{buildError.content}</UserMessage>
+              <Markdown>{buildError.content}</Markdown>
               {authorized && (
                 <Button
                   variant="outline"

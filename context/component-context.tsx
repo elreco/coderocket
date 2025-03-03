@@ -47,6 +47,7 @@ interface ComponentContextType {
   selectedFramework: Framework;
   image: File | null;
   setImage: (image: File | null) => void;
+  defaultImage: string | null;
 }
 
 export const ComponentContext = createContext<ComponentContextType | undefined>(

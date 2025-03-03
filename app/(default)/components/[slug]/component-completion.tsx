@@ -115,6 +115,7 @@ export default function ComponentCompletion({
   const [shareLink, setShareLink] = useState("");
 
   const [image, setImage] = useState<File | null>(null);
+  const [defaultImage, setDefaultImage] = useState<string | null>(null);
 
   useEffect(() => {
     const loadInitialData = async () => {
@@ -145,6 +146,7 @@ export default function ComponentCompletion({
         setCanvas(false);
         complete(userMsg?.content || "");
         setInput(userMsg?.content || "");
+        setDefaultImage(userMsg?.prompt_image || null);
         setIsLoading(true);
         return;
       }
@@ -502,6 +504,7 @@ export default function ComponentCompletion({
     setForceBuild,
     image,
     setImage,
+    defaultImage,
   };
 
   const FrameworkIcon =
@@ -648,7 +651,7 @@ export default function ComponentCompletion({
                         variant="secondary"
                         onClick={share}
                         disabled={!isVisible}
-                        className={!isVisible ? "cursor-not-allowed" : ""}
+                        className={isVisible ? "" : "cursor-not-allowed"}
                       >
                         <Share className="w-5" />
                       </Button>

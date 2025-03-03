@@ -16,35 +16,28 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { UserAvatar } from "@/components/user-avatar";
-import { UserMessage } from "@/components/user-message";
 import { useComponentContext } from "@/context/component-context";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import {
   ChatFile,
   ContentChunk,
-  extractDataTheme,
   extractFilesFromCompletion,
   hasArtifacts,
   splitContentIntoChunks,
 } from "@/utils/completion-parser";
-import { Framework, maxImageSize } from "@/utils/config";
+import { Framework, maxImageSize, storageUrl } from "@/utils/config";
 import { getRelativeDate } from "@/utils/date";
-import { getFileConfig } from "@/utils/file-extensions";
-import { formatFileSize, getInitials } from "@/utils/helpers";
-
-import { Markdown } from "../markdown";
+import { getInitials } from "@/utils/helpers";
 
 import ComponentTheme from "./(settings)/component-theme";
 import { improvePromptByChatId } from "./actions";
+import { ChunkReader } from "./chunk-reader";
 import ComponentChatFiles from "./component-chat-files";
 import { ComponentSidebarSkeleton } from "./component-sidebar-skeleton";
+import { Markdown } from "./markdown";
+import { PromptImage } from "./prompt-image";
 
 export default function ComponentSidebar({
   className,
@@ -66,6 +59,7 @@ export default function ComponentSidebar({
     handleVersionSelect,
     image,
     setImage,
+    defaultImage,
   } = useComponentContext();
 
   const [isLoaderVisible, setLoaderVisible] = useState(true);
@@ -370,16 +364,16 @@ export default function ComponentSidebar({
               avatarUrl={user?.avatar_url}
               fullName={user?.full_name}
             />
-            <UserMessage>{input}</UserMessage>
-            {image && (
-              <div className="mt-2">
-                <img
-                  src={URL.createObjectURL(image)}
-                  alt="Uploaded"
-                  className="aspect-video w-full rounded-md border border-foreground/10 object-contain shadow-md"
-                />
-              </div>
-            )}
+            <Markdown>{input}</Markdown>
+            <PromptImage
+              image={
+                image
+                  ? URL.createObjectURL(image)
+                  : defaultImage
+                    ? `${storageUrl}/${defaultImage}`
+                    : null
+              }
+            />
           </div>
           <p className="mt-2 text-right text-xs font-semibold text-muted-foreground">
             {getRelativeDate(new Date().toISOString())}
@@ -392,7 +386,7 @@ export default function ComponentSidebar({
             isLoading ? "block" : "hidden",
           )}
         >
-          <div className="flex flex-col items-start justify-start">
+          <div className="flex w-full flex-col gap-2 overflow-x-auto text-sm">
             {input && (
               <div className="flex items-center">
                 <Avatar className="mr-2 size-10 rounded-none">
@@ -408,97 +402,11 @@ export default function ComponentSidebar({
                 </h2>
               </div>
             )}
-            {streamingChunks.map((chunk, index) => (
-              <div
-                className="flex w-full flex-col gap-2 overflow-x-auto text-sm"
-                key={index}
-              >
-                {chunk.type === "text" && <Markdown>{chunk.content}</Markdown>}
-                {chunk.type === "artifact" && (
-                  <div className="w-full py-2">
-                    <div
-                      className={cn(
-                        "rounded-lg border bg-background p-2 text-foreground",
-                      )}
-                    >
-                      <div className="mb-3 flex items-center justify-between">
-                        <h3 className="text-xs font-semibold">
-                          {files.length === 1 ? "Output File" : "Output Files"}
-                        </h3>
-                        {selectedFramework === Framework.HTML && (
-                          <Tooltip>
-                            <TooltipTrigger>
-                              <Badge
-                                variant="secondary"
-                                className="cursor-default border border-border"
-                              >
-                                <Paintbrush className="mr-1 size-3" />{" "}
-                                <span className="first-letter:uppercase">
-                                  {extractDataTheme(files[0].content)}
-                                </span>
-                              </Badge>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>Theme</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        )}
-                      </div>
-                      <div className="space-y-2 overflow-x-auto">
-                        <div className="flex w-fit min-w-full flex-col space-y-2">
-                          {files.map((file, index) => {
-                            const fileConfig = getFileConfig(
-                              file.name || "untitled.html",
-                            );
-                            const FileIcon = fileConfig.icon;
-
-                            return (
-                              <div
-                                key={index}
-                                className={cn(
-                                  "flex items-center justify-between rounded p-1 bg-foreground w-full",
-                                  "hover:bg-gradient-to-l from-emerald-400 via-emerald-500 to-emerald-600 hover:text-foreground",
-                                  isLoading || file.isDelete
-                                    ? "cursor-not-allowed opacity-50"
-                                    : "cursor-pointer",
-                                  activeTab === file.name &&
-                                    "bg-gradient-to-l from-emerald-400 via-emerald-500 to-emerald-600 text-foreground",
-                                )}
-                              >
-                                <div className="flex max-w-full items-center">
-                                  <FileIcon
-                                    className={cn(
-                                      "mr-2 size-4",
-                                      fileConfig.color,
-                                    )}
-                                  />
-                                  <div
-                                    className={cn(
-                                      "font-mono whitespace-pre-wrap text-sm font-medium text-border",
-                                      file.isDelete &&
-                                        "text-red-500 group-hover:text-red-500",
-                                      activeTab === file.name &&
-                                        "text-foreground",
-                                    )}
-                                  >
-                                    {file.name || "untitled.html"}
-                                  </div>
-                                </div>
-                                <div className="whitespace-nowrap text-xs text-border opacity-75">
-                                  {formatFileSize(
-                                    new Blob([file.content]).size,
-                                  )}
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))}
+            <ChunkReader
+              chunks={streamingChunks}
+              files={files}
+              handleFileClick={handleFileClick}
+            />
             <div className="mt-2 flex gap-1">
               <span className="size-2 animate-[typing_1s_ease-in-out_infinite] rounded-full bg-foreground/50"></span>
               <span className="size-2 animate-[typing_1s_ease-in-out_infinite] rounded-full bg-foreground/50 delay-300"></span>

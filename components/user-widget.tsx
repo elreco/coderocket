@@ -25,7 +25,7 @@ export function UserWidget({
           <p className="text-base font-semibold">
             {userFullName || "Anonymous user"}
           </p>
-          <p className="whitespace-nowrap text-xs font-extrabold text-primary">
+          <p className="whitespace-nowrap text-xs">
             {getRelativeDate(createdAt)}
           </p>
         </div>
