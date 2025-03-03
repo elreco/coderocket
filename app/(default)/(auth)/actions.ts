@@ -42,10 +42,12 @@ export async function register(formData: FormData) {
   }
 
   if (error) {
+    console.error("Error registering user:", error);
     return { error: error.message };
   }
 
   if (!returnedData.user?.id) {
+    console.error("Error registering user:", error);
     return { error: "User not found" };
   }
   try {
