@@ -60,6 +60,7 @@ export default function ComponentSidebar({
     image,
     setImage,
     defaultImage,
+    loadingState,
   } = useComponentContext();
 
   const [isLoaderVisible, setLoaderVisible] = useState(true);
@@ -307,7 +308,9 @@ export default function ComponentSidebar({
                 <div
                   key={m.id}
                   onClick={() =>
-                    m.version !== selectedVersion && handleFileClick(m.version)
+                    m.version !== selectedVersion &&
+                    (loadingState === "error" || !loadingState) &&
+                    handleFileClick(m.version)
                   }
                   className={cn(
                     "rounded-lg border bg-background p-4 shadow-sm",

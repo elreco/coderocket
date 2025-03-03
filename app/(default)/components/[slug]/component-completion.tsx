@@ -38,7 +38,11 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { ChatMessage, ComponentContext } from "@/context/component-context";
+import {
+  ChatMessage,
+  ComponentContext,
+  WebcontainerLoadingState,
+} from "@/context/component-context";
 import { WebcontainerProvider } from "@/context/webcontainer-context";
 import { useToast } from "@/hooks/use-toast";
 import { Tables } from "@/types_db";
@@ -93,6 +97,8 @@ export default function ComponentCompletion({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editorValue, setEditorValue] = useState("");
   const [isWebcontainerReady, setWebcontainerReady] = useState(false);
+  const [loadingState, setLoadingState] =
+    useState<WebcontainerLoadingState>(null);
 
   const [chatFiles, setChatFiles] = useState<ChatFile[]>([]);
   const [artifactFiles, setArtifactFiles] = useState<ChatFile[]>([]);
@@ -505,6 +511,8 @@ export default function ComponentCompletion({
     image,
     setImage,
     defaultImage,
+    loadingState,
+    setLoadingState,
   };
 
   const FrameworkIcon =

@@ -15,7 +15,10 @@ import { webcontainer as webcontainerPromise } from "@/lib/webcontainer";
 import { Framework } from "@/utils/config";
 import { buildFileSystemTree, getPreviewId } from "@/utils/webcontainer";
 
-import { useComponentContext } from "./component-context";
+import {
+  useComponentContext,
+  WebcontainerLoadingState,
+} from "./component-context";
 
 type PreviewError = {
   title: string;
@@ -36,16 +39,7 @@ const WebcontainerContext = createContext<WebcontainerContextType | undefined>(
   undefined,
 );
 
-export type WebcontainerLoadingState =
-  | "initializing"
-  | "deploying"
-  | "starting"
-  | "processing"
-  | null;
-
 export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
-  const [loadingState, setLoadingState] =
-    useState<WebcontainerLoadingState>(null);
   const [error, setError] = useState<string | null>(null);
   const [previewError, setPreviewError] = useState<PreviewError | null>(null);
   const [previewId, setPreviewId] = useState<string | undefined>(undefined);
@@ -59,6 +53,8 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
     chatId,
     artifactFiles,
     isWebcontainerReady,
+    setLoadingState,
+    loadingState,
   } = useComponentContext();
 
   // References to hold the active processes and terminal
@@ -116,6 +112,7 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
           content: prevError.content + possibleError.content,
         };
       });
+      setLoadingState("error");
     }
   };
 
@@ -132,6 +129,7 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
         !selectedFramework ||
         artifactFiles.length === 0
       ) {
+        console.log("Artifact files are empty");
         return;
       }
 
@@ -158,7 +156,7 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
       if (isWebcontainerReady) {
         setLoadingState(null);
         setWebcontainerReady(true);
-
+        oldArtifactFilesRef.current = [];
         return;
       }
       // 1) Kill old processes
@@ -251,7 +249,14 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
     };
 
     setupProject();
-  }, [artifactFiles, isLoading, selectedFramework, selectedVersion, chatId]);
+  }, [
+    artifactFiles,
+    isLoading,
+    selectedFramework,
+    selectedVersion,
+    chatId,
+    isWebcontainerReady,
+  ]);
 
   return (
     <WebcontainerContext.Provider

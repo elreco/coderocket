@@ -7,11 +7,11 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { WebcontainerRender } from "@/components/webcontainer/webcontainer-render";
 /* import { WebcontainerTerminal } from "@/components/webcontainer/webcontainer-terminal"; */
-import { useComponentContext } from "@/context/component-context";
 import {
+  useComponentContext,
   WebcontainerLoadingState,
-  useWebcontainer,
-} from "@/context/webcontainer-context";
+} from "@/context/component-context";
+import { useWebcontainer } from "@/context/webcontainer-context";
 
 import { Markdown } from "./markdown";
 

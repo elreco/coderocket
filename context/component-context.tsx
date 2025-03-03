@@ -11,6 +11,14 @@ export type ChatMessage = Tables<"messages"> & {
   };
 };
 
+export type WebcontainerLoadingState =
+  | "initializing"
+  | "deploying"
+  | "starting"
+  | "processing"
+  | "error"
+  | null;
+
 interface ComponentContextType {
   isCanvas: boolean;
   setCanvas: (value: boolean) => void;
@@ -48,6 +56,8 @@ interface ComponentContextType {
   image: File | null;
   setImage: (image: File | null) => void;
   defaultImage: string | null;
+  loadingState: WebcontainerLoadingState;
+  setLoadingState: (value: WebcontainerLoadingState) => void;
 }
 
 export const ComponentContext = createContext<ComponentContextType | undefined>(
