@@ -113,9 +113,19 @@ export function AppSidebar({
 
   useEffect(() => {
     const fetchUserDetails = async () => {
-      const userDetails = await getUserDetails();
-      setUser(userDetails);
-      setIsLoading(false);
+      try {
+        const userDetails = await getUserDetails();
+        if (userDetails) {
+          setUser(userDetails);
+        }
+      } catch (error) {
+        console.error(
+          "Erreur lors de la récupération de l'utilisateur:",
+          error,
+        );
+      } finally {
+        setIsLoading(false);
+      }
     };
     fetchUserDetails();
   }, []);
@@ -129,12 +139,10 @@ export function AppSidebar({
   }, []);
 
   useEffect(() => {
-    setUser(defaultUser);
+    if (defaultUser) {
+      setUser(defaultUser);
+    }
   }, [defaultUser]);
-
-  useEffect(() => {
-    setUser(defaultUser);
-  }, []);
 
   const navMainItems = data.navMain.map((item) => ({
     ...item,
