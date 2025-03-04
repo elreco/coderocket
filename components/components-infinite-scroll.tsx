@@ -31,7 +31,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Framework, MAX_SEARCH_LENGTH } from "@/utils/config";
 
 const PAGE_SIZE = 20;
-const MAX_PAGE = 7;
+const MAX_PAGE = 40;
 
 interface ComponentsInfiniteScrollProps {
   initialChats: GetComponentsReturnType[] | null;
@@ -124,7 +124,7 @@ export function ComponentsInfiniteScroll({
     reset?: boolean;
   }) {
     try {
-      if (pageToFetch >= MAX_PAGE) {
+      if (isAccountPage ? pageToFetch >= 500 : pageToFetch >= MAX_PAGE) {
         setHasMore(false);
         return;
       }
