@@ -51,6 +51,7 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
     isWebcontainerReady,
     setLoadingState,
     loadingState,
+    isLengthError,
   } = useComponentContext();
 
   // References to hold the active processes and terminal
@@ -123,6 +124,15 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
         !selectedFramework ||
         artifactFiles.length === 0
       ) {
+        return;
+      }
+
+      if (isLengthError) {
+        setBuildError({
+          title: "AI reached token limit",
+          description: `The AI reached its token limit. You can continue by clicking the "Continue your work" button.`,
+          content: "Continue where you left off",
+        });
         return;
       }
 

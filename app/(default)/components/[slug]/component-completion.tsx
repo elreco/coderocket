@@ -359,6 +359,20 @@ export default function ComponentCompletion({
     if (!selectedAssistantMessage?.content) {
       return;
     }
+    if (
+      selectedAssistantMessage.content.includes(
+        "<!-- FINISH_REASON: length -->",
+      )
+    ) {
+      setIsLengthError(true);
+    }
+
+    if (
+      selectedAssistantMessage.content.includes("<!-- FINISH_REASON: error -->")
+    ) {
+      setIsLengthError(true);
+    }
+
     setCompletion(selectedAssistantMessage.content);
     handleChatFiles(selectedAssistantMessage.content, false, tabName);
     setWebcontainerReady(selectedAssistantMessage.is_built || false);
