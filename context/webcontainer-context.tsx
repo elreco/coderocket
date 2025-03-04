@@ -71,7 +71,7 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
     }
     setBuildError(null);
     setPreviewId(undefined);
-    setLoadingState("initializing");
+    setLoadingState(null);
     setWebcontainerReady(false);
     oldArtifactFilesRef.current = [];
   }, [chatId]);
