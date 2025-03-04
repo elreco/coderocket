@@ -215,7 +215,11 @@ export function AppSidebar({
             />
           </div>
         )}
-        {isLoading ? null : user ? <NavUser user={user} /> : <NavAuth />}
+        {isLoading ? null : user ? (
+          <NavUser user={user} onLogout={() => setUser(null)} />
+        ) : (
+          <NavAuth />
+        )}
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

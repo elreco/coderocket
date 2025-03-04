@@ -26,8 +26,10 @@ import { getInitials } from "@/utils/helpers";
 
 export function NavUser({
   user,
+  onLogout,
 }: {
   user: Tables<"users"> & { email: string | null };
+  onLogout: () => void;
 }) {
   const { isMobile, setOpenMobile } = useSidebar();
   const router = useRouter();
@@ -46,6 +48,7 @@ export function NavUser({
         title: "Success",
         description: "Logged out successfully!",
       });
+      onLogout();
       router.push(result.url);
       return;
     }
