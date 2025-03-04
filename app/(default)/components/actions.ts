@@ -406,10 +406,7 @@ export const getAllPublicChats = async (
     const { data: userData } = await supabase.auth.getUser();
     const user = userData.user;
 
-    let query = supabase
-      .rpc("get_components")
-      .is("is_private", false)
-      .not("last_assistant_message", "is", null);
+    let query = supabase.rpc("get_components").is("is_private", false);
     // 🔒 Sécuriser la requête de recherche
     if (searchQuery) {
       const sanitizedQuery = searchQuery.trim().slice(0, MAX_SEARCH_LENGTH);
@@ -421,6 +418,8 @@ export const getAllPublicChats = async (
 
     if (isAccountPage && user) {
       query = query.eq("user_id", user.id);
+    } else {
+      query = query.not("last_assistant_message", "is", null);
     }
     if (isPopular) {
       query = query
