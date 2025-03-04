@@ -58,6 +58,7 @@ interface ComponentContextType {
   defaultImage: string | null;
   loadingState: WebcontainerLoadingState;
   setLoadingState: (value: WebcontainerLoadingState) => void;
+  isLengthError: boolean;
 }
 
 export const ComponentContext = createContext<ComponentContextType | undefined>(

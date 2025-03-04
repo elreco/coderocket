@@ -5,7 +5,8 @@ import {
   MessageSquare,
   Paintbrush,
   WandSparkles,
-  XIcon,
+  X,
+  RefreshCw,
 } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState, useRef } from "react";
@@ -51,22 +52,23 @@ export default function ComponentSidebar({
   className?: string;
 }) {
   const {
-    chatId,
     authorized,
-    messages,
+    user,
     isLoading,
     selectedVersion,
-    user,
-    handleSubmitToAI,
-    input,
-    setInput,
-    selectedFramework,
     completion,
     handleVersionSelect,
+    handleSubmitToAI,
+    messages,
+    input,
+    setInput,
+    chatId,
+    selectedFramework,
     image,
     setImage,
     defaultImage,
     loadingState,
+    isLengthError,
   } = useComponentContext();
 
   const [isLoaderVisible, setLoaderVisible] = useState(true);
@@ -459,7 +461,7 @@ export default function ComponentSidebar({
                 )}
               </div>
 
-              {authorized && selectedFramework === Framework.HTML && (
+              {selectedFramework === Framework.HTML && (
                 <div className="text-sm font-semibold">
                   <ComponentTheme>
                     <Button
@@ -476,7 +478,7 @@ export default function ComponentSidebar({
                 </div>
               )}
               <div className="flex items-center">
-                {authorized && image && (
+                {image && (
                   <div className="mr-2 size-12">
                     <div className="relative size-12">
                       <Image
@@ -487,24 +489,40 @@ export default function ComponentSidebar({
                         crossOrigin="anonymous"
                         className="size-12 rounded-md object-contain"
                       />
-                      <button
+                      <Button
                         type="button"
-                        className="absolute right-0 top-0 cursor-pointer rounded-full bg-black/50 p-1"
+                        variant="ghost"
+                        size="icon"
+                        className="absolute -right-2 -top-2 size-5 rounded-full bg-background p-0"
                         onClick={handleImageRemove}
-                        disabled={isLoading}
                       >
-                        <XIcon className="size-4 text-white" />
-                      </button>
+                        <X className="size-3" />
+                      </Button>
                     </div>
                   </div>
                 )}
-                {authorized && (
+                {!isLoading && !isLengthError && (
                   <ImageSelector
                     fileInputRef={fileInputRef}
                     disabled={isLoading}
                     handleButtonClick={handleButtonClick}
                     handleImageChange={handleImageChange}
                   />
+                )}
+                {/* Continue your work button */}
+                {!isLoading && isLengthError && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="mr-2"
+                    onClick={() => {
+                      setInput("Continue where you left off");
+                    }}
+                  >
+                    <RefreshCw className="mr-2 size-4" />
+                    Continue generation
+                  </Button>
                 )}
               </div>
             </div>

@@ -109,6 +109,7 @@ export default function ComponentCompletion({
 
   const [isLoading, setIsLoading] = useState(true);
   const [forceBuild, setForceBuild] = useState(false);
+  const [isLengthError, setIsLengthError] = useState(false);
 
   const [fetchedChat, setFetchedChat] = useState<Tables<"chats"> | null>(null);
   const [lastAssistantMessage, setLastAssistantMessage] =
@@ -147,6 +148,15 @@ export default function ComponentCompletion({
       setVisible(!chat.is_private);
       setArtifactCode(chat.artifact_code || "");
       setWebcontainerReady(assistantMsg?.is_built || false);
+      if (assistantMsg?.content?.includes("<!-- FINISH_REASON: length -->")) {
+        setIsLengthError(true);
+      }
+
+      if (
+        lastAssistantMessage?.content?.includes("<!-- FINISH_REASON: error -->")
+      ) {
+        setIsLengthError(true);
+      }
 
       if (msgs?.length === 1) {
         setCanvas(false);
@@ -198,7 +208,11 @@ export default function ComponentCompletion({
         });
 
         if (!response.ok) {
-          throw new Error(await response.text());
+          const errorData = await response.json().catch(async () => {
+            const text = await response.text();
+            return { error: text };
+          });
+          throw new Error(errorData.error || "An unknown error occurred");
         }
 
         return response;
@@ -207,34 +221,12 @@ export default function ComponentCompletion({
       initialCompletion: lastAssistantMessage?.content,
       experimental_throttle: 500,
       onError: async (error: Error) => {
-        if (error.message === "payment-required") {
-          router.push("/pricing");
-          toast({
-            variant: "destructive",
-            title: "You have reached the limit of your free plan",
-            description:
-              "Please upgrade to continue. Go to My Account to see your usage.",
-            duration: 4000,
-          });
-          return;
-        }
         if (error.message === "payment-required-for-image") {
           router.push("/pricing");
           toast({
             variant: "destructive",
             title: "You can't upload images with a free plan",
             description: "Please upgrade to continue.",
-            duration: 4000,
-          });
-          return;
-        }
-        if (error.message === "length") {
-          setIsLoading(false);
-          setCanvas(true);
-          toast({
-            variant: "destructive",
-            title: "You have reached the limit of our AI",
-            description: `Our AI has reached the maximum number of tokens it can generate. Please create a new component.`,
             duration: 4000,
           });
           return;
@@ -294,17 +286,47 @@ export default function ComponentCompletion({
         }
       },
       onFinish: async () => {
-        const refreshedChatMessages = await refreshChatData();
-        if (refreshedChatMessages) {
-          const refreshedLastAssistantMessage = refreshedChatMessages.reduce(
-            (prev, current) =>
-              prev.version > current.version ? prev : current,
-            { version: 0 },
-          );
-          if (refreshedLastAssistantMessage) {
-            handleVersionSelect(refreshedLastAssistantMessage.version);
+        await refreshChatData();
+        const refreshedLastAssistantMessage =
+          await fetchLastAssistantMessageByChatId(chatId);
+
+        if (refreshedLastAssistantMessage) {
+          handleVersionSelect(refreshedLastAssistantMessage.version);
+
+          // Check if we have a special marker for finish reason
+          const content = refreshedLastAssistantMessage.content || "";
+          if (content.includes("<!-- FINISH_REASON: length -->")) {
+            setIsLengthError(true);
+            toast({
+              variant: "destructive",
+              title: "AI reached token limit",
+              description: `The AI reached its token limit. You can continue by clicking the "Continue your work" button.`,
+              duration: 6000,
+            });
+
+            // Remove the marker from the content
+            const cleanedContent = content.replace(
+              "\n\n<!-- FINISH_REASON: length -->",
+              "",
+            );
+            setCompletion(cleanedContent);
+          } else if (content.includes("<!-- FINISH_REASON: error -->")) {
+            toast({
+              variant: "destructive",
+              title: "Something went wrong",
+              description: "An error occurred during generation",
+              duration: 4000,
+            });
+
+            // Remove the marker from the content
+            const cleanedContent = content.replace(
+              "\n\n<!-- FINISH_REASON: error -->",
+              "",
+            );
+            setCompletion(cleanedContent);
           }
         }
+
         setCanvas(true);
         setInput("");
         setImage(null);
@@ -513,6 +535,7 @@ export default function ComponentCompletion({
     defaultImage,
     loadingState,
     setLoadingState,
+    isLengthError,
   };
 
   const FrameworkIcon =

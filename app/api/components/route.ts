@@ -38,7 +38,7 @@ export async function POST(req: Request) {
       Number(formData.get("selectedVersion")) || undefined;
     const image = formData.get("image") as File | null;
     const prompt = formData.get("prompt") as string | null;
-
+    console.log("prompt", prompt);
     const {
       messagesFromDatabase,
       framework,
@@ -53,6 +53,7 @@ export async function POST(req: Request) {
       updatedImage,
       selectedVersion,
     );
+    console.log("messages", messages);
     const stream = streamText({
       messages,
       model: anthropicModel("claude-3-7-sonnet-latest"),
@@ -67,34 +68,26 @@ export async function POST(req: Request) {
       toolChoice: "none",
       maxTokens: 8192,
       onFinish: async ({ text, usage, finishReason }) => {
-        if (finishReason === "length") {
-          throw new Error("length");
-        }
-        if (finishReason === "error") {
-          throw new Error("error");
-        }
-        try {
-          await updateDataAfterCompletion(
-            id,
-            text,
-            updatedPrompt,
-            usage,
-            updatedImage,
-          );
-        } catch (e) {
-          console.error(e);
-        }
+        await updateDataAfterCompletion(
+          id,
+          text,
+          updatedPrompt,
+          usage,
+          updatedImage,
+          finishReason,
+        );
       },
     });
+
     return stream.toTextStreamResponse();
   } catch (error: unknown) {
     if (error instanceof Error) {
-      return new Response(error.message, {
+      return new Response(JSON.stringify({ error: error.message }), {
         status: 500,
         headers: { "Content-Type": "application/json" },
       });
     }
-    return new Response("Internal server error", {
+    return new Response(JSON.stringify({ error: "Internal server error" }), {
       status: 500,
       headers: { "Content-Type": "application/json" },
     });
@@ -114,7 +107,7 @@ const buildMessagesToOpenAi = async (
       : messages;
 
   // Limiter le nombre de messages à envoyer à l'API (par exemple, les 10 derniers)
-  const maxMessagesToSend = 2;
+  const maxMessagesToSend = 6;
   const limitedMessages =
     filteredMessages.length > maxMessagesToSend
       ? filteredMessages.slice(-maxMessagesToSend)
@@ -279,6 +272,7 @@ const updateDataAfterCompletion = async (
   updatedPrompt: string,
   usage: LanguageModelUsage,
   updatedImage: string | null | undefined,
+  finishReason?: string,
 ) => {
   const supabase = await createClient();
 
@@ -308,7 +302,8 @@ const updateDataAfterCompletion = async (
 
   const currentInputTokens = currentChatData?.input_tokens || 0;
   const currentOutputTokens = currentChatData?.output_tokens || 0;
-
+  console.log("currentInputTokens", currentInputTokens);
+  console.log("currentOutputTokens", currentOutputTokens);
   // Update with the sum of previous and new tokens
   if (currentChatData.title) {
     await supabase
@@ -350,17 +345,32 @@ const updateDataAfterCompletion = async (
   }
 
   const theme = extractDataTheme(text);
+
+  // If we have a finishReason, add a special marker at the end of the content
+  // that the client can detect and remove
+  let content = text;
+  if (finishReason === "length" || finishReason === "error") {
+    content = `${text}\n\n<!-- FINISH_REASON: ${finishReason} -->`;
+  }
+  console.log("content", content);
   newMessages.push({
     chat_id: chatId,
     screenshot: null,
     version,
-    content: text,
+    content: content,
     theme,
     role: "assistant",
     output_tokens: usage.completionTokens,
   });
 
-  await supabase.from("messages").insert(newMessages).eq("chat_id", chatId);
+  const { data: newMessagesData, error: newMessagesError } = await supabase
+    .from("messages")
+    .insert(newMessages)
+    .eq("chat_id", chatId);
+  if (newMessagesError) {
+    console.error("Error inserting new messages:", newMessagesError);
+  }
+  console.log("newMessagesData", newMessagesData);
 
   after(async () => {
     if (chat.framework === Framework.HTML) {
