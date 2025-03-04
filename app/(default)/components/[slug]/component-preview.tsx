@@ -39,7 +39,7 @@ function LoadingStateComponent({ state }: { state: WebcontainerLoadingState }) {
 }
 
 export default function ComponentPreview() {
-  const { loadingState, buildError, error } = useWebcontainer();
+  const { loadingState, buildError } = useWebcontainer();
   const {
     chatId,
     selectedVersion,
@@ -52,29 +52,15 @@ export default function ComponentPreview() {
 
   return (
     <>
-      {loadingState && !previewId && !isLoading && !buildError && !error && (
+      {loadingState && !previewId && !isLoading && !buildError && (
         <LoadingStateComponent state={loadingState} />
       )}
 
-      {error && (
-        <div className="flex size-full items-center justify-center px-4">
-          <Alert
-            variant="destructive"
-            className="bg-destructive px-12 text-foreground"
-          >
-            <AlertDescription className="m-0 flex items-center gap-2">
-              <AlertCircle className="size-4" />
-              <p>{error}</p>
-            </AlertDescription>
-          </Alert>
-        </div>
-      )}
-
       {buildError && !isLoading && (
-        <div className="flex size-full items-center justify-center px-4">
+        <div className="flex size-full items-center justify-center px-4 xl:w-2/3">
           <Alert variant="default" className="bg-secondary text-foreground">
             <AlertCircle className="size-6" />
-            <AlertDescription className="flex flex-col !pl-12">
+            <AlertDescription className="flex size-full flex-col !pl-12">
               <p className="text-lg font-semibold">{buildError.title}</p>
               <p className="mb-4 whitespace-pre-line text-sm">
                 {buildError.description}
@@ -98,17 +84,12 @@ export default function ComponentPreview() {
       )}
       {!isWebcontainerReady &&
         previewId &&
-        !error &&
         !buildError &&
         !isLoading &&
         !loadingState && <WebcontainerRender previewId={previewId} />}
-      {/* {!isWebcontainerReady && terminal && !error && !isLoading && (
-        <WebcontainerTerminal />
-      )} */}
       {chatId &&
         selectedVersion !== undefined &&
         !isLoading &&
-        !error &&
         !buildError &&
         !loadingState &&
         isWebcontainerReady && (

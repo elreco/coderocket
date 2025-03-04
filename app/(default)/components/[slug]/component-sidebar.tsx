@@ -16,6 +16,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { UserAvatar } from "@/components/user-avatar";
 import { useComponentContext } from "@/context/component-context";
 import { toast } from "@/hooks/use-toast";
@@ -305,53 +311,68 @@ export default function ComponentSidebar({
             {messages
               .filter((m) => m.role === "user")
               .map((m) => (
-                <div
-                  key={m.id}
-                  onClick={() =>
-                    m.version !== selectedVersion &&
-                    (loadingState === "error" || !loadingState) &&
-                    handleFileClick(m.version)
-                  }
-                  className={cn(
-                    "rounded-lg border bg-background p-4 shadow-sm",
-                    m.version === selectedVersion
-                      ? "cursor-default hover:bg-background"
-                      : "cursor-pointer hover:bg-secondary",
-                  )}
-                >
-                  <div className="flex w-full items-center justify-between gap-2">
-                    <div className="flex w-full items-center gap-2">
-                      <Avatar className="size-8">
-                        <AvatarImage
-                          src={user?.avatar_url || undefined}
-                          alt={user?.full_name || undefined}
-                        />
-                        <AvatarFallback className="bg-secondary text-xs">
-                          {getInitials(user?.full_name || "")}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex flex-col">
-                        <span className="text-sm font-medium">
-                          {user?.full_name}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          Version #{m.version}
-                        </span>
+                <TooltipProvider key={m.id}>
+                  <Tooltip delayDuration={150}>
+                    <TooltipTrigger asChild>
+                      <div
+                        onClick={() =>
+                          m.version !== selectedVersion &&
+                          (loadingState === "error" || !loadingState) &&
+                          handleFileClick(m.version)
+                        }
+                        className={cn(
+                          "rounded-lg border bg-background p-4 shadow-sm",
+                          m.version === selectedVersion
+                            ? "cursor-default hover:bg-background"
+                            : loadingState && loadingState !== "error"
+                              ? "cursor-not-allowed opacity-70"
+                              : "cursor-pointer hover:bg-secondary",
+                        )}
+                      >
+                        <div className="flex w-full items-center justify-between gap-2">
+                          <div className="flex w-full items-center gap-2">
+                            <Avatar className="size-8">
+                              <AvatarImage
+                                src={user?.avatar_url || undefined}
+                                alt={user?.full_name || undefined}
+                              />
+                              <AvatarFallback className="bg-secondary text-xs">
+                                {getInitials(user?.full_name || "")}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex flex-col">
+                              <span className="text-sm font-medium">
+                                {user?.full_name}
+                              </span>
+                              <span className="text-xs text-muted-foreground">
+                                Version #{m.version}
+                              </span>
+                            </div>
+                          </div>
+                          {m.version === selectedVersion ? (
+                            <Badge variant="outline" className="rounded-full">
+                              Current
+                            </Badge>
+                          ) : (
+                            <ChevronsRight className="size-4" />
+                          )}
+                        </div>
+                        <p className="mt-2 truncate text-sm">{m.content}</p>
+                        <p className="mt-2 text-right text-xs text-muted-foreground">
+                          {getRelativeDate(m.created_at)}
+                        </p>
                       </div>
-                    </div>
-                    {m.version === selectedVersion ? (
-                      <Badge variant="outline" className="rounded-full">
-                        Current
-                      </Badge>
-                    ) : (
-                      <ChevronsRight className="size-4" />
+                    </TooltipTrigger>
+                    {loadingState && loadingState !== "error" && (
+                      <TooltipContent side="top">
+                        <p>
+                          Please wait for the component to load before changing
+                          versions
+                        </p>
+                      </TooltipContent>
                     )}
-                  </div>
-                  <p className="mt-2 truncate text-sm">{m.content}</p>
-                  <p className="mt-2 text-right text-xs text-muted-foreground">
-                    {getRelativeDate(m.created_at)}
-                  </p>
-                </div>
+                  </Tooltip>
+                </TooltipProvider>
               ))}
           </div>
         )}

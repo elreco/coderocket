@@ -20,19 +20,17 @@ import {
   WebcontainerLoadingState,
 } from "./component-context";
 
-type PreviewError = {
+type BuildError = {
   title: string;
   description: string;
   content: string;
 };
 
 interface WebcontainerContextType {
-  error: string | null;
   loadingState: WebcontainerLoadingState;
   setLoadingState: (state: WebcontainerLoadingState) => void;
-  previewError: PreviewError | null;
   previewId: string | undefined;
-  buildError: PreviewError | null;
+  buildError: BuildError | null;
 }
 
 const WebcontainerContext = createContext<WebcontainerContextType | undefined>(
@@ -40,10 +38,8 @@ const WebcontainerContext = createContext<WebcontainerContextType | undefined>(
 );
 
 export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
-  const [error, setError] = useState<string | null>(null);
-  const [previewError, setPreviewError] = useState<PreviewError | null>(null);
   const [previewId, setPreviewId] = useState<string | undefined>(undefined);
-  const [buildError, setBuildError] = useState<PreviewError | null>(null);
+  const [buildError, setBuildError] = useState<BuildError | null>(null);
 
   const {
     selectedFramework,
@@ -78,8 +74,6 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
     setLoadingState("initializing");
     setWebcontainerReady(false);
     oldArtifactFilesRef.current = [];
-    setError(null);
-    setPreviewError(null);
   }, [chatId]);
 
   /**
@@ -129,7 +123,6 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
         !selectedFramework ||
         artifactFiles.length === 0
       ) {
-        console.log("Artifact files are empty");
         return;
       }
 
@@ -150,8 +143,6 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
       setPreviewId(undefined);
       setLoadingState("initializing");
       setWebcontainerReady(false);
-      setError(null);
-      setPreviewError(null);
       setBuildError(null);
       if (isWebcontainerReady) {
         setLoadingState(null);
@@ -223,7 +214,7 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
           message.type === "PREVIEW_UNHANDLED_REJECTION"
         ) {
           const isPromise = message.type === "PREVIEW_UNHANDLED_REJECTION";
-          setPreviewError({
+          setBuildError({
             title: isPromise
               ? "Unhandled Promise Rejection"
               : "Uncaught Exception",
@@ -240,7 +231,6 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
           setLoadingState(null);
           setPreviewId(newPreviewId);
           setBuildError(null);
-          setError(null);
         }
       });
 
@@ -261,10 +251,8 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
   return (
     <WebcontainerContext.Provider
       value={{
-        error,
         loadingState,
         setLoadingState,
-        previewError,
         previewId,
         buildError,
       }}
@@ -285,7 +273,7 @@ export const useWebcontainer = (): WebcontainerContextType => {
 };
 
 // Utility to detect build errors
-function formatBuildError(data: string): PreviewError | null {
+function formatBuildError(data: string): BuildError | null {
   const cleanedData = stripAnsi(data);
 
   const errorPatterns = [
