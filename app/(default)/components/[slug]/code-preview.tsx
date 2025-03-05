@@ -30,10 +30,12 @@ const RenderContent = React.memo(
     isLoading,
     chatFiles,
     selectedFramework,
+    isLengthError,
   }: {
     isLoading: boolean;
     chatFiles: ChatFile[];
     selectedFramework: Framework;
+    isLengthError: boolean;
   }) => {
     if (isLoading && chatFiles.length === 0) {
       return (
@@ -47,7 +49,15 @@ const RenderContent = React.memo(
       chatFiles.length > 0 &&
       selectedFramework === Framework.HTML
     ) {
-      return <RenderHtmlComponent files={chatFiles} />;
+      return isLengthError ? (
+        <img
+          src="/placeholder.svg"
+          alt="Component is too long to display"
+          className="size-full object-cover"
+        />
+      ) : (
+        <RenderHtmlComponent files={chatFiles} />
+      );
     }
 
     return <RenderComponent />;
@@ -87,6 +97,7 @@ export default function CodePreview() {
     editorValue,
     artifactFiles,
     selectedFramework,
+    isLengthError,
   } = useComponentContext();
   const [, copy] = useCopyToClipboard();
   const codeMirrorRef = useRef<ReactCodeMirrorRef>(null);
@@ -168,6 +179,7 @@ export default function CodePreview() {
           isLoading={isLoading}
           chatFiles={chatFiles}
           selectedFramework={selectedFramework}
+          isLengthError={isLengthError}
         />
       </div>
       <div

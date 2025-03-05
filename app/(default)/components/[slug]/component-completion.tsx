@@ -699,13 +699,17 @@ export default function ComponentCompletion({
                           size="sm"
                           onClick={() => setIsModalOpen(true)}
                           className="flex items-center"
-                          disabled={isLoading}
+                          disabled={isLoading || isLengthError}
                         >
                           <Fullscreen className="w-5" />
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p>Display in fullscreen</p>
+                        {isLengthError ? (
+                          <p>The component has an error</p>
+                        ) : (
+                          <p>Display in fullscreen</p>
+                        )}
                       </TooltipContent>
                     </Tooltip>
                     {(isWebcontainerReady ||
@@ -724,13 +728,17 @@ export default function ComponentCompletion({
                               )
                             }
                             className="flex items-center"
-                            disabled={isLoading}
+                            disabled={isLoading || isLengthError}
                           >
                             <ExternalLink className="w-5" />
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p>Open in a new tab</p>
+                          {isLengthError ? (
+                            <p>The component has an error</p>
+                          ) : (
+                            <p>Open in a new tab</p>
+                          )}
                         </TooltipContent>
                       </Tooltip>
                     )}
