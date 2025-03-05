@@ -837,7 +837,7 @@ export default function ComponentCompletion({
             </div>
             <div className="relative m-0 flex h-full max-h-full flex-1 flex-col border-b lg:border-b-0">
               {!isLoading && isCanvas && (
-                <div className="absolute bottom-0 right-0 z-[9999] flex w-full items-center justify-between p-2">
+                <div className="absolute bottom-0 right-0 z-[9000] flex w-full items-center justify-between p-2">
                   {remixOriginalChat ? (
                     <div className="flex items-center gap-2 rounded-md bg-secondary px-3 py-2 text-sm shadow-sm">
                       <GitFork className="size-4" />
