@@ -462,6 +462,7 @@ export default function Hero() {
                 disabled={loading}
                 handleButtonClick={handleButtonClick}
                 handleImageChange={handleImageChange}
+                isReverse={true}
               />
               {selectedFramework === Framework.HTML && (
                 <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
@@ -525,7 +526,7 @@ export default function Hero() {
                   setSelectedFramework(value as Framework)
                 }
               >
-                <SelectTrigger className="w-full border-background sm:w-auto">
+                <SelectTrigger className="w-full rounded-md border-background sm:w-auto">
                   <SelectValue
                     className="mr-2"
                     placeholder="Select a framework"

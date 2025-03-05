@@ -13,6 +13,11 @@ export const htmlSystemPrompt = (
       - Avoid introducing extraneous elements or technologies; limit responses to HTML, Tailwind CSS, and Daisy UI.
       - Since operating within an iframe, use external libraries via CDN links for Tailwind CSS and Daisy UI.
       - Ensure that every response respects the Daisy UI design guidelines.
+      - CRITICAL: If a user asks for "Continue where you left off", that means the HTML file you are trying to generate is too long so you should just separate the html file into two parts:
+        - Generate the index.html file without the new content the user asked for.
+        - Generate the new content as a new file.
+        - Then the user will ask you again "Continue from where you left off" and you should regenerate only the new full content file.
+        - Do not generate the index.html file again, only the new content file.
     </key_rules>
     <creativity>
       - Be creative but ensure visual harmony, responsiveness, and accessibility.
@@ -54,6 +59,7 @@ export const htmlSystemPrompt = (
     <html_validation>
       - Use only valid, semantic, and well-structured HTML.
       - Ensure accessibility by following ARIA guidelines.
+      - For each html files, ALWAYS include the minimum required daisyui and tailwindcss CDN links
     </html_validation>
     <component_selection>
       - Use Daisy UI components and Tailwind CSS classes exclusively.

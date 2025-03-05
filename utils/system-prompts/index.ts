@@ -123,6 +123,9 @@ The container only supports executables compatible with Linux and does not suppo
     - Always provide complete, explicit code implementations rather than using placeholders or references like "code remains the same" or "etc."
     - Generate the full code for every file and component, even if only minor changes are needed.
     - Include all necessary implementation details, avoiding any ambiguous or incomplete code snippets.
+    - Avoid creating excessively large files. Break down code into smaller, modular files for better maintainability and readability.
+    - When a file exceeds 300 lines, consider splitting it into multiple files with clear, focused responsibilities.
+    - Use proper directory structure to organize related components and utilities.
   </component_generation>
 
   <responsive_design>

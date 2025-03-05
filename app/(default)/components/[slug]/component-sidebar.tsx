@@ -461,23 +461,23 @@ export default function ComponentSidebar({
                 )}
               </div>
 
-              {selectedFramework === Framework.HTML && (
-                <div className="text-sm font-semibold">
-                  <ComponentTheme>
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      size="sm"
-                      className="flex items-center"
-                      disabled={isLoading}
-                    >
-                      <Paintbrush className="size-4" />
-                      <span className="ml-0.5">Theme</span>
-                    </Button>
-                  </ComponentTheme>
-                </div>
-              )}
-              <div className="flex items-center">
+              <div className="flex items-center space-x-2">
+                {selectedFramework === Framework.HTML && !isLengthError && (
+                  <div className="text-sm font-semibold">
+                    <ComponentTheme>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        className="flex items-center"
+                        disabled={isLoading}
+                      >
+                        <Paintbrush className="size-4" />
+                        <span className="ml-0.5">Theme</span>
+                      </Button>
+                    </ComponentTheme>
+                  </div>
+                )}
                 {image && (
                   <div className="mr-2 size-12">
                     <div className="relative size-12">
@@ -561,15 +561,6 @@ export default function ComponentSidebar({
               </div>
               <div className="flex w-full items-center">
                 <Button
-                  size="sm"
-                  loading={isLoading}
-                  type="submit"
-                  className="flex w-full items-center"
-                >
-                  <CircleFadingArrowUp className="size-3" />
-                  <span>Iterate</span>
-                </Button>
-                <Button
                   type="button"
                   size="sm"
                   variant="ghost"
@@ -583,6 +574,15 @@ export default function ComponentSidebar({
                     : hasImproved
                       ? "Prompt improved"
                       : "Improve prompt"}
+                </Button>
+                <Button
+                  size="sm"
+                  loading={isLoading}
+                  type="submit"
+                  className="flex w-full items-center"
+                >
+                  <CircleFadingArrowUp className="size-3" />
+                  <span>Iterate</span>
                 </Button>
               </div>
             </div>

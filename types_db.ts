@@ -57,6 +57,7 @@ export type Database = {
           likes: number | null;
           output_tokens: number | null;
           prompt_image: string | null;
+          remix_chat_id: string | null;
           slug: string | null;
           title: string | null;
           user_id: string;
@@ -72,6 +73,7 @@ export type Database = {
           likes?: number | null;
           output_tokens?: number | null;
           prompt_image?: string | null;
+          remix_chat_id?: string | null;
           slug?: string | null;
           title?: string | null;
           user_id: string;
@@ -87,11 +89,19 @@ export type Database = {
           likes?: number | null;
           output_tokens?: number | null;
           prompt_image?: string | null;
+          remix_chat_id?: string | null;
           slug?: string | null;
           title?: string | null;
           user_id?: string;
         };
         Relationships: [
+          {
+            foreignKeyName: "chats_remix_chat_id_fkey";
+            columns: ["remix_chat_id"];
+            isOneToOne: false;
+            referencedRelation: "chats";
+            referencedColumns: ["id"];
+          },
           {
             foreignKeyName: "chats_user_id_fkey";
             columns: ["user_id"];

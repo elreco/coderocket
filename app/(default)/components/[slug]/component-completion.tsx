@@ -13,6 +13,7 @@ import {
   ExternalLink,
   ThumbsUp,
   Copy,
+  GitFork,
 } from "lucide-react";
 import { Share } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -67,6 +68,7 @@ import {
   fetchMessagesByChatId,
   hasUserLikedChat,
   toggleChatLike,
+  remixChat,
 } from "../actions";
 
 import ComponentSettings from "./(settings)/component-settings";
@@ -123,6 +125,15 @@ export default function ComponentCompletion({
 
   const [image, setImage] = useState<File | null>(null);
   const [defaultImage, setDefaultImage] = useState<string | null>(null);
+
+  const [remixOriginalChat, setRemixOriginalChat] =
+    useState<Tables<"chats"> | null>(null);
+
+  const [isRemixing, setIsRemixing] = useState(false);
+  const [subscription, setSubscription] =
+    useState<Tables<"subscriptions"> | null>(null);
+
+  const [isRemixModalOpen, setIsRemixModalOpen] = useState(false);
 
   useEffect(() => {
     const loadInitialData = async () => {
@@ -184,11 +195,28 @@ export default function ComponentCompletion({
       if (chat?.framework === Framework.HTML && assistantMsg?.content) {
         handleChatFiles(assistantMsg.content, true);
       }
+
+      // Fetch original chat if this is a remix
+      if (chat.remix_chat_id) {
+        const originalChat = await fetchChatById(chat.remix_chat_id);
+        if (originalChat) {
+          setRemixOriginalChat(originalChat);
+        }
+      }
+
       await new Promise((resolve) => setTimeout(resolve, 500));
       setIsLoading(false);
     };
     loadInitialData();
+    checkSubscriptionStatus();
   }, [chatId]);
+
+  const checkSubscriptionStatus = async () => {
+    if (!user) return;
+
+    const sub = await getSubscription();
+    setSubscription(sub);
+  };
 
   const { completion, stop, complete, setCompletion, input, setInput } =
     useCompletion({
@@ -514,6 +542,48 @@ export default function ComponentCompletion({
     toggleChatLike(chatId);
   };
 
+  const handleRemixClick = async () => {
+    if (isRemixing) return;
+    console.log("subscription", subscription);
+    if (!subscription) {
+      toast({
+        variant: "destructive",
+        title: "Subscription required",
+        description:
+          "Only subscribers can remix projects. Please upgrade to create remixes.",
+        duration: 4000,
+      });
+      return;
+    }
+
+    try {
+      setIsRemixing(true);
+      const newChat = await remixChat(chatId);
+
+      toast({
+        variant: "default",
+        title: "Project remixed",
+        description: "Your remix has been created successfully!",
+        duration: 4000,
+      });
+
+      // Redirect to the new chat
+      router.push(`/components/${newChat.slug}`);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Remix failed",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Failed to create remix. Please try again.",
+        duration: 4000,
+      });
+    } finally {
+      setIsRemixing(false);
+    }
+  };
+
   const contextValue = {
     isCanvas,
     setCanvas,
@@ -710,6 +780,25 @@ export default function ComponentCompletion({
                     </p>
                   </TooltipContent>
                 </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => setIsRemixModalOpen(true)}
+                        disabled={isRemixing}
+                        className="flex items-center gap-2"
+                      >
+                        <GitFork className="w-5" />
+                        <Badge className="hover:bg-primary">New</Badge>
+                      </Button>
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Remix this component</p>
+                  </TooltipContent>
+                </Tooltip>
                 {!isLoading && title && authorized && (
                   <ComponentSettings>
                     <Button
@@ -740,37 +829,57 @@ export default function ComponentCompletion({
             </div>
             <div className="relative m-0 flex h-full max-h-full flex-1 flex-col border-b lg:border-b-0">
               {!isLoading && isCanvas && (
-                <div className="absolute bottom-0 right-0 z-[9999] m-2 flex items-center">
-                  <Badge className="hover:bg-primary">
-                    <FrameworkIcon className="mr-1 size-3" />
-                    <span className="first-letter:uppercase">
-                      {fetchedChat?.framework}
-                    </span>
-                  </Badge>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <motion.div
-                        whileTap={{ scale: 0.9, rotate: 15 }}
-                        transition={{ type: "spring", stiffness: 300 }}
+                <div className="absolute bottom-0 right-0 z-[9999] flex w-full items-center justify-between p-2">
+                  {remixOriginalChat ? (
+                    <div className="flex items-center gap-2 rounded-md bg-secondary px-3 py-2 text-sm shadow-sm">
+                      <GitFork className="size-4" />
+                      <span>Remixed from:</span>
+                      <a
+                        href={`/components/${remixOriginalChat.slug}`}
+                        className="flex items-center gap-1 font-medium text-primary hover:underline"
+                        target="_blank"
+                        rel="noopener noreferrer"
                       >
-                        <Button
-                          onClick={handleLikeClick}
-                          variant="secondary"
-                          size="sm"
-                          className={`ml-2 rounded-full p-2 shadow-md transition-colors ${
-                            isLiked
-                              ? "bg-primary text-secondary hover:bg-primary"
-                              : "bg-green-300 text-green-700 hover:bg-green-200"
-                          }`}
+                        {remixOriginalChat.title ||
+                          `Component ${remixOriginalChat.slug}`}
+                        <ExternalLink className="size-3" />
+                      </a>
+                    </div>
+                  ) : (
+                    <div className="invisible"></div>
+                  )}
+                  <div className="flex items-center gap-2">
+                    <Badge className="hover:bg-primary">
+                      <FrameworkIcon className="mr-1 size-3" />
+                      <span className="first-letter:uppercase">
+                        {fetchedChat?.framework}
+                      </span>
+                    </Badge>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <motion.div
+                          whileTap={{ scale: 0.9, rotate: 15 }}
+                          transition={{ type: "spring", stiffness: 300 }}
                         >
-                          <ThumbsUp className="size-5" />
-                        </Button>
-                      </motion.div>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>{isLiked ? "Unlike" : "Like"}</p>
-                    </TooltipContent>
-                  </Tooltip>
+                          <Button
+                            onClick={handleLikeClick}
+                            variant="secondary"
+                            size="sm"
+                            className={`ml-2 rounded-full p-2 shadow-md transition-colors ${
+                              isLiked
+                                ? "bg-primary text-secondary hover:bg-primary"
+                                : "bg-green-300 text-green-700 hover:bg-green-200"
+                            }`}
+                          >
+                            <ThumbsUp className="size-5" />
+                          </Button>
+                        </motion.div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{isLiked ? "Unlike" : "Like"}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
                 </div>
               )}
               <WebcontainerProvider>
@@ -815,6 +924,48 @@ export default function ComponentCompletion({
                 >
                   <Copy className="size-4" />
                   <span className="sr-only">Copy</span>
+                </Button>
+              </div>
+            </DialogDescription>
+          </DialogContent>
+        </Dialog>
+        <Dialog open={isRemixModalOpen} onOpenChange={setIsRemixModalOpen}>
+          <DialogContent className="max-w-md sm:max-w-2xl">
+            <div className="mb-6 flex flex-col items-center justify-center text-center">
+              <GitFork className="mb-2 size-12 text-primary" />
+              <DialogTitle className="text-xl font-semibold">
+                Remix This Component
+              </DialogTitle>
+              <p className="text-muted-foreground">
+                Create your own version of this component! 🚀
+              </p>
+            </div>
+            <DialogDescription>
+              <p className="mb-4">
+                Remixing will create a copy of this component that you can
+                modify and customize. This feature is available for subscribers
+                only.
+              </p>
+              <div className="flex justify-center">
+                <Button
+                  onClick={() => {
+                    handleRemixClick();
+                    setIsRemixModalOpen(false);
+                  }}
+                  disabled={isRemixing}
+                  className="w-full max-w-xs"
+                >
+                  {isRemixing ? (
+                    <>
+                      <LoaderCircle className="mr-2 size-4 animate-spin" />
+                      Creating Remix...
+                    </>
+                  ) : (
+                    <>
+                      <GitFork className="mr-2 size-4" />
+                      Remix Component
+                    </>
+                  )}
                 </Button>
               </div>
             </DialogDescription>

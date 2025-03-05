@@ -61,6 +61,7 @@ export const fetchChatById = async (idOrSlug: string) => {
     output_tokens,
     user_id,
     slug,
+    remix_chat_id,
     user:users (*)
 `,
     )
@@ -84,7 +85,8 @@ export const fetchMessagesByChatId = async (
       *,
       chats (
         user:users (*),
-        prompt_image
+        prompt_image,
+        remix_chat_id
       )
     `,
     )
@@ -572,4 +574,108 @@ export const hasUserLikedChat = async (chatId: string) => {
     .single();
 
   return !!existingLike; // Retourne true si le like existe, sinon false
+};
+
+export const remixChat = async (chatId: string) => {
+  const supabase = await createClient();
+
+  // Get the original chat
+  const { data: originalChat } = await supabase
+    .from("chats")
+    .select(
+      `
+      id,
+      artifact_code,
+      title,
+      framework,
+      prompt_image,
+      user_id
+    `,
+    )
+    .eq("id", chatId)
+    .single();
+
+  if (!originalChat) {
+    throw new Error("Chat not found");
+  }
+
+  // Get the current user
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    throw new Error("User not authenticated");
+  }
+
+  // Check if user is a subscriber
+  const subscription = await getSubscription();
+
+  if (!subscription) {
+    throw new Error("Only subscribers can remix projects");
+  }
+  const uniqueId = await generateUniqueNanoid();
+  // Create a new chat as a remix - let Supabase generate the UUID
+  const { data: newChat, error } = await supabase
+    .from("chats")
+    .insert({
+      artifact_code: originalChat.artifact_code,
+      title: `Remix of ${originalChat.title || "Untitled Project"}`,
+      framework: originalChat.framework,
+      prompt_image: originalChat.prompt_image,
+      user_id: user.id,
+      remix_chat_id: originalChat.id,
+      is_private: true,
+      slug: uniqueId,
+    })
+    .select()
+    .single();
+
+  if (error) {
+    throw new Error("Failed to create remix");
+  }
+
+  // Get all messages from the original chat
+  const { data: originalMessages } = await supabase
+    .from("messages")
+    .select("*")
+    .eq("chat_id", chatId)
+    .order("version", { ascending: true });
+
+  if (!originalMessages || originalMessages.length === 0) {
+    throw new Error("Original chat has no messages");
+  }
+
+  // Copy all messages to the new chat
+  const messagesToInsert = originalMessages.map((message) => ({
+    chat_id: newChat.id,
+    role: message.role,
+    content: message.content,
+    version: message.version,
+    is_built: false,
+    screenshot: message.screenshot,
+    theme: message.theme,
+    prompt_image: message.prompt_image,
+    input_tokens: message.input_tokens,
+    output_tokens: message.output_tokens,
+  }));
+
+  const { error: messagesError } = await supabase
+    .from("messages")
+    .insert(messagesToInsert);
+
+  if (messagesError) {
+    throw new Error("Failed to copy messages");
+  }
+
+  after(async () => {
+    const lastAssistantMessage = await fetchLastAssistantMessageByChatId(
+      newChat.id,
+    );
+    if (lastAssistantMessage) {
+      await buildComponent(newChat.id, lastAssistantMessage.version);
+    }
+  });
+
+  return newChat;
 };

@@ -10,11 +10,13 @@ export const ImageSelector = memo(
     disabled,
     handleButtonClick,
     handleImageChange,
+    isReverse = false,
   }: {
     fileInputRef: React.RefObject<HTMLInputElement>;
     disabled: boolean;
     handleButtonClick: () => void;
     handleImageChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    isReverse?: boolean;
   }) => {
     return (
       <>
@@ -28,7 +30,7 @@ export const ImageSelector = memo(
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
-              variant="background"
+              variant={isReverse ? "background" : "secondary"}
               className="w-full lg:w-auto"
               size="sm"
               type="button"

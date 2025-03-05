@@ -352,7 +352,6 @@ const updateDataAfterCompletion = async (
   if (finishReason === "length" || finishReason === "error") {
     content = `${text}\n\n<!-- FINISH_REASON: ${finishReason} -->`;
   }
-  console.log("content", content);
   newMessages.push({
     chat_id: chatId,
     screenshot: null,

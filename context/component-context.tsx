@@ -8,6 +8,7 @@ export type ChatMessage = Tables<"messages"> & {
   chats: {
     user: Tables<"users">;
     prompt_image: string | null;
+    remix_chat_id: string | null;
   };
 };
 
