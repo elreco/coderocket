@@ -63,7 +63,7 @@ export default async function Page({ params }: Props) {
     return notFound();
   }
   return (
-    <div className="size-full">
+    <div className="relative size-full">
       <Watermark slug={chat.slug} />
       <iframe
         className="size-full border-none"
