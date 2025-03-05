@@ -57,15 +57,20 @@ export default function ComponentPreview() {
       )}
 
       {buildError && !isLoading && (
-        <div className="flex size-full items-center justify-center px-4 xl:w-2/3">
-          <Alert variant="default" className="bg-secondary text-foreground">
+        <div className="flex size-full h-full items-center justify-center px-4 xl:w-2/3">
+          <Alert
+            variant="default"
+            className="h-2/3 w-full bg-secondary py-10 text-foreground"
+          >
             <AlertCircle className="size-6" />
             <AlertDescription className="flex size-full flex-col !pl-12">
               <p className="text-lg font-semibold">{buildError.title}</p>
-              <p className="mb-4 whitespace-pre-line text-sm">
-                {buildError.description}
-              </p>
-              <Markdown>{buildError.content}</Markdown>
+              <div className="flex size-full flex-col overflow-y-auto">
+                <p className="mb-4 whitespace-pre-line  text-sm">
+                  {buildError.description}
+                </p>
+                <Markdown>{buildError.content}</Markdown>
+              </div>
               {authorized && (
                 <Button
                   variant="outline"
