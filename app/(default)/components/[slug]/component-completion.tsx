@@ -795,7 +795,7 @@ export default function ComponentCompletion({
                         size="sm"
                         variant="secondary"
                         onClick={() => setIsRemixModalOpen(true)}
-                        disabled={isRemixing}
+                        disabled={isRemixing || isLoading}
                         className="flex items-center gap-2"
                       >
                         <GitFork className="w-5" />
