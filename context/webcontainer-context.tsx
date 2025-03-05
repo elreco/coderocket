@@ -256,6 +256,7 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
     selectedVersion,
     chatId,
     isWebcontainerReady,
+    isLengthError,
   ]);
 
   return (

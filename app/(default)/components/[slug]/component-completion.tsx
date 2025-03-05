@@ -148,14 +148,13 @@ export default function ComponentCompletion({
       setVisible(!chat.is_private);
       setArtifactCode(chat.artifact_code || "");
       setWebcontainerReady(assistantMsg?.is_built || false);
-      if (assistantMsg?.content?.includes("<!-- FINISH_REASON: length -->")) {
-        setIsLengthError(true);
-      }
-
       if (
-        lastAssistantMessage?.content?.includes("<!-- FINISH_REASON: error -->")
+        assistantMsg?.content?.includes("<!-- FINISH_REASON: length -->") ||
+        assistantMsg?.content?.includes("<!-- FINISH_REASON: error -->")
       ) {
         setIsLengthError(true);
+      } else {
+        setIsLengthError(false);
       }
 
       if (msgs?.length === 1) {
@@ -311,6 +310,7 @@ export default function ComponentCompletion({
             );
             setCompletion(cleanedContent);
           } else if (content.includes("<!-- FINISH_REASON: error -->")) {
+            setIsLengthError(true);
             toast({
               variant: "destructive",
               title: "Something went wrong",
@@ -324,6 +324,8 @@ export default function ComponentCompletion({
               "",
             );
             setCompletion(cleanedContent);
+          } else {
+            setIsLengthError(false);
           }
         }
 
@@ -359,18 +361,16 @@ export default function ComponentCompletion({
     if (!selectedAssistantMessage?.content) {
       return;
     }
+
     if (
       selectedAssistantMessage.content.includes(
         "<!-- FINISH_REASON: length -->",
-      )
-    ) {
-      setIsLengthError(true);
-    }
-
-    if (
+      ) ||
       selectedAssistantMessage.content.includes("<!-- FINISH_REASON: error -->")
     ) {
       setIsLengthError(true);
+    } else {
+      setIsLengthError(false);
     }
 
     setCompletion(selectedAssistantMessage.content);
