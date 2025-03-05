@@ -782,7 +782,15 @@ export default function ComponentCompletion({
         </div>
         <Dialog open={isShareModalOpen} onOpenChange={setIsShareModalOpen}>
           <DialogContent className="max-w-md sm:max-w-2xl">
-            <DialogTitle>Share Component</DialogTitle>
+            <div className="mb-6 flex flex-col items-center justify-center text-center">
+              <Share className="mb-2 size-12 text-primary" />
+              <DialogTitle className="text-xl font-semibold">
+                Share Your Component
+              </DialogTitle>
+              <p className="text-muted-foreground">
+                Let the world see your awesome creation! ✨
+              </p>
+            </div>
             <DialogDescription>
               <p className="mb-1">Here is your shareable link:</p>
               <div className="flex items-center space-x-2">
