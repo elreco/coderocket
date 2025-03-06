@@ -102,7 +102,7 @@ export function ChunkReader({
                         />
                         <div
                           className={cn(
-                            "font-mono whitespace-pre-wrap text-sm font-medium text-border",
+                            "font-mono whitespace-pre-wrap text-sm font-medium text-border mr-2",
                             file.isDelete &&
                               "text-red-500 group-hover:text-red-500",
                             activeTab === file.name &&
