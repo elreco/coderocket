@@ -98,6 +98,14 @@ export default function ComponentSidebar({
     return () => clearTimeout(timer);
   }, [messages]);
 
+  const submitPrompt = (promptText: string) => {
+    handleSubmitToAI(promptText);
+    setActiveTab("chat");
+    if (containerRef.current) {
+      containerRef.current.scrollTop = containerRef.current.scrollHeight;
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -111,11 +119,7 @@ export default function ComponentSidebar({
       return;
     }
 
-    handleSubmitToAI(input);
-    setActiveTab("chat");
-    if (containerRef.current) {
-      containerRef.current.scrollTop = containerRef.current.scrollHeight;
-    }
+    submitPrompt(input);
   };
 
   const handleTabChange = (value: string) => {
@@ -513,14 +517,15 @@ export default function ComponentSidebar({
                 {!isLoading && isLengthError && (
                   <Button
                     type="button"
-                    variant="outline"
                     size="sm"
                     className="mr-2"
                     onClick={() => {
-                      setInput("Continue where you left off");
+                      const continuePrompt = "Continue where you left off";
+                      setInput(continuePrompt);
+                      submitPrompt(continuePrompt);
                     }}
                   >
-                    <RefreshCw className="mr-2 size-4" />
+                    <RefreshCw className="mr-1 size-4" />
                     Continue generation
                   </Button>
                 )}

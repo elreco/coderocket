@@ -98,8 +98,6 @@ export default function ComponentChatFiles({
         }
       }
 
-      console.log("Extracted files:", extractedFiles.length);
-
       // Filtrer les fichiers incomplets
       const validFiles = extractedFiles.filter((file) => !file.isIncomplete);
 

@@ -221,14 +221,18 @@ export default function ComponentCompletion({
   const { completion, stop, complete, setCompletion, input, setInput } =
     useCompletion({
       api: "/api/components",
-      fetch: async (url) => {
+      fetch: async (url, options) => {
+        const requestBody = JSON.parse((options?.body as string) || "{}");
+        const promptValue = requestBody.prompt || input;
+
         const formData = new FormData();
         if (image) {
           formData.append("image", image);
         }
         formData.append("id", chatId);
         formData.append("selectedVersion", String(selectedVersion));
-        formData.append("prompt", input);
+        formData.append("prompt", promptValue);
+
         const response = await fetch(url, {
           method: "POST",
           body: formData,
@@ -365,7 +369,7 @@ export default function ComponentCompletion({
       },
     });
 
-  const handleSubmitToAI = (input: string) => {
+  const handleSubmitToAI = (inputData: string) => {
     setForceBuild(true);
     setCompletion("");
     setArtifactFiles([]);
@@ -373,7 +377,7 @@ export default function ComponentCompletion({
     setChatFiles([]);
     setCanvas(false);
     setIsLoading(true);
-    complete(input);
+    complete(inputData);
   };
 
   const handleVersionSelect = (version: number, tabName?: string) => {
@@ -772,7 +776,7 @@ export default function ComponentCompletion({
                         size="sm"
                         variant="secondary"
                         onClick={share}
-                        disabled={!isVisible}
+                        disabled={!isVisible || isLoading || isLengthError}
                         className={isVisible ? "" : "cursor-not-allowed"}
                       >
                         <Share className="w-5" />
@@ -781,9 +785,13 @@ export default function ComponentCompletion({
                   </TooltipTrigger>
                   <TooltipContent>
                     <p>
-                      {isVisible
-                        ? "Share Component"
-                        : "Your component needs to be public to share it. You can make it public by clicking the settings button."}
+                      {isLoading
+                        ? "The component is loading"
+                        : isLengthError
+                          ? "The component has an error"
+                          : isVisible
+                            ? "Share Component"
+                            : "Your component needs to be public to share it. You can make it public by clicking the settings button."}
                     </p>
                   </TooltipContent>
                 </Tooltip>

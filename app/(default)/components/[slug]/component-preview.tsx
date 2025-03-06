@@ -60,18 +60,18 @@ export default function ComponentPreview() {
         <div className="flex size-full h-full items-center justify-center px-4 xl:w-2/3">
           <Alert
             variant="default"
-            className="h-2/3 w-full bg-secondary py-10 text-foreground"
+            className="h-2/3 w-full items-center justify-center bg-secondary text-foreground"
           >
             <AlertCircle className="size-6" />
             <AlertDescription className="flex size-full flex-col !pl-12">
               <p className="text-lg font-semibold">{buildError.title}</p>
               <div className="flex size-full flex-col overflow-y-auto">
-                <p className="mb-4 whitespace-pre-line  text-sm">
+                <p className="mb-4 whitespace-pre-line text-sm">
                   {buildError.description}
                 </p>
                 <Markdown>{buildError.content}</Markdown>
               </div>
-              {authorized && (
+              {authorized && buildError.content && (
                 <Button
                   variant="outline"
                   className="mt-2 self-end"

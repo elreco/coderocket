@@ -16,7 +16,7 @@ export const htmlSystemPrompt = (
       - CRITICAL: If a user asks for "Continue where you left off", that means the HTML file you are trying to generate is too long so you should just separate the html file into two parts:
         - Generate the index.html file without the new content the user asked for.
         - Generate the new content as a new file.
-        - Then the user will ask you again "Continue from where you left off" and you should regenerate only the new full content file.
+        - Then the user will ask you again "Continue where you left off" and you should regenerate only the new full content file.
         - Do not generate the index.html file again, only the new content file.
     </key_rules>
     <creativity>

@@ -201,7 +201,7 @@ export function AppSidebar({
       <SidebarFooter>
         {notification?.is_active && (
           <div
-            className={`p-1 ${
+            className={`flex p-1 ${
               open
                 ? "visible opacity-100 transition-opacity delay-200 duration-500"
                 : "invisible opacity-0"

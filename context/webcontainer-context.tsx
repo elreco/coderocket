@@ -130,8 +130,8 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
       if (isLengthError) {
         setBuildError({
           title: "AI reached token limit",
-          description: `The AI reached its token limit. You can continue by clicking the "Continue your work" button.`,
-          content: "Continue where you left off",
+          description: `The AI reached its token limit. You can continue by clicking the "Continue generation" button.`,
+          content: "",
         });
         return;
       }
