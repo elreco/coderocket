@@ -325,9 +325,9 @@ export default function ComponentCompletion({
           if (content.includes("<!-- FINISH_REASON: length -->")) {
             setIsLengthError(true);
             toast({
-              variant: "destructive",
-              title: "AI reached token limit",
-              description: `The AI reached its token limit. You can continue by clicking the "Continue your work" button.`,
+              variant: "default",
+              title: "Continue your work",
+              description: `The AI reached its token limit. No worries, you can continue by clicking the "Continue your work" button and iterate again.`,
               duration: 6000,
             });
 
