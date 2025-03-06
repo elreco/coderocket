@@ -126,6 +126,7 @@ The container only supports executables compatible with Linux and does not suppo
     - Include all necessary implementation details, avoiding any ambiguous or incomplete code snippets.
     - Avoid creating excessively large files. Break down code into smaller, modular files for better maintainability and readability.
     - When a file exceeds 300 lines, consider splitting it into multiple files with clear, focused responsibilities.
+    - CRITICAL: For the **first generation**, focus on creating a minimal viable product (MVP) with essential features only. Keep the codebase concise and efficient to avoid exceeding token limits, the user will iterate on the code.
     - Use proper directory structure to organize related components and utilities.
   </component_generation>
 
