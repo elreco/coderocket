@@ -31,6 +31,9 @@ export function ChunkReader({
   const { isCanvas, activeTab, selectedFramework, isLoading } =
     useComponentContext();
 
+  // Les fichiers sont déjà filtrés dans prepareContent
+  const validFiles = files;
+
   return chunks.map((chunk, index) => (
     <div key={index} className="text-sm">
       {chunk.type === "text" && <Markdown>{chunk.content}</Markdown>}
@@ -43,30 +46,31 @@ export function ChunkReader({
           >
             <div className="mb-3 flex items-center justify-between">
               <h3 className="text-xs font-semibold">
-                {files.length === 1 ? "Output File" : "Output Files"}
+                {validFiles.length === 1 ? "Output File" : "Output Files"}
               </h3>
-              {selectedFramework === Framework.HTML && (
-                <Tooltip>
-                  <TooltipTrigger>
-                    <Badge
-                      variant="secondary"
-                      className="cursor-default border border-border"
-                    >
-                      <Paintbrush className="mr-1 size-3" />{" "}
-                      <span className="first-letter:uppercase">
-                        {extractDataTheme(files[0].content)}
-                      </span>
-                    </Badge>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Theme</p>
-                  </TooltipContent>
-                </Tooltip>
-              )}
+              {selectedFramework === Framework.HTML &&
+                validFiles.length > 0 && (
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <Badge
+                        variant="secondary"
+                        className="cursor-default border border-border"
+                      >
+                        <Paintbrush className="mr-1 size-3" />{" "}
+                        <span className="first-letter:uppercase">
+                          {extractDataTheme(validFiles[0].content)}
+                        </span>
+                      </Badge>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Theme</p>
+                    </TooltipContent>
+                  </Tooltip>
+                )}
             </div>
             <div className="space-y-2 overflow-x-auto">
               <div className="flex w-fit min-w-full flex-col space-y-2">
-                {files.map((file, index) => {
+                {validFiles.map((file, index) => {
                   const fileConfig = getFileConfig(
                     file.name || "untitled.html",
                   );

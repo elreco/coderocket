@@ -544,7 +544,6 @@ export default function ComponentCompletion({
 
   const handleRemixClick = async () => {
     if (isRemixing) return;
-    console.log("subscription", subscription);
     if (!subscription) {
       toast({
         variant: "destructive",
