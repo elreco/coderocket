@@ -38,7 +38,6 @@ export async function POST(req: Request) {
       Number(formData.get("selectedVersion")) || undefined;
     const image = formData.get("image") as File | null;
     const prompt = formData.get("prompt") as string | null;
-    console.log("prompt", prompt);
     const {
       messagesFromDatabase,
       framework,
@@ -53,7 +52,7 @@ export async function POST(req: Request) {
       updatedImage,
       selectedVersion,
     );
-    console.log("messages", messages);
+
     const stream = streamText({
       messages,
       model: anthropicModel("claude-3-7-sonnet-latest"),
@@ -302,8 +301,6 @@ const updateDataAfterCompletion = async (
 
   const currentInputTokens = currentChatData?.input_tokens || 0;
   const currentOutputTokens = currentChatData?.output_tokens || 0;
-  console.log("currentInputTokens", currentInputTokens);
-  console.log("currentOutputTokens", currentOutputTokens);
   // Update with the sum of previous and new tokens
   if (currentChatData.title) {
     await supabase
@@ -362,14 +359,13 @@ const updateDataAfterCompletion = async (
     output_tokens: usage.completionTokens,
   });
 
-  const { data: newMessagesData, error: newMessagesError } = await supabase
+  const { error: newMessagesError } = await supabase
     .from("messages")
     .insert(newMessages)
     .eq("chat_id", chatId);
   if (newMessagesError) {
     console.error("Error inserting new messages:", newMessagesError);
   }
-  console.log("newMessagesData", newMessagesData);
 
   after(async () => {
     if (chat.framework === Framework.HTML) {

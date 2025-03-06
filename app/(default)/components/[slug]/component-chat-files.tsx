@@ -24,9 +24,10 @@ import { Tables } from "@/types_db";
 import {
   ChatFile,
   ContentChunk,
-  extractFilesFromCompletion,
-  hasArtifacts,
-  splitContentIntoChunks,
+  extractFilesFromCompletedCompletion,
+  extractFilesFromIncompleteArtifact,
+  hasCompletedArtifacts,
+  splitCompletedContentIntoChunks,
 } from "@/utils/completion-parser";
 import { storageUrl } from "@/utils/config";
 import { getRelativeDate } from "@/utils/date";
@@ -66,11 +67,47 @@ export default function ComponentChatFiles({
 
   useEffect(() => {
     const prepareContent = async () => {
-      const hasArtifactResult = hasArtifacts(message.content);
-      setFiles(
-        hasArtifactResult ? extractFilesFromCompletion(message.content) : [],
+      const hasPartialArtifactTags =
+        message.content.includes("<tailwindaiArtifact") &&
+        !message.content.includes("</tailwindaiArtifact>");
+      const hasIncompleteMarker = message.content.includes(
+        "<!-- FINISH_REASON: length -->",
       );
-      setChunks(splitContentIntoChunks(message.content));
+
+      // Vérifier si le message contient des artifacts valides
+      const hasArtifactResult = hasCompletedArtifacts(message.content);
+
+      // Extraire les fichiers
+      let extractedFiles: ChatFile[] = [];
+
+      // Si le message contient des artifacts valides ou des balises partielles avec le marqueur de fin de token
+      if (
+        hasArtifactResult ||
+        (hasPartialArtifactTags && hasIncompleteMarker)
+      ) {
+        // Si le message contient des balises partielles et le marqueur de fin de token,
+        // utiliser extractFilesFromIncompleteArtifact
+        if (hasPartialArtifactTags && hasIncompleteMarker) {
+          extractedFiles = extractFilesFromIncompleteArtifact(
+            message.content,
+            false,
+          );
+        } else {
+          // Sinon, utiliser extractFilesFromCompletion
+          extractedFiles = extractFilesFromCompletedCompletion(message.content);
+        }
+      }
+
+      console.log("Extracted files:", extractedFiles.length);
+
+      // Filtrer les fichiers incomplets
+      const validFiles = extractedFiles.filter((file) => !file.isIncomplete);
+
+      setFiles(validFiles);
+
+      // Découper le contenu en chunks
+      const contentChunks = splitCompletedContentIntoChunks(message.content);
+      setChunks(contentChunks);
     };
 
     prepareContent();
@@ -79,7 +116,7 @@ export default function ComponentChatFiles({
   const isSelectedVersion = selectedVersion === message.version && !isLoading;
 
   const handleFileClick = (version: number, file?: ChatFile) => {
-    if (isLoading || file?.isDelete) {
+    if (isLoading || file?.isDelete || file?.isIncomplete) {
       return;
     }
     handleVersionSelect(version, file?.name || undefined);
