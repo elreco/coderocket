@@ -11,7 +11,7 @@ import { Database } from "@/types_db";
 import {
   PRO_PLAN_MESSAGES_PER_PERIOD,
   STARTER_PLAN_MESSAGES_PER_PERIOD,
-  TRIAL_PLAN_MESSAGES_PER_DAY,
+  TRIAL_PLAN_MESSAGES_PER_MONTH,
 } from "@/utils/config";
 import { postData } from "@/utils/helpers";
 
@@ -111,7 +111,7 @@ export default function Pricing({ user, products, subscription }: Props) {
               </p>
               <p className="mt-4 flex items-center text-sm font-medium ">
                 <Check className="mr-2 size-4 text-emerald-500" />{" "}
-                {TRIAL_PLAN_MESSAGES_PER_DAY} messages per day
+                {TRIAL_PLAN_MESSAGES_PER_MONTH} messages per month
               </p>
               <p className="mt-4 flex items-center text-sm font-medium ">
                 <XIcon className="mr-2 size-4 text-border" /> Improve prompt

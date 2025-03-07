@@ -19,7 +19,7 @@ import {
 } from "@/utils/completion-parser";
 import {
   Framework,
-  TRIAL_PLAN_MESSAGES_PER_DAY,
+  TRIAL_PLAN_MESSAGES_PER_MONTH,
   anthropicModel,
   getMaxMessagesPerPeriod,
   storageUrl,
@@ -202,17 +202,16 @@ const validateRequest = async (
       throw new Error("limit-exceeded");
     }
   } else {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const currentPeriodStart = new Date(user?.created_at || new Date());
 
     // Vérifier la limite mensuelle pour les abonnés
     const { count } = await supabase
       .from("messages")
       .select("*, chats!inner(*)", { count: "exact", head: true })
       .eq("chats.user_id", user.id)
-      .gte("created_at", formatToTimestamp(today));
+      .gte("created_at", formatToTimestamp(currentPeriodStart));
 
-    if (count && count >= TRIAL_PLAN_MESSAGES_PER_DAY) {
+    if (count && count >= TRIAL_PLAN_MESSAGES_PER_MONTH) {
       throw new Error("limit-exceeded");
     }
   }

@@ -1,4 +1,4 @@
-import { addDays, format } from "date-fns";
+import { addMonths, format } from "date-fns";
 import Link from "next/link";
 import { ReactNode, Suspense } from "react";
 
@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import {
   getMaxMessagesPerPeriod,
-  TRIAL_PLAN_MESSAGES_PER_DAY,
+  TRIAL_PLAN_MESSAGES_PER_MONTH,
 } from "@/utils/config";
 import { formatToTimestamp } from "@/utils/date";
 import { createClient } from "@/utils/supabase/server";
@@ -64,19 +64,20 @@ export default async function Account() {
       maxMessages = getMaxMessagesPerPeriod(subscription);
       resetDate = new Date(subscription.current_period_end);
     } else {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
+      const currentPeriodStart = new Date(
+        userDetails?.created_at || new Date(),
+      );
 
       // Vérifier la limite mensuelle pour les abonnés
       const { count } = await supabase
         .from("messages")
         .select("*, chats!inner(*)", { count: "exact", head: true })
         .eq("chats.user_id", user.id)
-        .gte("created_at", formatToTimestamp(today));
+        .gte("created_at", formatToTimestamp(currentPeriodStart));
 
       usage = count || 0;
-      maxMessages = TRIAL_PLAN_MESSAGES_PER_DAY;
-      resetDate = addDays(today, 1);
+      maxMessages = TRIAL_PLAN_MESSAGES_PER_MONTH;
+      resetDate = addMonths(currentPeriodStart, 1);
     }
   }
 
@@ -123,11 +124,7 @@ export default async function Account() {
 
         <Card
           title="Usage"
-          description={
-            subscription
-              ? "Tracking your usage for the current period"
-              : "Tracking your usage for the current day"
-          }
+          description={"Tracking your usage for the current month"}
         >
           <div className="mb-4 mt-8 space-y-4">
             <div className="grid gap-4">

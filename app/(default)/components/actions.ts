@@ -1,6 +1,6 @@
 "use server";
 
-import { addDays, format } from "date-fns";
+import { addMonths, format } from "date-fns";
 import { nanoid } from "nanoid";
 import { after } from "next/server";
 
@@ -8,7 +8,7 @@ import { getSubscription } from "@/app/supabase-server";
 import {
   Framework,
   MAX_SEARCH_LENGTH,
-  TRIAL_PLAN_MESSAGES_PER_DAY,
+  TRIAL_PLAN_MESSAGES_PER_MONTH,
   defaultTheme,
   getMaxMessagesPerPeriod,
 } from "@/utils/config";
@@ -223,22 +223,21 @@ export const createChat = async (prompt: string, formData: FormData) => {
   }
 
   if (!subscription) {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const currentPeriodStart = new Date(user?.created_at || new Date());
 
     // Vérifier la limite mensuelle pour les abonnés
     const { count } = await supabase
       .from("messages")
       .select("*, chats!inner(*)", { count: "exact", head: true })
       .eq("chats.user_id", user.id)
-      .gte("created_at", formatToTimestamp(today));
+      .gte("created_at", formatToTimestamp(currentPeriodStart));
 
-    if (count && count >= TRIAL_PLAN_MESSAGES_PER_DAY) {
+    if (count && count >= TRIAL_PLAN_MESSAGES_PER_MONTH) {
       return {
         error: {
           title: "Daily message limit reached",
-          description: `You have reached your limit of ${TRIAL_PLAN_MESSAGES_PER_DAY} messages for today. Your limit will reset tomorrow (${format(
-            addDays(today, 1),
+          description: `You have reached your limit of ${TRIAL_PLAN_MESSAGES_PER_MONTH} messages for this month. Your limit will reset next month (${format(
+            addMonths(currentPeriodStart, 1),
             "d MMMM yyyy",
           )}). Upgrade to a paid plan to continue.`,
         },

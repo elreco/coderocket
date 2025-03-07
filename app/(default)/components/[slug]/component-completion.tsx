@@ -3,7 +3,7 @@
 import { SiHtml5, SiReact, SiVuedotjs } from "@icons-pack/react-simple-icons";
 import { useCompletion } from "ai/react";
 import { Crisp } from "crisp-sdk-web";
-import { addDays, format } from "date-fns";
+import { addMonths, format } from "date-fns";
 import { motion } from "framer-motion";
 import {
   Fullscreen,
@@ -55,7 +55,7 @@ import {
 } from "@/utils/completion-parser";
 import {
   Framework,
-  TRIAL_PLAN_MESSAGES_PER_DAY,
+  TRIAL_PLAN_MESSAGES_PER_MONTH,
   crispWebsiteId,
   getMaxMessagesPerPeriod,
 } from "@/utils/config";
@@ -265,16 +265,15 @@ export default function ComponentCompletion({
         if (error.message === "limit-exceeded") {
           const subscription = await getSubscription();
           if (!subscription) {
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            const maxMessagesPerPeriod = TRIAL_PLAN_MESSAGES_PER_DAY;
-            const resetDate = addDays(today, 1);
+            const currentPeriodStart = new Date(user?.created_at || new Date());
+            const maxMessagesPerPeriod = TRIAL_PLAN_MESSAGES_PER_MONTH;
+            const resetDate = addMonths(currentPeriodStart, 1);
             setIsLoading(false);
             setCanvas(true);
             toast({
               variant: "destructive",
               title: "Daily message limit reached",
-              description: `You have reached your limit of ${maxMessagesPerPeriod} messages for today. This limit will reset tomorrow (${format(
+              description: `You have reached your limit of ${maxMessagesPerPeriod} messages for this month. This limit will reset next month (${format(
                 resetDate,
                 "d MMMM yyyy",
               )}). Upgrade to a paid plan to continue.`,
