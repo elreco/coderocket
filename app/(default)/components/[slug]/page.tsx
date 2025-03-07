@@ -34,7 +34,7 @@ export async function generateMetadata(
   const lastAssistantMessage = await fetchLastAssistantMessageByChatId(chat.id);
   if (!lastAssistantMessage) {
     return {
-      title: "Generating content...",
+      title: "Tailwind AI",
     };
   }
 
@@ -42,9 +42,7 @@ export async function generateMetadata(
   const previousImages = (await parent).openGraph?.images || [];
 
   return {
-    title: chat.title
-      ? `${chat.title} - Tailwind AI`
-      : `Component ${chat.slug} - Tailwind AI`,
+    title: chat.title ? `${chat.title} - Tailwind AI` : `Tailwind AI`,
     openGraph: {
       images: lastAssistantMessage?.screenshot
         ? [lastAssistantMessage.screenshot]
