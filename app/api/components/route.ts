@@ -345,8 +345,10 @@ const updateDataAfterCompletion = async (
   // If we have a finishReason, add a special marker at the end of the content
   // that the client can detect and remove
   let content = text;
+  let hasError = false;
   if (finishReason === "length" || finishReason === "error") {
     content = `${text}\n\n<!-- FINISH_REASON: ${finishReason} -->`;
+    hasError = true;
   }
   newMessages.push({
     chat_id: chatId,
@@ -367,6 +369,9 @@ const updateDataAfterCompletion = async (
   }
 
   after(async () => {
+    if (hasError) {
+      return;
+    }
     if (chat.framework === Framework.HTML) {
       await takeScreenshot(chatId, version, theme, Framework.HTML);
       return;
