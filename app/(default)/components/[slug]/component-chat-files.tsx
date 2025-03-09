@@ -177,14 +177,13 @@ export default function ComponentChatFiles({
     >
       <div className="flex w-full gap-2">
         {message.role === "user" ? (
-          <Link
-            href={`/users/${message.chats.user.id}`}
-            className="flex w-full flex-col gap-2 rounded-lg border border-border bg-background p-5"
-          >
-            <UserAvatar
-              avatarUrl={message.chats.user.avatar_url}
-              fullName={message.chats.user.full_name}
-            />
+          <div className="flex w-full flex-col gap-2 rounded-lg border border-border bg-background p-5">
+            <Link href={`/users/${message.chats.user.id}`}>
+              <UserAvatar
+                avatarUrl={message.chats.user.avatar_url}
+                fullName={message.chats.user.full_name}
+              />
+            </Link>
             <Markdown>{message.content}</Markdown>
             <PromptImage
               image={
@@ -193,7 +192,7 @@ export default function ComponentChatFiles({
                   : null
               }
             />
-          </Link>
+          </div>
         ) : (
           <div className="flex w-full flex-col gap-2 overflow-x-auto text-sm">
             <div className="flex items-center justify-between">
