@@ -337,60 +337,6 @@ export const createChat = async (prompt: string, formData: FormData) => {
   return { slug: data.slug };
 };
 
-export const getHTMLChatsFromUser = async () => {
-  const supabase = await createClient();
-  const { data: userData } = await supabase.auth.getUser();
-  const user = userData.user;
-
-  if (!user) throw Error("Could not get user");
-  const { data } = await supabase
-    .rpc("get_components")
-    .eq("user_id", user.id)
-    .eq("framework", Framework.HTML)
-    .limit(99);
-
-  return data;
-};
-
-export const getReactChatsFromUser = async () => {
-  const supabase = await createClient();
-  const { data: userData } = await supabase.auth.getUser();
-  const user = userData.user;
-
-  if (!user) throw Error("Could not get user");
-  const { data } = await supabase
-    .rpc("get_components")
-    .eq("user_id", user.id)
-    .eq("framework", "react")
-    .limit(99);
-
-  return data;
-};
-
-export const getVueChatsFromUser = async () => {
-  const supabase = await createClient();
-  const { data: userData } = await supabase.auth.getUser();
-  const user = userData.user;
-
-  if (!user) throw Error("Could not get user");
-  const { data } = await supabase
-    .rpc("get_components")
-    .eq("user_id", user.id)
-    .eq("framework", "vue")
-    .limit(99);
-
-  return data;
-};
-
-export const getFeaturedChats = async () => {
-  const supabase = await createClient();
-
-  const { data } = await supabase
-    .rpc("get_components")
-    .is("is_featured", true)
-    .limit(50);
-  return data;
-};
 /**
  * 🔹 Récupère les composants publics avec pagination et recherche sécurisée.
  */

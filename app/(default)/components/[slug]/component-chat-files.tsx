@@ -1,6 +1,7 @@
 "use client";
 
 import { Trash2 } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useState, useRef } from "react";
 
 import {
@@ -97,12 +98,10 @@ export default function ComponentChatFiles({
           extractedFiles = extractFilesFromCompletedCompletion(message.content);
         }
       }
-
       // Filtrer les fichiers incomplets
-      const validFiles = extractedFiles.filter((file) => !file.isIncomplete);
+      const validFiles = extractedFiles;
 
       setFiles(validFiles);
-
       // Découper le contenu en chunks
       const contentChunks = splitCompletedContentIntoChunks(message.content);
       setChunks(contentChunks);
@@ -114,7 +113,7 @@ export default function ComponentChatFiles({
   const isSelectedVersion = selectedVersion === message.version && !isLoading;
 
   const handleFileClick = (version: number, file?: ChatFile) => {
-    if (isLoading || file?.isDelete || file?.isIncomplete) {
+    if (isLoading || file?.isDelete) {
       return;
     }
     handleVersionSelect(version, file?.name || undefined);
@@ -174,7 +173,7 @@ export default function ComponentChatFiles({
     <div
       ref={messageRef}
       data-message-id={message.id}
-      className={cn("group flex px-2 py-6 flex-col sm:px-4 transition-all")}
+      className={cn("flex px-2 py-6 flex-col sm:px-4 transition-all")}
     >
       <div className="flex w-full gap-2">
         {message.role === "user" ? (

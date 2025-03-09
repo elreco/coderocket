@@ -33,7 +33,6 @@ export function ChunkReader({
 
   // Les fichiers sont déjà filtrés dans prepareContent
   const validFiles = files;
-
   return chunks.map((chunk, index) => (
     <div key={index} className="text-sm">
       {chunk.type === "text" && <Markdown>{chunk.content}</Markdown>}
@@ -80,11 +79,12 @@ export function ChunkReader({
                     <div
                       key={index}
                       className={cn(
-                        "flex items-center justify-between rounded p-1 bg-foreground w-full",
+                        "group flex items-center justify-between rounded p-1 bg-foreground w-full",
                         "hover:bg-gradient-to-l from-emerald-400 via-emerald-500 to-emerald-600 hover:text-foreground",
                         isLoading || file.isDelete
                           ? "cursor-not-allowed opacity-50"
                           : "cursor-pointer",
+                        file.isIncomplete && "opacity-100 text-amber-600",
                         activeTab === file.name &&
                           isSelectedVersion &&
                           !isCanvas &&
@@ -102,9 +102,11 @@ export function ChunkReader({
                         />
                         <div
                           className={cn(
-                            "font-mono whitespace-pre-wrap text-sm font-medium text-border mr-2",
+                            "font-mono whitespace-pre-wrap text-sm font-medium text-border mr-2 group-hover:text-foreground",
                             file.isDelete &&
-                              "text-red-500 group-hover:text-red-500",
+                              "text-red-500 group-hover:text-foreground",
+                            file.isIncomplete &&
+                              "text-amber-600 group-hover:text-foreground",
                             activeTab === file.name &&
                               isSelectedVersion &&
                               !isCanvas &&
@@ -112,9 +114,11 @@ export function ChunkReader({
                           )}
                         >
                           {file.name || "untitled.html"}
+                          {file.isIncomplete && " (incomplete)"}
+                          {file.isDelete && " (deleted)"}
                         </div>
                       </div>
-                      <div className="whitespace-nowrap text-xs text-border opacity-75">
+                      <div className="whitespace-nowrap text-xs text-border opacity-75 group-hover:text-foreground">
                         {formatFileSize(new Blob([file.content]).size)}
                       </div>
                     </div>

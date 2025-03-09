@@ -511,7 +511,6 @@ export const splitCompletedContentIntoChunks = (
     // Vérifier si l'artifact partiel contient des fichiers valides
     const files = extractFilesFromIncompleteArtifact(completion, false);
     const hasValidFiles = files.some((file) => !file.isIncomplete);
-
     // Si l'artifact partiel contient des fichiers valides, l'ajouter comme chunk de type "artifact"
     if (hasValidFiles) {
       // Créer un artifact complet à partir de l'artifact partiel
@@ -533,7 +532,7 @@ ${file.content}
     } else {
       // Sinon, ajouter tout le reste comme chunk de type "text"
       chunks.push({
-        type: "text",
+        type: "artifact",
         content: artifactContent,
       });
     }
