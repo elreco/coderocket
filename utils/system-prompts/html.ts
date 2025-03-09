@@ -16,11 +16,8 @@ export const htmlSystemPrompt = (
       - Ensure that every response respects the Daisy UI design guidelines.
       - CRITICAL: Avoid exceeding token limits by keeping your code concise and efficient.
       - CRITICAL: Don't generate too much code in a single file, you must split the code into multiple HTML files.
-      - CRITICAL: If a user asks for "Continue where you left off", that means the HTML file you are trying to generate is too long so you should just separate the html file into two parts:
-        - Generate the index.html file without the new content the user asked for.
-        - Generate the new content as a new file.
-        - Then the user will ask you again "Continue where you left off" and you should regenerate only the new full content file.
-        - Do not generate the index.html file again, only the new content file.
+      - CRITICAL: If a user asks for "Continue where you left off", that means the HTML file you are trying to generate is too long so you should just separate the html file into two parts.
+      - If the user asks you to continue from where you left off, regenerate the full content of the last file that you didn't finish, then continue with the remaining files that need to be generated.
     </key_rules>
     <creativity>
       - Be creative but ensure visual harmony, responsiveness, and accessibility.
