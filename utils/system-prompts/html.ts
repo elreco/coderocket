@@ -14,6 +14,8 @@ export const htmlSystemPrompt = (
       - Since operating within an iframe, use external libraries via CDN links for Tailwind CSS and Daisy UI.
       - CRITICAL: For the **first generation**, focus on creating a minimal viable product (MVP) with essential features only. Keep the codebase concise and efficient to avoid exceeding token limits, the user will iterate on the code.
       - Ensure that every response respects the Daisy UI design guidelines.
+      - CRITICAL: Avoid exceeding token limits by keeping your code concise and efficient.
+      - CRITICAL: Don't generate too much code in a single file, you must split the code into multiple HTML files.
       - CRITICAL: If a user asks for "Continue where you left off", that means the HTML file you are trying to generate is too long so you should just separate the html file into two parts:
         - Generate the index.html file without the new content the user asked for.
         - Generate the new content as a new file.

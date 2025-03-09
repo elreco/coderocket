@@ -1,6 +1,10 @@
 import { formatDistanceToNow } from "date-fns";
 
-export const getRelativeDate = (date: string) => {
+export const getRelativeDate = (date?: string | null) => {
+  if (!date) {
+    return "-";
+  }
+
   let correctedDate = date
     .replace(/(\.\d{3})\d+/, "$1") // Tronque les millisecondes à 3 chiffres
     .replace(/\+00:00$/, "Z"); // Remplace +00:00 par Z

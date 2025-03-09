@@ -116,10 +116,20 @@ export const extractFilesFromCompletion = (
   if (!completion) return [];
 
   const filesArray: ChatFile[] = [];
-  const artifactRegex =
-    /<tailwindaiArtifact(?:\s+title=["']([^"']*?)["'])?>[\s\S]*?<\/tailwindaiArtifact>/g;
 
-  const artifacts = Array.from(completion.matchAll(artifactRegex));
+  // Vérifier d'abord si nous avons des balises d'artifact
+  if (!completion.includes("<tailwindaiArtifact")) {
+    return [];
+  }
+
+  // Utiliser une regex plus simple et plus robuste
+  const artifactRegex = /<tailwindaiArtifact[\s\S]*?<\/tailwindaiArtifact>/g;
+
+  const artifacts = [];
+  let match;
+  while ((match = artifactRegex.exec(completion)) !== null) {
+    artifacts.push(match);
+  }
 
   if (artifacts.length === 0) return [];
 
@@ -166,7 +176,6 @@ export const extractFilesFromCompletion = (
       if (isHtml) {
         content = ensureCDNsPresent(content);
       }
-
       // Ajouter le fichier au tableau
       filesArray.push({
         name: fileName || null,
@@ -357,7 +366,6 @@ export const extractFilesFromIncompleteArtifact = (
       isIncomplete: isIncomplete,
     });
   }
-
   return filesArray;
 };
 
