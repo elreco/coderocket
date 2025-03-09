@@ -29,12 +29,12 @@ export function ComponentCard({
   return (
     <Link
       href={`/components/${chat.slug || chat.chat_id}`}
-      className="group/card w-full"
+      className="group/card flex size-full"
     >
       <div
         key={chat.chat_id}
         className={cn(
-          "w-full bg-center overflow-hidden bg-cover bg-no-repeat relative transition-all duration-300 card h-72 rounded-[6px] hover:shadow-2xl mx-auto backgroundImage flex flex-col justify-between p-4 border border-background",
+          "w-full bg-center size-full overflow-hidden bg-cover bg-no-repeat relative transition-all duration-300 card min-h-72 rounded-[6px] hover:shadow-2xl mx-auto backgroundImage flex flex-col justify-between p-4 border border-background",
           isPopular
             ? "hover:border-amber-600 hover:shadow-amber-500/35"
             : "hover:border-primary hover:shadow-primary/35",
@@ -49,6 +49,7 @@ export function ComponentCard({
         <div className="absolute inset-0 size-full bg-gradient-to-b from-background/40 via-background/10 to-background/40"></div>
         <div className="z-10 flex flex-row items-center space-x-4 text-foreground transition-all duration-300">
           <UserWidget
+            id={chat.user_id}
             createdAt={chat.created_at}
             userAvatarUrl={chat.user_avatar_url}
             userFullName={chat.user_full_name}
@@ -78,12 +79,12 @@ export function ComponentCard({
               <div className="flex items-start justify-start gap-2">
                 <Tooltip>
                   <TooltipTrigger>
-                    <Badge className="bg-amber-500 text-white hover:bg-amber-500">
+                    <Badge className="bg-amber-500 hover:bg-amber-500">
                       <ThumbsUp className="mr-1 size-3" />
                       <span className="first-letter:uppercase">Popular</span>
                     </Badge>
                   </TooltipTrigger>
-                  <TooltipContent className="bg-amber-500 text-white">
+                  <TooltipContent className="bg-amber-500">
                     <p>{chat.likes} likes</p>
                   </TooltipContent>
                 </Tooltip>

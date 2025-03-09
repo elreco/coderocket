@@ -21,7 +21,7 @@ export async function getUserDetails() {
   }
 }
 
-export async function getSubscription() {
+export async function getSubscription(userId?: string) {
   const supabase = await createClient();
   try {
     const { data } = await supabase.auth.getUser();
@@ -30,7 +30,7 @@ export async function getSubscription() {
       .from("subscriptions")
       .select("*, prices(*, products(*))")
       .in("status", ["trialing", "active"])
-      .eq("user_id", data.user.id)
+      .eq("user_id", userId ?? data.user.id)
       .maybeSingle()
       .throwOnError();
     return subscription;

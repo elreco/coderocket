@@ -1,5 +1,11 @@
 "use client";
-import { ChevronsUpDown, CreditCard, LogOut, User } from "lucide-react";
+import {
+  ChevronsUpDown,
+  CreditCard,
+  LogOut,
+  User,
+  UserCircle,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -108,6 +114,15 @@ export function NavUser({
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
+              <DropdownMenuItem asChild className="cursor-pointer">
+                <Link
+                  href={`/users/${user.id}`}
+                  onClick={() => setOpenMobile(false)}
+                >
+                  <UserCircle />
+                  My Profile
+                </Link>
+              </DropdownMenuItem>
               <DropdownMenuItem asChild className="cursor-pointer">
                 <Link href="/account" onClick={() => setOpenMobile(false)}>
                   <User />
