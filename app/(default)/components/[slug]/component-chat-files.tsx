@@ -196,7 +196,7 @@ export default function ComponentChatFiles({
           <div className="flex w-full flex-col gap-2 overflow-x-auto text-sm">
             <div className="flex items-center justify-between">
               <div className="mr-2 flex items-center">
-                <Avatar className="size-10 cursor-pointer rounded-none">
+                <Avatar className="size-10 rounded-none">
                   <AvatarImage src="/logo-white.png" />
                   <AvatarFallback>T</AvatarFallback>
                 </Avatar>
