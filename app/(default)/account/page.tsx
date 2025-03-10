@@ -109,7 +109,7 @@ export default async function Account() {
         title="My Account"
         subtitle="Manage your account and billing."
       />
-      <div className="flex flex-col gap-4 pb-10">
+      <div className="mb-4 grid grid-cols-1 gap-x-4 md:grid-cols-2">
         <Card
           title="Your Plan"
           description={
@@ -193,51 +193,7 @@ export default async function Account() {
             </ul>
           </div>
         </Card>
-        <div className="grid grid-cols-1 gap-x-4 md:grid-cols-2">
-          {/* Composant pour acheter des messages supplémentaires */}
-          <Card
-            title="Usage"
-            description={"Tracking your usage for the current month"}
-          >
-            <div className="mb-4 mt-8 space-y-4">
-              <div className="grid gap-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">
-                    Components used
-                  </span>
-                  <span className="font-medium">
-                    {usage} / {maxMessages}
-                  </span>
-                </div>
 
-                <Progress value={(usage / maxMessages) * 100} />
-
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">
-                    Reset date
-                  </span>
-                  <span className="font-medium">
-                    {resetDate ? format(resetDate, "d MMMM yyyy") : "N/A"}
-                  </span>
-                </div>
-
-                {extraMessages > 0 && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">
-                      Extra messages available
-                    </span>
-                    <span className="font-medium text-emerald-500">
-                      {extraMessages}
-                    </span>
-                  </div>
-                )}
-              </div>
-            </div>
-          </Card>
-          <Suspense fallback={<div>Loading...</div>}>
-            <BuyExtraMessages />
-          </Suspense>
-        </div>
         <Card
           title="Your Information"
           description="Manage your personal information and account settings."
@@ -288,6 +244,51 @@ export default async function Account() {
           </form>
         </Card>
       </div>
+      <div className="grid grid-cols-1 gap-x-4 pb-10 md:grid-cols-2">
+        {/* Composant pour acheter des messages supplémentaires */}
+        <Card
+          title="Usage"
+          description={"Tracking your usage for the current month"}
+        >
+          <div className="mb-4 mt-8 space-y-4">
+            <div className="grid gap-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">
+                  Components used
+                </span>
+                <span className="font-medium">
+                  {usage} / {maxMessages}
+                </span>
+              </div>
+
+              <Progress value={(usage / maxMessages) * 100} />
+
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">
+                  Reset date
+                </span>
+                <span className="font-medium">
+                  {resetDate ? format(resetDate, "d MMMM yyyy") : "N/A"}
+                </span>
+              </div>
+
+              {extraMessages > 0 && (
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">
+                    Extra messages available
+                  </span>
+                  <span className="font-medium text-emerald-500">
+                    {extraMessages}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        </Card>
+        <Suspense fallback={<div>Loading...</div>}>
+          <BuyExtraMessages />
+        </Suspense>
+      </div>
     </Container>
   );
 }
@@ -301,14 +302,14 @@ interface Props {
 
 function Card({ title, description, footer, children }: Props) {
   return (
-    <div className="w-full rounded-md border bg-card">
-      <div className="px-5 py-4">
+    <div className="flex size-full flex-col rounded-md border bg-card">
+      <div className="grow px-5 py-4">
         <h3 className="mb-1 text-2xl font-medium">{title}</h3>
         <p>{description}</p>
         {children}
       </div>
       {footer && (
-        <div className="flex h-20 w-full items-center justify-between rounded-b-md border-t p-4 ">
+        <div className="mt-auto flex w-full items-center justify-between rounded-b-md border-t p-4">
           {footer}
         </div>
       )}
