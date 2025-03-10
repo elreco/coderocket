@@ -215,7 +215,13 @@ const validateRequest = async (
       }
     }
   } else {
-    const currentPeriodStart = new Date(user?.created_at || new Date());
+    // Utiliser le premier jour du mois en cours comme période de départ
+    const today = new Date();
+    const currentPeriodStart = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      1,
+    );
 
     // Vérifier la limite mensuelle pour les utilisateurs gratuits
     const { count } = await supabase

@@ -1,4 +1,4 @@
-import { addMonths, format } from "date-fns";
+import { format } from "date-fns";
 import { Check, XIcon } from "lucide-react";
 import Link from "next/link";
 import { ReactNode, Suspense } from "react";
@@ -73,11 +73,15 @@ export default async function Account() {
       maxMessages = getMaxMessagesPerPeriod(subscription);
       resetDate = new Date(subscription.current_period_end);
     } else {
+      // Utiliser le premier jour du mois en cours comme période de départ
+      const today = new Date();
       const currentPeriodStart = new Date(
-        userDetails?.created_at || new Date(),
+        today.getFullYear(),
+        today.getMonth(),
+        1,
       );
 
-      // Vérifier la limite mensuelle pour les abonnés
+      // Vérifier la limite mensuelle pour les utilisateurs gratuits
       const { count } = await supabase
         .from("messages")
         .select("*, chats!inner(*)", { count: "exact", head: true })
@@ -86,7 +90,8 @@ export default async function Account() {
 
       usage = count || 0;
       maxMessages = TRIAL_PLAN_MESSAGES_PER_MONTH;
-      resetDate = addMonths(currentPeriodStart, 1);
+      // Définir la date de réinitialisation au premier jour du mois prochain
+      resetDate = new Date(today.getFullYear(), today.getMonth() + 1, 1);
     }
   }
 

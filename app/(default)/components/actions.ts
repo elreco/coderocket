@@ -1,6 +1,6 @@
 "use server";
 
-import { addMonths, format } from "date-fns";
+import { format } from "date-fns";
 import { nanoid } from "nanoid";
 import { after } from "next/server";
 
@@ -228,7 +228,13 @@ export const createChat = async (prompt: string, formData: FormData) => {
   const extraMessages = await getExtraMessagesCount(user.id);
 
   if (!subscription) {
-    const currentPeriodStart = new Date(user?.created_at || new Date());
+    // Utiliser le premier jour du mois en cours comme période de départ
+    const today = new Date();
+    const currentPeriodStart = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      1,
+    );
 
     // Vérifier la limite mensuelle pour les utilisateurs gratuits
     const { count } = await supabase
@@ -242,22 +248,34 @@ export const createChat = async (prompt: string, formData: FormData) => {
       if (extraMessages > 0) {
         const decremented = await decrementExtraMessagesCount(user.id);
         if (!decremented) {
+          // Définir la date de réinitialisation au premier jour du mois prochain
+          const resetDate = new Date(
+            today.getFullYear(),
+            today.getMonth() + 1,
+            1,
+          );
           return {
             error: {
               title: "Daily message limit reached",
               description: `You have reached your limit of ${TRIAL_PLAN_MESSAGES_PER_MONTH} messages for this month. Your limit will reset next month (${format(
-                addMonths(currentPeriodStart, 1),
+                resetDate,
                 "d MMMM yyyy",
               )}). Upgrade to a paid plan or purchase extra messages to continue.`,
             },
           };
         }
       } else {
+        // Définir la date de réinitialisation au premier jour du mois prochain
+        const resetDate = new Date(
+          today.getFullYear(),
+          today.getMonth() + 1,
+          1,
+        );
         return {
           error: {
             title: "Daily message limit reached",
             description: `You have reached your limit of ${TRIAL_PLAN_MESSAGES_PER_MONTH} messages for this month. Your limit will reset next month (${format(
-              addMonths(currentPeriodStart, 1),
+              resetDate,
               "d MMMM yyyy",
             )}). Upgrade to a paid plan or purchase extra messages to continue.`,
           },

@@ -3,7 +3,7 @@
 import { SiHtml5, SiReact, SiVuedotjs } from "@icons-pack/react-simple-icons";
 import { useCompletion } from "ai/react";
 import { Crisp } from "crisp-sdk-web";
-import { addMonths, format } from "date-fns";
+import { format } from "date-fns";
 import { motion } from "framer-motion";
 import {
   Fullscreen,
@@ -267,19 +267,38 @@ export default function ComponentCompletion({
         if (error.message === "limit-exceeded") {
           const subscription = await getSubscription();
           if (!subscription) {
-            const currentPeriodStart = new Date(user?.created_at || new Date());
+            // Utiliser le premier jour du mois en cours comme période de départ
+            const today = new Date();
+            const currentPeriodStart = new Date(
+              today.getFullYear(),
+              today.getMonth(),
+              1,
+            );
             const maxMessagesPerPeriod = TRIAL_PLAN_MESSAGES_PER_MONTH;
-            const resetDate = addMonths(currentPeriodStart, 1);
+            // Définir la date de réinitialisation au premier jour du mois prochain
+            const resetDate = new Date(
+              today.getFullYear(),
+              today.getMonth() + 1,
+              1,
+            );
+
+            // Utiliser currentPeriodStart dans le message pour indiquer la période en cours
+            const currentPeriodFormatted = format(
+              currentPeriodStart,
+              "d MMMM yyyy",
+            );
+
             setIsLoading(false);
             setCanvas(true);
             toast({
               variant: "destructive",
-              title: "Daily message limit reached",
+              title: "Monthly message limit reached",
               description: (
                 <div>
                   <p>
                     You have reached your limit of {maxMessagesPerPeriod}{" "}
-                    messages for this month. This limit will reset next month (
+                    messages for this month (starting {currentPeriodFormatted}).
+                    This limit will reset next month (
                     {format(resetDate, "d MMMM yyyy")}).
                   </p>
                   <div className="mt-2 flex flex-col space-y-2">
