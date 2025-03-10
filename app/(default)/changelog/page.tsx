@@ -20,11 +20,22 @@ export default async function ChangelogPage() {
   const futureWorkData: { title: string; content: string }[] = [];
 
   rows.forEach((row) => {
-    const columns = row.split(",");
-    const date = columns[0]?.trim();
-    const title = columns[1]?.trim();
-    const content = columns[2]?.trim();
-    const type = columns[3]?.trim().toLowerCase().replace(/\r$/, "");
+    const regex = /(?:^|,)(?:"([^"]*(?:""[^"]*)*)"|([^,]*))/g;
+    const columns = [];
+    let match;
+
+    while ((match = regex.exec(row)) !== null) {
+      const value =
+        (match[1] !== undefined ? match[1].replace(/""/g, '"') : match[2]) ||
+        "";
+      columns.push(value.trim());
+    }
+
+    const date = columns[0] || "";
+    const title = columns[1] || "";
+    const content = columns[2] || "";
+    const type = columns[3]?.toLowerCase().replace(/\r$/, "") || "";
+
     if (type === "changelog") {
       changelogData.push({ date, title, content });
     } else if (type === "future") {
