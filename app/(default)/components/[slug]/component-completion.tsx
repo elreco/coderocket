@@ -14,6 +14,8 @@ import {
   ThumbsUp,
   Copy,
   GitFork,
+  Eye,
+  Code as CodeIcon,
 } from "lucide-react";
 import { Share } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -273,11 +275,31 @@ export default function ComponentCompletion({
             toast({
               variant: "destructive",
               title: "Daily message limit reached",
-              description: `You have reached your limit of ${maxMessagesPerPeriod} messages for this month. This limit will reset next month (${format(
-                resetDate,
-                "d MMMM yyyy",
-              )}). Upgrade to a paid plan to continue.`,
-              duration: 4000,
+              description: (
+                <div>
+                  <p>
+                    You have reached your limit of {maxMessagesPerPeriod}{" "}
+                    messages for this month. This limit will reset next month (
+                    {format(resetDate, "d MMMM yyyy")}).
+                  </p>
+                  <div className="mt-2 flex flex-col space-y-2">
+                    <Button
+                      onClick={() => router.push("/pricing")}
+                      className="w-full"
+                    >
+                      Upgrade to a paid plan
+                    </Button>
+                    <Button
+                      onClick={() => router.push("/account?buy_extra=true")}
+                      variant="outline"
+                      className="w-full"
+                    >
+                      Buy extra messages ($2 each)
+                    </Button>
+                  </div>
+                </div>
+              ),
+              duration: 10000,
             });
             return;
           }
@@ -298,8 +320,31 @@ export default function ComponentCompletion({
           toast({
             variant: "destructive",
             title: "You have reached the limit of your plan",
-            description: `You have reached your limit of ${maxMessagesPerPeriod} messages for ${subscription.prices?.interval}. This limit will reset on ${resetDate}. Go to My Account to see your usage.`,
-            duration: 4000,
+            description: (
+              <div>
+                <p>
+                  You have reached your limit of {maxMessagesPerPeriod} messages
+                  for {subscription.prices?.interval}. This limit will reset on{" "}
+                  {resetDate}.
+                </p>
+                <div className="mt-2 flex flex-col space-y-2">
+                  <Button
+                    onClick={() => router.push("/account")}
+                    className="w-full"
+                  >
+                    Go to My Account
+                  </Button>
+                  <Button
+                    onClick={() => router.push("/account?buy_extra=true")}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    Buy extra messages ($2 each)
+                  </Button>
+                </div>
+              </div>
+            ),
+            duration: 10000,
           });
 
           return;
@@ -686,8 +731,20 @@ export default function ComponentCompletion({
                   onValueChange={(value) => setCanvas(value === "canvas")}
                 >
                   <TabsList className="grid w-fit grid-cols-2 text-xs">
-                    <TabsTrigger value="canvas">Preview</TabsTrigger>
-                    <TabsTrigger value="code">Code</TabsTrigger>
+                    <TabsTrigger
+                      value="canvas"
+                      className="flex items-center justify-center"
+                    >
+                      <Eye className="size-4 md:hidden" />
+                      <span className="hidden md:inline">Preview</span>
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="code"
+                      className="flex items-center justify-center"
+                    >
+                      <CodeIcon className="size-4 md:hidden" />
+                      <span className="hidden md:inline">Code</span>
+                    </TabsTrigger>
                   </TabsList>
                 </Tabs>
                 {(fetchedChat?.framework === Framework.HTML ||
@@ -805,7 +862,9 @@ export default function ComponentCompletion({
                         className="flex items-center gap-2"
                       >
                         <GitFork className="w-5" />
-                        <Badge className="hover:bg-primary">New</Badge>
+                        <Badge className="hidden hover:bg-primary md:block">
+                          New
+                        </Badge>
                       </Button>
                     </span>
                   </TooltipTrigger>

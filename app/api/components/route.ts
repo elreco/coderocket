@@ -21,6 +21,8 @@ import {
   Framework,
   TRIAL_PLAN_MESSAGES_PER_MONTH,
   anthropicModel,
+  decrementExtraMessagesCount,
+  getExtraMessagesCount,
   getMaxMessagesPerPeriod,
   storageUrl,
 } from "@/utils/config";
@@ -186,6 +188,9 @@ const validateRequest = async (
   // Check subscription
   const subscription = await getSubscription();
 
+  // Vérifier les messages supplémentaires achetés
+  const extraMessages = await getExtraMessagesCount(user.id);
+
   if (subscription) {
     // Calculate the start of the current billing month based on current_period_start
     const currentPeriodStart = new Date(subscription.current_period_start);
@@ -199,12 +204,20 @@ const validateRequest = async (
 
     const maxMessagesPerPeriod = getMaxMessagesPerPeriod(subscription);
     if (count && count >= maxMessagesPerPeriod) {
-      throw new Error("limit-exceeded");
+      // Si l'utilisateur a des messages supplémentaires, utiliser un message supplémentaire
+      if (extraMessages > 0) {
+        const decremented = await decrementExtraMessagesCount(user.id);
+        if (!decremented) {
+          throw new Error("limit-exceeded");
+        }
+      } else {
+        throw new Error("limit-exceeded");
+      }
     }
   } else {
     const currentPeriodStart = new Date(user?.created_at || new Date());
 
-    // Vérifier la limite mensuelle pour les abonnés
+    // Vérifier la limite mensuelle pour les utilisateurs gratuits
     const { count } = await supabase
       .from("messages")
       .select("*, chats!inner(*)", { count: "exact", head: true })
@@ -212,7 +225,15 @@ const validateRequest = async (
       .gte("created_at", formatToTimestamp(currentPeriodStart));
 
     if (count && count >= TRIAL_PLAN_MESSAGES_PER_MONTH) {
-      throw new Error("limit-exceeded");
+      // Si l'utilisateur a des messages supplémentaires, utiliser un message supplémentaire
+      if (extraMessages > 0) {
+        const decremented = await decrementExtraMessagesCount(user.id);
+        if (!decremented) {
+          throw new Error("limit-exceeded");
+        }
+      } else {
+        throw new Error("limit-exceeded");
+      }
     }
   }
 

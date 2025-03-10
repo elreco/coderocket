@@ -1,4 +1,5 @@
 import { addMonths, format } from "date-fns";
+import { Check, XIcon } from "lucide-react";
 import Link from "next/link";
 import { ReactNode, Suspense } from "react";
 
@@ -11,11 +12,15 @@ import { Progress } from "@/components/ui/progress";
 import {
   getMaxMessagesPerPeriod,
   TRIAL_PLAN_MESSAGES_PER_MONTH,
+  getExtraMessagesCount,
+  PRO_PLAN_MESSAGES_PER_PERIOD,
+  STARTER_PLAN_MESSAGES_PER_PERIOD,
 } from "@/utils/config";
 import { formatToTimestamp } from "@/utils/date";
 import { createClient } from "@/utils/supabase/server";
 
 import { getUser, updateEmail, updateName } from "./actions";
+import { BuyExtraMessages } from "./components/buy-extra-messages";
 import ManageSubscriptionButton from "./manage-subscription-button";
 import UnsubscribeSurveyDialog from "./unsubscribe-survey-dialog";
 
@@ -50,8 +55,12 @@ export default async function Account() {
   let usage = 0;
   let resetDate = null;
   let maxMessages = 0;
+  let extraMessages = 0;
 
   if (user) {
+    // Récupérer le nombre de messages supplémentaires
+    extraMessages = await getExtraMessagesCount(user.id);
+
     if (subscription) {
       const currentPeriodStart = new Date(subscription.current_period_start);
       const { count } = await supabase
@@ -120,37 +129,110 @@ export default async function Account() {
               </div>
             )}
           </div>
-        </Card>
 
-        <Card
-          title="Usage"
-          description={"Tracking your usage for the current month"}
-        >
-          <div className="mb-4 mt-8 space-y-4">
-            <div className="grid gap-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">
-                  Components used
-                </span>
-                <span className="font-medium">
-                  {usage} / {maxMessages}
-                </span>
-              </div>
-
-              <Progress value={(usage / maxMessages) * 100} />
-
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">
-                  Reset date
-                </span>
-                <span className="font-medium">
-                  {resetDate ? format(resetDate, "d MMMM yyyy") : "N/A"}
-                </span>
-              </div>
-            </div>
+          <div className="mt-4 space-y-2">
+            <h4 className="font-medium">Plan Features:</h4>
+            <ul className="space-y-2">
+              {subscription ? (
+                <>
+                  <li className="flex items-center text-sm">
+                    <Check className="mr-2 size-4 text-emerald-500" />
+                    {subscription?.prices?.products?.name === "Starter"
+                      ? STARTER_PLAN_MESSAGES_PER_PERIOD
+                      : PRO_PLAN_MESSAGES_PER_PERIOD}{" "}
+                    messages per month
+                  </li>
+                  <li className="flex items-center text-sm">
+                    <Check className="mr-2 size-4 text-emerald-500" />
+                    Generate with Image
+                  </li>
+                  <li className="flex items-center text-sm">
+                    <Check className="mr-2 size-4 text-emerald-500" />
+                    Improve prompt
+                  </li>
+                  {subscription?.prices?.products?.name === "Pro" && (
+                    <>
+                      <li className="flex items-center text-sm">
+                        <Check className="mr-2 size-4 text-emerald-500" />
+                        AI Full Power
+                      </li>
+                      <li className="flex items-center text-sm">
+                        <Check className="mr-2 size-4 text-emerald-500" />
+                        Extended support
+                      </li>
+                    </>
+                  )}
+                </>
+              ) : (
+                <>
+                  <li className="flex items-center text-sm">
+                    <Check className="mr-2 size-4 text-emerald-500" />
+                    {
+                      TRIAL_PLAN_MESSAGES_PER_MONTH
+                    } messages per month
+                  </li>
+                  <li className="flex items-center text-sm">
+                    <XIcon className="mr-2 size-4 text-border" />
+                    Improve prompt
+                  </li>
+                  <li className="flex items-center text-sm">
+                    <XIcon className="mr-2 size-4 text-border" />
+                    Generate with Image
+                  </li>
+                  <li className="flex items-center text-sm">
+                    <XIcon className="mr-2 size-4 text-border" />
+                    AI Full Power
+                  </li>
+                </>
+              )}
+            </ul>
           </div>
         </Card>
+        <div className="grid grid-cols-1 gap-x-4 md:grid-cols-2">
+          {/* Composant pour acheter des messages supplémentaires */}
+          <Card
+            title="Usage"
+            description={"Tracking your usage for the current month"}
+          >
+            <div className="mb-4 mt-8 space-y-4">
+              <div className="grid gap-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">
+                    Components used
+                  </span>
+                  <span className="font-medium">
+                    {usage} / {maxMessages}
+                  </span>
+                </div>
 
+                <Progress value={(usage / maxMessages) * 100} />
+
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">
+                    Reset date
+                  </span>
+                  <span className="font-medium">
+                    {resetDate ? format(resetDate, "d MMMM yyyy") : "N/A"}
+                  </span>
+                </div>
+
+                {extraMessages > 0 && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">
+                      Extra messages available
+                    </span>
+                    <span className="font-medium text-emerald-500">
+                      {extraMessages}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </Card>
+          <Suspense fallback={<div>Loading...</div>}>
+            <BuyExtraMessages />
+          </Suspense>
+        </div>
         <Card
           title="Your Information"
           description="Manage your personal information and account settings."

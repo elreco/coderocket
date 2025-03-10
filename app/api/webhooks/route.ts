@@ -1,6 +1,7 @@
 import Stripe from "stripe";
 
 import { stripe } from "@/utils/stripe";
+import { createClient } from "@/utils/supabase/server";
 import {
   upsertProductRecord,
   upsertPriceRecord,
@@ -65,6 +66,44 @@ export async function POST(req: Request) {
               checkoutSession.customer as string,
               true,
             );
+          } else if (checkoutSession.mode === "payment") {
+            // Gérer les paiements uniques pour les messages supplémentaires
+            const metadata = checkoutSession.metadata;
+            if (metadata && metadata.extraMessages && metadata.userId) {
+              const userId = metadata.userId;
+              const extraMessages = parseInt(metadata.extraMessages, 10);
+
+              if (extraMessages > 0) {
+                // Mettre à jour le compteur de messages supplémentaires dans la base de données
+                const supabase = await createClient();
+
+                // Vérifier si l'utilisateur existe déjà dans la table extra_messages
+                const { data: existingData } = await supabase
+                  .from("extra_messages")
+                  .select("*")
+                  .eq("user_id", userId)
+                  .single();
+
+                if (existingData) {
+                  // Mettre à jour le nombre de messages supplémentaires
+                  await supabase
+                    .from("extra_messages")
+                    .update({
+                      count: existingData.count + extraMessages,
+                      updated_at: new Date().toISOString(),
+                    })
+                    .eq("user_id", userId);
+                } else {
+                  // Créer une nouvelle entrée
+                  await supabase.from("extra_messages").insert({
+                    user_id: userId,
+                    count: extraMessages,
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString(),
+                  });
+                }
+              }
+            }
           }
           break;
         default:

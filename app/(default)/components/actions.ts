@@ -11,6 +11,8 @@ import {
   TRIAL_PLAN_MESSAGES_PER_MONTH,
   defaultTheme,
   getMaxMessagesPerPeriod,
+  getExtraMessagesCount,
+  decrementExtraMessagesCount,
 } from "@/utils/config";
 import { formatToTimestamp } from "@/utils/date";
 import { defaultArtifactCode } from "@/utils/default-artifact-code";
@@ -222,10 +224,13 @@ export const createChat = async (prompt: string, formData: FormData) => {
     };
   }
 
+  // Vérifier les messages supplémentaires achetés
+  const extraMessages = await getExtraMessagesCount(user.id);
+
   if (!subscription) {
     const currentPeriodStart = new Date(user?.created_at || new Date());
 
-    // Vérifier la limite mensuelle pour les abonnés
+    // Vérifier la limite mensuelle pour les utilisateurs gratuits
     const { count } = await supabase
       .from("messages")
       .select("*, chats!inner(*)", { count: "exact", head: true })
@@ -233,15 +238,31 @@ export const createChat = async (prompt: string, formData: FormData) => {
       .gte("created_at", formatToTimestamp(currentPeriodStart));
 
     if (count && count >= TRIAL_PLAN_MESSAGES_PER_MONTH) {
-      return {
-        error: {
-          title: "Daily message limit reached",
-          description: `You have reached your limit of ${TRIAL_PLAN_MESSAGES_PER_MONTH} messages for this month. Your limit will reset next month (${format(
-            addMonths(currentPeriodStart, 1),
-            "d MMMM yyyy",
-          )}). Upgrade to a paid plan to continue.`,
-        },
-      };
+      // Si l'utilisateur a des messages supplémentaires, utiliser un message supplémentaire
+      if (extraMessages > 0) {
+        const decremented = await decrementExtraMessagesCount(user.id);
+        if (!decremented) {
+          return {
+            error: {
+              title: "Daily message limit reached",
+              description: `You have reached your limit of ${TRIAL_PLAN_MESSAGES_PER_MONTH} messages for this month. Your limit will reset next month (${format(
+                addMonths(currentPeriodStart, 1),
+                "d MMMM yyyy",
+              )}). Upgrade to a paid plan or purchase extra messages to continue.`,
+            },
+          };
+        }
+      } else {
+        return {
+          error: {
+            title: "Daily message limit reached",
+            description: `You have reached your limit of ${TRIAL_PLAN_MESSAGES_PER_MONTH} messages for this month. Your limit will reset next month (${format(
+              addMonths(currentPeriodStart, 1),
+              "d MMMM yyyy",
+            )}). Upgrade to a paid plan or purchase extra messages to continue.`,
+          },
+        };
+      }
     }
   } else {
     // Calculate the start of the current billing month based on current_period_start
@@ -257,21 +278,43 @@ export const createChat = async (prompt: string, formData: FormData) => {
     const maxMessagesPerPeriod = getMaxMessagesPerPeriod(subscription);
 
     if (count && count >= maxMessagesPerPeriod) {
-      const resetDate = format(
-        new Date(
-          currentPeriodStart.getFullYear(),
-          currentPeriodStart.getMonth() + 1,
-          1,
-        ),
-        "d MMMM yyyy", // Format lisible, par exemple, "1er novembre 2023"
-      );
+      // Si l'utilisateur a des messages supplémentaires, utiliser un message supplémentaire
+      if (extraMessages > 0) {
+        const decremented = await decrementExtraMessagesCount(user.id);
+        if (!decremented) {
+          const resetDate = format(
+            new Date(
+              currentPeriodStart.getFullYear(),
+              currentPeriodStart.getMonth() + 1,
+              1,
+            ),
+            "d MMMM yyyy",
+          );
 
-      return {
-        error: {
-          title: "You have reached the limit of your plan",
-          description: `You have reached your limit of ${maxMessagesPerPeriod} messages for this ${subscription.prices?.interval}. This limit will reset on ${resetDate}. Go to My Account to see your usage.`,
-        },
-      };
+          return {
+            error: {
+              title: "You have reached the limit of your plan",
+              description: `You have reached your limit of ${maxMessagesPerPeriod} messages for this ${subscription.prices?.interval}. This limit will reset on ${resetDate}. Go to My Account to see your usage or purchase extra messages.`,
+            },
+          };
+        }
+      } else {
+        const resetDate = format(
+          new Date(
+            currentPeriodStart.getFullYear(),
+            currentPeriodStart.getMonth() + 1,
+            1,
+          ),
+          "d MMMM yyyy",
+        );
+
+        return {
+          error: {
+            title: "You have reached the limit of your plan",
+            description: `You have reached your limit of ${maxMessagesPerPeriod} messages for this ${subscription.prices?.interval}. This limit will reset on ${resetDate}. Go to My Account to see your usage or purchase extra messages.`,
+          },
+        };
+      }
     }
   }
 

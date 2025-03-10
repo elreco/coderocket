@@ -25,10 +25,7 @@ export default async function PricingPage() {
 
   return (
     <Container className="pr-2 sm:pr-11">
-      <PageTitle
-        title="Pricing Plans"
-        subtitle="Start building for free, then add a site plan to go live. Account plans unlock additional features."
-      />
+      <PageTitle title="Pricing Plans" subtitle="Start building for free" />
       <Pricing
         user={userData.data.user}
         products={products}

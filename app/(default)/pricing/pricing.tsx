@@ -78,10 +78,38 @@ export default function Pricing({ user, products, subscription }: Props) {
     }
   };
 
-  // Calculer l'économie par rapport au plan Starter
-  /* const calculateSavings = (currentPrice: number, starterPrice: number) => {
-    return Math.round(((starterPrice - currentPrice) / starterPrice) * 100);
-  }; */
+  // Fonction pour rediriger vers la page d'achat de messages supplémentaires
+  const handleBuyExtraMessages = () => {
+    if (!user) {
+      return router.push("/login");
+    }
+    router.push("/account?buy_extra=true");
+  };
+
+  // Calculer l'économie par rapport au coût par message
+  const calculateSavings = (messagesPerPeriod: number, price: number) => {
+    // Coût par message pour ce plan
+    const costPerMessage = price / messagesPerPeriod;
+
+    // Coût par message du plan Starter (référence)
+    const starterPrice =
+      products
+        .flatMap((product) => product.prices)
+        .find((p) => p.description === "Starter")?.unit_amount || 0;
+
+    const starterMessages = STARTER_PLAN_MESSAGES_PER_PERIOD;
+    const starterCostPerMessage = starterPrice / starterMessages;
+
+    // Calculer le pourcentage d'économie
+    if (starterCostPerMessage > 0 && costPerMessage < starterCostPerMessage) {
+      return Math.round(
+        ((starterCostPerMessage - costPerMessage) / starterCostPerMessage) *
+          100,
+      );
+    }
+
+    return 0;
+  };
 
   // Fonction pour formater le prix
   const formatPrice = (price: number, currency: string) => {
@@ -94,7 +122,7 @@ export default function Pricing({ user, products, subscription }: Props) {
 
   if (products.length >= 1) {
     return (
-      <div className="flex items-center">
+      <div className="flex flex-col items-center">
         <div className="my-4 size-full items-center space-y-4 sm:my-4 sm:grid sm:grid-cols-2 sm:gap-6 sm:space-y-0 lg:mx-auto lg:max-w-4xl xl:mx-0 xl:max-w-none xl:grid-cols-3 xl:space-y-0">
           {/* Plan Trial */}
           <div className="flex h-full flex-col divide-y divide-border rounded-lg border bg-card p-3">
@@ -154,12 +182,16 @@ export default function Pricing({ user, products, subscription }: Props) {
                 price.currency!,
               );
 
-              /* // Calculer l'économie par rapport au plan Starter
-              const starterPrice = 180 * 100; // Convert to cents
-              const savings =
-                price.description !== "Starter"
-                  ? calculateSavings(price.unit_amount || 0, starterPrice)
-                  : null; */
+              // Calculer l'économie par rapport au coût par message
+              const messagesPerPeriod =
+                product.name === "Starter"
+                  ? STARTER_PLAN_MESSAGES_PER_PERIOD
+                  : PRO_PLAN_MESSAGES_PER_PERIOD;
+
+              const savings = calculateSavings(
+                messagesPerPeriod,
+                price.unit_amount || 0,
+              );
 
               // Description personnalisée basée sur le nom du produit
               const planDescription =
@@ -188,7 +220,29 @@ export default function Pricing({ user, products, subscription }: Props) {
                   <h3 className="mb-4 pl-3 text-lg font-bold text-white">
                     {product.name}
                   </h3>
-                  <div className="grow p-3">
+                  <div className="relative grow p-3">
+                    {savings > 0 && (
+                      <div className="absolute right-2 top-2 rounded-md bg-emerald-500 px-2 py-1 text-xs font-bold text-white">
+                        Save $
+                        {(() => {
+                          // Calculer l'économie en dollars
+                          const costPerMessage =
+                            (price.unit_amount || 0) / messagesPerPeriod;
+                          const starterPrice =
+                            products
+                              .flatMap((p) => p.prices)
+                              .find((p) => p.description === "Starter")
+                              ?.unit_amount || 0;
+                          const starterCostPerMessage =
+                            starterPrice / STARTER_PLAN_MESSAGES_PER_PERIOD;
+                          return (
+                            ((starterCostPerMessage - costPerMessage) *
+                              messagesPerPeriod) /
+                            100
+                          ).toFixed(0);
+                        })()}
+                      </div>
+                    )}
                     <p>
                       <span className="text-5xl font-bold text-primary">
                         {priceString}
@@ -257,6 +311,25 @@ export default function Pricing({ user, products, subscription }: Props) {
                 </div>
               );
             })}
+        </div>
+
+        {/* Section pour l'achat de messages supplémentaires */}
+        <div className="mt-12 w-full max-w-2xl">
+          <div className="rounded-lg border bg-card p-6">
+            <h3 className="mb-2 text-xl font-bold">Need More Messages?</h3>
+            <p className="mb-4">
+              If you&apos;ve reached your plan&apos;s limit, you can purchase
+              extra messages for $2 each. These messages never expire and can be
+              used anytime you need them.
+            </p>
+            <Button
+              onClick={handleBuyExtraMessages}
+              variant="background"
+              className="w-full"
+            >
+              Buy Extra Messages
+            </Button>
+          </div>
         </div>
       </div>
     );

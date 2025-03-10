@@ -2,6 +2,7 @@ import { createAnthropic } from "@ai-sdk/anthropic";
 import { createOpenAI } from "@ai-sdk/openai";
 
 import { Tables } from "@/types_db";
+import { createClient } from "@/utils/supabase/server";
 
 export const storageUrl =
   "https://jojdwiugelqhcajbccxn.supabase.co/storage/v1/object/public/images";
@@ -78,7 +79,6 @@ export const getMaxMessagesPerPeriod = (
   if (subscription.custom_messages_per_period) {
     return subscription.custom_messages_per_period;
   }
-
   switch (subscription.prices?.description) {
     case "Starter":
       return STARTER_PLAN_MESSAGES_PER_PERIOD;
@@ -100,3 +100,46 @@ export const DEFAULT_MESSAGES_PER_PERIOD = 100;
 export const TRIAL_PLAN_MESSAGES_PER_MONTH = 6;
 
 export const MAX_SEARCH_LENGTH = 50;
+
+// Fonction pour récupérer le nombre de messages supplémentaires disponibles pour un utilisateur
+export const getExtraMessagesCount = async (userId: string) => {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("extra_messages")
+    .select("count")
+    .eq("user_id", userId)
+    .single();
+
+  if (error || !data) {
+    return 0;
+  }
+
+  return data.count;
+};
+
+// Fonction pour décrémenter le compteur de messages supplémentaires
+export const decrementExtraMessagesCount = async (userId: string) => {
+  const supabase = await createClient();
+
+  // Récupérer le nombre actuel de messages supplémentaires
+  const { data, error } = await supabase
+    .from("extra_messages")
+    .select("count")
+    .eq("user_id", userId)
+    .single();
+
+  if (error || !data || data.count <= 0) {
+    return false;
+  }
+
+  // Décrémenter le compteur
+  const { error: updateError } = await supabase
+    .from("extra_messages")
+    .update({
+      count: data.count - 1,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("user_id", userId);
+
+  return !updateError;
+};
