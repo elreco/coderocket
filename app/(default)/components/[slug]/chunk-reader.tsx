@@ -140,7 +140,15 @@ export function ChunkReader({
                             {file.isDelete && " (deleted)"}
                           </div>
                         </div>
-                        <div className="whitespace-nowrap text-xs text-border opacity-75 group-hover:text-foreground">
+                        <div
+                          className={cn(
+                            "whitespace-nowrap text-xs text-border opacity-75 group-hover:text-foreground",
+                            activeTab === file.name &&
+                              isSelectedVersion &&
+                              !isCanvas &&
+                              "text-foreground opacity-100",
+                          )}
+                        >
                           {formatFileSize(new Blob([file.content]).size)}
                         </div>
                       </div>
