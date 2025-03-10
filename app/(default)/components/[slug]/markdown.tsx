@@ -287,7 +287,7 @@ export const Markdown = memo(
         components={components}
         remarkPlugins={remarkPlugins(limitedMarkdown)}
         rehypePlugins={rehypePlugins(html)}
-        className="text-sm"
+        className="overflow-x-auto text-sm"
       >
         {children}
       </ReactMarkdown>
