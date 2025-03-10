@@ -254,7 +254,7 @@ export default async function Account() {
             <div className="grid gap-4">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">
-                  Components used
+                  Messages used
                 </span>
                 <span className="font-medium">
                   {usage} / {maxMessages}
