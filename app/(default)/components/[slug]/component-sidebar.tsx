@@ -23,7 +23,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { UserAvatar } from "@/components/user-avatar";
+import { UserWidget } from "@/components/user-widget";
 import { useComponentContext } from "@/context/component-context";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -390,9 +390,11 @@ export default function ComponentSidebar({
           )}
         >
           <div className="flex flex-col gap-2 rounded-lg border border-border bg-background p-5">
-            <UserAvatar
-              avatarUrl={user?.avatar_url}
-              fullName={user?.full_name}
+            <UserWidget
+              id={user?.id}
+              createdAt={new Date().toISOString()}
+              userAvatarUrl={user?.avatar_url}
+              userFullName={user?.full_name}
             />
             <Markdown>{input}</Markdown>
             <PromptImage
@@ -405,9 +407,6 @@ export default function ComponentSidebar({
               }
             />
           </div>
-          <p className="mt-2 text-right text-xs font-semibold text-muted-foreground">
-            {getRelativeDate(new Date().toISOString())}
-          </p>
         </div>
         <div
           className={cn(
@@ -423,13 +422,18 @@ export default function ComponentSidebar({
                   <AvatarImage src="/logo-white.png" />
                   <AvatarFallback>T</AvatarFallback>
                 </Avatar>
-                <h2
-                  className={cn(
-                    "text-lg ml-2 font-semibold transition-all group-hover:text-primary",
-                  )}
-                >
-                  Generating version...
-                </h2>
+                <div className="ml-2 flex flex-col items-start">
+                  <h2
+                    className={cn(
+                      "text-lg font-semibold transition-all group-hover:text-primary",
+                    )}
+                  >
+                    Generating version...
+                  </h2>
+                  <p className="text-xs text-muted-foreground">
+                    {getRelativeDate(new Date().toISOString())}
+                  </p>
+                </div>
               </div>
             )}
             <ChunkReader

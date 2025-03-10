@@ -12,9 +12,9 @@ export function UserWidget({
   id,
 }: {
   createdAt: string;
-  userAvatarUrl: string;
-  userFullName: string;
-  id: string;
+  userAvatarUrl?: string | null;
+  userFullName?: string | null;
+  id?: string;
 }) {
   return (
     <Link

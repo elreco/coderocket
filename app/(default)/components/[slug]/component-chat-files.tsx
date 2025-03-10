@@ -1,7 +1,6 @@
 "use client";
 
 import { Trash2 } from "lucide-react";
-import Link from "next/link";
 import { useEffect, useState, useRef } from "react";
 
 import {
@@ -17,7 +16,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { UserAvatar } from "@/components/user-avatar";
+import { UserWidget } from "@/components/user-widget";
 import { useComponentContext } from "@/context/component-context";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -178,12 +177,12 @@ export default function ComponentChatFiles({
       <div className="flex w-full gap-2">
         {message.role === "user" ? (
           <div className="flex w-full flex-col gap-2 rounded-lg border border-border bg-background p-5">
-            <Link href={`/users/${message.chats.user.id}`}>
-              <UserAvatar
-                avatarUrl={message.chats.user.avatar_url}
-                fullName={message.chats.user.full_name}
-              />
-            </Link>
+            <UserWidget
+              id={message.chats.user.id}
+              createdAt={message.created_at}
+              userAvatarUrl={message.chats.user.avatar_url}
+              userFullName={message.chats.user.full_name}
+            />
             <Markdown>{message.content}</Markdown>
             <PromptImage
               image={
@@ -201,10 +200,14 @@ export default function ComponentChatFiles({
                   <AvatarImage src="/logo-white.png" />
                   <AvatarFallback>T</AvatarFallback>
                 </Avatar>
-
-                <h2 className={cn("text-lg ml-2 font-semibold")}>
-                  Version #{message.version}
-                </h2>
+                <div className="ml-2 flex flex-col items-start">
+                  <h2 className={cn("text-lg font-semibold")}>
+                    Version #{message.version}
+                  </h2>
+                  <p className="text-xs text-muted-foreground">
+                    {getRelativeDate(message.created_at)}
+                  </p>
+                </div>
               </div>
               {messages.length > 2 && authorized && (
                 <AlertDialog
@@ -267,13 +270,6 @@ export default function ComponentChatFiles({
           </div>
         )}
       </div>
-      <p
-        className={cn(
-          "mt-2 text-right text-muted-foreground text-xs font-semibold",
-        )}
-      >
-        {getRelativeDate(message.created_at)}
-      </p>
     </div>
   );
 }
