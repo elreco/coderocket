@@ -4,6 +4,7 @@ import { SiVuedotjs } from "@icons-pack/react-simple-icons";
 import { SiReact } from "@icons-pack/react-simple-icons";
 import { ThumbsUp } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 import { GetComponentsReturnType } from "@/app/(default)/components/actions";
 import { cn } from "@/lib/utils";
@@ -20,12 +21,20 @@ export function ComponentCard({
   chat: GetComponentsReturnType;
   isPopular?: boolean;
 }) {
+  const router = useRouter();
   const FrameworkIcon =
     chat.framework === Framework.REACT
       ? SiReact
       : chat.framework === Framework.VUE
         ? SiVuedotjs
         : SiHtml5;
+
+  const handleUserClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    router.push(`/users/${chat.user_id}`);
+  };
+
   return (
     <Link
       href={`/components/${chat.slug || chat.chat_id}`}
@@ -53,6 +62,8 @@ export function ComponentCard({
             createdAt={chat.created_at}
             userAvatarUrl={chat.user_avatar_url}
             userFullName={chat.user_full_name}
+            disableLink={true}
+            onClick={handleUserClick}
           />
         </div>
         <div>
