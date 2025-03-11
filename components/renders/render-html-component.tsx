@@ -5,71 +5,128 @@ import React, { useEffect, useState } from "react";
 import type { ChatFile } from "@/utils/completion-parser";
 
 export default function RenderHtmlComponent({ files }: { files: ChatFile[] }) {
-  const [testContent, setContent] = useState(files[0]?.content || "");
+  // State to track the currently displayed file
+  const [currentFile, setCurrentFile] = useState<ChatFile | null>(
+    files.length > 0 ? files[0] : null,
+  );
+
+  // Update current file when files prop changes
   useEffect(() => {
-    setContent(files[0]?.content || "");
-  }, []);
-  useEffect(() => {
-    setContent(files[0]?.content || "");
+    if (files.length > 0) {
+      setCurrentFile(files[0]);
+    }
   }, [files]);
 
-  useEffect(() => {
-    const iframe = document.querySelector("iframe");
-    if (!iframe) {
-      console.warn("Iframe non trouvé");
-      return;
+  // Function to find a file by name
+  const findFileByName = (name: string): ChatFile | null => {
+    // Try exact match first
+    let file = files.find((f) => f.name === name);
+
+    // If not found, try without ./ prefix
+    if (!file && name.startsWith("./")) {
+      file = files.find((f) => f.name === name.substring(2));
     }
 
-    const handleLinkClick = (event: MouseEvent) => {
-      const target = event.target as HTMLAnchorElement;
-      const href = target.getAttribute("href");
-
-      if (href?.startsWith("#")) {
-        event.preventDefault();
-        const anchorId = href.substring(1);
-        const iframeDocument =
-          iframe.contentDocument || iframe.contentWindow?.document;
-        const anchorElement = iframeDocument?.getElementById(anchorId);
-        if (anchorElement) {
-          anchorElement.scrollIntoView({ behavior: "smooth" });
-        }
-        return;
-      }
-
-      event.preventDefault();
-      const fileName = href?.replace("./", "");
+    // If not found, try just the filename (without path)
+    if (!file) {
+      const fileName = name.split("/").pop();
       if (fileName) {
-        const fileContent = files.find((file) => file.name === fileName);
-        setContent(fileContent?.content || "");
-      } else {
-        console.warn("Aucun nom de fichier trouvé dans l'attribut href.");
+        file = files.find((f) => f.name === fileName);
       }
-    };
+    }
 
-    const onLoad = () => {
-      const iframeDocument =
-        iframe.contentDocument || iframe.contentWindow?.document;
-      if (!iframeDocument) {
-        console.warn("Document de l'iframe non accessible");
-        return;
+    return file || null;
+  };
+
+  // Handle message from iframe
+  const handleMessage = (event: MessageEvent) => {
+    if (event.data && event.data.type === "linkClick") {
+      const href = event.data.href;
+
+      // Handle anchor links
+      if (href.startsWith("#")) {
+        return; // Let the iframe handle this
       }
 
-      const links = iframeDocument.querySelectorAll("a");
-      links.forEach((link) => {
-        link.addEventListener("click", handleLinkClick);
-      }); // Délai de 100ms
-    };
+      // Extract filename from href
+      let fileName = href;
 
-    iframe.addEventListener("load", onLoad);
+      // Remove query params and hash
+      if (fileName.includes("?")) {
+        fileName = fileName.split("?")[0];
+      }
+      if (fileName.includes("#")) {
+        fileName = fileName.split("#")[0];
+      }
 
+      // Find the file
+      const file = findFileByName(fileName);
+
+      if (file) {
+        setCurrentFile(file);
+      }
+    }
+  };
+
+  // Add event listener for messages from iframe
+  useEffect(() => {
+    window.addEventListener("message", handleMessage);
     return () => {
-      iframe.removeEventListener("load", onLoad);
+      window.removeEventListener("message", handleMessage);
     };
-  }, [files]);
+  }, [files]); // Re-add listener when files change
+
+  // Inject script to intercept link clicks
+  const injectLinkInterceptor = (content: string): string => {
+    const script = `
+      <script>
+        document.addEventListener('click', function(e) {
+          // Find closest anchor element
+          let target = e.target;
+          while (target && target.tagName !== 'A') {
+            target = target.parentElement;
+          }
+
+          // If we found an anchor with href
+          if (target && target.href) {
+            const href = target.getAttribute('href');
+
+            // Don't intercept anchor links (let browser handle them)
+            if (href.startsWith('#')) {
+              return;
+            }
+
+            // Prevent default navigation
+            e.preventDefault();
+
+            // Send message to parent
+            window.parent.postMessage({
+              type: 'linkClick',
+              href: href
+            }, '*');
+          }
+        }, true);
+      </script>
+    `;
+
+    // Insert script before closing body tag
+    if (content.includes("</body>")) {
+      return content.replace("</body>", `${script}</body>`);
+    }
+
+    // If no body tag, append to the end
+    return content + script;
+  };
+
+  // Prepare content with interceptor script
+  const prepareContent = (): string => {
+    if (!currentFile) return "";
+    return injectLinkInterceptor(currentFile.content);
+  };
 
   return (
     <iframe
-      srcDoc={testContent}
+      srcDoc={prepareContent()}
       style={{
         width: "100%",
         height: "100%",

@@ -837,7 +837,7 @@ export default function ComponentCompletion({
                               loading="eager"
                             />
                           ) : (
-                            <RenderHtmlComponent files={chatFiles} />
+                            <RenderHtmlComponent files={artifactFiles} />
                           )}
                         </DialogDescription>
                       </DialogContent>

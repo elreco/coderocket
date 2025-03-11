@@ -5,9 +5,12 @@ import {
   fetchAssistantMessageByChatIdAndVersion,
   fetchChatById,
 } from "@/app/(default)/components/actions";
-import RenderHtmlComponentServer from "@/components/renders/render-html-component-server";
+import RenderHtmlComponent from "@/components/renders/render-html-component";
 import { Watermark } from "@/components/watermark";
-import { extractFilesFromCompletion } from "@/utils/completion-parser";
+import {
+  extractFilesFromArtifact,
+  getUpdatedArtifactCode,
+} from "@/utils/completion-parser";
 
 interface Props {
   params: Promise<{ id: string; version: string }>;
@@ -67,15 +70,15 @@ export default async function Content({ params, searchParams }: Props) {
     return <div>No content found</div>;
   }
 
-  const files = extractFilesFromCompletion(lastAssistantMessage.content);
-
+  const newArtifactCode = getUpdatedArtifactCode(
+    lastAssistantMessage.content,
+    chat.artifact_code || "",
+  );
+  const files = extractFilesFromArtifact(newArtifactCode);
   return (
     <>
       {!noWatermark && <Watermark slug={chat.slug || ""} />}
-      <RenderHtmlComponentServer
-        files={files}
-        style={{ width: "100%", height: "100%", border: "none" }}
-      />
+      <RenderHtmlComponent files={files} />
     </>
   );
 }

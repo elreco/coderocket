@@ -28,16 +28,16 @@ import ChatSkeleton from "./component-skeleton";
 const RenderContent = React.memo(
   ({
     isLoading,
-    chatFiles,
+    artifactFiles,
     selectedFramework,
     isLengthError,
   }: {
     isLoading: boolean;
-    chatFiles: ChatFile[];
+    artifactFiles: ChatFile[];
     selectedFramework: Framework;
     isLengthError: boolean;
   }) => {
-    if (isLoading && chatFiles.length === 0) {
+    if (isLoading && artifactFiles.length === 0) {
       return (
         <div className="flex size-full items-center justify-center">
           <ChatSkeleton />
@@ -46,17 +46,16 @@ const RenderContent = React.memo(
     }
     if (
       !isLoading &&
-      chatFiles.length > 0 &&
+      artifactFiles.length > 0 &&
       selectedFramework === Framework.HTML
     ) {
       return isLengthError ? (
-        <img
-          src="/placeholder.svg"
-          alt="Component is too long to display"
-          className="size-full object-cover"
-        />
+        <div
+          className="flex size-full items-center justify-center bg-cover bg-center"
+          style={{ backgroundImage: "url(/placeholder.svg)" }}
+        ></div>
       ) : (
-        <RenderHtmlComponent files={chatFiles} />
+        <RenderHtmlComponent files={artifactFiles} />
       );
     }
 
@@ -79,7 +78,7 @@ const RenderContent = React.memo(
     // Compare chatFiles only if framework is html
     if (
       nextProps.selectedFramework === Framework.HTML &&
-      !areFilesEqual(prevProps.chatFiles, nextProps.chatFiles)
+      !areFilesEqual(prevProps.artifactFiles, nextProps.artifactFiles)
     ) {
       return false;
     }
@@ -177,7 +176,7 @@ export default function CodePreview() {
       >
         <RenderContent
           isLoading={isLoading}
-          chatFiles={chatFiles}
+          artifactFiles={artifactFiles}
           selectedFramework={selectedFramework}
           isLengthError={isLengthError}
         />
