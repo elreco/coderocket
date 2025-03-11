@@ -51,11 +51,16 @@ export const getUpdatedArtifactCode = (
   while ((existingMatch = existingFileRegex.exec(artifactCode)) !== null) {
     const fileName = existingMatch[1];
     const content = existingMatch[2].trim();
-    allFiles.set(fileName, content);
+
+    // Supprimer le marqueur FINISH_REASON s'il existe
+    const cleanedContent = content.replace(
+      /\n\n<!-- FINISH_REASON: (?:length|error) -->$/,
+      "",
+    );
+    allFiles.set(fileName, cleanedContent);
   }
 
   // Extract new/updated files from completion, including partial ones
-  const completionFiles = new Map();
   const fileRegex =
     /<tailwindaiFile.*?name=["']([^"']*?)["'].*?(?:action=["']([^"']*?)["'].*?)?>([\s\S]*?)(?=<\/tailwindaiFile|<tailwindaiFile|$)/g;
   let match;
@@ -74,14 +79,28 @@ export const getUpdatedArtifactCode = (
     if (action === "delete") {
       filesToDelete.add(fileName);
     } else if (content) {
-      completionFiles.set(fileName, content);
+      // Si le fichier existe déjà et ne contient pas de marqueur FINISH_REASON,
+      // on concatène le nouveau contenu au contenu existant
+      if (allFiles.has(fileName)) {
+        const existingContent = allFiles.get(fileName);
+        // Vérifier si le contenu existant se terminait par un marqueur FINISH_REASON (qui a été supprimé)
+        const hadFinishReason = artifactCode.includes(
+          `${fileName}">\n${existingContent}\n\n<!-- FINISH_REASON:`,
+        );
+
+        if (hadFinishReason) {
+          // Si oui, on concatène le nouveau contenu
+          allFiles.set(fileName, existingContent + content);
+        } else {
+          // Sinon, on remplace par le nouveau contenu
+          allFiles.set(fileName, content);
+        }
+      } else {
+        // Nouveau fichier
+        allFiles.set(fileName, content);
+      }
     }
   }
-
-  // Fusion des fichiers en donnant la priorité aux nouveaux fichiers
-  completionFiles.forEach((content, fileName) => {
-    allFiles.set(fileName, content);
-  });
 
   // Construction du nouvel artifact avec le titre
   let mergedArtifact = `<tailwindaiArtifact title="${artifactTitle}">\n`;
