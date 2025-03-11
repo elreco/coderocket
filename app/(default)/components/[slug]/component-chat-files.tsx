@@ -73,7 +73,6 @@ export default function ComponentChatFiles({
       const hasIncompleteMarker = message.content.includes(
         "<!-- FINISH_REASON: length -->",
       );
-
       // Vérifier si le message contient des artifacts valides
       const hasArtifactResult = hasCompletedArtifacts(message.content);
 
@@ -97,10 +96,7 @@ export default function ComponentChatFiles({
           extractedFiles = extractFilesFromCompletedCompletion(message.content);
         }
       }
-      // Filtrer les fichiers incomplets
-      const validFiles = extractedFiles;
-
-      setFiles(validFiles);
+      setFiles(extractedFiles);
       // Découper le contenu en chunks
       const contentChunks = splitCompletedContentIntoChunks(message.content);
       setChunks(contentChunks);

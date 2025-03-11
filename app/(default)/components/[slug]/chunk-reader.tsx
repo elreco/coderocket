@@ -12,7 +12,6 @@ import {
   ChatFile,
   extractDataTheme,
   extractTitle,
-  extractFilesFromArtifact,
 } from "@/utils/completion-parser";
 import { Framework } from "@/utils/config";
 import { getFileConfig } from "@/utils/file-extensions";
@@ -36,20 +35,17 @@ export function ChunkReader({
   const { isCanvas, activeTab, selectedFramework, isLoading } =
     useComponentContext();
 
-  // Les fichiers sont déjà filtrés dans prepareContent
-  const validFiles = files;
-
   return chunks.map((chunk, index) => {
     // Pour les chunks de type "artifact", extraire les fichiers de cet artifact spécifique
     let artifactFiles: ChatFile[] = [];
     if (chunk.type === "artifact") {
-      artifactFiles = extractFilesFromArtifact(chunk.content);
-
+      /* artifactFiles = extractFilesFromArtifact(chunk.content);
+      console.log("artifactFiles", artifactFiles);
       // Si aucun fichier n'a été extrait de cet artifact, utiliser les fichiers globaux
       // Cela peut arriver si l'artifact est incomplet ou mal formé
-      if (artifactFiles.length === 0) {
-        artifactFiles = validFiles;
-      }
+      if (artifactFiles.length === 0) { */
+      artifactFiles = files;
+      /* } */
     }
 
     return (

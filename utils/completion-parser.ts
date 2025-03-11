@@ -570,7 +570,6 @@ export const splitCompletedContentIntoChunks = (
       // Créer un artifact complet à partir de l'artifact partiel
       const completeArtifact = `<tailwindaiArtifact title="Generated Files">
 ${files
-  .filter((file) => !file.isIncomplete)
   .map(
     (file) => `<tailwindaiFile name="${file.name}">
 ${file.content}
