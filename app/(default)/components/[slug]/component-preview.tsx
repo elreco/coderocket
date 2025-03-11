@@ -73,7 +73,6 @@ export default function ComponentPreview() {
               </div>
               {authorized && buildError.content && (
                 <Button
-                  variant="outline"
                   className="mt-2 self-end"
                   onClick={() =>
                     setInput("Fix the following error: " + buildError.content)
