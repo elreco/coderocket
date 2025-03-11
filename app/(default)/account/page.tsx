@@ -124,18 +124,18 @@ export default async function Account() {
             </div>
           }
         >
-          <div className="mb-4 mt-8 h-16 text-xl font-medium text-primary">
-            {subscription ? (
-              `${subscriptionPrice}/${subscription?.prices?.interval}`
-            ) : (
-              <div className="flex flex-col items-start gap-2">
-                <p className="text-2xl text-muted-foreground">Free plan</p>
-                <Link href="/pricing">Choose your plan</Link>
-              </div>
-            )}
+          <div className="my-8 text-xl font-medium text-primary">
+            <div className="flex flex-col items-center gap-2">
+              <p className="text-2xl text-amber-500">
+                {subscription
+                  ? `${subscriptionPrice}/${subscription?.prices?.interval}`
+                  : "Free plan"}
+              </p>
+              {!subscription && <Link href="/pricing">Choose your plan</Link>}
+            </div>
           </div>
 
-          <div className="mt-4 space-y-2">
+          <div className="space-y-2">
             <h4 className="font-medium">Plan Features:</h4>
             <ul className="space-y-2">
               {subscription ? (
