@@ -35,6 +35,7 @@ export type GetComponentsReturnType = {
   last_assistant_message: string;
   last_assistant_message_theme: string;
   slug: string;
+  remix_chat_id: string;
 };
 
 export const fetchChatById = async (idOrSlug: string) => {
@@ -414,7 +415,7 @@ export const getAllPublicChats = async (
     const { data: userData } = await supabase.auth.getUser();
     const user = userData.user;
 
-    let query = supabase.rpc("get_components");
+    let query = supabase.rpc("get_components3");
     // 🔒 Sécuriser la requête de recherche
     if (searchQuery) {
       const sanitizedQuery = searchQuery.trim().slice(0, MAX_SEARCH_LENGTH);
@@ -631,7 +632,7 @@ export const remixChat = async (chatId: string) => {
       prompt_image: originalChat.prompt_image,
       user_id: user.id,
       remix_chat_id: originalChat.id,
-      is_private: true,
+      is_private: false,
       slug: uniqueId,
     })
     .select()

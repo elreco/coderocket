@@ -2,7 +2,7 @@
 import { SiHtml5 } from "@icons-pack/react-simple-icons";
 import { SiVuedotjs } from "@icons-pack/react-simple-icons";
 import { SiReact } from "@icons-pack/react-simple-icons";
-import { ThumbsUp } from "lucide-react";
+import { GitFork, ThumbsUp } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -71,34 +71,38 @@ export function ComponentCard({
             {chat.title || chat.first_user_message}
           </h1>
           <div className="relative z-10 mt-2 flex flex-row items-center justify-start space-x-2">
-            <div className="flex items-start justify-start gap-2">
+            <Tooltip>
+              <TooltipTrigger>
+                <Badge className="hover:bg-primary">
+                  <FrameworkIcon className="mr-1 size-3" />
+                  <span className="first-letter:uppercase">
+                    {chat.framework}
+                  </span>
+                </Badge>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Framework</p>
+              </TooltipContent>
+            </Tooltip>
+            {isPopular && (
               <Tooltip>
                 <TooltipTrigger>
-                  <Badge className="hover:bg-primary">
-                    <FrameworkIcon className="mr-1 size-3" />
-                    <span className="first-letter:uppercase">
-                      {chat.framework}
-                    </span>
+                  <Badge className="bg-amber-500 hover:bg-amber-500">
+                    <ThumbsUp className="mr-1 size-3" />
+                    <span className="first-letter:uppercase">Popular</span>
                   </Badge>
                 </TooltipTrigger>
-                <TooltipContent>
-                  <p>Framework</p>
+                <TooltipContent className="bg-amber-500">
+                  <p>{chat.likes} likes</p>
                 </TooltipContent>
               </Tooltip>
-            </div>
-            {isPopular && (
+            )}
+            {chat.remix_chat_id && (
               <div className="flex items-start justify-start gap-2">
-                <Tooltip>
-                  <TooltipTrigger>
-                    <Badge className="bg-amber-500 hover:bg-amber-500">
-                      <ThumbsUp className="mr-1 size-3" />
-                      <span className="first-letter:uppercase">Popular</span>
-                    </Badge>
-                  </TooltipTrigger>
-                  <TooltipContent className="bg-amber-500">
-                    <p>{chat.likes} likes</p>
-                  </TooltipContent>
-                </Tooltip>
+                <Badge className="bg-foreground text-background hover:bg-foreground">
+                  <GitFork className="mr-1 size-3" />
+                  <span className="first-letter:uppercase">Remixed</span>
+                </Badge>
               </div>
             )}
           </div>

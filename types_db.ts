@@ -463,7 +463,7 @@ export type Database = {
           framework: string;
         }[];
       };
-      get_components: {
+      get_components3: {
         Args: Record<PropertyKey, never>;
         Returns: {
           chat_id: string;
@@ -482,7 +482,7 @@ export type Database = {
           framework: string;
         }[];
       };
-      get_components_with_theme_and_slug: {
+      get_components3_with_theme_and_slug: {
         Args: Record<PropertyKey, never>;
         Returns: {
           chat_id: string;
