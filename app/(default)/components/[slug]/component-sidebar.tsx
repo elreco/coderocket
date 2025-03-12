@@ -34,9 +34,8 @@ import {
   hasArtifacts,
   splitContentIntoChunks,
 } from "@/utils/completion-parser";
-import { Framework, maxImageSize, storageUrl } from "@/utils/config";
+import { avatarApi, Framework, maxImageSize, storageUrl } from "@/utils/config";
 import { getRelativeDate } from "@/utils/date";
-import { getInitials } from "@/utils/helpers";
 
 import ComponentTheme from "./(settings)/component-theme";
 import { improvePromptByChatId } from "./actions";
@@ -340,10 +339,13 @@ export default function ComponentSidebar({
                             <Avatar className="size-8">
                               <AvatarImage
                                 src={user?.avatar_url || undefined}
-                                alt={user?.full_name || undefined}
                               />
-                              <AvatarFallback className="bg-secondary text-xs">
-                                {getInitials(user?.full_name || "")}
+                              <AvatarFallback>
+                                <img
+                                  src={`${avatarApi}${user?.full_name}`}
+                                  alt="logo"
+                                  className="size-full"
+                                />
                               </AvatarFallback>
                             </Avatar>
                             <div className="flex flex-col">

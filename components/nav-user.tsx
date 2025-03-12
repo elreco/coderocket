@@ -28,7 +28,7 @@ import {
 } from "@/components/ui/sidebar";
 import { toast } from "@/hooks/use-toast";
 import { Tables } from "@/types_db";
-import { getInitials } from "@/utils/helpers";
+import { avatarApi } from "@/utils/config";
 
 export function NavUser({
   user,
@@ -70,12 +70,13 @@ export function NavUser({
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
               <Avatar className="size-8 rounded-lg transition-all duration-300 group-hover:border-primary">
-                <AvatarImage
-                  src={user.avatar_url || undefined}
-                  alt={user.full_name || undefined}
-                />
-                <AvatarFallback className="rounded-lg bg-background">
-                  {getInitials(user.full_name || "")}
+                <AvatarImage src={user.avatar_url || undefined} />
+                <AvatarFallback>
+                  <img
+                    src={`${avatarApi}${user.full_name}`}
+                    alt="logo"
+                    className="size-full"
+                  />
                 </AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
@@ -96,12 +97,13 @@ export function NavUser({
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="size-8 rounded-lg">
-                  <AvatarImage
-                    src={user.avatar_url || undefined}
-                    alt={user.full_name || undefined}
-                  />
-                  <AvatarFallback className="rounded-lg">
-                    {getInitials(user.full_name || "")}
+                  <AvatarImage src={user.avatar_url || undefined} />
+                  <AvatarFallback>
+                    <img
+                      src={`${avatarApi}${user.full_name}`}
+                      alt="logo"
+                      className="size-full"
+                    />
                   </AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
