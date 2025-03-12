@@ -1,4 +1,5 @@
-import { Mail, Calendar, Clock, Plus, Heart, GitFork } from "lucide-react";
+import { Mail, Calendar, Plus, Heart, GitFork } from "lucide-react";
+import { Metadata, ResolvingMetadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -26,6 +27,36 @@ import {
   getComponentsCountByUserId,
   getRemixesCountByUserId,
 } from "./actions";
+
+interface Props {
+  params: Promise<{ id: string }>;
+}
+
+export async function generateMetadata(
+  { params }: Props,
+  parent: ResolvingMetadata,
+): Promise<Metadata> {
+  const { id } = await params;
+
+  const user = await getUser(id);
+  if (!user) {
+    return {
+      title: "User not found - Tailwind AI",
+    };
+  }
+
+  // optionally access and extend (rather than replace) parent metadata
+  const previousImages = (await parent).openGraph?.images || [];
+  return {
+    title: user.full_name
+      ? `${user.full_name} - Tailwind AI`
+      : "Anonymous user - Tailwind AI",
+    description: `${user.full_name || "Anonymous user"} - Tailwind AI`,
+    openGraph: {
+      images: [user.avatar_url ? user.avatar_url : "", ...previousImages],
+    },
+  };
+}
 
 export default async function UserPage({
   params,
@@ -137,17 +168,6 @@ export default async function UserPage({
                           </TooltipTrigger>
                           <TooltipContent>
                             <p>Account creation date</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <Clock className="size-4 text-muted-foreground" />
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <span>{getRelativeDate(user.last_sign_in_at)}</span>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Last login date</p>
                           </TooltipContent>
                         </Tooltip>
                       </div>
