@@ -17,6 +17,7 @@ export interface ChatFile {
   isDelete?: boolean;
   isActive: boolean;
   isIncomplete?: boolean;
+  isContinue?: boolean;
 }
 
 let previousFiles = new Map<string, string>(); // Pour stocker l'état précédent
@@ -78,6 +79,16 @@ export const getUpdatedArtifactCode = (
 
     if (action === "delete") {
       filesToDelete.add(fileName);
+    } else if (action === "continue") {
+      // Nouvelle action "continue" pour continuer un fichier incomplet
+      if (allFiles.has(fileName)) {
+        const existingContent = allFiles.get(fileName);
+        // Concaténer le nouveau contenu au contenu existant
+        allFiles.set(fileName, existingContent + content);
+      } else {
+        // Si le fichier n'existe pas, le traiter comme un nouveau fichier
+        allFiles.set(fileName, content);
+      }
     } else if (content) {
       // Si le fichier existe déjà et ne contient pas de marqueur FINISH_REASON,
       // on concatène le nouveau contenu au contenu existant
@@ -200,6 +211,7 @@ export const extractFilesFromCompletion = (
           content: content || completion,
           isDelete: action === "delete",
           isActive: false,
+          isContinue: action === "continue",
         });
       }
     }
@@ -237,7 +249,7 @@ export const extractFilesFromCompletion = (
         const match = line.match(/^[ \t]*/);
         return match ? match[0].length : 0;
       });
-      const minIndent = Math.min(...indentations);
+      const minIndent = indentations.length > 0 ? Math.min(...indentations) : 0;
 
       // Retirer l'indentation minimale commune de chaque ligne
       content = lines
@@ -249,12 +261,14 @@ export const extractFilesFromCompletion = (
       if (isHtml) {
         content = ensureCDNsPresent(content);
       }
+
       // Ajouter le fichier au tableau
       filesArray.push({
         name: fileName || null,
         content: content || completion,
         isDelete: action === "delete",
         isActive: false,
+        isContinue: action === "continue",
       });
     }
   }
@@ -365,7 +379,8 @@ export const extractFilesFromCompletedCompletion = (
         content: content || completion,
         isDelete: action === "delete",
         isActive: false,
-        isIncomplete: isIncomplete, // Ajouter une propriété pour indiquer si le fichier est incomplet
+        isIncomplete: isIncomplete,
+        isContinue: action === "continue",
       });
     }
   }
@@ -392,12 +407,13 @@ export const extractFilesFromIncompleteArtifact = (
   // Regex pour trouver les fichiers dans l'artifact incomplet
   // Cette regex est plus permissive pour capturer les fichiers même dans un artifact incomplet
   const fileRegex =
-    /<tailwindaiFile.*?name=["']([^"']*?)["'].*?>([\s\S]*?)(?=<\/tailwindaiFile>|<tailwindaiFile|$)/g;
+    /<tailwindaiFile.*?name=["']([^"']*?)["'].*?(?:action=["']([^"']*?)["'].*?)?>([\s\S]*?)(?=<\/tailwindaiFile>|<tailwindaiFile|$)/g;
 
   let fileMatch;
   while ((fileMatch = fileRegex.exec(incompleteArtifactContent)) !== null) {
     const fileName = fileMatch[1];
-    let content = fileMatch[2].trim();
+    const action = fileMatch[2];
+    let content = fileMatch[3].trim();
 
     // Nettoyage du contenu
     content = content
@@ -434,9 +450,10 @@ export const extractFilesFromIncompleteArtifact = (
     filesArray.push({
       name: fileName || null,
       content: content || completion,
-      isDelete: false,
+      isDelete: action === "delete",
       isActive: false,
       isIncomplete: isIncomplete,
+      isContinue: action === "continue",
     });
   }
   return filesArray;
