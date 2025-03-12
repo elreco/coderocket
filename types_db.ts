@@ -9,6 +9,42 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      api_collections: {
+        Row: {
+          created_at: string;
+          description: string | null;
+          id: string;
+          is_active: boolean;
+          name: string;
+          source: string;
+          spec: Json;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          description?: string | null;
+          id?: string;
+          is_active?: boolean;
+          name: string;
+          source: string;
+          spec: Json;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          description?: string | null;
+          id?: string;
+          is_active?: boolean;
+          name?: string;
+          source?: string;
+          spec?: Json;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       chat_likes: {
         Row: {
           chat_id: string;
@@ -55,6 +91,7 @@ export type Database = {
           is_featured: boolean | null;
           is_private: boolean | null;
           likes: number | null;
+          metadata: Json | null;
           output_tokens: number | null;
           prompt_image: string | null;
           remix_chat_id: string | null;
@@ -71,6 +108,7 @@ export type Database = {
           is_featured?: boolean | null;
           is_private?: boolean | null;
           likes?: number | null;
+          metadata?: Json | null;
           output_tokens?: number | null;
           prompt_image?: string | null;
           remix_chat_id?: string | null;
@@ -87,6 +125,7 @@ export type Database = {
           is_featured?: boolean | null;
           is_private?: boolean | null;
           likes?: number | null;
+          metadata?: Json | null;
           output_tokens?: number | null;
           prompt_image?: string | null;
           remix_chat_id?: string | null;
@@ -128,35 +167,27 @@ export type Database = {
       };
       extra_messages: {
         Row: {
-          id: number;
-          user_id: string;
           count: number;
           created_at: string;
+          id: number;
           updated_at: string;
+          user_id: string;
         };
         Insert: {
-          id?: number;
-          user_id: string;
-          count: number;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: number;
-          user_id?: string;
           count?: number;
           created_at?: string;
+          id?: number;
           updated_at?: string;
+          user_id: string;
         };
-        Relationships: [
-          {
-            foreignKeyName: "extra_messages_user_id_fkey";
-            columns: ["user_id"];
-            isOneToOne: false;
-            referencedRelation: "users";
-            referencedColumns: ["id"];
-          },
-        ];
+        Update: {
+          count?: number;
+          created_at?: string;
+          id?: number;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
       };
       messages: {
         Row: {
@@ -463,7 +494,7 @@ export type Database = {
           framework: string;
         }[];
       };
-      get_components3: {
+      get_components: {
         Args: Record<PropertyKey, never>;
         Returns: {
           chat_id: string;
@@ -482,7 +513,7 @@ export type Database = {
           framework: string;
         }[];
       };
-      get_components3_with_theme_and_slug: {
+      get_components_with_theme_and_slug: {
         Args: Record<PropertyKey, never>;
         Returns: {
           chat_id: string;
@@ -496,6 +527,46 @@ export type Database = {
           first_user_message: string;
           last_assistant_message: string;
           last_assistant_message_theme: string;
+        }[];
+      };
+      get_components2: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          chat_id: string;
+          user_id: string;
+          user_full_name: string;
+          user_avatar_url: string;
+          is_featured: boolean;
+          is_private: boolean;
+          created_at: string;
+          slug: string;
+          title: string;
+          likes: number;
+          first_user_message: string;
+          last_assistant_message: string;
+          last_assistant_message_theme: string;
+          framework: string;
+          remix_chat_id: string;
+        }[];
+      };
+      get_components3: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          chat_id: string;
+          user_id: string;
+          user_full_name: string;
+          user_avatar_url: string;
+          is_featured: boolean;
+          is_private: boolean;
+          created_at: string;
+          slug: string;
+          title: string;
+          likes: number;
+          first_user_message: string;
+          last_assistant_message: string;
+          last_assistant_message_theme: string;
+          framework: string;
+          remix_chat_id: string;
         }[];
       };
     };

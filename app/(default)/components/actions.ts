@@ -65,6 +65,7 @@ export const fetchChatById = async (idOrSlug: string) => {
     user_id,
     slug,
     remix_chat_id,
+    metadata,
     user:users (*)
 `,
     )
