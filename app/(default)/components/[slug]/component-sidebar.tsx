@@ -530,7 +530,7 @@ export default function ComponentSidebar({
                       submitPrompt(continuePrompt);
                     }}
                   >
-                    <RefreshCw className="mr-1 size-4" />
+                    <RefreshCw className=" size-4" />
                     Continue generation
                   </Button>
                 )}
