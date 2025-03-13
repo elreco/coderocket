@@ -22,6 +22,7 @@ export const promptEnhancer = async (
         I want you to improve the user prompt that is wrapped in \`<original_prompt>\` tags.
         I want you to keep the main idea of the prompt, don't change it too much. I just want the prompt to be in line with the system prompt without altering the main idea of the prompt.
         If you don't have any modifications to make, just return the original prompt.
+        Don't mention the technology in the prompt, just the main idea.
 
         IMPORTANT: Only respond with the improved prompt and nothing else!
 
@@ -34,7 +35,7 @@ export const promptEnhancer = async (
     model: anthropicModel("claude-3-5-haiku-latest"),
     system: contentMd,
     toolChoice: "none",
-    maxTokens: 8192,
+    maxTokens: 800,
   });
 
   return text;

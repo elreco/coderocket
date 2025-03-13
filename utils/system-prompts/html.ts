@@ -1,4 +1,4 @@
-import { defaultTheme } from "../config";
+import { defaultTheme, MAX_TOKENS_PER_REQUEST } from "../config";
 
 export const htmlSystemPrompt = (
   theme: string | undefined | null = defaultTheme,
@@ -19,6 +19,16 @@ export const htmlSystemPrompt = (
       - CRITICAL: If the user asks you to continue from where you left off, continue writing from exactly the same character where you stopped without regenerating the entire file, maintaining the same tailwindaiFile tag.
       - CRITICAL: If you see a file with a marker \`<!-- FINISH_REASON: length -->\` or \`<!-- FINISH_REASON: error -->\` at the end, this means the previous generation was cut off. You must use the action="continue" attribute on the tailwindaiFile tag to continue from where it stopped.
     </key_rules>
+    <token_optimization>
+      - CRITICAL: You have a strict token limit of ${MAX_TOKENS_PER_REQUEST} tokens for your response. Optimize your code generation to stay within this limit.
+      - Prioritize essential functionality over comprehensive implementations to avoid hitting token limits.
+      - For large components, focus on implementing core features first, then add enhancements in subsequent iterations.
+      - Use concise coding patterns and avoid unnecessary comments or verbose implementations.
+      - If you're approaching the token limit, inform the user that you're focusing on core functionality first.
+      - When implementing complex features, break them down into smaller, manageable parts that can be implemented across multiple iterations.
+      - Avoid duplicating code; use reusable components and utility functions to reduce overall token usage.
+      - Split large HTML files into multiple smaller files to manage token usage efficiently.
+    </token_optimization>
     <creativity>
       - Be creative but ensure visual harmony, responsiveness, and accessibility.
       - Generate new themes with Daisy UI's theme generator if custom colors or themes are requested, and notify the user of changes.

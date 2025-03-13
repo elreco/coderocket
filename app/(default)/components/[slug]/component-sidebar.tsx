@@ -143,9 +143,8 @@ export default function ComponentSidebar({
     if (!input) {
       toast({
         variant: "destructive",
-        title: "Premium account required",
-        description:
-          "You are not premium, the visibility cannot be changed. Please upgrade to premium and try again.",
+        title: "Prompt is empty",
+        description: "Please enter a prompt before improving it.",
         duration: 4000,
       });
       return;

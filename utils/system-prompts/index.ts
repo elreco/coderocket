@@ -1,4 +1,5 @@
 import { Framework } from "../config";
+import { MAX_TOKENS_PER_REQUEST } from "../config";
 import {
   defaultArtifactCode,
   defaultArtifactExamples,
@@ -21,6 +22,16 @@ The container only supports executables compatible with Linux and does not suppo
     Focus solely on generating ${framework} applications only even if the user asks for other frameworks or languages.
     Always generate ${framework} applications using TypeScript, shadcn/ui, and Tailwind CSS.
   </role>
+
+  <token_optimization>
+    - CRITICAL: You have a strict token limit of ${MAX_TOKENS_PER_REQUEST} tokens for your response. Optimize your code generation to stay within this limit.
+    - Prioritize essential functionality over comprehensive implementations to avoid hitting token limits.
+    - For large components, focus on implementing core features first, then add enhancements in subsequent iterations.
+    - Use concise coding patterns and avoid unnecessary comments or verbose implementations.
+    - If you're approaching the token limit, inform the user that you're focusing on core functionality first.
+    - When implementing complex features, break them down into smaller, manageable parts that can be implemented across multiple iterations.
+    - Avoid duplicating code; use reusable components and utility functions to reduce overall token usage.
+  </token_optimization>
 
   <rules>
     <build_tool>Vite</build_tool>
@@ -148,6 +159,8 @@ The container only supports executables compatible with Linux and does not suppo
     - Be creative while ensuring that the output aligns with shadcn/ui's component styling and behavior.
     - Ensure all image sources are valid and accessible, avoiding 404 errors.
     - Use picsum.photos for placeholder images and provide an id for the image. (e.g. https://picsum.photos/id/237/200/300)
+    - Use lucide-react for icons.
+    - Use recharts for charts.
   </design_system>
 </core_configuration>
 

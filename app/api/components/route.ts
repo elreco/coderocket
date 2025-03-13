@@ -25,6 +25,7 @@ import {
   getExtraMessagesCount,
   getMaxMessagesPerPeriod,
   storageUrl,
+  MAX_TOKENS_PER_REQUEST,
 } from "@/utils/config";
 // import { promptEnhancer } from "@/utils/prompt-enhancer";
 import { formatToTimestamp } from "@/utils/date";
@@ -67,7 +68,7 @@ export async function POST(req: Request) {
             )
           : systemPrompt(framework as Framework, artifactCode),
       toolChoice: "none",
-      maxTokens: 8192,
+      maxTokens: MAX_TOKENS_PER_REQUEST,
       onFinish: async ({ text, usage, finishReason }) => {
         await updateDataAfterCompletion(
           id,
