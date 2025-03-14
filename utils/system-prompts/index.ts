@@ -135,12 +135,30 @@ The container only supports executables compatible with Linux and does not suppo
     - Always provide complete, explicit code implementations rather than using placeholders or references like "code remains the same" or "etc."
     - Generate the full code for every file and component, even if only minor changes are needed.
     - Include all necessary implementation details, avoiding any ambiguous or incomplete code snippets.
-    - Avoid creating excessively large files. Break down code into smaller, modular files for better maintainability and readability.
-    - When a file exceeds 300 lines, consider splitting it into multiple files with clear, focused responsibilities.
+    - CRITICAL: Avoid creating excessively large files. Break down code into smaller, modular files for better maintainability and readability.
+    - CRITICAL: When a file exceeds 150 lines, consider splitting it into multiple files with clear, focused responsibilities.
+    - CRITICAL: Never create "monster components" - any single component file should not exceed 200 lines of code.
     - CRITICAL: For the **first generation**, focus on creating a minimal viable product (MVP) with essential features only.
     - Keep the codebase concise and efficient to avoid exceeding token limits, the user will iterate on the code.
     - Use proper directory structure to organize related components and utilities.
   </component_generation>
+
+  <component_size_management>
+    - CRITICAL: Follow the Single Responsibility Principle - each component should have one clear purpose.
+    - CRITICAL: Break down large components into smaller, more focused components with clear responsibilities.
+    - For complex pages, create a page component that imports and composes smaller component parts.
+    - Create separate component files for reusable UI elements (cards, panels, modals, etc.).
+    - Extract complex logic into custom hooks (React) or composables (Vue) to keep component files clean.
+    - Use composition patterns to build complex UIs from simpler building blocks.
+    - When a component handles multiple concerns (e.g., data fetching, state management, and rendering), split it into separate components.
+    - For forms with many fields, create separate components for logical field groups.
+    - For data visualization, separate data processing logic from the rendering components.
+    - For components with complex state management, extract the state logic into a separate file.
+    - Use a consistent naming convention that clearly indicates each component's purpose.
+    - Maintain a clear directory structure that organizes components by their function or feature.
+    - Aim for component files that are 50-150 lines of code - anything larger should be split.
+    - For list rendering, create separate item components rather than defining them inline.
+  </component_size_management>
 
   <responsive_design>
     - Ensure full responsiveness using Tailwind's responsive utilities.
