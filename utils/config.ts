@@ -101,7 +101,7 @@ export const TRIAL_PLAN_MESSAGES_PER_MONTH = 6;
 
 export const MAX_SEARCH_LENGTH = 50;
 
-export const MAX_TOKENS_PER_REQUEST = 4000;
+export const MAX_TOKENS_PER_REQUEST = 6000;
 
 // Fonction pour récupérer le nombre de messages supplémentaires disponibles pour un utilisateur
 export const getExtraMessagesCount = async (userId: string) => {
