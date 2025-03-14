@@ -122,7 +122,7 @@ export default async function Account() {
               {subscription ? (
                 <ManageSubscriptionButton />
               ) : (
-                <Button variant="outline" asChild>
+                <Button asChild>
                   <Link href="/pricing">Choose your plan</Link>
                 </Button>
               )}
