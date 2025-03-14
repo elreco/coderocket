@@ -119,7 +119,13 @@ export default async function Account() {
           }
           footer={
             <div className="flex items-center gap-4">
-              <ManageSubscriptionButton />
+              {subscription ? (
+                <ManageSubscriptionButton />
+              ) : (
+                <Button variant="outline" asChild>
+                  <Link href="/pricing">Choose your plan</Link>
+                </Button>
+              )}
               {subscription && <UnsubscribeSurveyDialog />}
             </div>
           }
