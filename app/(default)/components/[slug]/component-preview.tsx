@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2, AlertCircle, WandSparkles } from "lucide-react";
+import { Loader2, AlertCircle, WandSparkles, RefreshCw } from "lucide-react";
 import React from "react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -16,6 +16,38 @@ import { useWebcontainer } from "@/context/webcontainer-context";
 import { Markdown } from "./markdown";
 
 function LoadingStateComponent({ state }: { state: WebcontainerLoadingState }) {
+  const { setInput, handleSubmitToAI, authorized } = useComponentContext();
+
+  const handleContinueGeneration = () => {
+    const continuePrompt = "Continue where you left off";
+    setInput(continuePrompt);
+    handleSubmitToAI(continuePrompt);
+  };
+
+  if (state === "token-limit") {
+    return (
+      <div className="flex size-full flex-col items-center justify-center space-y-4 p-8 text-center">
+        <div className="flex size-16 items-center justify-center rounded-full bg-blue-100 text-primary dark:bg-violet-900/20 dark:text-primary">
+          <RefreshCw className="size-8" />
+        </div>
+        <div className="max-w-md space-y-2">
+          <h3 className="text-xl font-semibold">Generation in progress</h3>
+          <p className="text-sm text-muted-foreground">
+            The AI has reached its token limit, but don&apos;t worry! This is
+            completely normal when creating complex projects. The project is on
+            the right track!
+          </p>
+          {authorized && (
+            <Button className="mt-4" onClick={handleContinueGeneration}>
+              <RefreshCw className="mr-2 size-4" />
+              Continue generation
+            </Button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex size-full flex-col items-center justify-center space-y-4 p-8 text-center">
       <Loader2 className="size-8 animate-spin text-primary" />

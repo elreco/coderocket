@@ -18,6 +18,7 @@ export type WebcontainerLoadingState =
   | "starting"
   | "processing"
   | "error"
+  | "token-limit"
   | null;
 
 interface ComponentContextType {
