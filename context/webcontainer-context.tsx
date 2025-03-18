@@ -45,7 +45,6 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
     selectedFramework,
     isLoading,
     selectedVersion,
-    setWebcontainerReady,
     chatId,
     artifactFiles,
     isWebcontainerReady,
@@ -73,9 +72,23 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
     setBuildError(null);
     setPreviewId(undefined);
     setLoadingState(null);
-    setWebcontainerReady(false);
     oldArtifactFilesRef.current = [];
   }, [chatId]);
+
+  useEffect(() => {
+    if (shellProcessRef.current) {
+      shellProcessRef.current.kill();
+      shellProcessRef.current = null;
+    }
+    if (devProcessRef.current) {
+      devProcessRef.current.kill();
+      devProcessRef.current = null;
+    }
+    setBuildError(null);
+    setPreviewId(undefined);
+    setLoadingState(null);
+    oldArtifactFilesRef.current = [];
+  }, []);
 
   /**
    * Compare artifact files to detect whether `package.json` content has changed.
@@ -129,6 +142,9 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
 
       if (isLengthError) {
         setLoadingState("token-limit");
+        setBuildError(null);
+        setPreviewId(undefined);
+        oldArtifactFilesRef.current = [];
         return;
       }
 
@@ -148,10 +164,8 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
       setBuildError(null);
       setPreviewId(undefined);
       setLoadingState("initializing");
-      setWebcontainerReady(false);
       if (isWebcontainerReady) {
         setLoadingState(null);
-        setWebcontainerReady(true);
         oldArtifactFilesRef.current = [];
         return;
       }
