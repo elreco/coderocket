@@ -207,9 +207,6 @@ export default function ComponentSidebar({
   }, [completion, isLoading]);
 
   const handleFileClick = (version: number) => {
-    if (isLoading) {
-      return;
-    }
     setActiveTab("chat");
     handleVersionSelect(version, undefined);
   };
@@ -321,7 +318,6 @@ export default function ComponentSidebar({
                       <div
                         onClick={() =>
                           m.version !== selectedVersion &&
-                          (loadingState === "error" || !loadingState) &&
                           handleFileClick(m.version)
                         }
                         className={cn(
