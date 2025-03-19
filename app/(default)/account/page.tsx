@@ -63,13 +63,22 @@ export default async function Account() {
 
     if (subscription) {
       const currentPeriodStart = new Date(subscription.current_period_start);
-      const { count } = await supabase
+      const { count: originalCount } = await supabase
         .from("messages")
         .select("*, chats!inner(*)", { count: "exact", head: true })
         .eq("chats.user_id", user.id)
-        .gte("created_at", formatToTimestamp(currentPeriodStart));
+        .gte("created_at", formatToTimestamp(currentPeriodStart))
+        .is("chats.remix_chat_id", null);
 
-      usage = count || 0;
+      const { count: remixCount } = await supabase
+        .from("messages")
+        .select("*, chats!inner(*)", { count: "exact", head: true })
+        .eq("chats.user_id", user.id)
+        .gte("created_at", formatToTimestamp(currentPeriodStart))
+        .not("chats.remix_chat_id", "is", null)
+        .gt("version", 0);
+
+      usage = (originalCount || 0) + (remixCount || 0);
       maxMessages = getMaxMessagesPerPeriod(subscription);
       resetDate = new Date(subscription.current_period_end);
     } else {
@@ -82,13 +91,22 @@ export default async function Account() {
       );
 
       // Vérifier la limite mensuelle pour les utilisateurs gratuits
-      const { count } = await supabase
+      const { count: originalCount } = await supabase
         .from("messages")
         .select("*, chats!inner(*)", { count: "exact", head: true })
         .eq("chats.user_id", user.id)
-        .gte("created_at", formatToTimestamp(currentPeriodStart));
+        .gte("created_at", formatToTimestamp(currentPeriodStart))
+        .is("chats.remix_chat_id", null);
 
-      usage = count || 0;
+      const { count: remixCount } = await supabase
+        .from("messages")
+        .select("*, chats!inner(*)", { count: "exact", head: true })
+        .eq("chats.user_id", user.id)
+        .gte("created_at", formatToTimestamp(currentPeriodStart))
+        .not("chats.remix_chat_id", "is", null)
+        .gt("version", 0);
+
+      usage = (originalCount || 0) + (remixCount || 0);
       maxMessages = TRIAL_PLAN_MESSAGES_PER_MONTH;
       // Définir la date de réinitialisation au premier jour du mois prochain
       resetDate = new Date(today.getFullYear(), today.getMonth() + 1, 1);

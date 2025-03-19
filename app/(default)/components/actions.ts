@@ -65,6 +65,7 @@ export const fetchChatById = async (idOrSlug: string) => {
     user_id,
     slug,
     remix_chat_id,
+    remix_from_version,
     metadata,
     user:users (*)
 `,
@@ -239,13 +240,24 @@ export const createChat = async (prompt: string, formData: FormData) => {
     );
 
     // Vérifier la limite mensuelle pour les utilisateurs gratuits
-    const { count } = await supabase
+    const { count: originalCount } = await supabase
       .from("messages")
       .select("*, chats!inner(*)", { count: "exact", head: true })
       .eq("chats.user_id", user.id)
-      .gte("created_at", formatToTimestamp(currentPeriodStart));
+      .gte("created_at", formatToTimestamp(currentPeriodStart))
+      .is("chats.remix_chat_id", null);
 
-    if (count && count >= TRIAL_PLAN_MESSAGES_PER_MONTH) {
+    const { count: remixCount } = await supabase
+      .from("messages")
+      .select("*, chats!inner(*)", { count: "exact", head: true })
+      .eq("chats.user_id", user.id)
+      .gte("created_at", formatToTimestamp(currentPeriodStart))
+      .not("chats.remix_chat_id", "is", null)
+      .gt("version", 0);
+
+    const count = (originalCount || 0) + (remixCount || 0);
+
+    if (count >= TRIAL_PLAN_MESSAGES_PER_MONTH) {
       // Si l'utilisateur a des messages supplémentaires, utiliser un message supplémentaire
       if (extraMessages > 0) {
         const decremented = await decrementExtraMessagesCount(user.id);
@@ -289,15 +301,26 @@ export const createChat = async (prompt: string, formData: FormData) => {
     const currentPeriodStart = new Date(subscription.current_period_start);
 
     // Vérifier la limite mensuelle pour les abonnés
-    const { count } = await supabase
+    const { count: originalCount } = await supabase
       .from("messages")
       .select("*, chats!inner(*)", { count: "exact", head: true })
       .eq("chats.user_id", user.id)
-      .gte("created_at", formatToTimestamp(currentPeriodStart));
+      .gte("created_at", formatToTimestamp(currentPeriodStart))
+      .is("chats.remix_chat_id", null);
+
+    const { count: remixCount } = await supabase
+      .from("messages")
+      .select("*, chats!inner(*)", { count: "exact", head: true })
+      .eq("chats.user_id", user.id)
+      .gte("created_at", formatToTimestamp(currentPeriodStart))
+      .not("chats.remix_chat_id", "is", null)
+      .gt("version", 0);
+
+    const count = (originalCount || 0) + (remixCount || 0);
 
     const maxMessagesPerPeriod = getMaxMessagesPerPeriod(subscription);
 
-    if (count && count >= maxMessagesPerPeriod) {
+    if (count >= maxMessagesPerPeriod) {
       // Si l'utilisateur a des messages supplémentaires, utiliser un message supplémentaire
       if (extraMessages > 0) {
         const decremented = await decrementExtraMessagesCount(user.id);

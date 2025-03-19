@@ -9,42 +9,6 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      api_collections: {
-        Row: {
-          created_at: string;
-          description: string | null;
-          id: string;
-          is_active: boolean;
-          name: string;
-          source: string;
-          spec: Json;
-          updated_at: string;
-          user_id: string;
-        };
-        Insert: {
-          created_at?: string;
-          description?: string | null;
-          id?: string;
-          is_active?: boolean;
-          name: string;
-          source: string;
-          spec: Json;
-          updated_at?: string;
-          user_id: string;
-        };
-        Update: {
-          created_at?: string;
-          description?: string | null;
-          id?: string;
-          is_active?: boolean;
-          name?: string;
-          source?: string;
-          spec?: Json;
-          updated_at?: string;
-          user_id?: string;
-        };
-        Relationships: [];
-      };
       chat_likes: {
         Row: {
           chat_id: string;
@@ -95,6 +59,7 @@ export type Database = {
           output_tokens: number | null;
           prompt_image: string | null;
           remix_chat_id: string | null;
+          remix_from_version: number | null;
           slug: string | null;
           title: string | null;
           user_id: string;
@@ -112,6 +77,7 @@ export type Database = {
           output_tokens?: number | null;
           prompt_image?: string | null;
           remix_chat_id?: string | null;
+          remix_from_version?: number | null;
           slug?: string | null;
           title?: string | null;
           user_id: string;
@@ -129,6 +95,7 @@ export type Database = {
           output_tokens?: number | null;
           prompt_image?: string | null;
           remix_chat_id?: string | null;
+          remix_from_version?: number | null;
           slug?: string | null;
           title?: string | null;
           user_id?: string;
