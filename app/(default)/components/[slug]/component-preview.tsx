@@ -92,7 +92,7 @@ export default function ComponentPreview() {
         <div className="flex size-full h-full items-center justify-center px-4 xl:w-2/3">
           <Alert
             variant="default"
-            className="h-2/3 w-full items-center justify-center bg-secondary text-foreground"
+            className="h-2/3 max-h-[80vh] w-full items-center justify-center bg-secondary text-foreground"
           >
             <AlertCircle className="size-6" />
             <AlertDescription className="flex size-full flex-col !pl-12">
