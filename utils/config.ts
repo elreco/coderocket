@@ -102,7 +102,7 @@ export const TRIAL_PLAN_MESSAGES_PER_MONTH = 6;
 export const MAX_SEARCH_LENGTH = 50;
 
 export const MAX_TOKENS_PER_REQUEST = 6000;
-
+export const CHAR_PER_TOKEN = 2;
 // Fonction pour récupérer le nombre de messages supplémentaires disponibles pour un utilisateur
 export const getExtraMessagesCount = async (userId: string) => {
   const supabase = await createClient();

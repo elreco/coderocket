@@ -16,7 +16,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
+import {
+  TextareaWithLimit,
+  MAX_PROMPT_CHARS,
+} from "@/components/ui/textarea-with-limit";
 import {
   Tooltip,
   TooltipContent,
@@ -79,6 +82,7 @@ export default function ComponentSidebar({
   const [files, setFiles] = useState<ChatFile[]>([]);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
+  const [inputIsValid, setInputIsValid] = useState(true);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -113,6 +117,16 @@ export default function ComponentSidebar({
         variant: "destructive",
         title: "Empty input",
         description: "Please enter a prompt before submitting",
+        duration: 4000,
+      });
+      return;
+    }
+
+    if (!inputIsValid) {
+      toast({
+        variant: "destructive",
+        title: "Prompt is too long",
+        description: `Your prompt exceeds the limit of ${MAX_PROMPT_CHARS} characters. Please shorten it to continue.`,
         duration: 4000,
       });
       return;
@@ -533,12 +547,16 @@ export default function ComponentSidebar({
               </div>
             </div>
             <div className="flex w-full flex-col items-start space-y-1 border-t p-2">
-              <Textarea
+              <TextareaWithLimit
                 ref={inputRef}
                 autoFocus
                 disabled={isLoading}
                 value={input}
-                onChange={(e) => setInput(e.target.value)}
+                onChange={(value, isValid) => {
+                  setInput(value);
+                  setInputIsValid(isValid);
+                }}
+                showCounter={true}
                 minLength={2}
                 placeholder="Add a button, modify a div..."
                 required

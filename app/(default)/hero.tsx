@@ -33,7 +33,10 @@ import {
 } from "@/components/ui/sheet";
 import { Spotlight } from "@/components/ui/spotlight";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
+import {
+  TextareaWithLimit,
+  MAX_PROMPT_CHARS,
+} from "@/components/ui/textarea-with-limit";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { Framework } from "@/utils/config";
@@ -96,6 +99,7 @@ export default function Hero() {
   const router = useRouter();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [hasImproved, setHasImproved] = useState(false);
+  const [promptIsValid, setPromptIsValid] = useState(true);
 
   useEffect(() => {
     if (inputRef.current) {
@@ -178,6 +182,17 @@ export default function Hero() {
         variant: "destructive",
         title: "Prompt required",
         description: "Please enter a prompt to generate a component.",
+        duration: 4000,
+      });
+      return;
+    }
+
+    // Vérification de la validité de la longueur du prompt
+    if (!promptIsValid) {
+      toast({
+        variant: "destructive",
+        title: "Prompt is too long",
+        description: `Your prompt exceeds the limit of ${MAX_PROMPT_CHARS} characters. Please shorten it to continue.`,
         duration: 4000,
       });
       return;
@@ -353,12 +368,13 @@ export default function Hero() {
           <div className="flex w-full items-start">
             <Terminal className="mx-2 my-3 size-4" />
             <div className="relative w-full">
-              <Textarea
+              <TextareaWithLimit
                 ref={inputRef}
                 placeholder="Start generating a beautiful Tailwind component"
                 autoFocus={true}
                 required
                 value={prompt}
+                showCounter={true}
                 onKeyDown={(event) => {
                   if (event.key === "Enter") {
                     if (event.shiftKey) {
@@ -371,9 +387,10 @@ export default function Hero() {
                   }
                 }}
                 translate="no"
-                onChange={(e) => {
-                  setPrompt(e.target.value);
-                  localStorage.setItem("lastPrompt", e.target.value);
+                onChange={(value, isValid) => {
+                  setPrompt(value);
+                  setPromptIsValid(isValid);
+                  localStorage.setItem("lastPrompt", value);
                 }}
                 className="max-h-[400px] min-h-[76px] bg-secondary pl-1 focus-visible:ring-0 focus-visible:ring-offset-0"
               />

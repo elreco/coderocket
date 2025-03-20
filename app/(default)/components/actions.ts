@@ -13,6 +13,8 @@ import {
   getMaxMessagesPerPeriod,
   getExtraMessagesCount,
   decrementExtraMessagesCount,
+  MAX_TOKENS_PER_REQUEST,
+  CHAR_PER_TOKEN,
 } from "@/utils/config";
 import { formatToTimestamp } from "@/utils/date";
 import { defaultArtifactCode } from "@/utils/default-artifact-code";
@@ -202,6 +204,17 @@ export const createChat = async (prompt: string, formData: FormData) => {
       error: {
         title: "You must be logged in to create a component",
         description: "Please login or create an account to continue.",
+      },
+    };
+  }
+
+  const MAX_PROMPT_CHARS = MAX_TOKENS_PER_REQUEST * CHAR_PER_TOKEN;
+
+  if (prompt.length > MAX_PROMPT_CHARS) {
+    return {
+      error: {
+        title: "Prompt is too long",
+        description: `Your prompt exceeds the limit of ${MAX_PROMPT_CHARS} characters (approximately ${MAX_TOKENS_PER_REQUEST} tokens). Please shorten it to continue.`,
       },
     };
   }

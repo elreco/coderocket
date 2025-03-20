@@ -26,6 +26,7 @@ import {
   getMaxMessagesPerPeriod,
   storageUrl,
   MAX_TOKENS_PER_REQUEST,
+  CHAR_PER_TOKEN,
 } from "@/utils/config";
 // import { promptEnhancer } from "@/utils/prompt-enhancer";
 import { formatToTimestamp } from "@/utils/date";
@@ -175,6 +176,18 @@ const validateRequest = async (
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) throw new Error("Could not get user");
+
+  // Validation de la longueur du prompt
+  if (prompt) {
+    const MAX_PROMPT_CHARS = MAX_TOKENS_PER_REQUEST * CHAR_PER_TOKEN;
+
+    if (prompt.length > MAX_PROMPT_CHARS) {
+      throw new Error(
+        `Votre prompt dépasse la limite de ${MAX_PROMPT_CHARS} caractères (environ ${MAX_TOKENS_PER_REQUEST} tokens). Veuillez le raccourcir pour continuer.`,
+      );
+    }
+  }
+
   // Fetch chat data
   const chat = await fetchChatById(id);
   if (!chat) throw new Error("Could not get chat data");
