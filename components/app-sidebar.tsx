@@ -17,7 +17,6 @@ import { getNotification } from "@/app/(default)/actions";
 import { getUserDetails } from "@/app/supabase-client";
 import { NavMain } from "@/components/nav-main";
 import { NavUser } from "@/components/nav-user";
-import { Badge } from "@/components/ui/badge";
 import {
   Sidebar,
   SidebarContent,
@@ -43,16 +42,6 @@ const data = {
       title: "Browse Components",
       url: "/components",
       icon: Globe,
-      // items: [
-      //   {
-      //     title: "React Components",
-      //     url: "/components/react",
-      //   },
-      //   {
-      //     title: "HTML Components",
-      //     url: "/components",
-      //   },
-      // ],
     },
   ],
   myComponents: [
@@ -60,6 +49,18 @@ const data = {
       title: "My Components",
       url: "/account/components",
       icon: SquareUserRoundIcon,
+    },
+  ],
+  community: [
+    {
+      title: "Discord",
+      url: discordLink,
+      icon: SiDiscord,
+    },
+    {
+      title: "Changelog",
+      url: "/changelog",
+      icon: Rocket,
     },
   ],
   navMain: [
@@ -77,23 +78,6 @@ const data = {
       title: "Pricing",
       url: "/pricing",
       icon: CreditCard,
-    },
-    {
-      title: (
-        <div className="flex items-center gap-2">
-          Discord
-          <Badge variant="secondary" className="h-5 text-primary">
-            New
-          </Badge>
-        </div>
-      ),
-      url: discordLink,
-      icon: SiDiscord,
-    },
-    {
-      title: "Changelog",
-      url: "/changelog",
-      icon: Rocket,
     },
   ],
 };
@@ -149,17 +133,23 @@ export function AppSidebar({
     isActive: pathname === item.url,
   }));
 
-  const navComponentsItems = data.navComponents.map((item) => ({
+  const allComponentsItems = [
+    ...data.navComponents.map((item) => ({
+      ...item,
+      isActive: pathname === item.url,
+    })),
+    ...(user
+      ? data.myComponents.map((item) => ({
+          ...item,
+          isActive: pathname === item.url,
+        }))
+      : []),
+  ];
+
+  const communityItems = data.community.map((item) => ({
     ...item,
     isActive: pathname === item.url,
   }));
-
-  const myComponentsItems = user
-    ? data.myComponents.map((item) => ({
-        ...item,
-        isActive: pathname === item.url,
-      }))
-    : [];
 
   const { open, setOpenMobile } = useSidebar();
 
@@ -195,8 +185,8 @@ export function AppSidebar({
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={navMainItems} label="Tailwind AI" />
-        <NavMain items={navComponentsItems} label="Public Components" />
-        {user && <NavMain items={myComponentsItems} label="My Components" />}
+        <NavMain items={allComponentsItems} label="Components" />
+        <NavMain items={communityItems} label="Community" />
       </SidebarContent>
       <SidebarFooter>
         {notification?.is_active && (
