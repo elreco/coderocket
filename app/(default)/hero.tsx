@@ -15,6 +15,10 @@ import { useRef, useState, useEffect, useCallback } from "react";
 
 import { Container } from "@/components/container";
 import { ImageSelector } from "@/components/image-selector";
+import {
+  TextareaWithLimit,
+  MAX_PROMPT_CHARS,
+} from "@/components/textarea-with-limit";
 import { AnimatedGridPattern } from "@/components/ui/animated-grid-pattern";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -33,10 +37,6 @@ import {
 } from "@/components/ui/sheet";
 import { Spotlight } from "@/components/ui/spotlight";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  TextareaWithLimit,
-  MAX_PROMPT_CHARS,
-} from "@/components/ui/textarea-with-limit";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { Framework } from "@/utils/config";
@@ -394,20 +394,6 @@ export default function Hero() {
                 }}
                 className="max-h-[400px] min-h-[76px] bg-secondary pl-1 focus-visible:ring-0 focus-visible:ring-offset-0"
               />
-              {prompt && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-2 top-2 size-6 p-0"
-                  onClick={() => {
-                    setPrompt("");
-                    localStorage.removeItem("lastPrompt");
-                  }}
-                >
-                  <XIcon className="size-4" />
-                  <span className="sr-only">Clear input</span>
-                </Button>
-              )}
             </div>
           </div>
           <div

@@ -1,10 +1,13 @@
 "use client";
 
+import { XIcon } from "lucide-react";
 import * as React from "react";
 
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { MAX_TOKENS_PER_REQUEST, CHAR_PER_TOKEN } from "@/utils/config";
+
+import { Button } from "./ui/button";
 
 /**
  * Taille maximale d'un prompt utilisateur en nombre de caractères
@@ -97,7 +100,7 @@ const TextareaWithLimit = React.forwardRef<
     };
 
     return (
-      <div className="mb-1 w-full space-y-1">
+      <div className="relative mb-1 w-full space-y-1">
         <Textarea
           ref={ref}
           className={className}
@@ -118,6 +121,19 @@ const TextareaWithLimit = React.forwardRef<
               {valueLength} / {maxLength}
             </span>
           </div>
+        )}
+        {value && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="absolute right-0.5 top-0.5 size-6 p-0"
+            onClick={() => {
+              onChange?.("", true);
+            }}
+          >
+            <XIcon className="size-4" />
+            <span className="sr-only">Clear input</span>
+          </Button>
         )}
       </div>
     );

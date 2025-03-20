@@ -12,14 +12,14 @@ import Image from "next/image";
 import { useEffect, useState, useRef } from "react";
 
 import { ImageSelector } from "@/components/image-selector";
+import {
+  TextareaWithLimit,
+  MAX_PROMPT_CHARS,
+} from "@/components/textarea-with-limit";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  TextareaWithLimit,
-  MAX_PROMPT_CHARS,
-} from "@/components/ui/textarea-with-limit";
 import {
   Tooltip,
   TooltipContent,
