@@ -338,7 +338,7 @@ export default function ComponentSidebar({
                           "rounded-lg border bg-background p-4 shadow-sm",
                           m.version === selectedVersion
                             ? "cursor-default hover:bg-background"
-                            : loadingState && loadingState !== "error"
+                            : isLoading
                               ? "cursor-not-allowed opacity-70"
                               : "cursor-pointer hover:bg-secondary",
                         )}
@@ -380,7 +380,7 @@ export default function ComponentSidebar({
                         </p>
                       </div>
                     </TooltipTrigger>
-                    {loadingState && loadingState !== "error" && (
+                    {isLoading && (
                       <TooltipContent side="top">
                         <p>
                           Please wait for the component to load before changing
