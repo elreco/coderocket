@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Database } from "@/types_db";
 import {
+  FREE_CHAR_LIMIT,
+  PREMIUM_CHAR_LIMIT,
   PRO_PLAN_MESSAGES_PER_PERIOD,
   STARTER_PLAN_MESSAGES_PER_PERIOD,
   TRIAL_PLAN_MESSAGES_PER_MONTH,
@@ -142,8 +144,13 @@ export default function Pricing({ user, products, subscription }: Props) {
                 {TRIAL_PLAN_MESSAGES_PER_MONTH / 2} versions per month
               </p>
               <p className="mt-4 flex items-center text-sm font-medium ">
+                <Check className="mr-2 size-4 text-emerald-500" />{" "}
+                {FREE_CHAR_LIMIT} characters limit per prompt
+              </p>
+              <p className="mt-4 flex items-center text-sm font-medium ">
                 <XIcon className="mr-2 size-4 text-border" /> Improve prompt
               </p>
+
               <p className="mt-4 flex items-center text-sm font-medium ">
                 <XIcon className="mr-2 size-4 text-border" /> Generate with
                 Image
@@ -259,6 +266,10 @@ export default function Pricing({ user, products, subscription }: Props) {
                     <p className="mt-4 flex items-center text-sm font-medium ">
                       <Check className="mr-2 size-4 text-emerald-500" /> Improve
                       prompt
+                    </p>
+                    <p className="mt-4 flex items-center text-sm font-medium ">
+                      <Check className="mr-2 size-4 text-emerald-500" />{" "}
+                      {PREMIUM_CHAR_LIMIT} characters limit per prompt
                     </p>
                     <p className="mt-4 flex items-center text-sm font-medium ">
                       <Check className="mr-2 size-4 text-emerald-500" />
