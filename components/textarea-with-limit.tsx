@@ -140,17 +140,29 @@ const TextareaWithLimit = React.forwardRef<
               to get {PREMIUM_CHAR_LIMIT} characters!
             </p>
           )}
-          {showCounter && !isLoadingSubscription && (
-            <span
-              className={cn(
-                "text-xs ml-auto",
-                valueLength > characterLimit
-                  ? "text-destructive font-medium"
-                  : "text-muted-foreground",
+          {showCounter && !isLoadingSubscription && isLoggedIn && (
+            <>
+              {/* Cas 1: Utilisateur abonné (affichage dans tous les cas) */}
+              {subscription && (
+                <span
+                  className={cn(
+                    "text-xs ml-auto",
+                    valueLength > characterLimit
+                      ? "text-destructive font-medium"
+                      : "text-muted-foreground",
+                  )}
+                >
+                  {valueLength} / {characterLimit}
+                </span>
               )}
-            >
-              {valueLength} / {characterLimit}
-            </span>
+
+              {/* Cas 3: Utilisateur sans abonnement (affichage seulement si dépassement) */}
+              {!subscription && valueLength > characterLimit && (
+                <span className="ml-auto text-xs font-medium text-destructive">
+                  {valueLength} / {characterLimit}
+                </span>
+              )}
+            </>
           )}
         </div>
         {value && (
