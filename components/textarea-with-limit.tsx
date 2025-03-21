@@ -42,6 +42,10 @@ export interface TextareaWithLimitProps
    * Indique si le chargement de l'abonnement est en cours
    */
   isLoadingSubscription?: boolean;
+  /**
+   * Indique si l'utilisateur est connecté
+   */
+  isLoggedIn?: boolean;
 }
 
 /**
@@ -81,6 +85,7 @@ const TextareaWithLimit = React.forwardRef<
       value,
       subscription,
       isLoadingSubscription = false,
+      isLoggedIn,
       ...props
     },
     ref,
@@ -121,7 +126,7 @@ const TextareaWithLimit = React.forwardRef<
           {...props}
         />
         <div className="flex items-center justify-between">
-          {!isLoadingSubscription && !subscription && (
+          {!isLoadingSubscription && !subscription && isLoggedIn && (
             <p className="text-xs text-muted-foreground">
               <span className="font-medium text-yellow-600">
                 Limit: {FREE_CHAR_LIMIT} characters.

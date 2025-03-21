@@ -38,6 +38,7 @@ import {
 } from "@/utils/completion-parser";
 import { avatarApi, Framework, maxImageSize, storageUrl } from "@/utils/config";
 import { getRelativeDate } from "@/utils/date";
+import { createClient } from "@/utils/supabase/client";
 
 import ComponentTheme from "./(settings)/component-theme";
 import { improvePromptByChatId } from "./actions";
@@ -80,6 +81,7 @@ export default function ComponentSidebar({
   const [files, setFiles] = useState<ChatFile[]>([]);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [inputIsValid, setInputIsValid] = useState(true);
   const [subscription, setSubscription] = useState<
     | (Tables<"subscriptions"> & {
@@ -109,8 +111,11 @@ export default function ComponentSidebar({
   useEffect(() => {
     // Charger le statut de l'abonnement au chargement du composant
     const fetchSubscription = async () => {
+      const supabase = await createClient();
       try {
         setIsLoadingSubscription(true);
+        const { data } = await supabase.auth.getUser();
+        setIsLoggedIn(!!data?.user?.id);
         const sub = await getSubscription();
         setSubscription(sub);
       } catch (error) {
@@ -580,6 +585,7 @@ export default function ComponentSidebar({
                 }}
                 subscription={subscription}
                 isLoadingSubscription={isLoadingSubscription}
+                isLoggedIn={isLoggedIn}
                 showCounter={true}
                 minLength={2}
                 placeholder="Add a button, modify a div..."

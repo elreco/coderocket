@@ -106,6 +106,7 @@ export default function Hero() {
     | null
   >(null);
   const [isLoadingSubscription, setIsLoadingSubscription] = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
     if (inputRef.current) {
@@ -162,6 +163,8 @@ export default function Hero() {
     const fetchSubscription = async () => {
       try {
         setIsLoadingSubscription(true);
+        const { data } = await supabase.auth.getUser();
+        setIsLoggedIn(!!data?.user?.id);
         const sub = await getSubscription();
         setSubscription(sub);
       } catch (error) {
@@ -398,6 +401,7 @@ export default function Hero() {
                 required
                 value={prompt}
                 showCounter={true}
+                isLoggedIn={isLoggedIn}
                 onKeyDown={(event) => {
                   if (event.key === "Enter") {
                     if (event.shiftKey) {
