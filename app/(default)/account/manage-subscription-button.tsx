@@ -19,7 +19,8 @@ export default function ManageSubscriptionButton() {
   };
 
   return (
-    <div className="flex w-full flex-col items-start justify-between sm:flex-row sm:items-center">
+    <div className="flex w-full flex-col items-start justify-between space-x-2 sm:flex-row sm:items-center">
+      <Button onClick={redirectToCustomerPortal}>Manage billing</Button>
       <Button onClick={redirectToCustomerPortal}>Upgrade your plan</Button>
     </div>
   );

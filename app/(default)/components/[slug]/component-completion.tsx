@@ -296,8 +296,8 @@ export default function ComponentCompletion({
               description: (
                 <div>
                   <p>
-                    You have reached your limit of {maxMessagesPerPeriod}{" "}
-                    messages for this month (starting {currentPeriodFormatted}).
+                    You have reached your limit of {maxMessagesPerPeriod / 2}{" "}
+                    versions for this month (starting {currentPeriodFormatted}).
                     This limit will reset next month (
                     {format(resetDate, "d MMMM yyyy")}).
                   </p>
@@ -313,7 +313,7 @@ export default function ComponentCompletion({
                       variant="outline"
                       className="w-full"
                     >
-                      Buy extra messages ($2 each)
+                      Buy extra versions ($1 each)
                     </Button>
                   </div>
                 </div>
@@ -342,9 +342,9 @@ export default function ComponentCompletion({
             description: (
               <div>
                 <p>
-                  You have reached your limit of {maxMessagesPerPeriod} messages
-                  for {subscription.prices?.interval}. This limit will reset on{" "}
-                  {resetDate}.
+                  You have reached your limit of {maxMessagesPerPeriod / 2}
+                  versions for {subscription.prices?.interval}. This limit will
+                  reset on {resetDate}.
                 </p>
                 <div className="mt-2 flex flex-col space-y-2">
                   <Button
@@ -358,7 +358,7 @@ export default function ComponentCompletion({
                     variant="outline"
                     className="w-full"
                   >
-                    Buy extra messages ($2 each)
+                    Buy extra versions ($1 each)
                   </Button>
                 </div>
               </div>

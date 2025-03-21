@@ -19,13 +19,17 @@ export function BuyExtraMessages() {
 
   // Vérifier si l'utilisateur vient d'acheter des messages supplémentaires
   const extraMessages = searchParams.get("extra_messages");
+  const versions = searchParams.get("versions");
 
   // Afficher un toast si l'utilisateur vient d'acheter des messages supplémentaires
   if (extraMessages) {
     toast({
       title: "Purchase successful!",
-      description: `You have successfully purchased ${extraMessages} extra message${
-        parseInt(extraMessages) > 1 ? "s" : ""
+      description: `You have successfully purchased ${versions || Math.ceil(parseInt(extraMessages) / 2)} extra version${
+        (versions && parseInt(versions) > 1) ||
+        (!versions && Math.ceil(parseInt(extraMessages) / 2) > 1)
+          ? "s"
+          : ""
       }.`,
       duration: 5000,
     });
@@ -53,12 +57,10 @@ export function BuyExtraMessages() {
   const handlePurchase = async () => {
     setIsLoading(true);
     try {
-      // Calculate actual message quantity (2 messages per pair)
-      const messageQuantity = pairs * 2;
-
+      // Send the number of versions to purchase directly
       const data = await postData({
         url: "/api/purchase-extra-message",
-        data: { quantity: messageQuantity },
+        data: { quantity: pairs },
       });
 
       if (data.sessionUrl) {
@@ -77,16 +79,13 @@ export function BuyExtraMessages() {
     }
   };
 
-  // Calculate total messages and price
-  const totalMessages = pairs * 2;
-  const totalPrice = pairs * 2;
+  // Calculate price
+  const totalPrice = pairs;
 
   return (
     <Card className="w-full rounded-md border bg-card p-5">
-      <h3 className="mb-1 text-2xl font-medium">Buy Extra Messages</h3>
-      <p className="mb-4">
-        Need more messages? Purchase messages in pairs for $2 per pair.
-      </p>
+      <h3 className="mb-1 text-2xl font-medium">Buy Extra Versions</h3>
+      <p className="mb-4">Need more versions? Purchase versions for $1 each.</p>
 
       <div className="mb-6 flex flex-col space-y-4">
         <div className="flex items-center space-x-4">
@@ -112,19 +111,19 @@ export function BuyExtraMessages() {
           </Button>
 
           <div className="ml-4 text-lg font-medium">
-            ${totalPrice.toFixed(2)} for {totalMessages} messages
+            ${totalPrice.toFixed(2)} for {pairs} versions
           </div>
         </div>
 
         <Button onClick={handlePurchase} className="w-1/2" loading={isLoading}>
           <ShoppingCart className="mr-2 size-4" />
-          Purchase {totalMessages} Messages
+          Purchase {pairs} Versions
         </Button>
       </div>
 
       <div className="text-sm text-muted-foreground">
         <p>
-          Extra messages never expire and can be used anytime you reach your
+          Extra versions never expire and can be used anytime you reach your
           plan&apos;s limit.
         </p>
       </div>

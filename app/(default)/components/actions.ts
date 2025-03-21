@@ -282,7 +282,7 @@ export const createChat = async (prompt: string, formData: FormData) => {
           return {
             error: {
               title: "Daily message limit reached",
-              description: `You have reached your limit of ${TRIAL_PLAN_MESSAGES_PER_MONTH} messages for this month. Your limit will reset next month (${format(
+              description: `You have reached your limit of ${TRIAL_PLAN_MESSAGES_PER_MONTH / 2} versions for this month. Your limit will reset next month (${format(
                 resetDate,
                 "d MMMM yyyy",
               )}). Upgrade to a paid plan or purchase extra messages to continue.`,
@@ -299,7 +299,7 @@ export const createChat = async (prompt: string, formData: FormData) => {
         return {
           error: {
             title: "Daily message limit reached",
-            description: `You have reached your limit of ${TRIAL_PLAN_MESSAGES_PER_MONTH} messages for this month. Your limit will reset next month (${format(
+            description: `You have reached your limit of ${TRIAL_PLAN_MESSAGES_PER_MONTH / 2} versions for this month. Your limit will reset next month (${format(
               resetDate,
               "d MMMM yyyy",
             )}). Upgrade to a paid plan or purchase extra messages to continue.`,
@@ -348,7 +348,7 @@ export const createChat = async (prompt: string, formData: FormData) => {
           return {
             error: {
               title: "You have reached the limit of your plan",
-              description: `You have reached your limit of ${maxMessagesPerPeriod} messages for this ${subscription.prices?.interval}. This limit will reset on ${resetDate}. Go to My Account to see your usage or purchase extra messages.`,
+              description: `You have reached your limit of ${maxMessagesPerPeriod / 2} versions for this ${subscription.prices?.interval}. This limit will reset on ${resetDate}. Go to My Account to see your usage or purchase extra messages.`,
             },
           };
         }
@@ -365,7 +365,7 @@ export const createChat = async (prompt: string, formData: FormData) => {
         return {
           error: {
             title: "You have reached the limit of your plan",
-            description: `You have reached your limit of ${maxMessagesPerPeriod} messages for this ${subscription.prices?.interval}. This limit will reset on ${resetDate}. Go to My Account to see your usage or purchase extra messages.`,
+            description: `You have reached your limit of ${maxMessagesPerPeriod / 2} versions for this ${subscription.prices?.interval}. This limit will reset on ${resetDate}. Go to My Account to see your usage or purchase extra messages.`,
           },
         };
       }

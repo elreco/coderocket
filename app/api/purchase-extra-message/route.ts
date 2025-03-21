@@ -4,8 +4,11 @@ import { createOrRetrieveCustomer } from "@/utils/supabase-admin";
 
 export async function POST(req: Request) {
   if (req.method === "POST") {
-    // Get the quantity of messages to purchase (default 1)
+    // Get the number of versions to purchase (default 1)
     const { quantity = 1 } = await req.json();
+
+    // Calculate the actual number of messages (1 version = 2 messages)
+    const messageQuantity = quantity * 2;
 
     try {
       // Get the user from Supabase auth
@@ -29,8 +32,8 @@ export async function POST(req: Request) {
         email: user.email || "",
       });
 
-      // Fixed price for an additional message (2 dollars = 200 cents)
-      const unit_amount = 200;
+      // Fixed price for an additional version (1 dollar = 100 cents)
+      const unit_amount = 100;
 
       // Create a payment session in Stripe
       const session = await stripe.checkout.sessions.create({
@@ -44,8 +47,8 @@ export async function POST(req: Request) {
             price_data: {
               currency: "usd",
               product_data: {
-                name: "Additional Message",
-                description: `Purchase of ${quantity} additional message${quantity > 1 ? "s" : ""}`,
+                name: "Additional Version",
+                description: `Purchase of ${quantity} additional version${quantity > 1 ? "s" : ""}`,
               },
               unit_amount: unit_amount,
             },
@@ -54,11 +57,12 @@ export async function POST(req: Request) {
         ],
         mode: "payment",
         allow_promotion_codes: true,
-        success_url: `https://www.tailwindai.dev/account?extra_messages=${quantity}`,
+        success_url: `https://www.tailwindai.dev/account?extra_messages=${messageQuantity}&versions=${quantity}`,
         cancel_url: `https://www.tailwindai.dev/`,
         metadata: {
           userId: user.id,
-          extraMessages: quantity.toString(),
+          extraMessages: messageQuantity.toString(),
+          versions: quantity.toString(),
         },
       });
 

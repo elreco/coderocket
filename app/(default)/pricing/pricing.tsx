@@ -139,7 +139,7 @@ export default function Pricing({ user, products, subscription }: Props) {
               </p>
               <p className="mt-4 flex items-center text-sm font-medium ">
                 <Check className="mr-2 size-4 text-emerald-500" />{" "}
-                {TRIAL_PLAN_MESSAGES_PER_MONTH} messages per month
+                {TRIAL_PLAN_MESSAGES_PER_MONTH / 2} versions per month
               </p>
               <p className="mt-4 flex items-center text-sm font-medium ">
                 <XIcon className="mr-2 size-4 text-border" /> Improve prompt
@@ -262,10 +262,10 @@ export default function Pricing({ user, products, subscription }: Props) {
                     </p>
                     <p className="mt-4 flex items-center text-sm font-medium ">
                       <Check className="mr-2 size-4 text-emerald-500" />
-                      {product.name === "Starter"
+                      {(product.name === "Starter"
                         ? STARTER_PLAN_MESSAGES_PER_PERIOD
-                        : PRO_PLAN_MESSAGES_PER_PERIOD}{" "}
-                      messages per month
+                        : PRO_PLAN_MESSAGES_PER_PERIOD) / 2}{" "}
+                      versions per month
                     </p>
 
                     {product.name === "Starter" ? (
@@ -316,10 +316,10 @@ export default function Pricing({ user, products, subscription }: Props) {
         {/* Section pour l'achat de messages supplémentaires */}
         <div className="mt-12 w-full max-w-2xl">
           <div className="rounded-lg border bg-card p-6">
-            <h3 className="mb-2 text-xl font-bold">Need More Messages?</h3>
+            <h3 className="mb-2 text-xl font-bold">Need More Versions?</h3>
             <p className="mb-4">
               If you&apos;ve reached your plan&apos;s limit, you can purchase
-              extra messages for $2 each. These messages never expire and can be
+              extra versions for $1 each. These versions never expire and can be
               used anytime you need them.
             </p>
             <Button
@@ -327,7 +327,7 @@ export default function Pricing({ user, products, subscription }: Props) {
               variant="background"
               className="w-full"
             >
-              Buy Extra Messages
+              Buy Extra Versions
             </Button>
           </div>
         </div>

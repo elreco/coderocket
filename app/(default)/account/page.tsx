@@ -127,7 +127,7 @@ export default async function Account() {
         title="My Account"
         subtitle="Manage your account and billing."
       />
-      <div className="mb-4 grid grid-cols-1 gap-x-4 md:grid-cols-2">
+      <div className="mb-4 grid grid-cols-1 gap-4 xl:grid-cols-2">
         <Card
           title="Your Plan"
           description={
@@ -166,10 +166,10 @@ export default async function Account() {
                 <>
                   <li className="flex items-center text-sm">
                     <Check className="mr-2 size-4 text-emerald-500" />
-                    {subscription?.prices?.products?.name === "Starter"
+                    {(subscription?.prices?.products?.name === "Starter"
                       ? STARTER_PLAN_MESSAGES_PER_PERIOD
-                      : PRO_PLAN_MESSAGES_PER_PERIOD}{" "}
-                    messages per month
+                      : PRO_PLAN_MESSAGES_PER_PERIOD) / 2}{" "}
+                    versions per month
                   </li>
                   <li className="flex items-center text-sm">
                     <Check className="mr-2 size-4 text-emerald-500" />
@@ -196,9 +196,8 @@ export default async function Account() {
                 <>
                   <li className="flex items-center text-sm">
                     <Check className="mr-2 size-4 text-emerald-500" />
-                    {
-                      TRIAL_PLAN_MESSAGES_PER_MONTH
-                    } messages per month
+                    {TRIAL_PLAN_MESSAGES_PER_MONTH /
+                      2} versions per month
                   </li>
                   <li className="flex items-center text-sm">
                     <XIcon className="mr-2 size-4 text-border" />
@@ -268,7 +267,7 @@ export default async function Account() {
           </form>
         </Card>
       </div>
-      <div className="grid grid-cols-1 gap-x-4 pb-10 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 pb-10 xl:grid-cols-2">
         {/* Composant pour acheter des messages supplémentaires */}
         <Card
           title="Usage"
@@ -299,10 +298,10 @@ export default async function Account() {
               {extraMessages > 0 && (
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">
-                    Extra messages available
+                    Extra versions available
                   </span>
                   <span className="font-medium text-emerald-500">
-                    {extraMessages}
+                    {Math.ceil(extraMessages / 2)}
                   </span>
                 </div>
               )}
