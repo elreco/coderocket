@@ -5,6 +5,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { getClientIp } from "@/utils/client-ip";
+import { MAX_ACCOUNTS_PER_IP } from "@/utils/config";
 import { isTemporaryEmailDomain, normalizeEmail } from "@/utils/helpers";
 import { createClient } from "@/utils/supabase/server";
 import { createOrRetrieveCustomer } from "@/utils/supabase-admin";
@@ -60,14 +61,12 @@ export async function register(formData: FormData) {
       .select("id")
       .eq("ip_address", clientIp);
 
-    const maxAccountsPerIp = parseInt(
-      process.env.MAX_ACCOUNTS_PER_IP || "3",
-      10,
-    );
-
     if (ipLookupError) {
       console.error("Error checking IP:", ipLookupError);
-    } else if (usersWithSameIp && usersWithSameIp.length >= maxAccountsPerIp) {
+    } else if (
+      usersWithSameIp &&
+      usersWithSameIp.length >= MAX_ACCOUNTS_PER_IP
+    ) {
       return {
         error:
           "Too many accounts have been created from this IP address. Please contact support.",
@@ -149,15 +148,10 @@ export async function signInWithOAuth(provider: Provider) {
       .select("id")
       .eq("ip_address", clientIp);
 
-    const maxAccountsPerIp = parseInt(
-      process.env.MAX_ACCOUNTS_PER_IP || "3",
-      10,
-    );
-
     if (
       !ipLookupError &&
       usersWithSameIp &&
-      usersWithSameIp.length >= maxAccountsPerIp
+      usersWithSameIp.length >= MAX_ACCOUNTS_PER_IP
     ) {
       redirect(
         "/login?error=Too many accounts have been created from this IP address. Please contact support.",

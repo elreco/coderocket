@@ -15,7 +15,7 @@ BEGIN
 
   -- Si plus de 3 comptes utilisent la même IP, bloquer l'inscription
   -- Vous pouvez ajuster ce nombre selon vos besoins
-  IF ip_count >= 3 THEN
+  IF ip_count >= 1 THEN
     RAISE EXCEPTION 'Too many accounts created with this IP address.';
   END IF;
 

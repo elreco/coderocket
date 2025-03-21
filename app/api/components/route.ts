@@ -4,10 +4,12 @@ import { after } from "next/server";
 
 import { buildComponent } from "@/app/(default)/components/[slug]/actions";
 import {
+  decrementExtraMessagesCount,
   fetchChatById,
   fetchLastUserMessageByChatId,
   fetchMessagesByChatId,
   fetchUserMessageByChatIdAndVersion,
+  getExtraMessagesCount,
 } from "@/app/(default)/components/actions";
 import { getSubscription } from "@/app/supabase-server";
 import { Tables } from "@/types_db";
@@ -21,8 +23,6 @@ import {
   Framework,
   TRIAL_PLAN_MESSAGES_PER_MONTH,
   anthropicModel,
-  decrementExtraMessagesCount,
-  getExtraMessagesCount,
   getMaxMessagesPerPeriod,
   storageUrl,
   MAX_TOKENS_PER_REQUEST,
