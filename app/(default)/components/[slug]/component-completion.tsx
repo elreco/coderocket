@@ -881,9 +881,6 @@ export default function ComponentCompletion({
                         className="flex items-center gap-2"
                       >
                         <GitFork className="w-5" />
-                        <Badge className="hidden hover:bg-primary md:block">
-                          New
-                        </Badge>
                       </Button>
                     </span>
                   </TooltipTrigger>

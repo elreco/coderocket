@@ -44,6 +44,67 @@ export const toDateTime = (secs: number) => {
   return t;
 };
 
+// Fonction pour normaliser un email (supprime les points et tout après + dans Gmail)
+export function normalizeEmail(email: string): string {
+  if (!email) return "";
+
+  const [localPart, domain] = email.toLowerCase().split("@");
+
+  // Pour les emails Gmail, Google ignore les points et tout ce qui suit +
+  if (domain === "gmail.com" || domain === "googlemail.com") {
+    // Supprimer les points et tout ce qui suit un +
+    const normalizedLocal = localPart.replace(/\./g, "").split("+")[0];
+    return `${normalizedLocal}@${domain}`;
+  }
+
+  return email.toLowerCase();
+}
+
+// Liste des domaines d'emails temporaires courants
+export function isTemporaryEmailDomain(email: string): boolean {
+  const temporaryDomains = [
+    "mailinator.com",
+    "temp-mail.org",
+    "guerrillamail.com",
+    "sharklasers.com",
+    "yopmail.com",
+    "10minutemail.com",
+    "tempmail.com",
+    "temp-mail.ru",
+    "dispostable.com",
+    "mailnesia.com",
+    "mailinator.net",
+    "trashmail.com",
+    "wegwerfmail.de",
+    "fakeinbox.com",
+    "tempinbox.com",
+    "mintemail.com",
+    "throwawaymail.com",
+    "spambox.us",
+    "getairmail.com",
+    "spamgourmet.com",
+    "mailcatch.com",
+    "tempemail.net",
+    "tempmail.net",
+    "spambog.com",
+    "mytrashmail.com",
+    "anonbox.net",
+    "kasmail.com",
+    "spammotel.com",
+    "mailforspam.com",
+    "tempmail.it",
+    "getnada.com",
+    "emailondeck.com",
+    "mohmal.com",
+    "tempr.email",
+  ];
+
+  if (!email) return false;
+
+  const domain = email.split("@")[1].toLowerCase();
+  return temporaryDomains.includes(domain);
+}
+
 export const capitalizeFirstLetter = (string: string, maxLength?: number) => {
   if (!string) return "";
   let formattedString =
