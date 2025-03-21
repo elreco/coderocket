@@ -12,7 +12,7 @@ import {
   defaultTheme,
   getMaxMessagesPerPeriod,
   MAX_TOKENS_PER_REQUEST,
-  CHAR_PER_TOKEN,
+  PREMIUM_CHAR_LIMIT,
 } from "@/utils/config";
 import { formatToTimestamp } from "@/utils/date";
 import { defaultArtifactCode } from "@/utils/default-artifact-code";
@@ -206,13 +206,11 @@ export const createChat = async (prompt: string, formData: FormData) => {
     };
   }
 
-  const MAX_PROMPT_CHARS = MAX_TOKENS_PER_REQUEST * CHAR_PER_TOKEN;
-
-  if (prompt.length > MAX_PROMPT_CHARS) {
+  if (prompt.length > PREMIUM_CHAR_LIMIT) {
     return {
       error: {
         title: "Prompt is too long",
-        description: `Your prompt exceeds the limit of ${MAX_PROMPT_CHARS} characters (approximately ${MAX_TOKENS_PER_REQUEST} tokens). Please shorten it to continue.`,
+        description: `Your prompt exceeds the limit of ${PREMIUM_CHAR_LIMIT} characters (approximately ${MAX_TOKENS_PER_REQUEST} tokens). Please shorten it to continue.`,
       },
     };
   }

@@ -11,11 +11,9 @@ import {
 import Image from "next/image";
 import { useEffect, useState, useRef } from "react";
 
+import { getSubscription } from "@/app/supabase-server";
 import { ImageSelector } from "@/components/image-selector";
-import {
-  TextareaWithLimit,
-  MAX_PROMPT_CHARS,
-} from "@/components/textarea-with-limit";
+import { TextareaWithLimit } from "@/components/textarea-with-limit";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -30,6 +28,7 @@ import { UserWidget } from "@/components/user-widget";
 import { useComponentContext } from "@/context/component-context";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { Tables } from "@/types_db";
 import {
   ChatFile,
   ContentChunk,
@@ -82,6 +81,13 @@ export default function ComponentSidebar({
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
   const [inputIsValid, setInputIsValid] = useState(true);
+  const [subscription, setSubscription] = useState<
+    | (Tables<"subscriptions"> & {
+        prices: Partial<Tables<"prices">> | null;
+      })
+    | null
+  >(null);
+  const [isLoadingSubscription, setIsLoadingSubscription] = useState(true);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -99,6 +105,23 @@ export default function ComponentSidebar({
     }, 500);
     return () => clearTimeout(timer);
   }, [messages]);
+
+  useEffect(() => {
+    // Charger le statut de l'abonnement au chargement du composant
+    const fetchSubscription = async () => {
+      try {
+        setIsLoadingSubscription(true);
+        const sub = await getSubscription();
+        setSubscription(sub);
+      } catch (error) {
+        console.error("Error fetching subscription:", error);
+      } finally {
+        setIsLoadingSubscription(false);
+      }
+    };
+
+    fetchSubscription();
+  }, []);
 
   const submitPrompt = (promptText: string) => {
     handleSubmitToAI(promptText);
@@ -125,7 +148,7 @@ export default function ComponentSidebar({
       toast({
         variant: "destructive",
         title: "Prompt is too long",
-        description: `Your prompt exceeds the limit of ${MAX_PROMPT_CHARS} characters. Please shorten it to continue.`,
+        description: `Your prompt exceeds the character limit. Please shorten it to continue.`,
         duration: 4000,
       });
       return;
@@ -555,6 +578,8 @@ export default function ComponentSidebar({
                   setInput(value);
                   setInputIsValid(isValid);
                 }}
+                subscription={subscription}
+                isLoadingSubscription={isLoadingSubscription}
                 showCounter={true}
                 minLength={2}
                 placeholder="Add a button, modify a div..."

@@ -5,30 +5,19 @@ import * as React from "react";
 
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { MAX_TOKENS_PER_REQUEST, CHAR_PER_TOKEN } from "@/utils/config";
+import { Tables } from "@/types_db";
+import {
+  FREE_CHAR_LIMIT,
+  PREMIUM_CHAR_LIMIT,
+  getCharacterLimit,
+} from "@/utils/config";
 
 import { Button } from "./ui/button";
-
-/**
- * Taille maximale d'un prompt utilisateur en nombre de caractères
- * Cette valeur est calculée à partir de la limite de tokens définie dans la configuration
- * En pratique, cette limite permet:
- * - D'éviter des coûts excessifs liés aux tokens
- * - De laisser suffisamment d'espace pour la réponse du modèle
- * - De permettre à l'utilisateur d'inclure du code ou des instructions détaillées
- *
- * Avec MAX_TOKENS_PER_REQUEST = 6000 et CHAR_PER_TOKEN = 4, cela donne 24000 caractères,
- * ce qui représente environ:
- * - 12 pages Word standard
- * - 300-500 lignes de code
- * - Un article de blog complet
- */
-export const MAX_PROMPT_CHARS = MAX_TOKENS_PER_REQUEST * CHAR_PER_TOKEN;
 
 export interface TextareaWithLimitProps
   extends Omit<React.TextareaHTMLAttributes<HTMLTextAreaElement>, "onChange"> {
   /**
-   * Limite maximale de caractères (par défaut: MAX_PROMPT_CHARS)
+   * Limite maximale de caractères (basée sur l'abonnement ou définie par maxLength)
    */
   maxLength?: number;
   /**
@@ -41,6 +30,18 @@ export interface TextareaWithLimitProps
    * @param isValid Indique si la valeur respecte la limite de caractères
    */
   onChange?: (value: string, isValid: boolean) => void;
+  /**
+   * Abonnement de l'utilisateur, utilisé pour déterminer la limite de caractères
+   */
+  subscription?:
+    | (Tables<"subscriptions"> & {
+        prices: Partial<Tables<"prices">> | null;
+      })
+    | null;
+  /**
+   * Indique si le chargement de l'abonnement est en cours
+   */
+  isLoadingSubscription?: boolean;
 }
 
 /**
@@ -50,6 +51,8 @@ export interface TextareaWithLimitProps
  * - Un compteur de caractères
  * - Une validation de la limite de caractères
  * - Un retour d'information visuel et textuel lorsque la limite est dépassée
+ * - Un message d'upsell pour les utilisateurs non premium
+ * - Masquage des informations pendant le chargement de l'abonnement
  *
  * Exemple d'utilisation:
  * ```tsx
@@ -59,7 +62,8 @@ export interface TextareaWithLimitProps
  *     setPrompt(value);
  *     setIsValid(isValid);
  *   }}
- *   maxLength={10000}
+ *   subscription={subscription}
+ *   isLoadingSubscription={isLoadingSubscription}
  *   placeholder="Entrez votre prompt..."
  * />
  * ```
@@ -71,26 +75,34 @@ const TextareaWithLimit = React.forwardRef<
   (
     {
       className,
-      maxLength = MAX_PROMPT_CHARS,
+      maxLength,
       showCounter = true,
       onChange,
       value,
+      subscription,
+      isLoadingSubscription = false,
       ...props
     },
     ref,
   ) => {
+    // Déterminer la limite de caractères en fonction de l'abonnement
+    const characterLimit = React.useMemo(() => {
+      if (maxLength) return maxLength; // Si maxLength est spécifié, l'utiliser
+      return getCharacterLimit(subscription || null); // Sinon, calculer selon l'abonnement
+    }, [maxLength, subscription]);
+
     const [valueLength, setValueLength] = React.useState(0);
 
     React.useEffect(() => {
       if (typeof value === "string") {
         setValueLength(value.length);
       }
-    }, [value, maxLength]);
+    }, [value, characterLimit]);
 
     const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       const newValue = e.target.value;
       const newLength = newValue.length;
-      const newIsValid = newLength <= maxLength;
+      const newIsValid = newLength <= characterLimit;
 
       setValueLength(newLength);
 
@@ -108,20 +120,34 @@ const TextareaWithLimit = React.forwardRef<
           onChange={handleChange}
           {...props}
         />
-        {showCounter && (
-          <div className="flex justify-end">
+        <div className="flex items-center justify-between">
+          {!isLoadingSubscription && !subscription && (
+            <p className="text-xs text-muted-foreground">
+              <span className="font-medium text-yellow-600">
+                Limit: {FREE_CHAR_LIMIT} characters.
+              </span>{" "}
+              <a
+                href="/pricing"
+                className="text-primary underline hover:text-primary/80"
+              >
+                Upgrade to a paid plan
+              </a>{" "}
+              to get {PREMIUM_CHAR_LIMIT} characters!
+            </p>
+          )}
+          {showCounter && !isLoadingSubscription && (
             <span
               className={cn(
-                "text-xs",
-                valueLength > maxLength
+                "text-xs ml-auto",
+                valueLength > characterLimit
                   ? "text-destructive font-medium"
                   : "text-muted-foreground",
               )}
             >
-              {valueLength} / {maxLength}
+              {valueLength} / {characterLimit}
             </span>
-          </div>
-        )}
+          )}
+        </div>
         {value && (
           <Button
             variant="ghost"

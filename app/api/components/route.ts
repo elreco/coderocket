@@ -26,7 +26,7 @@ import {
   getMaxMessagesPerPeriod,
   storageUrl,
   MAX_TOKENS_PER_REQUEST,
-  CHAR_PER_TOKEN,
+  PREMIUM_CHAR_LIMIT,
 } from "@/utils/config";
 // import { promptEnhancer } from "@/utils/prompt-enhancer";
 import { formatToTimestamp } from "@/utils/date";
@@ -179,11 +179,9 @@ const validateRequest = async (
 
   // Validation de la longueur du prompt
   if (prompt) {
-    const MAX_PROMPT_CHARS = MAX_TOKENS_PER_REQUEST * CHAR_PER_TOKEN;
-
-    if (prompt.length > MAX_PROMPT_CHARS) {
+    if (prompt.length > PREMIUM_CHAR_LIMIT) {
       throw new Error(
-        `Votre prompt dépasse la limite de ${MAX_PROMPT_CHARS} caractères (environ ${MAX_TOKENS_PER_REQUEST} tokens). Veuillez le raccourcir pour continuer.`,
+        `Votre prompt dépasse la limite de ${PREMIUM_CHAR_LIMIT} caractères (environ ${MAX_TOKENS_PER_REQUEST} tokens). Veuillez le raccourcir pour continuer.`,
       );
     }
   }

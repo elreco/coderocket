@@ -13,12 +13,10 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useRef, useState, useEffect, useCallback } from "react";
 
+import { getSubscription } from "@/app/supabase-server";
 import { Container } from "@/components/container";
 import { ImageSelector } from "@/components/image-selector";
-import {
-  TextareaWithLimit,
-  MAX_PROMPT_CHARS,
-} from "@/components/textarea-with-limit";
+import { TextareaWithLimit } from "@/components/textarea-with-limit";
 import { AnimatedGridPattern } from "@/components/ui/animated-grid-pattern";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -39,6 +37,7 @@ import { Spotlight } from "@/components/ui/spotlight";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { Tables } from "@/types_db";
 import { Framework } from "@/utils/config";
 import { defaultTheme, maxImageSize, themes } from "@/utils/config";
 import { promptEnhancer } from "@/utils/prompt-enhancer";
@@ -100,6 +99,13 @@ export default function Hero() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [hasImproved, setHasImproved] = useState(false);
   const [promptIsValid, setPromptIsValid] = useState(true);
+  const [subscription, setSubscription] = useState<
+    | (Tables<"subscriptions"> & {
+        prices: Partial<Tables<"prices">> | null;
+      })
+    | null
+  >(null);
+  const [isLoadingSubscription, setIsLoadingSubscription] = useState(true);
 
   useEffect(() => {
     if (inputRef.current) {
@@ -151,6 +157,23 @@ export default function Hero() {
     };
   }, [inputRef, toast]);
 
+  useEffect(() => {
+    // Charger le statut de l'abonnement au chargement du composant
+    const fetchSubscription = async () => {
+      try {
+        setIsLoadingSubscription(true);
+        const sub = await getSubscription();
+        setSubscription(sub);
+      } catch (error) {
+        console.error("Error fetching subscription:", error);
+      } finally {
+        setIsLoadingSubscription(false);
+      }
+    };
+
+    fetchSubscription();
+  }, []);
+
   const handleImageChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       if (!e.target.files?.[0]) {
@@ -192,7 +215,7 @@ export default function Hero() {
       toast({
         variant: "destructive",
         title: "Prompt is too long",
-        description: `Your prompt exceeds the limit of ${MAX_PROMPT_CHARS} characters. Please shorten it to continue.`,
+        description: `Your prompt exceeds the character limit. Please shorten it to continue.`,
         duration: 4000,
       });
       return;
@@ -392,6 +415,8 @@ export default function Hero() {
                   setPromptIsValid(isValid);
                   localStorage.setItem("lastPrompt", value);
                 }}
+                subscription={subscription}
+                isLoadingSubscription={isLoadingSubscription}
                 className="max-h-[400px] min-h-[76px] bg-secondary pl-1 focus-visible:ring-0 focus-visible:ring-offset-0"
               />
             </div>
