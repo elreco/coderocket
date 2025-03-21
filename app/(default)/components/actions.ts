@@ -11,8 +11,6 @@ import {
   TRIAL_PLAN_MESSAGES_PER_MONTH,
   defaultTheme,
   getMaxMessagesPerPeriod,
-  getExtraMessagesCount,
-  decrementExtraMessagesCount,
   MAX_TOKENS_PER_REQUEST,
   CHAR_PER_TOKEN,
 } from "@/utils/config";
@@ -722,4 +720,46 @@ export const remixChat = async (chatId: string) => {
   });
 
   return newChat;
+};
+// Fonction pour récupérer le nombre de messages supplémentaires disponibles pour un utilisateur
+export const getExtraMessagesCount = async (userId: string) => {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("extra_messages")
+    .select("count")
+    .eq("user_id", userId)
+    .single();
+
+  if (error || !data) {
+    return 0;
+  }
+
+  return data.count;
+};
+
+// Fonction pour décrémenter le compteur de messages supplémentaires
+export const decrementExtraMessagesCount = async (userId: string) => {
+  const supabase = await createClient();
+
+  // Récupérer le nombre actuel de messages supplémentaires
+  const { data, error } = await supabase
+    .from("extra_messages")
+    .select("count")
+    .eq("user_id", userId)
+    .single();
+
+  if (error || !data || data.count <= 0) {
+    return false;
+  }
+
+  // Décrémenter le compteur
+  const { error: updateError } = await supabase
+    .from("extra_messages")
+    .update({
+      count: data.count - 1,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("user_id", userId);
+
+  return !updateError;
 };

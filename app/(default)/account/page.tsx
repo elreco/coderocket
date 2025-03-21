@@ -3,6 +3,7 @@ import { Check, XIcon } from "lucide-react";
 import Link from "next/link";
 import { ReactNode, Suspense } from "react";
 
+import { getExtraMessagesCount } from "@/app/(default)/components/actions";
 import { getUserDetails, getSubscription } from "@/app/supabase-server";
 import { Container } from "@/components/container";
 import { PageTitle } from "@/components/page-title";
@@ -12,7 +13,6 @@ import { Progress } from "@/components/ui/progress";
 import {
   getMaxMessagesPerPeriod,
   TRIAL_PLAN_MESSAGES_PER_MONTH,
-  getExtraMessagesCount,
   PRO_PLAN_MESSAGES_PER_PERIOD,
   STARTER_PLAN_MESSAGES_PER_PERIOD,
 } from "@/utils/config";
