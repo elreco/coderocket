@@ -93,8 +93,8 @@ export const builderApiUrl = "https://react-builder.fly.dev";
 export const avatarApi =
   "https://api.dicebear.com/9.x/avataaars-neutral/svg?seed=";
 
-export const STARTER_PLAN_MESSAGES_PER_PERIOD = 200;
-export const PRO_PLAN_MESSAGES_PER_PERIOD = 500;
+export const STARTER_PLAN_MESSAGES_PER_PERIOD = 100;
+export const PRO_PLAN_MESSAGES_PER_PERIOD = 300;
 export const DEFAULT_MESSAGES_PER_PERIOD = 100;
 export const TRIAL_PLAN_MESSAGES_PER_MONTH = 6;
 
