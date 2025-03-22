@@ -188,6 +188,7 @@ export default function ComponentSidebar({
         description: "Please enter a prompt before improving it.",
         duration: 4000,
       });
+      setIsImprovingLoading(false);
       return;
     }
     try {
@@ -204,6 +205,7 @@ export default function ComponentSidebar({
           "You are not premium, the visibility cannot be changed. Please upgrade to premium and try again.",
         duration: 4000,
       });
+      setIsImprovingLoading(false);
     }
   };
 
