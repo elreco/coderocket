@@ -57,6 +57,7 @@ import {
 } from "@/utils/completion-parser";
 import {
   Framework,
+  MAX_VERSIONS_PER_COMPONENT,
   TRIAL_PLAN_MESSAGES_PER_MONTH,
   crispWebsiteId,
   getMaxMessagesPerPeriod,
@@ -260,6 +261,15 @@ export default function ComponentCompletion({
             variant: "destructive",
             title: "You can't upload images with a free plan",
             description: "Please upgrade to continue.",
+            duration: 4000,
+          });
+          return;
+        }
+        if (error.message === "more-than-x-versions") {
+          toast({
+            variant: "destructive",
+            title: `You can't have more than ${MAX_VERSIONS_PER_COMPONENT} versions`,
+            description: "Please remix your component instead.",
             duration: 4000,
           });
           return;

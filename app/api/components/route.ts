@@ -27,6 +27,7 @@ import {
   storageUrl,
   MAX_TOKENS_PER_REQUEST,
   PREMIUM_CHAR_LIMIT,
+  MAX_VERSIONS_PER_COMPONENT,
 } from "@/utils/config";
 // import { promptEnhancer } from "@/utils/prompt-enhancer";
 import { formatToTimestamp } from "@/utils/date";
@@ -278,9 +279,10 @@ const validateRequest = async (
   }
 
   if (
-    messagesFromDatabase.filter((m) => m.role === "assistant")?.length > 200
+    messagesFromDatabase.filter((m) => m.role === "assistant")?.length >
+    MAX_VERSIONS_PER_COMPONENT
   ) {
-    throw new Error("You can't have more than 200 versions");
+    throw new Error("more-than-x-versions");
   }
 
   if (!subscription && image) {
