@@ -583,6 +583,7 @@ export default function ComponentSidebar({
                   setInput(value);
                   setInputIsValid(isValid);
                 }}
+                displayMessage={false}
                 subscription={subscription}
                 isLoadingSubscription={isLoadingSubscription}
                 isLoggedIn={isLoggedIn}

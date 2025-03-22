@@ -12,6 +12,7 @@ import {
   WebcontainerLoadingState,
 } from "@/context/component-context";
 import { useWebcontainer } from "@/context/webcontainer-context";
+import { FREE_CHAR_LIMIT } from "@/utils/config";
 
 import { Markdown } from "./markdown";
 
@@ -106,9 +107,14 @@ export default function ComponentPreview() {
               {authorized && buildError.content && (
                 <Button
                   className="mt-2 self-end"
-                  onClick={() =>
-                    setInput("Fix the following error: " + buildError.content)
-                  }
+                  onClick={() => {
+                    const errorContent = buildError.content;
+                    const truncatedContent =
+                      errorContent.length > FREE_CHAR_LIMIT
+                        ? errorContent.substring(0, FREE_CHAR_LIMIT)
+                        : errorContent;
+                    setInput("Fix the following error: " + truncatedContent);
+                  }}
                 >
                   <WandSparkles className="size-4" />
                   Ask Tailwind AI to fix it

@@ -46,6 +46,10 @@ export interface TextareaWithLimitProps
    * Indique si l'utilisateur est connecté
    */
   isLoggedIn?: boolean;
+  /**
+   * Indique si le message d'upsell doit être affiché
+   */
+  displayMessage?: boolean;
 }
 
 /**
@@ -86,6 +90,7 @@ const TextareaWithLimit = React.forwardRef<
       subscription,
       isLoadingSubscription = false,
       isLoggedIn,
+      displayMessage = true,
       ...props
     },
     ref,
@@ -126,20 +131,23 @@ const TextareaWithLimit = React.forwardRef<
           {...props}
         />
         <div className="flex items-center justify-between">
-          {!isLoadingSubscription && !subscription && isLoggedIn && (
-            <p className="text-xs text-muted-foreground">
-              <span className="font-medium text-yellow-600">
-                Limit: {FREE_CHAR_LIMIT} characters.
-              </span>{" "}
-              <a
-                href="/pricing"
-                className="text-primary underline hover:text-primary/80"
-              >
-                Upgrade to a paid plan
-              </a>{" "}
-              to get {PREMIUM_CHAR_LIMIT} characters!
-            </p>
-          )}
+          {!isLoadingSubscription &&
+            !subscription &&
+            isLoggedIn &&
+            displayMessage && (
+              <p className="text-xs text-muted-foreground">
+                <span className="font-medium text-yellow-600">
+                  Limit: {FREE_CHAR_LIMIT} characters.
+                </span>{" "}
+                <a
+                  href="/pricing"
+                  className="text-primary underline hover:text-primary/80"
+                >
+                  Upgrade to a paid plan
+                </a>{" "}
+                to get {PREMIUM_CHAR_LIMIT} characters!
+              </p>
+            )}
           {showCounter && !isLoadingSubscription && isLoggedIn && (
             <>
               {/* Cas 1: Utilisateur abonné (affichage dans tous les cas) */}
