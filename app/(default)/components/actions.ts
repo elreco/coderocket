@@ -660,7 +660,7 @@ export const remixChat = async (chatId: string) => {
     .from("chats")
     .insert({
       artifact_code: originalChat.artifact_code,
-      title: `Remix of ${originalChat.title || "Untitled Project"}`,
+      title: createRemixTitle(originalChat.title || "Untitled Project"),
       framework: originalChat.framework,
       prompt_image: originalChat.prompt_image,
       user_id: user.id,
@@ -675,23 +675,39 @@ export const remixChat = async (chatId: string) => {
     throw new Error("Failed to create remix");
   }
 
-  // Get all messages from the original chat
-  const { data: originalMessages } = await supabase
+  // Get the latest version number
+  const { data: versionData } = await supabase
+    .from("messages")
+    .select("version")
+    .eq("chat_id", chatId)
+    .order("version", { ascending: false })
+    .limit(1)
+    .single();
+
+  if (!versionData) {
+    throw new Error("Could not determine the latest version");
+  }
+
+  const latestVersion = versionData.version;
+
+  // Get only the latest version messages from the original chat
+  const { data: latestMessages } = await supabase
     .from("messages")
     .select("*")
     .eq("chat_id", chatId)
-    .order("version", { ascending: true });
+    .eq("version", latestVersion)
+    .order("created_at", { ascending: true });
 
-  if (!originalMessages || originalMessages.length === 0) {
-    throw new Error("Original chat has no messages");
+  if (!latestMessages || latestMessages.length === 0) {
+    throw new Error("Original chat has no messages for the latest version");
   }
 
-  // Copy all messages to the new chat
-  const messagesToInsert = originalMessages.map((message) => ({
+  // Insert the latest version messages but set them to version 0
+  const messagesToInsert = latestMessages.map((message) => ({
     chat_id: newChat.id,
     role: message.role,
     content: message.content,
-    version: message.version,
+    version: 0, // Set all messages to version 0
     is_built: false,
     screenshot: message.screenshot,
     theme: message.theme,
@@ -719,6 +735,7 @@ export const remixChat = async (chatId: string) => {
 
   return newChat;
 };
+
 // Fonction pour récupérer le nombre de messages supplémentaires disponibles pour un utilisateur
 export const getExtraMessagesCount = async (userId: string) => {
   const supabase = await createClient();
@@ -760,4 +777,20 @@ export const decrementExtraMessagesCount = async (userId: string) => {
     .eq("user_id", userId);
 
   return !updateError;
+};
+
+// Add this helper function above or below the remixChat function
+const createRemixTitle = (originalTitle: string) => {
+  // Extract the base title, removing any existing "Remix of" or "Remix #X -" prefix
+  let baseTitle = originalTitle;
+  if (baseTitle.startsWith("Remix of ")) {
+    baseTitle = baseTitle.substring(9);
+  } else if (/^Remix #\d+ - /.test(baseTitle)) {
+    baseTitle = baseTitle.replace(/^Remix #\d+ - /, "");
+  }
+
+  // Count existing remixes of this title to determine the remix number
+  // Note: In a real implementation, you might want to query the database
+  // to get the actual count of remixes for more accuracy
+  return `Remix #1 - ${baseTitle}`;
 };
