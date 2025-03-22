@@ -738,382 +738,386 @@ export default function ComponentCompletion({
 
   return (
     <ComponentContext.Provider value={contextValue}>
-      <Container className="!p-0 lg:overflow-hidden">
-        <div className="grid size-full max-h-full grid-cols-1 justify-center lg:grid-cols-3 lg:flex-row xl:grid-cols-4">
-          <div className="col-span-1 flex size-full min-h-full flex-col lg:col-span-2 xl:col-span-3 xl:mb-0">
-            <div className="relative flex flex-col items-center justify-start border-b py-1.5 pr-2 xl:flex-row xl:justify-between xl:pl-11">
-              <h1 className="mb-2 flex min-w-0 max-w-full flex-1 items-center font-medium lg:mb-0">
-                {title ? (
-                  <p className="mx-10 min-w-0 max-w-full xl:mx-0">
-                    <span className="block truncate text-center first-letter:uppercase">
-                      {title}
+      <WebcontainerProvider>
+        <Container className="!p-0 lg:overflow-hidden">
+          <div className="grid size-full max-h-full grid-cols-1 justify-center lg:grid-cols-3 lg:flex-row xl:grid-cols-4">
+            <div className="col-span-1 flex size-full min-h-full flex-col lg:col-span-2 xl:col-span-3 xl:mb-0">
+              <div className="relative flex flex-col items-center justify-start border-b py-1.5 pr-2 xl:flex-row xl:justify-between xl:pl-11">
+                <h1 className="mb-2 flex min-w-0 max-w-full flex-1 items-center font-medium lg:mb-0">
+                  {title ? (
+                    <p className="mx-10 min-w-0 max-w-full xl:mx-0">
+                      <span className="block truncate text-center first-letter:uppercase">
+                        {title}
+                      </span>
+                    </p>
+                  ) : (
+                    <span className="flex items-center">
+                      <LoaderCircle className="mr-2 size-4 animate-spin" />
+                      Loading
                     </span>
-                  </p>
-                ) : (
-                  <span className="flex items-center">
-                    <LoaderCircle className="mr-2 size-4 animate-spin" />
-                    Loading
-                  </span>
-                )}
-              </h1>
-              <div className="ml-2 flex items-center gap-2">
-                <Tabs
-                  value={isCanvas ? "canvas" : "code"}
-                  className="w-full"
-                  onValueChange={(value) => setCanvas(value === "canvas")}
-                >
-                  <TabsList className="grid w-fit grid-cols-2 text-xs">
-                    <TabsTrigger
-                      value="canvas"
-                      className="flex items-center justify-center"
-                    >
-                      <Eye className="size-4 md:hidden" />
-                      <span className="hidden md:inline">Preview</span>
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="code"
-                      className="flex items-center justify-center"
-                    >
-                      <CodeIcon className="size-4 md:hidden" />
-                      <span className="hidden md:inline">Code</span>
-                    </TabsTrigger>
-                  </TabsList>
-                </Tabs>
-                {(fetchedChat?.framework === Framework.HTML ||
-                  (isWebcontainerReady &&
-                    fetchedChat?.framework !== Framework.HTML)) && (
-                  <>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          onClick={() => setIsModalOpen(true)}
-                          className="flex items-center"
-                          disabled={isLoading || isLengthError}
-                        >
-                          <Fullscreen className="w-5" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        {isLengthError ? (
-                          <p>The component has an error</p>
-                        ) : (
-                          <p>Display in fullscreen</p>
-                        )}
-                      </TooltipContent>
-                    </Tooltip>
-                    {(isWebcontainerReady ||
-                      fetchedChat?.framework === Framework.HTML) && (
+                  )}
+                </h1>
+                <div className="ml-2 flex items-center gap-2">
+                  <Tabs
+                    value={isCanvas ? "canvas" : "code"}
+                    className="w-full"
+                    onValueChange={(value) => setCanvas(value === "canvas")}
+                  >
+                    <TabsList className="grid w-fit grid-cols-2 text-xs">
+                      <TabsTrigger
+                        value="canvas"
+                        className="flex items-center justify-center"
+                      >
+                        <Eye className="size-4 md:hidden" />
+                        <span className="hidden md:inline">Preview</span>
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value="code"
+                        className="flex items-center justify-center"
+                      >
+                        <CodeIcon className="size-4 md:hidden" />
+                        <span className="hidden md:inline">Code</span>
+                      </TabsTrigger>
+                    </TabsList>
+                  </Tabs>
+                  {(fetchedChat?.framework === Framework.HTML ||
+                    (isWebcontainerReady &&
+                      fetchedChat?.framework !== Framework.HTML)) && (
+                    <>
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Button
                             variant="secondary"
                             size="sm"
-                            onClick={() =>
-                              window.open(
-                                fetchedChat?.framework === Framework.HTML
-                                  ? `https://www.tailwindai.dev/content/${chatId}/${selectedVersion}`
-                                  : `https://${chatId}-${selectedVersion}.preview.tailwindai.dev`,
-                                "_blank",
-                              )
-                            }
+                            onClick={() => setIsModalOpen(true)}
                             className="flex items-center"
                             disabled={isLoading || isLengthError}
                           >
-                            <ExternalLink className="w-5" />
+                            <Fullscreen className="w-5" />
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent>
                           {isLengthError ? (
                             <p>The component has an error</p>
                           ) : (
-                            <p>Open in a new tab</p>
+                            <p>Display in fullscreen</p>
                           )}
                         </TooltipContent>
                       </Tooltip>
-                    )}
-                    <Dialog
-                      open={isModalOpen}
-                      onOpenChange={handleFullscreenToggle}
-                    >
-                      <DialogContent className="z-[9999] h-[98%] max-w-[98%] rounded-none p-10">
-                        <DialogTitle className="hidden">Fullscreen</DialogTitle>
-                        <DialogDescription className="z-50">
-                          {fetchedChat?.framework !== Framework.HTML &&
-                          isWebcontainerReady ? (
-                            <iframe
-                              className="size-full rounded-md border-none"
-                              src={`https://${chatId}-${selectedVersion}.webcontainer.tailwindai.dev`}
-                              sandbox="allow-scripts allow-forms allow-popups allow-modals allow-storage-access-by-user-activation allow-same-origin"
-                              allow="credentialless"
-                              loading="eager"
-                            />
-                          ) : (
-                            <RenderHtmlComponent files={artifactFiles} />
-                          )}
-                        </DialogDescription>
-                      </DialogContent>
-                    </Dialog>
-                  </>
-                )}
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span>
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        onClick={share}
-                        disabled={!isVisible || isLoading || isLengthError}
-                        className={isVisible ? "" : "cursor-not-allowed"}
+                      {(isWebcontainerReady ||
+                        fetchedChat?.framework === Framework.HTML) && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={() =>
+                                window.open(
+                                  fetchedChat?.framework === Framework.HTML
+                                    ? `https://www.tailwindai.dev/content/${chatId}/${selectedVersion}`
+                                    : `https://${chatId}-${selectedVersion}.preview.tailwindai.dev`,
+                                  "_blank",
+                                )
+                              }
+                              className="flex items-center"
+                              disabled={isLoading || isLengthError}
+                            >
+                              <ExternalLink className="w-5" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            {isLengthError ? (
+                              <p>The component has an error</p>
+                            ) : (
+                              <p>Open in a new tab</p>
+                            )}
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
+                      <Dialog
+                        open={isModalOpen}
+                        onOpenChange={handleFullscreenToggle}
                       >
-                        <Share className="w-5" />
-                      </Button>
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>
-                      {isLoading
-                        ? "The component is loading"
-                        : isLengthError
-                          ? "The component has an error"
-                          : isVisible
-                            ? "Share Component"
-                            : "Your component needs to be public to share it. You can make it public by clicking the settings button."}
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span>
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        onClick={() => setIsRemixModalOpen(true)}
-                        disabled={isRemixing || isLoading}
-                        className="text-xs"
-                      >
-                        <GitFork className="size-3.5" />
-                      </Button>
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Remix this component</p>
-                  </TooltipContent>
-                </Tooltip>
-                {!isLoading && title && authorized && (
-                  <ComponentSettings>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="secondary"
-                      disabled={isLoading}
-                    >
-                      <Settings className="w-5" />
-                    </Button>
-                  </ComponentSettings>
-                )}
-                <Sheet>
-                  <SheetTrigger asChild>
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      className="block lg:hidden"
-                    >
-                      <Layers className="size-5" />
-                    </Button>
-                  </SheetTrigger>
-                  <SheetContent className="h-full p-0">
-                    <ComponentSidebar className="flex lg:hidden" />
-                  </SheetContent>
-                </Sheet>
-              </div>
-            </div>
-            <div className="relative m-0 flex h-full max-h-full flex-1 flex-col border-b lg:border-b-0">
-              {!isLoading && isCanvas && (
-                <div className="absolute bottom-0 right-0 z-[9000] flex w-full items-center justify-between p-2">
-                  {remixOriginalChat ? (
-                    <div className="flex items-center gap-2 rounded-md bg-secondary px-3 py-2 text-sm shadow-sm">
-                      <GitFork className="size-4" />
-                      <span>Remixed from:</span>
-                      <a
-                        href={`/components/${remixOriginalChat.slug}`}
-                        className="flex items-center gap-1 font-medium text-primary hover:underline"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        {remixOriginalChat.title ||
-                          `Component ${remixOriginalChat.slug}`}
-                        <ExternalLink className="size-3" />
-                      </a>
-                    </div>
-                  ) : (
-                    <div className="invisible"></div>
+                        <DialogContent className="z-[9999] h-[98%] max-w-[98%] rounded-none p-10">
+                          <DialogTitle className="hidden">
+                            Fullscreen
+                          </DialogTitle>
+                          <DialogDescription className="z-50">
+                            {fetchedChat?.framework !== Framework.HTML &&
+                            isWebcontainerReady ? (
+                              <iframe
+                                className="size-full rounded-md border-none"
+                                src={`https://${chatId}-${selectedVersion}.webcontainer.tailwindai.dev`}
+                                sandbox="allow-scripts allow-forms allow-popups allow-modals allow-storage-access-by-user-activation allow-same-origin"
+                                allow="credentialless"
+                                loading="eager"
+                              />
+                            ) : (
+                              <RenderHtmlComponent files={artifactFiles} />
+                            )}
+                          </DialogDescription>
+                        </DialogContent>
+                      </Dialog>
+                    </>
                   )}
-                  <div className="flex items-center gap-2">
-                    <Badge className="hover:bg-primary">
-                      <FrameworkIcon className="mr-1 size-3" />
-                      <span className="first-letter:uppercase">
-                        {fetchedChat?.framework}
-                      </span>
-                    </Badge>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <motion.div
-                          whileTap={{ scale: 0.9, rotate: 15 }}
-                          transition={{ type: "spring", stiffness: 300 }}
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span>
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          onClick={share}
+                          disabled={!isVisible || isLoading || isLengthError}
+                          className={isVisible ? "" : "cursor-not-allowed"}
                         >
-                          <Button
-                            onClick={handleLikeClick}
-                            variant="secondary"
-                            size="sm"
-                            className={`ml-2 rounded-full p-2 shadow-md transition-colors ${
-                              isLiked
-                                ? "bg-primary text-secondary hover:bg-primary"
-                                : "bg-green-300 text-green-700 hover:bg-green-200"
-                            }`}
-                          >
-                            <ThumbsUp className="size-5" />
-                          </Button>
-                        </motion.div>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>{isLiked ? "Unlike" : "Like"}</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </div>
-                </div>
-              )}
-              <WebcontainerProvider>
-                <CodePreview />
-              </WebcontainerProvider>
-            </div>
-          </div>
-          <ComponentSidebar className="hidden lg:flex" />
-        </div>
-        <Dialog open={isShareModalOpen} onOpenChange={setIsShareModalOpen}>
-          <DialogContent className="max-w-md sm:max-w-2xl">
-            <div className="mb-6 flex flex-col items-center justify-center text-center">
-              <Share className="mb-2 size-12 text-primary" />
-              <DialogTitle className="text-xl font-semibold">
-                Share Your Component
-              </DialogTitle>
-              <p className="text-muted-foreground">
-                Let the world see your awesome creation! ✨
-              </p>
-            </div>
-            <DialogDescription>
-              <p className="mb-1">Here is your shareable link:</p>
-              <div className="flex items-center space-x-2">
-                <Input
-                  type="text"
-                  value={shareLink}
-                  readOnly
-                  className="flex-1"
-                />
-                <Button
-                  onClick={() => {
-                    copy(shareLink);
-                    toast({
-                      variant: "default",
-                      title: "Link copied",
-                      description:
-                        "The URL has been successfully copied to your clipboard",
-                      duration: 3000,
-                    });
-                  }}
-                  size="sm"
-                >
-                  <Copy className="size-4" />
-                  <span className="sr-only">Copy</span>
-                </Button>
-              </div>
-            </DialogDescription>
-          </DialogContent>
-        </Dialog>
-        <Dialog open={isRemixModalOpen} onOpenChange={setIsRemixModalOpen}>
-          <DialogContent className="max-w-md sm:max-w-2xl">
-            <div className="mb-6 flex flex-col items-center justify-center text-center">
-              <GitFork className="mb-2 size-12 text-primary" />
-              <DialogTitle className="text-xl font-semibold">
-                {hasAlreadyRemixed ? "Already Remixed" : "Remix This Component"}
-              </DialogTitle>
-              <p className="text-muted-foreground">
-                {hasAlreadyRemixed
-                  ? "This component is already remixed"
-                  : "Create your own version of this component! 🚀"}
-              </p>
-            </div>
-            <DialogDescription>
-              {hasAlreadyRemixed ? (
-                <div className="mb-4">
-                  {remixOriginalChat && (
-                    <div className="rounded-md bg-secondary p-4">
-                      <p className="mb-2 font-medium">Want to try again?</p>
-                      <p className="mb-4">
-                        You can go back to the original component that was used
-                        as the base for this remix and create a new remix from
-                        there:
+                          <Share className="w-5" />
+                        </Button>
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>
+                        {isLoading
+                          ? "The component is loading"
+                          : isLengthError
+                            ? "The component has an error"
+                            : isVisible
+                              ? "Share Component"
+                              : "Your component needs to be public to share it. You can make it public by clicking the settings button."}
                       </p>
-                      <div className="flex flex-col items-start gap-2 rounded-md bg-background p-3 text-sm">
-                        <div className="flex items-center gap-2">
-                          <GitFork className="size-4 text-primary" />
-                          <span>Original component:</span>
-                        </div>
+                    </TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span>
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => setIsRemixModalOpen(true)}
+                          disabled={isRemixing || isLoading}
+                          className="text-xs"
+                        >
+                          <GitFork className="size-3.5" />
+                        </Button>
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Remix this component</p>
+                    </TooltipContent>
+                  </Tooltip>
+                  {!isLoading && title && authorized && (
+                    <ComponentSettings>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="secondary"
+                        disabled={isLoading}
+                      >
+                        <Settings className="w-5" />
+                      </Button>
+                    </ComponentSettings>
+                  )}
+                  <Sheet>
+                    <SheetTrigger asChild>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        className="block lg:hidden"
+                      >
+                        <Layers className="size-5" />
+                      </Button>
+                    </SheetTrigger>
+                    <SheetContent className="h-full p-0">
+                      <ComponentSidebar className="flex lg:hidden" />
+                    </SheetContent>
+                  </Sheet>
+                </div>
+              </div>
+              <div className="relative m-0 flex h-full max-h-full flex-1 flex-col border-b lg:border-b-0">
+                {!isLoading && isCanvas && (
+                  <div className="absolute bottom-0 right-0 z-[9000] flex w-full items-center justify-between p-2">
+                    {remixOriginalChat ? (
+                      <div className="flex items-center gap-2 rounded-md bg-secondary px-3 py-2 text-sm shadow-sm">
+                        <GitFork className="size-4" />
+                        <span>Remixed from:</span>
                         <a
                           href={`/components/${remixOriginalChat.slug}`}
                           className="flex items-center gap-1 font-medium text-primary hover:underline"
+                          target="_blank"
+                          rel="noopener noreferrer"
                         >
                           {remixOriginalChat.title ||
                             `Component ${remixOriginalChat.slug}`}
                           <ExternalLink className="size-3" />
                         </a>
                       </div>
+                    ) : (
+                      <div className="invisible"></div>
+                    )}
+                    <div className="flex items-center gap-2">
+                      <Badge className="hover:bg-primary">
+                        <FrameworkIcon className="mr-1 size-3" />
+                        <span className="first-letter:uppercase">
+                          {fetchedChat?.framework}
+                        </span>
+                      </Badge>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <motion.div
+                            whileTap={{ scale: 0.9, rotate: 15 }}
+                            transition={{ type: "spring", stiffness: 300 }}
+                          >
+                            <Button
+                              onClick={handleLikeClick}
+                              variant="secondary"
+                              size="sm"
+                              className={`ml-2 rounded-full p-2 shadow-md transition-colors ${
+                                isLiked
+                                  ? "bg-primary text-secondary hover:bg-primary"
+                                  : "bg-green-300 text-green-700 hover:bg-green-200"
+                              }`}
+                            >
+                              <ThumbsUp className="size-5" />
+                            </Button>
+                          </motion.div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>{isLiked ? "Unlike" : "Like"}</p>
+                        </TooltipContent>
+                      </Tooltip>
                     </div>
-                  )}
-                </div>
-              ) : (
-                <p className="mb-4">
-                  Remixing will create a copy of this component that you can
-                  modify and customize. This feature is available for
-                  subscribers only.
+                  </div>
+                )}
+                <CodePreview />
+              </div>
+            </div>
+            <ComponentSidebar className="hidden lg:flex" />
+          </div>
+          <Dialog open={isShareModalOpen} onOpenChange={setIsShareModalOpen}>
+            <DialogContent className="max-w-md sm:max-w-2xl">
+              <div className="mb-6 flex flex-col items-center justify-center text-center">
+                <Share className="mb-2 size-12 text-primary" />
+                <DialogTitle className="text-xl font-semibold">
+                  Share Your Component
+                </DialogTitle>
+                <p className="text-muted-foreground">
+                  Let the world see your awesome creation! ✨
                 </p>
-              )}
-              <div className="flex justify-center">
-                {hasAlreadyRemixed ? (
-                  <Button
-                    onClick={() => setIsRemixModalOpen(false)}
-                    className="flex w-full max-w-xs items-center justify-center"
-                  >
-                    <X className="size-4" />
-                    <span>Close</span>
-                  </Button>
-                ) : (
+              </div>
+              <DialogDescription>
+                <p className="mb-1">Here is your shareable link:</p>
+                <div className="flex items-center space-x-2">
+                  <Input
+                    type="text"
+                    value={shareLink}
+                    readOnly
+                    className="flex-1"
+                  />
                   <Button
                     onClick={() => {
-                      handleRemixClick();
+                      copy(shareLink);
+                      toast({
+                        variant: "default",
+                        title: "Link copied",
+                        description:
+                          "The URL has been successfully copied to your clipboard",
+                        duration: 3000,
+                      });
                     }}
-                    disabled={isRemixing}
-                    className="flex w-full max-w-xs items-center justify-center"
+                    size="sm"
                   >
-                    {isRemixing ? (
-                      <>
-                        <LoaderCircle className="size-4 animate-spin" />
-                        Creating Remix...
-                      </>
-                    ) : (
-                      <>
-                        <GitFork className="size-4" />
-                        Remix Component
-                      </>
-                    )}
+                    <Copy className="size-4" />
+                    <span className="sr-only">Copy</span>
                   </Button>
-                )}
+                </div>
+              </DialogDescription>
+            </DialogContent>
+          </Dialog>
+          <Dialog open={isRemixModalOpen} onOpenChange={setIsRemixModalOpen}>
+            <DialogContent className="max-w-md sm:max-w-2xl">
+              <div className="mb-6 flex flex-col items-center justify-center text-center">
+                <GitFork className="mb-2 size-12 text-primary" />
+                <DialogTitle className="text-xl font-semibold">
+                  {hasAlreadyRemixed
+                    ? "Already Remixed"
+                    : "Remix This Component"}
+                </DialogTitle>
+                <p className="text-muted-foreground">
+                  {hasAlreadyRemixed
+                    ? "This component is already remixed"
+                    : "Create your own version of this component! 🚀"}
+                </p>
               </div>
-            </DialogDescription>
-          </DialogContent>
-        </Dialog>
-      </Container>
+              <DialogDescription>
+                {hasAlreadyRemixed ? (
+                  <div className="mb-4">
+                    {remixOriginalChat && (
+                      <div className="rounded-md bg-secondary p-4">
+                        <p className="mb-2 font-medium">Want to try again?</p>
+                        <p className="mb-4">
+                          You can go back to the original component that was
+                          used as the base for this remix and create a new remix
+                          from there:
+                        </p>
+                        <div className="flex flex-col items-start gap-2 rounded-md bg-background p-3 text-sm">
+                          <div className="flex items-center gap-2">
+                            <GitFork className="size-4 text-primary" />
+                            <span>Original component:</span>
+                          </div>
+                          <a
+                            href={`/components/${remixOriginalChat.slug}`}
+                            className="flex items-center gap-1 font-medium text-primary hover:underline"
+                          >
+                            {remixOriginalChat.title ||
+                              `Component ${remixOriginalChat.slug}`}
+                            <ExternalLink className="size-3" />
+                          </a>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <p className="mb-4">
+                    Remixing will create a copy of this component that you can
+                    modify and customize. This feature is available for
+                    subscribers only.
+                  </p>
+                )}
+                <div className="flex justify-center">
+                  {hasAlreadyRemixed ? (
+                    <Button
+                      onClick={() => setIsRemixModalOpen(false)}
+                      className="flex w-full max-w-xs items-center justify-center"
+                    >
+                      <X className="size-4" />
+                      <span>Close</span>
+                    </Button>
+                  ) : (
+                    <Button
+                      onClick={() => {
+                        handleRemixClick();
+                      }}
+                      disabled={isRemixing}
+                      className="flex w-full max-w-xs items-center justify-center"
+                    >
+                      {isRemixing ? (
+                        <>
+                          <LoaderCircle className="size-4 animate-spin" />
+                          Creating Remix...
+                        </>
+                      ) : (
+                        <>
+                          <GitFork className="size-4" />
+                          Remix Component
+                        </>
+                      )}
+                    </Button>
+                  )}
+                </div>
+              </DialogDescription>
+            </DialogContent>
+          </Dialog>
+        </Container>
+      </WebcontainerProvider>
     </ComponentContext.Provider>
   );
 }

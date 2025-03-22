@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/tooltip";
 import { UserWidget } from "@/components/user-widget";
 import { useComponentContext } from "@/context/component-context";
+import { useWebcontainer } from "@/context/webcontainer-context";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { Tables } from "@/types_db";
@@ -36,7 +37,13 @@ import {
   hasArtifacts,
   splitContentIntoChunks,
 } from "@/utils/completion-parser";
-import { avatarApi, Framework, maxImageSize, storageUrl } from "@/utils/config";
+import {
+  avatarApi,
+  Framework,
+  FREE_CHAR_LIMIT,
+  maxImageSize,
+  storageUrl,
+} from "@/utils/config";
 import { getRelativeDate } from "@/utils/date";
 import { createClient } from "@/utils/supabase/client";
 
@@ -71,6 +78,7 @@ export default function ComponentSidebar({
     defaultImage,
     isLengthError,
   } = useComponentContext();
+  const { buildError } = useWebcontainer();
 
   const [isLoaderVisible, setLoaderVisible] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -495,7 +503,7 @@ export default function ComponentSidebar({
       >
         {authorized && (
           <div className="flex w-full flex-col bg-background">
-            <div className="flex w-full items-center justify-between border-t p-2">
+            <div className="flex w-full items-center justify-between space-x-1 border-t p-2">
               <div className="whitespace-nowrap text-xs font-semibold">
                 {!isIterationVisible
                   ? "Generating first version"
@@ -549,7 +557,7 @@ export default function ComponentSidebar({
                     </div>
                   </div>
                 )}
-                {!isLoading && !isLengthError && (
+                {!isLoading && !isLengthError && !buildError && (
                   <ImageSelector
                     fileInputRef={fileInputRef}
                     disabled={isLoading}
@@ -573,6 +581,27 @@ export default function ComponentSidebar({
                     Continue generation
                   </Button>
                 )}
+                {!isLoading && buildError && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    className="mr-2"
+                    onClick={() => {
+                      const errorContent = buildError.content;
+                      const truncatedContent =
+                        errorContent.length > FREE_CHAR_LIMIT
+                          ? errorContent.substring(0, FREE_CHAR_LIMIT)
+                          : errorContent;
+                      const continuePrompt =
+                        "Fix the following error: " + truncatedContent;
+                      setInput(continuePrompt);
+                      handleSubmitToAI(continuePrompt);
+                    }}
+                  >
+                    <WandSparkles className="size-4" />
+                    Fix errors
+                  </Button>
+                )}
               </div>
             </div>
             <div className="flex w-full flex-col items-start space-y-1 border-t p-2">
@@ -580,6 +609,7 @@ export default function ComponentSidebar({
                 ref={inputRef}
                 autoFocus
                 disabled={isLoading}
+                isLoading={isLoading}
                 value={input}
                 onChange={(value, isValid) => {
                   setInput(value);

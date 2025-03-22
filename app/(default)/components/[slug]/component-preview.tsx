@@ -80,6 +80,7 @@ export default function ComponentPreview() {
     authorized,
     setInput,
     isWebcontainerReady,
+    handleSubmitToAI,
   } = useComponentContext();
   const { previewId } = useWebcontainer();
 
@@ -113,7 +114,10 @@ export default function ComponentPreview() {
                       errorContent.length > FREE_CHAR_LIMIT
                         ? errorContent.substring(0, FREE_CHAR_LIMIT)
                         : errorContent;
-                    setInput("Fix the following error: " + truncatedContent);
+                    const continuePrompt =
+                      "Fix the following error: " + truncatedContent;
+                    setInput(continuePrompt);
+                    handleSubmitToAI(continuePrompt);
                   }}
                 >
                   <WandSparkles className="size-4" />

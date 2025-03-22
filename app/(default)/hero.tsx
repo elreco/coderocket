@@ -402,6 +402,7 @@ export default function Hero() {
                 value={prompt}
                 showCounter={true}
                 isLoggedIn={isLoggedIn}
+                isLoading={loading}
                 onKeyDown={(event) => {
                   if (event.key === "Enter") {
                     if (event.shiftKey) {

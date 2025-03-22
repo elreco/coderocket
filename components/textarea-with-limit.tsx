@@ -47,6 +47,10 @@ export interface TextareaWithLimitProps
    */
   isLoggedIn?: boolean;
   /**
+   * Indique si le composant est en cours de chargement
+   */
+  isLoading?: boolean;
+  /**
    * Indique si le message d'upsell doit être affiché
    */
   displayMessage?: boolean;
@@ -90,6 +94,7 @@ const TextareaWithLimit = React.forwardRef<
       subscription,
       isLoadingSubscription = false,
       isLoggedIn,
+      isLoading,
       displayMessage = true,
       ...props
     },
@@ -167,6 +172,7 @@ const TextareaWithLimit = React.forwardRef<
             variant="ghost"
             size="sm"
             className="absolute right-0.5 top-0.5 size-6 p-0"
+            disabled={isLoading}
             onClick={() => {
               onChange?.("", true);
             }}
