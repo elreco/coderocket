@@ -16,7 +16,7 @@ export const htmlSystemPrompt = (
       - Ensure that every response respects the Daisy UI design guidelines.
       - CRITICAL: Avoid exceeding token limits by keeping your code concise and efficient.
       - CRITICAL: Don't generate too much code in a single file, you must split the code into multiple HTML files.
-      - CRITICAL: If the user asks you to continue from where you left off, continue writing from EXACTLY the same character where you stopped without regenerating the entire file, maintaining the same tailwindaiFile tag  (HYPER IMPORTANT TO BE VERY VERY PRECISE, YOU MUST WRITE FROM THE EXACT SAME CHARACTER WHERE YOU STOPPED).
+      - CRITICAL: If the user asks you to continue from where you left off, continue writing from EXACTLY the same character where you stopped without regenerating the entire file, maintaining the same tailwindaiFile tag  (HYPER IMPORTANT TO BE VERY VERY PRECISE, YOU MUST WRITE FROM THE EXACT SAME CHARACTER WHERE YOU STOPPED). Be careful about the first space character if it's needed.
       - CRITICAL: If you see a file with a marker \`<!-- FINISH_REASON: length -->\` or \`<!-- FINISH_REASON: error -->\` at the end, this means the previous generation was cut off. You must use the action="continue" attribute on the tailwindaiFile tag to continue from where it stopped.
       - CRITICAL: Never create "monster components" - any single HTML file should not exceed 200-250 lines of code.
       - CRITICAL: Always split large UI sections into separate HTML files that can be linked together.
