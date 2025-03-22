@@ -629,7 +629,8 @@ export const remixChat = async (chatId: string) => {
       title,
       framework,
       prompt_image,
-      user_id
+      user_id,
+      remix_chat_id
     `,
     )
     .eq("id", chatId)
@@ -654,6 +655,13 @@ export const remixChat = async (chatId: string) => {
   if (!subscription) {
     throw new Error("Only subscribers can remix projects");
   }
+
+  if (originalChat.remix_chat_id) {
+    throw new Error(
+      "You have already remixed this component. You cannot remix the same component more than once.",
+    );
+  }
+
   const uniqueId = await generateUniqueNanoid();
   // Create a new chat as a remix - let Supabase generate the UUID
   const { data: newChat, error } = await supabase
@@ -779,18 +787,10 @@ export const decrementExtraMessagesCount = async (userId: string) => {
   return !updateError;
 };
 
-// Add this helper function above or below the remixChat function
 const createRemixTitle = (originalTitle: string) => {
-  // Extract the base title, removing any existing "Remix of" or "Remix #X -" prefix
   let baseTitle = originalTitle;
   if (baseTitle.startsWith("Remix of ")) {
     baseTitle = baseTitle.substring(9);
-  } else if (/^Remix #\d+ - /.test(baseTitle)) {
-    baseTitle = baseTitle.replace(/^Remix #\d+ - /, "");
   }
-
-  // Count existing remixes of this title to determine the remix number
-  // Note: In a real implementation, you might want to query the database
-  // to get the actual count of remixes for more accuracy
-  return `Remix #1 - ${baseTitle}`;
+  return `Remix - ${baseTitle}`;
 };

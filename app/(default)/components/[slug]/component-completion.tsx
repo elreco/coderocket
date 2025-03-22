@@ -16,6 +16,7 @@ import {
   GitFork,
   Eye,
   Code as CodeIcon,
+  X,
 } from "lucide-react";
 import { Share } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -137,6 +138,7 @@ export default function ComponentCompletion({
     useState<Tables<"subscriptions"> | null>(null);
 
   const [isRemixModalOpen, setIsRemixModalOpen] = useState(false);
+  const [hasAlreadyRemixed, setHasAlreadyRemixed] = useState(false);
 
   useEffect(() => {
     const loadInitialData = async () => {
@@ -205,6 +207,7 @@ export default function ComponentCompletion({
         if (originalChat) {
           setRemixOriginalChat(originalChat);
         }
+        setHasAlreadyRemixed(true);
       }
 
       await new Promise((resolve) => setTimeout(resolve, 500));
@@ -629,6 +632,7 @@ export default function ComponentCompletion({
           "Only subscribers can remix projects. Please upgrade to create remixes.",
         duration: 4000,
       });
+      setIsRemixing(false);
       return;
     }
 
@@ -655,7 +659,6 @@ export default function ComponentCompletion({
             : "Failed to create remix. Please try again.",
         duration: 4000,
       });
-    } finally {
       setIsRemixing(false);
     }
   };
@@ -888,9 +891,9 @@ export default function ComponentCompletion({
                         variant="secondary"
                         onClick={() => setIsRemixModalOpen(true)}
                         disabled={isRemixing || isLoading}
-                        className="flex items-center gap-2"
+                        className="text-xs"
                       >
-                        <GitFork className="w-5" />
+                        <GitFork className="size-3.5" />
                       </Button>
                     </span>
                   </TooltipTrigger>
@@ -1033,39 +1036,79 @@ export default function ComponentCompletion({
             <div className="mb-6 flex flex-col items-center justify-center text-center">
               <GitFork className="mb-2 size-12 text-primary" />
               <DialogTitle className="text-xl font-semibold">
-                Remix This Component
+                {hasAlreadyRemixed ? "Already Remixed" : "Remix This Component"}
               </DialogTitle>
               <p className="text-muted-foreground">
-                Create your own version of this component! 🚀
+                {hasAlreadyRemixed
+                  ? "This component is already remixed"
+                  : "Create your own version of this component! 🚀"}
               </p>
             </div>
             <DialogDescription>
-              <p className="mb-4">
-                Remixing will create a copy of this component that you can
-                modify and customize. This feature is available for subscribers
-                only.
-              </p>
-              <div className="flex justify-center">
-                <Button
-                  onClick={() => {
-                    handleRemixClick();
-                    setIsRemixModalOpen(false);
-                  }}
-                  disabled={isRemixing}
-                  className="w-full max-w-xs"
-                >
-                  {isRemixing ? (
-                    <>
-                      <LoaderCircle className="mr-2 size-4 animate-spin" />
-                      Creating Remix...
-                    </>
-                  ) : (
-                    <>
-                      <GitFork className="mr-2 size-4" />
-                      Remix Component
-                    </>
+              {hasAlreadyRemixed ? (
+                <div className="mb-4">
+                  {remixOriginalChat && (
+                    <div className="rounded-md bg-secondary p-4">
+                      <p className="mb-2 font-medium">Want to try again?</p>
+                      <p className="mb-4">
+                        You can go back to the original component that was used
+                        as the base for this remix and create a new remix from
+                        there:
+                      </p>
+                      <div className="flex flex-col items-start gap-2 rounded-md bg-background p-3 text-sm">
+                        <div className="flex items-center gap-2">
+                          <GitFork className="size-4 text-primary" />
+                          <span>Original component:</span>
+                        </div>
+                        <a
+                          href={`/components/${remixOriginalChat.slug}`}
+                          className="flex items-center gap-1 font-medium text-primary hover:underline"
+                        >
+                          {remixOriginalChat.title ||
+                            `Component ${remixOriginalChat.slug}`}
+                          <ExternalLink className="size-3" />
+                        </a>
+                      </div>
+                    </div>
                   )}
-                </Button>
+                </div>
+              ) : (
+                <p className="mb-4">
+                  Remixing will create a copy of this component that you can
+                  modify and customize. This feature is available for
+                  subscribers only.
+                </p>
+              )}
+              <div className="flex justify-center">
+                {hasAlreadyRemixed ? (
+                  <Button
+                    onClick={() => setIsRemixModalOpen(false)}
+                    className="flex w-full max-w-xs items-center justify-center"
+                  >
+                    <X className="size-4" />
+                    <span>Close</span>
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={() => {
+                      handleRemixClick();
+                    }}
+                    disabled={isRemixing}
+                    className="flex w-full max-w-xs items-center justify-center"
+                  >
+                    {isRemixing ? (
+                      <>
+                        <LoaderCircle className="size-4 animate-spin" />
+                        Creating Remix...
+                      </>
+                    ) : (
+                      <>
+                        <GitFork className="size-4" />
+                        Remix Component
+                      </>
+                    )}
+                  </Button>
+                )}
               </div>
             </DialogDescription>
           </DialogContent>
