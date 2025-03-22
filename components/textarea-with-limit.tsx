@@ -134,6 +134,7 @@ const TextareaWithLimit = React.forwardRef<
           {!isLoadingSubscription &&
             !subscription &&
             isLoggedIn &&
+            valueLength > characterLimit &&
             displayMessage && (
               <p className="text-xs text-muted-foreground">
                 <span className="font-medium text-yellow-600">
@@ -149,28 +150,16 @@ const TextareaWithLimit = React.forwardRef<
               </p>
             )}
           {showCounter && !isLoadingSubscription && isLoggedIn && (
-            <>
-              {/* Cas 1: Utilisateur abonné (affichage dans tous les cas) */}
-              {subscription && (
-                <span
-                  className={cn(
-                    "text-xs ml-auto",
-                    valueLength > characterLimit
-                      ? "text-destructive font-medium"
-                      : "text-muted-foreground",
-                  )}
-                >
-                  {valueLength} / {characterLimit}
-                </span>
+            <span
+              className={cn(
+                "text-xs ml-auto",
+                valueLength > characterLimit
+                  ? "text-destructive font-medium"
+                  : "text-muted-foreground",
               )}
-
-              {/* Cas 3: Utilisateur sans abonnement (affichage seulement si dépassement) */}
-              {!subscription && valueLength > characterLimit && (
-                <span className="ml-auto text-xs font-medium text-destructive">
-                  {valueLength} / {characterLimit}
-                </span>
-              )}
-            </>
+            >
+              {valueLength} / {characterLimit}
+            </span>
           )}
         </div>
         {value && (
