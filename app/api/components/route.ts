@@ -110,7 +110,7 @@ const buildMessagesToOpenAi = async (
       : messages;
 
   // Limiter le nombre de messages à envoyer à l'API (par exemple, les 10 derniers)
-  const maxMessagesToSend = 5;
+  const maxMessagesToSend = 2;
   const limitedMessages =
     filteredMessages.length > maxMessagesToSend
       ? filteredMessages.slice(-maxMessagesToSend)
