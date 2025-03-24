@@ -130,7 +130,7 @@ export function ChunkReader({
                             )}
                           >
                             {file.name || "untitled.html"}
-                            {file.isIncomplete && " (incomplete)"}
+                            {file.isIncomplete && "(in progress)"}
                             {file.isDelete && " (deleted)"}
                           </div>
                         </div>
