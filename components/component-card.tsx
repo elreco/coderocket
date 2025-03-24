@@ -13,9 +13,10 @@ import { Badge } from "./ui/badge";
 
 interface ComponentCardProps {
   chat: GetComponentsReturnType;
+  isReverse?: boolean;
 }
 
-export function ComponentCard({ chat }: ComponentCardProps) {
+export function ComponentCard({ chat, isReverse }: ComponentCardProps) {
   const FrameworkIcon =
     chat.framework === Framework.REACT
       ? SiReact
@@ -31,7 +32,8 @@ export function ComponentCard({ chat }: ComponentCardProps) {
       <div
         key={chat.chat_id}
         className={cn(
-          "w-full bg-center overflow-hidden relative card rounded-md mx-auto bg-secondary",
+          "w-full bg-center overflow-hidden relative card rounded-md mx-auto",
+          isReverse ? "bg-background" : "bg-secondary",
         )}
       >
         {/* Image */}

@@ -42,11 +42,7 @@ export const htmlSystemPrompt = (
       - CRITICAL: Never create HTML files with more than 150 lines of code - ALWAYS split them.
       - CRITICAL: When approaching 100 lines of code in any file, start planning how to split it.
       - For pages with multiple sections (e.g., landing page with hero, features, testimonials), create separate HTML files for each section.
-      - Use HTML imports or iframe elements to compose complex pages from smaller component files.
-      - Create reusable component files for elements that appear multiple times (navigation, cards, forms, etc.).
-      - For complex forms, split them into multiple step files rather than creating one massive form file.
-      - Use a consistent naming convention for component files that clearly indicates their purpose.
-      - Maintain a clear directory structure that organizes components by their function or page location.
+      - If you create multiple files, you must add a link to the main file in the index.html file in order to view it.
       - CRITICAL: If you realize midway through coding that an HTML file is growing too large, immediately stop and refactor into multiple files.
     </component_size_management>
     <creativity>
