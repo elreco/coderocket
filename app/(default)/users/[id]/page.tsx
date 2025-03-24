@@ -245,29 +245,29 @@ export default async function UserPage({
               Latest components
             </h5>
             {latestComponents.length > 0 ? (
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-6">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-6">
                 {latestComponents.length > 0 && (
-                  <div className="sm:col-span-2 lg:col-span-4 lg:row-span-2">
+                  <div className="sm:col-span-3">
                     <ComponentCard chat={latestComponents[0]} isReverse />
                   </div>
                 )}
                 {latestComponents.length > 1 && (
-                  <div className="sm:col-span-1 lg:col-span-2">
+                  <div className="sm:col-span-3">
                     <ComponentCard chat={latestComponents[1]} isReverse />
                   </div>
                 )}
                 {latestComponents.length > 2 && (
-                  <div className="sm:col-span-1 lg:col-span-2">
+                  <div className="sm:col-span-2">
                     <ComponentCard chat={latestComponents[2]} isReverse />
                   </div>
                 )}
                 {latestComponents.length > 3 && (
-                  <div className="sm:col-span-1 lg:col-span-3">
+                  <div className="sm:col-span-2">
                     <ComponentCard chat={latestComponents[3]} isReverse />
                   </div>
                 )}
                 {latestComponents.length > 4 && (
-                  <div className="sm:col-span-1 lg:col-span-3">
+                  <div className="sm:col-span-2">
                     <ComponentCard chat={latestComponents[4]} isReverse />
                   </div>
                 )}
