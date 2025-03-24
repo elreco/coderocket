@@ -36,7 +36,6 @@ export type GetComponentsReturnType = {
   last_assistant_message_theme: string;
   slug: string;
   remix_chat_id: string;
-  views: number;
 };
 
 export const fetchChatById = async (idOrSlug: string) => {
