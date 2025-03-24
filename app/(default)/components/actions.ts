@@ -218,7 +218,8 @@ export const createChat = async (prompt: string, formData: FormData) => {
   const subscription = await getSubscription();
   let subscriptionType = "trial";
   if (subscription) {
-    subscriptionType = subscription.prices?.products?.name?.toLowerCase() || "trial";
+    subscriptionType =
+      subscription.prices?.products?.name?.toLowerCase() || "trial";
   }
   const isVisible = formData.get("isVisible");
   const theme = formData.get("theme")?.toString() || defaultTheme;

@@ -346,7 +346,8 @@ const updateDataAfterCompletion = async (
   const subscription = await getSubscription();
   let subscriptionType = "trial";
   if (subscription) {
-    subscriptionType = subscription.prices?.products?.name?.toLowerCase() || "trial";
+    subscriptionType =
+      subscription.prices?.products?.name?.toLowerCase() || "trial";
   }
 
   const chat = await fetchChatById(chatId);
@@ -411,7 +412,11 @@ const updateDataAfterCompletion = async (
   } else {
     await supabase
       .from("messages")
-      .update({ version, input_tokens: usage.promptTokens, subscription_type: subscriptionType })
+      .update({
+        version,
+        input_tokens: usage.promptTokens,
+        subscription_type: subscriptionType,
+      })
       .eq("chat_id", chatId)
       .eq("version", -1);
   }

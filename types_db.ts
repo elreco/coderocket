@@ -63,6 +63,7 @@ export type Database = {
           slug: string | null;
           title: string | null;
           user_id: string;
+          views: number | null;
         };
         Insert: {
           artifact_code?: string | null;
@@ -81,6 +82,7 @@ export type Database = {
           slug?: string | null;
           title?: string | null;
           user_id: string;
+          views?: number | null;
         };
         Update: {
           artifact_code?: string | null;
@@ -99,6 +101,7 @@ export type Database = {
           slug?: string | null;
           title?: string | null;
           user_id?: string;
+          views?: number | null;
         };
         Relationships: [
           {
@@ -131,6 +134,41 @@ export type Database = {
           stripe_customer_id?: string | null;
         };
         Relationships: [];
+      };
+      environment_variables: {
+        Row: {
+          chat_id: string;
+          created_at: string;
+          id: number;
+          key: string;
+          updated_at: string;
+          value: string;
+        };
+        Insert: {
+          chat_id: string;
+          created_at?: string;
+          id?: number;
+          key: string;
+          updated_at?: string;
+          value: string;
+        };
+        Update: {
+          chat_id?: string;
+          created_at?: string;
+          id?: number;
+          key?: string;
+          updated_at?: string;
+          value?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "environment_variables_chat_id_fkey";
+            columns: ["chat_id"];
+            isOneToOne: false;
+            referencedRelation: "chats";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       extra_messages: {
         Row: {
@@ -168,6 +206,7 @@ export type Database = {
           prompt_image: string | null;
           role: string;
           screenshot: string | null;
+          subscription_type: string | null;
           theme: string | null;
           version: number;
         };
@@ -182,6 +221,7 @@ export type Database = {
           prompt_image?: string | null;
           role: string;
           screenshot?: string | null;
+          subscription_type?: string | null;
           theme?: string | null;
           version: number;
         };
@@ -196,6 +236,7 @@ export type Database = {
           prompt_image?: string | null;
           role?: string;
           screenshot?: string | null;
+          subscription_type?: string | null;
           theme?: string | null;
           version?: number;
         };
@@ -419,8 +460,8 @@ export type Database = {
           created_at: string | null;
           full_name: string | null;
           id: string;
-          payment_method: Json | null;
           ip_address: string | null;
+          payment_method: Json | null;
         };
         Insert: {
           avatar_url?: string | null;
@@ -428,8 +469,8 @@ export type Database = {
           created_at?: string | null;
           full_name?: string | null;
           id: string;
-          payment_method?: Json | null;
           ip_address?: string | null;
+          payment_method?: Json | null;
         };
         Update: {
           avatar_url?: string | null;
@@ -437,14 +478,42 @@ export type Database = {
           created_at?: string | null;
           full_name?: string | null;
           id?: string;
-          payment_method?: Json | null;
           ip_address?: string | null;
+          payment_method?: Json | null;
         };
         Relationships: [];
       };
     };
     Views: {
-      [_ in never]: never;
+      messages_view: {
+        Row: {
+          chat_id: string | null;
+          content: string | null;
+          created_at: string | null;
+          email: string | null;
+          full_name: string | null;
+          id: number | null;
+          input_tokens_column: number | null;
+          is_built: boolean | null;
+          output_tokens_column: number | null;
+          prompt_image: string | null;
+          role: string | null;
+          screenshot: string | null;
+          subscription_count: number | null;
+          subscription_type: string | null;
+          theme: string | null;
+          version: number | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "messages_chat_id_fkey";
+            columns: ["chat_id"];
+            isOneToOne: false;
+            referencedRelation: "chats";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Functions: {
       get_all_components: {
@@ -537,6 +606,37 @@ export type Database = {
           last_assistant_message_theme: string;
           framework: string;
           remix_chat_id: string;
+        }[];
+      };
+      get_components4: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          chat_id: string;
+          user_id: string;
+          user_full_name: string;
+          user_avatar_url: string;
+          is_featured: boolean;
+          is_private: boolean;
+          created_at: string;
+          slug: string;
+          title: string;
+          likes: number;
+          first_user_message: string;
+          last_assistant_message: string;
+          last_assistant_message_theme: string;
+          framework: string;
+          remix_chat_id: string;
+          views: number;
+        }[];
+      };
+      get_median_message_cost: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          month: string;
+          processing_engine: string;
+          message_count: number;
+          average_cost: string;
+          median_cost: string;
         }[];
       };
     };
