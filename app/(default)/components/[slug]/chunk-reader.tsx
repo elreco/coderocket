@@ -1,4 +1,5 @@
 import { Paintbrush } from "lucide-react";
+import { useEffect } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import {
@@ -34,6 +35,10 @@ export function ChunkReader({
 }) {
   const { isCanvas, activeTab, selectedFramework, isLoading } =
     useComponentContext();
+
+  useEffect(() => {
+    console.log("chunks", chunks);
+  }, [chunks]);
   return chunks.map((chunk, index) => {
     // Pour les chunks de type "artifact", utiliser directement les fichiers fournis
     let artifactFiles: ChatFile[] = [];

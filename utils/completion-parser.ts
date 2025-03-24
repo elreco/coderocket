@@ -620,76 +620,93 @@ export const hasFiles = (completion: string): boolean => {
 export function splitCompletedContentIntoChunks(
   content: string,
 ): ContentChunk[] {
-  const chunks: ContentChunk[] = [];
-  let currentIndex = 0;
+  // Si le contenu est vide, renvoyer un tableau vide
+  if (!content || !content.trim()) {
+    return [];
+  }
 
-  // Vérifier si le contenu contient des artifacts
-  const hasArtifacts = content.includes("<tailwindaiArtifact");
-  const hasFiles = content.includes("<tailwindaiFile");
+  // 1. Si le contenu contient des artifacts déjà formatés, les extraire
+  if (
+    content.includes("<tailwindaiArtifact") &&
+    content.includes("</tailwindaiArtifact>")
+  ) {
+    const chunks: ContentChunk[] = [];
+    const artifactRegex = /<tailwindaiArtifact[\s\S]*?<\/tailwindaiArtifact>/g;
+    let artifactMatch;
+    let lastIndex = 0;
 
-  // Si le contenu contient des fichiers mais pas d'artifacts, créer un artifact parent
-  if (hasFiles && !hasArtifacts) {
-    const artificialArtifact = `<tailwindaiArtifact title="Generated Files">
-${content}
-</tailwindaiArtifact>`;
-    chunks.push({
-      type: "artifact",
-      content: artificialArtifact,
-    });
+    while ((artifactMatch = artifactRegex.exec(content)) !== null) {
+      // Ajouter le texte avant l'artifact s'il y en a
+      const textBefore = content.slice(lastIndex, artifactMatch.index).trim();
+      if (textBefore) {
+        chunks.push({
+          type: "text",
+          content: textBefore,
+        });
+      }
+
+      // Ajouter l'artifact
+      chunks.push({
+        type: "artifact",
+        content: artifactMatch[0],
+      });
+
+      lastIndex = artifactMatch.index + artifactMatch[0].length;
+    }
+
+    // Ajouter le texte après le dernier artifact s'il y en a
+    const textAfter = content.slice(lastIndex).trim();
+    if (textAfter) {
+      chunks.push({
+        type: "text",
+        content: textAfter,
+      });
+    }
+
     return chunks;
   }
 
-  // Sinon, procéder au découpage normal
-  while (currentIndex < content.length) {
-    const artifactStart = content.indexOf("<tailwindaiArtifact", currentIndex);
-    const textEnd = artifactStart === -1 ? content.length : artifactStart;
+  // 2. Si le contenu contient des fichiers mais pas d'artifacts, créer un artifact
+  if (content.includes("<tailwindaiFile")) {
+    // Extraire tous les fichiers
+    const filesRegex = /<tailwindaiFile[\s\S]*?<\/tailwindaiFile>/g;
+    let filesMatch;
+    const files = [];
 
-    // Ajouter le texte avant l'artifact
-    if (textEnd > currentIndex) {
-      const textContent = content.slice(currentIndex, textEnd).trim();
-      if (textContent) {
-        chunks.push({
-          type: "text",
-          content: textContent,
-        });
-      }
+    // Collecter tous les fichiers
+    while ((filesMatch = filesRegex.exec(content)) !== null) {
+      files.push(filesMatch[0]);
     }
 
-    if (artifactStart === -1) break;
-
-    // Trouver la fin de l'artifact
-    const artifactEnd = content.indexOf("</tailwindaiArtifact>", artifactStart);
-    if (artifactEnd === -1) break;
-
-    // Extraire l'artifact complet
-    const artifactContent = content.slice(
-      artifactStart,
-      artifactEnd + "</tailwindaiArtifact>".length,
-    );
-
-    // Vérifier si l'artifact contient des fichiers
-    if (artifactContent.includes("<tailwindaiFile")) {
-      chunks.push({
-        type: "artifact",
-        content: artifactContent,
-      });
+    // Si on a trouvé des fichiers complets, créer un artifact avec eux
+    if (files.length > 0) {
+      return [
+        {
+          type: "artifact",
+          content: `<tailwindaiArtifact title="Generated Files">${files.join("\n")}</tailwindaiArtifact>`,
+        },
+      ];
     }
 
-    currentIndex = artifactEnd + "</tailwindaiArtifact>".length;
-  }
-
-  // Ajouter le texte restant après le dernier artifact
-  if (currentIndex < content.length) {
-    const textContent = content.slice(currentIndex).trim();
-    if (textContent) {
-      chunks.push({
-        type: "text",
-        content: textContent,
-      });
+    // Si on n'a pas trouvé de fichiers complets mais il y a des balises tailwindaiFile,
+    // c'est probablement un fichier incomplet
+    if (content.includes("<tailwindaiFile")) {
+      return [
+        {
+          type: "artifact",
+          content: `<tailwindaiArtifact title="Generated Files">${content}</tailwindaiArtifact>`,
+        },
+      ];
     }
   }
 
-  return chunks;
+  // 3. Si c'est juste du texte, renvoyer un seul chunk text
+  return [
+    {
+      type: "text",
+      content: content.trim(),
+    },
+  ];
 }
 
 export const splitContentIntoChunks = (completion: string): ContentChunk[] => {

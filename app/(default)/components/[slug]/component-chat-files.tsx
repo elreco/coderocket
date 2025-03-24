@@ -146,10 +146,6 @@ ${extractedFiles
     setFiles(extractedFiles);
   }, [message.content, isLoading]);
 
-  useEffect(() => {
-    console.log("chunks", chunks);
-  }, [chunks]);
-
   const isSelectedVersion = selectedVersion === message.version && !isLoading;
 
   const handleFileClick = (version: number, file?: ChatFile) => {
