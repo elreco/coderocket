@@ -34,19 +34,14 @@ export function ChunkReader({
 }) {
   const { isCanvas, activeTab, selectedFramework, isLoading } =
     useComponentContext();
-
+  console.log("chunks", chunks);
   return chunks.map((chunk, index) => {
-    // Pour les chunks de type "artifact", extraire les fichiers de cet artifact spécifique
+    // Pour les chunks de type "artifact", utiliser directement les fichiers fournis
     let artifactFiles: ChatFile[] = [];
     if (chunk.type === "artifact") {
-      /* artifactFiles = extractFilesFromArtifact(chunk.content);
-      console.log("artifactFiles", artifactFiles);
-      // Si aucun fichier n'a été extrait de cet artifact, utiliser les fichiers globaux
-      // Cela peut arriver si l'artifact est incomplet ou mal formé
-      if (artifactFiles.length === 0) { */
       artifactFiles = files;
-      /* } */
     }
+    console.log("artifactFiles", artifactFiles);
 
     return (
       <div key={index} className="text-sm">

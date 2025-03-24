@@ -33,6 +33,7 @@ import { Tables } from "@/types_db";
 import {
   ChatFile,
   ContentChunk,
+  extractDirectFiles,
   extractFilesFromCompletion,
   hasArtifacts,
   splitContentIntoChunks,
@@ -244,16 +245,58 @@ export default function ComponentSidebar({
 
   useEffect(() => {
     if (isLoading && completion) {
-      const newChunks = splitContentIntoChunks(completion);
-      setStreamingChunks(newChunks);
-      const hasArtifactResult = hasArtifacts(completion);
-      if (hasArtifactResult) {
-        setFiles(extractFilesFromCompletion(completion));
+      // Extraction unique des fichiers
+      let extractedFiles: ChatFile[] = [];
+      let newChunks: ContentChunk[] = [];
+
+      // Vérifier d'abord les balises tailwindaiFile directement
+      if (completion.includes("<tailwindaiFile")) {
+        extractedFiles = extractDirectFiles(completion);
+
+        // Si des fichiers ont été extraits directement sans artifact, créer un "faux" artifact
+        if (
+          extractedFiles.length > 0 &&
+          !completion.includes("<tailwindaiArtifact")
+        ) {
+          const artificialArtifact = `<tailwindaiArtifact title="Generated Files">
+${extractedFiles.map((file) => `<tailwindaiFile name="${file.name || "unnamed"}">${file.content}</tailwindaiFile>`).join("\n")}
+</tailwindaiArtifact>`;
+
+          newChunks = [
+            {
+              type: "artifact",
+              content: artificialArtifact,
+            },
+          ];
+        } else {
+          // Sinon utiliser le découpage standard
+          newChunks = splitContentIntoChunks(completion);
+        }
       } else {
-        setFiles([]);
+        // Pas de balises tailwindaiFile, utiliser le découpage standard
+        newChunks = splitContentIntoChunks(completion);
+
+        // Vérifier les artifacts comme avant
+        const hasArtifactResult = hasArtifacts(completion);
+        if (hasArtifactResult) {
+          extractedFiles = extractFilesFromCompletion(completion);
+        }
       }
-    } else {
+
+      // Filtrer les chunks pour ne garder que ceux qui ne sont pas des fichiers
+      newChunks = newChunks.filter((chunk) => {
+        if (chunk.type === "artifact") return true;
+        // Pour les chunks de type "text", vérifier s'ils ne contiennent pas de balises tailwindaiFile
+        return !chunk.content.includes("<tailwindaiFile");
+      });
+
+      // Mettre à jour les états ensemble pour éviter les sauts
+      setStreamingChunks(newChunks);
+      setFiles(extractedFiles);
+    } else if (!isLoading) {
+      // Réinitialiser les états lorsque le chargement est terminé
       setStreamingChunks([]);
+      setFiles([]);
     }
   }, [completion, isLoading]);
 

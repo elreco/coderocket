@@ -1,7 +1,7 @@
 "use client";
 
 import { Trash2 } from "lucide-react";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 
 import {
   AlertDialog,
@@ -24,8 +24,8 @@ import { Tables } from "@/types_db";
 import {
   ChatFile,
   ContentChunk,
+  extractDirectFiles,
   extractFilesFromCompletedCompletion,
-  extractFilesFromIncompleteArtifact,
   hasCompletedArtifacts,
   splitCompletedContentIntoChunks,
 } from "@/utils/completion-parser";
@@ -65,45 +65,53 @@ export default function ComponentChatFiles({
 
   const messageRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const prepareContent = async () => {
-      const hasPartialArtifactTags =
-        message.content.includes("<tailwindaiArtifact") &&
-        !message.content.includes("</tailwindaiArtifact>");
-      const hasIncompleteMarker = message.content.includes(
-        "<!-- FINISH_REASON: length -->",
-      );
-      // Vérifier si le message contient des artifacts valides
-      const hasArtifactResult = hasCompletedArtifacts(message.content);
-
-      // Extraire les fichiers
-      let extractedFiles: ChatFile[] = [];
-
-      // Si le message contient des artifacts valides ou des balises partielles avec le marqueur de fin de token
-      if (
-        hasArtifactResult ||
-        (hasPartialArtifactTags && hasIncompleteMarker)
-      ) {
-        // Si le message contient des balises partielles et le marqueur de fin de token,
-        // utiliser extractFilesFromIncompleteArtifact
-        if (hasPartialArtifactTags && hasIncompleteMarker) {
-          extractedFiles = extractFilesFromIncompleteArtifact(
-            message.content,
-            false,
-          );
-        } else {
-          // Sinon, utiliser extractFilesFromCompletion
-          extractedFiles = extractFilesFromCompletedCompletion(message.content);
-        }
-      }
-      setFiles(extractedFiles);
-      // Découper le contenu en chunks
-      const contentChunks = splitCompletedContentIntoChunks(message.content);
-      setChunks(contentChunks);
-    };
-
-    prepareContent();
+  const completionWithFiles = useMemo(() => {
+    if (!message.content) return null;
+    if (hasCompletedArtifacts(message.content)) {
+      return message.content;
+    }
+    return message.content;
   }, [message.content]);
+
+  useEffect(() => {
+    if (!completionWithFiles) return;
+
+    // Extraire les fichiers directement du contenu
+    const extractedFiles = extractDirectFiles(completionWithFiles);
+
+    // Créer un seul tableau de chunks
+    let contentChunks = splitCompletedContentIntoChunks(completionWithFiles);
+
+    // Si des fichiers ont été extraits, créer un seul artifact
+    if (extractedFiles.length > 0) {
+      const artificialArtifact = `<tailwindaiArtifact title="Generated Files">
+${extractedFiles.map((file) => `<tailwindaiFile name="${file.name}">${file.content}</tailwindaiFile>`).join("\n")}
+</tailwindaiArtifact>`;
+
+      contentChunks = [
+        {
+          type: "artifact",
+          content: artificialArtifact,
+        },
+      ];
+    }
+
+    // Mettre à jour les états une seule fois
+    setChunks(contentChunks);
+    setFiles(extractedFiles);
+  }, [completionWithFiles]);
+
+  // Ajouter un état pour gérer le chargement initial
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+
+  useEffect(() => {
+    if (isInitialLoad && completionWithFiles) {
+      setIsInitialLoad(false);
+    }
+  }, [completionWithFiles, isInitialLoad]);
+
+  // Ne pas afficher les chunks pendant le chargement initial
+  const displayChunks = isInitialLoad ? [] : chunks;
 
   const isSelectedVersion = selectedVersion === message.version && !isLoading;
 
@@ -246,7 +254,7 @@ export default function ComponentChatFiles({
               )}
             </div>
             <ChunkReader
-              chunks={chunks}
+              chunks={displayChunks}
               files={files}
               handleFileClick={handleFileClick}
               isSelectedVersion={isSelectedVersion}

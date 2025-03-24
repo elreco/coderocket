@@ -23,6 +23,9 @@ export interface ChatFile {
 let previousFiles = new Map<string, string>(); // Pour stocker l'état précédent
 let lastActiveFile: string | null = null; // Pour stocker le nom du dernier fichier actif
 
+// Cache pour éviter les extractions multiples du même contenu
+const fileExtractionCache = new Map<string, ChatFile[]>();
+
 export const getUpdatedArtifactCode = (
   completion: string,
   artifactCode: string,
@@ -139,139 +142,264 @@ export const ensureCDNsPresent = (htmlContent: string): string => {
   return updatedContent;
 };
 
+// Nouvelle fonction pour extraire directement les fichiers, même mal formatés
+export const extractDirectFiles = (
+  content: string,
+  isHtml: boolean = false,
+): ChatFile[] => {
+  // Vérifier le cache d'abord
+  const cacheKey = content.substring(0, 200); // Utiliser le début du contenu comme clé de cache
+  if (fileExtractionCache.has(cacheKey)) {
+    return fileExtractionCache.get(cacheKey) || [];
+  }
+
+  if (!content || !content.includes("<tailwindaiFile")) {
+    return [];
+  }
+
+  const files: ChatFile[] = [];
+
+  // Approche basique par découpage des blocs de texte
+  // Plus robuste pour les contenus complexes avec des balises génériques TypeScript
+  let startSearchFrom = 0;
+
+  while (true) {
+    // Trouver le prochain début de balise tailwindaiFile
+    const startTagIndex = content.indexOf("<tailwindaiFile", startSearchFrom);
+    if (startTagIndex === -1) break; // Plus de balises tailwindaiFile
+
+    // Trouver le début du contenu (après le >)
+    const startTagEnd = content.indexOf(">", startTagIndex);
+    if (startTagEnd === -1) break; // Balise invalide
+
+    // Extraire les attributs de la balise d'ouverture
+    const openingTag = content.substring(startTagIndex, startTagEnd + 1);
+    const nameMatch = openingTag.match(/name=["']([^"']*?)["']/);
+    const actionMatch = openingTag.match(/action=["']([^"']*?)["']/);
+    const fileName = nameMatch ? nameMatch[1] : null;
+    const action = actionMatch ? actionMatch[1] : null;
+
+    // Chercher la fin du fichier (balise fermante ou début du prochain fichier)
+    const endTagIndex = content.indexOf("</tailwindaiFile>", startTagEnd);
+    const nextStartTagIndex = content.indexOf("<tailwindaiFile", startTagEnd);
+
+    let contentEndIndex;
+    if (
+      endTagIndex !== -1 &&
+      (nextStartTagIndex === -1 || endTagIndex < nextStartTagIndex)
+    ) {
+      // Balise fermante trouvée avant le prochain fichier
+      contentEndIndex = endTagIndex;
+      startSearchFrom = endTagIndex + "</tailwindaiFile>".length;
+    } else if (nextStartTagIndex !== -1) {
+      // Prochain fichier avant une balise fermante
+      contentEndIndex = nextStartTagIndex;
+      startSearchFrom = nextStartTagIndex;
+    } else {
+      // Ni balise fermante ni prochain fichier - prendre jusqu'à la fin
+      contentEndIndex = content.length;
+      startSearchFrom = content.length;
+    }
+
+    // Extraire le contenu du fichier
+    const fileContent = content
+      .substring(startTagEnd + 1, contentEndIndex)
+      .trim();
+
+    // Si le contenu existe et n'est pas vide
+    if (fileContent && fileContent.length > 0) {
+      // Normaliser l'indentation
+      const lines = fileContent.split("\n");
+      const nonEmptyLines = lines.filter((line) => line.trim().length > 0);
+
+      if (nonEmptyLines.length > 0) {
+        try {
+          // Calculer l'indentation minimale sans planter sur les lignes trop courtes
+          const indentations = nonEmptyLines
+            .map((line) => {
+              const match = line.match(/^[ \t]*/);
+              return match ? match[0].length : 0;
+            })
+            .filter((length) => length < 100); // Ignorer les valeurs aberrantes
+
+          const minIndent =
+            indentations.length > 0 ? Math.min(...indentations) : 0;
+
+          // Appliquer l'indentation en gérant les lignes trop courtes
+          const processedContent = lines
+            .map((line) =>
+              line.length >= minIndent ? line.slice(minIndent) : line,
+            )
+            .join("\n")
+            .trim();
+
+          // Ajouter des CDN si nécessaire
+          const finalContent = isHtml
+            ? ensureCDNsPresent(processedContent)
+            : processedContent;
+
+          files.push({
+            name: fileName,
+            content: finalContent,
+            isDelete: action === "delete",
+            isActive: false,
+            isContinue: action === "continue",
+            isIncomplete:
+              endTagIndex === -1 ||
+              (endTagIndex !== -1 && endTagIndex > contentEndIndex),
+          });
+        } catch (error) {
+          // En cas d'erreur dans le traitement de l'indentation, utiliser le contenu brut
+          console.warn("Erreur lors du traitement de l'indentation:", error);
+          const finalContent = isHtml
+            ? ensureCDNsPresent(fileContent)
+            : fileContent;
+
+          files.push({
+            name: fileName,
+            content: finalContent,
+            isDelete: action === "delete",
+            isActive: false,
+            isContinue: action === "continue",
+            isIncomplete:
+              endTagIndex === -1 ||
+              (endTagIndex !== -1 && endTagIndex > contentEndIndex),
+          });
+        }
+      }
+    }
+  }
+
+  // Stocker dans le cache
+  fileExtractionCache.set(cacheKey, files);
+  return files;
+};
+
 export const extractFilesFromCompletion = (
   completion: string,
   isHtml: boolean = false,
 ) => {
   if (!completion) return [];
 
+  // Essayer d'abord avec l'extraction directe qui est plus robuste avec le formatage TypeScript
+  const directFiles = extractDirectFiles(completion, isHtml);
+  if (directFiles.length > 0) {
+    return directFiles;
+  }
+
+  // Si aucun fichier n'est trouvé avec la méthode directe, continuer avec la méthode existante
   const filesArray: ChatFile[] = [];
 
-  // Vérifier d'abord si nous avons des balises d'artifact
-  if (!completion.includes("<tailwindaiArtifact")) {
+  // Identification préliminaire des balises tailwindaiFile
+  const hasOpeningTag = completion.includes("<tailwindaiFile");
+
+  // Si aucune balise tailwindaiFile n'est trouvée, retourner un tableau vide
+  if (!hasOpeningTag) {
     return [];
   }
 
-  // Utiliser une regex plus simple et plus robuste pour trouver tous les artifacts complets
-  const artifactRegex = /<tailwindaiArtifact[\s\S]*?<\/tailwindaiArtifact>/g;
+  // Expression régulière plus robuste pour capturer les balises tailwindaiFile avec leur contenu
+  // Cette regex est plus tolérante aux sauts de ligne et aux espaces dans les attributs
+  const fileRegex =
+    /<tailwindaiFile\s+name=["']([^"']*?)["'](?:\s+action=["']([^"']*?)["'])?[^>]*>([\s\S]*?)(?:<\/tailwindaiFile>|$)/g;
 
-  const artifacts = [];
-  let match;
-  while ((match = artifactRegex.exec(completion)) !== null) {
-    artifacts.push(match[0]);
+  let fileMatch;
+  while ((fileMatch = fileRegex.exec(completion)) !== null) {
+    const fileName = fileMatch[1];
+    const action = fileMatch[2];
+    let content = fileMatch[3];
+
+    // Vérifier si le contenu est vide ou ne contient que des espaces
+    if (!content || content.trim().length === 0) {
+      continue;
+    }
+
+    // Nettoyage du contenu
+    content = content
+      .replace(/<\/tailwindaiFile>[\s\S]*$/g, "") // Supprimer la balise fermante et tout ce qui suit
+      .replace(/<\/tailwindaiArtifact>[\s\S]*$/g, "")
+      .trim();
+
+    // Traitement de l'indentation
+    const lines = content.split("\n");
+    const nonEmptyLines = lines.filter((line) => line.trim().length > 0);
+
+    if (nonEmptyLines.length === 0) {
+      continue; // Ignorer les fichiers sans contenu réel
+    }
+
+    const indentations = nonEmptyLines.map((line) => {
+      const match = line.match(/^[ \t]*/);
+      return match ? match[0].length : 0;
+    });
+
+    const minIndent = Math.min(...indentations);
+
+    // Appliquer l'indentation minimale à toutes les lignes
+    content = lines
+      .map((line) => (line.length >= minIndent ? line.slice(minIndent) : line))
+      .join("\n")
+      .trim();
+
+    if (isHtml) {
+      content = ensureCDNsPresent(content);
+    }
+
+    // Vérifier si la balise est correctement fermée
+    const isComplete = completion.includes(`</tailwindaiFile>`);
+
+    filesArray.push({
+      name: fileName || null,
+      content: content,
+      isDelete: action === "delete",
+      isActive: false,
+      isContinue: action === "continue",
+      isIncomplete: !isComplete,
+    });
   }
 
-  // Si aucun artifact complet n'est trouvé, vérifier s'il y a un artifact partiel
-  if (artifacts.length === 0) {
-    // Vérifier s'il y a un début d'artifact sans fin
-    const lastArtifactStartIndex = completion.lastIndexOf(
-      "<tailwindaiArtifact",
-    );
-    if (lastArtifactStartIndex !== -1) {
-      // Extraire le contenu de l'artifact partiel
-      const partialArtifact = completion.slice(lastArtifactStartIndex);
+  // Si aucun fichier n'a été trouvé avec la regex précédente, tenter une approche plus agressive
+  if (filesArray.length === 0 && hasOpeningTag) {
+    // Extraire toutes les sections commençant par <tailwindaiFile et allant jusqu'à la fin du texte
+    // ou jusqu'à la prochaine balise tailwindaiFile
+    const lastFileStartIndex = completion.lastIndexOf("<tailwindaiFile");
 
-      // Utiliser la regex pour les fichiers dans l'artifact partiel
-      const fileRegex =
-        /<tailwindaiFile.*?name=["']([^"']*?)["'].*?(?:action=["']([^"']*?)["'].*?)?>([\s\S]*?)(?=<\/tailwindaiFile>|<tailwindaiFile|$)/g;
+    if (lastFileStartIndex !== -1) {
+      const nameMatch = completion
+        .slice(lastFileStartIndex)
+        .match(/name=["']([^"']*?)["']/);
+      const actionMatch = completion
+        .slice(lastFileStartIndex)
+        .match(/action=["']([^"']*?)["']/);
 
-      let fileMatch;
-      while ((fileMatch = fileRegex.exec(partialArtifact)) !== null) {
-        const fileName = fileMatch[1];
-        const action = fileMatch[2];
-        let content = fileMatch[3].trim();
+      let content = completion.slice(lastFileStartIndex);
 
-        // Nettoyage du contenu
-        content = content
-          .replace(/<\/tailwindaiFile>/g, "")
-          .replace(/<\/tailwindaiArtifact>/g, "")
-          .replace(/^\n/, "");
+      // Extraire le contenu après la balise d'ouverture
+      const openTagEndIndex = content.indexOf(">");
 
-        // Traitement de l'indentation et ajout au tableau
-        const lines = content.split("\n");
-        const nonEmptyLines = lines.filter((line) => line.trim().length > 0);
-        const indentations = nonEmptyLines.map((line) => {
-          const match = line.match(/^[ \t]*/);
-          return match ? match[0].length : 0;
-        });
-        const minIndent =
-          indentations.length > 0 ? Math.min(...indentations) : 0;
+      if (openTagEndIndex !== -1) {
+        content = content.slice(openTagEndIndex + 1).trim();
 
-        content = lines
-          .map((line) => line.slice(minIndent))
-          .join("\n")
+        // Nettoyer le contenu
+        const cleanedContent = content
+          .replace(/<\/tailwindaiFile>[\s\S]*$/g, "")
+          .replace(/<\/tailwindaiArtifact>[\s\S]*$/g, "")
           .trim();
 
-        if (isHtml) {
-          content = ensureCDNsPresent(content);
+        if (cleanedContent && cleanedContent.length > 0) {
+          filesArray.push({
+            name: nameMatch ? nameMatch[1] : null,
+            content: cleanedContent,
+            isDelete: actionMatch ? actionMatch[1] === "delete" : false,
+            isActive: false,
+            isContinue: actionMatch ? actionMatch[1] === "continue" : false,
+            isIncomplete: true,
+          });
         }
-
-        filesArray.push({
-          name: fileName || null,
-          content: content || completion,
-          isDelete: action === "delete",
-          isActive: false,
-          isContinue: action === "continue",
-        });
       }
     }
-
-    return filesArray;
   }
 
-  // Traiter chaque artifact complet trouvé
-  for (const artifactContent of artifacts) {
-    const fileRegex =
-      /<tailwindaiFile.*?name=["']([^"']*?)["'].*?(?:action=["']([^"']*?)["'].*?)?>([\s\S]*?)(?=<\/tailwindaiFile>|<tailwindaiFile|$)/g;
-
-    let fileMatch;
-    while ((fileMatch = fileRegex.exec(artifactContent)) !== null) {
-      const fileName = fileMatch[1];
-      const action = fileMatch[2];
-      let content = fileMatch[3].trim();
-
-      // Si on trouve une balise fermante pour ce fichier, on l'utilise comme limite
-      const closeTagIndex = content.indexOf("</tailwindaiFile>");
-      if (closeTagIndex !== -1) {
-        content = content.slice(0, closeTagIndex);
-      }
-
-      // Nettoyage du contenu
-      content = content
-        .replace(/<\/tailwindaiFile>/g, "")
-        .replace(/<\/tailwindaiArtifact>/g, "")
-        .replace(/^\n/, "");
-
-      // Trouver l'indentation minimale commune
-      const lines = content.split("\n");
-      const nonEmptyLines = lines.filter((line) => line.trim().length > 0);
-      const indentations = nonEmptyLines.map((line) => {
-        const match = line.match(/^[ \t]*/);
-        return match ? match[0].length : 0;
-      });
-      const minIndent = indentations.length > 0 ? Math.min(...indentations) : 0;
-
-      // Retirer l'indentation minimale commune de chaque ligne
-      content = lines
-        .map((line) => line.slice(minIndent))
-        .join("\n")
-        .trim();
-
-      // Assurez-vous que les CDNs sont présents
-      if (isHtml) {
-        content = ensureCDNsPresent(content);
-      }
-
-      // Ajouter le fichier au tableau
-      filesArray.push({
-        name: fileName || null,
-        content: content || completion,
-        isDelete: action === "delete",
-        isActive: false,
-        isContinue: action === "continue",
-      });
-    }
-  }
   return filesArray;
 };
 
@@ -500,6 +628,18 @@ export const hasArtifacts = (completion: string): boolean => {
 };
 
 export const hasCompletedArtifacts = (completion: string): boolean => {
+  // Vérifier d'abord s'il y a des balises tailwindaiFile directes sans artifact
+  if (
+    completion.includes("<tailwindaiFile") &&
+    !completion.includes("<tailwindaiArtifact")
+  ) {
+    // Si nous pouvons extraire des fichiers directement, considérer comme un artifact
+    const directFiles = extractDirectFiles(completion);
+    if (directFiles.length > 0) {
+      return true;
+    }
+  }
+
   // Vérifier si le contenu contient des balises d'artifact complètes ou partielles
   const hasCompleteArtifactTags =
     completion.includes("<tailwindaiArtifact") &&
@@ -567,111 +707,37 @@ export const hasFiles = (completion: string): boolean => {
   return /<tailwindaiFile/i.test(completion);
 };
 
-export const splitCompletedContentIntoChunks = (
-  completion: string,
-): ContentChunk[] => {
+export function splitCompletedContentIntoChunks(
+  content: string,
+): ContentChunk[] {
   const chunks: ContentChunk[] = [];
-
-  // Vérifier si le contenu contient des balises d'artifact complètes ou partielles
-  const hasCompleteArtifactTags =
-    completion.includes("<tailwindaiArtifact") &&
-    completion.includes("</tailwindaiArtifact>");
-  const hasPartialArtifactTags =
-    completion.includes("<tailwindaiArtifact") &&
-    !completion.includes("</tailwindaiArtifact>");
-
-  // Si le contenu contient des balises partielles, extraire le texte avant l'artifact partiel
-  if (hasPartialArtifactTags && !hasCompleteArtifactTags) {
-    const artifactStartIndex = completion.lastIndexOf("<tailwindaiArtifact");
-
-    // Ajouter le texte avant l'artifact partiel comme chunk de type "text"
-    if (artifactStartIndex > 0) {
-      const textBeforeArtifact = completion.slice(0, artifactStartIndex).trim();
-      if (textBeforeArtifact) {
-        chunks.push({
-          type: "text",
-          content: textBeforeArtifact,
-        });
-      }
-    }
-
-    // Extraire les fichiers de l'artifact partiel
-    const artifactContent = completion.slice(artifactStartIndex);
-
-    // Vérifier si l'artifact partiel contient des fichiers valides
-    const files = extractFilesFromIncompleteArtifact(completion, false);
-    const hasValidFiles = files.some((file) => !file.isIncomplete);
-    // Si l'artifact partiel contient des fichiers valides, l'ajouter comme chunk de type "artifact"
-    if (hasValidFiles) {
-      // Créer un artifact complet à partir de l'artifact partiel
-      const completeArtifact = `<tailwindaiArtifact title="Generated Files">
-${files
-  .map(
-    (file) => `<tailwindaiFile name="${file.name}">
-${file.content}
-</tailwindaiFile>`,
-  )
-  .join("\n")}
-</tailwindaiArtifact>`;
-
-      chunks.push({
-        type: "artifact",
-        content: completeArtifact,
-      });
-    } else {
-      // Sinon, ajouter tout le reste comme chunk de type "text"
-      chunks.push({
-        type: "artifact",
-        content: artifactContent,
-      });
-    }
-    return chunks;
-  }
-
-  // Si aucune balise d'artifact n'est trouvée, retourner tout le contenu comme texte
-  if (!hasCompleteArtifactTags && !hasPartialArtifactTags) {
-    if (completion.trim()) {
-      chunks.push({
-        type: "text",
-        content: completion,
-      });
-    }
-    return chunks;
-  }
-
-  // Regex pour trouver les artifacts complets
-  const artifactRegex = /<tailwindaiArtifact[\s\S]*?<\/tailwindaiArtifact>/g;
-
-  // Trouver tous les artifacts complets avec leur position
-  const artifactMatches = [];
-  let match;
-  while ((match = artifactRegex.exec(completion)) !== null) {
-    artifactMatches.push({
-      content: match[0],
-      index: match.index,
-    });
-  }
-
-  // Si aucun artifact complet n'est trouvé, retourner tout le contenu comme texte
-  if (artifactMatches.length === 0) {
-    chunks.push({
-      type: "text",
-      content: completion,
-    });
-    return chunks;
-  }
-
   let currentIndex = 0;
 
-  // Traiter chaque artifact complet trouvé
-  for (const match of artifactMatches) {
-    const artifactContent = match.content;
-    const matchIndex = match.index;
+  // Vérifier si le contenu contient des artifacts
+  const hasArtifacts = content.includes("<tailwindaiArtifact");
+  const hasFiles = content.includes("<tailwindaiFile");
+
+  // Si le contenu contient des fichiers mais pas d'artifacts, créer un artifact parent
+  if (hasFiles && !hasArtifacts) {
+    const artificialArtifact = `<tailwindaiArtifact title="Generated Files">
+${content}
+</tailwindaiArtifact>`;
+    chunks.push({
+      type: "artifact",
+      content: artificialArtifact,
+    });
+    return chunks;
+  }
+
+  // Sinon, procéder au découpage normal
+  while (currentIndex < content.length) {
+    const artifactStart = content.indexOf("<tailwindaiArtifact", currentIndex);
+    const textEnd = artifactStart === -1 ? content.length : artifactStart;
 
     // Ajouter le texte avant l'artifact
-    if (matchIndex > currentIndex) {
-      const textContent = completion.slice(currentIndex, matchIndex);
-      if (textContent.trim()) {
+    if (textEnd > currentIndex) {
+      const textContent = content.slice(currentIndex, textEnd).trim();
+      if (textContent) {
         chunks.push({
           type: "text",
           content: textContent,
@@ -679,118 +745,98 @@ ${file.content}
       }
     }
 
-    // Vérifier si l'artifact contient des fichiers incomplets
-    const containsIncompleteFile =
-      artifactContent.includes("<!-- FINISH_REASON: length -->") ||
-      artifactContent.includes("<!-- FINISH_REASON: error -->");
+    if (artifactStart === -1) break;
 
-    // Ajouter l'artifact comme type "artifact" s'il ne contient pas de fichiers incomplets
-    if (!containsIncompleteFile) {
+    // Trouver la fin de l'artifact
+    const artifactEnd = content.indexOf("</tailwindaiArtifact>", artifactStart);
+    if (artifactEnd === -1) break;
+
+    // Extraire l'artifact complet
+    const artifactContent = content.slice(
+      artifactStart,
+      artifactEnd + "</tailwindaiArtifact>".length,
+    );
+
+    // Vérifier si l'artifact contient des fichiers
+    if (artifactContent.includes("<tailwindaiFile")) {
       chunks.push({
         type: "artifact",
         content: artifactContent,
       });
-    } else {
-      // Si l'artifact contient des fichiers incomplets, le traiter comme du texte
-      chunks.push({
-        type: "text",
-        content: artifactContent,
-      });
     }
 
-    currentIndex = matchIndex + artifactContent.length;
+    currentIndex = artifactEnd + "</tailwindaiArtifact>".length;
   }
 
   // Ajouter le texte restant après le dernier artifact
-  if (currentIndex < completion.length) {
-    const textContent = completion.slice(currentIndex);
-    if (textContent.trim()) {
+  if (currentIndex < content.length) {
+    const textContent = content.slice(currentIndex).trim();
+    if (textContent) {
       chunks.push({
         type: "text",
         content: textContent,
       });
     }
   }
+
   return chunks;
-};
+}
 
 export const splitContentIntoChunks = (completion: string): ContentChunk[] => {
+  if (!completion) return [];
+
+  // Vérifier d'abord s'il y a des balises tailwindaiFile dans le contenu
+  const hasTailwindaiFile = completion.includes("<tailwindaiFile");
+
+  // Si le contenu contient des balises tailwindaiFile mais pas d'artefact complet,
+  // considérer le contenu entier comme un artefact pour une meilleure visualisation
+  if (hasTailwindaiFile && !completion.includes("<tailwindaiArtifact")) {
+    // Si on peut extraire des fichiers directement, traiter comme un artefact
+    const directFiles = extractDirectFiles(completion);
+    if (directFiles.length > 0) {
+      return [
+        {
+          type: "artifact",
+          content: completion,
+        },
+      ];
+    }
+  }
+
   const chunks: ContentChunk[] = [];
 
-  // Ne traiter que les artifacts complets
-  const artifactRegex =
-    /<tailwindaiArtifact(?:\s+title=["']([^"']*?)["'])?>[\s\S]*?<\/tailwindaiArtifact>/g;
+  // Expression régulière pour détecter les balises tailwindaiFile et tailwindaiArtifact
+  const combinedPattern =
+    /(<tailwindaiArtifact[^>]*>[\s\S]*?<\/tailwindaiArtifact>|<tailwindaiArtifact[^>]*>[\s\S]*?$|<tailwindaiFile[^>]*>[\s\S]*?<\/tailwindaiFile>|<tailwindaiFile[^>]*>[\s\S]*?$)/g;
 
-  const artifactStartRegex = /<tailwindaiArtifact/i;
+  // Diviser le texte en segments basés sur les balises trouvées
+  const segments = completion.split(combinedPattern);
 
-  // Si on a un début d'artifact sans fin, on ne traite pas le texte après
-  const lastArtifactStartIndex = completion.lastIndexOf("<tailwindaiArtifact");
-  const lastArtifactEndIndex = completion.lastIndexOf("</tailwindaiArtifact>");
-
-  // Si on a un début d'artifact sans fin, on coupe le texte à cet endroit
-  const safeCompletion =
-    lastArtifactStartIndex > lastArtifactEndIndex
-      ? completion.slice(0, lastArtifactStartIndex)
-      : completion;
-
-  // Trouver tous les artifacts complets avec leur position
-  const artifactMatches = [];
-  let match;
-  while ((match = artifactRegex.exec(safeCompletion)) !== null) {
-    artifactMatches.push({
-      content: match[0],
-      index: match.index,
-    });
+  // Trouver toutes les correspondances aux balises
+  const matches = [];
+  let matchResult;
+  while ((matchResult = combinedPattern.exec(completion)) !== null) {
+    matches.push(matchResult[0]);
   }
 
-  // Si aucun artifact complet n'est trouvé, traiter tout comme texte
-  if (artifactMatches.length === 0) {
-    // S'il n'y a pas d'artifact partiel, ajouter tout le contenu comme texte
-    if (lastArtifactStartIndex <= lastArtifactEndIndex) {
-      const textContent = safeCompletion.trim();
-      if (textContent) {
-        chunks.push({ type: "text", content: textContent });
+  // Traiter chaque segment
+  for (let i = 0; i < segments.length; i++) {
+    // Les segments pairs sont du texte normal, les segments impairs sont remplacés par les matches
+    if (i % 2 === 0) {
+      if (segments[i].trim()) {
+        chunks.push({
+          type: "text",
+          content: segments[i].trim(),
+        });
       }
-    }
-    // S'il y a un artifact partiel, ajouter seulement le texte avant
-    else if (lastArtifactStartIndex > 0) {
-      const textContent = completion.slice(0, lastArtifactStartIndex).trim();
-      if (textContent) {
-        chunks.push({ type: "text", content: textContent });
+    } else {
+      const matchIndex = Math.floor(i / 2);
+      if (matchIndex < matches.length) {
+        chunks.push({
+          type: "artifact",
+          content: matches[matchIndex],
+        });
       }
-    }
-    return chunks;
-  }
-
-  let currentIndex = 0;
-
-  // Traiter chaque artifact complet trouvé
-  for (const match of artifactMatches) {
-    const artifactContent = match.content;
-    const matchIndex = match.index;
-
-    // Ajouter le texte avant l'artifact
-    if (matchIndex > currentIndex) {
-      const textContent = safeCompletion.slice(currentIndex, matchIndex).trim();
-      if (textContent) {
-        chunks.push({ type: "text", content: textContent });
-      }
-    }
-
-    // Ajouter l'artifact
-    chunks.push({ type: "artifact", content: artifactContent });
-
-    currentIndex = matchIndex + artifactContent.length;
-  }
-
-  // Ajouter le texte restant seulement s'il n'y a pas d'artifact partiel
-  if (
-    currentIndex < safeCompletion.length &&
-    lastArtifactStartIndex <= lastArtifactEndIndex
-  ) {
-    const remainingText = safeCompletion.slice(currentIndex).trim();
-    if (remainingText && !artifactStartRegex.test(remainingText)) {
-      chunks.push({ type: "text", content: remainingText });
     }
   }
 
