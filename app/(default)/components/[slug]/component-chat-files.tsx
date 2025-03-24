@@ -1,7 +1,7 @@
 "use client";
 
 import { Trash2 } from "lucide-react";
-import { useEffect, useState, useRef, useMemo } from "react";
+import { useEffect, useState, useRef } from "react";
 
 import {
   AlertDialog,
@@ -22,12 +22,10 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { Tables } from "@/types_db";
 import {
-  ChatFile,
   ContentChunk,
   extractDirectFiles,
-  extractFilesFromCompletedCompletion,
-  hasCompletedArtifacts,
   splitCompletedContentIntoChunks,
+  ChatFile,
 } from "@/utils/completion-parser";
 import { storageUrl } from "@/utils/config";
 import { getRelativeDate } from "@/utils/date";
@@ -65,53 +63,92 @@ export default function ComponentChatFiles({
 
   const messageRef = useRef<HTMLDivElement>(null);
 
-  const completionWithFiles = useMemo(() => {
-    if (!message.content) return null;
-    if (hasCompletedArtifacts(message.content)) {
-      return message.content;
-    }
-    return message.content;
-  }, [message.content]);
-
   useEffect(() => {
-    if (!completionWithFiles) return;
+    if (!message.content) {
+      setFiles([]);
+      setChunks([]);
+      return;
+    }
 
-    // Extraire les fichiers directement du contenu
-    const extractedFiles = extractDirectFiles(completionWithFiles);
+    // Extraire les fichiers une seule fois
+    const extractedFiles = extractDirectFiles(message.content);
 
-    // Créer un seul tableau de chunks
-    let contentChunks = splitCompletedContentIntoChunks(completionWithFiles);
+    // Découper le contenu en chunks
+    let contentChunks = splitCompletedContentIntoChunks(message.content);
 
-    // Si des fichiers ont été extraits, créer un seul artifact
+    // Dédupliquer les chunks de texte identiques
+    contentChunks = contentChunks.filter((chunk, index, array) => {
+      if (chunk.type === "text") {
+        return (
+          array.findIndex(
+            (c) => c.type === "text" && c.content === chunk.content,
+          ) === index
+        );
+      }
+      return true;
+    });
+
+    // Si on a des fichiers et qu'ils ne sont pas dans un artifact existant
+    const hasArtifactWithFiles = contentChunks.some(
+      (chunk) =>
+        chunk.type === "artifact" && chunk.content.includes("<tailwindaiFile"),
+    );
+
+    // Créer un artifact avec les fichiers (complets ou incomplets)
     if (extractedFiles.length > 0) {
-      const artificialArtifact = `<tailwindaiArtifact title="Generated Files">
-${extractedFiles.map((file) => `<tailwindaiFile name="${file.name}">${file.content}</tailwindaiFile>`).join("\n")}
+      const artifactTitle = isLoading
+        ? "Generating Files..."
+        : "Generated Files";
+      const artificialArtifact = `<tailwindaiArtifact title="${artifactTitle}">
+${extractedFiles
+  .map((file) => {
+    const isIncompleteAttr =
+      isLoading && file.isIncomplete ? ' isIncomplete="true"' : "";
+    return `<tailwindaiFile name="${file.name}"${isIncompleteAttr}>${file.content}</tailwindaiFile>`;
+  })
+  .join("\n")}
 </tailwindaiArtifact>`;
 
-      contentChunks = [
-        {
-          type: "artifact",
-          content: artificialArtifact,
-        },
-      ];
+      if (!hasArtifactWithFiles) {
+        // Filtrer les chunks pour enlever ceux qui contiennent des fichiers
+        const textChunks = contentChunks.filter(
+          (chunk) => !chunk.content.includes("<tailwindaiFile"),
+        );
+
+        // Ajouter l'artifact au début avec le bon type
+        setChunks([
+          {
+            type: "artifact" as const,
+            content: artificialArtifact,
+          },
+          ...textChunks,
+        ]);
+      } else {
+        // Remplacer l'artifact existant par le nouveau
+        const updatedChunks = contentChunks.map((chunk) => {
+          if (
+            chunk.type === "artifact" &&
+            chunk.content.includes("<tailwindaiFile")
+          ) {
+            return {
+              type: "artifact" as const,
+              content: artificialArtifact,
+            };
+          }
+          return chunk;
+        });
+        setChunks(updatedChunks);
+      }
+    } else {
+      setChunks(contentChunks);
     }
 
-    // Mettre à jour les états une seule fois
-    setChunks(contentChunks);
     setFiles(extractedFiles);
-  }, [completionWithFiles]);
-
-  // Ajouter un état pour gérer le chargement initial
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
+  }, [message.content, isLoading]);
 
   useEffect(() => {
-    if (isInitialLoad && completionWithFiles) {
-      setIsInitialLoad(false);
-    }
-  }, [completionWithFiles, isInitialLoad]);
-
-  // Ne pas afficher les chunks pendant le chargement initial
-  const displayChunks = isInitialLoad ? [] : chunks;
+    console.log("chunks", chunks);
+  }, [chunks]);
 
   const isSelectedVersion = selectedVersion === message.version && !isLoading;
 
@@ -254,7 +291,7 @@ ${extractedFiles.map((file) => `<tailwindaiFile name="${file.name}">${file.conte
               )}
             </div>
             <ChunkReader
-              chunks={displayChunks}
+              chunks={chunks}
               files={files}
               handleFileClick={handleFileClick}
               isSelectedVersion={isSelectedVersion}

@@ -23,9 +23,6 @@ export interface ChatFile {
 let previousFiles = new Map<string, string>(); // Pour stocker l'état précédent
 let lastActiveFile: string | null = null; // Pour stocker le nom du dernier fichier actif
 
-// Cache pour éviter les extractions multiples du même contenu
-const fileExtractionCache = new Map<string, ChatFile[]>();
-
 export const getUpdatedArtifactCode = (
   completion: string,
   artifactCode: string,
@@ -143,146 +140,63 @@ export const ensureCDNsPresent = (htmlContent: string): string => {
 };
 
 // Nouvelle fonction pour extraire directement les fichiers, même mal formatés
-export const extractDirectFiles = (
-  content: string,
-  isHtml: boolean = false,
-): ChatFile[] => {
-  // Vérifier le cache d'abord
-  const cacheKey = content.substring(0, 200); // Utiliser le début du contenu comme clé de cache
-  if (fileExtractionCache.has(cacheKey)) {
-    return fileExtractionCache.get(cacheKey) || [];
-  }
-
+export function extractDirectFiles(content: string): ChatFile[] {
   if (!content || !content.includes("<tailwindaiFile")) {
     return [];
   }
 
   const files: ChatFile[] = [];
+  let currentIndex = 0;
 
-  // Approche basique par découpage des blocs de texte
-  // Plus robuste pour les contenus complexes avec des balises génériques TypeScript
-  let startSearchFrom = 0;
+  while (currentIndex < content.length) {
+    const fileStart = content.indexOf("<tailwindaiFile", currentIndex);
+    if (fileStart === -1) break;
 
-  while (true) {
-    // Trouver le prochain début de balise tailwindaiFile
-    const startTagIndex = content.indexOf("<tailwindaiFile", startSearchFrom);
-    if (startTagIndex === -1) break; // Plus de balises tailwindaiFile
+    const nameStart = content.indexOf('name="', fileStart);
+    if (nameStart === -1) break;
 
-    // Trouver le début du contenu (après le >)
-    const startTagEnd = content.indexOf(">", startTagIndex);
-    if (startTagEnd === -1) break; // Balise invalide
+    const nameEnd = content.indexOf('"', nameStart + 6);
+    if (nameEnd === -1) break;
 
-    // Extraire les attributs de la balise d'ouverture
-    const openingTag = content.substring(startTagIndex, startTagEnd + 1);
-    const nameMatch = openingTag.match(/name=["']([^"']*?)["']/);
-    const actionMatch = openingTag.match(/action=["']([^"']*?)["']/);
-    const fileName = nameMatch ? nameMatch[1] : null;
-    const action = actionMatch ? actionMatch[1] : null;
+    const fileName = content.slice(nameStart + 6, nameEnd);
 
-    // Chercher la fin du fichier (balise fermante ou début du prochain fichier)
-    const endTagIndex = content.indexOf("</tailwindaiFile>", startTagEnd);
-    const nextStartTagIndex = content.indexOf("<tailwindaiFile", startTagEnd);
+    const fileContentStart = content.indexOf(">", nameEnd);
+    if (fileContentStart === -1) break;
 
-    let contentEndIndex;
-    if (
-      endTagIndex !== -1 &&
-      (nextStartTagIndex === -1 || endTagIndex < nextStartTagIndex)
-    ) {
-      // Balise fermante trouvée avant le prochain fichier
-      contentEndIndex = endTagIndex;
-      startSearchFrom = endTagIndex + "</tailwindaiFile>".length;
-    } else if (nextStartTagIndex !== -1) {
-      // Prochain fichier avant une balise fermante
-      contentEndIndex = nextStartTagIndex;
-      startSearchFrom = nextStartTagIndex;
-    } else {
-      // Ni balise fermante ni prochain fichier - prendre jusqu'à la fin
-      contentEndIndex = content.length;
-      startSearchFrom = content.length;
-    }
+    const fileContentEnd = content.indexOf(
+      "</tailwindaiFile>",
+      fileContentStart,
+    );
+    // Si on ne trouve pas la fin du fichier, on considère qu'il est incomplet
+    const isIncomplete = fileContentEnd === -1;
 
-    // Extraire le contenu du fichier
-    const fileContent = content
-      .substring(startTagEnd + 1, contentEndIndex)
-      .trim();
+    // Pour un fichier incomplet, on prend tout le contenu restant
+    const fileContent = isIncomplete
+      ? content.slice(fileContentStart + 1)
+      : content.slice(fileContentStart + 1, fileContentEnd);
 
-    // Si le contenu existe et n'est pas vide
-    if (fileContent && fileContent.length > 0) {
-      // Normaliser l'indentation
-      const lines = fileContent.split("\n");
-      const nonEmptyLines = lines.filter((line) => line.trim().length > 0);
+    files.push({
+      name: fileName,
+      content: fileContent.trim(),
+      isIncomplete,
+      isDelete: false,
+      isActive: false,
+      isContinue: false,
+    });
 
-      if (nonEmptyLines.length > 0) {
-        try {
-          // Calculer l'indentation minimale sans planter sur les lignes trop courtes
-          const indentations = nonEmptyLines
-            .map((line) => {
-              const match = line.match(/^[ \t]*/);
-              return match ? match[0].length : 0;
-            })
-            .filter((length) => length < 100); // Ignorer les valeurs aberrantes
-
-          const minIndent =
-            indentations.length > 0 ? Math.min(...indentations) : 0;
-
-          // Appliquer l'indentation en gérant les lignes trop courtes
-          const processedContent = lines
-            .map((line) =>
-              line.length >= minIndent ? line.slice(minIndent) : line,
-            )
-            .join("\n")
-            .trim();
-
-          // Ajouter des CDN si nécessaire
-          const finalContent = isHtml
-            ? ensureCDNsPresent(processedContent)
-            : processedContent;
-
-          files.push({
-            name: fileName,
-            content: finalContent,
-            isDelete: action === "delete",
-            isActive: false,
-            isContinue: action === "continue",
-            isIncomplete:
-              endTagIndex === -1 ||
-              (endTagIndex !== -1 && endTagIndex > contentEndIndex),
-          });
-        } catch (error) {
-          // En cas d'erreur dans le traitement de l'indentation, utiliser le contenu brut
-          console.warn("Erreur lors du traitement de l'indentation:", error);
-          const finalContent = isHtml
-            ? ensureCDNsPresent(fileContent)
-            : fileContent;
-
-          files.push({
-            name: fileName,
-            content: finalContent,
-            isDelete: action === "delete",
-            isActive: false,
-            isContinue: action === "continue",
-            isIncomplete:
-              endTagIndex === -1 ||
-              (endTagIndex !== -1 && endTagIndex > contentEndIndex),
-          });
-        }
-      }
-    }
+    currentIndex = isIncomplete
+      ? content.length
+      : fileContentEnd + "</tailwindaiFile>".length;
   }
 
-  // Stocker dans le cache
-  fileExtractionCache.set(cacheKey, files);
   return files;
-};
+}
 
-export const extractFilesFromCompletion = (
-  completion: string,
-  isHtml: boolean = false,
-) => {
+export const extractFilesFromCompletion = (completion: string): ChatFile[] => {
   if (!completion) return [];
 
   // Essayer d'abord avec l'extraction directe qui est plus robuste avec le formatage TypeScript
-  const directFiles = extractDirectFiles(completion, isHtml);
+  const directFiles = extractDirectFiles(completion);
   if (directFiles.length > 0) {
     return directFiles;
   }
@@ -340,10 +254,6 @@ export const extractFilesFromCompletion = (
       .map((line) => (line.length >= minIndent ? line.slice(minIndent) : line))
       .join("\n")
       .trim();
-
-    if (isHtml) {
-      content = ensureCDNsPresent(content);
-    }
 
     // Vérifier si la balise est correctement fermée
     const isComplete = completion.includes(`</tailwindaiFile>`);

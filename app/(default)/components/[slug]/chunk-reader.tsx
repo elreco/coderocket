@@ -34,14 +34,12 @@ export function ChunkReader({
 }) {
   const { isCanvas, activeTab, selectedFramework, isLoading } =
     useComponentContext();
-  console.log("chunks", chunks);
   return chunks.map((chunk, index) => {
     // Pour les chunks de type "artifact", utiliser directement les fichiers fournis
     let artifactFiles: ChatFile[] = [];
     if (chunk.type === "artifact") {
       artifactFiles = files;
     }
-    console.log("artifactFiles", artifactFiles);
 
     return (
       <div key={index} className="text-sm">
