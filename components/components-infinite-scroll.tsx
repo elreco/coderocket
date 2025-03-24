@@ -407,11 +407,7 @@ export function ComponentsInfiniteScroll({
             : // Popular
               [
                 ...popularChats.map((chat) => (
-                  <ComponentCard
-                    key={`${chat.chat_id}-popular`}
-                    chat={chat}
-                    isPopular
-                  />
+                  <ComponentCard key={`${chat.chat_id}-popular`} chat={chat} />
                 )),
                 // Public (excluding duplicates)
                 ...filteredPublicChats.map((chat) => (
