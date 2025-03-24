@@ -329,13 +329,25 @@ const validateRequest = async (
 
 const updateDataAfterCompletion = async (
   chatId: string,
-  text: string | undefined,
+  text: string,
   updatedPrompt: string,
   usage: LanguageModelUsage,
-  updatedImage: string | null | undefined,
-  finishReason?: string,
+  updatedImage: string | null,
+  finishReason: string | null,
 ) => {
   const supabase = await createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  const user = userData.user;
+
+  if (!user) {
+    throw new Error("User not authenticated");
+  }
+
+  const subscription = await getSubscription();
+  let subscriptionType = "trial";
+  if (subscription) {
+    subscriptionType = subscription.prices?.products?.name?.toLowerCase() || "trial";
+  }
 
   const chat = await fetchChatById(chatId);
   if (!chat) return console.error("Could not get chat data");
@@ -394,11 +406,12 @@ const updateDataAfterCompletion = async (
       role: "user",
       prompt_image: updatedImage,
       input_tokens: usage.promptTokens,
+      subscription_type: subscriptionType,
     });
   } else {
     await supabase
       .from("messages")
-      .update({ version, input_tokens: usage.promptTokens })
+      .update({ version, input_tokens: usage.promptTokens, subscription_type: subscriptionType })
       .eq("chat_id", chatId)
       .eq("version", -1);
   }
@@ -421,6 +434,7 @@ const updateDataAfterCompletion = async (
     theme,
     role: "assistant",
     output_tokens: usage.completionTokens,
+    subscription_type: subscriptionType,
   });
 
   const { error: newMessagesError } = await supabase
