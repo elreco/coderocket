@@ -216,6 +216,10 @@ export const createChat = async (prompt: string, formData: FormData) => {
   }
 
   const subscription = await getSubscription();
+  let subscriptionType = "trial";
+  if (subscription) {
+    subscriptionType = subscription.prices?.products?.name?.toLowerCase() || "trial";
+  }
   const isVisible = formData.get("isVisible");
   const theme = formData.get("theme")?.toString() || defaultTheme;
   const frameworkInput = formData.get("framework")?.toString() || "react";
@@ -427,6 +431,7 @@ export const createChat = async (prompt: string, formData: FormData) => {
     ...(imageUrl && { prompt_image: imageUrl }),
     content: prompt,
     version: -1,
+    subscription_type: subscriptionType,
   });
 
   return { slug: data.slug };
