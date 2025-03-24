@@ -137,6 +137,7 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
         !selectedFramework ||
         artifactFiles.length === 0
       ) {
+        setBuildError(null);
         return;
       }
 
