@@ -36,6 +36,7 @@ export type GetComponentsReturnType = {
   last_assistant_message_theme: string;
   slug: string;
   remix_chat_id: string;
+  views: number;
 };
 
 export const fetchChatById = async (idOrSlug: string) => {
@@ -51,22 +52,7 @@ export const fetchChatById = async (idOrSlug: string) => {
     .from("chats")
     .select(
       `
-    id,
-    artifact_code,
-    created_at,
-    title,
-    likes,
-    is_private,
-    is_featured,
-    framework,
-    prompt_image,
-    input_tokens,
-    output_tokens,
-    user_id,
-    slug,
-    remix_chat_id,
-    remix_from_version,
-    metadata,
+    *,
     user:users (*)
 `,
     )
