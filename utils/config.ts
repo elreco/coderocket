@@ -90,8 +90,7 @@ export const getMaxMessagesPerPeriod = (
 
 export const builderApiUrl = "https://react-builder.fly.dev";
 
-export const avatarApi =
-  "https://api.dicebear.com/9.x/avataaars-neutral/svg?seed=";
+export const avatarApi = "https://api.dicebear.com/9.x/initials/svg?seed=";
 
 export const STARTER_PLAN_MESSAGES_PER_PERIOD = 100;
 export const PRO_PLAN_MESSAGES_PER_PERIOD = 300;

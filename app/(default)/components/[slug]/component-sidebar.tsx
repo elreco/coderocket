@@ -83,6 +83,7 @@ export default function ComponentSidebar({
 
   const [isLoaderVisible, setLoaderVisible] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
+  const currentVersionRef = useRef<HTMLDivElement | null>(null);
   const [streamingChunks, setStreamingChunks] = useState<ContentChunk[]>([]);
   const [activeTab, setActiveTab] = useState("chat");
   const [hasImproved, setHasImproved] = useState(false);
@@ -173,6 +174,18 @@ export default function ComponentSidebar({
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
+
+    // Faire défiler vers la version actuelle lorsque l'onglet "history" est sélectionné
+    if (value === "history") {
+      setTimeout(() => {
+        if (currentVersionRef.current) {
+          currentVersionRef.current.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+          });
+        }
+      }, 100);
+    }
   };
 
   const handleButtonClick = () => {
@@ -410,6 +423,11 @@ ${extractedFiles.map((file) => `<tailwindaiFile name="${file.name || "unnamed"}"
                   <Tooltip delayDuration={150}>
                     <TooltipTrigger asChild>
                       <div
+                        ref={
+                          m.version === selectedVersion
+                            ? currentVersionRef
+                            : null
+                        }
                         onClick={() =>
                           m.version !== selectedVersion &&
                           handleFileClick(m.version)
