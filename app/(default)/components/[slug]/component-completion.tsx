@@ -11,12 +11,12 @@ import {
   LoaderCircle,
   Settings,
   ExternalLink,
-  ThumbsUp,
   Copy,
   GitFork,
   Eye,
   Code as CodeIcon,
   X,
+  Heart,
 } from "lucide-react";
 import { Share } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -973,10 +973,10 @@ export default function ComponentCompletion({
                               className={`ml-2 rounded-full p-2 shadow-md transition-colors ${
                                 isLiked
                                   ? "bg-primary text-secondary hover:bg-primary"
-                                  : "bg-green-300 text-green-700 hover:bg-green-200"
+                                  : "bg-pink-500 text-pink-300 hover:bg-pink-400"
                               }`}
                             >
-                              <ThumbsUp className="size-5" />
+                              <Heart className="size-5" />
                             </Button>
                           </motion.div>
                         </TooltipTrigger>
