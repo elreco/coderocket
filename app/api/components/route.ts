@@ -43,13 +43,8 @@ export async function POST(req: Request) {
       Number(formData.get("selectedVersion")) || undefined;
     const image = formData.get("image") as File | null;
     const prompt = formData.get("prompt") as string | null;
-    const {
-      messagesFromDatabase,
-      framework,
-      artifactCode,
-      updatedPrompt,
-      updatedImage,
-    } = await validateRequest(id, image, prompt, selectedVersion);
+    const { messagesFromDatabase, framework, updatedPrompt, updatedImage } =
+      await validateRequest(id, image, prompt, selectedVersion);
 
     const { messagesToOpenAI: messages } = await buildMessagesToOpenAi(
       messagesFromDatabase,
@@ -68,7 +63,7 @@ export async function POST(req: Request) {
                 ? messagesFromDatabase[0]?.theme
                 : null,
             )
-          : systemPrompt(framework as Framework, artifactCode),
+          : systemPrompt(framework as Framework),
       toolChoice: "none",
       maxTokens: MAX_TOKENS_PER_REQUEST,
       onFinish: async ({ text, usage, finishReason }) => {
@@ -111,7 +106,7 @@ const buildMessagesToOpenAi = async (
       : messages;
 
   // Limiter le nombre de messages à envoyer à l'API (par exemple, les 10 derniers)
-  const maxMessagesToSend = 2;
+  const maxMessagesToSend = 75;
   const limitedMessages =
     filteredMessages.length > maxMessagesToSend
       ? filteredMessages.slice(-maxMessagesToSend)
@@ -321,7 +316,6 @@ const validateRequest = async (
     messagesFromDatabase,
     subscription,
     framework: chat.framework,
-    artifactCode: chat.artifact_code,
     updatedPrompt,
     updatedImage,
   };
