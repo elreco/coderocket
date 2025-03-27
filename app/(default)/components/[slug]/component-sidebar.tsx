@@ -707,22 +707,45 @@ ${extractedFiles.map((file) => `<tailwindaiFile name="${file.name || "unnamed"}"
                 <kbd className="rounded-sm bg-secondary p-1">Return</kbd> for a
                 new line
               </div>
-              <div className="flex w-full items-center">
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="ghost"
-                  className="w-full hover:bg-background lg:w-auto"
-                  disabled={isLoading || isImprovingLoading || hasImproved}
-                  onClick={handleImprovePrompt}
-                >
-                  <WandSparkles className="size-3" />
-                  {isImprovingLoading
-                    ? "Improving prompt..."
-                    : hasImproved
-                      ? "Prompt improved"
-                      : "Improve prompt"}
-                </Button>
+              <div className="flex w-full items-center space-x-1">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        className="size-9 p-0 hover:bg-background"
+                        disabled={
+                          isLoading || isImprovingLoading || hasImproved
+                        }
+                        onClick={handleImprovePrompt}
+                      >
+                        <WandSparkles
+                          className={cn(
+                            "size-4",
+                            isImprovingLoading && "animate-spin",
+                            hasImproved && "text-primary",
+                          )}
+                        />
+                        <span className="sr-only">
+                          {isImprovingLoading
+                            ? "Improving prompt..."
+                            : hasImproved
+                              ? "Prompt improved"
+                              : "Improve prompt"}
+                        </span>
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {isImprovingLoading
+                        ? "Improving prompt..."
+                        : hasImproved
+                          ? "Prompt improved"
+                          : "Improve prompt"}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
                 <Button
                   size="sm"
                   loading={isLoading}

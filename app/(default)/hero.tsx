@@ -35,6 +35,12 @@ import {
 } from "@/components/ui/sheet";
 import { Spotlight } from "@/components/ui/spotlight";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { Tables } from "@/types_db";
@@ -621,21 +627,42 @@ export default function Hero() {
               </Select>
             </div>
             <div className="flex w-full items-center justify-end space-x-0 lg:space-x-2">
-              <Button
-                type="button"
-                size="sm"
-                variant="ghost"
-                className="w-full hover:bg-background lg:w-auto"
-                disabled={loading || hasImproved}
-                onClick={handleImprovePrompt}
-              >
-                <WandSparkles className="size-3" />
-                {loadingAction === "improve"
-                  ? "Improving prompt..."
-                  : hasImproved
-                    ? "Prompt improved"
-                    : "Improve prompt"}
-              </Button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      className="size-9 p-0 hover:bg-background"
+                      disabled={loading || hasImproved}
+                      onClick={handleImprovePrompt}
+                    >
+                      <WandSparkles
+                        className={cn(
+                          "size-4",
+                          loadingAction === "improve" && "animate-spin",
+                          hasImproved && "text-primary",
+                        )}
+                      />
+                      <span className="sr-only">
+                        {loadingAction === "improve"
+                          ? "Improving prompt..."
+                          : hasImproved
+                            ? "Prompt improved"
+                            : "Improve prompt"}
+                      </span>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {loadingAction === "improve"
+                      ? "Improving prompt..."
+                      : hasImproved
+                        ? "Prompt improved"
+                        : "Improve prompt"}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
               <Button
                 type="submit"
                 size="sm"
