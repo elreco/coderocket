@@ -114,10 +114,25 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
     if (possibleError) {
       setBuildError((prevError) => {
         if (!prevError) return possibleError;
+
+        // Avoid duplicating similar error messages
+        if (prevError.content.includes(possibleError.content)) {
+          return prevError;
+        }
+
+        // Limit the total content length to prevent overwhelming the UI
+        const combinedContent =
+          prevError.content + "\n" + possibleError.content;
+        const maxLength = 2000;
+        const trimmedContent =
+          combinedContent.length > maxLength
+            ? combinedContent.substring(combinedContent.length - maxLength)
+            : combinedContent;
+
         return {
           ...prevError,
           description: prevError.description,
-          content: prevError.content + possibleError.content,
+          content: trimmedContent,
         };
       });
       setLoadingState("error");
@@ -163,15 +178,19 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
       if (!filesChanged) {
         return;
       }
+
+      // Reset error state when files change to avoid showing old component errors
       setBuildError(null);
       setPreviewId(undefined);
       setLoadingState("initializing");
+
       if (isWebcontainerReady) {
         setLoadingState(null);
         oldArtifactFilesRef.current = [];
         return;
       }
-      // 1) Kill old processes
+
+      // Kill old processes before starting new ones
       if (shellProcessRef.current) {
         shellProcessRef.current.kill();
         shellProcessRef.current = null;
@@ -298,6 +317,22 @@ export const useWebcontainer = (): WebcontainerContextType => {
 function formatBuildError(data: string): BuildError | null {
   const cleanedData = stripAnsi(data);
 
+  // Skip certain non-critical messages that might be mistaken for errors
+  const ignorePatterns = [
+    "compiled successfully",
+    "compiled with warnings",
+    "ready in",
+    "waiting for changes",
+    "starting development server",
+    "listening on",
+  ];
+
+  for (const pattern of ignorePatterns) {
+    if (cleanedData.toLowerCase().includes(pattern.toLowerCase())) {
+      return null;
+    }
+  }
+
   const errorPatterns = [
     "error",
     "npm ERR!",
@@ -335,12 +370,28 @@ function formatBuildError(data: string): BuildError | null {
     return null;
   }
 
-  // Limiter l'affichage des erreurs à 5 lignes maximum
+  // Improve error description based on content
+  let description = "An error occurred during build.";
+
+  // Extract specific error details if available
+  const errorLines = cleanedData
+    .split("\n")
+    .filter((line) =>
+      errorPatterns.some((pattern) =>
+        line.toLowerCase().includes(pattern.toLowerCase()),
+      ),
+    );
+
+  if (errorLines.length > 0) {
+    description = errorLines[0].trim();
+  }
+
+  // Limit the display of errors to 20 lines maximum
   const truncatedContent = cleanedData.split("\n").slice(0, 20).join("\n");
 
   return {
     title: "Build Error",
-    description: "An error occurred during build.",
+    description,
     content: truncatedContent,
   };
 }

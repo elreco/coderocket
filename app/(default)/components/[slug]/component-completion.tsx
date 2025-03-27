@@ -258,6 +258,10 @@ export default function ComponentCompletion({
       initialCompletion: lastAssistantMessage?.content,
       experimental_throttle: 500,
       onError: async (error: Error) => {
+        const newArtifactFiles = extractFilesFromArtifact(
+          fetchedChat?.artifact_code || "",
+        );
+        setArtifactFiles(newArtifactFiles);
         if (error.message === "payment-required-for-image") {
           router.push("/pricing");
           toast({
@@ -355,7 +359,7 @@ export default function ComponentCompletion({
             description: (
               <div>
                 <p>
-                  You have reached your limit of {maxMessagesPerPeriod / 2}
+                  You have reached your limit of {maxMessagesPerPeriod / 2}{" "}
                   versions for {subscription.prices?.interval}. This limit will
                   reset on {resetDate}.
                 </p>

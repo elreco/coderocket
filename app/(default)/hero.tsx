@@ -8,6 +8,7 @@ import {
   Lock,
   WandSparkles,
   Rocket,
+  Link2,
 } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -20,6 +21,7 @@ import { TextareaWithLimit } from "@/components/textarea-with-limit";
 import { AnimatedGridPattern } from "@/components/ui/animated-grid-pattern";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -34,7 +36,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Spotlight } from "@/components/ui/spotlight";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Tooltip,
   TooltipContent,
@@ -99,6 +101,10 @@ export default function Hero() {
     "generate" | "improve" | null
   >(null);
   const [image, setImage] = useState<File | null>(null);
+  const [websiteUrl, setWebsiteUrl] = useState("");
+  const [generationMode, setGenerationMode] = useState<"scratch" | "clone">(
+    "scratch",
+  );
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
   const router = useRouter();
@@ -208,8 +214,10 @@ export default function Hero() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Add validation for empty prompt
-    if (!prompt.trim()) {
+    let finalPrompt = prompt;
+
+    // Add validation for empty prompt or url in clone mode
+    if (generationMode === "scratch" && !prompt.trim()) {
       toast({
         variant: "destructive",
         title: "Prompt required",
@@ -217,6 +225,29 @@ export default function Hero() {
         duration: 4000,
       });
       return;
+    }
+
+    if (generationMode === "clone") {
+      if (!websiteUrl.trim()) {
+        toast({
+          variant: "destructive",
+          title: "URL required",
+          description: "Please enter a website URL to clone.",
+          duration: 4000,
+        });
+        return;
+      }
+
+      // Use simple URL validation with HTML5 input validation
+      let urlToUse = websiteUrl.trim();
+
+      // Add protocol if missing
+      if (!/^https?:\/\//i.test(urlToUse)) {
+        urlToUse = "https://" + urlToUse;
+      }
+
+      // Format the prompt for website cloning
+      finalPrompt = `Clone this website: ${urlToUse}`;
     }
 
     // Vérification de la validité de la longueur du prompt
@@ -239,7 +270,7 @@ export default function Hero() {
     formData.append("isVisible", isVisible.toString());
     formData.append("theme", selectedTheme);
     formData.append("framework", selectedFramework);
-    const { slug, error } = await createChat(prompt, formData);
+    const { slug, error } = await createChat(finalPrompt, formData);
     if (error) {
       toast({
         variant: "destructive",
@@ -252,6 +283,7 @@ export default function Hero() {
       return;
     }
     setPrompt("");
+    setWebsiteUrl("");
     localStorage.removeItem("lastPrompt");
     router.push(`/components/${slug}`);
     return;
@@ -396,53 +428,94 @@ export default function Hero() {
         className="group relative z-10 flex w-full flex-col items-center justify-center gap-x-0 space-y-3 rounded-lg border border-primary/40 bg-secondary p-3 text-center transition-all duration-300 hover:shadow-lg hover:shadow-primary/20 xl:w-3/4"
         onSubmit={handleSubmit}
       >
-        <div className="flex w-full flex-col items-end">
-          <div className="flex w-full items-start">
-            <Terminal className="mx-2 my-3 size-4" />
-            <div className="relative w-full">
-              <TextareaWithLimit
-                ref={inputRef}
-                placeholder="Start generating a beautiful Tailwind component"
-                autoFocus={true}
-                required
-                value={prompt}
-                showCounter={true}
-                isLoggedIn={isLoggedIn}
-                isLoading={loading}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") {
-                    if (event.shiftKey) {
-                      return;
-                    }
+        <Tabs
+          defaultValue="scratch"
+          className="w-full"
+          onValueChange={(value) =>
+            setGenerationMode(value as "scratch" | "clone")
+          }
+        >
+          <TabsList className="mb-3 w-full">
+            <TabsTrigger value="scratch" className="w-1/2">
+              Generate from scratch
+            </TabsTrigger>
+            <TabsTrigger
+              value="clone"
+              className="w-1/2"
+              disabled={selectedFramework === Framework.HTML}
+            >
+              Clone a website
+            </TabsTrigger>
+          </TabsList>
 
-                    event.preventDefault();
+          <TabsContent value="scratch" className="w-full">
+            <div className="flex w-full flex-col items-end">
+              <div className="flex w-full items-start">
+                <Terminal className="mx-2 my-3 size-4" />
+                <div className="relative w-full">
+                  <TextareaWithLimit
+                    ref={inputRef}
+                    placeholder="Start generating a beautiful Tailwind component"
+                    autoFocus={true}
+                    required
+                    value={prompt}
+                    showCounter={true}
+                    isLoggedIn={isLoggedIn}
+                    isLoading={loading}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") {
+                        if (event.shiftKey) {
+                          return;
+                        }
 
-                    handleSubmit(event);
-                  }
-                }}
-                translate="no"
-                onChange={(value, isValid) => {
-                  setPrompt(value);
-                  setPromptIsValid(isValid);
-                  localStorage.setItem("lastPrompt", value);
-                }}
-                subscription={subscription}
-                isLoadingSubscription={isLoadingSubscription}
-                className="max-h-[400px] min-h-[76px] bg-secondary pl-1 focus-visible:ring-0 focus-visible:ring-offset-0"
-              />
+                        event.preventDefault();
+
+                        handleSubmit(event);
+                      }
+                    }}
+                    translate="no"
+                    onChange={(value, isValid) => {
+                      setPrompt(value);
+                      setPromptIsValid(isValid);
+                      localStorage.setItem("lastPrompt", value);
+                    }}
+                    subscription={subscription}
+                    isLoadingSubscription={isLoadingSubscription}
+                    className="max-h-[400px] min-h-[76px] bg-secondary pl-1 focus-visible:ring-0 focus-visible:ring-offset-0"
+                  />
+                </div>
+              </div>
+              <div
+                className={cn(
+                  "my-0.5 text-xs text-foreground transition-opacity",
+                  prompt.length <= 3 && "opacity-0",
+                )}
+              >
+                Use <kbd className="rounded-sm bg-background p-1">Shift</kbd> +{" "}
+                <kbd className="rounded-sm bg-background p-1">Return</kbd> for a
+                new line
+              </div>
             </div>
-          </div>
-          <div
-            className={cn(
-              "my-0.5 text-xs text-foreground transition-opacity",
-              prompt.length <= 3 && "opacity-0",
-            )}
-          >
-            Use <kbd className="rounded-sm bg-background p-1">Shift</kbd> +{" "}
-            <kbd className="rounded-sm bg-background p-1">Return</kbd> for a new
-            line
-          </div>
-        </div>
+          </TabsContent>
+
+          <TabsContent value="clone" className="w-full">
+            <div className="flex w-full flex-col items-end">
+              <div className="flex w-full items-start">
+                <Link2 className="mx-2 my-3 size-4" />
+                <div className="relative w-full">
+                  <Input
+                    type="url"
+                    placeholder="Enter website URL to clone (e.g., https://example.com)"
+                    value={websiteUrl}
+                    onChange={(e) => setWebsiteUrl(e.target.value)}
+                    className="bg-secondary pl-1 focus-visible:ring-0 focus-visible:ring-offset-0"
+                  />
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
+
         <div className="flex w-full flex-1 items-center justify-between lg:flex-row">
           {image && (
             <div className="mr-2 size-12">
@@ -561,9 +634,13 @@ export default function Hero() {
               <Select
                 disabled={loading}
                 defaultValue="react"
-                onValueChange={(value) =>
-                  setSelectedFramework(value as Framework)
-                }
+                onValueChange={(value) => {
+                  setSelectedFramework(value as Framework);
+                  // Reset to "Generate from scratch" if HTML is selected
+                  if (value === Framework.HTML) {
+                    setGenerationMode("scratch");
+                  }
+                }}
               >
                 <SelectTrigger className="w-full rounded-md border-background sm:w-auto">
                   <SelectValue
@@ -572,97 +649,108 @@ export default function Hero() {
                   />
                 </SelectTrigger>
                 <SelectContent>
-                  {Object.values(Framework).map((framework) => {
-                    const config = frameworkConfig[framework];
-                    const Icon = config.icon;
+                  {Object.values(Framework)
+                    .filter(
+                      (framework) =>
+                        // Filter out HTML when in clone mode
+                        !(
+                          generationMode === "clone" &&
+                          framework === Framework.HTML
+                        ),
+                    )
+                    .map((framework) => {
+                      const config = frameworkConfig[framework];
+                      const Icon = config.icon;
 
-                    return (
-                      <SelectItem
-                        key={framework}
-                        value={framework}
-                        className={cn(
-                          "cursor-pointer",
-                          config.disabled && "cursor-not-allowed opacity-50",
-                        )}
-                        disabled={config.disabled}
-                        onSelect={
-                          config.disabled
-                            ? (e) => e.preventDefault()
-                            : undefined
-                        }
-                      >
-                        <div
+                      return (
+                        <SelectItem
+                          key={framework}
+                          value={framework}
                           className={cn(
-                            "mr-2 flex w-full flex-row items-center justify-between",
-                            config.disabled && "pointer-events-none",
+                            "cursor-pointer",
+                            config.disabled && "cursor-not-allowed opacity-50",
                           )}
+                          disabled={config.disabled}
+                          onSelect={
+                            config.disabled
+                              ? (e) => e.preventDefault()
+                              : undefined
+                          }
                         >
-                          <div className="flex items-center">
-                            <Icon className="mr-2 size-3" />
-                            <span className="text-sm">
-                              {framework.charAt(0).toUpperCase() +
-                                framework.slice(1)}
-                            </span>
+                          <div
+                            className={cn(
+                              "mr-2 flex w-full flex-row items-center justify-between",
+                              config.disabled && "pointer-events-none",
+                            )}
+                          >
+                            <div className="flex items-center">
+                              <Icon className="mr-2 size-3" />
+                              <span className="text-sm">
+                                {framework.charAt(0).toUpperCase() +
+                                  framework.slice(1)}
+                              </span>
+                            </div>
+                            {config.badge && (
+                              <Badge
+                                variant={
+                                  config.badge === "Soon"
+                                    ? "outline"
+                                    : "secondary"
+                                }
+                                className={cn(
+                                  "text-xs",
+                                  config.badge === "Soon" ? "ml-2" : "mr-1",
+                                )}
+                              >
+                                {config.badge}
+                              </Badge>
+                            )}
                           </div>
-                          {config.badge && (
-                            <Badge
-                              variant={
-                                config.badge === "Soon"
-                                  ? "outline"
-                                  : "secondary"
-                              }
-                              className={cn(
-                                "text-xs",
-                                config.badge === "Soon" ? "ml-2" : "mr-1",
-                              )}
-                            >
-                              {config.badge}
-                            </Badge>
-                          )}
-                        </div>
-                      </SelectItem>
-                    );
-                  })}
+                        </SelectItem>
+                      );
+                    })}
                 </SelectContent>
               </Select>
             </div>
             <div className="flex w-full items-center justify-end space-x-0 lg:space-x-2">
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="ghost"
-                      className="size-9 p-0 hover:bg-background"
-                      disabled={loading || hasImproved}
-                      onClick={handleImprovePrompt}
-                    >
-                      <WandSparkles
-                        className={cn(
-                          "size-4",
-                          loadingAction === "improve" && "animate-spin",
-                          hasImproved && "text-primary",
-                        )}
-                      />
-                      <span className="sr-only">
-                        {loadingAction === "improve"
-                          ? "Improving prompt..."
-                          : hasImproved
-                            ? "Prompt improved"
-                            : "Improve prompt"}
-                      </span>
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    {loadingAction === "improve"
-                      ? "Improving prompt..."
-                      : hasImproved
-                        ? "Prompt improved"
-                        : "Improve prompt"}
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              {generationMode === "scratch" && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        className="size-9 p-0 hover:bg-background"
+                        disabled={loading || hasImproved}
+                        onClick={handleImprovePrompt}
+                      >
+                        <WandSparkles
+                          className={cn(
+                            "size-4",
+                            loadingAction === "improve" && "animate-spin",
+                            hasImproved && "text-primary",
+                          )}
+                        />
+                        <span className="sr-only">
+                          {loadingAction === "improve"
+                            ? "Improving prompt..."
+                            : hasImproved
+                              ? "Prompt improved"
+                              : "Improve prompt"}
+                        </span>
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {loadingAction === "improve"
+                        ? "Improving prompt..."
+                        : hasImproved
+                          ? "Prompt improved"
+                          : "Improve prompt"}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
               <Button
                 type="submit"
                 size="sm"

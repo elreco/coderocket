@@ -246,6 +246,7 @@ module.exports = {
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": false,
+    "noImplicitAny": false,
 
     /* Aliases */
     "baseUrl": ".",
@@ -277,9 +278,10 @@ module.exports = {
 
     /* Linting */
     "strict": false,
-    "noUnusedLocals": false,       // CHANGED: was true
-    "noUnusedParameters": false,   // CHANGED: was true
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": false,
+    "noImplicitAny": false,
     "paths": {
       "@/*": ["./src/*"]
     }
@@ -572,8 +574,8 @@ module.exports = {
     /* Linting */
     "strict": false,
     "skipLibCheck": true,
-    "noUnusedLocals": false,       // CHANGED: was true
-    "noUnusedParameters": false,   // CHANGED: was true
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
     "paths": {

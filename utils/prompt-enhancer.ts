@@ -12,6 +12,11 @@ export const promptEnhancer = async (
   prompt: string,
   framework: Framework,
 ): Promise<string> => {
+  // If it's a website clone request, return it as is without enhancement
+  if (prompt.startsWith("Clone this website:")) {
+    return prompt;
+  }
+
   const contentMd =
     framework === Framework.HTML ? htmlSystemPrompt() : systemPrompt(framework);
   const { text } = await generateText({
