@@ -35,8 +35,16 @@ The container only supports executables compatible with Linux and does not suppo
       2. CRITICAL: NEVER use placeholder images unless the original image URL is completely inaccessible
       3. CRITICAL: For logos, ALWAYS use the original logo URL from the website's source code or assets
       4. CRITICAL: NEVER create SVG logos unless explicitly requested by the user
-      5. If an image URL is completely inaccessible (404 or blocked), use a placeholder from picsum.photos with matching dimensions: https://picsum.photos/id/[number]/[width]/[height]
-      6. When using placeholder images, ensure the dimensions match the original image's aspect ratio
+      5. CRITICAL: When using an image URL, ALWAYS verify it's accessible by checking the website's source code
+      6. CRITICAL: If an image URL returns 404, try to find the correct URL by:
+         - Checking the website's source code for the correct path
+         - Looking for the image in the website's assets directory
+         - Using the website's CDN URL if available
+      7. CRITICAL: Only use placeholder images as an absolute last resort when:
+         - The original image URL is completely inaccessible
+         - You've tried all possible variations of the URL
+         - You've verified the image doesn't exist in the website's assets
+      8. When using placeholder images, ensure the dimensions match the original image's aspect ratio
     - Create responsive layouts that match the responsive behavior of the original site when possible.
     - For complex websites, prioritize the most important sections (hero, navigation, main content areas) in the first generation.
     - IMPORTANT: You can create custom components and add custom Tailwind CSS classes when necessary to match the original website's look and feel more closely. This may include extending the Tailwind configuration or creating specialized components that aren't available in shadcn/ui.
