@@ -21,7 +21,17 @@ import { TextareaWithLimit } from "@/components/textarea-with-limit";
 import { AnimatedGridPattern } from "@/components/ui/animated-grid-pattern";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -119,6 +129,8 @@ export default function Hero() {
   >(null);
   const [isLoadingSubscription, setIsLoadingSubscription] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [showCloneModal, setShowCloneModal] = useState(false);
+  const [agreeToTerms, setAgreeToTerms] = useState(false);
 
   useEffect(() => {
     if (inputRef.current) {
@@ -211,6 +223,23 @@ export default function Hero() {
     [toast],
   );
 
+  const isRestrictedWebsite = (url: string): string | null => {
+    const restrictedDomains = [
+      { pattern: /\.gov($|\/)/, reason: "Government websites" },
+      { pattern: /\.mil($|\/)/, reason: "Military websites" },
+      { pattern: /\.police($|\/)/, reason: "Law enforcement websites" },
+      { pattern: /\.bank($|\/)/, reason: "Banking websites" },
+      { pattern: /\.edu($|\/)/, reason: "Educational institution websites" },
+    ];
+
+    for (const { pattern, reason } of restrictedDomains) {
+      if (pattern.test(url.toLowerCase())) {
+        return reason;
+      }
+    }
+    return null;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -238,12 +267,39 @@ export default function Hero() {
         return;
       }
 
-      // Use simple URL validation with HTML5 input validation
-      let urlToUse = websiteUrl.trim();
-
       // Add protocol if missing
+      let urlToUse = websiteUrl.trim();
       if (!/^https?:\/\//i.test(urlToUse)) {
         urlToUse = "https://" + urlToUse;
+      }
+
+      // Check if website is restricted
+      const restriction = isRestrictedWebsite(urlToUse);
+      if (restriction) {
+        toast({
+          variant: "destructive",
+          title: "Restricted Website",
+          description: `Cloning ${restriction} is not allowed for ethical reasons.`,
+          duration: 4000,
+        });
+        return;
+      }
+
+      // Show the ethical use confirmation modal and return
+      if (!showCloneModal) {
+        setShowCloneModal(true);
+        return;
+      }
+
+      // If modal was shown but they didn't agree to terms
+      if (!agreeToTerms) {
+        toast({
+          variant: "destructive",
+          title: "Agreement Required",
+          description: "You must agree to the ethical use policy to continue.",
+          duration: 4000,
+        });
+        return;
       }
 
       // Format the prompt for website cloning
@@ -390,6 +446,19 @@ export default function Hero() {
     }
     setLoading(false);
     setLoadingAction(null);
+  };
+
+  const handleCloneModalClose = () => {
+    setShowCloneModal(false);
+    setAgreeToTerms(false);
+  };
+
+  const handleAgreeAndContinue = () => {
+    if (agreeToTerms) {
+      setShowCloneModal(false);
+      // Call handleSubmit again, now with agreement
+      handleSubmit(new Event("submit") as unknown as React.FormEvent);
+    }
   };
 
   return (
@@ -775,6 +844,44 @@ export default function Hero() {
           </Badge>
         ))}
       </div>
+      <Dialog open={showCloneModal} onOpenChange={handleCloneModalClose}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Ethical Use Agreement</DialogTitle>
+            <DialogDescription>
+              Before proceeding with website cloning, please confirm your
+              commitment to ethical use.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex items-start space-x-2 pt-4">
+            <Checkbox
+              id="terms"
+              checked={agreeToTerms}
+              onCheckedChange={(checked) => {
+                setAgreeToTerms(checked as boolean);
+              }}
+            />
+            <Label htmlFor="terms" className="text-sm leading-relaxed">
+              I confirm that I will use this feature only for legitimate
+              purposes such as learning, prototyping, or non-deceptive use. I
+              will not use this tool for phishing, fraud, impersonation, or any
+              other illegal or harmful activities. I understand that I am
+              responsible for respecting intellectual property rights and terms
+              of service of any website I choose to clone.
+            </Label>
+          </div>
+
+          <DialogFooter className="mt-4">
+            <Button variant="outline" onClick={handleCloneModalClose}>
+              Cancel
+            </Button>
+            <Button onClick={handleAgreeAndContinue} disabled={!agreeToTerms}>
+              Agree & Continue
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Container>
   );
 }
