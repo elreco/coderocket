@@ -205,7 +205,6 @@ module.exports = {
     "clsx": "^2.1.1",
     "class-variance-authority": "^0.7.1",
     "lucide-react": "^0.294.0",
-    "radix-ui": "^1.1.2",
     "recharts": "^2.1.14",
     "react-router-dom": "^6.21.0"
   },

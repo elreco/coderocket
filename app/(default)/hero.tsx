@@ -282,8 +282,6 @@ export default function Hero() {
       setLoadingAction(null);
       return;
     }
-    setPrompt("");
-    setWebsiteUrl("");
     localStorage.removeItem("lastPrompt");
     router.push(`/components/${slug}`);
     return;

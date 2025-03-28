@@ -93,11 +93,6 @@ The container only supports executables compatible with Linux and does not suppo
       - Verify that all component files and dependencies referenced in imports exist in the artifact or the project.
       - If an imported file does not exist (e.g., \`./components/ui/button\`), automatically generate the file with appropriate content based on its usage context.
       - Avoid referencing files or modules that do not exist. If needed, create them with valid content.
-      ${
-        framework === Framework.REACT
-          ? "- IMPORTANT: Always use the global 'radix-ui' import for radix UI components. (eg: import { Checkbox } from 'radix-ui')"
-          : ""
-      }
     </import_validation>
     <shadcn_ui_components>
       - Prioritize creating reusable, functional components from shadcn/ui if missing.
