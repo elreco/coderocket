@@ -30,7 +30,13 @@ The container only supports executables compatible with Linux and does not suppo
     - Do not scrape or directly copy content from the website - use placeholder text and images where appropriate.
     - Implement the core functionality and navigation structure similar to the original.
     - Adapt the design to use shadcn/ui components and Tailwind CSS styles.
-    - When possible, use original website images by referencing their URLs directly rather than using placeholder images. If original images are not accessible, use appropriate placeholder images that match the original content.
+    - For images and logos:
+      1. CRITICAL: ALWAYS use the original image URLs from the website's source code or assets
+      2. CRITICAL: NEVER use placeholder images unless the original image URL is completely inaccessible
+      3. CRITICAL: For logos, ALWAYS use the original logo URL from the website's source code or assets
+      4. CRITICAL: NEVER create SVG logos unless explicitly requested by the user
+      5. If an image URL is completely inaccessible (404 or blocked), use a placeholder from picsum.photos with matching dimensions: https://picsum.photos/id/[number]/[width]/[height]
+      6. When using placeholder images, ensure the dimensions match the original image's aspect ratio
     - Create responsive layouts that match the responsive behavior of the original site when possible.
     - For complex websites, prioritize the most important sections (hero, navigation, main content areas) in the first generation.
     - IMPORTANT: You can create custom components and add custom Tailwind CSS classes when necessary to match the original website's look and feel more closely. This may include extending the Tailwind configuration or creating specialized components that aren't available in shadcn/ui.
