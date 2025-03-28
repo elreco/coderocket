@@ -83,21 +83,8 @@ export const getUpdatedArtifactCode = (
       // Nouvelle action "continue" pour continuer un fichier incomplet
       if (allFiles.has(fileName)) {
         const existingContent = allFiles.get(fileName);
-        // Préserver l'indentation de la dernière ligne
-        const lastLine = existingContent.split("\n").pop() || "";
-        const lastLineIndent = lastLine.match(/^[ \t]*/)[0];
-
-        // Nettoyer le nouveau contenu tout en préservant l'indentation
-        const cleanedContent = content
-          .split("\n")
-          .map((line) => {
-            // Si la ligne n'est pas vide, appliquer l'indentation de la dernière ligne
-            return line.trim() ? lastLineIndent + line.trim() : line;
-          })
-          .join("\n");
-
         // Concaténer le nouveau contenu au contenu existant
-        allFiles.set(fileName, existingContent + cleanedContent);
+        allFiles.set(fileName, existingContent + content);
       } else {
         // Si le fichier n'existe pas, le traiter comme un nouveau fichier
         allFiles.set(fileName, content);
