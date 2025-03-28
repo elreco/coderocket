@@ -142,22 +142,6 @@ export async function signInWithOAuth(provider: Provider) {
 
   // Vérifier le nombre d'utilisateurs avec cette IP
   const clientIp = getClientIp(headersList as unknown as Headers);
-  if (clientIp) {
-    const { data: usersWithSameIp, error: ipLookupError } = await supabase
-      .from("users")
-      .select("id")
-      .eq("ip_address", clientIp);
-
-    if (
-      !ipLookupError &&
-      usersWithSameIp &&
-      usersWithSameIp.length >= MAX_ACCOUNTS_PER_IP
-    ) {
-      redirect(
-        "/login?error=Too many accounts have been created from this IP address. Please contact support.",
-      );
-    }
-  }
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider,
