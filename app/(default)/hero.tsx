@@ -9,6 +9,7 @@ import {
   WandSparkles,
   Rocket,
   Link2,
+  Lightbulb,
 } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -85,6 +86,50 @@ const previewButtons = [
   },
 ];
 
+// Add this array of additional prompt ideas
+const additionalPromptIdeas = [
+  {
+    text: "Pricing table",
+    input:
+      "A modern pricing comparison table with Free, Premium and Enterprise plans highlighting key features and annual/monthly toggle.",
+  },
+  {
+    text: "Testimonials",
+    input:
+      "A carousel of client testimonials with profile pictures, company logos, star ratings and detailed feedback.",
+  },
+  {
+    text: "Features grid",
+    input:
+      "An interactive features showcase with animated icons, benefit descriptions and hover effects arranged in a responsive grid.",
+  },
+  {
+    text: "Navigation bar",
+    input:
+      "A sticky header with animated dropdown menus, search bar, and responsive behavior that transforms into a drawer on mobile.",
+  },
+  {
+    text: "FAQ accordion",
+    input:
+      "An expandable FAQ section with smooth animations, search functionality and categorized questions.",
+  },
+  {
+    text: "Image gallery",
+    input:
+      "A responsive masonry image gallery with lightbox preview, filtering capabilities and lazy loading.",
+  },
+  {
+    text: "Stats dashboard",
+    input:
+      "An analytics dashboard with interactive charts, data tables and customizable date range selectors.",
+  },
+  {
+    text: "User profile",
+    input:
+      "A user profile page with avatar upload, editable personal information and activity timeline.",
+  },
+];
+
 // Ajoutez cette constante pour gérer les badges et les états désactivés
 const frameworkConfig = {
   [Framework.REACT]: { icon: SiReact, badge: null, disabled: false },
@@ -131,6 +176,7 @@ export default function Hero() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showCloneModal, setShowCloneModal] = useState(false);
   const [agreeToTerms, setAgreeToTerms] = useState(false);
+  const [showPromptIdeasModal, setShowPromptIdeasModal] = useState(false);
 
   useEffect(() => {
     if (inputRef.current) {
@@ -515,20 +561,20 @@ export default function Hero() {
           }
         >
           <TabsList className="mb-3 w-full">
-            <TabsTrigger value="scratch" className="w-1/2">
+            <TabsTrigger value="scratch" className="w-1/2 p-2">
               Generate from scratch
             </TabsTrigger>
             <TabsTrigger
               value="clone"
-              className="w-1/2"
+              className="w-1/2 p-2"
               disabled={selectedFramework === Framework.HTML}
             >
               Clone a website
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="scratch" className="w-full">
-            <div className="flex w-full flex-col items-end">
+          <TabsContent value="scratch" className="h-32 w-full">
+            <div className="flex size-full flex-col items-end">
               <div className="flex w-full items-start">
                 <Terminal className="mx-2 my-3 size-4" />
                 <div className="relative w-full">
@@ -577,7 +623,7 @@ export default function Hero() {
             </div>
           </TabsContent>
 
-          <TabsContent value="clone" className="w-full">
+          <TabsContent value="clone" className="h-32 max-h-40 w-full">
             <div className="flex w-full flex-col items-end">
               <div className="flex w-full items-start">
                 <Link2 className="mx-2 my-3 size-4" />
@@ -793,42 +839,62 @@ export default function Hero() {
             </div>
             <div className="flex w-full items-center justify-end space-x-0 lg:space-x-2">
               {generationMode === "scratch" && (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="ghost"
-                        className="size-9 p-0 hover:bg-background"
-                        disabled={loading || hasImproved}
-                        onClick={handleImprovePrompt}
-                      >
-                        <WandSparkles
-                          className={cn(
-                            "size-4",
-                            loadingAction === "improve" && "animate-spin",
-                            hasImproved && "text-primary",
-                          )}
-                        />
-                        <span className="sr-only">
-                          {loadingAction === "improve"
-                            ? "Improving prompt..."
-                            : hasImproved
-                              ? "Prompt improved"
-                              : "Improve prompt"}
-                        </span>
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      {loadingAction === "improve"
-                        ? "Improving prompt..."
-                        : hasImproved
-                          ? "Prompt improved"
-                          : "Improve prompt"}
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+                <>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          className="hover:bg-background"
+                          disabled={loading}
+                          onClick={() => setShowPromptIdeasModal(true)}
+                        >
+                          <Lightbulb className="size-4" />
+                          <span className="sr-only">Prompt ideas</span>
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Prompt ideas</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          className="hover:bg-background"
+                          disabled={loading || hasImproved}
+                          onClick={handleImprovePrompt}
+                        >
+                          <WandSparkles
+                            className={cn(
+                              "size-4",
+                              loadingAction === "improve" && "animate-spin",
+                              hasImproved && "text-primary",
+                            )}
+                          />
+                          <span className="sr-only">
+                            {loadingAction === "improve"
+                              ? "Improving prompt..."
+                              : hasImproved
+                                ? "Prompt improved"
+                                : "Improve prompt"}
+                          </span>
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        {loadingAction === "improve"
+                          ? "Improving prompt..."
+                          : hasImproved
+                            ? "Prompt improved"
+                            : "Improve prompt"}
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </>
               )}
               <Button
                 type="submit"
@@ -837,27 +903,13 @@ export default function Hero() {
                 className="w-full lg:w-auto"
                 disabled={loading}
               >
-                <Rocket className="size-3" />
+                <Rocket className="size-4" />
                 {loadingAction === "generate" ? "Generating..." : "Generate"}
               </Button>
             </div>
           </div>
         </div>
       </form>
-      {generationMode === "scratch" && (
-        <div className="flex flex-wrap items-center justify-center gap-2">
-          {previewButtons.map((button, index) => (
-            <Badge
-              key={index}
-              variant="secondary"
-              onClick={() => handleBadgeClick(button.input)}
-              className="whitespace-nowrap"
-            >
-              {button.text}
-            </Badge>
-          ))}
-        </div>
-      )}
       <Dialog open={showCloneModal} onOpenChange={handleCloneModalClose}>
         <DialogContent>
           <DialogHeader>
@@ -892,6 +944,43 @@ export default function Hero() {
             </Button>
             <Button onClick={handleAgreeAndContinue} disabled={!agreeToTerms}>
               Agree & Continue
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog
+        open={showPromptIdeasModal}
+        onOpenChange={setShowPromptIdeasModal}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Prompt Ideas</DialogTitle>
+            <DialogDescription>
+              Select one of these ideas to get inspired for your next component
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex flex-wrap items-center justify-center gap-3 py-4">
+            {previewButtons
+              .concat(additionalPromptIdeas)
+              .map((button, index) => (
+                <Badge
+                  key={index}
+                  variant="outline"
+                  onClick={() => {
+                    handleBadgeClick(button.input);
+                    setShowPromptIdeasModal(false);
+                  }}
+                  className="cursor-pointer px-3 py-2 text-sm hover:bg-secondary"
+                >
+                  {button.text}
+                </Badge>
+              ))}
+          </div>
+
+          <DialogFooter>
+            <Button onClick={() => setShowPromptIdeasModal(false)}>
+              Close
             </Button>
           </DialogFooter>
         </DialogContent>
