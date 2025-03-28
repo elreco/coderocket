@@ -206,7 +206,15 @@ module.exports = {
     "class-variance-authority": "^0.7.1",
     "lucide-react": "^0.294.0",
     "recharts": "^2.1.14",
-    "react-router-dom": "^6.21.0"
+    "react-router-dom": "^6.21.0",
+    "@radix-ui/react-slot": "^1.0.2",
+    "@radix-ui/react-tabs": "^1.0.4",
+    "@radix-ui/react-accordion": "^1.0.2",
+    "@radix-ui/react-dialog": "^1.0.4",
+    "@radix-ui/react-select": "^1.0.2",
+    "@radix-ui/react-checkbox": "^1.0.2",
+    "@radix-ui/react-popover": "^1.0.2",
+    "@radix-ui/react-radio-group": "^1.0.2"
   },
   "devDependencies": {
     "@types/node": "^20.3.1",

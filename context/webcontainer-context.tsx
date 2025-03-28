@@ -186,6 +186,7 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
 
       if (isWebcontainerReady) {
         setLoadingState(null);
+        setBuildError(null);
         oldArtifactFilesRef.current = [];
         return;
       }
