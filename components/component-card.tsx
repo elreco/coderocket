@@ -8,6 +8,7 @@ import Link from "next/link";
 import { GetComponentsReturnType } from "@/app/(default)/components/actions";
 import { cn } from "@/lib/utils";
 import { Framework } from "@/utils/config";
+import { getRelativeDate } from "@/utils/date";
 
 import { Badge } from "./ui/badge";
 
@@ -58,11 +59,15 @@ export function ComponentCard({ chat, isReverse }: ComponentCardProps) {
               {chat.title || chat.first_user_message}
             </h1>
           </Link>
-          <Link href={`/users/${chat.user_id}`}>
-            <span className="text-xs text-muted-foreground hover:text-muted-foreground/80">
-              {chat.user_full_name || "Anonymous user"}
-            </span>
-          </Link>
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Link href={`/users/${chat.user_id}`}>
+              <span className="hover:text-muted-foreground/80">
+                {chat.user_full_name || "Anonymous user"}
+              </span>
+            </Link>
+            <span className="text-muted-foreground/60">•</span>
+            <span>{getRelativeDate(chat.created_at)}</span>
+          </div>
         </div>
 
         {/* Framework Badge and Stats */}
