@@ -191,7 +191,10 @@ export const createChat = async (prompt: string, formData: FormData) => {
     };
   }
 
-  if (prompt.length > PREMIUM_CHAR_LIMIT) {
+  // Déterminer le prompt à utiliser pour les vérifications de longueur
+  const promptToCheck = prompt; // On vérifie la longueur du prompt simple
+
+  if (promptToCheck.length > PREMIUM_CHAR_LIMIT) {
     return {
       error: {
         title: "Prompt is too long",
@@ -387,6 +390,16 @@ export const createChat = async (prompt: string, formData: FormData) => {
   }
 
   const uniqueSlug = await generateUniqueNanoid();
+
+  // Extraire l'URL du site cloné à partir du prompt si disponible
+  let cloneUrl: string | null = null;
+  const cloneWebsiteMatch = prompt.match(
+    /Clone this website: (https?:\/\/[^\s]+)/,
+  );
+  if (cloneWebsiteMatch && cloneWebsiteMatch[1]) {
+    cloneUrl = cloneWebsiteMatch[1];
+  }
+
   const { data } = await supabase
     .from("chats")
     .insert([
@@ -397,6 +410,7 @@ export const createChat = async (prompt: string, formData: FormData) => {
         artifact_code:
           defaultArtifactCode[framework as keyof typeof defaultArtifactCode],
         slug: uniqueSlug,
+        ...(cloneUrl && { clone_url: cloneUrl }),
       },
     ])
     .select()
@@ -410,7 +424,16 @@ export const createChat = async (prompt: string, formData: FormData) => {
     };
   }
 
-  await supabase.from("messages").insert({
+  // Créer un objet pour insérer le message
+  const messageData: {
+    chat_id: string;
+    role: string;
+    theme: string;
+    prompt_image?: string;
+    content: string;
+    version: number;
+    subscription_type: string;
+  } = {
     chat_id: data.id,
     role: "user",
     theme,
@@ -418,7 +441,9 @@ export const createChat = async (prompt: string, formData: FormData) => {
     content: prompt,
     version: -1,
     subscription_type: subscriptionType,
-  });
+  };
+
+  await supabase.from("messages").insert(messageData);
 
   return { slug: data.slug };
 };

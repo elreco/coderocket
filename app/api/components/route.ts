@@ -13,6 +13,7 @@ import {
 } from "@/app/(default)/components/actions";
 import { getSubscription } from "@/app/supabase-server";
 import { Tables } from "@/types_db";
+import { cloneWebsite } from "@/utils/actions/clone-website";
 import { takeScreenshot } from "@/utils/capture-screenshot";
 import {
   extractDataTheme,
@@ -43,9 +44,11 @@ export async function POST(req: Request) {
       Number(formData.get("selectedVersion")) || undefined;
     const image = formData.get("image") as File | null;
     const prompt = formData.get("prompt") as string | null;
-    const { messagesFromDatabase, framework, updatedPrompt, updatedImage } =
-      await validateRequest(id, image, prompt, selectedVersion);
+    const aiPrompt = formData.get("aiPrompt") as string | null;
 
+    const { messagesFromDatabase, framework, updatedPrompt, updatedImage } =
+      await validateRequest(id, image, prompt, aiPrompt, selectedVersion);
+    console.log("messagesFromDatabase", messagesFromDatabase);
     const { messagesToOpenAI: messages } = await buildMessagesToOpenAi(
       messagesFromDatabase,
       updatedPrompt,
@@ -53,6 +56,7 @@ export async function POST(req: Request) {
       selectedVersion,
     );
 
+    console.log("messages", messages);
     const stream = streamText({
       messages,
       model: anthropicModel("claude-3-7-sonnet-latest"),
@@ -95,7 +99,7 @@ export async function POST(req: Request) {
 
 const buildMessagesToOpenAi = async (
   messages: Tables<"messages">[],
-  updatedPrompt: string,
+  updatedPrompt: string, // Ce paramètre contient le prompt détaillé avec tous les détails du site
   updatedImage: string | null,
   selectedVersion?: number,
 ) => {
@@ -142,22 +146,23 @@ const buildMessagesToOpenAi = async (
     };
   }) as CoreMessage[];
 
+  // Ajouter le dernier message de l'utilisateur avec le prompt détaillé
   messagesToOpenAI.push({
     role: "user",
     content: updatedImage
       ? [
           {
             type: "text",
-            text: updatedPrompt,
+            text: updatedPrompt, // Contient le prompt détaillé avec toutes les informations du site
           },
           {
             type: "image",
             image: new URL(`${storageUrl}/${updatedImage}`),
           },
         ]
-      : updatedPrompt,
+      : updatedPrompt, // Contient le prompt détaillé avec toutes les informations du site
   });
-
+  console.log("messagesToOpenAI", messagesToOpenAI);
   return { messagesToOpenAI };
 };
 
@@ -165,6 +170,7 @@ const validateRequest = async (
   id: string,
   image: File | null,
   prompt: string | null,
+  aiPrompt: string | null,
   selectedVersion?: number,
 ) => {
   const supabase = await createClient();
@@ -173,9 +179,12 @@ const validateRequest = async (
   } = await supabase.auth.getUser();
   if (!user) throw new Error("Could not get user");
 
+  // Utiliser aiPrompt s'il est disponible, sinon utiliser prompt
+  const finalPrompt = aiPrompt || prompt;
+
   // Validation de la longueur du prompt
-  if (prompt) {
-    if (prompt.length > PREMIUM_CHAR_LIMIT) {
+  if (finalPrompt) {
+    if (finalPrompt.length > PREMIUM_CHAR_LIMIT) {
       throw new Error(
         `Votre prompt dépasse la limite de ${PREMIUM_CHAR_LIMIT} caractères (environ ${MAX_TOKENS_PER_REQUEST} tokens). Veuillez le raccourcir pour continuer.`,
       );
@@ -190,6 +199,74 @@ const validateRequest = async (
   if (chat.user?.id !== user.id) {
     throw new Error("User is not authorized to modify chat");
   }
+
+  // Vérifier si c'est un site cloné et récupérer les détails si nécessaire
+  let enhancedPrompt = finalPrompt;
+  let updatedImage = null;
+
+  if (chat.clone_url && prompt?.includes("Clone this website:") && !aiPrompt) {
+    try {
+      const cloneResult = await cloneWebsite(chat.clone_url, true);
+
+      if (cloneResult.success && cloneResult.data) {
+        // Construire un prompt détaillé avec les informations du site
+        enhancedPrompt = `Clone this website: ${chat.clone_url}
+LAYOUT STRUCTURE:
+${cloneResult.data.structure.layoutDescription || ""}
+
+COLORS:
+${JSON.stringify(cloneResult.data.structure.colors || [])}
+
+FONTS:
+${JSON.stringify(cloneResult.data.structure.fonts || [])}
+
+MENU ITEMS:
+${JSON.stringify(cloneResult.data.structure.menu || [])}
+
+META TAGS:
+${JSON.stringify(cloneResult.data.metaTags || {})}
+
+IMAGES COUNT: ${cloneResult.data.imageCount || 0}
+
+IMPORTANT IMAGES TO USE:
+${JSON.stringify(cloneResult.data.images.slice(0, 20) || [])}
+`;
+
+        // Si un screenshot est disponible, l'enregistrer dans le stockage pour l'utiliser comme image
+        if (cloneResult.data.screenshot) {
+          try {
+            // Convertir le Base64 en Buffer
+            const buffer = Buffer.from(cloneResult.data.screenshot, "base64");
+            const screenshotFileName = `screenshot-${Date.now()}-${user?.id}.jpg`;
+
+            // Sauvegarder le screenshot dans le stockage
+            const { data: imageData, error: imageError } =
+              await supabase.storage
+                .from("images")
+                .upload(screenshotFileName, buffer, {
+                  contentType: "image/jpeg",
+                });
+
+            if (!imageError && imageData) {
+              updatedImage = imageData.path;
+            }
+          } catch (screenshotError) {
+            console.error(
+              "Erreur lors de l'enregistrement du screenshot:",
+              screenshotError,
+            );
+          }
+        }
+      }
+    } catch (error) {
+      console.error(
+        "Erreur lors de la récupération des détails du site:",
+        error,
+      );
+      // Continuer avec le prompt simple en cas d'erreur
+    }
+  }
+
   const messagesFromDatabase = await fetchMessagesByChatId(id);
   if (!messagesFromDatabase) throw new Error("Could not get chat messages");
 
@@ -290,10 +367,10 @@ const validateRequest = async (
       : await fetchLastUserMessageByChatId(id);
   if (!lastUserMessage) throw new Error("No last user message");
 
-  let updatedPrompt = prompt || "";
-  let updatedImage = null;
+  // Utiliser le prompt détaillé s'il est disponible, sinon utiliser le prompt existant
+  let updatedPrompt = enhancedPrompt || "";
 
-  if (!prompt) {
+  if (!enhancedPrompt) {
     updatedPrompt = lastUserMessage.content || "";
   }
 
@@ -316,7 +393,7 @@ const validateRequest = async (
     messagesFromDatabase,
     subscription,
     framework: chat.framework,
-    updatedPrompt,
+    updatedPrompt, // Contient maintenant le prompt détaillé avec tous les détails du site
     updatedImage,
   };
 };

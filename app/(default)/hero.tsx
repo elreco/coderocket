@@ -7,9 +7,10 @@ import {
   Globe,
   Lock,
   WandSparkles,
-  Rocket,
   Link2,
   Lightbulb,
+  Loader2,
+  Rocket,
 } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -63,6 +64,12 @@ import { promptEnhancer } from "@/utils/prompt-enhancer";
 import { createClient } from "@/utils/supabase/client";
 
 import { createChat } from "./components/actions";
+
+// Types pour les thèmes
+export type ThemeType = "light" | "dark" | "system";
+
+// Types pour les frameworks
+export type FrameworkType = "next" | "react" | "vue" | "angular" | "svelte";
 
 const previewButtons = [
   {
@@ -177,6 +184,7 @@ export default function Hero() {
   const [showCloneModal, setShowCloneModal] = useState(false);
   const [agreeToTerms, setAgreeToTerms] = useState(false);
   const [showPromptIdeasModal, setShowPromptIdeasModal] = useState(false);
+  const [speen, setSpeen] = useState([0]);
 
   useEffect(() => {
     if (inputRef.current) {
@@ -290,7 +298,14 @@ export default function Hero() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Create a proper prompt for clone mode by including the URL
     let finalPrompt = prompt;
+    if (generationMode === "clone" && websiteUrl) {
+      // Format the prompt to match the expected pattern for extracting clone URL
+      finalPrompt = `Clone this website: ${websiteUrl}`;
+    }
+
+    const aiPrompt = finalPrompt; // Prompt complet pour l'IA avec les détails techniques
 
     // Add validation for empty prompt or url in clone mode
     if (generationMode === "scratch" && !prompt.trim()) {
@@ -318,6 +333,7 @@ export default function Hero() {
       let urlToUse = websiteUrl.trim();
       if (!/^https?:\/\//i.test(urlToUse)) {
         urlToUse = "https://" + urlToUse;
+        setWebsiteUrl(urlToUse); // Update the state with properly formatted URL
       }
 
       // Check if website is restricted
@@ -349,7 +365,7 @@ export default function Hero() {
         return;
       }
 
-      // Format the prompt for website cloning
+      // Make sure finalPrompt has the correct URL format
       finalPrompt = `Clone this website: ${urlToUse}`;
     }
 
@@ -373,6 +389,11 @@ export default function Hero() {
     formData.append("isVisible", isVisible.toString());
     formData.append("theme", selectedTheme);
     formData.append("framework", selectedFramework);
+
+    // Stocker le prompt simple pour l'affichage et le prompt détaillé pour l'IA
+    formData.append("prompt", finalPrompt);
+    formData.append("aiPrompt", aiPrompt);
+
     const { slug, error } = await createChat(finalPrompt, formData);
     if (error) {
       toast({
@@ -508,6 +529,24 @@ export default function Hero() {
     }
   };
 
+  // Add animation for loading dots
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+
+    if (loading) {
+      interval = setInterval(() => {
+        setSpeen((prev) => {
+          if (prev.length >= 3) return [0];
+          return [...prev, prev.length];
+        });
+      }, 500);
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [loading]);
+
   return (
     <Container className="relative flex min-h-full w-auto flex-col items-center justify-center space-y-4 overflow-hidden pr-2 sm:pr-11">
       <AnimatedGridPattern
@@ -556,18 +595,23 @@ export default function Hero() {
         <Tabs
           defaultValue="scratch"
           className="w-full"
-          onValueChange={(value) =>
-            setGenerationMode(value as "scratch" | "clone")
-          }
+          onValueChange={(value) => {
+            if (loading) return; // Prevent tab change when loading
+            setGenerationMode(value as "scratch" | "clone");
+          }}
         >
           <TabsList className="mb-3 w-full">
-            <TabsTrigger value="scratch" className="w-1/2 p-2">
+            <TabsTrigger
+              value="scratch"
+              className="w-1/2 p-2"
+              disabled={loading} // Disable tab when loading
+            >
               Generate from scratch
             </TabsTrigger>
             <TabsTrigger
               value="clone"
               className="w-1/2 p-2"
-              disabled={selectedFramework === Framework.HTML}
+              disabled={selectedFramework === Framework.HTML || loading} // Also disable when loading
             >
               Clone a website
             </TabsTrigger>
@@ -623,18 +667,23 @@ export default function Hero() {
             </div>
           </TabsContent>
 
-          <TabsContent value="clone" className="h-32 max-h-40 w-full">
+          <TabsContent
+            value="clone"
+            className="max-h-[350px] min-h-32 w-full overflow-y-auto"
+          >
             <div className="flex w-full flex-col items-end">
               <div className="flex w-full items-start">
                 <Link2 className="mx-2 my-3 size-4" />
                 <div className="relative w-full">
-                  <Input
-                    type="url"
-                    placeholder="Enter website URL to clone (e.g., https://example.com)"
-                    value={websiteUrl}
-                    onChange={(e) => setWebsiteUrl(e.target.value)}
-                    className="bg-secondary pl-1 focus-visible:ring-0 focus-visible:ring-offset-0"
-                  />
+                  <div className="flex gap-2">
+                    <Input
+                      type="url"
+                      placeholder="Enter website URL to clone (e.g., https://example.com)"
+                      value={websiteUrl}
+                      onChange={(e) => setWebsiteUrl(e.target.value)}
+                      className="bg-secondary pl-1 focus-visible:ring-0 focus-visible:ring-offset-0"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -896,16 +945,46 @@ export default function Hero() {
                   </TooltipProvider>
                 </>
               )}
-              <Button
-                type="submit"
-                size="sm"
-                variant="default"
-                className="w-full lg:w-auto"
-                disabled={loading}
-              >
-                <Rocket className="size-4" />
-                {loadingAction === "generate" ? "Generating..." : "Generate"}
-              </Button>
+              <div className="flex flex-col space-y-2">
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="submit"
+                    size="sm"
+                    variant="default"
+                    className="flex w-full items-center justify-center lg:w-auto"
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="size-4 animate-spin" />
+                        {loadingAction === "generate" && (
+                          <span>
+                            Generating{speen.includes(0) && "."}
+                            {speen.includes(1) && "."}
+                            {speen.includes(2) && "."}
+                          </span>
+                        )}
+                        {loadingAction === "improve" && (
+                          <span>
+                            Improving{speen.includes(0) && "."}
+                            {speen.includes(1) && "."}
+                            {speen.includes(2) && "."}
+                          </span>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <span className="flex items-center justify-center">
+                          <Rocket className="mr-1 size-4" />
+                          {generationMode === "scratch"
+                            ? "Generate"
+                            : "Clone website"}
+                        </span>
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
