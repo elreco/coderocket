@@ -494,7 +494,9 @@ export default function ComponentCompletion({
     const link =
       fetchedChat?.framework === Framework.HTML
         ? `https://www.tailwindai.dev/content/${chatId}/${selectedVersion}`
-        : `https://${chatId}-${selectedVersion}.preview.tailwindai.dev`;
+        : isWebcontainerReady
+          ? `https://${chatId}-${selectedVersion}.preview.tailwindai.dev`
+          : window.location.href;
     setShareLink(link);
     setIsShareModalOpen(true);
     copy(link);
@@ -864,6 +866,7 @@ export default function ComponentCompletion({
                       </Dialog>
                     </>
                   )}
+
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <span>
