@@ -215,7 +215,8 @@ module.exports = {
     "@radix-ui/react-checkbox": "^1.0.2",
     "@radix-ui/react-popover": "^1.0.2",
     "@radix-ui/react-radio-group": "^1.0.2",
-    "@radix-ui/react-avatar": "^1.0.3"
+    "@radix-ui/react-avatar": "^1.0.3",
+    "@radix-ui/react-dropdown-menu": "^2.0.6"
   },
   "devDependencies": {
     "@types/node": "^20.3.1",
