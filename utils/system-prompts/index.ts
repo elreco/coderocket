@@ -33,7 +33,7 @@ The container only supports executables compatible with Linux and does not suppo
     - When possible, use original website images by referencing their URLs directly rather than using placeholder images. If original images are not accessible, use appropriate placeholder images that match the original content.
     - Create responsive layouts that match the responsive behavior of the original site when possible.
     - For complex websites, prioritize the most important sections (hero, navigation, main content areas) in the first generation.
-    - You can create custom components and add custom Tailwind CSS classes when necessary to match the original website's look and feel more closely. This may include extending the Tailwind configuration or creating specialized components that aren't available in shadcn/ui.
+    - IMPORTANT: You can create custom components and add custom Tailwind CSS classes when necessary to match the original website's look and feel more closely. This may include extending the Tailwind configuration or creating specialized components that aren't available in shadcn/ui.
   </website_cloning>
 
   <token_optimization>
