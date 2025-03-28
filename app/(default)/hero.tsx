@@ -833,18 +833,20 @@ export default function Hero() {
           </div>
         </div>
       </form>
-      <div className="flex flex-wrap items-center justify-center gap-2">
-        {previewButtons.map((button, index) => (
-          <Badge
-            key={index}
-            variant="secondary"
-            onClick={() => handleBadgeClick(button.input)}
-            className="whitespace-nowrap"
-          >
-            {button.text}
-          </Badge>
-        ))}
-      </div>
+      {generationMode === "scratch" && (
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          {previewButtons.map((button, index) => (
+            <Badge
+              key={index}
+              variant="secondary"
+              onClick={() => handleBadgeClick(button.input)}
+              className="whitespace-nowrap"
+            >
+              {button.text}
+            </Badge>
+          ))}
+        </div>
+      )}
       <Dialog open={showCloneModal} onOpenChange={handleCloneModalClose}>
         <DialogContent>
           <DialogHeader>
