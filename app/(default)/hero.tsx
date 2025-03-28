@@ -225,11 +225,12 @@ export default function Hero() {
 
   const isRestrictedWebsite = (url: string): string | null => {
     const restrictedDomains = [
-      { pattern: /\.gov($|\/)/, reason: "Government websites" },
-      { pattern: /\.mil($|\/)/, reason: "Military websites" },
-      { pattern: /\.police($|\/)/, reason: "Law enforcement websites" },
-      { pattern: /\.bank($|\/)/, reason: "Banking websites" },
-      { pattern: /\.edu($|\/)/, reason: "Educational institution websites" },
+      { pattern: /\.gov(\.|$|\/)/, reason: "Government websites" },
+      { pattern: /\.gouv(\.|$|\/)/, reason: "Government websites" },
+      { pattern: /\.mil(\.|$|\/)/, reason: "Military websites" },
+      { pattern: /\.police(\.|$|\/)/, reason: "Law enforcement websites" },
+      { pattern: /\.bank(\.|$|\/)/, reason: "Banking websites" },
+      { pattern: /\.edu(\.|$|\/)/, reason: "Educational institution websites" },
     ];
 
     for (const { pattern, reason } of restrictedDomains) {
