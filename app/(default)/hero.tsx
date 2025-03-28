@@ -485,10 +485,21 @@ export default function Hero() {
           Create. <span className="text-primary">Refine.</span> Deliver.
         </h2>
         <p className="text-center font-normal">
-          Build fully responsive{" "}
-          <span className="font-semibold">Tailwind websites</span> effortlessly
-          using <span className="font-semibold">AI-powered</span> text prompts
-          and image inputs.
+          {generationMode === "scratch" ? (
+            <>
+              Build{" "}
+              <span className="font-semibold">responsive Tailwind sites</span>{" "}
+              with
+              <span className="font-semibold"> AI-powered</span> prompts and
+              images.
+            </>
+          ) : (
+            <>
+              <span className="font-semibold">Clone any website</span> by URL
+              and get a <span className="font-semibold">Tailwind-ready</span>{" "}
+              version instantly.
+            </>
+          )}
         </p>
       </div>
       <form

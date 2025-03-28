@@ -25,7 +25,7 @@ const meta = {
   title: "Tailwind AI - Build Stunning Tailwind Websites with AI",
   metadataBase: new URL("https://www.tailwindai.dev"),
   description:
-    "Create high-quality, AI-powered Tailwind websites and components effortlessly. Tailwind AI simplifies your workflow, generating sleek, responsive designs in seconds.",
+    "Create high-quality, AI-powered Tailwind websites and components effortlessly. Tailwind AI simplifies your workflow, generating sleek, responsive designs in seconds. Clone existing websites with a URL or build from scratch.",
   cardImage: "https://www.tailwindai.dev/og.png",
   robots: "index, follow",
   favicon: "/favicon.ico",
@@ -35,7 +35,7 @@ const meta = {
     card: "summary_large_image",
     title: "Tailwind AI - AI-Powered Tailwind App Builder",
     description:
-      "Design and build stunning Tailwind websites and components with AI. Automate your UI development and create responsive, production-ready websites faster than ever.",
+      "Design and build stunning Tailwind websites and components with AI. Clone existing websites with a URL or create responsive, production-ready websites faster than ever.",
     images: ["https://www.tailwindai.dev/og.png"],
   },
 };
@@ -75,6 +75,34 @@ export default async function RootLayout({ children }: PropsWithChildren) {
       lang="en"
       className={cn("dark size-full antialiased", rubik.className)}
     >
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebApplication",
+              name: "Tailwind AI",
+              url: "https://www.tailwindai.dev",
+              description:
+                "Create high-quality, AI-powered Tailwind websites and components effortlessly. Clone existing websites with a URL or build from scratch.",
+              applicationCategory: "WebDevelopment",
+              operatingSystem: "Any",
+              offers: {
+                "@type": "Offer",
+                price: "0",
+                priceCurrency: "USD",
+              },
+              featureList: [
+                "AI-powered Tailwind component generation",
+                "Website cloning from URL",
+                "Multiple framework support (React, Vue, HTML)",
+                "Responsive design",
+              ],
+            }),
+          }}
+        />
+      </head>
       <body className="size-full bg-background">
         <SidebarProvider defaultOpen={defaultOpen} className="size-full">
           <AppSidebar defaultUser={user} />

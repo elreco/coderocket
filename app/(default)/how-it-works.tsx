@@ -41,7 +41,8 @@ export default function Video() {
         >
           Generate components effortlessly with simple prompts, iterate
           seamlessly, and use vision technology to create components from
-          images, ensuring flexibility and innovation in your projects.
+          images. Clone existing websites by simply providing a URL or build
+          from scratch, ensuring flexibility and innovation in your projects.
         </motion.p>
         <div className="mt-10 w-full text-left">
           <Faq />
