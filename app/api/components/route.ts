@@ -46,13 +46,16 @@ export async function POST(req: Request) {
     const prompt = formData.get("prompt") as string | null;
     const aiPrompt = formData.get("aiPrompt") as string | null;
 
+    // Valider la requête et récupérer les messages, le framework, et le prompt mis à jour
+    // Si un site est cloné, cette fonction va aussi capturer et enregistrer un screenshot
+    // qui sera ensuite envoyé à Anthropic avec le prompt
     const { messagesFromDatabase, framework, updatedPrompt, updatedImage } =
       await validateRequest(id, image, prompt, aiPrompt, selectedVersion);
-    console.log("messagesFromDatabase", messagesFromDatabase);
+
     const { messagesToOpenAI: messages } = await buildMessagesToOpenAi(
       messagesFromDatabase,
       updatedPrompt,
-      updatedImage,
+      updatedImage, // Le chemin vers le screenshot capturé si disponible
       selectedVersion,
     );
 
@@ -157,6 +160,7 @@ const buildMessagesToOpenAi = async (
           },
           {
             type: "image",
+            // Inclure le screenshot du site dans le message multimodal envoyé à Anthropic
             image: new URL(`${storageUrl}/${updatedImage}`),
           },
         ]
@@ -230,16 +234,18 @@ IMAGES COUNT: ${cloneResult.data.imageCount || 0}
 
 IMPORTANT IMAGES TO USE:
 ${JSON.stringify(cloneResult.data.images.slice(0, 20) || [])}
-`;
 
+SCREENSHOT: A screenshot of the website is provided as an image reference. Please use it as visual reference for the layout, colors, and overall design.
+`;
+        console.log("cloneResult.data.screenshot", cloneResult.data.screenshot);
         // Si un screenshot est disponible, l'enregistrer dans le stockage pour l'utiliser comme image
         if (cloneResult.data.screenshot) {
           try {
-            // Convertir le Base64 en Buffer
+            // Convertir le Base64 en Buffer pour sauvegarder l'image
             const buffer = Buffer.from(cloneResult.data.screenshot, "base64");
             const screenshotFileName = `screenshot-${Date.now()}-${user?.id}.jpg`;
 
-            // Sauvegarder le screenshot dans le stockage
+            // Sauvegarder le screenshot dans le stockage pour l'envoyer à Anthropic
             const { data: imageData, error: imageError } =
               await supabase.storage
                 .from("images")
@@ -248,7 +254,12 @@ ${JSON.stringify(cloneResult.data.images.slice(0, 20) || [])}
                 });
 
             if (!imageError && imageData) {
+              // Stocker le chemin de l'image pour l'utiliser dans le message à Anthropic
               updatedImage = imageData.path;
+              console.log(
+                "Screenshot saved and will be used as image reference:",
+                updatedImage,
+              );
             }
           } catch (screenshotError) {
             console.error(

@@ -743,13 +743,15 @@ export default function Hero() {
                   </TabsTrigger>
                 </TabsList>
               </Tabs>
-              <ImageSelector
-                fileInputRef={fileInputRef}
-                disabled={loading}
-                handleButtonClick={handleButtonClick}
-                handleImageChange={handleImageChange}
-                isReverse={true}
-              />
+              {generationMode === "scratch" && (
+                <ImageSelector
+                  fileInputRef={fileInputRef}
+                  disabled={loading}
+                  handleButtonClick={handleButtonClick}
+                  handleImageChange={handleImageChange}
+                  isReverse={true}
+                />
+              )}
               {selectedFramework === Framework.HTML && (
                 <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
                   <SheetTrigger asChild>
@@ -810,7 +812,6 @@ export default function Hero() {
                 defaultValue="react"
                 onValueChange={(value) => {
                   setSelectedFramework(value as Framework);
-                  // Reset to "Generate from scratch" if HTML is selected
                   if (value === Framework.HTML) {
                     setGenerationMode("scratch");
                   }
@@ -826,7 +827,6 @@ export default function Hero() {
                   {Object.values(Framework)
                     .filter(
                       (framework) =>
-                        // Filter out HTML when in clone mode
                         !(
                           generationMode === "clone" &&
                           framework === Framework.HTML
