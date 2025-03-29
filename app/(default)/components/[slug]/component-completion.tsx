@@ -245,11 +245,18 @@ export default function ComponentCompletion({
         });
 
         if (!response.ok) {
-          const errorData = await response.json().catch(async () => {
+          try {
+            const errorData = await response.json();
+            throw new Error(errorData.error || "An unknown error occurred");
+          } catch (e) {
+            if (e instanceof Error) {
+              throw e;
+            }
+
+            // If we can't parse as JSON, try to get the text
             const text = await response.text();
-            return { error: text };
-          });
-          throw new Error(errorData.error || "An unknown error occurred");
+            throw new Error(text || "An unknown error occurred");
+          }
         }
 
         return response;
