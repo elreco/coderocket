@@ -429,14 +429,6 @@ export async function scrapeWebsite(
     // Get HTML content
     const html = await page.content();
 
-    // Take a screenshot of the site
-    const screenshot = await page.screenshot({
-      encoding: "base64",
-      fullPage: options?.fullPage === true, // Utiliser le paramètre fullPage si fourni
-      type: "jpeg",
-      quality: 80, // Reduce quality to keep size reasonable
-    });
-
     // Extract all images with their URLs and alt texts
     const images = await page.evaluate(() => {
       return Array.from(document.querySelectorAll("img"))
@@ -470,7 +462,6 @@ export async function scrapeWebsite(
       title,
       description,
       url,
-      screenshot: screenshot.toString(), // Add the screenshot
       structure,
       metaTags,
     };

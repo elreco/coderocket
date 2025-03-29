@@ -24,7 +24,6 @@ export async function cloneWebsite(url: string, fullPage?: boolean) {
         url: websiteData.url,
         imageCount: websiteData.images.length,
         images: websiteData.images.slice(0, 20),
-        screenshot: websiteData.screenshot,
         metaTags: websiteData.metaTags || {},
         html: websiteData.html,
         structure: {
