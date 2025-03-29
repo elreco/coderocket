@@ -68,7 +68,38 @@ export const htmlSystemPrompt = (
     - CRITICAL: One single \`<tailwindaiArtifact></tailwindaiArtifact>\` component per response
     - STRICTLY FORBIDDEN: Comments or explanatory text inside the \`<tailwindaiArtifact>\` component or between the \`<tailwindaiFile>\` components.
     - CRITICAL: Always provide complete file content for modified or added files even if the content is the same as the previous file. NEVER ADD PLACEHOLDER LIKE THIS : \`// Rest of the code remains the same as in the previous generation\`. Always provide the full code to ensure completeness.
-    - CRITICAL: If you encounter a file with \`<!-- FINISH_REASON: length -->\` or \`<!-- FINISH_REASON: error -->\` at the end, use \`<tailwindaiFile name="filename.html" action="continue">\` to continue from where it left off. When using action="continue", you should only provide the continuation of the file, not the entire file content again.
+    - CRITICAL: If the user asks you to "continue from where you left off" or "continue where you left off", you MUST:
+        1. Look for the marker \`<!-- FINISH_REASON: length -->\` or \`<!-- FINISH_REASON: error -->\` in the previous content
+        2. ALWAYS use \`<tailwindaiFile name="filename.html" action="continue">\` syntax
+        3. Remove these markers from your continuation
+        4. Continue writing from EXACTLY the same character where the content was truncated
+        5. Do NOT regenerate any part of the file - continue from precisely where it stopped
+        6. Preserve the EXACT indentation level, whitespace patterns, and code style
+        7. Do NOT add ANY extra characters at the beginning of your continuation - not even spaces or line breaks
+        8. Ensure perfect character-by-character continuation as if the file was never interrupted
+        9. Look at the last token in the file to ensure your continuation forms complete syntax
+        10. CRITICAL: Be extremely careful with opening/closing HTML tags, brackets, quotes, and attributes
+        11. DO NOT repeat any code that was already generated
+        12. Pay special attention to HTML context to ensure the continuation makes perfect sense
+
+    - CRITICAL: When continuing from where you left off:
+        1. Maintain EXACTLY the same indentation level as the last line
+        2. If the last line ended with a space, start with the next appropriate character WITHOUT adding another space
+        3. If the last line ended with a newline, start with the correct indentation and the next logical statement
+        4. If the last line ended in the middle of a tag, attribute or value, continue that EXACT tag, attribute or value
+        5. If the last line had an opening HTML tag without a closing tag, be sure to include the matching closing tag in your continuation
+        6. If the last line ended inside a HTML comment, continue correctly inside that comment
+        7. NEVER add extra spaces or newlines at the beginning of the continuation
+        8. NEVER modify the indentation of the existing code
+        9. ALWAYS use character-by-character precision
+        10. ALWAYS use the same tailwindaiFile tag with action="continue"
+
+    - CRITICAL: If you encounter a file with \`<!-- FINISH_REASON: length -->\` or \`<!-- FINISH_REASON: error -->\` at the end:
+        1. Remove this marker completely from consideration when continuing
+        2. Use \`<tailwindaiFile name="filename.html" action="continue">\` to continue from where it left off
+        3. When using action="continue", you should only provide the continuation of the file, not the entire file content again
+        4. Check the exact character where the file was cut off to ensure perfect continuation
+
     - CRITICAL: If you're approaching token limits, prioritize completing core functionality files first and leave less critical files for subsequent iterations.
     - CRITICAL: When implementing a complex feature, focus on one key aspect per generation to avoid exceeding token limits.
     - CRITICAL: For large components, consider implementing them incrementally across multiple generations.

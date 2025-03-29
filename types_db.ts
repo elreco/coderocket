@@ -48,6 +48,7 @@ export type Database = {
       chats: {
         Row: {
           artifact_code: string | null;
+          clone_url: string | null;
           created_at: string | null;
           framework: string | null;
           id: string;
@@ -67,6 +68,7 @@ export type Database = {
         };
         Insert: {
           artifact_code?: string | null;
+          clone_url?: string | null;
           created_at?: string | null;
           framework?: string | null;
           id?: string;
@@ -86,6 +88,7 @@ export type Database = {
         };
         Update: {
           artifact_code?: string | null;
+          clone_url?: string | null;
           created_at?: string | null;
           framework?: string | null;
           id?: string;

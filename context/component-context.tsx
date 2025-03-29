@@ -10,6 +10,7 @@ export type ChatMessage = Tables<"messages"> & {
     prompt_image: string | null;
     remix_chat_id: string | null;
   };
+  ai_prompt?: string;
 };
 
 export type WebcontainerLoadingState =

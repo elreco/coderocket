@@ -83,8 +83,25 @@ export const getUpdatedArtifactCode = (
       // Nouvelle action "continue" pour continuer un fichier incomplet
       if (allFiles.has(fileName)) {
         const existingContent = allFiles.get(fileName);
-        // Concaténer le nouveau contenu au contenu existant
-        allFiles.set(fileName, existingContent + content);
+        // Nettoyer le contenu existant de tout marqueur de fin
+        const cleanedExistingContent = existingContent.replace(
+          /\n\n<!-- FINISH_REASON: (?:length|error) -->$/,
+          "",
+        );
+
+        // Vérifier si le contenu commence par des espaces ou des sauts de ligne
+        // et s'assurer que la concaténation respecte l'indentation
+        const needsSpace =
+          cleanedExistingContent.endsWith(" ") ||
+          !(/\s$/.test(cleanedExistingContent) || /^\s/.test(content));
+
+        // Concaténer le nouveau contenu au contenu existant avec un espace si nécessaire
+        allFiles.set(
+          fileName,
+          cleanedExistingContent +
+            (needsSpace && !cleanedExistingContent.endsWith("\n") ? " " : "") +
+            content,
+        );
       } else {
         // Si le fichier n'existe pas, le traiter comme un nouveau fichier
         allFiles.set(fileName, content);
@@ -94,14 +111,30 @@ export const getUpdatedArtifactCode = (
       // on concatène le nouveau contenu au contenu existant
       if (allFiles.has(fileName)) {
         const existingContent = allFiles.get(fileName);
-        // Vérifier si le contenu existant se terminait par un marqueur FINISH_REASON (qui a été supprimé)
-        const hadFinishReason = artifactCode.includes(
-          `${fileName}">\n${existingContent}\n\n<!-- FINISH_REASON:`,
-        );
+        // Vérifier si le contenu existant se terminait par un marqueur FINISH_REASON
+        const hadFinishReason = existingContent.includes("<!-- FINISH_REASON:");
 
         if (hadFinishReason) {
-          // Si oui, on concatène le nouveau contenu
-          allFiles.set(fileName, existingContent + content);
+          // Nettoyer le contenu existant de tout marqueur de fin
+          const cleanedExistingContent = existingContent.replace(
+            /\n\n<!-- FINISH_REASON: (?:length|error) -->$/,
+            "",
+          );
+
+          // Vérifier si le contenu commence par des espaces ou des sauts de ligne
+          const needsSpace =
+            cleanedExistingContent.endsWith(" ") ||
+            !(/\s$/.test(cleanedExistingContent) || /^\s/.test(content));
+
+          // Concaténer le nouveau contenu au contenu existant
+          allFiles.set(
+            fileName,
+            cleanedExistingContent +
+              (needsSpace && !cleanedExistingContent.endsWith("\n")
+                ? " "
+                : "") +
+              content,
+          );
         } else {
           // Sinon, on remplace par le nouveau contenu
           allFiles.set(fileName, content);
@@ -160,6 +193,15 @@ export function extractDirectFiles(content: string): ChatFile[] {
 
     const fileName = content.slice(nameStart + 6, nameEnd);
 
+    // Vérifier si l'action est "continue"
+    const actionStart = content.indexOf('action="', fileStart);
+    const hasAction =
+      actionStart !== -1 && actionStart < content.indexOf(">", fileStart);
+    const actionEnd = hasAction ? content.indexOf('"', actionStart + 8) : -1;
+    const action = hasAction ? content.slice(actionStart + 8, actionEnd) : null;
+    const isContinue = action === "continue";
+    const isDelete = action === "delete";
+
     const fileContentStart = content.indexOf(">", nameEnd);
     if (fileContentStart === -1) break;
 
@@ -171,17 +213,29 @@ export function extractDirectFiles(content: string): ChatFile[] {
     const isIncomplete = fileContentEnd === -1;
 
     // Pour un fichier incomplet, on prend tout le contenu restant
-    const fileContent = isIncomplete
+    let fileContent = isIncomplete
       ? content.slice(fileContentStart + 1)
       : content.slice(fileContentStart + 1, fileContentEnd);
+
+    // Vérifier si le contenu contient un marqueur FINISH_REASON
+    const hasFinishReasonMarker =
+      fileContent.includes("<!-- FINISH_REASON: length -->") ||
+      fileContent.includes("<!-- FINISH_REASON: error -->");
+
+    // Nettoyer le contenu des marqueurs de fin si nécessaire
+    if (hasFinishReasonMarker) {
+      fileContent = fileContent
+        .replace(/\n\n<!-- FINISH_REASON: (?:length|error) -->$/, "")
+        .trim();
+    }
 
     files.push({
       name: fileName,
       content: fileContent.trim(),
-      isIncomplete,
-      isDelete: false,
+      isIncomplete: isIncomplete || hasFinishReasonMarker,
+      isDelete: isDelete,
       isActive: false,
-      isContinue: false,
+      isContinue: isContinue,
     });
 
     currentIndex = isIncomplete
@@ -242,6 +296,18 @@ export const extractFilesFromCompletion = (completion: string): ChatFile[] => {
       continue; // Ignorer les fichiers sans contenu réel
     }
 
+    // Détection de présence de marqueurs FINISH_REASON
+    const hasFinishReasonMarker =
+      content.includes("<!-- FINISH_REASON: length -->") ||
+      content.includes("<!-- FINISH_REASON: error -->");
+
+    // Vérifier si le fichier est complet (balise fermante présente)
+    const isComplete = completion.includes(`</tailwindaiFile>`);
+
+    // Déterminer si le fichier est incomplet (pas de balise fermante ou présence d'un marqueur FINISH_REASON)
+    const isIncomplete = !isComplete || hasFinishReasonMarker;
+
+    // Ajustement des indentations pour un affichage propre
     const indentations = nonEmptyLines.map((line) => {
       const match = line.match(/^[ \t]*/);
       return match ? match[0].length : 0;
@@ -255,16 +321,13 @@ export const extractFilesFromCompletion = (completion: string): ChatFile[] => {
       .join("\n")
       .trim();
 
-    // Vérifier si la balise est correctement fermée
-    const isComplete = completion.includes(`</tailwindaiFile>`);
-
     filesArray.push({
       name: fileName || null,
       content: content,
       isDelete: action === "delete",
       isActive: false,
       isContinue: action === "continue",
-      isIncomplete: !isComplete,
+      isIncomplete: isIncomplete,
     });
   }
 
