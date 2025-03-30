@@ -9,25 +9,58 @@ interface WebsiteContent {
     url: string;
     alt: string;
     dimensions?: { width: number; height: number };
+    isVisible?: boolean;
+    role?: string;
+    className?: string;
+    inViewport?: boolean;
+    lazyLoaded?: boolean;
+    type?: string;
+    isHero?: boolean;
+    style?: {
+      border?: string;
+      borderRadius?: string;
+      boxShadow?: string;
+      filter?: string;
+      backgroundSize?: string;
+      backgroundPosition?: string;
+      backgroundRepeat?: string;
+    };
   }>;
   title: string;
   description: string | null;
   url: string;
   screenshot?: string; // Base64 encoded screenshot
+  sectionScreenshots?: Record<string, string>; // Base64 encoded section screenshots
   metaTags?: Record<string, string>;
   structure?: {
     menu?: Array<{ text: string; url: string }>;
-    sections?: Array<{ title?: string; content?: string; type: string }>;
+    sections?: Array<{
+      title?: string;
+      content?: string;
+      type: string;
+      headingCount?: number;
+      imageCount?: number;
+      paragraphCount?: number;
+      className?: string;
+      id?: string;
+    }>;
     layout?: {
       header?: boolean;
       footer?: boolean;
       sidebar?: boolean;
       mainContent?: string;
+      gridColumns?: number;
+      flexDirection?: string;
+      responsive?: boolean;
     };
     colors?: Array<string>;
     fonts?: Array<string>;
     buttons?: Array<{ text: string; style: string }>;
     domTreeDepth?: number;
+    cta?: Array<{ text: string; url?: string; style?: string }>;
+    imageStyles?: Array<{ style: string; count: number }>;
+    spacingPattern?: string;
+    cssVariables?: Record<string, string>;
   };
 }
 
@@ -156,7 +189,16 @@ async function extractSiteStructure(
   return await page.evaluate(() => {
     const structure: {
       menu: Array<{ text: string; url: string }>;
-      sections: Array<{ title?: string; content?: string; type: string }>;
+      sections: Array<{
+        title?: string;
+        content?: string;
+        type: string;
+        headingCount?: number;
+        imageCount?: number;
+        paragraphCount?: number;
+        className?: string;
+        id?: string;
+      }>;
       colors: string[];
       fonts: string[];
       buttons: Array<{ text: string; style: string }>;
@@ -165,8 +207,15 @@ async function extractSiteStructure(
         footer: boolean;
         sidebar: boolean;
         mainContent: string;
+        gridColumns?: number;
+        flexDirection?: string;
+        responsive?: boolean;
       };
       domTreeDepth?: number;
+      cta?: Array<{ text: string; url?: string; style?: string }>;
+      imageStyles?: Array<{ style: string; count: number }>;
+      spacingPattern?: string;
+      cssVariables?: Record<string, string>;
     } = {
       menu: [],
       sections: [],
@@ -228,6 +277,10 @@ async function extractSiteStructure(
     ];
 
     structure.sections = sectionElements.map((item) => {
+      const headings = item.element.querySelectorAll("h1, h2, h3, h4, h5, h6");
+      const images = item.element.querySelectorAll("img");
+      const paragraphs = item.element.querySelectorAll("p");
+
       const section = {
         title:
           item.element.querySelector("h1, h2, h3")?.textContent?.trim() ||
@@ -235,6 +288,11 @@ async function extractSiteStructure(
         content:
           item.element.textContent?.trim().substring(0, 200) || undefined,
         type: item.type,
+        headingCount: headings.length,
+        imageCount: images.length,
+        paragraphCount: paragraphs.length,
+        className: item.element.className || "",
+        id: item.element.id || "",
       };
       return section;
     });
@@ -256,6 +314,7 @@ async function extractSiteStructure(
       // Count children to determine if it's a grid, flex, or standard layout
       const mainChildren = mainElement.children;
       const childrenCount = mainChildren.length;
+      const mainStyle = window.getComputedStyle(mainElement);
 
       if (childrenCount >= 3) {
         // Check if it might be a grid/card layout
@@ -271,13 +330,58 @@ async function extractSiteStructure(
       }
 
       // Check for flex layout indicators
-      const mainStyle = window.getComputedStyle(mainElement);
-      if (mainStyle.display === "flex" || mainStyle.display === "grid") {
-        structure.layout.mainContent = mainStyle.display;
+      if (mainStyle.display === "flex") {
+        structure.layout.mainContent = "flex";
+        structure.layout.flexDirection = mainStyle.flexDirection;
+      } else if (mainStyle.display === "grid") {
+        structure.layout.mainContent = "grid";
+        structure.layout.gridColumns =
+          mainStyle.gridTemplateColumns.split(" ").length;
       } else if (!structure.layout.mainContent) {
         structure.layout.mainContent = "standard";
       }
+
+      // Check for responsive design indicators
+      const mediaQueriesCount = Array.from(document.styleSheets)
+        .filter((sheet) => {
+          try {
+            return sheet.cssRules !== null; // Will throw if from a different origin
+          } catch {
+            return false;
+          }
+        })
+        .reduce((count, sheet) => {
+          try {
+            return (
+              count +
+              Array.from(sheet.cssRules).filter(
+                (rule) => rule.type === CSSRule.MEDIA_RULE,
+              ).length
+            );
+          } catch {
+            return count;
+          }
+        }, 0);
+
+      structure.layout.responsive = mediaQueriesCount > 0;
     }
+
+    // Extract calls-to-action
+    const ctaElements = document.querySelectorAll(
+      'a.cta, button.cta, .btn-primary, a[class*="cta"], [class*="btn-primary"], a.button, a.btn',
+    );
+
+    structure.cta = Array.from(ctaElements)
+      .slice(0, 5)
+      .map((el) => {
+        const style = window.getComputedStyle(el);
+        return {
+          text: el.textContent?.trim() || "",
+          url: el instanceof HTMLAnchorElement ? el.href : undefined,
+          style: `bg:${style.backgroundColor}, color:${style.color}, radius:${style.borderRadius}`,
+        };
+      })
+      .filter((cta) => cta.text);
 
     // Extract colors by getting all computed styles
     const allElements = document.querySelectorAll("*");
@@ -316,6 +420,19 @@ async function extractSiteStructure(
 
     structure.fonts = Array.from(fontSet).slice(0, 5);
 
+    // Extract image styles
+    const imageStyleMap = new Map<string, number>();
+    document.querySelectorAll("img").forEach((img) => {
+      const style = window.getComputedStyle(img);
+      const styleKey = `border:${style.border}, radius:${style.borderRadius}, shadow:${style.boxShadow}`;
+      imageStyleMap.set(styleKey, (imageStyleMap.get(styleKey) || 0) + 1);
+    });
+
+    structure.imageStyles = Array.from(imageStyleMap.entries())
+      .map(([style, count]) => ({ style, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+
     // Extract buttons
     const buttons = document.querySelectorAll(
       "button, .btn, .button, [role='button'], a.btn, a.button",
@@ -326,10 +443,49 @@ async function extractSiteStructure(
         const style = window.getComputedStyle(btn);
         return {
           text: btn.textContent?.trim() || "",
-          style: `bg:${style.backgroundColor}, color:${style.color}, radius:${style.borderRadius}`,
+          style: `bg:${style.backgroundColor}, color:${style.color}, radius:${style.borderRadius}, padding:${style.padding}, font:${style.fontFamily}, weight:${style.fontWeight}`,
         };
       })
       .filter((btn) => btn.text);
+
+    // Extract CSS variables for color schemes
+    structure.cssVariables = {};
+    const rootStyle = window.getComputedStyle(document.documentElement);
+    for (let i = 0; i < rootStyle.length; i++) {
+      const prop = rootStyle[i];
+      if (prop.startsWith("--")) {
+        structure.cssVariables[prop] = rootStyle.getPropertyValue(prop).trim();
+      }
+    }
+
+    // Analyze spacing patterns
+    const spacings = Array.from(allElements).map((el) => {
+      const style = window.getComputedStyle(el);
+      return {
+        margin: style.margin,
+        padding: style.padding,
+      };
+    });
+
+    // Simplistic spacing pattern detection
+    const commonSpacings: Record<string, number> = {};
+    spacings.forEach((s) => {
+      if (s.margin && s.margin !== "0px") {
+        commonSpacings[s.margin] = (commonSpacings[s.margin] || 0) + 1;
+      }
+      if (s.padding && s.padding !== "0px") {
+        commonSpacings[s.padding] = (commonSpacings[s.padding] || 0) + 1;
+      }
+    });
+
+    const mostCommonSpacings = Object.entries(commonSpacings)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map((entry) => entry[0])
+      .join(", ");
+
+    structure.spacingPattern =
+      mostCommonSpacings || "No consistent spacing pattern detected";
 
     // Calculate DOM tree depth to understand complexity
     function getMaxDepth(element: Element, currentDepth = 0): number {
@@ -431,8 +587,32 @@ export async function scrapeWebsite(
 
     // Extract all images with their URLs and alt texts
     const images = await page.evaluate(() => {
-      return Array.from(document.querySelectorAll("img"))
+      // Helper to extract background images from computed style
+      const extractBackgroundImage = (
+        style: CSSStyleDeclaration,
+      ): string | null => {
+        const bgImage = style.backgroundImage;
+        if (bgImage && bgImage !== "none") {
+          // Extract URL from the "url('...')" format
+          const match = bgImage.match(/url\(['"]?(.*?)['"]?\)/);
+          return match ? match[1] : null;
+        }
+        return null;
+      };
+
+      // Get regular img tags
+      const imgElements = Array.from(document.querySelectorAll("img"));
+      const imgData = imgElements
         .map((img) => {
+          const computedStyle = window.getComputedStyle(img);
+          const rect = img.getBoundingClientRect();
+          const isVisible =
+            rect.width > 1 &&
+            rect.height > 1 &&
+            computedStyle.display !== "none" &&
+            computedStyle.visibility !== "hidden" &&
+            computedStyle.opacity !== "0";
+
           return {
             url: img.src,
             alt: img.alt || "",
@@ -440,6 +620,18 @@ export async function scrapeWebsite(
               img.width && img.height
                 ? { width: img.width, height: img.height }
                 : undefined,
+            isVisible,
+            role: img.getAttribute("role") || undefined,
+            className: img.className || undefined,
+            inViewport: rect.top < window.innerHeight && rect.bottom > 0,
+            lazyLoaded:
+              img.loading === "lazy" || img.getAttribute("data-src") !== null,
+            style: {
+              border: computedStyle.border,
+              borderRadius: computedStyle.borderRadius,
+              boxShadow: computedStyle.boxShadow,
+              filter: computedStyle.filter,
+            },
           };
         })
         .filter(
@@ -448,7 +640,112 @@ export async function scrapeWebsite(
             !img.url.startsWith("data:") &&
             !img.url.includes("placeholder"),
         );
+
+      // Get background images from elements that may have them
+      const bgElements = document.querySelectorAll(
+        'header, section, div[class*="banner"], div[class*="hero"], div[class*="background"], .background, .bg, div[style*="background-image"], a[style*="background-image"]',
+      );
+
+      const bgImagesData = Array.from(bgElements)
+        .map((el) => {
+          const computedStyle = window.getComputedStyle(el);
+          const bgUrl = extractBackgroundImage(computedStyle);
+
+          if (!bgUrl) return null;
+
+          const rect = el.getBoundingClientRect();
+          return {
+            url: bgUrl,
+            alt:
+              el.getAttribute("aria-label") || el.getAttribute("title") || "",
+            dimensions: { width: rect.width, height: rect.height },
+            isVisible:
+              rect.width > 1 &&
+              rect.height > 1 &&
+              computedStyle.display !== "none" &&
+              computedStyle.visibility !== "hidden",
+            type: "background",
+            className: el.className || undefined,
+            inViewport: rect.top < window.innerHeight && rect.bottom > 0,
+            isHero:
+              el.classList.contains("hero") ||
+              el.classList.contains("banner") ||
+              (el.tagName === "HEADER" && rect.top < 200),
+            style: {
+              backgroundSize: computedStyle.backgroundSize,
+              backgroundPosition: computedStyle.backgroundPosition,
+              backgroundRepeat: computedStyle.backgroundRepeat,
+              filter: computedStyle.filter,
+            },
+          };
+        })
+        .filter(
+          (item): item is NonNullable<typeof item> =>
+            item !== null && !!item.url && !item.url.includes("placeholder"),
+        );
+
+      // Combine both types of images
+      return [...imgData, ...bgImagesData];
     });
+
+    // Capture screenshot if requested
+    let screenshot = undefined;
+    const sectionScreenshots: Record<string, string> = {};
+
+    if (options?.fullPage) {
+      // Capture full page screenshot
+      screenshot = (await page.screenshot({
+        fullPage: true,
+        encoding: "base64",
+        type: "jpeg",
+        quality: 80,
+      })) as string;
+
+      // Capture screenshots of important sections
+      const sectionsToCapture = await page.evaluate(() => {
+        const sections = [
+          // Header
+          document.querySelector("header"),
+          // Hero section
+          document.querySelector(
+            '.hero, .banner, [class*="hero"], [class*="banner"]',
+          ),
+          // Main content
+          document.querySelector('main, [role="main"]'),
+          // Footer
+          document.querySelector("footer"),
+        ].filter((el) => el !== null);
+
+        return sections.map((section) => {
+          const rect = section.getBoundingClientRect();
+          const id = section.id || "";
+          const className = section.className || "";
+          const tagName = section.tagName.toLowerCase();
+
+          return {
+            id,
+            className,
+            tagName,
+            rect: {
+              x: rect.x,
+              y: rect.y,
+              width: rect.width,
+              height: rect.height,
+            },
+          };
+        });
+      });
+
+      for (const section of sectionsToCapture) {
+        const key = section.id || section.className || section.tagName;
+        sectionScreenshots[key] = (await page.screenshot({
+          clip: section.rect,
+          encoding: "base64",
+          type: "jpeg",
+          quality: 80,
+        })) as string;
+      }
+    }
 
     // Extract website structure
     const structure = await extractSiteStructure(page);
@@ -464,6 +761,8 @@ export async function scrapeWebsite(
       url,
       structure,
       metaTags,
+      screenshot,
+      sectionScreenshots,
     };
   } catch (error) {
     console.error("Error during Puppeteer website scraping:", error);
