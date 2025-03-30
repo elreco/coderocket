@@ -714,24 +714,32 @@ export const remixChat = async (chatId: string) => {
 
   const latestVersion = versionData.version;
 
-  // Get only the latest version messages from the original chat
-  const { data: latestMessages } = await supabase
+  // Calculate how many versions to fetch (up to 10 most recent versions)
+  const startVersion = Math.max(0, latestVersion - 9);
+
+  // Get messages from the last 10 versions (or all if less than 10) of the original chat
+  const { data: originalMessages } = await supabase
     .from("messages")
     .select("*")
     .eq("chat_id", chatId)
-    .eq("version", latestVersion)
+    .gte("version", startVersion)
+    .lte("version", latestVersion)
+    .order("version", { ascending: true })
     .order("created_at", { ascending: true });
 
-  if (!latestMessages || latestMessages.length === 0) {
-    throw new Error("Original chat has no messages for the latest version");
+  if (!originalMessages || originalMessages.length === 0) {
+    throw new Error("Original chat has no messages");
   }
 
-  // Insert the latest version messages but set them to version 0
-  const messagesToInsert = latestMessages.map((message) => ({
+  // Calculate version offset to start at version 0 in the new chat
+  const versionOffset = startVersion;
+
+  // Flatten and map all messages to insert them, adjusting the version number
+  const messagesToInsert = originalMessages.map((message) => ({
     chat_id: newChat.id,
     role: message.role,
     content: message.content,
-    version: 0, // Set all messages to version 0
+    version: message.version - versionOffset, // Adjust version number to start from 0
     is_built: false,
     screenshot: message.screenshot,
     theme: message.theme,
@@ -740,6 +748,7 @@ export const remixChat = async (chatId: string) => {
     output_tokens: message.output_tokens,
   }));
 
+  // Insert all messages
   const { error: messagesError } = await supabase
     .from("messages")
     .insert(messagesToInsert);
@@ -749,6 +758,7 @@ export const remixChat = async (chatId: string) => {
   }
 
   after(async () => {
+    // Get the latest assistant message from the newly created chat
     const lastAssistantMessage = await fetchLastAssistantMessageByChatId(
       newChat.id,
     );

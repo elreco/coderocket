@@ -253,9 +253,6 @@ export default function ComponentSidebar({
     }
   }, [isLoading]);
 
-  const isIterationVisible =
-    selectedVersion !== undefined && selectedVersion > -1;
-
   useEffect(() => {
     if (isLoading && completion) {
       // Extraction unique des fichiers
@@ -565,19 +562,6 @@ ${extractedFiles.map((file) => `<tailwindaiFile name="${file.name || "unnamed"}"
         {authorized && (
           <div className="flex w-full flex-col bg-background">
             <div className="flex w-full items-center justify-between space-x-1 border-t p-2">
-              <div className="whitespace-nowrap text-xs font-semibold">
-                {!isIterationVisible
-                  ? "Generating first version"
-                  : isLoading
-                    ? "Iterating from "
-                    : "Iterate from "}
-                {isIterationVisible && (
-                  <span className="text-primary">
-                    version #{selectedVersion}
-                  </span>
-                )}
-              </div>
-
               <div className="flex items-center space-x-2">
                 {selectedFramework === Framework.HTML && !isLengthError && (
                   <div className="text-sm font-semibold">
