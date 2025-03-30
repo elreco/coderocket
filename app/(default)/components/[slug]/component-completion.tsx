@@ -493,7 +493,50 @@ export default function ComponentCompletion({
     }
 
     setCompletion(selectedAssistantMessage.content);
-    handleChatFiles(selectedAssistantMessage.content, false, tabName);
+
+    // Use the message's artifact_code if available, otherwise calculate it
+    if (selectedAssistantMessage.artifact_code) {
+      // Set the artifact code from the message
+      setArtifactCode(selectedAssistantMessage.artifact_code);
+
+      // Extract files from the artifact code
+      const newArtifactFiles = extractFilesFromArtifact(
+        selectedAssistantMessage.artifact_code,
+      );
+      setArtifactFiles(newArtifactFiles);
+
+      // Handle file selection
+      const files = extractFilesFromCompletion(
+        selectedAssistantMessage.content,
+      );
+      if (files.length > 0) {
+        setChatFiles(files);
+      } else {
+        setChatFiles([]);
+      }
+
+      if (tabName) {
+        const file = newArtifactFiles.find((file) => file.name === tabName);
+        if (file) {
+          setEditorValue(file.content);
+          setActiveTab(tabName);
+          setCanvas(false);
+        }
+      } else {
+        // Select appropriate file to display
+        const activeFile =
+          newArtifactFiles.find((file) => file.isActive) || newArtifactFiles[0];
+        if (activeFile) {
+          setEditorValue(activeFile.content);
+          setActiveTab(activeFile.name || "");
+          setCanvas(true);
+        }
+      }
+    } else {
+      // Fall back to previous behavior
+      handleChatFiles(selectedAssistantMessage.content, false, tabName);
+    }
+
     setWebcontainerReady(selectedAssistantMessage.is_built || false);
   };
 

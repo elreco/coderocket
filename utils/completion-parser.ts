@@ -81,30 +81,90 @@ export const getUpdatedArtifactCode = (
       filesToDelete.add(fileName);
     } else if (action === "continue") {
       // Nouvelle action "continue" pour continuer un fichier incomplet
-      if (allFiles.has(fileName)) {
-        const existingContent = allFiles.get(fileName);
+      const normalizedFileName = fileName.trim();
+      // Check if the file exists with exact name or similar name (case insensitive)
+      const existingFileKey = Array.from(allFiles.keys()).find(
+        (key) => key.toLowerCase() === normalizedFileName.toLowerCase(),
+      );
+
+      if (existingFileKey) {
+        const existingContent = allFiles.get(existingFileKey);
         // Nettoyer le contenu existant de tout marqueur de fin
         const cleanedExistingContent = existingContent.replace(
           /\n\n<!-- FINISH_REASON: (?:length|error) -->$/,
           "",
         );
 
-        // Vérifier si le contenu commence par des espaces ou des sauts de ligne
-        // et s'assurer que la concaténation respecte l'indentation
-        const needsSpace =
-          cleanedExistingContent.endsWith(" ") ||
-          !(/\s$/.test(cleanedExistingContent) || /^\s/.test(content));
+        // Amélioration de la logique de concaténation pour éviter les espaces superflus
+        // On concatène directement si le contenu existant se termine par un \n
+        // ou si le nouveau contenu commence par un \n
+        const existingEndsWithNewline = cleanedExistingContent.endsWith("\n");
+        const newContentStartsWithNewline = content.startsWith("\n");
 
-        // Concaténer le nouveau contenu au contenu existant avec un espace si nécessaire
-        allFiles.set(
-          fileName,
-          cleanedExistingContent +
-            (needsSpace && !cleanedExistingContent.endsWith("\n") ? " " : "") +
-            content,
-        );
+        // Concaténer le nouveau contenu au contenu existant sans ajouter d'espace
+        if (existingEndsWithNewline || newContentStartsWithNewline) {
+          // Si l'un des deux a déjà un saut de ligne, concaténer directement
+          allFiles.set(
+            existingFileKey,
+            existingEndsWithNewline
+              ? cleanedExistingContent + content.replace(/^\n/, "")
+              : cleanedExistingContent + content,
+          );
+        } else {
+          // Sinon, déterminer s'il faut ajouter un espace en analysant le contexte du code
+          const lastChar = cleanedExistingContent.charAt(
+            cleanedExistingContent.length - 1,
+          );
+          const firstChar = content.charAt(0);
+
+          // Les caractères qui n'ont généralement pas besoin d'espace entre eux
+          const noSpaceNeededAfter = [
+            "{",
+            "(",
+            "[",
+            ".",
+            ",",
+            ":",
+            "<",
+            "'",
+            '"',
+            "`",
+            "=",
+            "+",
+            "-",
+            "*",
+            "/",
+          ];
+          const noSpaceNeededBefore = [
+            "}",
+            ")",
+            "]",
+            ".",
+            ",",
+            ":",
+            ">",
+            "'",
+            '"',
+            "`",
+            ";",
+          ];
+
+          const needsSpace = !(
+            noSpaceNeededAfter.includes(lastChar) ||
+            noSpaceNeededBefore.includes(firstChar)
+          );
+
+          allFiles.set(
+            existingFileKey,
+            cleanedExistingContent + (needsSpace ? " " : "") + content,
+          );
+        }
       } else {
         // Si le fichier n'existe pas, le traiter comme un nouveau fichier
-        allFiles.set(fileName, content);
+        console.warn(
+          `File not found for continue action: ${normalizedFileName}. Creating new file.`,
+        );
+        allFiles.set(normalizedFileName, content);
       }
     } else if (content) {
       // Si le fichier existe déjà et ne contient pas de marqueur FINISH_REASON,
@@ -121,20 +181,68 @@ export const getUpdatedArtifactCode = (
             "",
           );
 
-          // Vérifier si le contenu commence par des espaces ou des sauts de ligne
-          const needsSpace =
-            cleanedExistingContent.endsWith(" ") ||
-            !(/\s$/.test(cleanedExistingContent) || /^\s/.test(content));
+          // Même logique améliorée pour éviter les espaces superflus
+          const existingEndsWithNewline = cleanedExistingContent.endsWith("\n");
+          const newContentStartsWithNewline = content.startsWith("\n");
 
-          // Concaténer le nouveau contenu au contenu existant
-          allFiles.set(
-            fileName,
-            cleanedExistingContent +
-              (needsSpace && !cleanedExistingContent.endsWith("\n")
-                ? " "
-                : "") +
-              content,
-          );
+          // Concaténer le nouveau contenu au contenu existant sans ajouter d'espace
+          if (existingEndsWithNewline || newContentStartsWithNewline) {
+            // Si l'un des deux a déjà un saut de ligne, concaténer directement
+            allFiles.set(
+              fileName,
+              existingEndsWithNewline
+                ? cleanedExistingContent + content.replace(/^\n/, "")
+                : cleanedExistingContent + content,
+            );
+          } else {
+            // Sinon, déterminer s'il faut ajouter un espace en analysant le contexte du code
+            const lastChar = cleanedExistingContent.charAt(
+              cleanedExistingContent.length - 1,
+            );
+            const firstChar = content.charAt(0);
+
+            // Les caractères qui n'ont généralement pas besoin d'espace entre eux
+            const noSpaceNeededAfter = [
+              "{",
+              "(",
+              "[",
+              ".",
+              ",",
+              ":",
+              "<",
+              "'",
+              '"',
+              "`",
+              "=",
+              "+",
+              "-",
+              "*",
+              "/",
+            ];
+            const noSpaceNeededBefore = [
+              "}",
+              ")",
+              "]",
+              ".",
+              ",",
+              ":",
+              ">",
+              "'",
+              '"',
+              "`",
+              ";",
+            ];
+
+            const needsSpace = !(
+              noSpaceNeededAfter.includes(lastChar) ||
+              noSpaceNeededBefore.includes(firstChar)
+            );
+
+            allFiles.set(
+              fileName,
+              cleanedExistingContent + (needsSpace ? " " : "") + content,
+            );
+          }
         } else {
           // Sinon, on remplace par le nouveau contenu
           allFiles.set(fileName, content);
@@ -191,7 +299,7 @@ export function extractDirectFiles(content: string): ChatFile[] {
     const nameEnd = content.indexOf('"', nameStart + 6);
     if (nameEnd === -1) break;
 
-    const fileName = content.slice(nameStart + 6, nameEnd);
+    const fileName = content.slice(nameStart + 6, nameEnd).trim();
 
     // Vérifier si l'action est "continue"
     const actionStart = content.indexOf('action="', fileStart);
@@ -872,7 +980,7 @@ export const extractFilesFromArtifact = (artifactCode: string): ChatFile[] => {
 
   let match;
   while ((match = fileRegex.exec(artifactCode)) !== null) {
-    const fileName = match[1];
+    const fileName = match[1].trim();
     const action = match[2];
     let content = match[3].trim();
 
@@ -907,10 +1015,11 @@ export const extractFilesFromArtifact = (artifactCode: string): ChatFile[] => {
     currentFiles.set(fileName, content);
 
     // Si le contenu a changé, c'est le nouveau fichier actif
-    if (
-      previousFiles.has(fileName) &&
-      previousFiles.get(fileName) !== content
-    ) {
+    const previousFileKey = Array.from(previousFiles.keys()).find(
+      (key) => key.toLowerCase() === fileName.toLowerCase(),
+    );
+
+    if (previousFileKey && previousFiles.get(previousFileKey) !== content) {
       newActiveFile = fileName;
     }
 
