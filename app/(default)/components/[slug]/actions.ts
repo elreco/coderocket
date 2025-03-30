@@ -214,11 +214,9 @@ export const buildComponent = async (
     if (chat.framework === Framework.HTML) {
       return;
     }
-    const newArtifactCode = getUpdatedArtifactCode(
-      lastAssistantMessage.content,
-      chat.artifact_code || "",
+    const newArtifactFiles = extractFilesFromArtifact(
+      lastAssistantMessage.artifact_code || "",
     );
-    const newArtifactFiles = extractFilesFromArtifact(newArtifactCode);
 
     if (!newArtifactFiles.length) {
       throw new Error("No files found in completion");

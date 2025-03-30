@@ -186,7 +186,9 @@ export default function ComponentCompletion({
         chat.artifact_code &&
         assistantMsg?.content
       ) {
-        const newArtifactFiles = extractFilesFromArtifact(chat.artifact_code);
+        const newArtifactFiles = extractFilesFromArtifact(
+          chat.artifact_code || "",
+        );
         setArtifactFiles(newArtifactFiles);
         const firstFile = newArtifactFiles[0];
         if (!firstFile) {
@@ -532,9 +534,6 @@ export default function ComponentCompletion({
           setCanvas(true);
         }
       }
-    } else {
-      // Fall back to previous behavior
-      handleChatFiles(selectedAssistantMessage.content, false, tabName);
     }
 
     setWebcontainerReady(selectedAssistantMessage.is_built || false);

@@ -544,7 +544,7 @@ ${extractedFiles.map((file) => `<tailwindaiFile name="${file.name || "unnamed"}"
                 </div>
               </div>
             )}
-            {fetchedChat?.clone_url && selectedVersion === 0 && (
+            {fetchedChat?.clone_url && selectedVersion === -1 && (
               <div className="mb-4 mt-2 flex flex-col gap-2 rounded-lg border border-blue-400/30 bg-blue-500/10 p-4 text-sm">
                 <div className="flex items-center">
                   <LoaderCircle className="mr-2 size-5 animate-spin text-blue-500" />
@@ -616,14 +616,12 @@ ${extractedFiles.map((file) => `<tailwindaiFile name="${file.name || "unnamed"}"
                     </div>
                   </div>
                 )}
-                {!isLoading && !isLengthError && !buildError && (
-                  <ImageSelector
-                    fileInputRef={fileInputRef}
-                    disabled={isLoading}
-                    handleButtonClick={handleButtonClick}
-                    handleImageChange={handleImageChange}
-                  />
-                )}
+                <ImageSelector
+                  fileInputRef={fileInputRef}
+                  disabled={isLoading || isLengthError || !!buildError}
+                  handleButtonClick={handleButtonClick}
+                  handleImageChange={handleImageChange}
+                />
                 {/* Continue your work button */}
                 {!isLoading && isLengthError && (
                   <Button

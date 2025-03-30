@@ -59,7 +59,6 @@ export async function POST(req: Request) {
       selectedVersion,
     );
 
-    console.log("messages", messages);
     const stream = streamText({
       messages,
       model: anthropicModel("claude-3-7-sonnet-latest"),
@@ -166,7 +165,6 @@ const buildMessagesToOpenAi = async (
         ]
       : updatedPrompt, // Contient le prompt détaillé avec toutes les informations du site
   });
-  console.log("messagesToOpenAI", messagesToOpenAI);
   return { messagesToOpenAI };
 };
 
