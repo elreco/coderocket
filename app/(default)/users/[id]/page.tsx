@@ -1,4 +1,4 @@
-import { Mail, Calendar, Plus, Heart, GitFork } from "lucide-react";
+import { Calendar, Plus, Heart, GitFork } from "lucide-react";
 import { Metadata, ResolvingMetadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -113,9 +113,22 @@ export default async function UserPage({
                       </AvatarFallback>
                     </Avatar>
                     <div className="text-center">
-                      <h5 className="text-base font-semibold lg:text-lg">
+                      <h5 className="mb-1 text-base font-semibold lg:text-lg">
                         {user.full_name}
                       </h5>
+                      <TooltipProvider>
+                        <div className="flex items-center gap-2 text-xs lg:text-sm">
+                          <Calendar className="size-4 text-muted-foreground" />
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span>{getRelativeDate(user.created_at)}</span>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Account creation date</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </div>
+                      </TooltipProvider>
                     </div>
                   </div>
                   <div className="grid grid-cols-3 divide-x text-center">
