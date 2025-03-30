@@ -489,6 +489,7 @@ const updateDataAfterCompletion = async (
     role: "assistant",
     output_tokens: usage.completionTokens,
     subscription_type: subscriptionType,
+    artifact_code: artifactCode,
   });
 
   const { error: newMessagesError } = await supabase
