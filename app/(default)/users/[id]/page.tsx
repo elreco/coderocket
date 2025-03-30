@@ -116,9 +116,6 @@ export default async function UserPage({
                       <h5 className="text-base font-semibold lg:text-lg">
                         {user.full_name}
                       </h5>
-                      <div className="text-xs text-muted-foreground lg:text-sm">
-                        {user.email}
-                      </div>
                     </div>
                   </div>
                   <div className="grid grid-cols-3 divide-x text-center">
@@ -146,32 +143,6 @@ export default async function UserPage({
                         Likes
                       </div>
                     </div>
-                  </div>
-                  <div className="flex flex-col gap-y-4 text-xs lg:text-sm">
-                    <TooltipProvider>
-                      <div className="flex items-center gap-3">
-                        <Mail className="size-4 text-muted-foreground" />
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <span className="truncate">{user.email}</span>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>User email</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <Calendar className="size-4 text-muted-foreground" />
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <span>{getRelativeDate(user.created_at)}</span>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Account creation date</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </div>
-                    </TooltipProvider>
                   </div>
                 </div>
               </div>

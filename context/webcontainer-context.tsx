@@ -215,7 +215,6 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
           },
         }),
       );
-
       // 6) Mount/update all files
       const fsTree = buildFileSystemTree(artifactFiles);
       await webcontainer.mount(fsTree);
