@@ -743,6 +743,7 @@ export const remixChat = async (chatId: string) => {
     is_built: false,
     screenshot: message.screenshot,
     theme: message.theme,
+    artifact_code: message.artifact_code,
     prompt_image: message.prompt_image,
     input_tokens: message.input_tokens,
     output_tokens: message.output_tokens,
