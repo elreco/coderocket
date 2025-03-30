@@ -61,6 +61,7 @@ interface ComponentContextType {
   defaultImage: string | null;
   loadingState: WebcontainerLoadingState;
   setLoadingState: (value: WebcontainerLoadingState) => void;
+  fetchedChat: Tables<"chats"> | null;
   isLengthError: boolean;
 }
 

@@ -7,6 +7,7 @@ import {
   WandSparkles,
   X,
   RefreshCw,
+  LoaderCircle,
 } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState, useRef } from "react";
@@ -78,6 +79,7 @@ export default function ComponentSidebar({
     setImage,
     defaultImage,
     isLengthError,
+    fetchedChat,
   } = useComponentContext();
   const { buildError } = useWebcontainer();
 
@@ -540,6 +542,18 @@ ${extractedFiles.map((file) => `<tailwindaiFile name="${file.name || "unnamed"}"
                     {getRelativeDate(new Date().toISOString())}
                   </p>
                 </div>
+              </div>
+            )}
+            {fetchedChat?.clone_url && selectedVersion === 0 && (
+              <div className="mb-4 mt-2 flex flex-col gap-2 rounded-lg border border-blue-400/30 bg-blue-500/10 p-4 text-sm">
+                <div className="flex items-center">
+                  <LoaderCircle className="mr-2 size-5 animate-spin text-blue-500" />
+                  <p className="font-medium text-blue-600">Analyzing website</p>
+                </div>
+                <p className="text-muted-foreground">
+                  We are currently analyzing the website structure, colors, and
+                  content to create your component. This may take a moment.
+                </p>
               </div>
             )}
             <ChunkReader

@@ -754,6 +754,7 @@ export default function ComponentCompletion({
     defaultImage,
     loadingState,
     setLoadingState,
+    fetchedChat,
     isLengthError,
   };
 
