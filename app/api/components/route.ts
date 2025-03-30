@@ -1,5 +1,11 @@
 export const maxDuration = 300;
-import { CoreMessage, LanguageModelUsage, streamText } from "ai";
+import {
+  CoreMessage,
+  LanguageModelUsage,
+  streamText,
+  ImagePart,
+  TextPart,
+} from "ai";
 import { after } from "next/server";
 
 import { buildComponent } from "@/app/(default)/components/[slug]/actions";
@@ -148,23 +154,30 @@ const buildMessagesToOpenAi = async (
     };
   }) as CoreMessage[];
 
-  // Ajouter le dernier message de l'utilisateur avec le prompt détaillé
+  // Préparer le contenu du message final de l'utilisateur
+  const finalMessageContent: Array<TextPart | ImagePart> = [];
+
+  // Toujours inclure le texte du prompt
+  finalMessageContent.push({
+    type: "text",
+    text: updatedPrompt,
+  });
+
+  // Si une image a été uploadée ou une capture d'écran est disponible
+  if (updatedImage) {
+    finalMessageContent.push({
+      type: "image",
+      image: new URL(`${storageUrl}/${updatedImage}`),
+    });
+  }
+
+  // Ajouter le dernier message de l'utilisateur avec le prompt détaillé et les images
   messagesToOpenAI.push({
     role: "user",
-    content: updatedImage
-      ? [
-          {
-            type: "text",
-            text: updatedPrompt, // Contient le prompt détaillé avec toutes les informations du site
-          },
-          {
-            type: "image",
-            // Inclure le screenshot du site dans le message multimodal envoyé à Anthropic
-            image: new URL(`${storageUrl}/${updatedImage}`),
-          },
-        ]
-      : updatedPrompt, // Contient le prompt détaillé avec toutes les informations du site
+    content:
+      finalMessageContent.length > 1 ? finalMessageContent : updatedPrompt,
   });
+
   return { messagesToOpenAI };
 };
 
@@ -222,17 +235,72 @@ ${JSON.stringify(cloneResult.data.structure.colors || [])}
 FONTS:
 ${JSON.stringify(cloneResult.data.structure.fonts || [])}
 
+CSS VARIABLES:
+${JSON.stringify(cloneResult.data.structure.cssVariables || {})}
+
 MENU ITEMS:
 ${JSON.stringify(cloneResult.data.structure.menu || [])}
+
+CALLS TO ACTION:
+${JSON.stringify(cloneResult.data.structure.cta || [])}
+
+BUTTON STYLES:
+${JSON.stringify(cloneResult.data.structure.buttons || [])}
+
+IMAGE STYLES:
+${JSON.stringify(cloneResult.data.structure.imageStyles || [])}
+
+SPACING PATTERNS:
+${cloneResult.data.structure.spacingPattern || ""}
 
 META TAGS:
 ${JSON.stringify(cloneResult.data.metaTags || {})}
 
 IMAGES COUNT: ${cloneResult.data.imageCount || 0}
 
+HERO/BACKGROUND IMAGES:
+${JSON.stringify(cloneResult.data.heroImages || [])}
+
 IMPORTANT IMAGES TO USE:
-${JSON.stringify(cloneResult.data.images.slice(0, 20) || [])}
+${JSON.stringify(cloneResult.data.visibleImages || [])}
 `;
+
+        // Si nous avons des captures d'écran, ajouter des instructions pour les consulter
+        if (
+          cloneResult.data.screenshot ||
+          cloneResult.data.sectionScreenshots
+        ) {
+          enhancedPrompt += `\n\nNOTE: Une capture d'écran du site est incluse dans ce message. Utilisez-la comme référence pour reproduire fidèlement la mise en page et l'apparence.`;
+
+          // Enregistrer la capture d'écran du site si disponible
+          if (cloneResult.data.screenshot) {
+            try {
+              // Convertir base64 en Buffer
+              const buffer = Buffer.from(cloneResult.data.screenshot, "base64");
+
+              // Générer un nom de fichier unique
+              const screenshotFileName = `${Date.now()}-${user?.id}-screenshot.jpg`;
+
+              // Enregistrer le screenshot dans le bucket 'images'
+              const { data: imageData, error: imageError } =
+                await supabase.storage
+                  .from("images")
+                  .upload(screenshotFileName, buffer, {
+                    contentType: "image/jpeg",
+                    cacheControl: "3600",
+                  });
+
+              if (imageError) {
+                console.error("Failed to upload screenshot:", imageError);
+              } else {
+                // Utiliser le chemin du screenshot pour le message multimodal
+                updatedImage = imageData?.path;
+              }
+            } catch (screenshotError) {
+              console.error("Error processing screenshot:", screenshotError);
+            }
+          }
+        }
       }
     } catch (error) {
       console.error(
