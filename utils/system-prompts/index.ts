@@ -142,7 +142,7 @@ The container only supports executables compatible with Linux and does not suppo
       - To delete a file, use the \`<tailwindaiFile name="filename.tsx" action="delete" />\` component.
       - To continue a file that was cut off (has a FINISH_REASON marker), use \`<tailwindaiFile name="filename.tsx" action="continue">\` and provide only the continuation.
       - If it's not a delete action, never forget add the \`<tailwindaiFile></tailwindaiFile>\` closing tag.
-      - To move or rename a file, first delete it using the \`action="delete"\` component, then add it again with the new location. Update all imports accordingly.
+      - Don't delete important files like App.tsx, App.vue, index.tsx, index.vue, etc.
     </tailwindai_artifact_info>
     <vision_input>
       - Don't recreate the image provided by the user, just use it as a reference.
