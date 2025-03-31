@@ -1,7 +1,7 @@
 import chromium from "@sparticuz/chromium";
 import { JSDOM } from "jsdom";
 import puppeteer from "puppeteer-core";
-import type { Page } from "puppeteer-core";
+import type { Browser, Page } from "puppeteer-core";
 
 interface WebsiteContent {
   html: string;
@@ -25,6 +25,17 @@ interface WebsiteContent {
       backgroundPosition?: string;
       backgroundRepeat?: string;
     };
+  }>;
+  videos?: Array<{
+    url: string;
+    type: string;
+    provider?: string;
+    width?: number;
+    height?: number;
+    posterImage?: string;
+    isVisible?: boolean;
+    isAutoplay?: boolean;
+    className?: string;
   }>;
   title: string;
   description: string | null;
@@ -176,6 +187,7 @@ async function fetchWebsiteContent(url: string): Promise<WebsiteContent> {
       return {
         html,
         images,
+        videos: [],
         title,
         description,
         url,
@@ -188,6 +200,7 @@ async function fetchWebsiteContent(url: string): Promise<WebsiteContent> {
       return {
         html: "",
         images: [],
+        videos: [],
         title: url,
         description: `Failed to fetch website content: ${response.status} ${response.statusText}`,
         url,
@@ -198,6 +211,7 @@ async function fetchWebsiteContent(url: string): Promise<WebsiteContent> {
     return {
       html: "",
       images: [],
+      videos: [],
       title: url,
       description: `Failed to fetch website content`,
       url,
@@ -271,14 +285,14 @@ async function waitForDynamicContentToLoad(page: Page): Promise<void> {
         // Nombre de mutations importantes nécessaires pour considérer que la page continue à charger
         const MUTATION_THRESHOLD = 10;
         // Délai maximum d'attente (5 secondes)
-        const MAX_WAIT_TIME = 5000;
+        const MAX_WAIT_TIME = 3000;
 
         let significantMutations = 0;
         let lastSignificantMutationTime = Date.now();
 
         // Considérer la page comme stable si aucune mutation significative
         // n'a été détectée pendant 1 seconde
-        const STABLE_THRESHOLD = 1000;
+        const STABLE_THRESHOLD = 500;
 
         // Créer un observateur de mutations pour détecter les changements de DOM
         const observer = new MutationObserver((mutations) => {
@@ -375,7 +389,7 @@ async function waitForDynamicContentToLoad(page: Page): Promise<void> {
     });
 
     // Attendre encore un peu pour s'assurer que tous les éléments visuels sont rendus
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 500));
   } catch (error) {
     console.error("Erreur lors de l'attente du contenu dynamique:", error);
     // Continuer même en cas d'erreur
@@ -423,7 +437,7 @@ async function handleLoadingAnimationsAndInfiniteScroll(
     // Si la page utilise des animations, attendre qu'elles se terminent
     if (hasAnimations) {
       console.log("Animations détectées, attente supplémentaire...");
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
     }
 
     // 2. Détecter le scroll infini en simulant un scroll vers le bas
@@ -460,7 +474,7 @@ async function handleLoadingAnimationsAndInfiniteScroll(
           );
 
           // Attendre le chargement
-          await new Promise((resolve) => setTimeout(resolve, 800));
+          await new Promise((resolve) => setTimeout(resolve, 400));
 
           // Si la hauteur n'a pas ou peu changé, arrêter
           if (document.body.scrollHeight - previousHeight < 100) {
@@ -473,7 +487,7 @@ async function handleLoadingAnimationsAndInfiniteScroll(
       });
 
       // Attendre que tout soit chargé
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 500));
     }
 
     // 3. Assurer que les transitions de page sont terminées (SPA, etc.)
@@ -496,7 +510,7 @@ async function handleLoadingAnimationsAndInfiniteScroll(
 
       if (transitionElements.length > 0) {
         // Si des éléments de transition sont présents, attendre leur disparition
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, 500));
       }
     });
   } catch (error) {
@@ -1311,11 +1325,11 @@ async function waitForLoaderToDisappear(page: Page): Promise<void> {
       console.log("Loader détecté, attente en cours...");
 
       // Option 1: Attendre un délai fixe supplémentaire
-      await new Promise((resolve) => setTimeout(resolve, 3000));
+      await new Promise((resolve) => setTimeout(resolve, 1500));
 
       // Option 2: Attendre la disparition des loaders (jusqu'à 10 secondes max)
       const startTime = Date.now();
-      const maxWaitTime = 10000; // 10 secondes max
+      const maxWaitTime = 5000; // 5 secondes max
 
       while (Date.now() - startTime < maxWaitTime) {
         // Vérifier à nouveau si le loader est encore visible
@@ -1343,12 +1357,12 @@ async function waitForLoaderToDisappear(page: Page): Promise<void> {
         }
 
         // Attendre un peu avant de revérifier
-        await new Promise((resolve) => setTimeout(resolve, 500));
+        await new Promise((resolve) => setTimeout(resolve, 300));
       }
 
       // Attendre que le réseau soit à nouveau inactif après la disparition du loader
       await page
-        .waitForNetworkIdle({ idleTime: 1000, timeout: 5000 })
+        .waitForNetworkIdle({ idleTime: 500, timeout: 3000 })
         .catch(() => {
           console.log("Timeout lors de l'attente du network idle après loader");
         });
@@ -1364,38 +1378,46 @@ async function waitForLoaderToDisappear(page: Page): Promise<void> {
  */
 export async function scrapeWebsite(
   url: string,
-  options?: { fullPage?: boolean },
+  options?: { fullPage?: boolean; fastMode?: boolean; simpleMode?: boolean },
 ): Promise<WebsiteContent> {
-  // Determine if running on Windows
-  const isWindows = process.platform === "win32";
-
-  // Get executable path
-  let executablePath;
-  if (isWindows) {
-    // Try to find Chrome/Edge on Windows
-    executablePath = (await findChromePath()) || "chrome.exe";
-  } else {
-    executablePath = await chromium.executablePath();
-  }
-
-  // Setup browser launch options
-  const browserOptions = {
-    args: [
-      ...chromium.args,
-      "--no-sandbox",
-      "--disable-setuid-sandbox",
-      "--disable-web-security",
-      "--disable-features=IsolateOrigins,site-per-process",
-      "--disable-blink-features=AutomationControlled",
-    ],
-    defaultViewport: chromium.defaultViewport,
-    executablePath,
-    headless: true,
-    ignoreHTTPSErrors: true,
+  // Default options
+  options = {
+    fullPage: true,
+    fastMode: false,
+    simpleMode: false,
+    ...options,
   };
 
-  let browser;
+  let browser: Browser | null = null;
   try {
+    // Determine if running on Windows
+    const isWindows = process.platform === "win32";
+
+    // Get executable path
+    let executablePath;
+    if (isWindows) {
+      // Try to find Chrome/Edge on Windows
+      executablePath = (await findChromePath()) || "chrome.exe";
+    } else {
+      executablePath = await chromium.executablePath();
+    }
+
+    // Setup browser launch options
+    const browserOptions = {
+      args: [
+        ...chromium.args,
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-web-security",
+        "--disable-features=IsolateOrigins,site-per-process",
+        "--disable-blink-features=AutomationControlled",
+      ],
+      defaultViewport: chromium.defaultViewport,
+      executablePath,
+      headless: true,
+      ignoreHTTPSErrors: true,
+    };
+
     // Attempt to launch browser
     browser = await puppeteer.launch(browserOptions);
 
@@ -1466,17 +1488,24 @@ export async function scrapeWebsite(
     // Navigate to the URL with extra options to avoid detection
     await page.goto(url, {
       waitUntil: "networkidle2",
-      timeout: 30000,
+      timeout: options.fastMode ? 15000 : 20000,
     });
 
     // Attendre la fin des loaders initiaux
     await waitForLoaderToDisappear(page);
 
     // Vérifier si la page continue à charger du contenu dynamiquement
-    await waitForDynamicContentToLoad(page);
+    if (!options.fastMode) {
+      await waitForDynamicContentToLoad(page);
+    } else {
+      // Version simplifiée en mode rapide
+      await new Promise((resolve) => setTimeout(resolve, 800));
+    }
 
     // Détecter et gérer les animations de chargement et le scroll infini
-    await handleLoadingAnimationsAndInfiniteScroll(page);
+    if (!options.fastMode) {
+      await handleLoadingAnimationsAndInfiniteScroll(page);
+    }
 
     // Check if the page contains common Cloudflare challenge elements
     const isChallengePresent = await page.evaluate(() => {
@@ -1494,7 +1523,7 @@ export async function scrapeWebsite(
       await page
         .waitForNavigation({
           waitUntil: "networkidle2",
-          timeout: 15000,
+          timeout: 8000,
         })
         .catch(() => console.log("Challenge timeout exceeded"));
     }
@@ -1675,11 +1704,208 @@ export async function scrapeWebsite(
       return allImages;
     });
 
-    // Capture screenshot if requested
-    let screenshot = undefined;
+    // Extract all videos from the page
+    const videos = await page.evaluate(() => {
+      const extractVideos = () => {
+        const allVideos: Array<{
+          url: string;
+          type: string;
+          provider?: string;
+          width?: number;
+          height?: number;
+          posterImage?: string;
+          isVisible?: boolean;
+          isAutoplay?: boolean;
+          className?: string;
+        }> = [];
+
+        // Capture HTML5 video elements
+        const videoElements = Array.from(document.querySelectorAll("video"));
+        for (const video of videoElements) {
+          const rect = video.getBoundingClientRect();
+          const computedStyle = window.getComputedStyle(video);
+          const isVisible =
+            rect.width > 1 &&
+            rect.height > 1 &&
+            computedStyle.display !== "none" &&
+            computedStyle.visibility !== "hidden" &&
+            computedStyle.opacity !== "0";
+
+          // Get sources
+          const sources = Array.from(video.querySelectorAll("source"));
+          const sourceUrls = sources.map((source) => ({
+            url: source.src,
+            type: source.type || "video/mp4",
+          }));
+
+          // If video has src directly
+          if (video.src && video.src.length > 0) {
+            sourceUrls.push({
+              url: video.src,
+              type: "video/mp4", // Default assumption
+            });
+          }
+
+          if (sourceUrls.length > 0) {
+            allVideos.push({
+              url: sourceUrls[0].url, // Use first source
+              type: "html5",
+              width:
+                typeof video.width === "number"
+                  ? video.width
+                  : Math.round(rect.width),
+              height:
+                typeof video.height === "number"
+                  ? video.height
+                  : Math.round(rect.height),
+              posterImage: video.poster || undefined,
+              isVisible,
+              isAutoplay: video.autoplay,
+              className: video.className || undefined,
+            });
+          }
+        }
+
+        // Capture YouTube iframes
+        const youtubeFrames = Array.from(
+          document.querySelectorAll("iframe"),
+        ).filter((iframe) => {
+          const src = iframe.src.toLowerCase();
+          return src.includes("youtube.com") || src.includes("youtu.be");
+        });
+
+        for (const frame of youtubeFrames) {
+          const rect = frame.getBoundingClientRect();
+          const computedStyle = window.getComputedStyle(frame);
+          const isVisible =
+            rect.width > 1 &&
+            rect.height > 1 &&
+            computedStyle.display !== "none" &&
+            computedStyle.visibility !== "hidden";
+
+          // Extract YouTube ID from URL
+          let youtubeId = "";
+          const src = frame.src;
+
+          if (src.includes("youtube.com/embed/")) {
+            youtubeId = src.split("youtube.com/embed/")[1].split("?")[0];
+          } else if (src.includes("youtube.com/watch?v=")) {
+            youtubeId = new URL(src).searchParams.get("v") || "";
+          } else if (src.includes("youtu.be/")) {
+            youtubeId = src.split("youtu.be/")[1].split("?")[0];
+          }
+
+          if (youtubeId) {
+            allVideos.push({
+              url: `https://www.youtube.com/watch?v=${youtubeId}`,
+              type: "youtube",
+              provider: "youtube",
+              width: Math.round(rect.width),
+              height: Math.round(rect.height),
+              posterImage: `https://img.youtube.com/vi/${youtubeId}/mqdefault.jpg`,
+              isVisible,
+              className: frame.className || undefined,
+            });
+          }
+        }
+
+        // Capture Vimeo iframes
+        const vimeoFrames = Array.from(
+          document.querySelectorAll("iframe"),
+        ).filter((iframe) => {
+          const src = iframe.src.toLowerCase();
+          return src.includes("vimeo.com");
+        });
+
+        for (const frame of vimeoFrames) {
+          const rect = frame.getBoundingClientRect();
+          const computedStyle = window.getComputedStyle(frame);
+          const isVisible =
+            rect.width > 1 &&
+            rect.height > 1 &&
+            computedStyle.display !== "none" &&
+            computedStyle.visibility !== "hidden";
+
+          // Extract Vimeo ID
+          let vimeoId = "";
+          const src = frame.src;
+
+          if (src.includes("vimeo.com/video/")) {
+            vimeoId = src.split("vimeo.com/video/")[1].split("?")[0];
+          } else if (src.includes("player.vimeo.com/video/")) {
+            vimeoId = src.split("player.vimeo.com/video/")[1].split("?")[0];
+          }
+
+          if (vimeoId) {
+            allVideos.push({
+              url: `https://vimeo.com/${vimeoId}`,
+              type: "vimeo",
+              provider: "vimeo",
+              width: Math.round(rect.width),
+              height: Math.round(rect.height),
+              isVisible,
+              className: frame.className || undefined,
+            });
+          }
+        }
+
+        // Look for video data-attributes in div elements (common in custom players)
+        const customPlayers = Array.from(
+          document.querySelectorAll(
+            "div[data-video-url], div[data-video-src], div[data-video], div[data-src]",
+          ),
+        );
+        for (const player of customPlayers) {
+          const videoUrl =
+            player.getAttribute("data-video-url") ||
+            player.getAttribute("data-video-src") ||
+            player.getAttribute("data-video") ||
+            player.getAttribute("data-src");
+
+          if (
+            videoUrl &&
+            (videoUrl.endsWith(".mp4") ||
+              videoUrl.endsWith(".webm") ||
+              videoUrl.endsWith(".ogg") ||
+              videoUrl.includes("youtube") ||
+              videoUrl.includes("vimeo"))
+          ) {
+            const rect = player.getBoundingClientRect();
+            const computedStyle = window.getComputedStyle(player);
+            const isVisible =
+              rect.width > 1 &&
+              rect.height > 1 &&
+              computedStyle.display !== "none" &&
+              computedStyle.visibility !== "hidden";
+
+            allVideos.push({
+              url: videoUrl,
+              type: "custom",
+              provider: videoUrl.includes("youtube")
+                ? "youtube"
+                : videoUrl.includes("vimeo")
+                  ? "vimeo"
+                  : "custom",
+              width: Math.round(rect.width),
+              height: Math.round(rect.height),
+              isVisible,
+              className: player.className || undefined,
+            });
+          }
+        }
+
+        return allVideos;
+      };
+
+      return extractVideos();
+    });
+
+    // Screenshot logic - simplified in simple mode
+    let screenshot: string | undefined;
     const sectionScreenshots: Record<string, string> = {};
 
-    if (options?.fullPage) {
+    if (!options.simpleMode) {
+      // Regular screenshot capturing with full details
       // Retourner au début de la page avant de prendre la capture d'écran
       await page.evaluate(() => {
         window.scrollTo(0, 0);
@@ -1698,18 +1924,47 @@ export async function scrapeWebsite(
 
       // Capture screenshots of important sections
       const sectionsToCapture = await page.evaluate(() => {
-        const sections = [
+        // Function to check if element is visible and has reasonable dimensions
+        const isValidElement = (el: Element): boolean => {
+          if (!el) return false;
+
+          const rect = el.getBoundingClientRect();
+          return (
+            rect.width > 10 &&
+            rect.height > 10 &&
+            rect.width < window.innerWidth * 2 &&
+            rect.height < window.innerHeight * 10
+          );
+        };
+
+        // Prioritized selectors - we only want the most important elements
+        const selectors: string[] = [
           // Header
-          document.querySelector("header"),
-          // Hero section
-          document.querySelector(
-            '.hero, .banner, [class*="hero"], [class*="banner"]',
-          ),
-          // Main content
-          document.querySelector('main, [role="main"]'),
+          'header, nav, [class*="header"], [class*="navigation"]',
+          // Hero section - most important visual element
+          '.hero, [class*="hero"], .banner, [class*="banner"], .jumbotron',
+          // Important content sections
+          'main, [role="main"], .content, #content, [class*="content"]',
           // Footer
-          document.querySelector("footer"),
-        ].filter((el) => el !== null);
+          'footer, [class*="footer"]',
+        ];
+
+        const sections: Element[] = [];
+
+        // Try each selector and only capture the first valid element for each
+        selectors.forEach((selector) => {
+          const elements = document.querySelectorAll(selector);
+          for (let i = 0; i < Math.min(elements.length, 1); i++) {
+            const element = elements[i];
+            if (
+              isValidElement(element) &&
+              !sections.some((s) => s === element)
+            ) {
+              sections.push(element);
+              break; // Only use first match per selector type
+            }
+          }
+        });
 
         return sections.map((section) => {
           const rect = section.getBoundingClientRect();
@@ -1733,13 +1988,37 @@ export async function scrapeWebsite(
 
       for (const section of sectionsToCapture) {
         const key = section.id || section.className || section.tagName;
-        sectionScreenshots[key] = (await page.screenshot({
-          clip: section.rect,
-          encoding: "base64",
-          type: "jpeg",
-          quality: 80,
-        })) as string;
+        try {
+          // Make sure all dimensions are valid and positive
+          const rect = {
+            x: Math.max(0, section.rect.x),
+            y: Math.max(0, section.rect.y),
+            width: Math.max(1, section.rect.width),
+            height: Math.max(1, section.rect.height),
+          };
+
+          // Only take screenshot if dimensions are valid
+          if (rect.width > 0 && rect.height > 0) {
+            sectionScreenshots[key] = (await page.screenshot({
+              clip: rect,
+              encoding: "base64",
+              type: "jpeg",
+              quality: 80,
+            })) as string;
+          }
+        } catch (e) {
+          console.warn(`Failed to capture section screenshot for ${key}:`, e);
+          // Continue with other sections - don't let one screenshot failure break everything
+        }
       }
+    } else {
+      // Simple mode: Just take a full page screenshot and skip section-specific ones
+      screenshot = (await page.screenshot({
+        fullPage: true,
+        encoding: "base64",
+        type: "jpeg",
+        quality: 80, // Slightly lower quality for speed
+      })) as string;
     }
 
     // Extract CSS stylesheets content for better cloning
@@ -1806,6 +2085,7 @@ export async function scrapeWebsite(
     return {
       html,
       images,
+      videos,
       title,
       description,
       url,
@@ -1832,9 +2112,24 @@ export async function scrapeWebsite(
       );
     }
 
-    // Try fallback method
-    console.log("Attempting fallback fetch method...");
-    return fetchWebsiteContent(url);
+    // Try fallback method with simpleMode
+    console.log("Attempting fallback fetch method with simpleMode...");
+    if (!options.simpleMode) {
+      // First try with simpleMode
+      try {
+        return await scrapeWebsite(url, { ...options, simpleMode: true });
+      } catch (fallbackError) {
+        // If that fails too, use the fetch-only method
+        console.error(
+          "Simple mode scraping failed, using fetch-only method:",
+          fallbackError,
+        );
+        return fetchWebsiteContent(url);
+      }
+    } else {
+      // Already in simpleMode, just use fetch-only method
+      return fetchWebsiteContent(url);
+    }
   } finally {
     if (browser) {
       await browser.close();

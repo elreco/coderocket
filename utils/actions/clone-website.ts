@@ -2,100 +2,48 @@
 
 import { scrapeWebsite } from "@/utils/agents/website-scraper";
 
-/**
- * Server Action qui remplace l'API /api/tools/clone-website
- * Cette fonction clone un site web en récupérant son contenu via scraping
- */
-export async function cloneWebsite(url: string, fullPage?: boolean) {
-  try {
-    if (!url) {
-      throw new Error("URL is required");
-    }
-
-    console.log(`Début du clonage du site: ${url}`);
-
-    // Définir un timeout plus long pour les sites avec chargement lent
-    const timeout = new Promise((_, reject) => {
-      setTimeout(
-        () => reject(new Error("Clonage timeout après 90 secondes")),
-        90000,
-      );
-    });
-
-    // Lancer l'opération de scraping avec un timeout de sécurité
-    const scraping = scrapeWebsite(url, { fullPage });
-    const websiteData = (await Promise.race([scraping, timeout])) as Awaited<
-      typeof scraping
-    >;
-    console.log({ websiteData });
-    // Vérifie si le scraping a rencontré des problèmes d'anti-bot
-    if (
-      websiteData.description?.includes("Failed to fetch website content") ||
-      websiteData.html?.includes("cf-browser-verification") ||
-      websiteData.html?.includes("cf-challenge-running")
-    ) {
-      return {
-        success: false,
-        error:
-          "Anti-bot protection detected. The website is using Cloudflare or similar technology to block scraping. Try using a different URL or a simpler page.",
-      };
-    }
-
-    // Retourner les données pour l'IA
-    return {
-      success: true,
-      data: {
-        title: websiteData.title,
-        description: websiteData.description,
-        url: websiteData.url,
-        imageCount: websiteData.images.length,
-        images: websiteData.images.slice(0, 20),
-        metaTags: websiteData.metaTags || {},
-        html: websiteData.html,
-        screenshot: websiteData.screenshot,
-        sectionScreenshots: websiteData.sectionScreenshots,
-        cssContent: websiteData.cssContent || [],
-        structure: {
-          ...websiteData.structure,
-          // Ajouter une description de la mise en page pour l'IA
-          layoutDescription: generateLayoutDescription(websiteData),
-          menu: websiteData.structure?.menu || [],
-          colors: websiteData.structure?.colors || [],
-          fonts: websiteData.structure?.fonts || [],
-          fontSources: websiteData.structure?.fontSources || [],
-          cssVariables: websiteData.structure?.cssVariables || {},
-          cta: websiteData.structure?.cta || [],
-          imageStyles: websiteData.structure?.imageStyles || [],
-          spacingPattern: websiteData.structure?.spacingPattern || "",
-          // Nouvelles propriétés ajoutées
-          mainContentStructure:
-            websiteData.structure?.layout?.mainContentStructure || null,
-          responsiveDetails:
-            websiteData.structure?.layout?.responsiveDetails || null,
-          visualPatterns: websiteData.structure?.visualPatterns || null,
-        },
-        heroImages: websiteData.images
-          .filter((img) => img.isHero || img.type === "background")
-          .slice(0, 5),
-        visibleImages: websiteData.images
-          .filter((img) => img.isVisible)
-          .slice(0, 15),
-      },
+// Interface pour les données provenant de website-scraper
+interface WebsiteContent {
+  html: string;
+  images: Array<{
+    url: string;
+    alt: string;
+    isHero?: boolean;
+    isVisible?: boolean;
+    type?: string;
+    role?: string;
+    className?: string;
+    dimensions?: { width: number; height: number };
+    style?: {
+      border?: string;
+      borderRadius?: string;
+      boxShadow?: string;
+      filter?: string;
+      backgroundSize?: string;
+      backgroundPosition?: string;
+      backgroundRepeat?: string;
     };
-  } catch (error) {
-    console.error("Error in cloneWebsite server action:", error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Unknown error",
-    };
-  }
-}
-
-/**
- * Génère une description textuelle de la mise en page pour aider l'IA à comprendre le site
- */
-function generateLayoutDescription(websiteData: {
+  }>;
+  videos?: Array<{
+    url: string;
+    type: string;
+    provider?: string;
+    width?: number;
+    height?: number;
+    posterImage?: string;
+    isVisible?: boolean;
+    isAutoplay?: boolean;
+    className?: string;
+  }>;
+  title: string;
+  description: string | null;
+  url: string;
+  screenshot?: string;
+  sectionScreenshots?: Record<string, string>;
+  metaTags?: Record<string, string>;
+  cssContent?: string[];
   structure?: {
+    menu?: Array<{ text: string; url: string }>;
     layout?: {
       header?: boolean;
       footer?: boolean;
@@ -174,13 +122,194 @@ function generateLayoutDescription(websiteData: {
       hasAlternatingRows: boolean;
     };
   };
-  images?: Array<{
-    url: string;
-    isHero?: boolean;
-    type?: string;
-  }>;
-  cssContent?: string[];
-}): string {
+}
+
+/**
+ * Server Action qui clone un site web en récupérant son contenu via scraping
+ * Optimisé pour une meilleure fidélité tout en simplifiant le processus
+ */
+export async function cloneWebsite(url: string, fullPage?: boolean) {
+  try {
+    if (!url) {
+      throw new Error("URL is required");
+    }
+
+    console.log(`Début du clonage du site: ${url}`);
+
+    // Timeout de 2 minutes pour les sites complexes
+    const timeout = new Promise((_, reject) => {
+      setTimeout(
+        () => reject(new Error("Clonage timeout après 120 secondes")),
+        120000,
+      );
+    });
+
+    // Options optimisées pour un meilleur équilibre performance/fidélité
+    const options = {
+      fullPage: fullPage ?? false,
+      fastMode: false, // Désactivé pour améliorer la fidélité
+      captureFullCSS: true, // Capture complète des styles CSS
+      waitForNetworkIdle: true, // Attente que le réseau soit inactif
+      extractInteractions: true, // Capture les éléments interactifs
+      captureVisualStyles: true, // Capture les styles visuels précis
+    };
+
+    // Lancer l'opération de scraping avec le timeout de sécurité
+    const scraping = scrapeWebsite(url, options);
+    const websiteData = (await Promise.race([
+      scraping,
+      timeout,
+    ])) as WebsiteContent;
+
+    // Détection des protections anti-bot avancée
+    if (detectAntiBot(websiteData)) {
+      return {
+        success: false,
+        error:
+          "Protection anti-bot détectée. Le site utilise Cloudflare ou une technologie similaire pour bloquer le scraping. Essayez une URL différente ou une page plus simple.",
+      };
+    }
+
+    // Retourner les données avec une structure simplifiée mais plus complète
+    return {
+      success: true,
+      data: formatWebsiteData(websiteData),
+    };
+  } catch (error) {
+    console.error("Error in cloneWebsite server action:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
+/**
+ * Détecte les protections anti-bot courantes
+ */
+function detectAntiBot(websiteData: {
+  html?: string;
+  description?: string | null;
+}): boolean {
+  // Vérification du contenu HTML
+  if (websiteData.html) {
+    const antiScrapingSignatures = [
+      "cf-browser-verification",
+      "cf-challenge-running",
+      "captcha",
+      "robot verification",
+      "security check",
+      "ddos protection",
+      "security challenge",
+      "recaptcha",
+      "Please Wait...",
+      "checking your browser",
+      "access to this page has been denied",
+    ];
+
+    for (const signature of antiScrapingSignatures) {
+      if (websiteData.html.toLowerCase().includes(signature.toLowerCase())) {
+        return true;
+      }
+    }
+  }
+
+  // Vérification des descriptions d'erreur
+  if (websiteData.description?.includes("Failed to fetch website content")) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Formate les données du site web pour une utilisation optimale par l'IA
+ */
+function formatWebsiteData(websiteData: WebsiteContent) {
+  return {
+    // Informations de base
+    title: websiteData.title,
+    description: websiteData.description,
+    url: websiteData.url,
+
+    // Contenu visuel avec optimisation
+    html: websiteData.html,
+    screenshot: websiteData.screenshot,
+    sectionScreenshots: websiteData.sectionScreenshots,
+
+    // Ressources médias optimisées
+    imageCount: websiteData.images?.length || 0,
+    images: websiteData.images?.slice(0, 30) || [], // Augmenté à 30 images
+    videoCount: websiteData.videos?.length || 0,
+    videos: websiteData.videos?.slice(0, 15) || [], // Augmenté à 15 vidéos
+
+    // Métadonnées et SEO
+    metaTags: websiteData.metaTags || {},
+
+    // Styles et CSS
+    cssContent: websiteData.cssContent || [],
+
+    // Structure avancée du site
+    structure: {
+      // Navigation et menus
+      menu: websiteData.structure?.menu || [],
+
+      // Mise en page et layout
+      layout: websiteData.structure?.layout || {},
+      sections: websiteData.structure?.sections || [],
+      domTreeDepth: websiteData.structure?.domTreeDepth,
+
+      // Éléments de design
+      colors: websiteData.structure?.colors || [],
+      fonts: websiteData.structure?.fonts || [],
+      fontSources: websiteData.structure?.fontSources || [],
+      cssVariables: websiteData.structure?.cssVariables || {},
+
+      // Éléments d'interaction
+      buttons: websiteData.structure?.buttons || [],
+      cta: websiteData.structure?.cta || [],
+
+      // Style et présentation des images
+      imageStyles: websiteData.structure?.imageStyles || [],
+      spacingPattern: websiteData.structure?.spacingPattern || "",
+
+      // Patterns de design avancés
+      visualPatterns: websiteData.structure?.visualPatterns || {},
+
+      // Description textuelle du layout
+      layoutDescription: generateLayoutDescription(websiteData),
+    },
+
+    // Collections d'images spéciales
+    heroImages: websiteData.images
+      .filter((img) => img.isHero || img.type === "background")
+      .slice(0, 10),
+
+    visibleImages: websiteData.images
+      .filter((img) => img.isVisible)
+      .slice(0, 20),
+
+    // Nouvelles collections pour améliorer la fidélité
+    backgroundImages: websiteData.images
+      .filter((img) => img.type === "background")
+      .slice(0, 10),
+
+    logoImages: websiteData.images
+      .filter(
+        (img) =>
+          img.role === "logo" ||
+          (img.className &&
+            (img.className.toLowerCase().includes("logo") ||
+              img.className.toLowerCase().includes("brand"))),
+      )
+      .slice(0, 5),
+  };
+}
+
+/**
+ * Génère une description textuelle de la mise en page pour aider l'IA à comprendre le site
+ */
+function generateLayoutDescription(websiteData: WebsiteContent): string {
   const structure = websiteData.structure || {};
   const layout = structure.layout || {};
   const images = websiteData.images || [];
@@ -302,7 +431,7 @@ function generateLayoutDescription(websiteData: {
     );
 
     if (mainSections.length > 0) {
-      description += `Contains ${mainSections.length} main sections: `;
+      description += `Contains ${mainSections.length} main sections. `;
 
       // Compter combien de sections contiennent des images
       const sectionsWithImages = mainSections.filter(

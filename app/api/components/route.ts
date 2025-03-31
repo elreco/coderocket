@@ -226,15 +226,21 @@ const validateRequest = async (
       if (cloneResult.success && cloneResult.data) {
         // Construire un prompt détaillé avec les informations du site
         enhancedPrompt = `Clone this website: ${chat.clone_url}
+
+## GENERAL STRUCTURE
 LAYOUT STRUCTURE:
 ${cloneResult.data.structure.layoutDescription || ""}
 
 MAIN CONTENT STRUCTURE:
-${JSON.stringify(cloneResult.data.structure.mainContentStructure || {})}
+${JSON.stringify(cloneResult.data.structure.layout?.mainContentStructure || {})}
 
 RESPONSIVE DESIGN DETAILS:
-${JSON.stringify(cloneResult.data.structure.responsiveDetails || {})}
+${JSON.stringify(cloneResult.data.structure.layout?.responsiveDetails || {})}
 
+SECTIONS:
+${JSON.stringify(cloneResult.data.structure.sections?.slice(0, 5) || [])}
+
+## VISUAL DESIGN
 VISUAL PATTERNS:
 ${JSON.stringify(cloneResult.data.structure.visualPatterns || {})}
 
@@ -250,6 +256,11 @@ ${JSON.stringify(cloneResult.data.structure.fontSources || [])}
 CSS VARIABLES:
 ${JSON.stringify(cloneResult.data.structure.cssVariables || {})}
 
+## MEDIA RESOURCES
+VIDEOS:
+${JSON.stringify(cloneResult.data.videos?.slice(0, 5) || [])}
+
+## INTERACTION ELEMENTS
 MENU ITEMS:
 ${JSON.stringify(cloneResult.data.structure.menu || [])}
 
@@ -259,6 +270,7 @@ ${JSON.stringify(cloneResult.data.structure.cta || [])}
 BUTTON STYLES:
 ${JSON.stringify(cloneResult.data.structure.buttons || [])}
 
+## STYLES AND DESIGN PATTERNS
 IMAGE STYLES:
 ${JSON.stringify(cloneResult.data.structure.imageStyles || [])}
 
@@ -271,13 +283,20 @@ ${JSON.stringify(cloneResult.data.metaTags || {})}
 CSS CONTENT SAMPLES:
 ${JSON.stringify(cloneResult.data.cssContent?.slice(0, 10) || [])}
 
+## IMAGE COLLECTIONS
 IMAGES COUNT: ${cloneResult.data.imageCount || 0}
 
-HERO/BACKGROUND IMAGES:
-${JSON.stringify(cloneResult.data.heroImages || [])}
+HERO/BACKGROUND IMAGES (${cloneResult.data.heroImages?.length || 0}):
+${JSON.stringify(cloneResult.data.heroImages?.slice(0, 5) || [])}
 
-IMPORTANT IMAGES TO USE:
-${JSON.stringify(cloneResult.data.visibleImages || [])}
+LOGO IMAGES (${cloneResult.data.logoImages?.length || 0}):
+${JSON.stringify(cloneResult.data.logoImages || [])}
+
+BACKGROUND IMAGES (${cloneResult.data.backgroundImages?.length || 0}):
+${JSON.stringify(cloneResult.data.backgroundImages?.slice(0, 5) || [])}
+
+IMPORTANT VISIBLE IMAGES (${cloneResult.data.visibleImages?.length || 0}):
+${JSON.stringify(cloneResult.data.visibleImages?.slice(0, 10) || [])}
 `;
 
         // Si nous avons des captures d'écran, ajouter des instructions pour les consulter
@@ -285,7 +304,12 @@ ${JSON.stringify(cloneResult.data.visibleImages || [])}
           cloneResult.data.screenshot ||
           cloneResult.data.sectionScreenshots
         ) {
-          enhancedPrompt += `\n\nNOTE: Une capture d'écran du site est incluse dans ce message. Utilisez-la comme référence pour reproduire fidèlement la mise en page et l'apparence.`;
+          enhancedPrompt += `\n\n## SCREENSHOT
+NOTE: A screenshot of the website is included in this message. Use it as a reference to faithfully reproduce the layout and appearance. Pay attention to the following elements:
+- Respect the visual hierarchy and spacing between elements
+- Reproduce important visual effects such as shadows and rounded corners
+- Ensure the color palette matches the original
+- Maintain the responsive layout and identified breakpoints`;
 
           // Enregistrer la capture d'écran du site si disponible
           if (cloneResult.data.screenshot) {
