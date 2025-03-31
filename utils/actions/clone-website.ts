@@ -12,8 +12,21 @@ export async function cloneWebsite(url: string, fullPage?: boolean) {
       throw new Error("URL is required");
     }
 
-    // Lancer l'opération de scraping
-    const websiteData = await scrapeWebsite(url, { fullPage });
+    console.log(`Début du clonage du site: ${url}`);
+
+    // Définir un timeout plus long pour les sites avec chargement lent
+    const timeout = new Promise((_, reject) => {
+      setTimeout(
+        () => reject(new Error("Clonage timeout après 90 secondes")),
+        90000,
+      );
+    });
+
+    // Lancer l'opération de scraping avec un timeout de sécurité
+    const scraping = scrapeWebsite(url, { fullPage });
+    const websiteData = (await Promise.race([scraping, timeout])) as Awaited<
+      typeof scraping
+    >;
     console.log({ websiteData });
     // Vérifie si le scraping a rencontré des problèmes d'anti-bot
     if (
@@ -41,6 +54,7 @@ export async function cloneWebsite(url: string, fullPage?: boolean) {
         html: websiteData.html,
         screenshot: websiteData.screenshot,
         sectionScreenshots: websiteData.sectionScreenshots,
+        cssContent: websiteData.cssContent || [],
         structure: {
           ...websiteData.structure,
           // Ajouter une description de la mise en page pour l'IA
@@ -48,10 +62,17 @@ export async function cloneWebsite(url: string, fullPage?: boolean) {
           menu: websiteData.structure?.menu || [],
           colors: websiteData.structure?.colors || [],
           fonts: websiteData.structure?.fonts || [],
+          fontSources: websiteData.structure?.fontSources || [],
           cssVariables: websiteData.structure?.cssVariables || {},
           cta: websiteData.structure?.cta || [],
           imageStyles: websiteData.structure?.imageStyles || [],
           spacingPattern: websiteData.structure?.spacingPattern || "",
+          // Nouvelles propriétés ajoutées
+          mainContentStructure:
+            websiteData.structure?.layout?.mainContentStructure || null,
+          responsiveDetails:
+            websiteData.structure?.layout?.responsiveDetails || null,
+          visualPatterns: websiteData.structure?.visualPatterns || null,
         },
         heroImages: websiteData.images
           .filter((img) => img.isHero || img.type === "background")
@@ -83,6 +104,25 @@ function generateLayoutDescription(websiteData: {
       gridColumns?: number;
       flexDirection?: string;
       responsive?: boolean;
+      mainContentStructure?: {
+        width: string | null;
+        maxWidth: string | null;
+        padding: string | null;
+        margin: string | null;
+        centeringStrategy: string | null;
+        gap: string | null;
+        columnCount: number | null;
+        rowCount: number | null;
+        columnWidths?: string[];
+        gridPattern?: string;
+        columnGap?: string;
+      };
+      responsiveDetails?: {
+        mediaQueriesCount: number;
+        hasViewportMeta: boolean;
+        usesFlexibleUnits: boolean;
+        breakpoints: string[];
+      };
     };
     sections?: Array<{
       title?: string;
@@ -110,14 +150,36 @@ function generateLayoutDescription(websiteData: {
     }>;
     spacingPattern?: string;
     fonts?: string[];
+    fontSources?: string[];
     colors?: string[];
     cssVariables?: Record<string, string>;
+    visualPatterns?: {
+      cardPatterns: Array<{
+        selector: string;
+        count: number;
+        structure: {
+          hasImage: boolean;
+          hasTitle: boolean;
+          hasText: boolean;
+          hasButton: boolean;
+        };
+      }>;
+      visualHierarchy: {
+        hasSeparators: boolean;
+        usesDifferentBackgrounds: boolean;
+        usesShadowsForDepth: boolean;
+        usesTypographicHierarchy: boolean;
+      };
+      contentContainersCount: number;
+      hasAlternatingRows: boolean;
+    };
   };
   images?: Array<{
     url: string;
     isHero?: boolean;
     type?: string;
   }>;
+  cssContent?: string[];
 }): string {
   const structure = websiteData.structure || {};
   const layout = structure.layout || {};
@@ -140,20 +202,97 @@ function generateLayoutDescription(websiteData: {
     }
   }
 
-  // Décrire la réactivité (responsive)
+  // Décrire la réactivité (responsive) avec détails
   if (layout.responsive) {
-    description += "Website is responsive. ";
+    const responsiveDetails = layout.responsiveDetails;
+    if (responsiveDetails) {
+      description += `Website is responsive with ${responsiveDetails.mediaQueriesCount} media queries. `;
+      if (responsiveDetails.hasViewportMeta) {
+        description += `Uses viewport meta tag. `;
+      }
+      if (responsiveDetails.usesFlexibleUnits) {
+        description += `Uses fluid/flexible sizing units. `;
+      }
+      if (
+        responsiveDetails.breakpoints &&
+        responsiveDetails.breakpoints.length > 0
+      ) {
+        description += `Main breakpoints: ${responsiveDetails.breakpoints.slice(0, 2).join(", ")}. `;
+      }
+    } else {
+      description += "Website is responsive. ";
+    }
   }
 
-  // Décrire la complexité DOM
-  if (structure.domTreeDepth) {
-    const complexity =
-      structure.domTreeDepth > 15
-        ? "complex"
-        : structure.domTreeDepth > 8
-          ? "moderate"
-          : "simple";
-    description += `DOM complexity is ${complexity} (depth: ${structure.domTreeDepth}). `;
+  // Décrire la structure du contenu principal
+  const mainContentStructure = layout.mainContentStructure;
+  if (mainContentStructure) {
+    if (mainContentStructure.centeringStrategy) {
+      description += `Content centering uses ${mainContentStructure.centeringStrategy} technique. `;
+    }
+
+    if (mainContentStructure.maxWidth) {
+      description += `Main content max width: ${mainContentStructure.maxWidth}. `;
+    }
+
+    if (
+      mainContentStructure.columnCount &&
+      mainContentStructure.columnCount > 1
+    ) {
+      description += `Layout uses ${mainContentStructure.columnCount} columns `;
+      if (mainContentStructure.gap) {
+        description += `with ${mainContentStructure.gap} gap. `;
+      } else {
+        description += `. `;
+      }
+    }
+
+    if (mainContentStructure.gridPattern) {
+      description += `Grid template: ${mainContentStructure.gridPattern}. `;
+    }
+  }
+
+  // Décrire les patterns visuels
+  if (structure.visualPatterns) {
+    const vp = structure.visualPatterns;
+
+    // Décrire les card patterns
+    if (vp.cardPatterns && vp.cardPatterns.length > 0) {
+      const cardPattern = vp.cardPatterns[0];
+      description += `Uses card-based design with ${cardPattern.count} ${cardPattern.selector} elements. `;
+
+      const cardStructure = cardPattern.structure;
+      description += `Cards typically `;
+      if (cardStructure.hasImage) description += `include images, `;
+      if (cardStructure.hasTitle) description += `have headings, `;
+      if (cardStructure.hasText) description += `contain text, `;
+      if (cardStructure.hasButton) description += `have buttons/CTAs, `;
+      description = description.replace(/, $/, ". ");
+    }
+
+    // Décrire la hiérarchie visuelle
+    const vh = vp.visualHierarchy;
+    if (vh) {
+      if (vh.usesDifferentBackgrounds) {
+        description += `Uses alternating section backgrounds for visual separation. `;
+      }
+
+      if (vh.usesShadowsForDepth) {
+        description += `Employs shadows for depth and elevation. `;
+      }
+
+      if (vh.usesTypographicHierarchy) {
+        description += `Has clear typographic hierarchy. `;
+      }
+
+      if (vh.hasSeparators) {
+        description += `Uses visual separators/dividers between sections. `;
+      }
+    }
+
+    if (vp.hasAlternatingRows) {
+      description += `Features alternating row styles. `;
+    }
   }
 
   // Décrire les sections
@@ -198,9 +337,27 @@ function generateLayoutDescription(websiteData: {
     description += `Contains ${structure.cta.length} call-to-action elements. `;
   }
 
-  // Décrire les polices
+  // Décrire les polices avec plus de détails
   if (structure.fonts && structure.fonts.length > 0) {
-    description += `Uses ${structure.fonts.length} font families. `;
+    description += `Uses ${structure.fonts.length} font families: ${structure.fonts.slice(0, 3).join(", ")}${structure.fonts.length > 3 ? "..." : ""}. `;
+
+    // Ajouter des informations sur les sources de polices web
+    if (structure.fontSources && structure.fontSources.length > 0) {
+      const googleFonts = structure.fontSources.filter((src) =>
+        src.includes("googleapis"),
+      );
+      const customFonts = structure.fontSources.filter(
+        (src) => !src.includes("googleapis"),
+      );
+
+      if (googleFonts.length > 0) {
+        description += `Uses Google Fonts. `;
+      }
+
+      if (customFonts.length > 0) {
+        description += `Uses custom web fonts. `;
+      }
+    }
   }
 
   // Décrire le schéma de couleurs
@@ -229,6 +386,11 @@ function generateLayoutDescription(websiteData: {
   // Décrire les tendances de spacing
   if (structure.spacingPattern) {
     description += `Common spacing values: ${structure.spacingPattern}. `;
+  }
+
+  // Ajouter des informations sur le CSS
+  if (websiteData.cssContent && websiteData.cssContent.length > 0) {
+    description += `Contains ${websiteData.cssContent.length} important CSS rules. `;
   }
 
   return description;
