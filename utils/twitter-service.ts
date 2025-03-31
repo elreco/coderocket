@@ -2,7 +2,6 @@
 
 import { TwitterApi } from "twitter-api-v2";
 
-import { extractTitle } from "@/utils/completion-parser";
 import { createClient } from "@/utils/supabase/server";
 
 // Check if auto-tweeting is enabled
@@ -50,18 +49,7 @@ export async function tweetComponent(
       return false;
     }
 
-    // Get title from last assistant message
-    const { data: lastAssistantMessage } = await supabase
-      .from("messages")
-      .select("content")
-      .eq("chat_id", chatId)
-      .eq("version", version)
-      .eq("role", "assistant")
-      .single();
-
-    const title = lastAssistantMessage
-      ? extractTitle(lastAssistantMessage.content) || "Tailwind Component"
-      : "Tailwind Component";
+    const title = chat.title || "Tailwind Component";
 
     // Generate component URL
     const componentUrl = `https://www.tailwindai.dev/components/${chat.slug}`;
