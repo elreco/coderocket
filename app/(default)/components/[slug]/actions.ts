@@ -258,7 +258,9 @@ export const buildComponent = async (
       undefined,
       chat.framework || Framework.REACT,
     );
-
+    if (chat.is_private) {
+      return;
+    }
     await tweetComponent(chatId, version, screenshotUrl);
   } catch (error) {
     console.error("API error:", error);
