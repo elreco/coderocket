@@ -14,7 +14,7 @@ export async function cloneWebsite(url: string, fullPage?: boolean) {
 
     // Lancer l'opération de scraping
     const websiteData = await scrapeWebsite(url, { fullPage });
-
+    console.log({ websiteData });
     // Vérifie si le scraping a rencontré des problèmes d'anti-bot
     if (
       websiteData.description?.includes("Failed to fetch website content") ||
