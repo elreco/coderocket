@@ -229,11 +229,23 @@ const validateRequest = async (
 LAYOUT STRUCTURE:
 ${cloneResult.data.structure.layoutDescription || ""}
 
+MAIN CONTENT STRUCTURE:
+${JSON.stringify(cloneResult.data.structure.mainContentStructure || {})}
+
+RESPONSIVE DESIGN DETAILS:
+${JSON.stringify(cloneResult.data.structure.responsiveDetails || {})}
+
+VISUAL PATTERNS:
+${JSON.stringify(cloneResult.data.structure.visualPatterns || {})}
+
 COLORS:
 ${JSON.stringify(cloneResult.data.structure.colors || [])}
 
 FONTS:
 ${JSON.stringify(cloneResult.data.structure.fonts || [])}
+
+FONT SOURCES:
+${JSON.stringify(cloneResult.data.structure.fontSources || [])}
 
 CSS VARIABLES:
 ${JSON.stringify(cloneResult.data.structure.cssVariables || {})}
@@ -255,6 +267,9 @@ ${cloneResult.data.structure.spacingPattern || ""}
 
 META TAGS:
 ${JSON.stringify(cloneResult.data.metaTags || {})}
+
+CSS CONTENT SAMPLES:
+${JSON.stringify(cloneResult.data.cssContent?.slice(0, 10) || [])}
 
 IMAGES COUNT: ${cloneResult.data.imageCount || 0}
 
