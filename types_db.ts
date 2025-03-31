@@ -4,647 +4,654 @@ export type Json =
   | boolean
   | null
   | { [key: string]: Json | undefined }
-  | Json[]
+  | Json[];
 
 export type Database = {
   public: {
     Tables: {
       chat_likes: {
         Row: {
-          chat_id: string
-          created_at: string
-          id: number
-          user_id: string
-        }
+          chat_id: string;
+          created_at: string;
+          id: number;
+          user_id: string;
+        };
         Insert: {
-          chat_id: string
-          created_at?: string
-          id?: number
-          user_id: string
-        }
+          chat_id: string;
+          created_at?: string;
+          id?: number;
+          user_id: string;
+        };
         Update: {
-          chat_id?: string
-          created_at?: string
-          id?: number
-          user_id?: string
-        }
+          chat_id?: string;
+          created_at?: string;
+          id?: number;
+          user_id?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "chat_likes_chat_id_fkey"
-            columns: ["chat_id"]
-            isOneToOne: false
-            referencedRelation: "chats"
-            referencedColumns: ["id"]
+            foreignKeyName: "chat_likes_chat_id_fkey";
+            columns: ["chat_id"];
+            isOneToOne: false;
+            referencedRelation: "chats";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "chat_likes_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
+            foreignKeyName: "chat_likes_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       chats: {
         Row: {
-          artifact_code: string | null
-          clone_url: string | null
-          created_at: string | null
-          framework: string | null
-          id: string
-          input_tokens: number | null
-          is_featured: boolean | null
-          is_private: boolean | null
-          likes: number | null
-          metadata: Json | null
-          output_tokens: number | null
-          prompt_image: string | null
-          remix_chat_id: string | null
-          remix_from_version: number | null
-          slug: string | null
-          title: string | null
-          user_id: string
-          views: number | null
-        }
+          artifact_code: string | null;
+          clone_url: string | null;
+          created_at: string | null;
+          framework: string | null;
+          id: string;
+          input_tokens: number | null;
+          is_featured: boolean | null;
+          is_private: boolean | null;
+          likes: number | null;
+          metadata: Json | null;
+          output_tokens: number | null;
+          prompt_image: string | null;
+          remix_chat_id: string | null;
+          remix_from_version: number | null;
+          slug: string | null;
+          title: string | null;
+          user_id: string;
+          views: number | null;
+        };
         Insert: {
-          artifact_code?: string | null
-          clone_url?: string | null
-          created_at?: string | null
-          framework?: string | null
-          id?: string
-          input_tokens?: number | null
-          is_featured?: boolean | null
-          is_private?: boolean | null
-          likes?: number | null
-          metadata?: Json | null
-          output_tokens?: number | null
-          prompt_image?: string | null
-          remix_chat_id?: string | null
-          remix_from_version?: number | null
-          slug?: string | null
-          title?: string | null
-          user_id: string
-          views?: number | null
-        }
+          artifact_code?: string | null;
+          clone_url?: string | null;
+          created_at?: string | null;
+          framework?: string | null;
+          id?: string;
+          input_tokens?: number | null;
+          is_featured?: boolean | null;
+          is_private?: boolean | null;
+          likes?: number | null;
+          metadata?: Json | null;
+          output_tokens?: number | null;
+          prompt_image?: string | null;
+          remix_chat_id?: string | null;
+          remix_from_version?: number | null;
+          slug?: string | null;
+          title?: string | null;
+          user_id: string;
+          views?: number | null;
+        };
         Update: {
-          artifact_code?: string | null
-          clone_url?: string | null
-          created_at?: string | null
-          framework?: string | null
-          id?: string
-          input_tokens?: number | null
-          is_featured?: boolean | null
-          is_private?: boolean | null
-          likes?: number | null
-          metadata?: Json | null
-          output_tokens?: number | null
-          prompt_image?: string | null
-          remix_chat_id?: string | null
-          remix_from_version?: number | null
-          slug?: string | null
-          title?: string | null
-          user_id?: string
-          views?: number | null
-        }
+          artifact_code?: string | null;
+          clone_url?: string | null;
+          created_at?: string | null;
+          framework?: string | null;
+          id?: string;
+          input_tokens?: number | null;
+          is_featured?: boolean | null;
+          is_private?: boolean | null;
+          likes?: number | null;
+          metadata?: Json | null;
+          output_tokens?: number | null;
+          prompt_image?: string | null;
+          remix_chat_id?: string | null;
+          remix_from_version?: number | null;
+          slug?: string | null;
+          title?: string | null;
+          user_id?: string;
+          views?: number | null;
+        };
         Relationships: [
           {
-            foreignKeyName: "chats_remix_chat_id_fkey"
-            columns: ["remix_chat_id"]
-            isOneToOne: false
-            referencedRelation: "chats"
-            referencedColumns: ["id"]
+            foreignKeyName: "chats_remix_chat_id_fkey";
+            columns: ["remix_chat_id"];
+            isOneToOne: false;
+            referencedRelation: "chats";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "chats_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
+            foreignKeyName: "chats_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       customers: {
         Row: {
-          id: string
-          stripe_customer_id: string | null
-        }
+          id: string;
+          stripe_customer_id: string | null;
+        };
         Insert: {
-          id: string
-          stripe_customer_id?: string | null
-        }
+          id: string;
+          stripe_customer_id?: string | null;
+        };
         Update: {
-          id?: string
-          stripe_customer_id?: string | null
-        }
-        Relationships: []
-      }
+          id?: string;
+          stripe_customer_id?: string | null;
+        };
+        Relationships: [];
+      };
       environment_variables: {
         Row: {
-          chat_id: string
-          created_at: string
-          id: number
-          key: string
-          updated_at: string
-          value: string
-        }
+          chat_id: string;
+          created_at: string;
+          id: number;
+          key: string;
+          updated_at: string;
+          value: string;
+        };
         Insert: {
-          chat_id: string
-          created_at?: string
-          id?: number
-          key: string
-          updated_at?: string
-          value: string
-        }
+          chat_id: string;
+          created_at?: string;
+          id?: number;
+          key: string;
+          updated_at?: string;
+          value: string;
+        };
         Update: {
-          chat_id?: string
-          created_at?: string
-          id?: number
-          key?: string
-          updated_at?: string
-          value?: string
-        }
+          chat_id?: string;
+          created_at?: string;
+          id?: number;
+          key?: string;
+          updated_at?: string;
+          value?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "environment_variables_chat_id_fkey"
-            columns: ["chat_id"]
-            isOneToOne: false
-            referencedRelation: "chats"
-            referencedColumns: ["id"]
+            foreignKeyName: "environment_variables_chat_id_fkey";
+            columns: ["chat_id"];
+            isOneToOne: false;
+            referencedRelation: "chats";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       extra_messages: {
         Row: {
-          count: number
-          created_at: string
-          id: number
-          updated_at: string
-          user_id: string
-        }
+          count: number;
+          created_at: string;
+          id: number;
+          updated_at: string;
+          user_id: string;
+        };
         Insert: {
-          count?: number
-          created_at?: string
-          id?: number
-          updated_at?: string
-          user_id: string
-        }
+          count?: number;
+          created_at?: string;
+          id?: number;
+          updated_at?: string;
+          user_id: string;
+        };
         Update: {
-          count?: number
-          created_at?: string
-          id?: number
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
+          count?: number;
+          created_at?: string;
+          id?: number;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       messages: {
         Row: {
-          artifact_code: string | null
-          chat_id: string
-          content: string
-          created_at: string
-          id: number
-          input_tokens: number | null
-          is_built: boolean | null
-          output_tokens: number | null
-          prompt_image: string | null
-          role: string
-          screenshot: string | null
-          subscription_type: string | null
-          theme: string | null
-          version: number
-        }
+          artifact_code: string | null;
+          chat_id: string;
+          content: string;
+          created_at: string;
+          id: number;
+          input_tokens: number | null;
+          is_built: boolean | null;
+          output_tokens: number | null;
+          prompt_image: string | null;
+          role: string;
+          screenshot: string | null;
+          subscription_type: string | null;
+          theme: string | null;
+          version: number;
+        };
         Insert: {
-          artifact_code?: string | null
-          chat_id: string
-          content: string
-          created_at?: string
-          id?: number
-          input_tokens?: number | null
-          is_built?: boolean | null
-          output_tokens?: number | null
-          prompt_image?: string | null
-          role: string
-          screenshot?: string | null
-          subscription_type?: string | null
-          theme?: string | null
-          version: number
-        }
+          artifact_code?: string | null;
+          chat_id: string;
+          content: string;
+          created_at?: string;
+          id?: number;
+          input_tokens?: number | null;
+          is_built?: boolean | null;
+          output_tokens?: number | null;
+          prompt_image?: string | null;
+          role: string;
+          screenshot?: string | null;
+          subscription_type?: string | null;
+          theme?: string | null;
+          version: number;
+        };
         Update: {
-          artifact_code?: string | null
-          chat_id?: string
-          content?: string
-          created_at?: string
-          id?: number
-          input_tokens?: number | null
-          is_built?: boolean | null
-          output_tokens?: number | null
-          prompt_image?: string | null
-          role?: string
-          screenshot?: string | null
-          subscription_type?: string | null
-          theme?: string | null
-          version?: number
-        }
+          artifact_code?: string | null;
+          chat_id?: string;
+          content?: string;
+          created_at?: string;
+          id?: number;
+          input_tokens?: number | null;
+          is_built?: boolean | null;
+          output_tokens?: number | null;
+          prompt_image?: string | null;
+          role?: string;
+          screenshot?: string | null;
+          subscription_type?: string | null;
+          theme?: string | null;
+          version?: number;
+        };
         Relationships: [
           {
-            foreignKeyName: "messages_chat_id_fkey"
-            columns: ["chat_id"]
-            isOneToOne: false
-            referencedRelation: "chats"
-            referencedColumns: ["id"]
+            foreignKeyName: "messages_chat_id_fkey";
+            columns: ["chat_id"];
+            isOneToOne: false;
+            referencedRelation: "chats";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       notification: {
         Row: {
-          button_label: string | null
-          button_link: string | null
-          created_at: string
-          description: string
-          id: number
-          is_active: boolean
-          title: string
-        }
+          button_label: string | null;
+          button_link: string | null;
+          created_at: string;
+          description: string;
+          id: number;
+          is_active: boolean;
+          title: string;
+        };
         Insert: {
-          button_label?: string | null
-          button_link?: string | null
-          created_at?: string
-          description: string
-          id?: number
-          is_active: boolean
-          title: string
-        }
+          button_label?: string | null;
+          button_link?: string | null;
+          created_at?: string;
+          description: string;
+          id?: number;
+          is_active: boolean;
+          title: string;
+        };
         Update: {
-          button_label?: string | null
-          button_link?: string | null
-          created_at?: string
-          description?: string
-          id?: number
-          is_active?: boolean
-          title?: string
-        }
-        Relationships: []
-      }
+          button_label?: string | null;
+          button_link?: string | null;
+          created_at?: string;
+          description?: string;
+          id?: number;
+          is_active?: boolean;
+          title?: string;
+        };
+        Relationships: [];
+      };
       prices: {
         Row: {
-          active: boolean | null
-          currency: string | null
-          description: string | null
-          id: string
-          interval: Database["public"]["Enums"]["pricing_plan_interval"] | null
-          interval_count: number | null
-          metadata: Json | null
-          product_id: string | null
-          trial_period_days: number | null
-          type: Database["public"]["Enums"]["pricing_type"] | null
-          unit_amount: number | null
-        }
+          active: boolean | null;
+          currency: string | null;
+          description: string | null;
+          id: string;
+          interval: Database["public"]["Enums"]["pricing_plan_interval"] | null;
+          interval_count: number | null;
+          metadata: Json | null;
+          product_id: string | null;
+          trial_period_days: number | null;
+          type: Database["public"]["Enums"]["pricing_type"] | null;
+          unit_amount: number | null;
+        };
         Insert: {
-          active?: boolean | null
-          currency?: string | null
-          description?: string | null
-          id: string
-          interval?: Database["public"]["Enums"]["pricing_plan_interval"] | null
-          interval_count?: number | null
-          metadata?: Json | null
-          product_id?: string | null
-          trial_period_days?: number | null
-          type?: Database["public"]["Enums"]["pricing_type"] | null
-          unit_amount?: number | null
-        }
+          active?: boolean | null;
+          currency?: string | null;
+          description?: string | null;
+          id: string;
+          interval?:
+            | Database["public"]["Enums"]["pricing_plan_interval"]
+            | null;
+          interval_count?: number | null;
+          metadata?: Json | null;
+          product_id?: string | null;
+          trial_period_days?: number | null;
+          type?: Database["public"]["Enums"]["pricing_type"] | null;
+          unit_amount?: number | null;
+        };
         Update: {
-          active?: boolean | null
-          currency?: string | null
-          description?: string | null
-          id?: string
-          interval?: Database["public"]["Enums"]["pricing_plan_interval"] | null
-          interval_count?: number | null
-          metadata?: Json | null
-          product_id?: string | null
-          trial_period_days?: number | null
-          type?: Database["public"]["Enums"]["pricing_type"] | null
-          unit_amount?: number | null
-        }
+          active?: boolean | null;
+          currency?: string | null;
+          description?: string | null;
+          id?: string;
+          interval?:
+            | Database["public"]["Enums"]["pricing_plan_interval"]
+            | null;
+          interval_count?: number | null;
+          metadata?: Json | null;
+          product_id?: string | null;
+          trial_period_days?: number | null;
+          type?: Database["public"]["Enums"]["pricing_type"] | null;
+          unit_amount?: number | null;
+        };
         Relationships: [
           {
-            foreignKeyName: "prices_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
+            foreignKeyName: "prices_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "products";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       products: {
         Row: {
-          active: boolean | null
-          description: string | null
-          id: string
-          image: string | null
-          metadata: Json | null
-          name: string | null
-        }
+          active: boolean | null;
+          description: string | null;
+          id: string;
+          image: string | null;
+          metadata: Json | null;
+          name: string | null;
+        };
         Insert: {
-          active?: boolean | null
-          description?: string | null
-          id: string
-          image?: string | null
-          metadata?: Json | null
-          name?: string | null
-        }
+          active?: boolean | null;
+          description?: string | null;
+          id: string;
+          image?: string | null;
+          metadata?: Json | null;
+          name?: string | null;
+        };
         Update: {
-          active?: boolean | null
-          description?: string | null
-          id?: string
-          image?: string | null
-          metadata?: Json | null
-          name?: string | null
-        }
-        Relationships: []
-      }
+          active?: boolean | null;
+          description?: string | null;
+          id?: string;
+          image?: string | null;
+          metadata?: Json | null;
+          name?: string | null;
+        };
+        Relationships: [];
+      };
       subscriptions: {
         Row: {
-          cancel_at: string | null
-          cancel_at_period_end: boolean | null
-          canceled_at: string | null
-          created: string
-          current_period_end: string
-          current_period_start: string
-          custom_messages_per_period: number | null
-          ended_at: string | null
-          id: string
-          metadata: Json | null
-          price_id: string | null
-          quantity: number | null
-          status: Database["public"]["Enums"]["subscription_status"] | null
-          trial_end: string | null
-          trial_start: string | null
-          user_id: string
-        }
+          cancel_at: string | null;
+          cancel_at_period_end: boolean | null;
+          canceled_at: string | null;
+          created: string;
+          current_period_end: string;
+          current_period_start: string;
+          custom_messages_per_period: number | null;
+          ended_at: string | null;
+          id: string;
+          metadata: Json | null;
+          price_id: string | null;
+          quantity: number | null;
+          status: Database["public"]["Enums"]["subscription_status"] | null;
+          trial_end: string | null;
+          trial_start: string | null;
+          user_id: string;
+        };
         Insert: {
-          cancel_at?: string | null
-          cancel_at_period_end?: boolean | null
-          canceled_at?: string | null
-          created?: string
-          current_period_end?: string
-          current_period_start?: string
-          custom_messages_per_period?: number | null
-          ended_at?: string | null
-          id: string
-          metadata?: Json | null
-          price_id?: string | null
-          quantity?: number | null
-          status?: Database["public"]["Enums"]["subscription_status"] | null
-          trial_end?: string | null
-          trial_start?: string | null
-          user_id: string
-        }
+          cancel_at?: string | null;
+          cancel_at_period_end?: boolean | null;
+          canceled_at?: string | null;
+          created?: string;
+          current_period_end?: string;
+          current_period_start?: string;
+          custom_messages_per_period?: number | null;
+          ended_at?: string | null;
+          id: string;
+          metadata?: Json | null;
+          price_id?: string | null;
+          quantity?: number | null;
+          status?: Database["public"]["Enums"]["subscription_status"] | null;
+          trial_end?: string | null;
+          trial_start?: string | null;
+          user_id: string;
+        };
         Update: {
-          cancel_at?: string | null
-          cancel_at_period_end?: boolean | null
-          canceled_at?: string | null
-          created?: string
-          current_period_end?: string
-          current_period_start?: string
-          custom_messages_per_period?: number | null
-          ended_at?: string | null
-          id?: string
-          metadata?: Json | null
-          price_id?: string | null
-          quantity?: number | null
-          status?: Database["public"]["Enums"]["subscription_status"] | null
-          trial_end?: string | null
-          trial_start?: string | null
-          user_id?: string
-        }
+          cancel_at?: string | null;
+          cancel_at_period_end?: boolean | null;
+          canceled_at?: string | null;
+          created?: string;
+          current_period_end?: string;
+          current_period_start?: string;
+          custom_messages_per_period?: number | null;
+          ended_at?: string | null;
+          id?: string;
+          metadata?: Json | null;
+          price_id?: string | null;
+          quantity?: number | null;
+          status?: Database["public"]["Enums"]["subscription_status"] | null;
+          trial_end?: string | null;
+          trial_start?: string | null;
+          user_id?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "subscriptions_price_id_fkey"
-            columns: ["price_id"]
-            isOneToOne: false
-            referencedRelation: "prices"
-            referencedColumns: ["id"]
+            foreignKeyName: "subscriptions_price_id_fkey";
+            columns: ["price_id"];
+            isOneToOne: false;
+            referencedRelation: "prices";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       unsubscribe_surveys: {
         Row: {
-          email: string | null
-          id: number
-          improvementsuggestion: string | null
-          mainreason: string | null
-          otherreason: string | null
-          submission_date: string | null
-        }
+          email: string | null;
+          id: number;
+          improvementsuggestion: string | null;
+          mainreason: string | null;
+          otherreason: string | null;
+          submission_date: string | null;
+        };
         Insert: {
-          email?: string | null
-          id?: number
-          improvementsuggestion?: string | null
-          mainreason?: string | null
-          otherreason?: string | null
-          submission_date?: string | null
-        }
+          email?: string | null;
+          id?: number;
+          improvementsuggestion?: string | null;
+          mainreason?: string | null;
+          otherreason?: string | null;
+          submission_date?: string | null;
+        };
         Update: {
-          email?: string | null
-          id?: number
-          improvementsuggestion?: string | null
-          mainreason?: string | null
-          otherreason?: string | null
-          submission_date?: string | null
-        }
-        Relationships: []
-      }
+          email?: string | null;
+          id?: number;
+          improvementsuggestion?: string | null;
+          mainreason?: string | null;
+          otherreason?: string | null;
+          submission_date?: string | null;
+        };
+        Relationships: [];
+      };
       users: {
         Row: {
-          avatar_url: string | null
-          billing_address: Json | null
-          created_at: string | null
-          full_name: string | null
-          id: string
-          ip_address: string | null
-          payment_method: Json | null
-        }
+          avatar_url: string | null;
+          billing_address: Json | null;
+          created_at: string | null;
+          full_name: string | null;
+          id: string;
+          ip_address: string | null;
+          payment_method: Json | null;
+        };
         Insert: {
-          avatar_url?: string | null
-          billing_address?: Json | null
-          created_at?: string | null
-          full_name?: string | null
-          id: string
-          ip_address?: string | null
-          payment_method?: Json | null
-        }
+          avatar_url?: string | null;
+          billing_address?: Json | null;
+          created_at?: string | null;
+          full_name?: string | null;
+          id: string;
+          ip_address?: string | null;
+          payment_method?: Json | null;
+        };
         Update: {
-          avatar_url?: string | null
-          billing_address?: Json | null
-          created_at?: string | null
-          full_name?: string | null
-          id?: string
-          ip_address?: string | null
-          payment_method?: Json | null
-        }
-        Relationships: []
-      }
-    }
+          avatar_url?: string | null;
+          billing_address?: Json | null;
+          created_at?: string | null;
+          full_name?: string | null;
+          id?: string;
+          ip_address?: string | null;
+          payment_method?: Json | null;
+        };
+        Relationships: [];
+      };
+    };
     Views: {
       messages_view: {
         Row: {
-          chat_id: string | null
-          content: string | null
-          created_at: string | null
-          email: string | null
-          full_name: string | null
-          id: number | null
-          input_tokens_column: number | null
-          is_built: boolean | null
-          output_tokens_column: number | null
-          prompt_image: string | null
-          role: string | null
-          screenshot: string | null
-          subscription_count: number | null
-          subscription_type: string | null
-          theme: string | null
-          version: number | null
-        }
+          chat_id: string | null;
+          content: string | null;
+          created_at: string | null;
+          email: string | null;
+          full_name: string | null;
+          id: number | null;
+          input_tokens_column: number | null;
+          is_built: boolean | null;
+          output_tokens_column: number | null;
+          prompt_image: string | null;
+          role: string | null;
+          screenshot: string | null;
+          subscription_count: number | null;
+          subscription_type: string | null;
+          theme: string | null;
+          version: number | null;
+        };
         Relationships: [
           {
-            foreignKeyName: "messages_chat_id_fkey"
-            columns: ["chat_id"]
-            isOneToOne: false
-            referencedRelation: "chats"
-            referencedColumns: ["id"]
+            foreignKeyName: "messages_chat_id_fkey";
+            columns: ["chat_id"];
+            isOneToOne: false;
+            referencedRelation: "chats";
+            referencedColumns: ["id"];
           },
-        ]
-      }
-    }
+        ];
+      };
+    };
     Functions: {
       get_all_components: {
-        Args: Record<PropertyKey, never>
+        Args: Record<PropertyKey, never>;
         Returns: {
-          chat_id: string
-          user_id: string
-          user_full_name: string
-          user_avatar_url: string
-          is_featured: boolean
-          is_private: boolean
-          created_at: string
-          slug: string
-          first_user_message: string
-          last_assistant_message: string
-          last_assistant_message_theme: string
-          framework: string
-        }[]
-      }
+          chat_id: string;
+          user_id: string;
+          user_full_name: string;
+          user_avatar_url: string;
+          is_featured: boolean;
+          is_private: boolean;
+          created_at: string;
+          slug: string;
+          first_user_message: string;
+          last_assistant_message: string;
+          last_assistant_message_theme: string;
+          framework: string;
+        }[];
+      };
       get_components: {
-        Args: Record<PropertyKey, never>
+        Args: Record<PropertyKey, never>;
         Returns: {
-          chat_id: string
-          user_id: string
-          user_full_name: string
-          user_avatar_url: string
-          is_featured: boolean
-          is_private: boolean
-          created_at: string
-          slug: string
-          title: string
-          likes: number
-          first_user_message: string
-          last_assistant_message: string
-          last_assistant_message_theme: string
-          framework: string
-        }[]
-      }
+          chat_id: string;
+          user_id: string;
+          user_full_name: string;
+          user_avatar_url: string;
+          is_featured: boolean;
+          is_private: boolean;
+          created_at: string;
+          slug: string;
+          title: string;
+          likes: number;
+          first_user_message: string;
+          last_assistant_message: string;
+          last_assistant_message_theme: string;
+          framework: string;
+          remix_chat_id: string;
+          views: number;
+          clone_url: string;
+        }[];
+      };
       get_components_with_theme_and_slug: {
-        Args: Record<PropertyKey, never>
+        Args: Record<PropertyKey, never>;
         Returns: {
-          chat_id: string
-          user_id: string
-          user_full_name: string
-          user_avatar_url: string
-          is_featured: boolean
-          is_private: boolean
-          created_at: string
-          slug: string
-          first_user_message: string
-          last_assistant_message: string
-          last_assistant_message_theme: string
-        }[]
-      }
+          chat_id: string;
+          user_id: string;
+          user_full_name: string;
+          user_avatar_url: string;
+          is_featured: boolean;
+          is_private: boolean;
+          created_at: string;
+          slug: string;
+          first_user_message: string;
+          last_assistant_message: string;
+          last_assistant_message_theme: string;
+        }[];
+      };
       get_components2: {
-        Args: Record<PropertyKey, never>
+        Args: Record<PropertyKey, never>;
         Returns: {
-          chat_id: string
-          user_id: string
-          user_full_name: string
-          user_avatar_url: string
-          is_featured: boolean
-          is_private: boolean
-          created_at: string
-          slug: string
-          title: string
-          likes: number
-          first_user_message: string
-          last_assistant_message: string
-          last_assistant_message_theme: string
-          framework: string
-          remix_chat_id: string
-        }[]
-      }
+          chat_id: string;
+          user_id: string;
+          user_full_name: string;
+          user_avatar_url: string;
+          is_featured: boolean;
+          is_private: boolean;
+          created_at: string;
+          slug: string;
+          title: string;
+          likes: number;
+          first_user_message: string;
+          last_assistant_message: string;
+          last_assistant_message_theme: string;
+          framework: string;
+          remix_chat_id: string;
+        }[];
+      };
       get_components3: {
-        Args: Record<PropertyKey, never>
+        Args: Record<PropertyKey, never>;
         Returns: {
-          chat_id: string
-          user_id: string
-          user_full_name: string
-          user_avatar_url: string
-          is_featured: boolean
-          is_private: boolean
-          created_at: string
-          slug: string
-          title: string
-          likes: number
-          first_user_message: string
-          last_assistant_message: string
-          last_assistant_message_theme: string
-          framework: string
-          remix_chat_id: string
-        }[]
-      }
+          chat_id: string;
+          user_id: string;
+          user_full_name: string;
+          user_avatar_url: string;
+          is_featured: boolean;
+          is_private: boolean;
+          created_at: string;
+          slug: string;
+          title: string;
+          likes: number;
+          first_user_message: string;
+          last_assistant_message: string;
+          last_assistant_message_theme: string;
+          framework: string;
+          remix_chat_id: string;
+        }[];
+      };
       get_components4: {
-        Args: Record<PropertyKey, never>
+        Args: Record<PropertyKey, never>;
         Returns: {
-          chat_id: string
-          user_id: string
-          user_full_name: string
-          user_avatar_url: string
-          is_featured: boolean
-          is_private: boolean
-          created_at: string
-          slug: string
-          title: string
-          likes: number
-          first_user_message: string
-          last_assistant_message: string
-          last_assistant_message_theme: string
-          framework: string
-          remix_chat_id: string
-          views: number
-        }[]
-      }
+          chat_id: string;
+          user_id: string;
+          user_full_name: string;
+          user_avatar_url: string;
+          is_featured: boolean;
+          is_private: boolean;
+          created_at: string;
+          slug: string;
+          title: string;
+          likes: number;
+          first_user_message: string;
+          last_assistant_message: string;
+          last_assistant_message_theme: string;
+          framework: string;
+          remix_chat_id: string;
+          views: number;
+        }[];
+      };
       get_median_message_cost: {
-        Args: Record<PropertyKey, never>
+        Args: Record<PropertyKey, never>;
         Returns: {
-          month: string
-          processing_engine: string
-          message_count: number
-          average_cost: string
-          median_cost: string
-        }[]
-      }
-    }
+          month: string;
+          processing_engine: string;
+          message_count: number;
+          average_cost: string;
+          median_cost: string;
+        }[];
+      };
+    };
     Enums: {
-      pricing_plan_interval: "day" | "week" | "month" | "year"
-      pricing_type: "one_time" | "recurring"
+      pricing_plan_interval: "day" | "week" | "month" | "year";
+      pricing_type: "one_time" | "recurring";
       subscription_status:
         | "trialing"
         | "active"
@@ -653,15 +660,15 @@ export type Database = {
         | "incomplete_expired"
         | "past_due"
         | "unpaid"
-        | "paused"
-    }
+        | "paused";
+    };
     CompositeTypes: {
-      [_ in never]: never
-    }
-  }
-}
+      [_ in never]: never;
+    };
+  };
+};
 
-type PublicSchema = Database[Extract<keyof Database, "public">]
+type PublicSchema = Database[Extract<keyof Database, "public">];
 
 export type Tables<
   PublicTableNameOrOptions extends
@@ -674,7 +681,7 @@ export type Tables<
 > = PublicTableNameOrOptions extends { schema: keyof Database }
   ? (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
       Database[PublicTableNameOrOptions["schema"]]["Views"])[TableName] extends {
-      Row: infer R
+      Row: infer R;
     }
     ? R
     : never
@@ -682,11 +689,11 @@ export type Tables<
         PublicSchema["Views"])
     ? (PublicSchema["Tables"] &
         PublicSchema["Views"])[PublicTableNameOrOptions] extends {
-        Row: infer R
+        Row: infer R;
       }
       ? R
       : never
-    : never
+    : never;
 
 export type TablesInsert<
   PublicTableNameOrOptions extends
@@ -697,17 +704,17 @@ export type TablesInsert<
     : never = never,
 > = PublicTableNameOrOptions extends { schema: keyof Database }
   ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Insert: infer I
+      Insert: infer I;
     }
     ? I
     : never
   : PublicTableNameOrOptions extends keyof PublicSchema["Tables"]
     ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
-        Insert: infer I
+        Insert: infer I;
       }
       ? I
       : never
-    : never
+    : never;
 
 export type TablesUpdate<
   PublicTableNameOrOptions extends
@@ -718,17 +725,17 @@ export type TablesUpdate<
     : never = never,
 > = PublicTableNameOrOptions extends { schema: keyof Database }
   ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Update: infer U
+      Update: infer U;
     }
     ? U
     : never
   : PublicTableNameOrOptions extends keyof PublicSchema["Tables"]
     ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
-        Update: infer U
+        Update: infer U;
       }
       ? U
       : never
-    : never
+    : never;
 
 export type Enums<
   PublicEnumNameOrOptions extends
@@ -741,14 +748,14 @@ export type Enums<
   ? Database[PublicEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : PublicEnumNameOrOptions extends keyof PublicSchema["Enums"]
     ? PublicSchema["Enums"][PublicEnumNameOrOptions]
-    : never
+    : never;
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof PublicSchema["CompositeTypes"]
     | { schema: keyof Database },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof Database;
   }
     ? keyof Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
     : never = never,
@@ -756,4 +763,4 @@ export type CompositeTypes<
   ? Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof PublicSchema["CompositeTypes"]
     ? PublicSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
-    : never
+    : never;

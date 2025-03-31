@@ -15,6 +15,19 @@ export async function cloneWebsite(url: string, fullPage?: boolean) {
     // Lancer l'opération de scraping
     const websiteData = await scrapeWebsite(url, { fullPage });
 
+    // Vérifie si le scraping a rencontré des problèmes d'anti-bot
+    if (
+      websiteData.description?.includes("Failed to fetch website content") ||
+      websiteData.html?.includes("cf-browser-verification") ||
+      websiteData.html?.includes("cf-challenge-running")
+    ) {
+      return {
+        success: false,
+        error:
+          "Anti-bot protection detected. The website is using Cloudflare or similar technology to block scraping. Try using a different URL or a simpler page.",
+      };
+    }
+
     // Retourner les données pour l'IA
     return {
       success: true,

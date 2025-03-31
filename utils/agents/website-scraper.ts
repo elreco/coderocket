@@ -69,51 +69,89 @@ interface WebsiteContent {
  */
 async function fetchWebsiteContent(url: string): Promise<WebsiteContent> {
   try {
-    const response = await fetch(url);
-    const html = await response.text();
+    // Use a more browser-like request with headers that may help bypass some protections
+    const response = await fetch(url, {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
+        Accept:
+          "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Cache-Control": "no-cache",
+        Pragma: "no-cache",
+        "sec-ch-ua": '"Not.A/Brand";v="8", "Chromium";v="123"',
+        "sec-ch-ua-mobile": "?0",
+        "sec-ch-ua-platform": '"Windows"',
+        "Sec-Fetch-Dest": "document",
+        "Sec-Fetch-Mode": "navigate",
+        "Sec-Fetch-Site": "none",
+        "Sec-Fetch-User": "?1",
+        "Upgrade-Insecure-Requests": "1",
+      },
+      redirect: "follow",
+    });
 
-    // Create a DOM from HTML content
-    const dom = new JSDOM(html);
-    const document = dom.window.document;
+    // If we got a successful response
+    if (response.ok) {
+      const html = await response.text();
 
-    // Extract title
-    const title = document.querySelector("title")?.textContent || url;
+      // Create a DOM from HTML content
+      const dom = new JSDOM(html);
+      const document = dom.window.document;
 
-    // Extract description
-    const metaDescription = document.querySelector('meta[name="description"]');
-    const description = metaDescription?.getAttribute("content") || null;
+      // Extract title
+      const title = document.querySelector("title")?.textContent || url;
 
-    // Extract images with proper type casting
-    const imgElements = document.querySelectorAll("img");
-    const images = Array.from(imgElements)
-      .map((element) => {
-        const img = element as HTMLImageElement;
-        const src = img.getAttribute("src") || "";
-        // Handle relative URLs
-        const imageUrl = src.startsWith("http")
-          ? src
-          : new URL(src, url).toString();
-
-        return {
-          url: imageUrl,
-          alt: img.getAttribute("alt") || "",
-          dimensions: undefined,
-        };
-      })
-      .filter(
-        (img) =>
-          img.url &&
-          !img.url.startsWith("data:") &&
-          !img.url.includes("placeholder"),
+      // Extract description
+      const metaDescription = document.querySelector(
+        'meta[name="description"]',
       );
+      const description = metaDescription?.getAttribute("content") || null;
 
-    return {
-      html,
-      images,
-      title,
-      description,
-      url,
-    };
+      // Extract images with proper type casting
+      const imgElements = document.querySelectorAll("img");
+      const images = Array.from(imgElements)
+        .map((element) => {
+          const img = element as HTMLImageElement;
+          const src = img.getAttribute("src") || "";
+          // Handle relative URLs
+          const imageUrl = src.startsWith("http")
+            ? src
+            : new URL(src, url).toString();
+
+          return {
+            url: imageUrl,
+            alt: img.getAttribute("alt") || "",
+            dimensions: undefined,
+          };
+        })
+        .filter(
+          (img) =>
+            img.url &&
+            !img.url.startsWith("data:") &&
+            !img.url.includes("placeholder"),
+        );
+
+      return {
+        html,
+        images,
+        title,
+        description,
+        url,
+      };
+    } else {
+      // Handle case where response is not OK
+      console.warn(
+        `Failed to fetch ${url}: ${response.status} ${response.statusText}`,
+      );
+      return {
+        html: "",
+        images: [],
+        title: url,
+        description: `Failed to fetch website content: ${response.status} ${response.statusText}`,
+        url,
+      };
+    }
   } catch (error) {
     console.error("Error in fetch fallback:", error);
     return {
@@ -550,7 +588,14 @@ export async function scrapeWebsite(
 
   // Setup browser launch options
   const browserOptions = {
-    args: [...chromium.args, "--no-sandbox", "--disable-setuid-sandbox"],
+    args: [
+      ...chromium.args,
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-web-security",
+      "--disable-features=IsolateOrigins,site-per-process",
+      "--disable-blink-features=AutomationControlled",
+    ],
     defaultViewport: chromium.defaultViewport,
     executablePath,
     headless: true,
@@ -564,14 +609,94 @@ export async function scrapeWebsite(
 
     const page = await browser.newPage();
 
+    // Set a common user agent to appear more like a regular browser
+    await page.setUserAgent(
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
+    );
+
     // Set a reasonable viewport
     await page.setViewport({ width: 1280, height: 800 });
+
+    // Set extra headers to appear more like a real browser
+    await page.setExtraHTTPHeaders({
+      "Accept-Language": "en-US,en;q=0.9",
+      Accept:
+        "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+      "sec-ch-ua": '"Not.A/Brand";v="8", "Chromium";v="123"',
+      "sec-ch-ua-mobile": "?0",
+      "sec-ch-ua-platform": '"Windows"',
+    });
+
+    // Mask WebDriver usage
+    await page.evaluateOnNewDocument(() => {
+      // Hide webdriver and automation indicators
+      Object.defineProperty(navigator, "webdriver", { get: () => false });
+
+      // Delete navigator.plugins
+      if (navigator.plugins) {
+        Object.defineProperty(navigator, "plugins", {
+          get: () => [
+            {
+              0: { type: "application/x-google-chrome-pdf" },
+              description: "Portable Document Format",
+              filename: "internal-pdf-viewer",
+              name: "Chrome PDF Viewer",
+              length: 1,
+            },
+          ],
+        });
+      }
+
+      // Add some common Chrome functions to appear more like a real Chrome browser
+      window.chrome = {
+        runtime: {},
+      };
+
+      // Overwrite the permissions API if present
+      if (navigator.permissions) {
+        navigator.permissions.query = (parameters) =>
+          Promise.resolve({
+            state: parameters.name === "notifications" ? "prompt" : "granted",
+            name: parameters.name,
+            onchange: null,
+            addEventListener: function () {},
+            removeEventListener: function () {},
+            dispatchEvent: function () {
+              return true;
+            },
+          } as PermissionStatus);
+      }
+    });
 
     // Set timeout for navigation
     await page.setDefaultNavigationTimeout(30000);
 
-    // Navigate to the URL
-    await page.goto(url, { waitUntil: "networkidle2" });
+    // Navigate to the URL with extra options to avoid detection
+    await page.goto(url, {
+      waitUntil: "networkidle2",
+      timeout: 30000,
+    });
+
+    // Check if the page contains common Cloudflare challenge elements
+    const isChallengePresent = await page.evaluate(() => {
+      return (
+        document.querySelector(
+          "#cf-challenge-running, .cf-browser-verification, .cf-error-code",
+        ) !== null
+      );
+    });
+
+    // If a Cloudflare challenge is detected, try waiting a bit longer
+    if (isChallengePresent) {
+      console.log("Cloudflare challenge detected. Waiting to solve...");
+      // Wait for up to 15 seconds to see if the challenge resolves
+      await page
+        .waitForNavigation({
+          waitUntil: "networkidle2",
+          timeout: 15000,
+        })
+        .catch(() => console.log("Challenge timeout exceeded"));
+    }
 
     // Get page title and description
     const title = await page.title();
@@ -766,6 +891,20 @@ export async function scrapeWebsite(
     };
   } catch (error) {
     console.error("Error during Puppeteer website scraping:", error);
+
+    // Check if the error message indicates Cloudflare or anti-bot protection
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    if (
+      errorMsg.includes("cloudflare") ||
+      errorMsg.includes("challenge") ||
+      errorMsg.includes("captcha") ||
+      errorMsg.includes("403") ||
+      errorMsg.includes("blocked")
+    ) {
+      console.log(
+        "Likely encountered anti-bot protection. Trying fallback method...",
+      );
+    }
 
     // Try fallback method
     console.log("Attempting fallback fetch method...");
