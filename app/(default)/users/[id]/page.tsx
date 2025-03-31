@@ -112,7 +112,7 @@ export default async function UserPage({
                         />
                       </AvatarFallback>
                     </Avatar>
-                    <div className="text-center">
+                    <div className="flex flex-col items-center">
                       <h5 className="mb-1 text-base font-semibold lg:text-lg">
                         {user.full_name}
                       </h5>
