@@ -12,6 +12,7 @@ import {
 import { builderApiUrl, Framework } from "@/utils/config";
 import { promptEnhancer } from "@/utils/prompt-enhancer";
 import { createClient } from "@/utils/supabase/server";
+import { tweetComponent } from "@/utils/twitter-service";
 
 import {
   fetchAssistantMessageByChatIdAndVersion,
@@ -240,6 +241,7 @@ export const buildComponent = async (
     if (responseData.errors) {
       throw new Error(responseData.errors);
     }
+
     // update the message with the build status
     const supabase = await createClient();
     await supabase
@@ -249,12 +251,15 @@ export const buildComponent = async (
       .eq("role", "assistant")
       .eq("version", version);
 
-    await takeScreenshot(
+    // Take screenshot and get the URL
+    const screenshotUrl = await takeScreenshot(
       chatId,
       version,
       undefined,
       chat.framework || Framework.REACT,
     );
+
+    await tweetComponent(chatId, version, screenshotUrl);
   } catch (error) {
     console.error("API error:", error);
   }

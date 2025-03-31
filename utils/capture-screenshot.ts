@@ -26,40 +26,46 @@ async function getBrowser() {
 
 export async function captureScreenshot(url: string) {
   // Lance un navigateur headless
-  const browser = await getBrowser();
-  const page = await browser.newPage();
-  // Configure la taille de la fenêtre
-  await page.setViewport({
-    width: 1200,
-    height: 630,
-    deviceScaleFactor: 1,
-  });
+  try {
+    const browser = await getBrowser();
+    const page = await browser.newPage();
+    // Configure la taille de la fenêtre
+    await page.setViewport({
+      width: 1200,
+      height: 630,
+      deviceScaleFactor: 1,
+    });
 
-  // Ou bien lors du goto :
-  await page.goto(url, {
-    waitUntil: "networkidle0",
-  });
-  await new Promise((resolve) => setTimeout(resolve, 5000));
-  // Prend la capture d'écran au format PNG (renvoie un Buffer)
-  const screenshot = await page.screenshot({
-    type: "png",
-  });
+    // Ou bien lors du goto :
+    await page.goto(url, {
+      waitUntil: "networkidle0",
+    });
+    await new Promise((resolve) => setTimeout(resolve, 5000));
+    // Prend la capture d'écran au format PNG (renvoie un Buffer)
+    const screenshot = await page.screenshot({
+      type: "png",
+    });
 
-  await browser.close();
-  return screenshot;
+    await browser.close();
+    return screenshot;
+  } catch (error) {
+    console.error("Failed to capture screenshot", error);
+    return undefined;
+  }
 }
 
 /**
  * Vérifie en base si on a déjà un screenshot pour (chatId, version).
  * Si oui, on ne fait rien.
  * Sinon, on appelle `captureScreenshot` pour générer l'image et la stocke dans Supabase.
+ * @returns The public URL of the screenshot, or undefined if no screenshot was created or found
  */
 export const takeScreenshot = async (
   chatId: string,
   version: number,
   theme: string = defaultTheme,
   framework: string,
-) => {
+): Promise<string | undefined> => {
   const supabase = await createClient();
   // Si framework n'est pas html, on vérifie d'abord si un screenshot existe déjà
   if (framework !== Framework.HTML) {
@@ -73,7 +79,7 @@ export const takeScreenshot = async (
 
     if (existingMessage?.screenshot) {
       console.log("Screenshot already exists, skipping capture");
-      return;
+      return existingMessage.screenshot;
     }
   }
 
@@ -86,7 +92,7 @@ export const takeScreenshot = async (
 
   const screenshot = await captureScreenshot(finalUrl);
   if (!screenshot) {
-    throw new Error("Failed to capture screenshot");
+    return undefined;
   }
   // On stocke l'image dans le bucket "chat-images" de Supabase
   const uploadPath = `${chatId}/${version}-${theme}`;
@@ -121,7 +127,8 @@ export const takeScreenshot = async (
   );
 
   if (!findAssistantMessage) {
-    return console.error("Could not find assistant message");
+    console.error("Could not find assistant message");
+    return publicUrl;
   }
 
   // On met à jour la colonne "screenshot" pour ce message
@@ -131,4 +138,5 @@ export const takeScreenshot = async (
     .eq("id", findAssistantMessage.id);
 
   console.log("Screenshot captured and stored successfully:", publicUrl);
+  return publicUrl;
 };
