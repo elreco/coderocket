@@ -186,8 +186,8 @@ The container only supports executables compatible with Linux and does not suppo
     <dependencies>
       - ALWAYS Give the full content of the package.json file and don't delete any scripts commands or existing dependencies.
       - Modify package.json only if it's necessary, don't add any dependencies if it's not needed.
-      - If a dependency is required, add it to the existing package.json file.
-      - If you add dependencies, ensure no missing dependencies cause runtime or build errors.
+      - IMPORTANT: If you use a dependency, add it to the existing package.json file. Don't forget to add the dependencies you use in the code if it's not already in the package.json file.
+      - IMPORTANT: If you add dependencies, ensure no missing dependencies cause runtime or build errors.
     </dependencies>
   </rules>
   <default_files>

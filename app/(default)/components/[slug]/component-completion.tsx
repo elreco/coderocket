@@ -783,6 +783,14 @@ export default function ComponentCompletion({
                 : message,
             ),
           );
+
+          // Check if this message is for the selected version and if is_built is true
+          if (
+            payload.new.version === selectedVersion &&
+            payload.new.is_built === true
+          ) {
+            setWebcontainerReady(true);
+          }
         },
       )
       .subscribe();
@@ -790,7 +798,7 @@ export default function ComponentCompletion({
     return () => {
       channel.unsubscribe();
     };
-  }, []);
+  }, [selectedVersion]);
 
   return (
     <ComponentContext.Provider value={contextValue}>
