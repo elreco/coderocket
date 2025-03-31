@@ -1018,7 +1018,20 @@ export default function ComponentCompletion({
                     ) : (
                       <div className="invisible"></div>
                     )}
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center justify-center gap-2">
+                      {fetchedChat?.clone_url && (
+                        <a
+                          href={fetchedChat.clone_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block truncate text-xs text-blue-500 hover:text-blue-600 hover:underline"
+                          title={fetchedChat.clone_url}
+                        >
+                          {fetchedChat.clone_url
+                            .replace(/^https?:\/\/(www\.)?/i, "")
+                            .replace(/\/$/, "")}
+                        </a>
+                      )}
                       <Badge className="hover:bg-primary">
                         <FrameworkIcon className="mr-1 size-3" />
                         <span className="first-letter:uppercase">

@@ -68,6 +68,19 @@ export function ComponentCard({ chat, isReverse }: ComponentCardProps) {
             <span className="text-muted-foreground/60">•</span>
             <span>{getRelativeDate(chat.created_at)}</span>
           </div>
+          {chat.clone_url && (
+            <a
+              href={chat.clone_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-1 block truncate text-xs text-blue-500 hover:text-blue-600 hover:underline"
+              title={chat.clone_url}
+            >
+              {chat.clone_url
+                .replace(/^https?:\/\/(www\.)?/i, "")
+                .replace(/\/$/, "")}
+            </a>
+          )}
         </div>
 
         {/* Framework Badge and Stats */}

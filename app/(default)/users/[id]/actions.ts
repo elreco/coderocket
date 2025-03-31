@@ -58,7 +58,7 @@ export const getLatestComponentsByUserId = async (
     const { data: userData } = await supabase.auth.getUser();
     const user = userData.user;
 
-    let query = supabase.rpc("get_components3");
+    let query = supabase.rpc("get_components");
     // 🔒 Sécuriser la requête de recherche
     if (searchQuery) {
       const sanitizedQuery = searchQuery.trim().slice(0, MAX_SEARCH_LENGTH);
