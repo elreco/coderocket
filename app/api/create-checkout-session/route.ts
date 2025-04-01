@@ -63,7 +63,7 @@ export async function POST(req: Request) {
           ],
           mode: "payment",
           allow_promotion_codes: true,
-          success_url: `https://www.tailwindai.dev/account`,
+          success_url: `https://www.tailwindai.dev/account?payment-success`,
           cancel_url: `https://www.tailwindai.dev/`,
         });
       }
