@@ -549,12 +549,43 @@ export async function scrapeWebsite(url: string): Promise<WebsiteContent> {
       return [...videoData, ...youtubeFrames];
     });
 
-    const screenshot = (await page.screenshot({
-      fullPage: false,
-      encoding: "base64",
-      type: "jpeg",
-      quality: 60,
-    })) as string;
+    // Measure page height and determine if scaling is needed
+    const measurements = await page.evaluate(() => {
+      const pageHeight = document.documentElement.scrollHeight;
+      const pageWidth = document.documentElement.scrollWidth;
+      return { pageHeight, pageWidth };
+    });
+
+    // Anthropic limit is 8000px, use 7500px as a safe limit
+    const maxHeight = 7500;
+    let screenshot;
+
+    if (measurements.pageHeight <= maxHeight) {
+      // For reasonable height pages, capture full page
+      screenshot = await page.screenshot({
+        fullPage: true,
+        encoding: "base64",
+        type: "jpeg",
+        quality: 80,
+      });
+    } else {
+      // For very tall pages, scale down the page
+      const scaleFactor = maxHeight / measurements.pageHeight;
+
+      // First capture the full content with proper aspect ratio
+      await page.setViewport({
+        width: Math.min(measurements.pageWidth, 1280),
+        height: Math.floor(maxHeight),
+        deviceScaleFactor: scaleFactor,
+      });
+
+      screenshot = await page.screenshot({
+        fullPage: true,
+        encoding: "base64",
+        type: "jpeg",
+        quality: 75,
+      });
+    }
 
     const structure = await extractSiteStructure(page);
     const metaTags = await extractMetaTags(page);
