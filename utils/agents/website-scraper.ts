@@ -37,6 +37,52 @@ interface WebsiteContent {
     colors?: Array<string>;
     fonts?: Array<string>;
   };
+  htmlStructure?: {
+    headTags: {
+      title: string;
+      favicons: string[];
+      stylesheets: string[];
+      scripts: string[];
+      charset: string;
+      viewportMeta: string | null;
+    };
+    bodyStructure: {
+      classes: string;
+      id: string;
+      attributes: Array<{ name: string; value: string }>;
+      childrenCount: number;
+    };
+    semanticElements: Record<
+      string,
+      {
+        count: number;
+        details: Array<{
+          id: string;
+          classes: string;
+          childElementCount: number;
+          textContent: string;
+        }>;
+      }
+    >;
+    domStats: {
+      totalElements: number;
+      divCount: number;
+      spanCount: number;
+      paragraphCount: number;
+      imageCount: number;
+      linkCount: number;
+      buttonCount: number;
+      formCount: number;
+      tableCount: number;
+      listCount: number;
+    };
+    mainContentHtml: string;
+    significantElements: Array<{
+      selector: string;
+      count: number;
+      sample: string;
+    }>;
+  };
 }
 
 async function fetchWebsiteContent(url: string): Promise<WebsiteContent> {
@@ -266,6 +312,146 @@ async function extractMetaTags(page: Page): Promise<Record<string, string>> {
   });
 }
 
+async function extractDetailedHtmlStructure(
+  page: Page,
+): Promise<WebsiteContent["htmlStructure"]> {
+  return await page.evaluate(() => {
+    // Extract semantic structure information
+    const htmlStructure: WebsiteContent["htmlStructure"] = {
+      headTags: {
+        title: document.title,
+        favicons: Array.from(document.querySelectorAll('link[rel*="icon"]'))
+          .map((el) => el.getAttribute("href") || "")
+          .filter((href) => href !== ""),
+        stylesheets: Array.from(
+          document.querySelectorAll('link[rel="stylesheet"]'),
+        )
+          .map((el) => el.getAttribute("href") || "")
+          .filter((href) => href !== ""),
+        scripts: Array.from(document.querySelectorAll("script[src]"))
+          .map((el) => el.getAttribute("src") || "")
+          .filter((src) => src !== ""),
+        charset: document.characterSet,
+        viewportMeta:
+          document
+            .querySelector('meta[name="viewport"]')
+            ?.getAttribute("content") || null,
+      },
+      bodyStructure: {
+        classes: document.body.className,
+        id: document.body.id,
+        attributes: Array.from(document.body.attributes).map((attr) => ({
+          name: attr.name,
+          value: attr.value,
+        })),
+        childrenCount: document.body.children.length,
+      },
+      semanticElements: {} as Record<
+        string,
+        {
+          count: number;
+          details: Array<{
+            id: string;
+            classes: string;
+            childElementCount: number;
+            textContent: string;
+          }>;
+        }
+      >,
+      domStats: {
+        totalElements: document.querySelectorAll("*").length,
+        divCount: document.querySelectorAll("div").length,
+        spanCount: document.querySelectorAll("span").length,
+        paragraphCount: document.querySelectorAll("p").length,
+        imageCount: document.querySelectorAll("img").length,
+        linkCount: document.querySelectorAll("a").length,
+        buttonCount: document.querySelectorAll("button").length,
+        formCount: document.querySelectorAll("form").length,
+        tableCount: document.querySelectorAll("table").length,
+        listCount: document.querySelectorAll("ul, ol").length,
+      },
+      mainContentHtml: "",
+      significantElements: [],
+    };
+
+    // Extract semantic elements
+    const semanticTags = [
+      "header",
+      "nav",
+      "main",
+      "article",
+      "section",
+      "aside",
+      "footer",
+    ];
+    semanticTags.forEach((tag) => {
+      const elements = document.querySelectorAll(tag);
+      htmlStructure.semanticElements[tag] = {
+        count: elements.length,
+        details: Array.from(elements)
+          .slice(0, 2)
+          .map((el) => ({
+            id: (el as HTMLElement).id,
+            classes: (el as HTMLElement).className,
+            childElementCount: el.childElementCount,
+            textContent:
+              (el as HTMLElement).textContent?.substring(0, 100).trim() || "",
+          })),
+      };
+    });
+
+    // Extract main content HTML (limited)
+    const mainElement =
+      document.querySelector("main") ||
+      document.querySelector("article") ||
+      document.querySelector(".content") ||
+      document.querySelector("#content");
+    if (mainElement) {
+      // Clone to avoid modifying actual DOM
+      const mainClone = mainElement.cloneNode(true) as HTMLElement;
+
+      // Remove scripts and large inline styles to reduce size
+      mainClone.querySelectorAll("script").forEach((el) => el.remove());
+      Array.from(mainClone.querySelectorAll("*")).forEach((el) => {
+        if (
+          (el as HTMLElement).style &&
+          (el as HTMLElement).style.cssText.length > 100
+        ) {
+          (el as HTMLElement).style.cssText = "";
+        }
+      });
+
+      // Get a sample of the HTML (up to ~10KB)
+      htmlStructure.mainContentHtml = mainClone.outerHTML.substring(0, 10000);
+    }
+
+    // Identify significant elements (forms, cards, galleries, etc.)
+    const significantSelectors = [
+      "form",
+      '.card, .cards, [class*="card-"], [class*="cards-"]',
+      '.gallery, [class*="gallery-"], [class*="slider-"], .carousel',
+      '.hero, .banner, .jumbotron, [class*="hero-"]',
+      "table",
+    ];
+
+    significantSelectors.forEach((selector) => {
+      const elements = document.querySelectorAll(selector);
+      if (elements.length > 0) {
+        htmlStructure.significantElements.push({
+          selector,
+          count: elements.length,
+          sample:
+            elements.length > 0
+              ? (elements[0] as HTMLElement).outerHTML.substring(0, 500)
+              : "",
+        });
+      }
+    });
+
+    return htmlStructure;
+  });
+}
+
 export async function scrapeWebsite(url: string): Promise<WebsiteContent> {
   try {
     const browser = await getBrowser();
@@ -293,6 +479,7 @@ export async function scrapeWebsite(url: string): Promise<WebsiteContent> {
     });
 
     const html = await page.content();
+    const detailedHtmlStructure = await extractDetailedHtmlStructure(page);
 
     const images = await page.evaluate(() => {
       const imgElements = Array.from(document.querySelectorAll("img"));
@@ -376,6 +563,7 @@ export async function scrapeWebsite(url: string): Promise<WebsiteContent> {
 
     return {
       html,
+      htmlStructure: detailedHtmlStructure,
       images,
       videos,
       title,

@@ -5,6 +5,52 @@ import { scrapeWebsite } from "@/utils/agents/website-scraper";
 // Interface pour les données provenant de website-scraper
 interface WebsiteContent {
   html: string;
+  htmlStructure?: {
+    headTags: {
+      title: string;
+      favicons: string[];
+      stylesheets: string[];
+      scripts: string[];
+      charset: string;
+      viewportMeta: string | null;
+    };
+    bodyStructure: {
+      classes: string;
+      id: string;
+      attributes: Array<{ name: string; value: string }>;
+      childrenCount: number;
+    };
+    semanticElements: Record<
+      string,
+      {
+        count: number;
+        details: Array<{
+          id: string;
+          classes: string;
+          childElementCount: number;
+          textContent: string;
+        }>;
+      }
+    >;
+    domStats: {
+      totalElements: number;
+      divCount: number;
+      spanCount: number;
+      paragraphCount: number;
+      imageCount: number;
+      linkCount: number;
+      buttonCount: number;
+      formCount: number;
+      tableCount: number;
+      listCount: number;
+    };
+    mainContentHtml: string;
+    significantElements: Array<{
+      selector: string;
+      count: number;
+      sample: string;
+    }>;
+  };
   images: Array<{
     url: string;
     alt: string;
@@ -224,6 +270,7 @@ function formatWebsiteData(websiteData: WebsiteContent) {
 
     // Contenu visuel avec optimisation
     html: websiteData.html,
+    htmlStructure: websiteData.htmlStructure || {},
     screenshot: websiteData.screenshot,
     sectionScreenshots: websiteData.sectionScreenshots,
 

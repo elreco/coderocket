@@ -221,7 +221,7 @@ const validateRequest = async (
 
   if (chat.clone_url && prompt?.includes("Clone this website:") && !aiPrompt) {
     try {
-      const cloneResult = await cloneWebsite(chat.clone_url, true);
+      const cloneResult = await cloneWebsite(chat.clone_url);
 
       if (cloneResult.success && cloneResult.data) {
         // Construire un prompt détaillé avec les informations du site
@@ -239,6 +239,9 @@ ${JSON.stringify(cloneResult.data.structure.layout?.responsiveDetails || {})}
 
 SECTIONS:
 ${JSON.stringify(cloneResult.data.structure.sections?.slice(0, 5) || [])}
+
+## HTML STRUCTURE DETAILS
+HTML STRUCTURE: The website contains detailed HTML structure information including head tags, semantic elements, DOM statistics, and significant elements. This information has been extracted to help you better recreate the website.
 
 ## VISUAL DESIGN
 VISUAL PATTERNS:
