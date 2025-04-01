@@ -777,11 +777,13 @@ ${extractedFiles.map((file) => `<tailwindaiFile name="${file.name || "unnamed"}"
                     <p className="mb-1 text-xs font-semibold text-foreground">
                       Page Screenshot:
                     </p>
-                    <img
-                      src={`data:image/jpeg;base64,${scrapingStatus.screenshot}`}
-                      alt="Website screenshot"
-                      className="w-full rounded-lg  border border-border object-cover"
-                    />
+                    <div className="max-h-[300px] overflow-y-auto">
+                      <img
+                        src={`data:image/jpeg;base64,${scrapingStatus.screenshot}`}
+                        alt="Website screenshot"
+                        className="w-full rounded-lg  border border-border object-cover"
+                      />
+                    </div>
                   </div>
                 )}
 

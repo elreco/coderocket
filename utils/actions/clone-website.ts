@@ -202,7 +202,7 @@ export async function cloneWebsite(url: string) {
       return {
         success: false,
         error:
-          "Anti-bot protection detected. The site uses Cloudflare or similar technology to block scraping. Try a different URL or a simpler page.",
+          "Anti-bot protection detected. The site uses Cloudflare or similar technology to block scraping.",
       };
     }
 
