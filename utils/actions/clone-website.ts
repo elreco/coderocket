@@ -128,7 +128,7 @@ interface WebsiteContent {
  * Server Action qui clone un site web en récupérant son contenu via scraping
  * Optimisé pour une meilleure fidélité tout en simplifiant le processus
  */
-export async function cloneWebsite(url: string, fullPage?: boolean) {
+export async function cloneWebsite(url: string) {
   try {
     if (!url) {
       throw new Error("URL is required");
@@ -144,18 +144,8 @@ export async function cloneWebsite(url: string, fullPage?: boolean) {
       );
     });
 
-    // Options optimisées pour un meilleur équilibre performance/fidélité
-    const options = {
-      fullPage: fullPage ?? false,
-      fastMode: false, // Désactivé pour améliorer la fidélité
-      captureFullCSS: true, // Capture complète des styles CSS
-      waitForNetworkIdle: true, // Attente que le réseau soit inactif
-      extractInteractions: true, // Capture les éléments interactifs
-      captureVisualStyles: true, // Capture les styles visuels précis
-    };
-
     // Lancer l'opération de scraping avec le timeout de sécurité
-    const scraping = scrapeWebsite(url, options);
+    const scraping = scrapeWebsite(url);
     const websiteData = (await Promise.race([
       scraping,
       timeout,
@@ -166,7 +156,7 @@ export async function cloneWebsite(url: string, fullPage?: boolean) {
       return {
         success: false,
         error:
-          "Protection anti-bot détectée. Le site utilise Cloudflare ou une technologie similaire pour bloquer le scraping. Essayez une URL différente ou une page plus simple.",
+          "Anti-bot protection detected. The site uses Cloudflare or similar technology to block scraping. Try a different URL or a simpler page.",
       };
     }
 

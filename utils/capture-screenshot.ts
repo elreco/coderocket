@@ -11,13 +11,16 @@ import { createClient } from "./supabase/server";
  * @returns Buffer d'image PNG.
  */
 
-async function getBrowser() {
-  const executablePath = await chromium.executablePath();
-
+export async function getBrowser() {
+  const executablePath = await chromium.executablePath(
+    "/opt/homebrew/Caskroom/chromium/latest/chrome-mac/Chromium.app/Contents/MacOS/Chromium",
+  );
+  console.log(`Executable path: ${executablePath}`);
   const browser = await puppeteerCore.launch({
     args: [...chromium.args, "--disable-extensions"],
     defaultViewport: chromium.defaultViewport,
-    executablePath,
+    executablePath:
+      "/opt/homebrew/Caskroom/chromium/latest/chrome-mac/Chromium.app/Contents/MacOS/Chromium",
     headless: true,
     ignoreDefaultArgs: ["--disable-extensions"],
   });

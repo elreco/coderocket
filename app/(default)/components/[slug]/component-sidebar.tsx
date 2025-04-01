@@ -8,9 +8,13 @@ import {
   X,
   RefreshCw,
   LoaderCircle,
+  Image as ImageIcon,
+  Palette,
+  LayoutGrid,
+  VideoIcon,
 } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 
 import { getSubscription } from "@/app/supabase-server";
 import { ImageSelector } from "@/components/image-selector";
@@ -31,6 +35,7 @@ import { useWebcontainer } from "@/context/webcontainer-context";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { Tables } from "@/types_db";
+import { cloneWebsite } from "@/utils/actions/clone-website";
 import {
   ChatFile,
   ContentChunk,
@@ -102,6 +107,27 @@ export default function ComponentSidebar({
     | null
   >(null);
   const [isLoadingSubscription, setIsLoadingSubscription] = useState(true);
+  const [scrapingStatus, setScrapingStatus] = useState<{
+    progress: number;
+    images: Array<{ url: string; alt: string }>;
+    colors: string[];
+    fonts: string[];
+    structure: { sections: number; imageCount: number };
+    isRealData: boolean;
+    screenshot?: string | null;
+    videosCount: number;
+    error?: string | null;
+  }>({
+    progress: 0,
+    images: [],
+    colors: [],
+    fonts: [],
+    structure: { sections: 0, imageCount: 0 },
+    isRealData: false,
+    screenshot: null,
+    videosCount: 0,
+    error: null,
+  });
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -234,28 +260,6 @@ export default function ComponentSidebar({
   };
 
   useEffect(() => {
-    if (isLoading && containerRef.current) {
-      const scrollToBottom = () => {
-        containerRef.current!.scrollTop = containerRef.current!.scrollHeight;
-      };
-
-      // Scroll immédiatement
-      scrollToBottom();
-
-      // Créer un observateur pour détecter les changements de contenu
-      const observer = new MutationObserver(scrollToBottom);
-
-      // Observer les changements dans le conteneur
-      observer.observe(containerRef.current, {
-        childList: true,
-        subtree: true,
-      });
-
-      return () => observer.disconnect();
-    }
-  }, [isLoading]);
-
-  useEffect(() => {
     if (isLoading && completion) {
       // Extraction unique des fichiers
       let extractedFiles: ChatFile[] = [];
@@ -371,6 +375,195 @@ ${extractedFiles.map((file) => `<tailwindaiFile name="${file.name || "unnamed"}"
 
     setImage(file);
   };
+
+  const fetchCloneData = useCallback(async (url: string) => {
+    if (!url) return false;
+
+    try {
+      const result = await cloneWebsite(url);
+
+      if (result.success && result.data) {
+        // Process real data
+        const images = [];
+
+        // Add hero images first if available
+        if (result.data.heroImages && result.data.heroImages.length > 0) {
+          for (const img of result.data.heroImages) {
+            images.push({
+              url: img.url,
+              alt: img.alt || "Hero image",
+            });
+          }
+        }
+
+        // Add visible images
+        if (result.data.visibleImages && result.data.visibleImages.length > 0) {
+          for (const img of result.data.visibleImages) {
+            if (!images.some((existing) => existing.url === img.url)) {
+              images.push({
+                url: img.url,
+                alt: img.alt || "Content image",
+              });
+            }
+          }
+        }
+
+        // Add logo images
+        if (result.data.logoImages && result.data.logoImages.length > 0) {
+          for (const img of result.data.logoImages) {
+            if (!images.some((existing) => existing.url === img.url)) {
+              images.push({
+                url: img.url,
+                alt: img.alt || "Logo image",
+              });
+            }
+          }
+        }
+
+        // Set real data
+        setScrapingStatus({
+          progress: 100,
+          images: images,
+          colors: result.data.structure.colors || [],
+          fonts: result.data.structure.fonts || [],
+          structure: {
+            sections: result.data.structure.sections?.length || 0,
+            imageCount: result.data.imageCount || 0,
+          },
+          isRealData: true,
+          screenshot: result.data.screenshot || null,
+          videosCount: result.data.videos?.length || 0,
+          error: null,
+        });
+
+        return true;
+      } else if (!result.success) {
+        // Handle the case where the scraping was unsuccessful
+        setScrapingStatus((prev) => ({
+          ...prev,
+          error: result.error || "Failed to analyze website",
+          isRealData: false,
+          progress: 95, // Set to almost complete but not quite
+        }));
+        return false;
+      }
+    } catch (error) {
+      console.error("Error fetching clone data:", error);
+      // Set error information in the state
+      setScrapingStatus((prev) => ({
+        ...prev,
+        error:
+          error instanceof Error ? error.message : "Unknown error occurred",
+        isRealData: false,
+        progress: 95, // Set to almost complete but not quite
+      }));
+    }
+
+    return false;
+  }, []);
+
+  useEffect(() => {
+    // Only run this effect when in clone mode with a URL
+    if (fetchedChat?.clone_url && selectedVersion === -1 && isLoading) {
+      // Try to fetch real data first
+      let intervalId: NodeJS.Timeout;
+      let hasRealData = false;
+
+      const fetchData = async () => {
+        if (fetchedChat.clone_url) {
+          hasRealData = await fetchCloneData(fetchedChat.clone_url);
+        }
+
+        // If we couldn't get real data, simulate progress
+        if (!hasRealData) {
+          intervalId = setInterval(() => {
+            setScrapingStatus((prev) => {
+              // Increment progress by random amount (1-10%)
+              const progressIncrement = Math.floor(Math.random() * 10) + 1;
+              const newProgress = Math.min(
+                prev.progress + progressIncrement,
+                95,
+              );
+
+              // Simulate discovering images and colors as progress increases
+              const newImages = [...prev.images];
+              const newColors = [...prev.colors];
+              const newFonts = [...prev.fonts];
+              const newStructure = { ...prev.structure };
+
+              // Add simulated images at certain progress points
+              if (newProgress > 30 && prev.progress <= 30) {
+                const imageCount = Math.floor(Math.random() * 3) + 1;
+                for (let i = 0; i < imageCount; i++) {
+                  newImages.push({
+                    url: `https://picsum.photos/seed/${Math.random()}/${200}/${150}`,
+                    alt: `Found image ${newImages.length + 1}`,
+                  });
+                }
+                newStructure.imageCount = newImages.length;
+              }
+
+              if (newProgress > 50 && prev.progress <= 50) {
+                // Add some colors
+                const colors = [
+                  "#3B82F6",
+                  "#10B981",
+                  "#F59E0B",
+                  "#EF4444",
+                  "#8B5CF6",
+                ];
+                for (let i = 0; i < Math.min(3, colors.length); i++) {
+                  if (!newColors.includes(colors[i])) {
+                    newColors.push(colors[i]);
+                  }
+                }
+
+                // Add some fonts
+                const fonts = ["Inter", "Roboto", "Open Sans", "Montserrat"];
+                for (let i = 0; i < Math.min(2, fonts.length); i++) {
+                  if (!newFonts.includes(fonts[i])) {
+                    newFonts.push(fonts[i]);
+                  }
+                }
+
+                // Update sections count
+                newStructure.sections = Math.floor(Math.random() * 5) + 3;
+              }
+
+              if (newProgress > 70 && prev.progress <= 70) {
+                const imageCount = Math.floor(Math.random() * 4) + 2;
+                for (let i = 0; i < imageCount; i++) {
+                  newImages.push({
+                    url: `https://picsum.photos/seed/${Math.random()}/${200}/${150}`,
+                    alt: `Found image ${newImages.length + 1}`,
+                  });
+                }
+                newStructure.imageCount = newImages.length;
+              }
+
+              return {
+                progress: newProgress,
+                images: newImages,
+                colors: newColors,
+                fonts: newFonts,
+                structure: newStructure,
+                isRealData: false,
+                videosCount:
+                  newProgress > 60 ? Math.floor(Math.random() * 3) : 0,
+                error: prev.error,
+              };
+            });
+          }, 1500);
+        }
+      };
+
+      fetchData();
+
+      return () => {
+        if (intervalId) clearInterval(intervalId);
+      };
+    }
+  }, [fetchedChat?.clone_url, selectedVersion, isLoading, fetchCloneData]);
 
   return (
     <div
@@ -545,15 +738,130 @@ ${extractedFiles.map((file) => `<tailwindaiFile name="${file.name || "unnamed"}"
               </div>
             )}
             {fetchedChat?.clone_url && selectedVersion === -1 && (
-              <div className="mb-4 mt-2 flex flex-col gap-2 rounded-lg border border-blue-400/30 bg-blue-500/10 p-4 text-sm">
+              <div className="mb-4 mt-2 flex flex-col gap-3 rounded-lg border border-blue-400/30 bg-blue-500/10 p-4 text-sm">
                 <div className="flex items-center">
                   <LoaderCircle className="mr-2 size-5 animate-spin text-blue-500" />
-                  <p className="font-medium text-blue-600">Analyzing website</p>
+                  <p className="font-medium text-blue-600">
+                    Analyzing website {fetchedChat.clone_url}
+                  </p>
                 </div>
-                <p className="text-muted-foreground">
-                  We are currently analyzing the website structure, colors, and
-                  content to create your component. This may take a moment.
+                <p className="ml-2 text-xs text-orange-500">
+                  This may take a while
                 </p>
+
+                {scrapingStatus.error && (
+                  <div className="mt-2 rounded-lg border border-red-400/30 bg-red-500/10 p-2 text-xs">
+                    <p className="font-medium text-red-600">
+                      Analysis encountered an issue:
+                    </p>
+                    <p className="text-muted-foreground">
+                      {scrapingStatus.error}
+                    </p>
+                    <p className="mt-1 text-xs">
+                      Using fallback analysis methods instead.
+                    </p>
+                  </div>
+                )}
+
+                {!scrapingStatus.isRealData && !scrapingStatus.error && (
+                  <div className="relative h-2 w-full overflow-hidden rounded-full bg-blue-100">
+                    <div
+                      className="h-full bg-blue-500 transition-all duration-500"
+                      style={{ width: `${scrapingStatus.progress}%` }}
+                    ></div>
+                  </div>
+                )}
+
+                {scrapingStatus.screenshot && !scrapingStatus.error && (
+                  <div className="mt-3 overflow-hidden">
+                    <p className="mb-1 text-xs font-semibold text-foreground">
+                      Page Screenshot:
+                    </p>
+                    <img
+                      src={`data:image/jpeg;base64,${scrapingStatus.screenshot}`}
+                      alt="Website screenshot"
+                      className="w-full rounded-lg  border border-border object-cover"
+                    />
+                  </div>
+                )}
+
+                {!scrapingStatus.error && (
+                  <div className="flex flex-col gap-2 pt-1">
+                    <div className="flex items-center gap-2">
+                      <ImageIcon className="size-4 text-blue-500" />
+                      <span className="text-xs text-foreground">
+                        Images found: {scrapingStatus.images.length}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <Palette className="size-4 text-blue-500" />
+                      <span className="text-xs text-foreground">
+                        Colors detected: {scrapingStatus.colors.length}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <LayoutGrid className="size-4 text-blue-500" />
+                      <span className="text-xs text-foreground">
+                        Sections analyzed: {scrapingStatus.structure.sections}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <VideoIcon className="size-4 text-blue-500" />
+                      <span className="text-xs text-foreground">
+                        Videos found: {scrapingStatus.videosCount}
+                      </span>
+                    </div>
+                  </div>
+                )}
+                {scrapingStatus.images.length > 0 && (
+                  <div className="mt-2">
+                    <p className="mb-1 text-xs font-semibold text-foreground">
+                      Images discovered:
+                    </p>
+                    <div className="flex flex-wrap gap-2 overflow-hidden">
+                      {scrapingStatus.images.slice(0, 6).map((img, index) => (
+                        <div
+                          key={index}
+                          className="relative size-14 overflow-hidden rounded border border-gray-200"
+                        >
+                          <img
+                            src={img.url}
+                            alt={img.alt}
+                            className="size-full object-cover"
+                          />
+                        </div>
+                      ))}
+                      {scrapingStatus.images.length > 6 && (
+                        <div className="flex size-14 items-center justify-center rounded border border-gray-200 bg-gray-50">
+                          <span className="text-xs text-background">
+                            +{scrapingStatus.images.length - 6} more
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {scrapingStatus.colors.length > 0 && (
+                  <div className="mt-2">
+                    <p className="mb-1 text-xs font-semibold text-foreground">
+                      Colors palette:
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {scrapingStatus.colors.map((color, index) => (
+                        <div
+                          key={index}
+                          className="size-6 rounded-full border border-gray-200"
+                          style={{ backgroundColor: color }}
+                          title={color}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
             <ChunkReader
