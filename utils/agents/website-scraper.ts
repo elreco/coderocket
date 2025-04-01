@@ -1,7 +1,7 @@
-import chromium from "@sparticuz/chromium";
 import { JSDOM } from "jsdom";
-import puppeteer from "puppeteer-core";
-import type { Browser, Page } from "puppeteer-core";
+import type { Page } from "puppeteer-core";
+
+import { getBrowser } from "../capture-screenshot";
 
 interface WebsiteContent {
   html: string;
@@ -217,60 +217,6 @@ async function fetchWebsiteContent(url: string): Promise<WebsiteContent> {
       url,
     };
   }
-}
-
-/**
- * Find Chrome/Chromium executable path on Windows machines
- */
-async function findChromePath(): Promise<string | undefined> {
-  const fs = await import("fs");
-  const { execSync } = await import("child_process");
-
-  // Potential Chrome/Chromium paths
-  const chromePaths = [
-    // Chrome paths
-    process.env.PUPPETEER_EXECUTABLE_PATH,
-    "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
-    "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
-    // Edge paths
-    "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
-    "C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe",
-  ];
-
-  // Try each path
-  for (const chromePath of chromePaths) {
-    if (chromePath && fs.existsSync(chromePath)) {
-      return chromePath;
-    }
-  }
-
-  // Try registry lookup for Chrome
-  try {
-    const regQuery =
-      'reg query "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\chrome.exe" /ve';
-    const regResult = execSync(regQuery, { stdio: "pipe" }).toString();
-    const match = regResult.match(/REG_(?:SZ|EXPAND_SZ)\s+([^\s]+)/);
-    if (match && match[1] && fs.existsSync(match[1])) {
-      return match[1];
-    }
-  } catch {
-    console.log("No Chrome found in registry");
-  }
-
-  // Try registry lookup for Edge
-  try {
-    const regQuery =
-      'reg query "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\msedge.exe" /ve';
-    const regResult = execSync(regQuery, { stdio: "pipe" }).toString();
-    const match = regResult.match(/REG_(?:SZ|EXPAND_SZ)\s+([^\s]+)/);
-    if (match && match[1] && fs.existsSync(match[1])) {
-      return match[1];
-    }
-  } catch {
-    console.log("No Edge found in registry");
-  }
-
-  return undefined;
 }
 
 /**
@@ -1382,44 +1328,15 @@ export async function scrapeWebsite(
 ): Promise<WebsiteContent> {
   // Default options
   options = {
-    fullPage: true,
+    fullPage: false,
     fastMode: false,
     simpleMode: false,
     ...options,
   };
 
-  let browser: Browser | null = null;
   try {
-    // Determine if running on Windows
-    const isWindows = process.platform === "win32";
-
-    // Get executable path
-    let executablePath;
-    if (isWindows) {
-      // Try to find Chrome/Edge on Windows
-      executablePath = (await findChromePath()) || "chrome.exe";
-    } else {
-      executablePath = await chromium.executablePath();
-    }
-
-    // Setup browser launch options
-    const browserOptions = {
-      args: [
-        ...chromium.args,
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-web-security",
-        "--disable-features=IsolateOrigins,site-per-process",
-        "--disable-blink-features=AutomationControlled",
-      ],
-      defaultViewport: chromium.defaultViewport,
-      executablePath,
-      headless: true,
-      ignoreHTTPSErrors: true,
-    };
-
     // Attempt to launch browser
-    browser = await puppeteer.launch(browserOptions);
+    const browser = await getBrowser();
 
     const page = await browser.newPage();
 
@@ -1905,7 +1822,7 @@ export async function scrapeWebsite(
     const sectionScreenshots: Record<string, string> = {};
 
     if (!options.simpleMode) {
-      // Regular screenshot capturing with full details
+      // Regular screenshot capturing with basic viewport only
       // Retourner au début de la page avant de prendre la capture d'écran
       await page.evaluate(() => {
         window.scrollTo(0, 0);
@@ -1914,12 +1831,12 @@ export async function scrapeWebsite(
       // Attendre un court délai pour s'assurer que tout est bien visible
       await new Promise((resolve) => setTimeout(resolve, 800));
 
-      // Capture full page screenshot avec une meilleure qualité
+      // Capture viewport screenshot instead of full page
       screenshot = (await page.screenshot({
-        fullPage: true,
+        fullPage: false,
         encoding: "base64",
         type: "jpeg",
-        quality: 90, // Qualité améliorée pour mieux voir les détails
+        quality: 60, // Qualité améliorée pour mieux voir les détails
       })) as string;
 
       // Capture screenshots of important sections
@@ -2003,7 +1920,7 @@ export async function scrapeWebsite(
               clip: rect,
               encoding: "base64",
               type: "jpeg",
-              quality: 80,
+              quality: 60,
             })) as string;
           }
         } catch (e) {
@@ -2014,10 +1931,10 @@ export async function scrapeWebsite(
     } else {
       // Simple mode: Just take a full page screenshot and skip section-specific ones
       screenshot = (await page.screenshot({
-        fullPage: true,
+        fullPage: false,
         encoding: "base64",
         type: "jpeg",
-        quality: 80, // Slightly lower quality for speed
+        quality: 60, // Slightly lower quality for speed
       })) as string;
     }
 
@@ -2081,7 +1998,7 @@ export async function scrapeWebsite(
 
     // Extract meta tags
     const metaTags = await extractMetaTags(page);
-
+    await browser.close();
     return {
       html,
       images,
@@ -2129,10 +2046,6 @@ export async function scrapeWebsite(
     } else {
       // Already in simpleMode, just use fetch-only method
       return fetchWebsiteContent(url);
-    }
-  } finally {
-    if (browser) {
-      await browser.close();
     }
   }
 }
