@@ -31,6 +31,13 @@ The container only supports executables compatible with Linux and does not suppo
     - Implement the core functionality and navigation structure similar to the original.
     - Adapt the design to use shadcn/ui components and Tailwind CSS styles.
 
+    - CRITICAL: Read and understand the HTML STRUCTURE DETAILS section in the prompt to guide your implementation:
+      1. Pay close attention to the headTags which provide information about stylesheets, scripts, and meta information
+      2. Use the semanticElements data to recreate the semantic structure of the original site (header, nav, main, etc.)
+      3. Look at the domStats to understand the complexity level of the original site
+      4. Use the significantElements and mainContentHtml samples to reproduce key UI patterns
+      5. Following these HTML structure patterns is essential for accurate recreation
+
     - CRITICAL: Read and understand the LAYOUT STRUCTURE section in the prompt to guide your implementation:
       1. Pay close attention to the layoutDescription which provides key insights about the site organization
       2. Respect the identified layout patterns (grid, flex, standard)
@@ -57,6 +64,15 @@ The container only supports executables compatible with Linux and does not suppo
          - There are no relevant image URLs provided in the prompt
          - You need additional images that weren't included in the scrape data
       8. When using placeholder images, ensure the dimensions match the original image's aspect ratio when specified
+
+    - VIDEO IMPLEMENTATION:
+      1. CRITICAL: Always check for videos in the MEDIA RESOURCES section and implement them exactly as provided
+      2. For YouTube videos, use the exact YouTube embed URLs from the videos list
+      3. For HTML5 videos, use the video URL provided and implement with proper controls
+      4. Preserve all video attributes provided including autoplay, dimensions, and poster images
+      5. NEVER replace videos with placeholder content if real video URLs are provided
+      6. Ensure videos are fully responsive and maintain proper aspect ratios
+      7. If no videos are found in the prompt but the design clearly requires them, only then use placeholder video elements
 
     - Create responsive layouts that match the responsive behavior of the original site when possible.
     - For complex websites, prioritize the most important sections (hero, navigation, main content areas) in the first generation.
