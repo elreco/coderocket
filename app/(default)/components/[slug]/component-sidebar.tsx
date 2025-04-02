@@ -43,6 +43,7 @@ import {
   extractFilesFromCompletion,
   hasArtifacts,
   splitContentIntoChunks,
+  createContinuePrompt,
 } from "@/utils/completion-parser";
 import {
   avatarApi,
@@ -939,7 +940,7 @@ ${extractedFiles.map((file) => `<tailwindaiFile name="${file.name || "unnamed"}"
                     size="sm"
                     className="mr-2"
                     onClick={() => {
-                      const continuePrompt = "Continue where you left off";
+                      const continuePrompt = createContinuePrompt(messages);
                       setInput(continuePrompt);
                       submitPrompt(continuePrompt);
                     }}
@@ -975,7 +976,7 @@ ${extractedFiles.map((file) => `<tailwindaiFile name="${file.name || "unnamed"}"
               <TextareaWithLimit
                 ref={inputRef}
                 autoFocus
-                disabled={isLoading}
+                disabled={isLoading || isLengthError}
                 isLoading={isLoading}
                 value={input}
                 onChange={(value, isValid) => {

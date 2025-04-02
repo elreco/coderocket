@@ -1,3 +1,5 @@
+import { Tables } from "@/types_db";
+
 import { defaultTheme } from "./config";
 
 const TAILWIND_SCRIPT_CDN =
@@ -18,6 +20,20 @@ export interface ChatFile {
   isActive: boolean;
   isIncomplete?: boolean;
   isContinue?: boolean;
+}
+
+export interface ChatMessage {
+  id: string | number;
+  role: "user" | "assistant" | "system";
+  content: string;
+  version: number;
+  created_at: string;
+  chats?: {
+    user?: Record<string, unknown>;
+    prompt_image?: string | null;
+    remix_chat_id?: string | null;
+  };
+  ai_prompt?: string;
 }
 
 let previousFiles = new Map<string, string>(); // Pour stocker l'état précédent
@@ -111,111 +127,8 @@ export const getUpdatedArtifactCode = (
               : cleanedExistingContent + content,
           );
         } else {
-          // Sinon, déterminer s'il faut ajouter un espace en analysant le contexte du code
-          const lastChar = cleanedExistingContent.charAt(
-            cleanedExistingContent.length - 1,
-          );
-          const firstChar = content.charAt(0);
-
-          // Check if we're in the middle of a word, identifier, or type reference
-          const isInMiddleOfIdentifier = () => {
-            // Get last word of existing content and first word of new content
-            const lastWord = cleanedExistingContent.match(/[\w$_]+$/);
-            const firstWord = content.match(/^[\w$_]+/);
-
-            // If both are parts of identifiers, we're likely in the middle of one
-            if (lastWord && firstWord) {
-              return true;
-            }
-
-            // Check for TypeScript generic/template or complex type situations
-            // Example: React.ElementRef<typeof SelectPrim itive.ScrollDownButton>
-            const lastPart = cleanedExistingContent.substring(
-              Math.max(0, cleanedExistingContent.length - 20),
-            );
-            if (
-              // Check if we're in the middle of a type reference
-              lastPart.includes("<typeof ") ||
-              // Common generic syntax patterns
-              (lastPart.includes("<") && !lastPart.includes(">")) ||
-              // Check for JSX component props
-              lastPart.includes("Component<") ||
-              lastPart.includes("ElementRef<") ||
-              // Check for namespace access
-              (lastChar === "." && /^[A-Z]/.test(firstChar)) ||
-              (lastPart.match(/[A-Z][a-z]*$/) && /^[A-Z]/.test(firstChar))
-            ) {
-              return true;
-            }
-
-            return false;
-          };
-
-          // Les caractères qui n'ont généralement pas besoin d'espace entre eux
-          const noSpaceNeededAfter = [
-            "{",
-            "(",
-            "[",
-            ".",
-            ",",
-            ":",
-            "<",
-            "'",
-            '"',
-            "`",
-            "=",
-            "+",
-            "-",
-            "*",
-            "/",
-            "!",
-            "?",
-            "&",
-            "|",
-            "^",
-            "%",
-            "#",
-            "@",
-            "~",
-            "$",
-            "_",
-          ];
-          const noSpaceNeededBefore = [
-            "}",
-            ")",
-            "]",
-            ".",
-            ",",
-            ":",
-            ">",
-            "'",
-            '"',
-            "`",
-            ";",
-            "!",
-            "?",
-            "&",
-            "|",
-            "^",
-            "%",
-            "#",
-            "@",
-            "~",
-            "$",
-            "_",
-          ];
-
-          // Determine if we need a space
-          const needsSpace = !(
-            noSpaceNeededAfter.includes(lastChar) ||
-            noSpaceNeededBefore.includes(firstChar) ||
-            isInMiddleOfIdentifier()
-          );
-
-          allFiles.set(
-            existingFileKey,
-            cleanedExistingContent + (needsSpace ? " " : "") + content,
-          );
+          // Concaténer directement, sans logique d'espace
+          allFiles.set(existingFileKey, cleanedExistingContent + content);
         }
       } else {
         // Si le fichier n'existe pas, le traiter comme un nouveau fichier
@@ -253,111 +166,8 @@ export const getUpdatedArtifactCode = (
                 : cleanedExistingContent + content,
             );
           } else {
-            // Sinon, déterminer s'il faut ajouter un espace en analysant le contexte du code
-            const lastChar = cleanedExistingContent.charAt(
-              cleanedExistingContent.length - 1,
-            );
-            const firstChar = content.charAt(0);
-
-            // Check if we're in the middle of a word, identifier, or type reference
-            const isInMiddleOfIdentifier = () => {
-              // Get last word of existing content and first word of new content
-              const lastWord = cleanedExistingContent.match(/[\w$_]+$/);
-              const firstWord = content.match(/^[\w$_]+/);
-
-              // If both are parts of identifiers, we're likely in the middle of one
-              if (lastWord && firstWord) {
-                return true;
-              }
-
-              // Check for TypeScript generic/template or complex type situations
-              // Example: React.ElementRef<typeof SelectPrim itive.ScrollDownButton>
-              const lastPart = cleanedExistingContent.substring(
-                Math.max(0, cleanedExistingContent.length - 20),
-              );
-              if (
-                // Check if we're in the middle of a type reference
-                lastPart.includes("<typeof ") ||
-                // Common generic syntax patterns
-                (lastPart.includes("<") && !lastPart.includes(">")) ||
-                // Check for JSX component props
-                lastPart.includes("Component<") ||
-                lastPart.includes("ElementRef<") ||
-                // Check for namespace access
-                (lastChar === "." && /^[A-Z]/.test(firstChar)) ||
-                (lastPart.match(/[A-Z][a-z]*$/) && /^[A-Z]/.test(firstChar))
-              ) {
-                return true;
-              }
-
-              return false;
-            };
-
-            // Les caractères qui n'ont généralement pas besoin d'espace entre eux
-            const noSpaceNeededAfter = [
-              "{",
-              "(",
-              "[",
-              ".",
-              ",",
-              ":",
-              "<",
-              "'",
-              '"',
-              "`",
-              "=",
-              "+",
-              "-",
-              "*",
-              "/",
-              "!",
-              "?",
-              "&",
-              "|",
-              "^",
-              "%",
-              "#",
-              "@",
-              "~",
-              "$",
-              "_",
-            ];
-            const noSpaceNeededBefore = [
-              "}",
-              ")",
-              "]",
-              ".",
-              ",",
-              ":",
-              ">",
-              "'",
-              '"',
-              "`",
-              ";",
-              "!",
-              "?",
-              "&",
-              "|",
-              "^",
-              "%",
-              "#",
-              "@",
-              "~",
-              "$",
-              "_",
-            ];
-
-            // Determine if we need a space
-            const needsSpace = !(
-              noSpaceNeededAfter.includes(lastChar) ||
-              noSpaceNeededBefore.includes(firstChar) ||
-              isInMiddleOfIdentifier()
-            );
-
-            allFiles.set(
-              fileName,
-              cleanedExistingContent + (needsSpace ? " " : "") + content,
-            );
+            // Concaténer directement, sans logique d'espace
+            allFiles.set(fileName, cleanedExistingContent + content);
           }
         } else {
           // Sinon, on remplace par le nouveau contenu
@@ -1161,4 +971,61 @@ export const extractFilesFromArtifact = (artifactCode: string): ChatFile[] => {
   previousFiles = currentFiles;
 
   return filesArray;
+};
+
+export const extractContentBeforeFinishReason = (
+  content: string,
+  contextLength: number = 100,
+): string => {
+  if (!content) return "Continue where you left off";
+
+  // Check if content contains FINISH_REASON markers
+  const hasLengthMarker = content.includes("<!-- FINISH_REASON: length -->");
+  const hasErrorMarker = content.includes("<!-- FINISH_REASON: error -->");
+
+  if (!hasLengthMarker && !hasErrorMarker) {
+    return "Continue where you left off";
+  }
+
+  // Find the position of the marker
+  const markerIndex = Math.max(
+    content.lastIndexOf("<!-- FINISH_REASON: length -->"),
+    content.lastIndexOf("<!-- FINISH_REASON: error -->"),
+  );
+
+  if (markerIndex <= 0) {
+    return "Continue where you left off";
+  }
+
+  // Extract last characters before the marker
+  const startIndex = Math.max(0, markerIndex - contextLength);
+  const contextSnippet = content.substring(startIndex, markerIndex);
+
+  return `Continue where you left off. Here's the last part of the content: \`\`\`${contextSnippet}\`\`\``;
+};
+
+export const createContinuePrompt = (
+  messages: Tables<"messages">[],
+  contextLength: number = 100,
+): string => {
+  // Find the last assistant message
+  const assistantMessages = messages.filter((msg) => msg.role === "assistant");
+  const sortedAssistantMessages = assistantMessages.sort(
+    (a, b) => a.version - b.version,
+  );
+  const lastAssistantMessage =
+    sortedAssistantMessages.length > 0
+      ? sortedAssistantMessages[sortedAssistantMessages.length - 1]
+      : null;
+
+  // Default prompt if no assistant message is found
+  if (!lastAssistantMessage || !lastAssistantMessage.content) {
+    return "Continue where you left off";
+  }
+
+  // Extract context using existing function
+  return extractContentBeforeFinishReason(
+    lastAssistantMessage.content,
+    contextLength,
+  );
 };

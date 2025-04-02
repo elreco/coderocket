@@ -12,15 +12,17 @@ import {
   WebcontainerLoadingState,
 } from "@/context/component-context";
 import { useWebcontainer } from "@/context/webcontainer-context";
+import { createContinuePrompt } from "@/utils/completion-parser";
 import { FREE_CHAR_LIMIT } from "@/utils/config";
 
 import { Markdown } from "./markdown";
 
 function LoadingStateComponent({ state }: { state: WebcontainerLoadingState }) {
-  const { setInput, handleSubmitToAI, authorized } = useComponentContext();
+  const { setInput, handleSubmitToAI, authorized, messages } =
+    useComponentContext();
 
   const handleContinueGeneration = () => {
-    const continuePrompt = "Continue where you left off";
+    const continuePrompt = createContinuePrompt(messages);
     setInput(continuePrompt);
     handleSubmitToAI(continuePrompt);
   };
