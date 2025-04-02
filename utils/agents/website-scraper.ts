@@ -483,32 +483,66 @@ export async function scrapeWebsite(url: string): Promise<WebsiteContent> {
 
     const images = await page.evaluate(() => {
       const imgElements = Array.from(document.querySelectorAll("img"));
-      return imgElements
-        .map((img) => {
-          const rect = img.getBoundingClientRect();
-          const isVisible = rect.width > 1 && rect.height > 1;
+      const backgroundImages = Array.from(
+        document.querySelectorAll("*"),
+      ).filter((el) => {
+        const style = window.getComputedStyle(el);
+        return style.backgroundImage && style.backgroundImage !== "none";
+      });
 
-          return {
-            url: img.src,
-            alt: img.alt || "",
-            dimensions:
-              img.width && img.height
-                ? { width: img.width, height: img.height }
-                : undefined,
-            isVisible,
-          };
-        })
-        .filter(
-          (img) =>
-            img.url &&
-            !img.url.startsWith("data:") &&
-            !img.url.includes("placeholder"),
-        );
+      const regularImages = imgElements.map((img) => {
+        const rect = img.getBoundingClientRect();
+        const isVisible = rect.width > 1 && rect.height > 1;
+
+        return {
+          url: img.src,
+          alt: img.alt || "",
+          dimensions:
+            img.width && img.height
+              ? { width: img.width, height: img.height }
+              : undefined,
+          isVisible,
+          type: "img",
+        };
+      });
+
+      const extractedBackgroundImages = backgroundImages.map((el) => {
+        const style = window.getComputedStyle(el);
+        const bgImage = style.backgroundImage;
+        const rect = el.getBoundingClientRect();
+        const isVisible = rect.width > 1 && rect.height > 1;
+
+        const urlMatch = bgImage.match(/url\(['"]?(.*?)['"]?\)/);
+        const url = urlMatch ? urlMatch[1] : "";
+
+        return {
+          url,
+          alt: el.getAttribute("aria-label") || "",
+          dimensions: { width: rect.width, height: rect.height },
+          isVisible,
+          type: "background",
+        };
+      });
+
+      return [...regularImages, ...extractedBackgroundImages].filter(
+        (img) =>
+          img.url &&
+          !img.url.startsWith("data:") &&
+          !img.url.includes("placeholder"),
+      );
     });
 
     const videos = await page.evaluate(() => {
       const videoElements = Array.from(document.querySelectorAll("video"));
-      const videoData = videoElements
+      const backgroundVideos = Array.from(
+        document.querySelectorAll("*"),
+      ).filter((el) => {
+        const style = window.getComputedStyle(el);
+        const hasVideo = style.backgroundImage?.includes("video") || false;
+        return hasVideo;
+      });
+
+      const regularVideos = videoElements
         .map((video) => {
           const sources = Array.from(video.querySelectorAll("source"));
           const sourceUrl = sources.length > 0 ? sources[0].src : video.src;
@@ -516,6 +550,21 @@ export async function scrapeWebsite(url: string): Promise<WebsiteContent> {
           return {
             url: sourceUrl,
             type: "html5",
+          };
+        })
+        .filter((v) => v.url);
+
+      const extractedBackgroundVideos = backgroundVideos
+        .map((el) => {
+          const style = window.getComputedStyle(el);
+          const videoMatch = style.backgroundImage.match(
+            /url\(['"]?(.*?)['"]?\)/,
+          );
+          const url = videoMatch ? videoMatch[1] : "";
+
+          return {
+            url,
+            type: "background-video",
           };
         })
         .filter((v) => v.url);
@@ -546,7 +595,7 @@ export async function scrapeWebsite(url: string): Promise<WebsiteContent> {
         })
         .filter((v) => v.url);
 
-      return [...videoData, ...youtubeFrames];
+      return [...regularVideos, ...extractedBackgroundVideos, ...youtubeFrames];
     });
 
     // Measure page height and determine if scaling is needed
