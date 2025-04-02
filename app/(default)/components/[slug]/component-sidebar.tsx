@@ -12,6 +12,7 @@ import {
   Palette,
   LayoutGrid,
   VideoIcon,
+  CheckCircle,
 } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState, useRef, useCallback } from "react";
@@ -114,7 +115,6 @@ export default function ComponentSidebar({
     colors: string[];
     fonts: string[];
     structure: { sections: number; imageCount: number };
-    isRealData: boolean;
     screenshot?: string | null;
     videosCount: number;
     error?: string | null;
@@ -124,7 +124,6 @@ export default function ComponentSidebar({
     colors: [],
     fonts: [],
     structure: { sections: 0, imageCount: 0 },
-    isRealData: false,
     screenshot: null,
     videosCount: 0,
     error: null,
@@ -310,12 +309,12 @@ ${extractedFiles.map((file) => `<tailwindaiFile name="${file.name || "unnamed"}"
       // Mettre à jour les états ensemble pour éviter les sauts
       setStreamingChunks(newChunks);
       setFiles(extractedFiles);
-    } else if (!isLoading) {
+    } else if (!isLoading && !isLengthError && !buildError) {
       // Réinitialiser les états lorsque le chargement est terminé
       setStreamingChunks([]);
       setFiles([]);
     }
-  }, [completion, isLoading]);
+  }, [completion, isLoading, isLengthError, buildError]);
 
   const handleFileClick = (version: number) => {
     setActiveTab("chat");
@@ -431,7 +430,6 @@ ${extractedFiles.map((file) => `<tailwindaiFile name="${file.name || "unnamed"}"
             sections: result.data.structure.sections?.length || 0,
             imageCount: result.data.imageCount || 0,
           },
-          isRealData: true,
           screenshot: result.data.screenshot || null,
           videosCount: result.data.videos?.length || 0,
           error: null,
@@ -443,7 +441,6 @@ ${extractedFiles.map((file) => `<tailwindaiFile name="${file.name || "unnamed"}"
         setScrapingStatus((prev) => ({
           ...prev,
           error: result.error || "Failed to analyze website",
-          isRealData: false,
           progress: 95, // Set to almost complete but not quite
         }));
         return false;
@@ -455,7 +452,6 @@ ${extractedFiles.map((file) => `<tailwindaiFile name="${file.name || "unnamed"}"
         ...prev,
         error:
           error instanceof Error ? error.message : "Unknown error occurred",
-        isRealData: false,
         progress: 95, // Set to almost complete but not quite
       }));
     }
@@ -548,7 +544,6 @@ ${extractedFiles.map((file) => `<tailwindaiFile name="${file.name || "unnamed"}"
                 colors: newColors,
                 fonts: newFonts,
                 structure: newStructure,
-                isRealData: false,
                 videosCount:
                   newProgress > 60 ? Math.floor(Math.random() * 3) : 0,
                 error: prev.error,
@@ -741,14 +736,26 @@ ${extractedFiles.map((file) => `<tailwindaiFile name="${file.name || "unnamed"}"
             {fetchedChat?.clone_url && selectedVersion === -1 && (
               <div className="mb-4 mt-2 flex flex-col gap-3 rounded-lg border border-blue-400/30 bg-blue-500/10 p-4 text-sm">
                 <div className="flex items-center">
-                  <LoaderCircle className="mr-2 size-5 animate-spin text-blue-500" />
-                  <p className="font-medium text-blue-600">
-                    Analyzing website {fetchedChat.clone_url}
-                  </p>
+                  {completion ? (
+                    <CheckCircle className="mr-2 size-5 text-green-500" />
+                  ) : (
+                    <LoaderCircle className="mr-2 size-5 animate-spin text-blue-500" />
+                  )}
+                  {completion ? (
+                    <p className="font-medium text-green-600">
+                      Website {fetchedChat.clone_url} analyzed
+                    </p>
+                  ) : (
+                    <p className="font-medium text-blue-600">
+                      Analyzing website {fetchedChat.clone_url}
+                    </p>
+                  )}
                 </div>
-                <p className="ml-2 text-xs text-orange-500">
-                  This may take a while
-                </p>
+                {!completion ? (
+                  <p className="ml-2 text-xs text-orange-500">
+                    This may take a while
+                  </p>
+                ) : null}
 
                 {scrapingStatus.error && (
                   <div className="mt-2 rounded-lg border border-red-400/30 bg-red-500/10 p-2 text-xs">
@@ -764,7 +771,7 @@ ${extractedFiles.map((file) => `<tailwindaiFile name="${file.name || "unnamed"}"
                   </div>
                 )}
 
-                {!scrapingStatus.isRealData && !scrapingStatus.error && (
+                {!scrapingStatus.error && (
                   <div className="relative h-2 w-full overflow-hidden rounded-full bg-blue-100">
                     <div
                       className="h-full bg-blue-500 transition-all duration-500"
