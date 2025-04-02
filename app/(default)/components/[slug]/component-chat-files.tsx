@@ -105,13 +105,130 @@ export default function ComponentChatFiles({
       contentChunks = splitCompletedContentIntoChunks(message.content);
     }
 
+    // NOUVEAU: Fonction pour vérifier si un texte contient des balises incomplètes
+    const containsIncompleteTag = (text: string): boolean => {
+      // Vérifier s'il y a une balise ouvrante sans balise fermante correspondante
+      const openingTags = ["<tailwindaiArtifact", "<tailwindaiFile"];
+
+      const closingTags = ["</tailwindaiArtifact>", "</tailwindaiFile>"];
+
+      // Vérifier chaque paire de balises
+      for (let i = 0; i < openingTags.length; i++) {
+        const openTag = openingTags[i];
+        const closeTag = closingTags[i];
+
+        // Si une balise ouvrante existe sans sa balise fermante correspondante
+        if (text.includes(openTag) && !text.includes(closeTag)) {
+          return true;
+        }
+
+        // Vérifier si une balise fermante est incomplète (ex: "</tailwin")
+        if (
+          text.includes("<") &&
+          text.includes("/") &&
+          closeTag.startsWith(text.substring(text.lastIndexOf("<")))
+        ) {
+          return true;
+        }
+      }
+
+      // Vérifier les fragments de balises (comme "<tailwind" sans le reste)
+      for (const tag of [...openingTags, ...closingTags]) {
+        // Pour chaque caractère de 3 à la longueur-1, vérifier si ce fragment apparaît à la fin du texte
+        for (let i = 3; i < tag.length; i++) {
+          const fragment = tag.substring(0, i);
+          if (text.endsWith(fragment)) {
+            return true;
+          }
+        }
+      }
+
+      return false;
+    };
+
+    // NOUVEAU: Fonction pour vérifier si un texte contient des balises vides ou inutiles
+    const containsEmptyOrUselessTags = (text: string): boolean => {
+      // Vérifier les balises artifact sans contenu utile
+      const emptyArtifactPattern =
+        /<tailwindaiArtifact[^>]*>[\s\n]*<\/tailwindaiArtifact>/g;
+      if (emptyArtifactPattern.test(text)) {
+        return true;
+      }
+
+      // Vérifier les balises artifact avec juste un titre mais sans contenu
+      const justTitlePattern =
+        /<tailwindaiArtifact[^>]*title="[^"]*"[^>]*>[\s\n]*<\/tailwindaiArtifact>/g;
+      if (justTitlePattern.test(text)) {
+        return true;
+      }
+
+      // Vérifier les balises file sans contenu utile
+      const emptyFilePattern =
+        /<tailwindaiFile[^>]*>[\s\n]*<\/tailwindaiFile>/g;
+      if (emptyFilePattern.test(text)) {
+        return true;
+      }
+
+      // Vérifier les balises avec très peu de contenu réel (moins de 5 caractères non-blancs)
+      const checkLowContent = (tagPattern: RegExp): boolean => {
+        let match;
+        while ((match = tagPattern.exec(text)) !== null) {
+          const tagContent = match[1];
+          const nonWhitespaceContent = tagContent.replace(/\s/g, "");
+          if (nonWhitespaceContent.length < 5) {
+            return true;
+          }
+        }
+        return false;
+      };
+
+      // Appliquer la vérification aux contenus des balises artifact et file
+      const artifactContentPattern =
+        /<tailwindaiArtifact[^>]*>([\s\S]*?)<\/tailwindaiArtifact>/g;
+      const fileContentPattern =
+        /<tailwindaiFile[^>]*>([\s\S]*?)<\/tailwindaiFile>/g;
+
+      if (
+        checkLowContent(artifactContentPattern) ||
+        checkLowContent(fileContentPattern)
+      ) {
+        return true;
+      }
+
+      return false;
+    };
+
     // Filtrer les chunks pour enlever ceux qui contiennent "FINISH_REASON"
-    contentChunks = contentChunks.filter(
-      (chunk) =>
-        !(
-          chunk.type === "text" && chunk.content.includes("<!-- FINISH_REASON:")
-        ),
-    );
+    // ou des balises incomplètes pendant le chargement
+    contentChunks = contentChunks.filter((chunk) => {
+      if (chunk.type !== "text") {
+        // Pour les artifacts, vérifier s'ils sont vides ou inutiles
+        if (
+          chunk.type === "artifact" &&
+          containsEmptyOrUselessTags(chunk.content)
+        ) {
+          return false;
+        }
+        return true;
+      }
+
+      // Filtrer les marqueurs FINISH_REASON
+      if (chunk.content.includes("<!-- FINISH_REASON:")) {
+        return false;
+      }
+
+      // Pendant le chargement, filtrer les balises incomplètes
+      if (isLoading && containsIncompleteTag(chunk.content)) {
+        return false;
+      }
+
+      // Filtrer les textes contenant des balises vides ou inutiles
+      if (containsEmptyOrUselessTags(chunk.content)) {
+        return false;
+      }
+
+      return true;
+    });
 
     // Dédupliquer les chunks de texte identiques
     contentChunks = contentChunks.filter((chunk, index, array) => {
@@ -126,7 +243,7 @@ export default function ComponentChatFiles({
     });
 
     // Si on a extrait du texte d'introduction, l'ajouter comme premier chunk de texte
-    if (introText) {
+    if (introText && !containsIncompleteTag(introText)) {
       // Vérifier si ce texte n'existe pas déjà dans les chunks
       const textExists = contentChunks.some(
         (chunk) => chunk.type === "text" && chunk.content.includes(introText),

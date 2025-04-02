@@ -114,7 +114,7 @@ export function ChunkReader({
                           />
                           <div
                             className={cn(
-                              "flex items-center font-mono whitespace-pre-wrap text-sm font-medium text-border mr-2 group-hover:text-foreground",
+                              "flex items-center font-medium text-background whitespace-pre-wrap text-sm mr-2 group-hover:text-foreground",
                               file.isDelete &&
                                 "text-red-500 group-hover:text-foreground",
                               file.isIncomplete &&
@@ -131,12 +131,16 @@ export function ChunkReader({
                             {file.isDelete && (
                               <Trash2 className="mr-1 size-4" />
                             )}
-                            <span>{file.name || "untitled.html"}</span>
+                            <span>
+                              {file.name
+                                ? file.name.split("/").pop()
+                                : "untitled.html"}
+                            </span>
                           </div>
                         </div>
                         <div
                           className={cn(
-                            "whitespace-nowrap text-xs text-border opacity-75 group-hover:text-foreground",
+                            "whitespace-nowrap text-xs text-background font-semibold opacity-75 group-hover:text-foreground",
                             activeTab === file.name &&
                               isSelectedVersion &&
                               !isCanvas &&

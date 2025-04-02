@@ -1,4 +1,4 @@
-import { ChevronDown, Folder, Files } from "lucide-react";
+import { ChevronDown, Folder, Files, Loader } from "lucide-react";
 import * as React from "react";
 
 import { Button } from "@/components/ui/button";
@@ -158,11 +158,21 @@ export function CodePreviewFileTree() {
       <DropdownMenuTrigger asChild>
         <Button
           variant="outline"
+          disabled={artifactFiles.length === 0}
           className="flex cursor-pointer items-center gap-2"
         >
-          <Files className="size-4" />
-          {activeTab}
-          <ChevronDown className="size-4" />
+          {artifactFiles.length === 0 ? (
+            <>
+              <Loader className="size-4 animate-spin" />
+              <span>Loading</span>
+            </>
+          ) : (
+            <>
+              <Files className="size-4" />
+              {activeTab}
+              <ChevronDown className="size-4" />
+            </>
+          )}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent>
