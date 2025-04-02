@@ -25,6 +25,7 @@ import {
   ContentChunk,
   extractDirectFiles,
   splitCompletedContentIntoChunks,
+  splitContentIntoChunks,
   ChatFile,
 } from "@/utils/completion-parser";
 import { storageUrl } from "@/utils/config";
@@ -73,8 +74,44 @@ export default function ComponentChatFiles({
     // Extraire les fichiers une seule fois
     const extractedFiles = extractDirectFiles(message.content);
 
+    // NOUVEAU: Extraire spécifiquement le texte avant le premier artifact ou balise tailwindaiFile
+    let introText = "";
+    const firstArtifactIndex = message.content.indexOf("<tailwindaiArtifact");
+    const firstFileIndex = message.content.indexOf("<tailwindaiFile");
+
+    // Si on a du texte avant les balises, l'extraire
+    if (firstArtifactIndex > 0 || firstFileIndex > 0) {
+      // Prendre l'index du premier élément qui apparaît, ou la longueur totale si aucun n'est trouvé
+      const cutIndex = Math.min(
+        firstArtifactIndex > -1 ? firstArtifactIndex : Number.MAX_SAFE_INTEGER,
+        firstFileIndex > -1 ? firstFileIndex : Number.MAX_SAFE_INTEGER,
+      );
+
+      if (cutIndex < Number.MAX_SAFE_INTEGER) {
+        introText = message.content.substring(0, cutIndex).trim();
+
+        // Supprimer la ligne avec "FINISH_REASON" si elle existe
+        if (introText.includes("<!-- FINISH_REASON:")) {
+          introText = introText.split("<!-- FINISH_REASON:")[0].trim();
+        }
+      }
+    }
+
     // Découper le contenu en chunks
-    let contentChunks = splitCompletedContentIntoChunks(message.content);
+    let contentChunks;
+    if (isLoading) {
+      contentChunks = splitContentIntoChunks(message.content);
+    } else {
+      contentChunks = splitCompletedContentIntoChunks(message.content);
+    }
+
+    // Filtrer les chunks pour enlever ceux qui contiennent "FINISH_REASON"
+    contentChunks = contentChunks.filter(
+      (chunk) =>
+        !(
+          chunk.type === "text" && chunk.content.includes("<!-- FINISH_REASON:")
+        ),
+    );
 
     // Dédupliquer les chunks de texte identiques
     contentChunks = contentChunks.filter((chunk, index, array) => {
@@ -87,6 +124,21 @@ export default function ComponentChatFiles({
       }
       return true;
     });
+
+    // Si on a extrait du texte d'introduction, l'ajouter comme premier chunk de texte
+    if (introText) {
+      // Vérifier si ce texte n'existe pas déjà dans les chunks
+      const textExists = contentChunks.some(
+        (chunk) => chunk.type === "text" && chunk.content.includes(introText),
+      );
+
+      if (!textExists) {
+        contentChunks.unshift({
+          type: "text",
+          content: introText,
+        });
+      }
+    }
 
     // Si on a des fichiers et qu'ils ne sont pas dans un artifact existant
     const hasArtifactWithFiles = contentChunks.some(
@@ -112,16 +164,25 @@ ${extractedFiles
       if (!hasArtifactWithFiles) {
         // Filtrer les chunks pour enlever ceux qui contiennent des fichiers
         const textChunks = contentChunks.filter(
-          (chunk) => !chunk.content.includes("<tailwindaiFile"),
+          (chunk) =>
+            chunk.type === "text" ||
+            (chunk.type === "artifact" &&
+              !chunk.content.includes("<tailwindaiFile")),
         );
 
-        // Ajouter l'artifact au début avec le bon type
+        // Ajouter l'artifact au début avec le bon type - mais après les chunks de texte
+        const textOnlyChunks = textChunks.filter(
+          (chunk) => chunk.type === "text",
+        );
+        const otherChunks = textChunks.filter((chunk) => chunk.type !== "text");
+
         setChunks([
+          ...textOnlyChunks,
           {
             type: "artifact" as const,
             content: artificialArtifact,
           },
-          ...textChunks,
+          ...otherChunks,
         ]);
       } else {
         // Remplacer l'artifact existant par le nouveau
@@ -140,6 +201,15 @@ ${extractedFiles
         setChunks(updatedChunks);
       }
     } else {
+      // S'assurer qu'il y a au moins un chunk de texte si pas de fichiers et texte disponible
+      if (contentChunks.length === 0 && message.content.trim()) {
+        contentChunks = [
+          {
+            type: "text" as const,
+            content: message.content.trim(),
+          },
+        ];
+      }
       setChunks(contentChunks);
     }
 

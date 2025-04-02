@@ -223,7 +223,8 @@ module.exports = {
     "@radix-ui/react-switch": "^1.0.3",
     "@radix-ui/react-toggle-group": "^1.0.2",
     "@radix-ui/react-tooltip": "^1.0.3",
-    "@radix-ui/react-slider": "^1.0.2"
+    "@radix-ui/react-slider": "^1.0.2",
+    "@radix-ui/react-toast": "^1.0.3"
   },
   "devDependencies": {
     "@types/node": "^20.3.1",
