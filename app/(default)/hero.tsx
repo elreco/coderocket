@@ -285,6 +285,10 @@ export default function Hero() {
       { pattern: /\.police(\.|$|\/)/, reason: "Law enforcement websites" },
       { pattern: /\.bank(\.|$|\/)/, reason: "Banking websites" },
       { pattern: /\.edu(\.|$|\/)/, reason: "Educational institution websites" },
+      {
+        pattern: /localhost|127\.0\.0\.1/,
+        reason: "Local development servers",
+      },
     ];
 
     for (const { pattern, reason } of restrictedDomains) {
