@@ -16,6 +16,7 @@ import RenderComponent from "@/app/(default)/components/[slug]/component-preview
 import RenderHtmlComponent from "@/components/renders/render-html-component";
 import { Button } from "@/components/ui/button";
 import { useComponentContext } from "@/context/component-context";
+import { useWebcontainer } from "@/context/webcontainer-context";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { ChatFile } from "@/utils/completion-parser";
@@ -98,6 +99,7 @@ export default function CodePreview() {
     selectedFramework,
     isLengthError,
   } = useComponentContext();
+  const { buildError } = useWebcontainer();
   const [, copy] = useCopyToClipboard();
   const codeMirrorRef = useRef<ReactCodeMirrorRef>(null);
   const downloadCode = async () => {
@@ -191,8 +193,8 @@ export default function CodePreview() {
           <div className="relative flex flex-1 flex-col items-start justify-start">
             <div className="flex w-full items-center justify-between p-2">
               <CodePreviewFileTree />
-              <div className="flex items-center justify-center space-x-2">
-                {!isLoading && (
+              {!isLoading && !isLengthError && !buildError && (
+                <div className="flex items-center justify-center space-x-2">
                   <Button
                     variant="outline"
                     onClick={copyRawHTML}
@@ -203,9 +205,7 @@ export default function CodePreview() {
                     </span>{" "}
                     <Clipboard className="w-4" />
                   </Button>
-                )}
 
-                {!isLoading && (
                   <Button
                     variant="outline"
                     onClick={downloadCode}
@@ -216,8 +216,8 @@ export default function CodePreview() {
                     </span>{" "}
                     <Download className="w-4" />
                   </Button>
-                )}
-              </div>
+                </div>
+              )}
             </div>
             <div className="m-0 flex h-0 w-full max-w-full grow">
               <CodeMirror
