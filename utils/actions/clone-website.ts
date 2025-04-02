@@ -198,13 +198,13 @@ export async function cloneWebsite(url: string) {
     ])) as WebsiteContent;
 
     // Détection des protections anti-bot avancée
-    if (detectAntiBot(websiteData)) {
-      return {
-        success: false,
-        error:
-          "Anti-bot protection detected. The site uses Cloudflare or similar technology to block scraping.",
-      };
-    }
+    // if (detectAntiBot(websiteData)) {
+    //   return {
+    //     success: false,
+    //     error:
+    //       "Anti-bot protection detected. The site uses Cloudflare or similar technology to block scraping.",
+    //   };
+    // }
 
     // Retourner les données avec une structure simplifiée mais plus complète
     return {
@@ -218,44 +218,6 @@ export async function cloneWebsite(url: string) {
       error: error instanceof Error ? error.message : "Unknown error",
     };
   }
-}
-
-/**
- * Détecte les protections anti-bot courantes
- */
-function detectAntiBot(websiteData: {
-  html?: string;
-  description?: string | null;
-}): boolean {
-  // Vérification du contenu HTML
-  if (websiteData.html) {
-    const antiScrapingSignatures = [
-      "cf-browser-verification",
-      "cf-challenge-running",
-      "captcha",
-      "robot verification",
-      "security check",
-      "ddos protection",
-      "security challenge",
-      "recaptcha",
-      "Please Wait...",
-      "checking your browser",
-      "access to this page has been denied",
-    ];
-
-    for (const signature of antiScrapingSignatures) {
-      if (websiteData.html.toLowerCase().includes(signature.toLowerCase())) {
-        return true;
-      }
-    }
-  }
-
-  // Vérification des descriptions d'erreur
-  if (websiteData.description?.includes("Failed to fetch website content")) {
-    return true;
-  }
-
-  return false;
 }
 
 /**
