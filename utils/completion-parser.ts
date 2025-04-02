@@ -1001,7 +1001,7 @@ export const extractContentBeforeFinishReason = (
   const startIndex = Math.max(0, markerIndex - contextLength);
   const contextSnippet = content.substring(startIndex, markerIndex);
 
-  return `Continue where you left off. Here's the last part of the content: \`\`\`${contextSnippet}\`\`\``;
+  return `Continue where you left off. Here's the last part of the content: ${contextSnippet}`;
 };
 
 export const createContinuePrompt = (
