@@ -57,15 +57,12 @@ export async function tweetComponent(
     // Create hashtags
     const hashtags = ["#TailwindCSS", "#AI"];
 
-    // If it's a clone, add related hashtag and mention the source
-    let cloneText = "";
     if (chat.clone_url) {
       hashtags.push("#WebsiteClone");
-      cloneText = `\nClone of: ${chat.clone_url}`;
     }
 
     // Construct tweet text
-    const tweetText = `Check out this ${chat.framework} component built with Tailwind AI: "${title}"\n\n${componentUrl}${cloneText}\n\n${hashtags.join(" ")}`;
+    const tweetText = `Check out this ${chat.framework} component built with Tailwind AI: "${title}"\n\n${componentUrl}\n\n${hashtags.join(" ")}`;
 
     // Initialize Twitter client
     const twitterClient = await createTwitterClient();
