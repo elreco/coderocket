@@ -189,8 +189,35 @@ export default function CodePreview() {
       >
         <div className="relative flex size-full flex-col rounded-none border-none">
           <div className="relative flex flex-1 flex-col items-start justify-start">
-            <div className="flex items-start justify-start p-2">
+            <div className="flex w-full items-center justify-between p-2">
               <CodePreviewFileTree />
+              <div className="flex items-center justify-center space-x-2">
+                {!isLoading && (
+                  <Button
+                    variant="outline"
+                    onClick={copyRawHTML}
+                    className="flex items-center rounded-sm"
+                  >
+                    <span className="mr-1 hidden text-nowrap text-xs xl:block">
+                      Copy code
+                    </span>{" "}
+                    <Clipboard className="w-4" />
+                  </Button>
+                )}
+
+                {!isLoading && (
+                  <Button
+                    variant="outline"
+                    onClick={downloadCode}
+                    className="flex items-center rounded-sm"
+                  >
+                    <span className="mr-1 hidden text-nowrap text-xs xl:block">
+                      Download project
+                    </span>{" "}
+                    <Download className="w-4" />
+                  </Button>
+                )}
+              </div>
             </div>
             <div className="m-0 flex h-0 w-full max-w-full grow">
               <CodeMirror
@@ -220,29 +247,6 @@ export default function CodePreview() {
                 }}
               />
             </div>
-          </div>
-          <div className="absolute bottom-0 right-0 m-1 flex items-center justify-center space-x-1 ease-out hover:ease-in xl:hidden group-hover:xl:flex">
-            {!isLoading && (
-              <Button
-                variant="outline"
-                onClick={copyRawHTML}
-                className="flex items-center rounded-sm"
-              >
-                <span className="mr-1 text-nowrap text-xs">Copy code</span>{" "}
-                <Clipboard className="w-4" />
-              </Button>
-            )}
-
-            {!isLoading && (
-              <Button
-                variant="outline"
-                onClick={downloadCode}
-                className="flex items-center rounded-sm"
-              >
-                <span className="mr-1 text-nowrap text-xs">Download</span>{" "}
-                <Download className="w-4" />
-              </Button>
-            )}
           </div>
         </div>
       </div>
