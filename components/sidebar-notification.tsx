@@ -22,14 +22,16 @@ export function SidebarNotification({
   buttonLabel?: string;
 }) {
   return (
-    <Card className="bg-background shadow-none">
+    <Card className="border border-primary/30 bg-primary/10 shadow-none">
       <form>
         <CardHeader className={buttonLink ? "p-4 pb-0" : "p-4"}>
-          <CardTitle className="flex items-center gap-1 text-xs">
+          <CardTitle className="flex items-center gap-1 text-xs text-primary">
             <Bell className="size-3" />
             {title}
           </CardTitle>
-          <CardDescription className="text-xs">{description}</CardDescription>
+          <CardDescription className="text-xs text-foreground/75">
+            {description}
+          </CardDescription>
         </CardHeader>
         {buttonLink && (
           <CardContent className="grid gap-2.5 p-4">

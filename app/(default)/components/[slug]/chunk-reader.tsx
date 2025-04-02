@@ -49,15 +49,15 @@ export function ChunkReader({
           <div className="w-full space-y-2">
             <div
               className={cn(
-                "rounded-lg border bg-background p-2 text-foreground",
+                "rounded-lg border border-primary/30 bg-primary/10 p-2 text-foreground",
               )}
             >
               <div className="mb-3 flex items-center justify-between">
-                <h3 className="text-xs font-semibold">
+                <h3 className="text-xs font-semibold text-primary">
                   {extractTitle(chunk.content) ||
                     (artifactFiles.length === 1
-                      ? "Output File"
-                      : "Output Files")}
+                      ? "Generated File"
+                      : "Generated Files")}
                 </h3>
                 {selectedFramework === Framework.HTML &&
                   artifactFiles.length > 0 && (
@@ -92,7 +92,7 @@ export function ChunkReader({
                         key={fileIndex}
                         className={cn(
                           "group flex items-center justify-between rounded p-1 bg-foreground w-full",
-                          "hover:bg-gradient-to-l from-emerald-400 via-emerald-500 to-emerald-600 hover:text-foreground",
+                          "hover:bg-gradient-to-l from-primary via-primary/90 to-primary/80 hover:text-foreground",
                           isLoading || file.isDelete
                             ? "cursor-not-allowed opacity-50"
                             : "cursor-pointer",
@@ -100,7 +100,7 @@ export function ChunkReader({
                           activeTab === file.name &&
                             isSelectedVersion &&
                             !isCanvas &&
-                            "bg-gradient-to-l from-emerald-400 via-emerald-500 to-emerald-600 text-foreground",
+                            "bg-gradient-to-l from-primary via-primary/90 to-primary/80 text-foreground",
                         )}
                         onClick={() =>
                           version !== undefined

@@ -653,9 +653,7 @@ ${extractedFiles.map((file) => `<tailwindaiFile name="${file.name || "unnamed"}"
                             </div>
                           </div>
                           {m.version === selectedVersion ? (
-                            <Badge variant="outline" className="rounded-full">
-                              Current
-                            </Badge>
+                            <Badge className="rounded-full">Current</Badge>
                           ) : (
                             <ChevronsRight className="size-4" />
                           )}
