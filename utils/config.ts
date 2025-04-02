@@ -101,7 +101,7 @@ export const MAX_SEARCH_LENGTH = 50;
 
 export const MAX_TOKENS_PER_REQUEST = 6000;
 export const CHAR_PER_TOKEN = 2;
-export const MAX_ACCOUNTS_PER_IP = 1;
+export const MAX_ACCOUNTS_PER_IP = 5;
 
 export const FREE_CHAR_LIMIT = 1500;
 export const PREMIUM_CHAR_LIMIT = MAX_TOKENS_PER_REQUEST * CHAR_PER_TOKEN; // 12000 caractères
