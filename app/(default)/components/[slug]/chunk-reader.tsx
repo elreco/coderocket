@@ -1,4 +1,4 @@
-import { Paintbrush } from "lucide-react";
+import { Loader, Paintbrush, Trash2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import {
@@ -114,20 +114,24 @@ export function ChunkReader({
                           />
                           <div
                             className={cn(
-                              "font-mono whitespace-pre-wrap text-sm font-medium text-border mr-2 group-hover:text-foreground",
+                              "flex items-center font-mono whitespace-pre-wrap text-sm font-medium text-border mr-2 group-hover:text-foreground",
                               file.isDelete &&
                                 "text-red-500 group-hover:text-foreground",
                               file.isIncomplete &&
-                                "text-amber-600 group-hover:text-foreground",
+                                "text-primary group-hover:text-foreground",
                               activeTab === file.name &&
                                 isSelectedVersion &&
                                 !isCanvas &&
                                 "text-foreground",
                             )}
                           >
-                            {file.name || "untitled.html"}
-                            {file.isIncomplete && "(in progress)"}
-                            {file.isDelete && " (deleted)"}
+                            {file.isIncomplete && (
+                              <Loader className="mr-1 size-4 animate-spin" />
+                            )}
+                            {file.isDelete && (
+                              <Trash2 className="mr-1 size-4" />
+                            )}
+                            <span>{file.name || "untitled.html"}</span>
                           </div>
                         </div>
                         <div

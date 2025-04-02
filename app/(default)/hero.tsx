@@ -9,8 +9,8 @@ import {
   WandSparkles,
   Link2,
   Lightbulb,
-  Loader2,
   Rocket,
+  Loader,
 } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -184,7 +184,6 @@ export default function Hero() {
   const [showCloneModal, setShowCloneModal] = useState(false);
   const [agreeToTerms, setAgreeToTerms] = useState(false);
   const [showPromptIdeasModal, setShowPromptIdeasModal] = useState(false);
-  const [speen, setSpeen] = useState([0]);
 
   useEffect(() => {
     if (inputRef.current) {
@@ -532,24 +531,6 @@ export default function Hero() {
       handleSubmit(new Event("submit") as unknown as React.FormEvent);
     }
   };
-
-  // Add animation for loading dots
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-
-    if (loading) {
-      interval = setInterval(() => {
-        setSpeen((prev) => {
-          if (prev.length >= 3) return [0];
-          return [...prev, prev.length];
-        });
-      }, 500);
-    }
-
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [loading]);
 
   return (
     <Container className="relative flex min-h-full w-auto flex-col items-center justify-center space-y-4 overflow-hidden pr-2 sm:pr-11">
@@ -960,21 +941,11 @@ export default function Hero() {
                   >
                     {loading ? (
                       <>
-                        <Loader2 className="size-4 animate-spin" />
+                        <Loader className="size-4 animate-spin" />
                         {loadingAction === "generate" && (
-                          <span>
-                            Generating{speen.includes(0) && "."}
-                            {speen.includes(1) && "."}
-                            {speen.includes(2) && "."}
-                          </span>
+                          <span>Generating</span>
                         )}
-                        {loadingAction === "improve" && (
-                          <span>
-                            Improving{speen.includes(0) && "."}
-                            {speen.includes(1) && "."}
-                            {speen.includes(2) && "."}
-                          </span>
-                        )}
+                        {loadingAction === "improve" && <span>Improving</span>}
                       </>
                     ) : (
                       <>

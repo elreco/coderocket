@@ -8,7 +8,7 @@ import { motion } from "framer-motion";
 import {
   Fullscreen,
   Layers,
-  LoaderCircle,
+  Loader,
   Settings,
   ExternalLink,
   Copy,
@@ -817,7 +817,7 @@ export default function ComponentCompletion({
                     </p>
                   ) : (
                     <span className="flex items-center">
-                      <LoaderCircle className="mr-2 size-4 animate-spin" />
+                      <Loader className="mr-2 size-4 animate-spin" />
                       Loading
                     </span>
                   )}
@@ -1180,7 +1180,7 @@ export default function ComponentCompletion({
                     >
                       {isRemixing ? (
                         <>
-                          <LoaderCircle className="size-4 animate-spin" />
+                          <Loader className="size-4 animate-spin" />
                           Creating Remix...
                         </>
                       ) : (

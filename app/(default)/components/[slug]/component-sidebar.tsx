@@ -7,12 +7,12 @@ import {
   WandSparkles,
   X,
   RefreshCw,
-  LoaderCircle,
   Image as ImageIcon,
   Palette,
   LayoutGrid,
   VideoIcon,
   CheckCircle,
+  Loader,
 } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState, useRef, useCallback } from "react";
@@ -734,19 +734,19 @@ ${extractedFiles.map((file) => `<tailwindaiFile name="${file.name || "unnamed"}"
               </div>
             )}
             {fetchedChat?.clone_url && selectedVersion === -1 && (
-              <div className="mb-4 mt-2 flex flex-col gap-3 rounded-lg border border-blue-400/30 bg-blue-500/10 p-4 text-sm">
+              <div className="mb-4 mt-2 flex flex-col gap-3 rounded-lg border border-primary/30 bg-primary/10 p-4 text-sm">
                 <div className="flex items-center">
                   {completion ? (
                     <CheckCircle className="mr-2 size-5 text-green-500" />
                   ) : (
-                    <LoaderCircle className="mr-2 size-5 animate-spin text-blue-500" />
+                    <Loader className="mr-2 size-5 animate-spin text-primary" />
                   )}
                   {completion ? (
                     <p className="font-medium text-green-600">
                       Website {fetchedChat.clone_url} analyzed
                     </p>
                   ) : (
-                    <p className="font-medium text-blue-600">
+                    <p className="font-medium text-primary">
                       Analyzing website {fetchedChat.clone_url}
                     </p>
                   )}
@@ -772,9 +772,9 @@ ${extractedFiles.map((file) => `<tailwindaiFile name="${file.name || "unnamed"}"
                 )}
 
                 {!scrapingStatus.error && (
-                  <div className="relative h-2 w-full overflow-hidden rounded-full bg-blue-100">
+                  <div className="relative h-2 w-full overflow-hidden rounded-full bg-primary/10">
                     <div
-                      className="h-full bg-blue-500 transition-all duration-500"
+                      className="h-full bg-primary transition-all duration-500"
                       style={{ width: `${scrapingStatus.progress}%` }}
                     ></div>
                   </div>
@@ -798,28 +798,28 @@ ${extractedFiles.map((file) => `<tailwindaiFile name="${file.name || "unnamed"}"
                 {!scrapingStatus.error && (
                   <div className="flex flex-col gap-2 pt-1">
                     <div className="flex items-center gap-2">
-                      <ImageIcon className="size-4 text-blue-500" />
+                      <ImageIcon className="size-4 text-primary" />
                       <span className="text-xs text-foreground">
                         Images found: {scrapingStatus.images.length}
                       </span>
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <Palette className="size-4 text-blue-500" />
+                      <Palette className="size-4 text-primary" />
                       <span className="text-xs text-foreground">
                         Colors detected: {scrapingStatus.colors.length}
                       </span>
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <LayoutGrid className="size-4 text-blue-500" />
+                      <LayoutGrid className="size-4 text-primary" />
                       <span className="text-xs text-foreground">
                         Sections analyzed: {scrapingStatus.structure.sections}
                       </span>
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <VideoIcon className="size-4 text-blue-500" />
+                      <VideoIcon className="size-4 text-primary" />
                       <span className="text-xs text-foreground">
                         Videos found: {scrapingStatus.videosCount}
                       </span>
@@ -894,52 +894,7 @@ ${extractedFiles.map((file) => `<tailwindaiFile name="${file.name || "unnamed"}"
         {authorized && (
           <div className="flex w-full flex-col bg-background">
             <div className="flex w-full items-center justify-between space-x-1 border-t p-2">
-              <div className="flex items-center space-x-2">
-                {selectedFramework === Framework.HTML && !isLengthError && (
-                  <div className="text-sm font-semibold">
-                    <ComponentTheme>
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        size="sm"
-                        className="flex items-center"
-                        disabled={isLoading}
-                      >
-                        <Paintbrush className="size-4" />
-                        <span className="ml-0.5">Theme</span>
-                      </Button>
-                    </ComponentTheme>
-                  </div>
-                )}
-                {image && (
-                  <div className="mr-2 size-12">
-                    <div className="relative size-12">
-                      <Image
-                        src={URL.createObjectURL(image)}
-                        alt="Uploaded"
-                        width={12}
-                        height={12}
-                        crossOrigin="anonymous"
-                        className="size-12 rounded-md object-contain"
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="absolute -right-2 -top-2 size-5 rounded-full bg-background p-0"
-                        onClick={handleImageRemove}
-                      >
-                        <X className="size-3" />
-                      </Button>
-                    </div>
-                  </div>
-                )}
-                <ImageSelector
-                  fileInputRef={fileInputRef}
-                  disabled={isLoading || isLengthError || !!buildError}
-                  handleButtonClick={handleButtonClick}
-                  handleImageChange={handleImageChange}
-                />
+              <div className="flex items-center gap-2">
                 {/* Continue your work button */}
                 {!isLoading && isLengthError && (
                   <Button
@@ -976,6 +931,53 @@ ${extractedFiles.map((file) => `<tailwindaiFile name="${file.name || "unnamed"}"
                     <WandSparkles className="size-4" />
                     Fix errors
                   </Button>
+                )}
+              </div>
+              <div className="flex items-center space-x-2">
+                {selectedFramework === Framework.HTML && !isLengthError && (
+                  <div className="text-sm font-semibold">
+                    <ComponentTheme>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        className="flex items-center"
+                        disabled={isLoading}
+                      >
+                        <Paintbrush className="size-4" />
+                        <span className="ml-0.5">Theme</span>
+                      </Button>
+                    </ComponentTheme>
+                  </div>
+                )}
+                <ImageSelector
+                  fileInputRef={fileInputRef}
+                  disabled={isLoading || isLengthError || !!buildError}
+                  handleButtonClick={handleButtonClick}
+                  handleImageChange={handleImageChange}
+                />
+                {image && (
+                  <div className="mr-2 size-12">
+                    <div className="relative size-12">
+                      <Image
+                        src={URL.createObjectURL(image)}
+                        alt="Uploaded"
+                        width={12}
+                        height={12}
+                        crossOrigin="anonymous"
+                        className="size-12 rounded-md object-contain"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="absolute -right-2 -top-2 size-5 rounded-full bg-background p-0"
+                        onClick={handleImageRemove}
+                      >
+                        <X className="size-3" />
+                      </Button>
+                    </div>
+                  </div>
                 )}
               </div>
             </div>
