@@ -8,11 +8,7 @@ import {
 } from "@/components/ui/tooltip";
 import { useComponentContext } from "@/context/component-context";
 import { cn } from "@/lib/utils";
-import {
-  ChatFile,
-  extractDataTheme,
-  extractTitle,
-} from "@/utils/completion-parser";
+import { ChatFile, extractDataTheme } from "@/utils/completion-parser";
 import { Framework } from "@/utils/config";
 import { getFileConfig } from "@/utils/file-extensions";
 import { formatFileSize } from "@/utils/helpers";
@@ -54,10 +50,11 @@ export function ChunkReader({
             >
               <div className="mb-3 flex items-center justify-between">
                 <h3 className="text-xs font-semibold text-primary">
-                  {extractTitle(chunk.content) ||
-                    (artifactFiles.length === 1
+                  {isLoading
+                    ? "Generating Files..."
+                    : artifactFiles.length === 1
                       ? "Generated File"
-                      : "Generated Files")}
+                      : "Generated Files"}
                 </h3>
                 {selectedFramework === Framework.HTML &&
                   artifactFiles.length > 0 && (

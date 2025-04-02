@@ -4,7 +4,7 @@ import { SiHtml5, SiReact, SiVuedotjs } from "@icons-pack/react-simple-icons";
 import {
   ArrowDown,
   ChevronDown,
-  Loader2,
+  Loader,
   RefreshCcw,
   Search,
   SearchX,
@@ -317,7 +317,7 @@ export function ComponentsInfiniteScroll({
               className="ml-1"
             >
               {isLoading ? (
-                <Loader2 className="size-4 animate-spin" />
+                <Loader className="size-4 animate-spin" />
               ) : (
                 "Search"
               )}
@@ -429,7 +429,7 @@ export function ComponentsInfiniteScroll({
             {isFetchingMore ? (
               <div className="flex items-center gap-2">
                 <span>Loading...</span>
-                <Loader2 className="size-4 animate-spin" />
+                <Loader className="size-4 animate-spin" />
               </div>
             ) : (
               <div className="flex items-center gap-2">
