@@ -613,7 +613,7 @@ export default function Hero() {
               className="w-1/2 p-2"
               disabled={selectedFramework === Framework.HTML || loading} // Also disable when loading
             >
-              Clone a website
+              Generate using a URL
             </TabsTrigger>
           </TabsList>
 
