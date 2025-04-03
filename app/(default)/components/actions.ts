@@ -647,7 +647,8 @@ export const remixChat = async (chatId: string) => {
       framework,
       prompt_image,
       user_id,
-      remix_chat_id
+      remix_chat_id,
+      clone_url
     `,
     )
     .eq("id", chatId)
@@ -690,6 +691,7 @@ export const remixChat = async (chatId: string) => {
       prompt_image: originalChat.prompt_image,
       user_id: user.id,
       remix_chat_id: originalChat.id,
+      clone_url: originalChat.clone_url,
       is_private: false,
       slug: uniqueId,
     })

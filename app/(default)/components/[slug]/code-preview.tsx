@@ -1,5 +1,6 @@
 import { StateField } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
+import { SiHtml5, SiReact, SiVuedotjs } from "@icons-pack/react-simple-icons";
 import { draculaInit } from "@uiw/codemirror-theme-dracula";
 import CodeMirror, {
   ReactCodeMirrorRef,
@@ -14,6 +15,7 @@ import { useCopyToClipboard } from "usehooks-ts";
 
 import RenderComponent from "@/app/(default)/components/[slug]/component-preview";
 import RenderHtmlComponent from "@/components/renders/render-html-component";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useComponentContext } from "@/context/component-context";
 import { useWebcontainer } from "@/context/webcontainer-context";
@@ -168,6 +170,13 @@ export default function CodePreview() {
     }
   }, []);
 
+  const FrameworkIcon =
+    selectedFramework === Framework.HTML
+      ? SiHtml5
+      : selectedFramework === Framework.REACT
+        ? SiReact
+        : SiVuedotjs;
+
   return (
     <div className="flex size-full flex-col overflow-hidden xl:flex-row">
       <div
@@ -193,31 +202,39 @@ export default function CodePreview() {
           <div className="relative flex flex-1 flex-col items-start justify-start">
             <div className="flex w-full items-center justify-between p-2">
               <CodePreviewFileTree />
-              {!isLoading && !isLengthError && !buildError && (
-                <div className="flex items-center justify-center space-x-2">
-                  <Button
-                    variant="outline"
-                    onClick={copyRawHTML}
-                    className="flex items-center rounded-sm"
-                  >
-                    <span className="mr-1 hidden text-nowrap text-xs xl:block">
-                      Copy code
-                    </span>{" "}
-                    <Clipboard className="w-4" />
-                  </Button>
+              <div className="flex items-center justify-center space-x-2">
+                <Badge className="hover:bg-primary">
+                  <FrameworkIcon className="mr-1 size-3" />
+                  <span className="first-letter:uppercase">
+                    {selectedFramework}
+                  </span>
+                </Badge>
+                {!isLoading && !isLengthError && !buildError && (
+                  <>
+                    <Button
+                      variant="outline"
+                      onClick={copyRawHTML}
+                      className="flex items-center rounded-sm"
+                    >
+                      <span className="mr-1 hidden text-nowrap text-xs xl:block">
+                        Copy code
+                      </span>{" "}
+                      <Clipboard className="w-4" />
+                    </Button>
 
-                  <Button
-                    variant="outline"
-                    onClick={downloadCode}
-                    className="flex items-center rounded-sm"
-                  >
-                    <span className="mr-1 hidden text-nowrap text-xs xl:block">
-                      Download project
-                    </span>{" "}
-                    <Download className="w-4" />
-                  </Button>
-                </div>
-              )}
+                    <Button
+                      variant="outline"
+                      onClick={downloadCode}
+                      className="flex items-center rounded-sm"
+                    >
+                      <span className="mr-1 hidden text-nowrap text-xs xl:block">
+                        Download project
+                      </span>{" "}
+                      <Download className="w-4" />
+                    </Button>
+                  </>
+                )}
+              </div>
             </div>
             <div className="m-0 flex h-0 w-full max-w-full grow">
               <CodeMirror

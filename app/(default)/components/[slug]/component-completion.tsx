@@ -1,6 +1,5 @@
 "use client";
 
-import { SiHtml5, SiReact, SiVuedotjs } from "@icons-pack/react-simple-icons";
 import { useCompletion } from "ai/react";
 import { Crisp } from "crisp-sdk-web";
 import { format } from "date-fns";
@@ -17,6 +16,7 @@ import {
   Code as CodeIcon,
   X,
   Heart,
+  Globe,
 } from "lucide-react";
 import { Share } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -26,7 +26,6 @@ import { useCopyToClipboard } from "usehooks-ts";
 import { getSubscription } from "@/app/supabase-server";
 import { Container } from "@/components/container";
 import RenderHtmlComponent from "@/components/renders/render-html-component";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -757,13 +756,6 @@ export default function ComponentCompletion({
     isLengthError,
   };
 
-  const FrameworkIcon =
-    fetchedChat?.framework === Framework.HTML
-      ? SiHtml5
-      : fetchedChat?.framework === Framework.REACT
-        ? SiReact
-        : SiVuedotjs;
-
   useEffect(() => {
     const channel = supabase
       .channel("schema-db-changes")
@@ -1000,70 +992,82 @@ export default function ComponentCompletion({
               </div>
               <div className="relative m-0 flex h-full max-h-full flex-1 flex-col border-b lg:border-b-0">
                 {!isLoading && isCanvas && (
-                  <div className="absolute bottom-0 right-0 z-[9000] flex w-full items-center justify-between p-2">
-                    {remixOriginalChat ? (
-                      <div className="flex items-center gap-2 rounded-md bg-secondary px-3 py-2 text-sm shadow-sm">
-                        <GitFork className="size-4" />
-                        <span>Remixed from:</span>
-                        <a
-                          href={`/components/${remixOriginalChat.slug}`}
-                          className="flex items-center gap-1 font-medium text-primary hover:underline"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          {remixOriginalChat.title ||
-                            `Component ${remixOriginalChat.slug}`}
-                          <ExternalLink className="size-3" />
-                        </a>
-                      </div>
-                    ) : (
-                      <div className="invisible"></div>
-                    )}
-                    <div className="flex items-center justify-center gap-2">
-                      {fetchedChat?.clone_url && (
-                        <a
-                          href={fetchedChat.clone_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="block truncate text-xs text-blue-500 hover:text-blue-600 hover:underline"
-                          title={fetchedChat.clone_url}
-                        >
-                          {fetchedChat.clone_url
-                            .replace(/^https?:\/\/(www\.)?/i, "")
-                            .replace(/\/$/, "")}
-                        </a>
-                      )}
-                      <Badge className="hover:bg-primary">
-                        <FrameworkIcon className="mr-1 size-3" />
-                        <span className="first-letter:uppercase">
-                          {fetchedChat?.framework}
-                        </span>
-                      </Badge>
+                  <div className="absolute bottom-0 right-0 z-[9000] flex w-full items-center justify-end p-2">
+                    {fetchedChat?.clone_url && (
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <motion.div
-                            whileTap={{ scale: 0.9, rotate: 15 }}
-                            transition={{ type: "spring", stiffness: 300 }}
-                          >
-                            <Button
-                              onClick={handleLikeClick}
-                              variant="secondary"
-                              size="sm"
-                              className={`ml-2 rounded-full p-2 shadow-md transition-colors ${
-                                isLiked
-                                  ? "bg-primary text-secondary hover:bg-primary"
-                                  : "bg-pink-500 text-pink-300 hover:bg-pink-400"
-                              }`}
+                          <Button variant="outline" size="sm" asChild>
+                            <a
+                              href={fetchedChat.clone_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="block truncate text-xs text-blue-500 hover:text-blue-600 hover:underline"
                             >
-                              <Heart className="size-5" />
-                            </Button>
-                          </motion.div>
+                              <Globe className="size-4" />
+                              {fetchedChat.clone_url
+                                .replace(/^https?:\/\/(www\.)?/i, "")
+                                .replace(/\/$/, "")}
+                            </a>
+                          </Button>
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p>{isLiked ? "Unlike" : "Like"}</p>
+                          <p>Component generated from this URL</p>
                         </TooltipContent>
                       </Tooltip>
-                    </div>
+                    )}
+                    {remixOriginalChat && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button variant="outline" size="sm" asChild>
+                            <a
+                              href={`/components/${remixOriginalChat.slug}`}
+                              className="flex items-center gap-1"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              <GitFork className="size-4" />
+                              {remixOriginalChat.title ||
+                                `Component ${remixOriginalChat.slug}`}
+                              <ExternalLink className="size-3" />
+                            </a>
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>
+                            This component is a remix of this original component
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <motion.div
+                          whileTap={{ scale: 0.9, rotate: 15 }}
+                          transition={{ type: "spring", stiffness: 300 }}
+                        >
+                          <Button
+                            onClick={handleLikeClick}
+                            variant="secondary"
+                            size="sm"
+                            className={`ml-2 flex items-center gap-1 rounded-full p-2 shadow-md transition-colors ${
+                              isLiked
+                                ? "bg-primary text-secondary hover:bg-primary"
+                                : "bg-pink-500 text-pink-300 hover:bg-pink-400"
+                            }`}
+                          >
+                            <Heart className="size-5" />
+                            <span>{isLiked ? "Unlike" : "Like"}</span>
+                          </Button>
+                        </motion.div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>
+                          {isLiked
+                            ? "Remove from liked components"
+                            : "Add to liked components"}
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
                   </div>
                 )}
                 <CodePreview />
