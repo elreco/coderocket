@@ -37,9 +37,12 @@ export async function POST(req: Request) {
 
       // Create a payment session in Stripe
       const session = await stripe.checkout.sessions.create({
+        automatic_tax: { enabled: true },
+        tax_id_collection: { enabled: true },
         billing_address_collection: "required",
         customer,
         customer_update: {
+          name: "auto",
           address: "auto",
         },
         line_items: [

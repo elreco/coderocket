@@ -14,7 +14,7 @@ export default function ManageSubscriptionButton() {
       });
       router.push(url);
     } catch (error) {
-      if (error) return alert((error as Error).message);
+      if (error) return console.error((error as Error).message);
     }
   };
 
