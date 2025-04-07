@@ -124,6 +124,13 @@ The container only supports executables compatible with Linux and does not suppo
         4. Do NOT regenerate any part of the file - continue from precisely where it stopped
         5. Preserve the EXACT indentation level, whitespace patterns, and code style
         6. Ensure perfect character-by-character continuation as if the file was never interrupted
+        7. Pay special attention to syntax elements (braces, parentheses, quotes) to maintain proper code structure
+        8. If the truncation happened mid-word or mid-line, continue exactly from that point without restarting or repeating
+        9. If inside a function, method, or block, maintain the current scope and logic flow
+        10. DO NOT add any summary, introduction or explanation - continue the code directly
+        11. CRITICAL: NEVER repeat or regenerate ANY content that was already in the truncated file, even partially
+        12. ALWAYS look at the exact end point of the truncated file to avoid duplicating content
+        13. If the file was cut off in the middle of a structure (like an array item or object property), continue EXACTLY after the last character without repeating anything
       - CRITICAL: If you're approaching token limits, prioritize completing core functionality files first and leave less critical files for subsequent iterations.
       - CRITICAL: When implementing a complex feature, focus on one key aspect per generation to avoid exceeding token limits.
       - CRITICAL: For large components, consider implementing them incrementally across multiple generations.

@@ -111,25 +111,104 @@ export const getUpdatedArtifactCode = (
           "",
         );
 
-        // Amélioration de la logique de concaténation pour éviter les espaces superflus
-        // On concatène directement si le contenu existant se termine par un \n
-        // ou si le nouveau contenu commence par un \n
-        const existingEndsWithNewline = cleanedExistingContent.endsWith("\n");
-        const newContentStartsWithNewline = content.startsWith("\n");
+        // Analyse plus précise pour déterminer s'il faut ajouter un espace ou non
+        // 1. Vérifier le dernier caractère du contenu existant
+        const lastCharExisting = cleanedExistingContent.charAt(
+          cleanedExistingContent.length - 1,
+        );
+        // 2. Vérifier le premier caractère du nouveau contenu
+        const firstCharNew = content.charAt(0);
 
-        // Concaténer le nouveau contenu au contenu existant sans ajouter d'espace
-        if (existingEndsWithNewline || newContentStartsWithNewline) {
-          // Si l'un des deux a déjà un saut de ligne, concaténer directement
-          allFiles.set(
-            existingFileKey,
-            existingEndsWithNewline
-              ? cleanedExistingContent + content.replace(/^\n/, "")
-              : cleanedExistingContent + content,
-          );
-        } else {
-          // Concaténer directement, sans logique d'espace
-          allFiles.set(existingFileKey, cleanedExistingContent + content);
+        // Détecter et éviter les duplications de contenu
+        let newContent = "";
+
+        // Vérifier si le nouveau contenu commence par une répétition de la fin du contenu existant
+        let duplicationFound = false;
+
+        // Vérifier jusqu'à 50 caractères pour les duplications potentielles
+        for (let overlap = 50; overlap >= 3; overlap--) {
+          if (cleanedExistingContent.length >= overlap) {
+            const endOfExisting = cleanedExistingContent.slice(-overlap);
+
+            // Si le nouveau contenu commence par cette séquence, nous avons une duplication
+            if (content.startsWith(endOfExisting)) {
+              // Supprimer la duplication du nouveau contenu
+              newContent = cleanedExistingContent + content.slice(overlap);
+              duplicationFound = true;
+              break;
+            }
+
+            // Détection de duplication partielle (mot coupé)
+            for (let i = Math.min(overlap - 1, 20); i >= 3; i--) {
+              const partialEnd = cleanedExistingContent.slice(-i);
+
+              if (content.startsWith(partialEnd)) {
+                newContent = cleanedExistingContent + content.slice(i);
+                duplicationFound = true;
+                break;
+              }
+            }
+
+            if (duplicationFound) break;
+          }
         }
+
+        // Si aucune duplication n'a été trouvée, utiliser la logique standard
+        if (!duplicationFound) {
+          // Règles de concaténation améliorées
+          if (lastCharExisting === "" || firstCharNew === "") {
+            // L'un des deux est vide, concaténation simple
+            newContent = cleanedExistingContent + content;
+          } else if (
+            cleanedExistingContent.endsWith("\n") ||
+            content.startsWith("\n")
+          ) {
+            // Si l'un des deux a un retour à la ligne, concaténer directement
+            // en supprimant un retour à la ligne superflu si les deux en ont un
+            if (
+              cleanedExistingContent.endsWith("\n") &&
+              content.startsWith("\n")
+            ) {
+              newContent = cleanedExistingContent + content.substring(1);
+            } else {
+              newContent = cleanedExistingContent + content;
+            }
+          } else if (
+            /[\s.,;:!?)\]}]$/.test(lastCharExisting) ||
+            /[\s({[]/.test(firstCharNew)
+          ) {
+            // Si le dernier char est un espace ou ponctuation finale, ou le premier est un espace ou ponctuation début
+            // concaténer directement sans ajouter d'espace
+            newContent = cleanedExistingContent + content;
+          } else if (
+            /[\w]$/.test(lastCharExisting) &&
+            /[\w]/.test(firstCharNew)
+          ) {
+            // Si on a deux caractères alphanumériques qui se suivent (possible milieu de mot)
+            // concaténer directement sans ajouter d'espace
+            newContent = cleanedExistingContent + content;
+          } else {
+            // Dans les autres cas, ajouter un espace entre les deux contenus
+            // sauf si on est dans un contexte de code (HTML, JS, etc.) où des éléments pourraient être joints
+            // Vérification de contexte de code
+            const lastFewChars = cleanedExistingContent.slice(-10);
+            if (
+              lastFewChars.includes('"') ||
+              lastFewChars.includes("'") ||
+              lastFewChars.includes("<") ||
+              lastFewChars.includes("{") ||
+              lastFewChars.includes("(")
+            ) {
+              // Dans un contexte de code, concaténer directement
+              newContent = cleanedExistingContent + content;
+            } else {
+              // Ajouter un espace dans les autres cas
+              newContent = cleanedExistingContent + " " + content;
+            }
+          }
+        }
+
+        allFiles.set(existingFileKey, newContent);
       } else {
         // Si le fichier n'existe pas, le traiter comme un nouveau fichier
         console.warn(
@@ -152,23 +231,83 @@ export const getUpdatedArtifactCode = (
             "",
           );
 
-          // Même logique améliorée pour éviter les espaces superflus
-          const existingEndsWithNewline = cleanedExistingContent.endsWith("\n");
-          const newContentStartsWithNewline = content.startsWith("\n");
+          // Utiliser la même logique améliorée que pour la continuation
+          const lastCharExisting = cleanedExistingContent.charAt(
+            cleanedExistingContent.length - 1,
+          );
+          const firstCharNew = content.charAt(0);
 
-          // Concaténer le nouveau contenu au contenu existant sans ajouter d'espace
-          if (existingEndsWithNewline || newContentStartsWithNewline) {
-            // Si l'un des deux a déjà un saut de ligne, concaténer directement
-            allFiles.set(
-              fileName,
-              existingEndsWithNewline
-                ? cleanedExistingContent + content.replace(/^\n/, "")
-                : cleanedExistingContent + content,
-            );
-          } else {
-            // Concaténer directement, sans logique d'espace
-            allFiles.set(fileName, cleanedExistingContent + content);
+          let newContent = "";
+
+          // Vérifier les duplications comme ci-dessus
+          let duplicationFound = false;
+
+          for (let overlap = 50; overlap >= 3; overlap--) {
+            if (cleanedExistingContent.length >= overlap) {
+              const endOfExisting = cleanedExistingContent.slice(-overlap);
+
+              if (content.startsWith(endOfExisting)) {
+                newContent = cleanedExistingContent + content.slice(overlap);
+                duplicationFound = true;
+                break;
+              }
+
+              for (let i = Math.min(overlap - 1, 20); i >= 3; i--) {
+                const partialEnd = cleanedExistingContent.slice(-i);
+
+                if (content.startsWith(partialEnd)) {
+                  newContent = cleanedExistingContent + content.slice(i);
+                  duplicationFound = true;
+                  break;
+                }
+              }
+
+              if (duplicationFound) break;
+            }
           }
+
+          if (!duplicationFound) {
+            if (lastCharExisting === "" || firstCharNew === "") {
+              newContent = cleanedExistingContent + content;
+            } else if (
+              cleanedExistingContent.endsWith("\n") ||
+              content.startsWith("\n")
+            ) {
+              if (
+                cleanedExistingContent.endsWith("\n") &&
+                content.startsWith("\n")
+              ) {
+                newContent = cleanedExistingContent + content.substring(1);
+              } else {
+                newContent = cleanedExistingContent + content;
+              }
+            } else if (
+              /[\s.,;:!?)\]}]$/.test(lastCharExisting) ||
+              /[\s({[]/.test(firstCharNew)
+            ) {
+              newContent = cleanedExistingContent + content;
+            } else if (
+              /[\w]$/.test(lastCharExisting) &&
+              /[\w]/.test(firstCharNew)
+            ) {
+              newContent = cleanedExistingContent + content;
+            } else {
+              const lastFewChars = cleanedExistingContent.slice(-10);
+              if (
+                lastFewChars.includes('"') ||
+                lastFewChars.includes("'") ||
+                lastFewChars.includes("<") ||
+                lastFewChars.includes("{") ||
+                lastFewChars.includes("(")
+              ) {
+                newContent = cleanedExistingContent + content;
+              } else {
+                newContent = cleanedExistingContent + " " + content;
+              }
+            }
+          }
+
+          allFiles.set(fileName, newContent);
         } else {
           // Sinon, on remplace par le nouveau contenu
           allFiles.set(fileName, content);
@@ -975,16 +1114,16 @@ export const extractFilesFromArtifact = (artifactCode: string): ChatFile[] => {
 
 export const extractContentBeforeFinishReason = (
   content: string,
-  contextLength: number = 100,
+  contextLength: number = 200,
 ): string => {
-  if (!content) return "Continue where you left off";
+  if (!content) return "Continue exactly where you left off";
 
   // Check if content contains FINISH_REASON markers
   const hasLengthMarker = content.includes("<!-- FINISH_REASON: length -->");
   const hasErrorMarker = content.includes("<!-- FINISH_REASON: error -->");
 
   if (!hasLengthMarker && !hasErrorMarker) {
-    return "Continue where you left off";
+    return "Continue exactly where you left off";
   }
 
   // Find the position of the marker
@@ -994,19 +1133,46 @@ export const extractContentBeforeFinishReason = (
   );
 
   if (markerIndex <= 0) {
-    return "Continue where you left off";
+    return "Continue exactly where you left off";
   }
 
-  // Extract last characters before the marker
-  const startIndex = Math.max(0, markerIndex - contextLength);
-  const contextSnippet = content.substring(startIndex, markerIndex);
+  // Get the content before the finish reason marker
+  const contentBeforeMarker = content.substring(0, markerIndex).trim();
 
-  return `Continue where you left off. Here's the last part of the content: ${contextSnippet}`;
+  // Extract the last 200 characters (or all if less than 200)
+  const lastChars = contentBeforeMarker.substring(
+    Math.max(0, contentBeforeMarker.length - contextLength),
+  );
+
+  // Identify the exact last line or code fragment
+  // Find the last line break to make sure we're starting at a logical boundary
+  let snippetStart = 0;
+  const lastLineBreakIndex = lastChars.lastIndexOf("\n");
+
+  if (lastLineBreakIndex !== -1) {
+    // Get at least 2 lines if possible for better context
+    const prevLineBreakIndex = lastChars.lastIndexOf(
+      "\n",
+      lastLineBreakIndex - 1,
+    );
+    if (
+      prevLineBreakIndex !== -1 &&
+      lastLineBreakIndex - prevLineBreakIndex < 100
+    ) {
+      snippetStart = prevLineBreakIndex + 1;
+    } else {
+      snippetStart = lastLineBreakIndex + 1;
+    }
+  }
+
+  const contextSnippet = lastChars.substring(snippetStart);
+
+  return `Continue exactly where you left off. Here's the exact end of the content: ${contextSnippet}`;
 };
 
 export const createContinuePrompt = (
   messages: Tables<"messages">[],
-  contextLength: number = 100,
+  contextLength: number = 200,
 ): string => {
   // Find the last assistant message
   const assistantMessages = messages.filter((msg) => msg.role === "assistant");
@@ -1020,7 +1186,7 @@ export const createContinuePrompt = (
 
   // Default prompt if no assistant message is found
   if (!lastAssistantMessage || !lastAssistantMessage.content) {
-    return "Continue where you left off";
+    return "Continue exactly where you left off";
   }
 
   // Extract context using existing function
