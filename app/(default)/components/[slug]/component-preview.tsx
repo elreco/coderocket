@@ -1,7 +1,7 @@
 "use client";
 
 import { Loader2, AlertCircle, WandSparkles, RefreshCw } from "lucide-react";
-import React from "react";
+import React, { useRef } from "react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -85,6 +85,7 @@ export default function ComponentPreview() {
     handleSubmitToAI,
   } = useComponentContext();
   const { previewId } = useWebcontainer();
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   return (
     <>
@@ -141,13 +142,16 @@ export default function ComponentPreview() {
         !buildError &&
         !loadingState &&
         isWebcontainerReady && (
-          <iframe
-            src={`https://${chatId}-${selectedVersion}.webcontainer.coderocket.app`}
-            className="size-full border-none"
-            sandbox="allow-scripts allow-forms allow-popups allow-modals allow-storage-access-by-user-activation allow-same-origin"
-            allow="credentialless"
-            loading="eager"
-          />
+          <div className="relative size-full">
+            <iframe
+              ref={iframeRef}
+              src={`https://${chatId}-${selectedVersion}.dev.webcontainer.coderocket.app`}
+              className="size-full border-none"
+              sandbox="allow-scripts allow-forms allow-popups allow-modals allow-storage-access-by-user-activation allow-same-origin"
+              allow="credentialless"
+              loading="eager"
+            />
+          </div>
         )}
     </>
   );

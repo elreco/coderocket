@@ -19,7 +19,7 @@ export async function middleware(request: NextRequest) {
   // 🔁 Réécriture pour les sous-domaines spécifiques
   const subdomainConfig = {
     "preview.coderocket.app": "preview",
-    "webcontainer.coderocket.app": "webcontainer",
+    "dev.webcontainer.coderocket.app": "webcontainer",
   } as const;
 
   for (const [domain, path] of Object.entries(subdomainConfig)) {

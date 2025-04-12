@@ -67,7 +67,7 @@ export default async function Page({ params }: Props) {
       <Watermark slug={chat.slug} />
       <iframe
         className="size-full border-none"
-        src={`https://${prefix}.webcontainer.coderocket.app/${slug ? slug.join("/") : ""}`}
+        src={`https://${prefix}.dev.webcontainer.coderocket.app/${slug ? slug.join("/") : ""}`}
         sandbox="allow-scripts allow-forms allow-popups allow-modals allow-storage-access-by-user-activation allow-same-origin"
         allow="credentialless"
         loading="eager"

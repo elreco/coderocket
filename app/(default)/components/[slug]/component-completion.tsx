@@ -140,6 +140,13 @@ export default function ComponentCompletion({
   const [isRemixModalOpen, setIsRemixModalOpen] = useState(false);
   const [hasAlreadyRemixed, setHasAlreadyRemixed] = useState(false);
 
+  const [isSelectingElement, setIsSelectingElement] = useState(false);
+
+  // Add state for selected element
+  const [selectedElementSelector, setSelectedElementSelector] = useState<
+    string | null
+  >(null);
+
   useEffect(() => {
     const loadInitialData = async () => {
       const [chat, assistantMsg, userMsg, msgs, hasLiked] = await Promise.all([
@@ -759,6 +766,10 @@ export default function ComponentCompletion({
     setLoadingState,
     fetchedChat,
     isLengthError,
+    isSelectingElement,
+    setIsSelectingElement,
+    selectedElementSelector,
+    setSelectedElementSelector,
   };
 
   useEffect(() => {
@@ -909,7 +920,7 @@ export default function ComponentCompletion({
                             isWebcontainerReady ? (
                               <iframe
                                 className="size-full rounded-md border-none"
-                                src={`https://${chatId}-${selectedVersion}.webcontainer.coderocket.app`}
+                                src={`https://${chatId}-${selectedVersion}.dev.webcontainer.coderocket.app`}
                                 sandbox="allow-scripts allow-forms allow-popups allow-modals allow-storage-access-by-user-activation allow-same-origin"
                                 allow="credentialless"
                                 loading="eager"

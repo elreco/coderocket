@@ -13,11 +13,14 @@ import {
   VideoIcon,
   CheckCircle,
   Loader,
+  MousePointer,
+  Code,
 } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState, useRef, useCallback } from "react";
 
 import { getSubscription } from "@/app/supabase-server";
+import { IframeElementSelector } from "@/components/iframe-element-selector";
 import { ImageSelector } from "@/components/image-selector";
 import { TextareaWithLimit } from "@/components/textarea-with-limit";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -87,6 +90,11 @@ export default function ComponentSidebar({
     defaultImage,
     isLengthError,
     fetchedChat,
+    isWebcontainerReady,
+    isSelectingElement,
+    setIsSelectingElement,
+    selectedElementSelector,
+    setSelectedElementSelector,
   } = useComponentContext();
   const { buildError } = useWebcontainer();
 
@@ -128,6 +136,220 @@ export default function ComponentSidebar({
     videosCount: 0,
     error: null,
   });
+
+  // Add iframe reference
+  const iframeRef = useRef<HTMLIFrameElement | null>(null);
+
+  // État pour suivre si l'iframe a été trouvé et correctement configuré
+  const [iframeConfigured, setIframeConfigured] = useState(false);
+
+  // Initialize element selector avec une fonction onSelect simplifiée
+  const { startSelection, cancelSelection } = IframeElementSelector({
+    iframeRef,
+    onSelect: useCallback(
+      (selector: string) => {
+        if (!selector) return;
+
+        // Stocker le sélecteur sans l'ajouter à l'input
+        setSelectedElementSelector(selector);
+        setIsSelectingElement(false);
+      },
+      [setSelectedElementSelector, setIsSelectingElement],
+    ),
+    enabled: isWebcontainerReady && iframeConfigured, // Activer uniquement quand l'iframe est configuré
+  });
+
+  // Fonction pour trouver et configurer l'iframe
+  const findAndConfigureIframe = useCallback(() => {
+    // Chercher l'iframe dans le DOM
+    const iframe = document.querySelector("iframe") as HTMLIFrameElement;
+    if (iframe && iframe.contentWindow) {
+      console.log("[Buildr] iframe found, setting reference");
+
+      // Vérifier si l'iframe est accessible
+      try {
+        // Essayer d'accéder au contentWindow pour vérifier que l'iframe est chargée
+        const origin = iframe.getAttribute("src");
+        if (origin) {
+          iframeRef.current = iframe;
+          setIframeConfigured(true);
+          return true;
+        }
+      } catch (e) {
+        console.error("[Buildr] Error accessing iframe:", e);
+      }
+    }
+    return false;
+  }, []);
+
+  // Surveiller les changements d'état du webcontainer et tenter de configurer l'iframe
+  useEffect(() => {
+    if (!isWebcontainerReady || !chatId || selectedVersion === undefined) {
+      // Réinitialiser l'état quand le webcontainer n'est pas prêt
+      setIframeConfigured(false);
+      iframeRef.current = null;
+      return;
+    }
+
+    // Attendre que le DOM soit complètement rendu
+    const checkIframe = () => {
+      const found = findAndConfigureIframe();
+
+      // Si l'iframe n'est pas trouvée, réessayer après un délai
+      if (!found) {
+        const timeoutId = setTimeout(() => {
+          checkIframe();
+        }, 500);
+
+        return () => {
+          clearTimeout(timeoutId);
+        };
+      }
+    };
+
+    checkIframe();
+  }, [isWebcontainerReady, chatId, selectedVersion, findAndConfigureIframe]);
+
+  // Toggle element selection sans créer de dépendances circulaires
+  const toggleElementSelector = useCallback(() => {
+    // Vérifier que le webcontainer est prêt avant de permettre la sélection
+    if (!isWebcontainerReady) {
+      toast({
+        variant: "destructive",
+        title: "Preview not ready",
+        description:
+          "Please wait for the preview to load before selecting elements",
+        duration: 3000,
+      });
+      return;
+    }
+
+    console.log(
+      "[Buildr] Toggle element selection, current state:",
+      isSelectingElement,
+    );
+
+    if (isSelectingElement) {
+      // Function to completely reset the iframe
+      const resetIframe = () => {
+        console.log("[Buildr] Performing complete iframe reset");
+
+        // First try the normal cancellation
+        try {
+          cancelSelection();
+        } catch (e) {
+          console.error("[Buildr] Error in standard cancellation:", e);
+        }
+
+        // Always force a complete iframe reload regardless of the above result
+        if (iframeRef.current) {
+          try {
+            // Store the current src
+            const currentSrc = iframeRef.current.src;
+
+            // 1. First set to about:blank to clear everything
+            iframeRef.current.src = "about:blank";
+
+            // 2. After a delay, set it back with a cache-busting parameter
+            setTimeout(() => {
+              if (iframeRef.current && currentSrc) {
+                // Add a unique timestamp to prevent caching
+                const timestampedSrc = currentSrc.includes("?")
+                  ? `${currentSrc}&_reset=${Date.now()}`
+                  : `${currentSrc}?_reset=${Date.now()}`;
+
+                iframeRef.current.src = timestampedSrc;
+                console.log("[Buildr] Iframe has been completely reset");
+              }
+            }, 100);
+          } catch (err) {
+            console.error("[Buildr] Error during iframe reset:", err);
+          }
+        }
+
+        // Always update UI state
+        setIsSelectingElement(false);
+      };
+
+      // Force cancellation using multiple methods for reliability
+      try {
+        // Attempt to use the hook's cancellation
+        cancelSelection();
+        console.log("[Buildr] Cancel selection called via hook");
+
+        // Direct iframe message as a backup
+        if (iframeRef.current && iframeRef.current.contentWindow) {
+          // Send direct cancel message to iframe
+          iframeRef.current.contentWindow.postMessage(
+            {
+              type: "cancel-element-selector",
+              source: "direct-toggle",
+            },
+            "*",
+          );
+          console.log("[Buildr] Direct cancel message sent from toggle");
+
+          // If both were successful (no errors), give it a moment to take effect
+          setTimeout(() => {
+            // If the user is still selecting (didn't actually happen), force reset
+            if (isSelectingElement) {
+              console.log("[Buildr] Selection is still active, forcing reset");
+              resetIframe();
+            }
+          }, 250);
+        } else {
+          // No iframe contentWindow, do a full reset immediately
+          resetIframe();
+        }
+      } catch (err) {
+        console.error("[Buildr] Error in cancellation flow:", err);
+        // On any error, force the reset
+        resetIframe();
+      } finally {
+        // Always update state even if cancelSelection fails
+        setIsSelectingElement(false);
+      }
+    } else {
+      // Vérifier si l'iframe est toujours valide ou tenter de la retrouver
+      if (!iframeRef.current || !iframeConfigured) {
+        const found = findAndConfigureIframe();
+        if (!found) {
+          console.error("[Buildr] No iframe element found");
+          toast({
+            variant: "destructive",
+            title: "Cannot select elements",
+            description:
+              "The preview frame is not available. Try refreshing the page.",
+            duration: 3000,
+          });
+          return;
+        }
+      }
+
+      try {
+        startSelection();
+        setIsSelectingElement(true);
+      } catch (err) {
+        console.error("[Buildr] Error starting selection:", err);
+        toast({
+          variant: "destructive",
+          title: "Selection error",
+          description: "Could not start element selection mode",
+          duration: 3000,
+        });
+      }
+    }
+  }, [
+    isSelectingElement,
+    setIsSelectingElement,
+    startSelection,
+    cancelSelection,
+    isWebcontainerReady,
+    iframeConfigured,
+    findAndConfigureIframe,
+    iframeRef,
+    toast,
+  ]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -197,7 +419,13 @@ export default function ComponentSidebar({
       return;
     }
 
-    submitPrompt(input);
+    // Si un élément est sélectionné, on l'ajoute au prompt envoyé à l'API
+    const finalPrompt = selectedElementSelector
+      ? `${input}\n\nPlease modify this specific element: \`${selectedElementSelector}\``
+      : input;
+
+    setSelectedElementSelector(null); // Réinitialiser le sélecteur après l'envoi
+    submitPrompt(finalPrompt);
   };
 
   const handleTabChange = (value: string) => {
@@ -905,7 +1133,7 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
                       submitPrompt(continuePrompt);
                     }}
                   >
-                    <RefreshCw className=" size-4" />
+                    <RefreshCw className="size-4" />
                     Continue generation
                   </Button>
                 )}
@@ -928,6 +1156,20 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
                   >
                     <WandSparkles className="size-4" />
                     Fix errors
+                  </Button>
+                )}
+                {/* Bouton de sélection d'élément - ne s'affiche que lorsque webcontainer est prêt */}
+                {isWebcontainerReady && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    className="mr-2"
+                    variant={isSelectingElement ? "secondary" : "outline"}
+                    onClick={toggleElementSelector}
+                    disabled={!iframeRef.current}
+                  >
+                    <MousePointer className="size-4" />
+                    {isSelectingElement ? "Cancel Selection" : "Select Element"}
                   </Button>
                 )}
               </div>
@@ -980,6 +1222,28 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
               </div>
             </div>
             <div className="flex w-full flex-col items-start space-y-1 border-t p-2">
+              {/* Afficher le badge d'élément sélectionné s'il y en a un */}
+              {selectedElementSelector && (
+                <div className="mb-2 flex w-full items-center justify-between rounded-md bg-primary/10 p-2 text-xs text-primary">
+                  <div className="flex items-center">
+                    <Code className="mr-1.5 size-3.5" />
+                    <span className="font-mono">
+                      {selectedElementSelector.length > 30
+                        ? `${selectedElementSelector.substring(0, 30)}...`
+                        : selectedElementSelector}
+                    </span>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="size-5 p-0 text-primary hover:text-primary/80"
+                    onClick={() => setSelectedElementSelector(null)}
+                  >
+                    <X className="size-3" />
+                  </Button>
+                </div>
+              )}
               <TextareaWithLimit
                 ref={inputRef}
                 autoFocus

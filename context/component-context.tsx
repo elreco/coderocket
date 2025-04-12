@@ -63,6 +63,10 @@ interface ComponentContextType {
   setLoadingState: (value: WebcontainerLoadingState) => void;
   fetchedChat: Tables<"chats"> | null;
   isLengthError: boolean;
+  isSelectingElement: boolean;
+  setIsSelectingElement: (value: boolean) => void;
+  selectedElementSelector: string | null;
+  setSelectedElementSelector: (value: string | null) => void;
 }
 
 export const ComponentContext = createContext<ComponentContextType | undefined>(

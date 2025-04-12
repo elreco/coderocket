@@ -102,6 +102,7 @@ export default async function RootLayout({ children }: PropsWithChildren) {
             }),
           }}
         />
+        <script src="/preload-handlers.js" async></script>
       </head>
       <body className="size-full bg-background">
         <SidebarProvider defaultOpen={defaultOpen} className="size-full">
