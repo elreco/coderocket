@@ -109,20 +109,20 @@ export async function GET(
       Expires: "0",
       "Surrogate-Control": "no-store",
 
-      // CORS (sans credentials + wildcard)
+      // CORS - set to allow everything
       "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Methods": "*",
       "Access-Control-Allow-Headers": "*",
+      "Access-Control-Allow-Credentials": "true",
 
-      // Iframe autorisé
+      // Iframe - allow unrestricted access
       "X-Frame-Options": "ALLOWALL",
-      "Content-Security-Policy": "frame-ancestors *",
+      "Content-Security-Policy":
+        "default-src * 'unsafe-inline' 'unsafe-eval'; frame-ancestors *",
 
-      // Cross-Origin Isolation (vous aviez déjà COEP: credentialless + COOP: same-origin)
-      "Cross-Origin-Opener-Policy": "same-origin",
-      "Cross-Origin-Embedder-Policy": "credentialless",
-
-      // Manquant auparavant : indique qu’on accepte d’être chargé cross-origin
+      // Disable cross-origin isolation policies
+      "Cross-Origin-Opener-Policy": "unsafe-none",
+      "Cross-Origin-Embedder-Policy": "unsafe-none",
       "Cross-Origin-Resource-Policy": "cross-origin",
     },
   });
