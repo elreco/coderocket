@@ -118,12 +118,15 @@ export async function GET(
       "X-Frame-Options": "ALLOWALL",
       "Content-Security-Policy": "frame-ancestors *",
 
-      // Cross-Origin Isolation (vous aviez déjà COEP: credentialless + COOP: same-origin)
-      "Cross-Origin-Opener-Policy": "same-origin",
-      "Cross-Origin-Embedder-Policy": "credentialless",
+      // Cross-Origin Isolation - Updated to allow document access
+      "Cross-Origin-Opener-Policy": "same-origin-allow-popups",
+      "Cross-Origin-Embedder-Policy": "unsafe-none",
 
-      // Manquant auparavant : indique qu’on accepte d’être chargé cross-origin
+      // Manquant auparavant : indique qu'on accepte d'être chargé cross-origin
       "Cross-Origin-Resource-Policy": "cross-origin",
+
+      // Allow document domain modification
+      "Document-Domain": "allow",
     },
   });
 }
