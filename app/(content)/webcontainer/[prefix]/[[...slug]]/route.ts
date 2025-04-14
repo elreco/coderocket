@@ -117,7 +117,7 @@ export async function GET(
       // Iframe autorisé
       "X-Frame-Options": "ALLOWALL",
       "Content-Security-Policy": "frame-ancestors *",
-
+      "Cross-Origin-Isolation": "require-corp",
       // Cross-Origin Isolation (vous aviez déjà COEP: credentialless + COOP: same-origin)
       "Cross-Origin-Opener-Policy": "same-origin",
       "Cross-Origin-Embedder-Policy": "credentialless",
