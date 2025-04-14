@@ -66,16 +66,24 @@ export async function POST(req: Request) {
     );
 
     const stream = streamText({
-      messages,
+      messages: [
+        {
+          role: "system",
+          content:
+            framework === Framework.HTML
+              ? htmlSystemPrompt(
+                  messagesFromDatabase.length === 1
+                    ? messagesFromDatabase[0]?.theme
+                    : null,
+                )
+              : systemPrompt(framework as Framework),
+          providerOptions: {
+            anthropic: { cacheControl: { type: "ephemeral" } },
+          },
+        },
+        ...messages,
+      ],
       model: anthropicModel("claude-3-7-sonnet-latest"),
-      system:
-        framework === Framework.HTML
-          ? htmlSystemPrompt(
-              messagesFromDatabase.length === 1
-                ? messagesFromDatabase[0]?.theme
-                : null,
-            )
-          : systemPrompt(framework as Framework),
       toolChoice: "none",
       maxTokens: MAX_TOKENS_PER_REQUEST,
       onFinish: async ({ text, usage, finishReason }) => {
