@@ -99,12 +99,12 @@ export const TRIAL_PLAN_MESSAGES_PER_MONTH = 6;
 
 export const MAX_SEARCH_LENGTH = 50;
 
-export const MAX_TOKENS_PER_REQUEST = 6000;
+export const MAX_TOKENS_PER_REQUEST = 64000;
 export const CHAR_PER_TOKEN = 2;
 export const MAX_ACCOUNTS_PER_IP = 5;
 
 export const FREE_CHAR_LIMIT = 1500;
-export const PREMIUM_CHAR_LIMIT = MAX_TOKENS_PER_REQUEST * CHAR_PER_TOKEN; // 12000 caractères
+export const PREMIUM_CHAR_LIMIT = 8000 * CHAR_PER_TOKEN; // 12000 caractères
 
 export const MAX_VERSIONS_PER_COMPONENT = 70;
 

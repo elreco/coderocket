@@ -606,7 +606,7 @@ export async function scrapeWebsite(url: string): Promise<WebsiteContent> {
     });
 
     // Anthropic limit is 8000px, use 7500px as a safe limit
-    const maxHeight = 7500;
+    const maxHeight = 6000;
     let screenshot;
 
     if (measurements.pageHeight <= maxHeight) {
@@ -615,7 +615,7 @@ export async function scrapeWebsite(url: string): Promise<WebsiteContent> {
         fullPage: true,
         encoding: "base64",
         type: "jpeg",
-        quality: 80,
+        quality: 75,
       });
     } else {
       // For very tall pages, scale down the page
@@ -632,7 +632,7 @@ export async function scrapeWebsite(url: string): Promise<WebsiteContent> {
         fullPage: true,
         encoding: "base64",
         type: "jpeg",
-        quality: 75,
+        quality: 50,
       });
     }
 
