@@ -74,10 +74,10 @@ export default function ComponentChatFiles({
     // Extraire les fichiers une seule fois
     const extractedFiles = extractDirectFiles(message.content);
 
-    // NOUVEAU: Extraire spécifiquement le texte avant le premier artifact ou balise tailwindaiFile
+    // NOUVEAU: Extraire spécifiquement le texte avant le premier artifact ou balise coderocketFile
     let introText = "";
-    const firstArtifactIndex = message.content.indexOf("<tailwindaiArtifact");
-    const firstFileIndex = message.content.indexOf("<tailwindaiFile");
+    const firstArtifactIndex = message.content.indexOf("<coderocketArtifact");
+    const firstFileIndex = message.content.indexOf("<coderocketFile");
 
     // Si on a du texte avant les balises, l'extraire
     if (firstArtifactIndex > 0 || firstFileIndex > 0) {
@@ -108,9 +108,9 @@ export default function ComponentChatFiles({
     // NOUVEAU: Fonction pour vérifier si un texte contient des balises incomplètes
     const containsIncompleteTag = (text: string): boolean => {
       // Vérifier s'il y a une balise ouvrante sans balise fermante correspondante
-      const openingTags = ["<tailwindaiArtifact", "<tailwindaiFile"];
+      const openingTags = ["<coderocketArtifact", "<coderocketFile"];
 
-      const closingTags = ["</tailwindaiArtifact>", "</tailwindaiFile>"];
+      const closingTags = ["</coderocketArtifact>", "</coderocketFile>"];
 
       // Vérifier chaque paire de balises
       for (let i = 0; i < openingTags.length; i++) {
@@ -150,21 +150,21 @@ export default function ComponentChatFiles({
     const containsEmptyOrUselessTags = (text: string): boolean => {
       // Vérifier les balises artifact sans contenu utile
       const emptyArtifactPattern =
-        /<tailwindaiArtifact[^>]*>[\s\n]*<\/tailwindaiArtifact>/g;
+        /<coderocketArtifact[^>]*>[\s\n]*<\/coderocketArtifact>/g;
       if (emptyArtifactPattern.test(text)) {
         return true;
       }
 
       // Vérifier les balises artifact avec juste un titre mais sans contenu
       const justTitlePattern =
-        /<tailwindaiArtifact[^>]*title="[^"]*"[^>]*>[\s\n]*<\/tailwindaiArtifact>/g;
+        /<coderocketArtifact[^>]*title="[^"]*"[^>]*>[\s\n]*<\/coderocketArtifact>/g;
       if (justTitlePattern.test(text)) {
         return true;
       }
 
       // Vérifier les balises file sans contenu utile
       const emptyFilePattern =
-        /<tailwindaiFile[^>]*>[\s\n]*<\/tailwindaiFile>/g;
+        /<coderocketFile[^>]*>[\s\n]*<\/coderocketFile>/g;
       if (emptyFilePattern.test(text)) {
         return true;
       }
@@ -184,9 +184,9 @@ export default function ComponentChatFiles({
 
       // Appliquer la vérification aux contenus des balises artifact et file
       const artifactContentPattern =
-        /<tailwindaiArtifact[^>]*>([\s\S]*?)<\/tailwindaiArtifact>/g;
+        /<coderocketArtifact[^>]*>([\s\S]*?)<\/coderocketArtifact>/g;
       const fileContentPattern =
-        /<tailwindaiFile[^>]*>([\s\S]*?)<\/tailwindaiFile>/g;
+        /<coderocketFile[^>]*>([\s\S]*?)<\/coderocketFile>/g;
 
       if (
         checkLowContent(artifactContentPattern) ||
@@ -260,7 +260,7 @@ export default function ComponentChatFiles({
     // Si on a des fichiers et qu'ils ne sont pas dans un artifact existant
     const hasArtifactWithFiles = contentChunks.some(
       (chunk) =>
-        chunk.type === "artifact" && chunk.content.includes("<tailwindaiFile"),
+        chunk.type === "artifact" && chunk.content.includes("<coderocketFile"),
     );
 
     // Créer un artifact avec les fichiers (complets ou incomplets)
@@ -268,15 +268,15 @@ export default function ComponentChatFiles({
       const artifactTitle = isLoading
         ? "Generating Files..."
         : "Generated Files";
-      const artificialArtifact = `<tailwindaiArtifact title="${artifactTitle}">
+      const artificialArtifact = `<coderocketArtifact title="${artifactTitle}">
 ${extractedFiles
   .map((file) => {
     const isIncompleteAttr =
       isLoading && file.isIncomplete ? ' isIncomplete="true"' : "";
-    return `<tailwindaiFile name="${file.name}"${isIncompleteAttr}>${file.content}</tailwindaiFile>`;
+    return `<coderocketFile name="${file.name}"${isIncompleteAttr}>${file.content}</coderocketFile>`;
   })
   .join("\n")}
-</tailwindaiArtifact>`;
+</coderocketArtifact>`;
 
       if (!hasArtifactWithFiles) {
         // Filtrer les chunks pour enlever ceux qui contiennent des fichiers
@@ -284,7 +284,7 @@ ${extractedFiles
           (chunk) =>
             chunk.type === "text" ||
             (chunk.type === "artifact" &&
-              !chunk.content.includes("<tailwindaiFile")),
+              !chunk.content.includes("<coderocketFile")),
         );
 
         // Ajouter l'artifact au début avec le bon type - mais après les chunks de texte
@@ -306,7 +306,7 @@ ${extractedFiles
         const updatedChunks = contentChunks.map((chunk) => {
           if (
             chunk.type === "artifact" &&
-            chunk.content.includes("<tailwindaiFile")
+            chunk.content.includes("<coderocketFile")
           ) {
             return {
               type: "artifact" as const,

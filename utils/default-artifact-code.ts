@@ -1,7 +1,7 @@
 export const defaultArtifactCode = {
   html: ``,
-  react: `<tailwindaiArtifact title="Blank React App">
-<tailwindaiFile name="index.html">
+  react: `<coderocketArtifact title="Blank React App">
+<coderocketFile name="index.html">
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -14,8 +14,8 @@ export const defaultArtifactCode = {
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
-</tailwindaiFile>
-<tailwindaiFile name="src/main.tsx">
+</coderocketFile>
+<coderocketFile name="src/main.tsx">
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.tsx'
@@ -26,8 +26,8 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <App />
   </React.StrictMode>,
 )
-</tailwindaiFile>
-<tailwindaiFile name="src/App.tsx">
+</coderocketFile>
+<coderocketFile name="src/App.tsx">
 function App() {
   return (
     <div className="min-h-screen flex items-center justify-center">
@@ -37,8 +37,8 @@ function App() {
 }
 
 export default App
-</tailwindaiFile>
-<tailwindFile name="components.json">
+</coderocketFile>
+<coderocketFile name="components.json">
 {
   "$schema": "https://ui.shadcn.com/schema.json",
   "style": "new-york",
@@ -60,8 +60,8 @@ export default App
   },
   "iconLibrary": "lucide"
 }
-</tailwindFile>
-<tailwindaiFile name="src/globals.css">
+</coderocketFile>
+<coderocketFile name="src/globals.css">
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -121,8 +121,8 @@ export default App
     @apply font-sans antialiased bg-background text-foreground;
   }
 }
-</tailwindaiFile>
-<tailwindaiFile name="tailwind.config.js">
+</coderocketFile>
+<coderocketFile name="tailwind.config.js">
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   darkMode: ["class"],
@@ -178,16 +178,16 @@ module.exports = {
   },
   plugins: [require("tailwindcss-animate")],
 }
-</tailwindaiFile>
-<tailwindaiFile name="postcss.config.cjs">
+</coderocketFile>
+<coderocketFile name="postcss.config.cjs">
 module.exports = {
   plugins: {
     tailwindcss: {},
     autoprefixer: {},
   },
 }
-</tailwindaiFile>
-<tailwindaiFile name="package.json">
+</coderocketFile>
+<coderocketFile name="package.json">
 {
   "name": "tailwind-ai-app",
   "private": true,
@@ -240,8 +240,8 @@ module.exports = {
     "vite": "^4.3.9"
   }
 }
-</tailwindaiFile>
-<tailwindaiFile name="tsconfig.json">
+</coderocketFile>
+<coderocketFile name="tsconfig.json">
 {
   "compilerOptions": {
     "target": "ES2020",
@@ -274,8 +274,8 @@ module.exports = {
   "include": ["src"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
-</tailwindaiFile>
-<tailwindaiFile name="tsconfig.app.json">
+</coderocketFile>
+<coderocketFile name="tsconfig.app.json">
 {
   "compilerOptions": {
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
@@ -305,8 +305,8 @@ module.exports = {
   },
   "include": ["src"]
 }
-</tailwindaiFile>
-<tailwindaiFile name="tsconfig.node.json">
+</coderocketFile>
+<coderocketFile name="tsconfig.node.json">
 {
   "compilerOptions": {
     "composite": true,
@@ -317,8 +317,8 @@ module.exports = {
   },
   "include": ["vite.config.ts"]
 }
-</tailwindaiFile>
-<tailwindaiFile name="vite.config.ts">
+</coderocketFile>
+<coderocketFile name="vite.config.ts">
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
@@ -340,21 +340,21 @@ export default defineConfig({
     },
   },
 })
-</tailwindaiFile>
-<tailwindaiFile name="public/vite.svg">
+</coderocketFile>
+<coderocketFile name="public/vite.svg">
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img" class="iconify iconify--logos" width="31.88" height="32" preserveAspectRatio="xMidYMid meet" viewBox="0 0 256 257"><defs><linearGradient id="IconifyId1813088fe1fbc01fb466" x1="-.828%" x2="57.636%" y1="7.652%" y2="78.411%"><stop offset="0%" stop-color="#41D1FF"></stop><stop offset="100%" stop-color="#BD34FE"></stop></linearGradient><linearGradient id="IconifyId1813088fe1fbc01fb467" x1="43.376%" x2="50.316%" y1="2.242%" y2="89.03%"><stop offset="0%" stop-color="#FFEA83"></stop><stop offset="8.333%" stop-color="#FFDD35"></stop><stop offset="100%" stop-color="#FFA800"></stop></linearGradient></defs><path fill="url(#IconifyId1813088fe1fbc01fb466)" d="M255.153 37.938L134.897 252.976c-2.483 4.44-8.862 4.466-11.382.048L.875 37.958c-2.746-4.814 1.371-10.646 6.827-9.67l120.385 21.517a6.537 6.537 0 0 0 2.322-.004l117.867-21.483c5.438-.991 9.574 4.796 6.877 9.62Z"></path><path fill="url(#IconifyId1813088fe1fbc01fb467)" d="M185.432.063L96.44 17.501a3.268 3.268 0 0 0-2.634 3.014l-5.474 92.456a3.268 3.268 0 0 0 3.997 3.378l24.777-5.718c2.318-.535 4.413 1.507 3.936 3.838l-7.361 36.047c-.495 2.426 1.782 4.5 4.151 3.78l15.304-4.649c2.372-.72 4.652 1.36 4.15 3.788l-11.698 56.621c-.732 3.542 3.979 5.473 5.943 2.437l1.313-2.028l72.516-144.72c1.215-2.423-.88-5.186-3.54-4.672l-25.505 4.922c-2.396.462-4.435-1.77-3.759-4.114l16.646-57.705c.677-2.35-1.37-4.583-3.769-4.113Z"></path></svg>
-</tailwindaiFile>
-<tailwindaiFile name="src/lib/utils.ts">
+</coderocketFile>
+<coderocketFile name="src/lib/utils.ts">
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
-</tailwindaiFile>
-</tailwindaiArtifact>`,
-  vue: `<tailwindaiArtifact>
-<tailwindaiFile name="index.html">
+</coderocketFile>
+</coderocketArtifact>`,
+  vue: `<coderocketArtifact>
+<coderocketFile name="index.html">
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -367,25 +367,25 @@ export function cn(...inputs: ClassValue[]) {
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
-</tailwindaiFile>
+</coderocketFile>
 
-<tailwindaiFile name="src/main.ts">
+<coderocketFile name="src/main.ts">
 import { createApp } from 'vue'
 import App from './App.vue'
 import './globals.css'
 
 createApp(App).mount('#app')
-</tailwindaiFile>
+</coderocketFile>
 
-<tailwindaiFile name="src/App.vue">
+<coderocketFile name="src/App.vue">
 <template>
   <div class="min-h-screen flex items-center justify-center">
     <h1 class="text-4xl font-bold">Hello CodeRocket</h1>
   </div>
 </template>
-</tailwindaiFile>
+</coderocketFile>
 
-<tailwindFile name="components.json">
+<coderocketFile name="components.json">
 {
   "$schema": "https://shadcn-vue.com/schema.json",
   "style": "new-york",
@@ -404,9 +404,9 @@ createApp(App).mount('#app')
     "utils": "@/lib/utils"
   }
 }
-</tailwindFile>
+</coderocketFile>
 
-<tailwindaiFile name="src/globals.css">
+<coderocketFile name="src/globals.css">
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -466,9 +466,9 @@ createApp(App).mount('#app')
     @apply font-sans antialiased bg-background text-foreground;
   }
 }
-</tailwindaiFile>
+</coderocketFile>
 
-<tailwindaiFile name="tailwind.config.js">
+<coderocketFile name="tailwind.config.js">
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   darkMode: ["class"],
@@ -521,17 +521,17 @@ module.exports = {
   },
   plugins: [require("tailwindcss-animate")],
 }
-</tailwindaiFile>
-<tailwindaiFile name="postcss.config.cjs">
+</coderocketFile>
+<coderocketFile name="postcss.config.cjs">
 module.exports = {
   plugins: {
     tailwindcss: {},
     autoprefixer: {},
   },
 }
-</tailwindaiFile>
+</coderocketFile>
 
-<tailwindaiFile name="package.json">
+<coderocketFile name="package.json">
 {
   "name": "vue-tailwind-app",
   "private": true,
@@ -567,13 +567,13 @@ module.exports = {
     "tailwindcss-animate": "^1.0.7"
   }
 }
-</tailwindaiFile>
+</coderocketFile>
 
-<tailwindaiFile name="src/vite-env.d.ts">
+<coderocketFile name="src/vite-env.d.ts">
 /// <reference types="vite/client" />
-</tailwindaiFile>
+</coderocketFile>
 
-<tailwindaiFile name="tsconfig.json">
+<coderocketFile name="tsconfig.json">
 {
   "files": [],
   "references": [
@@ -581,8 +581,8 @@ module.exports = {
     { "path": "./tsconfig.node.json" }
   ]
 }
-</tailwindaiFile>
-<tailwindaiFile name="tsconfig.app.json">
+</coderocketFile>
+<coderocketFile name="tsconfig.app.json">
 {
   "extends": "@vue/tsconfig/tsconfig.dom.json",
   "compilerOptions": {
@@ -601,8 +601,8 @@ module.exports = {
   },
   "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue"]
 }
-</tailwindaiFile>
-<tailwindaiFile name="tsconfig.node.json">
+</coderocketFile>
+<coderocketFile name="tsconfig.node.json">
 {
   "compilerOptions": {
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo",
@@ -627,8 +627,8 @@ module.exports = {
   },
   "include": ["vite.config.ts"]
 }
-</tailwindaiFile>
-<tailwindaiFile name="vite.config.ts">
+</coderocketFile>
+<coderocketFile name="vite.config.ts">
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import path from 'path'
@@ -643,19 +643,19 @@ export default defineConfig({
     },
   },
 })
-</tailwindaiFile>
-<tailwindaiFile name="public/vite.svg">
+</coderocketFile>
+<coderocketFile name="public/vite.svg">
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img" class="iconify iconify--logos" width="31.88" height="32" preserveAspectRatio="xMidYMid meet" viewBox="0 0 256 257"><defs><linearGradient id="IconifyId1813088fe1fbc01fb466" x1="-.828%" x2="57.636%" y1="7.652%" y2="78.411%"><stop offset="0%" stop-color="#41D1FF"></stop><stop offset="100%" stop-color="#BD34FE"></stop></linearGradient><linearGradient id="IconifyId1813088fe1fbc01fb467" x1="43.376%" x2="50.316%" y1="2.242%" y2="89.03%"><stop offset="0%" stop-color="#FFEA83"></stop><stop offset="8.333%" stop-color="#FFDD35"></stop><stop offset="100%" stop-color="#FFA800"></stop></linearGradient></defs><path fill="url(#IconifyId1813088fe1fbc01fb466)" d="M255.153 37.938L134.897 252.976c-2.483 4.44-8.862 4.466-11.382.048L.875 37.958c-2.746-4.814 1.371-10.646 6.827-9.67l120.385 21.517a6.537 6.537 0 0 0 2.322-.004l117.867-21.483c5.438-.991 9.574 4.796 6.877 9.62Z"></path><path fill="url(#IconifyId1813088fe1fbc01fb467)" d="M185.432.063L96.44 17.501a3.268 3.268 0 0 0-2.634 3.014l-5.474 92.456a3.268 3.268 0 0 0 3.997 3.378l24.777-5.718c2.318-.535 4.413 1.507 3.936 3.838l-7.361 36.047c-.495 2.426 1.782 4.5 4.151 3.78l15.304-4.649c2.372-.72 4.652 1.36 4.15 3.788l-11.698 56.621c-.732 3.542 3.979 5.473 5.943 2.437l1.313-2.028l72.516-144.72c1.215-2.423-.88-5.186-3.54-4.672l-25.505 4.922c-2.396.462-4.435-1.77-3.759-4.114l16.646-57.705c.677-2.35-1.37-4.583-3.769-4.113Z"></path></svg>
-</tailwindaiFile>
-<tailwindaiFile name="src/lib/utils.ts">
+</coderocketFile>
+<coderocketFile name="src/lib/utils.ts">
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
-</tailwindaiFile>
-</tailwindaiArtifact>
+</coderocketFile>
+</coderocketArtifact>
 `,
 };
 
@@ -664,8 +664,8 @@ export const defaultArtifactExamples = {
   <example>
     <user_query>Create a login page with email and password inputs.</user_query>
     <assistant_response>
-      <tailwindaiArtifact title="A login page with email and password inputs">
-        <tailwindaiFile name="src/App.tsx">
+      <coderocketArtifact title="A login page with email and password inputs">
+        <coderocketFile name="src/App.tsx">
           import { Input } from './components/ui/input';
           import { Button } from './components/ui/button';
           import './globals.css';
@@ -692,16 +692,16 @@ export const defaultArtifactExamples = {
           }
 
           export default App;
-        </tailwindaiFile>
+        </coderocketFile>
 
-        <tailwindaiFile name="src/components/ui/ui/input.tsx">
+        <coderocketFile name="src/components/ui/ui/input.tsx">
           ...
-        </tailwindaiFile>
+        </coderocketFile>
 
-        <tailwindaiFile name="src/components/ui/ui/button.tsx">
+        <coderocketFile name="src/components/ui/ui/button.tsx">
           ...
-        </tailwindaiFile>
-      </tailwindaiArtifact>
+        </coderocketFile>
+      </coderocketArtifact>
 
       Here's a simple login page setup using shadcn/ui components, TypeScript, Vite, and Tailwind CSS.
     </assistant_response>
@@ -715,8 +715,8 @@ export const defaultArtifactExamples = {
   <example>
     <user_query>Create a login page with email and password inputs.</user_query>
     <assistant_response>
-      <tailwindaiArtifact title="A login page with email and password inputs">
-        <tailwindaiFile name="src/App.tsx">
+      <coderocketArtifact title="A login page with email and password inputs">
+        <coderocketFile name="src/App.tsx">
           import { Input } from './components/ui/input';
           import { Button } from './components/ui/button';
           import './globals.css';
@@ -743,24 +743,24 @@ export const defaultArtifactExamples = {
           }
 
           export default App;
-        </tailwindaiFile>
+        </coderocketFile>
 
-        <tailwindaiFile name="src/components/ui/ui/input.tsx">
+        <coderocketFile name="src/components/ui/ui/input.tsx">
           ...
-        </tailwindaiFile>
+        </coderocketFile>
 
-        <tailwindaiFile name="src/components/ui/ui/button.tsx">
+        <coderocketFile name="src/components/ui/ui/button.tsx">
           ...
-        </tailwindaiFile>
-      </tailwindaiArtifact>
+        </coderocketFile>
+      </coderocketArtifact>
 
       Here's a simple login page setup using shadcn/ui components, TypeScript, Vite, and Tailwind CSS.
     </assistant_response>
     <user_query>Remove the button from the login page.</user_query>
     <assistant_response>
       I removed the button from the login page.
-      <tailwindaiArtifact title="A login page with email and password inputs">
-        <tailwindaiFile name="src/App.tsx">
+      <coderocketArtifact title="A login page with email and password inputs">
+        <coderocketFile name="src/App.tsx">
           import { Input } from './components/ui/input';
           import './globals.css';
 
@@ -785,18 +785,18 @@ export const defaultArtifactExamples = {
           }
 
           export default App;
-        </tailwindaiFile>
-        <tailwindaiFile name="src/components/ui/ui/button.tsx" action="delete" />
-      </tailwindaiArtifact>
+        </coderocketFile>
+        <coderocketFile name="src/components/ui/ui/button.tsx" action="delete" />
+      </coderocketArtifact>
       <user_query>Move input component from ui folder to components folder.</user_query>
       <assistant_response>
         I moved the input component from ui folder to components folder.
-        <tailwindaiArtifact title="A login page with email and password inputs">
-          <tailwindaiFile name="src/components/ui/ui/input.tsx" action="delete" />
-          <tailwindaiFile name="src/components/ui/input.tsx">
+        <coderocketArtifact title="A login page with email and password inputs">
+          <coderocketFile name="src/components/ui/ui/input.tsx" action="delete" />
+          <coderocketFile name="src/components/ui/input.tsx">
             ...
-          </tailwindaiFile>
-        </tailwindaiArtifact>
+          </coderocketFile>
+        </coderocketArtifact>
       </assistant_response>
     </example>
   </examples>`,
@@ -804,8 +804,8 @@ export const defaultArtifactExamples = {
   <example>
     <user_query>Create a login page with email and password inputs.</user_query>
     <assistant_response>
-      <tailwindaiArtifact title="A login page with email and password inputs">
-        <tailwindaiFile name="src/App.vue">
+      <coderocketArtifact title="A login page with email and password inputs">
+        <coderocketFile name="src/App.vue">
           <template>
             <div class="min-h-screen flex items-center justify-center">
               <div class="p-6 bg-white shadow-md rounded-lg max-w-sm w-full">
@@ -841,16 +841,16 @@ export const defaultArtifactExamples = {
           <style scoped>
           /* Add any additional styles if needed */
           </style>
-        </tailwindaiFile>
+        </coderocketFile>
 
-        <tailwindaiFile name="src/components/ui/Input.vue">
+        <coderocketFile name="src/components/ui/Input.vue">
           ...
-        </tailwindaiFile>
+        </coderocketFile>
 
-        <tailwindaiFile name="src/components/ui/Button.vue">
+        <coderocketFile name="src/components/ui/Button.vue">
           ...
-        </tailwindaiFile>
-      </tailwindaiArtifact>
+        </coderocketFile>
+      </coderocketArtifact>
 
       Here's a simple login page setup using Vue 3, Composition API, and Tailwind CSS.
     </assistant_response>
@@ -866,8 +866,8 @@ export const defaultArtifactExamples = {
   <example>
     <user_query>Create a login page with email and password inputs.</user_query>
     <assistant_response>
-      <tailwindaiArtifact title="A login page with email and password inputs">
-        <tailwindaiFile name="src/App.vue">
+      <coderocketArtifact title="A login page with email and password inputs">
+        <coderocketFile name="src/App.vue">
           <template>
             <div class="min-h-screen flex items-center justify-center">
               <div class="p-6 bg-white shadow-md rounded-lg max-w-sm w-full">
@@ -899,16 +899,16 @@ export const defaultArtifactExamples = {
             console.log('Logging in with:', email.value, password.value);
           };
           </script>
-        </tailwindaiFile>
+        </coderocketFile>
 
-        <tailwindaiFile name="src/components/ui/Input.vue">
+        <coderocketFile name="src/components/ui/Input.vue">
           ...
-        </tailwindaiFile>
+        </coderocketFile>
 
-        <tailwindaiFile name="src/components/ui/Button.vue">
+        <coderocketFile name="src/components/ui/Button.vue">
           ...
-        </tailwindaiFile>
-      </tailwindaiArtifact>
+        </coderocketFile>
+      </coderocketArtifact>
 
       Here's a simple login page setup using Vue 3, Composition API, and Tailwind CSS.
     </assistant_response>
@@ -916,8 +916,8 @@ export const defaultArtifactExamples = {
     <user_query>Remove the button from the login page.</user_query>
     <assistant_response>
       I removed the button from the login page.
-      <tailwindaiArtifact title="A login page with email and password inputs">
-        <tailwindaiFile name="src/App.vue">
+      <coderocketArtifact title="A login page with email and password inputs">
+        <coderocketFile name="src/App.vue">
           <template>
             <div class="min-h-screen flex items-center justify-center">
               <div class="p-6 bg-white shadow-md rounded-lg max-w-sm w-full">
@@ -943,21 +943,21 @@ export const defaultArtifactExamples = {
           const email = ref('');
           const password = ref('');
           </script>
-        </tailwindaiFile>
+        </coderocketFile>
 
-        <tailwindaiFile name="src/components/ui/Button.vue" action="delete" />
-      </tailwindaiArtifact>
+        <coderocketFile name="src/components/ui/Button.vue" action="delete" />
+      </coderocketArtifact>
     </assistant_response>
 
     <user_query>Move input component from components folder to ui folder.</user_query>
     <assistant_response>
       I moved the input component from the components folder to the ui folder.
-      <tailwindaiArtifact title="A login page with email and password inputs">
-        <tailwindaiFile name="src/components/ui/Input.vue" action="delete" />
-        <tailwindaiFile name="src/components/ui/ui/Input.vue">
+      <coderocketArtifact title="A login page with email and password inputs">
+        <coderocketFile name="src/components/ui/Input.vue" action="delete" />
+        <coderocketFile name="src/components/ui/ui/Input.vue">
           ...
-        </tailwindaiFile>
-      </tailwindaiArtifact>
+        </coderocketFile>
+      </coderocketArtifact>
     </assistant_response>
   </example>
 </examples>

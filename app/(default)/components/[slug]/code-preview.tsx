@@ -113,7 +113,7 @@ export default function CodePreview() {
     });
 
     zip.generateAsync({ type: "blob" }).then(function (content) {
-      saveAs(content, "tailwindai-dev.zip");
+      saveAs(content, "coderocket-dev.zip");
     });
   };
 

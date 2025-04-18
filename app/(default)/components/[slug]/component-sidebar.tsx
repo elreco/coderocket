@@ -265,18 +265,18 @@ export default function ComponentSidebar({
       let extractedFiles: ChatFile[] = [];
       let newChunks: ContentChunk[] = [];
 
-      // Vérifier d'abord les balises tailwindaiFile directement
-      if (completion.includes("<tailwindaiFile")) {
+      // Vérifier d'abord les balises coderocketFile directement
+      if (completion.includes("<coderocketFile")) {
         extractedFiles = extractDirectFiles(completion);
 
         // Si des fichiers ont été extraits directement sans artifact, créer un "faux" artifact
         if (
           extractedFiles.length > 0 &&
-          !completion.includes("<tailwindaiArtifact")
+          !completion.includes("<coderocketArtifact")
         ) {
-          const artificialArtifact = `<tailwindaiArtifact title="Generated Files">
-${extractedFiles.map((file) => `<tailwindaiFile name="${file.name || "unnamed"}">${file.content}</tailwindaiFile>`).join("\n")}
-</tailwindaiArtifact>`;
+          const artificialArtifact = `<coderocketArtifact title="Generated Files">
+${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}">${file.content}</coderocketFile>`).join("\n")}
+</coderocketArtifact>`;
 
           newChunks = [
             {
@@ -289,7 +289,7 @@ ${extractedFiles.map((file) => `<tailwindaiFile name="${file.name || "unnamed"}"
           newChunks = splitContentIntoChunks(completion);
         }
       } else {
-        // Pas de balises tailwindaiFile, utiliser le découpage standard
+        // Pas de balises coderocketFile, utiliser le découpage standard
         newChunks = splitContentIntoChunks(completion);
 
         // Vérifier les artifacts comme avant
@@ -302,8 +302,8 @@ ${extractedFiles.map((file) => `<tailwindaiFile name="${file.name || "unnamed"}"
       // Filtrer les chunks pour ne garder que ceux qui ne sont pas des fichiers
       newChunks = newChunks.filter((chunk) => {
         if (chunk.type === "artifact") return true;
-        // Pour les chunks de type "text", vérifier s'ils ne contiennent pas de balises tailwindaiFile
-        return !chunk.content.includes("<tailwindaiFile");
+        // Pour les chunks de type "text", vérifier s'ils ne contiennent pas de balises coderocketFile
+        return !chunk.content.includes("<coderocketFile");
       });
 
       // Mettre à jour les états ensemble pour éviter les sauts
