@@ -57,8 +57,8 @@ export async function POST(req: Request) {
         ],
         mode: "payment",
         allow_promotion_codes: true,
-        success_url: `https://www.tailwindai.dev/account?extra_messages=${messageQuantity}&versions=${quantity}`,
-        cancel_url: `https://www.tailwindai.dev/`,
+        success_url: `https://www.coderocket.app/account?extra_messages=${messageQuantity}&versions=${quantity}`,
+        cancel_url: `https://www.coderocket.app/`,
         metadata: {
           userId: user.id,
           extraMessages: messageQuantity.toString(),

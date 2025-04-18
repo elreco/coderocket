@@ -3,9 +3,9 @@ const Logo = ({ className = "", src = "/logo-alternate.png", ...props }) => (
     className={className}
     {...props}
     src={src}
-    alt="Tailwind AI"
-    width="32"
-    height="32"
+    alt="CodeRocket"
+    width="34"
+    height="34"
   />
 );
 

@@ -43,8 +43,8 @@ export async function generateMetadata(
   const previousImages = (await parent).openGraph?.images || [];
   return {
     title: chat.title
-      ? `${chat.title} - Tailwind AI`
-      : `Component ${chat.slug} - Tailwind AI`,
+      ? `${chat.title} - CodeRocket`
+      : `Component ${chat.slug} - CodeRocket`,
     openGraph: {
       images: lastAssistantMessage?.screenshot
         ? [lastAssistantMessage.screenshot]
@@ -67,7 +67,7 @@ export default async function Page({ params }: Props) {
       <Watermark slug={chat.slug} />
       <iframe
         className="size-full border-none"
-        src={`https://${prefix}.webcontainer.tailwindai.dev/${slug ? slug.join("/") : ""}`}
+        src={`https://${prefix}.webcontainer.coderocket.app/${slug ? slug.join("/") : ""}`}
         sandbox="allow-scripts allow-forms allow-popups allow-modals allow-storage-access-by-user-activation allow-same-origin"
         allow="credentialless"
         loading="eager"

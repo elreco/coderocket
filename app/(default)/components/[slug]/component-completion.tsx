@@ -541,9 +541,9 @@ export default function ComponentCompletion({
   const share = () => {
     const link =
       fetchedChat?.framework === Framework.HTML
-        ? `https://www.tailwindai.dev/content/${chatId}/${selectedVersion}`
+        ? `https://www.coderocket.app/content/${chatId}/${selectedVersion}`
         : isWebcontainerReady
-          ? `https://${chatId}-${selectedVersion}.preview.tailwindai.dev`
+          ? `https://${chatId}-${selectedVersion}.preview.coderocket.app`
           : window.location.href;
     setShareLink(link);
     setIsShareModalOpen(true);
@@ -565,7 +565,7 @@ export default function ComponentCompletion({
     setArtifactCode(refreshedChat.artifact_code || "");
     const title = refreshedChat.title || `Version #${selectedVersion}`;
     setTitle(title);
-    document.title = `${title} - Tailwind AI`;
+    document.title = `${title} - CodeRocket`;
     return refreshedChatMessages;
   };
 
@@ -871,8 +871,8 @@ export default function ComponentCompletion({
                               onClick={() =>
                                 window.open(
                                   fetchedChat?.framework === Framework.HTML
-                                    ? `https://www.tailwindai.dev/content/${chatId}/${selectedVersion}`
-                                    : `https://${chatId}-${selectedVersion}.preview.tailwindai.dev`,
+                                    ? `https://www.coderocket.app/content/${chatId}/${selectedVersion}`
+                                    : `https://${chatId}-${selectedVersion}.preview.coderocket.app`,
                                   "_blank",
                                 )
                               }
@@ -904,7 +904,7 @@ export default function ComponentCompletion({
                             isWebcontainerReady ? (
                               <iframe
                                 className="size-full rounded-md border-none"
-                                src={`https://${chatId}-${selectedVersion}.webcontainer.tailwindai.dev`}
+                                src={`https://${chatId}-${selectedVersion}.webcontainer.coderocket.app`}
                                 sandbox="allow-scripts allow-forms allow-popups allow-modals allow-storage-access-by-user-activation allow-same-origin"
                                 allow="credentialless"
                                 loading="eager"

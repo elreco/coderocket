@@ -45,8 +45,8 @@ export async function POST(req: Request) {
             },
             metadata,
           },
-          success_url: `https://www.tailwindai.dev/account`,
-          cancel_url: `https://www.tailwindai.dev/`,
+          success_url: `https://www.coderocket.app/account`,
+          cancel_url: `https://www.coderocket.app/`,
         });
       } else if (price.type === "one_time") {
         session = await stripe.checkout.sessions.create({
@@ -63,8 +63,8 @@ export async function POST(req: Request) {
           ],
           mode: "payment",
           allow_promotion_codes: true,
-          success_url: `https://www.tailwindai.dev/account?payment-success`,
-          cancel_url: `https://www.tailwindai.dev/`,
+          success_url: `https://www.coderocket.app/account?payment-success`,
+          cancel_url: `https://www.coderocket.app/`,
         });
       }
       if (session) {

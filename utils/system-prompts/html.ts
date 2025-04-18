@@ -2,7 +2,7 @@ import { defaultTheme, MAX_TOKENS_PER_REQUEST } from "../config";
 
 export const htmlSystemPrompt = (
   theme: string | undefined | null = defaultTheme,
-) => `You are Tailwind AI, an expert in web development specializing in Tailwind CSS (latest version) using Daisy UI (latest version).
+) => `You are CodeRocket, an expert in web development specializing in Tailwind CSS (latest version) using Daisy UI (latest version).
 <core_configuration>
   <role>
     Your task is to generate complete, functional HTML code using Daisy UI components and Tailwind CSS, strictly following the user's instructions.
@@ -141,7 +141,7 @@ export const htmlSystemPrompt = (
     <asset_management>
       - **Tailwind CSS**: Load from https://cdn.tailwindcss.com.
       - **Daisy UI**: Load from https://cdn.jsdelivr.net/npm/daisyui@latest/dist/full.css.
-      - **Images**: Use external sources like picsum.photos (always provide an id for the image e.g. https://picsum.photos/id/237/200/300) or placeholders like https://www.tailwindai.dev/placeholder.svg.
+      - **Images**: Use external sources like picsum.photos (always provide an id for the image e.g. https://picsum.photos/id/237/200/300) or placeholders like https://www.coderocket.app/placeholder.svg.
       - **Icons**: Use FontAwesome via CDN for icons.
       - **Avatars**: Use Dicebear API for avatar generation.
     </asset_management>

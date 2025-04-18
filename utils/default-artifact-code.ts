@@ -7,7 +7,7 @@ export const defaultArtifactCode = {
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Hello Tailwind AI</title>
+    <title>Hello CodeRocket</title>
   </head>
   <body>
     <div id="root"></div>
@@ -31,7 +31,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 function App() {
   return (
     <div className="min-h-screen flex items-center justify-center">
-      <h1 className="text-4xl font-bold">Hello Tailwind AI</h1>
+      <h1 className="text-4xl font-bold">Hello CodeRocket</h1>
     </div>
   )
 }
@@ -360,7 +360,7 @@ export function cn(...inputs: ClassValue[]) {
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Hello Tailwind AI</title>
+    <title>Hello CodeRocket</title>
   </head>
   <body>
     <div id="app"></div>
@@ -380,7 +380,7 @@ createApp(App).mount('#app')
 <tailwindaiFile name="src/App.vue">
 <template>
   <div class="min-h-screen flex items-center justify-center">
-    <h1 class="text-4xl font-bold">Hello Tailwind AI</h1>
+    <h1 class="text-4xl font-bold">Hello CodeRocket</h1>
   </div>
 </template>
 </tailwindaiFile>

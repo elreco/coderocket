@@ -136,7 +136,7 @@ export default function Pricing({ user, products, subscription }: Props) {
               </p>
               <p className="mt-4 ">
                 <span className="font-bold">Start for free!</span> No payment
-                required. Explore Tailwind AI and see how it can boost your
+                required. Explore CodeRocket and see how it can boost your
                 workflow.
               </p>
               <p className="mt-4 flex items-center text-sm font-medium ">
@@ -214,7 +214,7 @@ export default function Pricing({ user, products, subscription }: Props) {
                   </p>
                 ) : (
                   <p className="mt-4 ">
-                    <span className="font-bold">❤️ Support Tailwind AI</span>
+                    <span className="font-bold">❤️ Support CodeRocket</span>
                     &apos;s development while enjoying the best value!
                   </p>
                 );

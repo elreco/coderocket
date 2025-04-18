@@ -11,9 +11,9 @@ export default function Faq() {
   return (
     <Accordion type="single" collapsible>
       <AccordionItem value="item-1">
-        <AccordionTrigger>What is tailwindai.dev?</AccordionTrigger>
+        <AccordionTrigger>What is coderocket.app?</AccordionTrigger>
         <AccordionContent>
-          tailwindai.dev is a generative user interface system powered by AI. It
+          coderocket.app is a generative user interface system powered by AI. It
           generates copy-and-paste friendly HTML code based on{" "}
           <a
             className="text-indigo-500 underline hover:text-indigo-900"
@@ -26,7 +26,7 @@ export default function Faq() {
         </AccordionContent>
       </AccordionItem>
       <AccordionItem value="item-2">
-        <AccordionTrigger>How does tailwindai.dev work?</AccordionTrigger>
+        <AccordionTrigger>How does coderocket.app work?</AccordionTrigger>
         <AccordionContent>
           <p>
             {" "}

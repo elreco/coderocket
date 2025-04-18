@@ -161,7 +161,7 @@ export function AppSidebar({
             <SidebarMenuButton size="lg" asChild>
               <Link
                 href="/"
-                className="group/link"
+                className="group/link flex items-center gap-2"
                 onClick={() => setOpenMobile(false)}
               >
                 <Logo
@@ -173,8 +173,10 @@ export function AppSidebar({
                   src="/logo-white.png"
                 />
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">Tailwind AI</span>
-                  <span className="truncate text-xs text-sidebar-primary group-hover/link:text-sidebar-primary-foreground">
+                  <span className="truncate text-sm font-semibold text-sidebar-primary group-hover/link:text-sidebar-primary-foreground">
+                    CodeRocket
+                  </span>
+                  <span className="truncate text-xs">
                     AI-powered Tailwind CSS
                   </span>
                 </div>
@@ -184,7 +186,7 @@ export function AppSidebar({
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={navMainItems} label="Tailwind AI" />
+        <NavMain items={navMainItems} label="CodeRocket" />
         <NavMain items={allComponentsItems} label="Components" />
         <NavMain items={communityItems} label="Community" />
       </SidebarContent>

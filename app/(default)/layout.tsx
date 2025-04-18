@@ -22,21 +22,21 @@ const rubik = Plus_Jakarta_Sans({
 });
 
 const meta = {
-  title: "Tailwind AI - Build Stunning Tailwind Websites with AI",
-  metadataBase: new URL("https://www.tailwindai.dev"),
+  title: "CodeRocket - Build Stunning Tailwind Websites with AI",
+  metadataBase: new URL("https://www.coderocket.app"),
   description:
-    "Create high-quality, AI-powered Tailwind websites and components effortlessly. Tailwind AI simplifies your workflow, generating sleek, responsive designs in seconds. Clone existing websites with a URL or build from scratch.",
-  cardImage: "https://www.tailwindai.dev/og.png",
+    "Create high-quality, AI-powered Tailwind websites and components effortlessly. CodeRocket simplifies your workflow, generating sleek, responsive designs in seconds. Clone existing websites with a URL or build from scratch.",
+  cardImage: "https://www.coderocket.app/og.png",
   robots: "index, follow",
   favicon: "/favicon.ico",
-  url: "https://www.tailwindai.dev",
+  url: "https://www.coderocket.app",
   type: "website",
   twitter: {
     card: "summary_large_image",
-    title: "Tailwind AI - AI-Powered Tailwind App Builder",
+    title: "CodeRocket - AI-Powered Tailwind App Builder",
     description:
       "Design and build stunning Tailwind websites and components with AI. Clone existing websites with a URL or create responsive, production-ready websites faster than ever.",
-    images: ["https://www.tailwindai.dev/og.png"],
+    images: ["https://www.coderocket.app/og.png"],
   },
 };
 
@@ -54,7 +54,7 @@ export const metadata = {
     description: meta.description,
     cardImage: meta.cardImage,
     type: meta.type,
-    siteName: "Tailwind AI",
+    siteName: "CodeRocket",
     images: meta.twitter.images,
   },
   twitter: {
@@ -82,8 +82,8 @@ export default async function RootLayout({ children }: PropsWithChildren) {
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "WebApplication",
-              name: "Tailwind AI",
-              url: "https://www.tailwindai.dev",
+              name: "CodeRocket",
+              url: "https://www.coderocket.app",
               description:
                 "Create high-quality, AI-powered Tailwind websites and components effortlessly. Clone existing websites with a URL or build from scratch.",
               applicationCategory: "WebDevelopment",

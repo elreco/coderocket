@@ -11,8 +11,8 @@ export async function middleware(request: NextRequest) {
 
   // Configuration des sous-domaines et leurs redirections
   const subdomainConfig = {
-    "preview.tailwindai.dev": "preview",
-    "webcontainer.tailwindai.dev": "webcontainer",
+    "preview.coderocket.app": "preview",
+    "webcontainer.coderocket.app": "webcontainer",
   } as const;
 
   // Vérifie si on est dans un contexte de sous-domaine

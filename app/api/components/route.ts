@@ -142,7 +142,7 @@ const buildMessagesToOpenAi = async (
             type: "text",
             text:
               limitedMessages.length === 1
-                ? `NEW PROJECT TAILWIND AI - ${m.content}`
+                ? `NEW PROJECT CodeRocket - ${m.content}`
                 : m.content,
           },
           {
@@ -157,7 +157,7 @@ const buildMessagesToOpenAi = async (
       role: m.role as "user" | "assistant" | "tool" | "system",
       content:
         limitedMessages.length === 1 && m.role === "user"
-          ? `NEW PROJECT TAILWIND AI - ${m.content}`
+          ? `NEW PROJECT CodeRocket - ${m.content}`
           : m.content,
     };
   }) as CoreMessage[];

@@ -52,7 +52,7 @@ export async function tweetComponent(
     const title = chat.title || "Tailwind Component";
 
     // Generate component URL
-    const componentUrl = `https://www.tailwindai.dev/components/${chat.slug}`;
+    const componentUrl = `https://www.coderocket.app/components/${chat.slug}`;
 
     // Create hashtags
     const hashtags = ["#TailwindCSS", "#AI"];
@@ -62,7 +62,7 @@ export async function tweetComponent(
     }
 
     // Construct tweet text
-    const tweetText = `Check out this ${chat.framework} component built with Tailwind AI: "${title}"\n\n${componentUrl}\n\n${hashtags.join(" ")}`;
+    const tweetText = `Check out this ${chat.framework} component built with CodeRocket: "${title}"\n\n${componentUrl}\n\n${hashtags.join(" ")}`;
 
     // Initialize Twitter client
     const twitterClient = await createTwitterClient();

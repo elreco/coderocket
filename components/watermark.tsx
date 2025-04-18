@@ -8,19 +8,19 @@ export const Watermark = ({ slug }: { slug?: string | null }) => {
       <Link
         href={
           slug
-            ? `https://www.tailwindai.dev/components/${slug}`
-            : "https://www.tailwindai.dev"
+            ? `https://www.coderocket.app/components/${slug}`
+            : "https://www.coderocket.app"
         }
       >
         <div className="flex cursor-pointer items-center gap-2 rounded-lg bg-primary p-2 shadow-lg hover:bg-primary/90">
           <img
-            src="https://www.tailwindai.dev/logo-white.png"
-            alt="Tailwind AI"
+            src="https://www.coderocket.app/logo-white.png"
+            alt="CodeRocket"
             className="w-6"
           />
 
           <p className="flex items-center gap-2 text-sm font-semibold text-white">
-            <span>Built with Tailwind AI</span> <Rocket className="w-4" />
+            <span>Built with CodeRocket</span> <Rocket className="w-4" />
           </p>
         </div>
       </Link>

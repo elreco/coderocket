@@ -14,9 +14,9 @@ const rubik = Plus_Jakarta_Sans({
 });
 
 const meta = {
-  title: "Tailwind AI - Preview",
+  title: "CodeRocket - Preview",
   description: "Component preview",
-  cardImage: "https://www.tailwindai.dev/og.png",
+  cardImage: "https://www.coderocket.app/og.png",
   robots: "index, follow",
   favicon: "/favicon.ico",
 };

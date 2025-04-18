@@ -40,7 +40,7 @@ export function ComponentCard({ chat, isReverse }: ComponentCardProps) {
           style={{
             backgroundImage: `url(${
               chat.last_assistant_message ||
-              "https://www.tailwindai.dev/placeholder.svg"
+              "https://www.coderocket.app/placeholder.svg"
             })`,
           }}
         >

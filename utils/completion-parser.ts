@@ -45,13 +45,13 @@ export const getUpdatedArtifactCode = (
 ): string => {
   // Récupération du titre depuis l'artifact existant
   const titleMatch = artifactCode.match(
-    /<tailwindaiArtifact\s+title=["']([^"']*?)["']/,
+    /<coderocketArtifact\s+title=["']([^"']*?)["']/,
   );
   let artifactTitle = titleMatch ? titleMatch[1] : "Untitled"; // Valeur par défaut
 
   // Extraction du titre depuis la nouvelle réponse si disponible
   const newTitleMatch = completion.match(
-    /<tailwindaiArtifact\s+title=["']([^"']*?)["']/,
+    /<coderocketArtifact\s+title=["']([^"']*?)["']/,
   );
   if (newTitleMatch) {
     artifactTitle = newTitleMatch[1];
@@ -63,7 +63,7 @@ export const getUpdatedArtifactCode = (
 
   // Extract existing files
   const existingFileRegex =
-    /<tailwindaiFile.*?name=["']([^"']*?)["'].*?>([\s\S]*?)<\/tailwindaiFile>/g;
+    /<coderocketFile.*?name=["']([^"']*?)["'].*?>([\s\S]*?)<\/coderocketFile>/g;
   let existingMatch;
   while ((existingMatch = existingFileRegex.exec(artifactCode)) !== null) {
     const fileName = existingMatch[1];
@@ -79,7 +79,7 @@ export const getUpdatedArtifactCode = (
 
   // Extract new/updated files from completion, including partial ones
   const fileRegex =
-    /<tailwindaiFile.*?name=["']([^"']*?)["'].*?(?:action=["']([^"']*?)["'].*?)?>([\s\S]*?)(?=<\/tailwindaiFile|<tailwindaiFile|$)/g;
+    /<coderocketFile.*?name=["']([^"']*?)["'].*?(?:action=["']([^"']*?)["'].*?)?>([\s\S]*?)(?=<\/coderocketFile|<coderocketFile|$)/g;
   let match;
 
   while ((match = fileRegex.exec(completion)) !== null) {
@@ -89,8 +89,8 @@ export const getUpdatedArtifactCode = (
 
     // Nettoyage du contenu
     content = content
-      .replace(/<\/tailwindaiFile>.*$/g, "")
-      .replace(/<\/tailwindaiArtifact>.*$/g, "")
+      .replace(/<\/coderocketFile>.*$/g, "")
+      .replace(/<\/coderocketArtifact>.*$/g, "")
       .trim();
 
     if (action === "delete") {
@@ -320,13 +320,13 @@ export const getUpdatedArtifactCode = (
   }
 
   // Construction du nouvel artifact avec le titre
-  let mergedArtifact = `<tailwindaiArtifact title="${artifactTitle}">\n`;
+  let mergedArtifact = `<coderocketArtifact title="${artifactTitle}">\n`;
   allFiles.forEach((content, fileName) => {
     if (!filesToDelete.has(fileName)) {
-      mergedArtifact += `<tailwindaiFile name="${fileName}">\n${content}\n</tailwindaiFile>\n`;
+      mergedArtifact += `<coderocketFile name="${fileName}">\n${content}\n</coderocketFile>\n`;
     }
   });
-  mergedArtifact += "</tailwindaiArtifact>";
+  mergedArtifact += "</coderocketArtifact>";
 
   return mergedArtifact;
 };
@@ -347,7 +347,7 @@ export const ensureCDNsPresent = (htmlContent: string): string => {
 
 // Nouvelle fonction pour extraire directement les fichiers, même mal formatés
 export function extractDirectFiles(content: string): ChatFile[] {
-  if (!content || !content.includes("<tailwindaiFile")) {
+  if (!content || !content.includes("<coderocketFile")) {
     return [];
   }
 
@@ -355,7 +355,7 @@ export function extractDirectFiles(content: string): ChatFile[] {
   let currentIndex = 0;
 
   while (currentIndex < content.length) {
-    const fileStart = content.indexOf("<tailwindaiFile", currentIndex);
+    const fileStart = content.indexOf("<coderocketFile", currentIndex);
     if (fileStart === -1) break;
 
     const nameStart = content.indexOf('name="', fileStart);
@@ -379,7 +379,7 @@ export function extractDirectFiles(content: string): ChatFile[] {
     if (fileContentStart === -1) break;
 
     const fileContentEnd = content.indexOf(
-      "</tailwindaiFile>",
+      "</coderocketFile>",
       fileContentStart,
     );
     // Si on ne trouve pas la fin du fichier, on considère qu'il est incomplet
@@ -413,7 +413,7 @@ export function extractDirectFiles(content: string): ChatFile[] {
 
     currentIndex = isIncomplete
       ? content.length
-      : fileContentEnd + "</tailwindaiFile>".length;
+      : fileContentEnd + "</coderocketFile>".length;
   }
 
   return files;
@@ -431,18 +431,18 @@ export const extractFilesFromCompletion = (completion: string): ChatFile[] => {
   // Si aucun fichier n'est trouvé avec la méthode directe, continuer avec la méthode existante
   const filesArray: ChatFile[] = [];
 
-  // Identification préliminaire des balises tailwindaiFile
-  const hasOpeningTag = completion.includes("<tailwindaiFile");
+  // Identification préliminaire des balises coderocketFile
+  const hasOpeningTag = completion.includes("<coderocketFile");
 
-  // Si aucune balise tailwindaiFile n'est trouvée, retourner un tableau vide
+  // Si aucune balise coderocketFile n'est trouvée, retourner un tableau vide
   if (!hasOpeningTag) {
     return [];
   }
 
-  // Expression régulière plus robuste pour capturer les balises tailwindaiFile avec leur contenu
+  // Expression régulière plus robuste pour capturer les balises coderocketFile avec leur contenu
   // Cette regex est plus tolérante aux sauts de ligne et aux espaces dans les attributs
   const fileRegex =
-    /<tailwindaiFile\s+name=["']([^"']*?)["'](?:\s+action=["']([^"']*?)["'])?[^>]*>([\s\S]*?)(?:<\/tailwindaiFile>|$)/g;
+    /<coderocketFile\s+name=["']([^"']*?)["'](?:\s+action=["']([^"']*?)["'])?[^>]*>([\s\S]*?)(?:<\/coderocketFile>|$)/g;
 
   let fileMatch;
   while ((fileMatch = fileRegex.exec(completion)) !== null) {
@@ -457,8 +457,8 @@ export const extractFilesFromCompletion = (completion: string): ChatFile[] => {
 
     // Nettoyage du contenu
     content = content
-      .replace(/<\/tailwindaiFile>[\s\S]*$/g, "") // Supprimer la balise fermante et tout ce qui suit
-      .replace(/<\/tailwindaiArtifact>[\s\S]*$/g, "")
+      .replace(/<\/coderocketFile>[\s\S]*$/g, "") // Supprimer la balise fermante et tout ce qui suit
+      .replace(/<\/coderocketArtifact>[\s\S]*$/g, "")
       .trim();
 
     // Traitement de l'indentation
@@ -475,7 +475,7 @@ export const extractFilesFromCompletion = (completion: string): ChatFile[] => {
       content.includes("<!-- FINISH_REASON: error -->");
 
     // Vérifier si le fichier est complet (balise fermante présente)
-    const isComplete = completion.includes(`</tailwindaiFile>`);
+    const isComplete = completion.includes(`</coderocketFile>`);
 
     // Déterminer si le fichier est incomplet (pas de balise fermante ou présence d'un marqueur FINISH_REASON)
     const isIncomplete = !isComplete || hasFinishReasonMarker;
@@ -506,9 +506,9 @@ export const extractFilesFromCompletion = (completion: string): ChatFile[] => {
 
   // Si aucun fichier n'a été trouvé avec la regex précédente, tenter une approche plus agressive
   if (filesArray.length === 0 && hasOpeningTag) {
-    // Extraire toutes les sections commençant par <tailwindaiFile et allant jusqu'à la fin du texte
-    // ou jusqu'à la prochaine balise tailwindaiFile
-    const lastFileStartIndex = completion.lastIndexOf("<tailwindaiFile");
+    // Extraire toutes les sections commençant par <coderocketFile et allant jusqu'à la fin du texte
+    // ou jusqu'à la prochaine balise coderocketFile
+    const lastFileStartIndex = completion.lastIndexOf("<coderocketFile");
 
     if (lastFileStartIndex !== -1) {
       const nameMatch = completion
@@ -528,8 +528,8 @@ export const extractFilesFromCompletion = (completion: string): ChatFile[] => {
 
         // Nettoyer le contenu
         const cleanedContent = content
-          .replace(/<\/tailwindaiFile>[\s\S]*$/g, "")
-          .replace(/<\/tailwindaiArtifact>[\s\S]*$/g, "")
+          .replace(/<\/coderocketFile>[\s\S]*$/g, "")
+          .replace(/<\/coderocketArtifact>[\s\S]*$/g, "")
           .trim();
 
         if (cleanedContent && cleanedContent.length > 0) {
@@ -557,11 +557,11 @@ export const extractFilesFromCompletedCompletion = (
 
   // Vérifier si le contenu contient des balises d'artifact complètes ou partielles
   const hasCompleteArtifactTags =
-    completion.includes("<tailwindaiArtifact") &&
-    completion.includes("</tailwindaiArtifact>");
+    completion.includes("<coderocketArtifact") &&
+    completion.includes("</coderocketArtifact>");
   const hasPartialArtifactTags =
-    completion.includes("<tailwindaiArtifact") &&
-    !completion.includes("</tailwindaiArtifact>");
+    completion.includes("<coderocketArtifact") &&
+    !completion.includes("</coderocketArtifact>");
   const hasIncompleteMarker =
     completion.includes("<!-- FINISH_REASON: length -->") ||
     completion.includes("<!-- FINISH_REASON: error -->");
@@ -584,7 +584,7 @@ export const extractFilesFromCompletedCompletion = (
   const filesArray: ChatFile[] = [];
 
   // Regex pour trouver les artifacts complets
-  const artifactRegex = /<tailwindaiArtifact[\s\S]*?<\/tailwindaiArtifact>/g;
+  const artifactRegex = /<coderocketArtifact[\s\S]*?<\/coderocketArtifact>/g;
 
   // Trouver tous les artifacts
   const artifactMatches = [];
@@ -602,7 +602,7 @@ export const extractFilesFromCompletedCompletion = (
   // Traiter chaque artifact complet trouvé
   for (const artifactContent of artifactMatches) {
     const fileRegex =
-      /<tailwindaiFile.*?name=["']([^"']*?)["'].*?(?:action=["']([^"']*?)["'].*?)?>([\s\S]*?)(?=<\/tailwindaiFile>|<tailwindaiFile|$)/g;
+      /<coderocketFile.*?name=["']([^"']*?)["'].*?(?:action=["']([^"']*?)["'].*?)?>([\s\S]*?)(?=<\/coderocketFile>|<coderocketFile|$)/g;
 
     let fileMatch;
     while ((fileMatch = fileRegex.exec(artifactContent)) !== null) {
@@ -611,15 +611,15 @@ export const extractFilesFromCompletedCompletion = (
       let content = fileMatch[3].trim();
 
       // Si on trouve une balise fermante pour ce fichier, on l'utilise comme limite
-      const closeTagIndex = content.indexOf("</tailwindaiFile>");
+      const closeTagIndex = content.indexOf("</coderocketFile>");
       if (closeTagIndex !== -1) {
         content = content.slice(0, closeTagIndex);
       }
 
       // Nettoyage du contenu
       content = content
-        .replace(/<\/tailwindaiFile>/g, "")
-        .replace(/<\/tailwindaiArtifact>/g, "")
+        .replace(/<\/coderocketFile>/g, "")
+        .replace(/<\/coderocketArtifact>/g, "")
         .replace(/^\n/, "");
 
       // Vérifier si le fichier est incomplet (contient le marqueur de fin de token)
@@ -670,7 +670,7 @@ export const extractFilesFromIncompleteArtifact = (
   const filesArray: ChatFile[] = [];
 
   // Trouver le début de l'artifact incomplet
-  const artifactStartIndex = completion.lastIndexOf("<tailwindaiArtifact");
+  const artifactStartIndex = completion.lastIndexOf("<coderocketArtifact");
   if (artifactStartIndex === -1) {
     return [];
   }
@@ -681,7 +681,7 @@ export const extractFilesFromIncompleteArtifact = (
   // Regex pour trouver les fichiers dans l'artifact incomplet
   // Cette regex est plus permissive pour capturer les fichiers même dans un artifact incomplet
   const fileRegex =
-    /<tailwindaiFile.*?name=["']([^"']*?)["'].*?(?:action=["']([^"']*?)["'].*?)?>([\s\S]*?)(?=<\/tailwindaiFile>|<tailwindaiFile|$)/g;
+    /<coderocketFile.*?name=["']([^"']*?)["'].*?(?:action=["']([^"']*?)["'].*?)?>([\s\S]*?)(?=<\/coderocketFile>|<coderocketFile|$)/g;
 
   let fileMatch;
   while ((fileMatch = fileRegex.exec(incompleteArtifactContent)) !== null) {
@@ -691,8 +691,8 @@ export const extractFilesFromIncompleteArtifact = (
 
     // Nettoyage du contenu
     content = content
-      .replace(/<\/tailwindaiFile>/g, "")
-      .replace(/<\/tailwindaiArtifact>/g, "")
+      .replace(/<\/coderocketFile>/g, "")
+      .replace(/<\/coderocketArtifact>/g, "")
       .replace(/^\n/, "");
 
     // Vérifier si le fichier est incomplet (contient le marqueur de fin de token)
@@ -736,15 +736,15 @@ export const extractFilesFromIncompleteArtifact = (
 // Je veux récupérer tout le contenu de la réponse, sans les balises
 // et pas les balises de fichier
 export const extractContent = (completion: string) => {
-  // Supprimer toute partie de texte commençant par <tailwindai
-  const withoutPartialArtifact = completion.replace(/<tailwindai[^>]*$/g, "");
+  // Supprimer toute partie de texte commençant par <coderocket
+  const withoutPartialArtifact = completion.replace(/<coderocket[^>]*$/g, "");
 
   // Remplacer temporairement les artifacts par un marqueur spécial
   let artifactCounter = 0;
   const artifacts: string[] = [];
 
   const textWithPlaceholders = withoutPartialArtifact.replace(
-    /<tailwindaiArtifact>[\s\S]*?<\/tailwindaiArtifact>/g,
+    /<coderocketArtifact>[\s\S]*?<\/coderocketArtifact>/g,
     (match) => {
       artifacts.push(match);
       return `__ARTIFACT_${artifactCounter++}__`;
@@ -768,16 +768,16 @@ export const extractContent = (completion: string) => {
 };
 
 export const hasArtifacts = (completion: string): boolean => {
-  return /<tailwindaiArtifact(?:\s+title=["']([^"']*?)["'])?>/i.test(
+  return /<coderocketArtifact(?:\s+title=["']([^"']*?)["'])?>/i.test(
     completion,
   );
 };
 
 export const hasCompletedArtifacts = (completion: string): boolean => {
-  // Vérifier d'abord s'il y a des balises tailwindaiFile directes sans artifact
+  // Vérifier d'abord s'il y a des balises coderocketFile directes sans artifact
   if (
-    completion.includes("<tailwindaiFile") &&
-    !completion.includes("<tailwindaiArtifact")
+    completion.includes("<coderocketFile") &&
+    !completion.includes("<coderocketArtifact")
   ) {
     // Si nous pouvons extraire des fichiers directement, considérer comme un artifact
     const directFiles = extractDirectFiles(completion);
@@ -788,11 +788,11 @@ export const hasCompletedArtifacts = (completion: string): boolean => {
 
   // Vérifier si le contenu contient des balises d'artifact complètes ou partielles
   const hasCompleteArtifactTags =
-    completion.includes("<tailwindaiArtifact") &&
-    completion.includes("</tailwindaiArtifact>");
+    completion.includes("<coderocketArtifact") &&
+    completion.includes("</coderocketArtifact>");
   const hasPartialArtifactTags =
-    completion.includes("<tailwindaiArtifact") &&
-    !completion.includes("</tailwindaiArtifact>");
+    completion.includes("<coderocketArtifact") &&
+    !completion.includes("</coderocketArtifact>");
   const hasIncompleteMarker =
     completion.includes("<!-- FINISH_REASON: length -->") ||
     completion.includes("<!-- FINISH_REASON: error -->");
@@ -819,7 +819,7 @@ export const hasCompletedArtifacts = (completion: string): boolean => {
   }
 
   // Regex pour trouver les artifacts complets
-  const artifactRegex = /<tailwindaiArtifact[\s\S]*?<\/tailwindaiArtifact>/g;
+  const artifactRegex = /<coderocketArtifact[\s\S]*?<\/coderocketArtifact>/g;
 
   // Trouver tous les artifacts
   const artifactMatches = [];
@@ -850,7 +850,7 @@ export const hasCompletedArtifacts = (completion: string): boolean => {
 };
 
 export const hasFiles = (completion: string): boolean => {
-  return /<tailwindaiFile/i.test(completion);
+  return /<coderocketFile/i.test(completion);
 };
 
 export function splitCompletedContentIntoChunks(
@@ -863,11 +863,11 @@ export function splitCompletedContentIntoChunks(
 
   // 1. Si le contenu contient des artifacts déjà formatés, les extraire
   if (
-    content.includes("<tailwindaiArtifact") &&
-    content.includes("</tailwindaiArtifact>")
+    content.includes("<coderocketArtifact") &&
+    content.includes("</coderocketArtifact>")
   ) {
     const chunks: ContentChunk[] = [];
-    const artifactRegex = /<tailwindaiArtifact[\s\S]*?<\/tailwindaiArtifact>/g;
+    const artifactRegex = /<coderocketArtifact[\s\S]*?<\/coderocketArtifact>/g;
     let artifactMatch;
     let lastIndex = 0;
 
@@ -903,9 +903,9 @@ export function splitCompletedContentIntoChunks(
   }
 
   // 2. Si le contenu contient des fichiers mais pas d'artifacts, créer un artifact
-  if (content.includes("<tailwindaiFile")) {
+  if (content.includes("<coderocketFile")) {
     // Extraire tous les fichiers
-    const filesRegex = /<tailwindaiFile[\s\S]*?<\/tailwindaiFile>/g;
+    const filesRegex = /<coderocketFile[\s\S]*?<\/coderocketFile>/g;
     let filesMatch;
     const files = [];
 
@@ -919,18 +919,18 @@ export function splitCompletedContentIntoChunks(
       return [
         {
           type: "artifact",
-          content: `<tailwindaiArtifact title="Generated Files">${files.join("\n")}</tailwindaiArtifact>`,
+          content: `<coderocketArtifact title="Generated Files">${files.join("\n")}</coderocketArtifact>`,
         },
       ];
     }
 
-    // Si on n'a pas trouvé de fichiers complets mais il y a des balises tailwindaiFile,
+    // Si on n'a pas trouvé de fichiers complets mais il y a des balises coderocketFile,
     // c'est probablement un fichier incomplet
-    if (content.includes("<tailwindaiFile")) {
+    if (content.includes("<coderocketFile")) {
       return [
         {
           type: "artifact",
-          content: `<tailwindaiArtifact title="Generated Files">${content}</tailwindaiArtifact>`,
+          content: `<coderocketArtifact title="Generated Files">${content}</coderocketArtifact>`,
         },
       ];
     }
@@ -948,12 +948,12 @@ export function splitCompletedContentIntoChunks(
 export const splitContentIntoChunks = (completion: string): ContentChunk[] => {
   if (!completion) return [];
 
-  // Vérifier d'abord s'il y a des balises tailwindaiFile dans le contenu
-  const hasTailwindaiFile = completion.includes("<tailwindaiFile");
+  // Vérifier d'abord s'il y a des balises coderocketFile dans le contenu
+  const hasCoderocketFile = completion.includes("<coderocketFile");
 
-  // Si le contenu contient des balises tailwindaiFile mais pas d'artefact complet,
+  // Si le contenu contient des balises coderocketFile mais pas d'artefact complet,
   // considérer le contenu entier comme un artefact pour une meilleure visualisation
-  if (hasTailwindaiFile && !completion.includes("<tailwindaiArtifact")) {
+  if (hasCoderocketFile && !completion.includes("<coderocketArtifact")) {
     // Si on peut extraire des fichiers directement, traiter comme un artefact
     const directFiles = extractDirectFiles(completion);
     if (directFiles.length > 0) {
@@ -968,9 +968,9 @@ export const splitContentIntoChunks = (completion: string): ContentChunk[] => {
 
   const chunks: ContentChunk[] = [];
 
-  // Expression régulière pour détecter les balises tailwindaiFile et tailwindaiArtifact
+  // Expression régulière pour détecter les balises coderocketFile et coderocketArtifact
   const combinedPattern =
-    /(<tailwindaiArtifact[^>]*>[\s\S]*?<\/tailwindaiArtifact>|<tailwindaiArtifact[^>]*>[\s\S]*?$|<tailwindaiFile[^>]*>[\s\S]*?<\/tailwindaiFile>|<tailwindaiFile[^>]*>[\s\S]*?$)/g;
+    /(<coderocketArtifact[^>]*>[\s\S]*?<\/coderocketArtifact>|<coderocketArtifact[^>]*>[\s\S]*?$|<coderocketFile[^>]*>[\s\S]*?<\/coderocketFile>|<coderocketFile[^>]*>[\s\S]*?$)/g;
 
   // Diviser le texte en segments basés sur les balises trouvées
   const segments = completion.split(combinedPattern);
@@ -1013,7 +1013,7 @@ export const extractDataTheme = (completion: string): string => {
 
 export const extractTitle = (completion: string): string | null => {
   const match = completion.match(
-    /<tailwindaiArtifact\s+title=["']([^"']*?)["']/,
+    /<coderocketArtifact\s+title=["']([^"']*?)["']/,
   );
   return match ? match[1] : null;
 };
@@ -1041,7 +1041,7 @@ export const extractFilesFromArtifact = (artifactCode: string): ChatFile[] => {
   let newActiveFile: string | null = null;
 
   const fileRegex =
-    /<tailwindaiFile.*?name=["']([^"']*?)["'].*?(?:action=["']([^"']*?)["'].*?)?>([\s\S]*?)(?=<\/tailwindaiFile>|<tailwindaiFile|$)/g;
+    /<coderocketFile.*?name=["']([^"']*?)["'].*?(?:action=["']([^"']*?)["'].*?)?>([\s\S]*?)(?=<\/coderocketFile>|<coderocketFile|$)/g;
 
   let match;
   while ((match = fileRegex.exec(artifactCode)) !== null) {
@@ -1050,15 +1050,15 @@ export const extractFilesFromArtifact = (artifactCode: string): ChatFile[] => {
     let content = match[3].trim();
 
     // Si on trouve une balise fermante pour ce fichier, on l'utilise comme limite
-    const closeTagIndex = content.indexOf("</tailwindaiFile>");
+    const closeTagIndex = content.indexOf("</coderocketFile>");
     if (closeTagIndex !== -1) {
       content = content.slice(0, closeTagIndex);
     }
 
     // Nettoyer le contenu
     content = content
-      .replace(/<\/tailwindaiFile>/g, "")
-      .replace(/<\/tailwindaiArtifact>/g, "")
+      .replace(/<\/coderocketFile>/g, "")
+      .replace(/<\/coderocketArtifact>/g, "")
       .replace(/^\n/, "");
 
     // Trouver l'indentation minimale commune

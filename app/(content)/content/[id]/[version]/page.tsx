@@ -44,8 +44,8 @@ export async function generateMetadata(
   const previousImages = (await parent).openGraph?.images || [];
   return {
     title: chat.title
-      ? `${chat.title} - Tailwind AI`
-      : `Component ${chat.slug} - Tailwind AI`,
+      ? `${chat.title} - CodeRocket`
+      : `Component ${chat.slug} - CodeRocket`,
     openGraph: {
       images: lastAssistantMessage?.screenshot
         ? [lastAssistantMessage.screenshot]

@@ -146,7 +146,7 @@ export async function signInWithOAuth(provider: Provider) {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider,
     options: {
-      redirectTo: `https://www.tailwindai.dev/auth/callback`,
+      redirectTo: `https://www.coderocket.app/auth/callback`,
     },
   });
   if (error) {

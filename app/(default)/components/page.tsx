@@ -14,8 +14,8 @@ export async function generateMetadata({
   const searchQuery = search || "";
   return {
     title: searchQuery
-      ? `Results for "${searchQuery}" - Public Components - Tailwind AI`
-      : "Public Components - Tailwind AI",
+      ? `Results for "${searchQuery}" - Public Components - CodeRocket`
+      : "Public Components - CodeRocket",
     description: searchQuery
       ? `Discover the latest AI components for "${searchQuery}".`
       : "Last Tailwind components generated with AI by our users with React, Vue, and HTML",

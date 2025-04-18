@@ -37,7 +37,7 @@ async function handleUserInfoUpdate(formData: FormData) {
 }
 
 export const metadata = {
-  title: `My Account - Tailwind AI`,
+  title: `My Account - CodeRocket`,
   description: "Manage your account and billing.",
 };
 

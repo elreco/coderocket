@@ -22,8 +22,8 @@ export async function GET(
   let prefix: string;
   let slug: string[] = [];
 
-  if (hostname?.includes("tailwindai.dev")) {
-    // Format : prefix.tailwindai.dev/slug...
+  if (hostname?.includes("coderocket.app")) {
+    // Format : prefix.coderocket.app/slug...
     prefix = hostname.split(".")[0]; // Ex: e7ff9bcc-7d89-401a-97a8-67cd5e13bf97-0
     if (pathname !== "/") {
       slug = pathname.slice(1).split("/");

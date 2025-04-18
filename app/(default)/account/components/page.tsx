@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Framework } from "@/utils/config";
 
 export const metadata = {
-  title: `My components - Tailwind AI`,
+  title: `My components - CodeRocket`,
   description:
     "My last Tailwind HTML components generated with AI by our users with React, Vue, and HTML",
 };

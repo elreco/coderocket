@@ -41,7 +41,7 @@ export async function generateMetadata(
   const user = await getUser(id);
   if (!user) {
     return {
-      title: "User not found - Tailwind AI",
+      title: "User not found - CodeRocket",
     };
   }
 
@@ -49,9 +49,9 @@ export async function generateMetadata(
   const previousImages = (await parent).openGraph?.images || [];
   return {
     title: user.full_name
-      ? `${user.full_name} - Tailwind AI`
-      : "Anonymous user - Tailwind AI",
-    description: `${user.full_name || "Anonymous user"} - Tailwind AI`,
+      ? `${user.full_name} - CodeRocket`
+      : "Anonymous user - CodeRocket",
+    description: `${user.full_name || "Anonymous user"} - CodeRocket`,
     openGraph: {
       images: [user.avatar_url ? user.avatar_url : "", ...previousImages],
     },

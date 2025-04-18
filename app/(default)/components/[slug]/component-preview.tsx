@@ -123,7 +123,7 @@ export default function ComponentPreview() {
                   }}
                 >
                   <WandSparkles className="size-4" />
-                  Ask Tailwind AI to fix it
+                  Ask CodeRocket to fix it
                 </Button>
               )}
             </AlertDescription>
@@ -142,7 +142,7 @@ export default function ComponentPreview() {
         !loadingState &&
         isWebcontainerReady && (
           <iframe
-            src={`https://${chatId}-${selectedVersion}.webcontainer.tailwindai.dev`}
+            src={`https://${chatId}-${selectedVersion}.webcontainer.coderocket.app`}
             className="size-full border-none"
             sandbox="allow-scripts allow-forms allow-popups allow-modals allow-storage-access-by-user-activation allow-same-origin"
             allow="credentialless"

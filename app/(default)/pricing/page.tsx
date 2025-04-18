@@ -10,7 +10,7 @@ import { createClient } from "@/utils/supabase/server";
 import Pricing from "./pricing";
 
 export const metadata = {
-  title: `Pricing - Tailwind AI`,
+  title: `Pricing - CodeRocket`,
   description:
     "Start building for free, then add a site plan to go live. Account plans unlock additional features.",
 };

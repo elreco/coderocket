@@ -19,7 +19,7 @@ export async function POST(req: Request) {
       if (!customer) throw Error("Could not get customer");
       const { url } = await stripe.billingPortal.sessions.create({
         customer,
-        return_url: `https://www.tailwindai.dev/account`,
+        return_url: `https://www.coderocket.app/account`,
       });
       return new Response(JSON.stringify({ url }), {
         status: 200,

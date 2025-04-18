@@ -3,7 +3,7 @@ import Logo from "@/components/icons/logo";
 import AuthUI from "./auth-ui";
 
 export const metadata = {
-  title: `Register - Tailwind AI`,
+  title: `Register - CodeRocket`,
 };
 
 export default async function SignIn() {
