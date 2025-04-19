@@ -86,7 +86,7 @@ export async function POST(req: Request) {
       model: anthropicModel("claude-3-7-sonnet-latest"),
       toolChoice: "none",
       maxTokens: MAX_TOKENS_PER_REQUEST,
-      onFinish: async ({ text, usage, finishReason }) => {
+      onFinish: async ({ text, usage, finishReason, providerMetadata }) => {
         await updateDataAfterCompletion(
           id,
           text,
@@ -94,6 +94,7 @@ export async function POST(req: Request) {
           usage,
           updatedImage,
           finishReason,
+          providerMetadata,
         );
       },
     });
@@ -499,6 +500,8 @@ const updateDataAfterCompletion = async (
   usage: LanguageModelUsage,
   updatedImage: string | null,
   finishReason: string | null,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  providerMetadata: any,
 ) => {
   const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
@@ -562,7 +565,10 @@ const updateDataAfterCompletion = async (
       })
       .eq("id", chatId);
   }
-
+  const cacheCreationInputTokens =
+    providerMetadata?.anthropic?.cacheCreationInputTokens || 0;
+  const cacheReadInputTokens =
+    providerMetadata?.anthropic?.cacheReadInputTokens || 0;
   if (version > 0) {
     newMessages.push({
       chat_id: chatId,
@@ -573,6 +579,8 @@ const updateDataAfterCompletion = async (
       prompt_image: updatedImage,
       input_tokens: usage.promptTokens,
       subscription_type: subscriptionType,
+      cache_creation_input_tokens: cacheCreationInputTokens,
+      cache_read_input_tokens: cacheReadInputTokens,
     });
   } else {
     await supabase
@@ -580,6 +588,8 @@ const updateDataAfterCompletion = async (
       .update({
         version,
         input_tokens: usage.promptTokens,
+        cache_creation_input_tokens: cacheCreationInputTokens,
+        cache_read_input_tokens: cacheReadInputTokens,
         subscription_type: subscriptionType,
       })
       .eq("chat_id", chatId)
@@ -606,6 +616,8 @@ const updateDataAfterCompletion = async (
     output_tokens: usage.completionTokens,
     subscription_type: subscriptionType,
     artifact_code: artifactCode,
+    cache_creation_input_tokens: cacheCreationInputTokens,
+    cache_read_input_tokens: cacheReadInputTokens,
   });
 
   const { error: newMessagesError } = await supabase
