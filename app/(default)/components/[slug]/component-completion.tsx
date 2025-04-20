@@ -115,6 +115,7 @@ export default function ComponentCompletion({
   const [isLoading, setIsLoading] = useState(true);
   const [forceBuild, setForceBuild] = useState(false);
   const [isLengthError, setIsLengthError] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [fetchedChat, setFetchedChat] = useState<Tables<"chats"> | null>(null);
   const [lastAssistantMessage, setLastAssistantMessage] =
@@ -266,6 +267,7 @@ export default function ComponentCompletion({
       initialCompletion: lastAssistantMessage?.content,
       experimental_throttle: 500,
       onError: async (error: Error) => {
+        setIsSubmitting(false);
         const newArtifactFiles = extractFilesFromArtifact(
           fetchedChat?.artifact_code || "",
         );
@@ -405,6 +407,7 @@ export default function ComponentCompletion({
         }
       },
       onFinish: async () => {
+        setIsSubmitting(false);
         await refreshChatData();
         const refreshedLastAssistantMessage =
           await fetchLastAssistantMessageByChatId(chatId);
@@ -458,6 +461,8 @@ export default function ComponentCompletion({
     });
 
   const handleSubmitToAI = (inputData: string) => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     setForceBuild(true);
     setCompletion("");
     setArtifactFiles([]);
