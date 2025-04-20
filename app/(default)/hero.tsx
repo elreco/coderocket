@@ -561,7 +561,7 @@ export default function Hero() {
               <span className="font-semibold">responsive Tailwind sites</span>{" "}
               with
               <span className="font-semibold"> AI-powered</span> prompts and
-              images.
+              images. (formerly Tailwind AI)
             </>
           ) : (
             <>
