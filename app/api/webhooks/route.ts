@@ -19,6 +19,19 @@ const relevantEvents = new Set([
   "customer.subscription.deleted",
 ]);
 
+async function getEuroAmount(
+  amount: number,
+  currency: string,
+): Promise<number> {
+  if (currency === "eur") return amount / 100;
+  const res = await fetch(
+    `https://api.exchangerate.host/convert?from=${currency}&to=eur`,
+  );
+  const data = await res.json();
+  const rate = data.info.rate;
+  return (amount / 100) * rate;
+}
+
 export async function POST(req: Request) {
   const body = await req.text();
   const sig = req.headers.get("stripe-signature") as string;
@@ -105,6 +118,31 @@ export async function POST(req: Request) {
               }
             }
           }
+          break;
+        case "payment_intent.succeeded":
+          // eslint-disable-next-line no-case-declarations
+          const paymentIntent = event.data.object as Stripe.PaymentIntent;
+          // eslint-disable-next-line no-case-declarations
+          const supabase = await createClient();
+
+          // Conversion du montant en euros
+          // eslint-disable-next-line no-case-declarations
+          const amount_euro = await getEuroAmount(
+            paymentIntent.amount_received,
+            paymentIntent.currency,
+          );
+          // eslint-disable-next-line no-case-declarations
+          const { data, error } = await supabase.from("payments").insert({
+            payment_id: paymentIntent.id,
+            created: new Date(paymentIntent.created * 1000).toISOString(),
+            amount: paymentIntent.amount,
+            amount_euro,
+            payment_currency: paymentIntent.currency,
+            description: paymentIntent.description,
+            stripe_customer_id: paymentIntent.customer?.toString(),
+          });
+          console.log("data", data);
+          console.log("error", error);
           break;
         default:
           throw new Error("Unhandled relevant event!");
