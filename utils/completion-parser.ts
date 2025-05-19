@@ -3,9 +3,10 @@ import { Tables } from "@/types_db";
 import { defaultTheme } from "./config";
 
 const TAILWIND_SCRIPT_CDN =
-  '<script src="https://cdn.tailwindcss.com"></script>';
+  '<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>';
 const DAISYUI_CDN =
-  '<link href="https://cdn.jsdelivr.net/npm/daisyui@latest/dist/full.css" rel="stylesheet">';
+  '<link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet">\n' +
+  '<link href="https://cdn.jsdelivr.net/npm/daisyui@5/themes.css" rel="stylesheet" type="text/css" />';
 
 // Ajoutez cette nouvelle interface et fonction
 export interface ContentChunk {
@@ -334,11 +335,11 @@ export const getUpdatedArtifactCode = (
 export const ensureCDNsPresent = (htmlContent: string): string => {
   let updatedContent = htmlContent;
 
-  if (!htmlContent.includes("cdn.tailwindcss.com")) {
+  if (!htmlContent.includes("cdn.jsdelivr.net/npm/@tailwindcss/browser@4")) {
     updatedContent += `\n${TAILWIND_SCRIPT_CDN}`;
   }
 
-  if (!htmlContent.includes("cdn.jsdelivr.net/npm/daisyui@latest")) {
+  if (!htmlContent.includes("cdn.jsdelivr.net/npm/daisyui@5")) {
     updatedContent += `\n${DAISYUI_CDN}`;
   }
 
