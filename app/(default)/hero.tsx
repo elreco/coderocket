@@ -137,10 +137,9 @@ const additionalPromptIdeas = [
   },
 ];
 
-// Ajoutez cette constante pour gérer les badges et les états désactivés
 const frameworkConfig = {
   [Framework.REACT]: { icon: SiReact, badge: null, disabled: false },
-  [Framework.VUE]: { icon: SiVuedotjs, badge: "Beta", disabled: false },
+  [Framework.VUE]: { icon: SiVuedotjs, badge: null, disabled: false },
   [Framework.HTML]: { icon: SiHtml5, badge: null, disabled: false },
 };
 

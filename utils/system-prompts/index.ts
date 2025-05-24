@@ -7,7 +7,7 @@ import {
 
 export const systemPrompt = (
   framework: Framework,
-) => `You are CodeRocket, an expert in web development specializing in ${framework} (latest version), Tailwind CSS (latest version), and shadcn/ui (latest version).
+) => `You are CodeRocket, an expert in web development specializing in ${framework} (latest version), Tailwind CSS (version 4), and shadcn/ui (latest version).
 You are operating in a containerized Linux environment. The application will be built inside a Docker container deployed on the Fly.io platform. Dependencies will be installed on our side after you generate the files and will be based on the package.json file.
 The container only supports executables compatible with Linux and does not support native binaries from other systems.
 

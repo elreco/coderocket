@@ -62,9 +62,8 @@ export default App
 }
 </coderocketFile>
 <coderocketFile name="src/globals.css">
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@config "../tailwind.config.js";
 
 @layer base {
   :root {
@@ -179,14 +178,6 @@ module.exports = {
   plugins: [require("tailwindcss-animate")],
 }
 </coderocketFile>
-<coderocketFile name="postcss.config.cjs">
-module.exports = {
-  plugins: {
-    tailwindcss: {},
-    autoprefixer: {},
-  },
-}
-</coderocketFile>
 <coderocketFile name="package.json">
 {
   "name": "tailwind-ai-app",
@@ -200,45 +191,44 @@ module.exports = {
     "preview": "vite preview"
   },
   "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
     "clsx": "^2.1.1",
     "class-variance-authority": "^0.7.1",
-    "lucide-react": "^0.294.0",
+    "lucide-react": "^0.511.0",
+    "tailwindcss": "^4.0.0",
     "recharts": "^2.1.14",
     "react-router-dom": "^6.21.0",
-    "@radix-ui/react-slot": "^1.0.2",
-    "@radix-ui/react-tabs": "^1.0.4",
-    "@radix-ui/react-accordion": "^1.0.2",
-    "@radix-ui/react-dialog": "^1.0.4",
-    "@radix-ui/react-select": "^1.0.2",
-    "@radix-ui/react-checkbox": "^1.0.2",
-    "@radix-ui/react-popover": "^1.0.2",
-    "@radix-ui/react-radio-group": "^1.0.2",
-    "@radix-ui/react-avatar": "^1.0.3",
-    "@radix-ui/react-dropdown-menu": "^2.0.6",
-    "@radix-ui/react-label": "^2.0.2",
-    "@radix-ui/react-scroll-area": "^1.0.4",
-    "@radix-ui/react-separator": "^1.0.3",
-    "@radix-ui/react-switch": "^1.0.3",
-    "@radix-ui/react-toggle-group": "^1.0.2",
-    "@radix-ui/react-tooltip": "^1.0.3",
-    "@radix-ui/react-slider": "^1.0.2",
-    "@radix-ui/react-toast": "^1.0.3",
-    "@radix-ui/react-icons": "^1.0.2"
+    "@radix-ui/react-slot": "^1.2.0",
+    "@radix-ui/react-tabs": "^1.1.0",
+    "@radix-ui/react-accordion": "^1.2.0",
+    "@radix-ui/react-dialog": "^1.1.0",
+    "@radix-ui/react-select": "^2.2.0",
+    "@radix-ui/react-checkbox": "^1.3.0",
+    "@radix-ui/react-popover": "^1.1.0",
+    "@radix-ui/react-radio-group": "^1.3.0",
+    "@radix-ui/react-avatar": "^1.1.0",
+    "@radix-ui/react-dropdown-menu": "^2.1.0",
+    "@radix-ui/react-label": "^2.1.0",
+    "@radix-ui/react-scroll-area": "^1.2.0",
+    "@radix-ui/react-separator": "^1.1.0",
+    "@radix-ui/react-switch": "^1.1.0",
+    "@radix-ui/react-toggle-group": "^1.1.0",
+    "@radix-ui/react-tooltip": "^1.1.0",
+    "@radix-ui/react-slider": "^1.1.0",
+    "@radix-ui/react-toast": "^1.1.0",
+    "@radix-ui/react-icons": "^1.3.0"
   },
   "devDependencies": {
     "@types/node": "^20.3.1",
     "@types/react": "^18.0.37",
     "@types/react-dom": "^18.0.11",
-    "@vitejs/plugin-react": "^4.0.0",
-    "autoprefixer": "^10.4.14",
-    "postcss": "^8.4.24",
+    "@vitejs/plugin-react": "^4.4.1",
+    "@tailwindcss/vite": "^4.0.0",
     "typescript": "^5.0.2",
-    "tailwindcss": "^3.3.2",
     "tailwind-merge": "^2.4.0",
     "tailwindcss-animate": "^1.0.7",
-    "vite": "^4.3.9"
+    "vite": "^6.3.5"
   }
 }
 </coderocketFile>
@@ -323,10 +313,10 @@ module.exports = {
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
-
+import tailwindcss from '@tailwindcss/vite'
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), tailwindcss()],
   base: "./",
   build: {
     minify: false,
@@ -408,9 +398,8 @@ createApp(App).mount('#app')
 </coderocketFile>
 
 <coderocketFile name="src/globals.css">
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@config "../tailwind.config.js";
 
 @layer base {
   :root {
@@ -523,20 +512,13 @@ module.exports = {
   plugins: [require("tailwindcss-animate")],
 }
 </coderocketFile>
-<coderocketFile name="postcss.config.cjs">
-module.exports = {
-  plugins: {
-    tailwindcss: {},
-    autoprefixer: {},
-  },
-}
-</coderocketFile>
 
 <coderocketFile name="package.json">
 {
   "name": "vue-tailwind-app",
   "private": true,
   "version": "0.0.0",
+  "type": "module",
   "scripts": {
     "dev": "vue-tsc && vite",
     "build": "vue-tsc && vite build",
@@ -544,26 +526,24 @@ module.exports = {
   },
   "dependencies": {
     "vue": "^3.3.4",
-    "tailwindcss": "^3.3.2",
     "clsx": "^2.1.1",
+    "tailwindcss": "^4.0.0",
     "class-variance-authority": "^0.7.1",
-    "lucide-vue-next": "^0.474.0",
-    "radix-vue": "^1.9.13",
+    "lucide-vue-next": "^0.511.0",
+    "radix-vue": "^1.9.17",
     "vue-router": "^4.3.1"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^4.0.0",
-    "vite": "^4.3.9",
+    "@vitejs/plugin-vue": "^5.2.4",
+    "vite": "^6.3.5",
     "vue-tsc": "^2.2.0",
     "@types/node": "^20.3.1",
     "@vue/tsconfig": "^0.7.0",
     "@typescript-eslint/eslint-plugin": "^5.59.0",
     "@typescript-eslint/parser": "^5.59.0",
-    "autoprefixer": "^10.4.14",
     "eslint": "^8.38.0",
-    "postcss": "^8.4.24",
     "typescript": "^5.0.2",
-    "tailwindcss": "^3.3.2",
+    "@tailwindcss/vite": "^4.0.0",
     "tailwind-merge": "^2.4.0",
     "tailwindcss-animate": "^1.0.7"
   }
@@ -633,11 +613,19 @@ module.exports = {
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import path from 'path'
+import tailwindcss from '@tailwindcss/vite'
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [vue()],
+  plugins: [vue(), tailwindcss()],
   base: "./",
+  build: {
+    minify: false,
+    sourcemap: false,
+    cssCodeSplit: false,
+    target: "esnext",
+    ssr: false,
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
