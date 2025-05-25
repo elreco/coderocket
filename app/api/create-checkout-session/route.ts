@@ -24,7 +24,6 @@ export async function POST(req: Request) {
       let session;
       if (price.type === "recurring") {
         session = await stripe.checkout.sessions.create({
-          automatic_tax: { enabled: true },
           tax_id_collection: { enabled: true },
           billing_address_collection: "required",
           customer,
@@ -53,7 +52,6 @@ export async function POST(req: Request) {
         });
       } else if (price.type === "one_time") {
         session = await stripe.checkout.sessions.create({
-          automatic_tax: { enabled: true },
           tax_id_collection: { enabled: true },
           billing_address_collection: "required",
           customer,
