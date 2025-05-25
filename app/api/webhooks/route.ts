@@ -141,8 +141,8 @@ export async function POST(req: Request) {
             description: paymentIntent.description,
             stripe_customer_id: paymentIntent.customer?.toString(),
           });
-          console.log("data", data);
-          console.log("error", error);
+          console.log("data webhooks elreco", data);
+          console.log("error webhooks elreco", error);
           break;
         default:
           throw new Error("Unhandled relevant event!");
