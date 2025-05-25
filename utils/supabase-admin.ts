@@ -103,6 +103,40 @@ const copyBillingDetailsToCustomer = async (
   if (error) throw error;
 };
 
+async function getEuroAmount(
+  amount: number,
+  currency: string,
+): Promise<number> {
+  if (currency === "eur") return amount / 100;
+  const res = await fetch(
+    `https://api.exchangerate.host/convert?from=${currency}&to=eur`,
+  );
+  const data = await res.json();
+  const rate = data.info.rate;
+  return (amount / 100) * rate;
+}
+
+export const updatePaymentRecord = async (
+  paymentIntent: Stripe.PaymentIntent,
+) => {
+  const supabase = await createClient();
+
+  const amount_euro = await getEuroAmount(
+    paymentIntent.amount_received,
+    paymentIntent.currency,
+  );
+
+  await supabase.from("payments").insert({
+    payment_id: paymentIntent.id,
+    created: new Date(paymentIntent.created * 1000).toISOString(),
+    amount: paymentIntent.amount,
+    amount_euro,
+    payment_currency: paymentIntent.currency,
+    description: paymentIntent.description,
+    stripe_customer_id: paymentIntent.customer?.toString(),
+  });
+};
+
 const manageSubscriptionStatusChange = async (
   subscriptionId: string,
   customerId: string,
