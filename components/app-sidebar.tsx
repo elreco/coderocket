@@ -177,7 +177,7 @@ export function AppSidebar({
                     CodeRocket
                   </span>
                   <span className="truncate text-xs">
-                    AI-powered Tailwind CSS
+                    AI-powered Tailwind components
                   </span>
                 </div>
               </Link>

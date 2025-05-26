@@ -692,7 +692,7 @@ export const defaultArtifactExamples = {
         </coderocketFile>
       </coderocketArtifact>
 
-      Here's a simple login page setup using shadcn/ui components, TypeScript, Vite, and Tailwind CSS.
+      Here's a simple login page setup using shadcn/ui components, TypeScript, Vite, and Tailwind CSS 4.
     </assistant_response>
   </example>
   <example>
@@ -743,7 +743,7 @@ export const defaultArtifactExamples = {
         </coderocketFile>
       </coderocketArtifact>
 
-      Here's a simple login page setup using shadcn/ui components, TypeScript, Vite, and Tailwind CSS.
+      Here's a simple login page setup using shadcn/ui components, TypeScript, Vite, and Tailwind CSS 4.
     </assistant_response>
     <user_query>Remove the button from the login page.</user_query>
     <assistant_response>
@@ -841,7 +841,7 @@ export const defaultArtifactExamples = {
         </coderocketFile>
       </coderocketArtifact>
 
-      Here's a simple login page setup using Vue 3, Composition API, and Tailwind CSS.
+      Here's a simple login page setup using Vue 3, Composition API, and Tailwind CSS 4.
     </assistant_response>
   </example>
 
@@ -899,7 +899,7 @@ export const defaultArtifactExamples = {
         </coderocketFile>
       </coderocketArtifact>
 
-      Here's a simple login page setup using Vue 3, Composition API, and Tailwind CSS.
+      Here's a simple login page setup using Vue 3, Composition API, and Tailwind CSS 4.
     </assistant_response>
 
     <user_query>Remove the button from the login page.</user_query>
