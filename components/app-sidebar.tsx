@@ -4,6 +4,7 @@ import { SiDiscord } from "@icons-pack/react-simple-icons";
 import {
   CreditCard,
   Globe,
+  Heart,
   Rocket,
   SquareTerminal,
   SquareUserRoundIcon,
@@ -49,6 +50,11 @@ const data = {
       title: "My Components",
       url: "/account/components",
       icon: SquareUserRoundIcon,
+    },
+    {
+      title: "Liked Components",
+      url: "/account/liked-components",
+      icon: Heart,
     },
   ],
   community: [

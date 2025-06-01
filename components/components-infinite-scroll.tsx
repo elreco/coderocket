@@ -39,6 +39,7 @@ interface ComponentsInfiniteScrollProps {
   initialSearchQuery?: string;
   initialSelectedFrameworks?: Framework[];
   isAccountPage?: boolean;
+  isLikedPage?: boolean;
 }
 
 export function ComponentsInfiniteScroll({
@@ -47,6 +48,7 @@ export function ComponentsInfiniteScroll({
   initialSearchQuery = "",
   initialSelectedFrameworks = [],
   isAccountPage = false,
+  isLikedPage = false,
 }: ComponentsInfiniteScrollProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -136,6 +138,7 @@ export function ComponentsInfiniteScroll({
         search,
         frameworks,
         isAccountPage,
+        isLikedPage,
       );
       const validData = data.filter(Boolean);
 
@@ -165,6 +168,7 @@ export function ComponentsInfiniteScroll({
       search,
       frameworks,
       isAccountPage,
+      isLikedPage,
     );
     setPopularChats(data.filter(Boolean));
   }
@@ -379,11 +383,19 @@ export function ComponentsInfiniteScroll({
       {hasNoResults ? (
         <div className="mt-6 flex min-h-[400px] flex-col items-center justify-center rounded-lg border border-dashed border-border bg-secondary px-4 py-6 text-center">
           <SearchX className="size-12 text-muted-foreground" />
-          <h3 className="mt-4 text-lg font-semibold">No components found</h3>
+          {isLikedPage ? (
+            <h3 className="mt-4 text-lg font-semibold">
+              No liked components found
+            </h3>
+          ) : (
+            <h3 className="mt-4 text-lg font-semibold">No components found</h3>
+          )}
           <p className="mt-2 max-w-sm text-sm text-muted-foreground">
-            {searchQuery
-              ? `No results found for "${searchQuery}". Try adjusting your search or filters.`
-              : "No components available. Try changing your filters or search for something else."}
+            {isLikedPage
+              ? `No liked components found. Try changing your filters or search for something else.`
+              : searchQuery
+                ? `No results found for "${searchQuery}". Try adjusting your search or filters.`
+                : "No components available. Try changing your filters or search for something else."}
           </p>
           <Button
             onClick={async () => {

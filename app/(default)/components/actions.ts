@@ -459,6 +459,7 @@ export const getAllPublicChats = async (
   searchQuery?: string,
   selectedFrameworks?: Framework[],
   isAccountPage?: boolean,
+  isLikedPage?: boolean,
 ) => {
   try {
     const supabase = await createClient();
@@ -491,6 +492,20 @@ export const getAllPublicChats = async (
       query = query.order("created_at", { ascending: false });
     }
 
+    if (isLikedPage && user) {
+      const { data: likedChats } = await supabase
+        .from("chat_likes")
+        .select("chat_id")
+        .eq("user_id", user.id);
+      if (likedChats) {
+        query = query.in(
+          "chat_id",
+          likedChats.map((chat) => chat.chat_id),
+        );
+      } else {
+        query = query.in("chat_id", []);
+      }
+    }
     const { data, error } = await query.range(offset, offset + limit - 1);
 
     if (error) {

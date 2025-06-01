@@ -24,7 +24,6 @@ export function ComponentCard({ chat, isReverse }: ComponentCardProps) {
       : chat.framework === Framework.VUE
         ? SiVuedotjs
         : SiHtml5;
-  console.log(chat);
   return (
     <div
       key={chat.chat_id}
