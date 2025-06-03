@@ -20,7 +20,7 @@ export default function Faq() {
             href="https://tailwindcss.com"
             target="_blank"
           >
-            Tailwind 4
+            Tailwind v4
           </a>{" "}
           that people can use in their projects.
         </AccordionContent>

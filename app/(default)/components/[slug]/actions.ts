@@ -12,7 +12,6 @@ import {
 import { builderApiUrl, Framework } from "@/utils/config";
 import { promptEnhancer } from "@/utils/prompt-enhancer";
 import { createClient } from "@/utils/supabase/server";
-import { tweetComponent } from "@/utils/twitter-service";
 
 import {
   fetchAssistantMessageByChatIdAndVersion,
@@ -250,18 +249,6 @@ export const buildComponent = async (
       .eq("chat_id", chatId)
       .eq("role", "assistant")
       .eq("version", version);
-
-    // Take screenshot and get the URL
-    const screenshotUrl = await takeScreenshot(
-      chatId,
-      version,
-      undefined,
-      chat.framework || Framework.REACT,
-    );
-    if (chat.is_private) {
-      return;
-    }
-    await tweetComponent(chatId, version, screenshotUrl);
   } catch (error) {
     console.error("API error:", error);
   }

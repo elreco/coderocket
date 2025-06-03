@@ -182,9 +182,7 @@ export function AppSidebar({
                   <span className="truncate text-sm font-semibold text-sidebar-primary group-hover/link:text-sidebar-primary-foreground">
                     CodeRocket
                   </span>
-                  <span className="truncate text-xs">
-                    AI-powered Tailwind components
-                  </span>
+                  <span className="truncate text-xs">AI-powered Tailwind</span>
                 </div>
               </Link>
             </SidebarMenuButton>

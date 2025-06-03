@@ -22,10 +22,10 @@ const rubik = Plus_Jakarta_Sans({
 });
 
 const meta = {
-  title: "CodeRocket - Build Stunning Tailwind 4 Websites with AI",
+  title: "CodeRocket - Build Stunning Tailwind Websites with AI",
   metadataBase: new URL("https://www.coderocket.app"),
   description:
-    "Create high-quality, AI-powered Tailwind 4 websites and components effortlessly. CodeRocket simplifies your workflow, generating sleek, responsive designs in seconds. Clone existing websites with a URL or build from scratch.",
+    "Create high-quality, AI-powered Tailwind v4 websites and components effortlessly. CodeRocket simplifies your workflow, generating sleek, responsive designs in seconds. Clone existing websites with a URL or build from scratch.",
   cardImage: "https://www.coderocket.app/og.png",
   robots: "index, follow",
   favicon: "/favicon.ico",
@@ -33,9 +33,9 @@ const meta = {
   type: "website",
   twitter: {
     card: "summary_large_image",
-    title: "CodeRocket - AI-Powered Tailwind 4 App Builder",
+    title: "CodeRocket - AI-Powered Tailwind App Builder",
     description:
-      "Design and build stunning Tailwind 4 websites and components with AI. Clone existing websites with a URL or create responsive, production-ready websites faster than ever.",
+      "Design and build stunning Tailwind v4 websites and components with AI. Clone existing websites with a URL or create responsive, production-ready websites faster than ever.",
     images: ["https://www.coderocket.app/og.png"],
   },
 };
@@ -85,7 +85,7 @@ export default async function RootLayout({ children }: PropsWithChildren) {
               name: "CodeRocket",
               url: "https://www.coderocket.app",
               description:
-                "Create high-quality, AI-powered Tailwind 4 websites and components effortlessly. Clone existing websites with a URL or build from scratch.",
+                "Create high-quality, AI-powered Tailwind websites and components effortlessly. Clone existing websites with a URL or build from scratch.",
               applicationCategory: "WebDevelopment",
               operatingSystem: "Any",
               offers: {
@@ -94,7 +94,7 @@ export default async function RootLayout({ children }: PropsWithChildren) {
                 priceCurrency: "USD",
               },
               featureList: [
-                "AI-powered Tailwind 4 component generation",
+                "AI-powered Tailwind v4 component generation",
                 "Website cloning from URL",
                 "Multiple framework support (React, Vue, HTML)",
                 "Responsive design",
