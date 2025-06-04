@@ -1,6 +1,6 @@
 "use client";
 
-import { useCompletion } from "ai/react";
+import { useCompletion } from "@ai-sdk/react";
 import { Crisp } from "crisp-sdk-web";
 import { format } from "date-fns";
 import { motion } from "framer-motion";

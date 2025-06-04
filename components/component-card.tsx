@@ -30,6 +30,7 @@ export function ComponentCard({ chat, isReverse }: ComponentCardProps) {
       className={cn(
         "w-full bg-center overflow-hidden relative card rounded-md mx-auto",
         isReverse ? "bg-background" : "bg-secondary",
+        chat.user_has_liked && "border border-pink-500",
       )}
     >
       {/* Image */}
@@ -90,16 +91,23 @@ export function ComponentCard({ chat, isReverse }: ComponentCardProps) {
           </Badge>
 
           <div className="flex items-center gap-3 text-xs text-muted-foreground">
-            <div className="flex items-center gap-1.5">
-              <Heart className="size-3.5" />
-              <span>{chat.likes || 0}</span>
-            </div>
             {chat.remix_chat_id && (
               <div className="flex items-center gap-1">
                 <GitFork className="size-3" />
                 <span>Remixed</span>
               </div>
             )}
+            <div className="flex items-center gap-1.5">
+              <Heart
+                className={cn(
+                  "size-3.5",
+                  chat.user_has_liked && "text-pink-500",
+                )}
+              />
+              <span className={cn(chat.user_has_liked && "text-pink-500")}>
+                {chat.likes || 0}
+              </span>
+            </div>
           </div>
         </div>
       </div>

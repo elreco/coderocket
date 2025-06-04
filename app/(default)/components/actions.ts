@@ -37,6 +37,7 @@ export type GetComponentsReturnType = {
   slug: string;
   remix_chat_id: string;
   clone_url?: string;
+  user_has_liked?: boolean;
 };
 
 export const fetchChatById = async (idOrSlug: string) => {
@@ -512,7 +513,28 @@ export const getAllPublicChats = async (
       console.error("Error fetching public chats:", error);
       return [];
     }
-    return data || [];
+
+    if (user && data && data.length > 0) {
+      const chatIds = data.map((chat) => chat.chat_id);
+      const { data: userLikes } = await supabase
+        .from("chat_likes")
+        .select("chat_id")
+        .eq("user_id", user.id)
+        .in("chat_id", chatIds);
+
+      const likedChatIds = userLikes
+        ? new Set(userLikes.map((like) => like.chat_id))
+        : new Set();
+
+      return data.map((chat) => ({
+        ...chat,
+        user_has_liked: likedChatIds.has(chat.chat_id),
+      }));
+    }
+    return (data || []).map((chat) => ({
+      ...chat,
+      user_has_liked: false,
+    }));
   } catch (err) {
     console.error("Unexpected error in getAllPublicChats:", err);
     return [];
