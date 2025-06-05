@@ -670,7 +670,11 @@ export const hasUserLikedChat = async (chatId: string) => {
   return !!existingLike; // Retourne true si le like existe, sinon false
 };
 
-export const remixChat = async (chatId: string) => {
+export const remixChat = async (
+  chatId: string,
+  selectedVersion: number | undefined,
+) => {
+  console.log("remixChat", chatId, selectedVersion);
   const supabase = await createClient();
 
   // Get the original chat
@@ -752,10 +756,13 @@ export const remixChat = async (chatId: string) => {
     throw new Error("Could not determine the latest version");
   }
 
-  const latestVersion = versionData.version;
-
   // Calculate how many versions to fetch (up to 10 most recent versions)
-  const startVersion = Math.max(0, latestVersion - 9);
+  const startVersion = Math.max(
+    0,
+    selectedVersion !== undefined
+      ? selectedVersion - 9
+      : versionData.version - 9,
+  );
 
   // Get messages from the last 10 versions (or all if less than 10) of the original chat
   const { data: originalMessages } = await supabase
@@ -763,7 +770,7 @@ export const remixChat = async (chatId: string) => {
     .select("*")
     .eq("chat_id", chatId)
     .gte("version", startVersion)
-    .lte("version", latestVersion)
+    .lte("version", selectedVersion)
     .order("version", { ascending: true })
     .order("created_at", { ascending: true });
 

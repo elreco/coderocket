@@ -17,6 +17,7 @@ import {
   X,
   Heart,
   Globe,
+  Info,
 } from "lucide-react";
 import { Share } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -26,6 +27,8 @@ import { useCopyToClipboard } from "usehooks-ts";
 import { getSubscription } from "@/app/supabase-server";
 import { Container } from "@/components/container";
 import RenderHtmlComponent from "@/components/renders/render-html-component";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -697,7 +700,7 @@ export default function ComponentCompletion({
 
     try {
       setIsRemixing(true);
-      const newChat = await remixChat(chatId);
+      const newChat = await remixChat(chatId, selectedVersion);
 
       toast({
         variant: "default",
@@ -1164,11 +1167,27 @@ export default function ComponentCompletion({
                     )}
                   </div>
                 ) : (
-                  <p className="mb-4">
-                    Remixing will create a copy of this component that you can
-                    modify and customize. This feature is available for
-                    subscribers only.
-                  </p>
+                  <>
+                    <p className="mb-4">
+                      Remixing will create a copy of this component that you can
+                      modify and customize. This feature is available for
+                      subscribers only.
+                    </p>
+                    <Alert className="mb-4">
+                      <AlertTitle className="mb-2 flex items-center gap-2">
+                        <Info className="size-4" />{" "}
+                        <p>Remixing from selected version</p>
+                      </AlertTitle>
+                      <AlertDescription>
+                        You selected{" "}
+                        <Badge variant="outline">
+                          version #{selectedVersion}
+                        </Badge>{" "}
+                        as the base of your remix. You can change this by
+                        selecting a different version in the sidebar.
+                      </AlertDescription>
+                    </Alert>
+                  </>
                 )}
                 <div className="flex justify-center">
                   {hasAlreadyRemixed ? (
