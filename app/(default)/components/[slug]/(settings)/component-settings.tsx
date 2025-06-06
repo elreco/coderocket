@@ -13,6 +13,8 @@ import { toast } from "@/hooks/use-toast";
 
 import { changeVisibilityByChatId } from "../actions";
 
+import GitHubSync from "./github-sync";
+
 export default function ComponentSettings({
   children,
 }: {
@@ -43,22 +45,32 @@ export default function ComponentSettings({
       <SheetTrigger asChild>{children}</SheetTrigger>
       <SheetContent className="overflow-auto">
         <SheetTitle className="mb-4">Component Settings</SheetTitle>
-        <div>
-          <h3 className="mb-4 text-base font-semibold">Change visibility</h3>
-          <div className="space-y-4">
-            <div className="mb-5 flex flex-row items-center justify-between rounded-lg border p-4">
-              <div className="space-y-0.5">
-                <Label>Private mode</Label>
-                <p className="text-sm text-muted-foreground">
-                  When private, the component will not be visible to the public.
-                </p>
+
+        <div className="space-y-6">
+          {/* Visibility Settings */}
+          <div>
+            <h3 className="mb-4 text-base font-semibold">Change visibility</h3>
+            <div className="space-y-4">
+              <div className="mb-5 flex flex-row items-center justify-between rounded-lg border p-4">
+                <div className="space-y-0.5">
+                  <Label>Private mode</Label>
+                  <p className="text-sm text-muted-foreground">
+                    When private, the component will not be visible to the
+                    public.
+                  </p>
+                </div>
+                <Switch
+                  checked={!isVisible}
+                  onCheckedChange={handleVisibility}
+                  disabled={isVisibilityLoading}
+                />
               </div>
-              <Switch
-                checked={!isVisible}
-                onCheckedChange={handleVisibility}
-                disabled={isVisibilityLoading}
-              />
             </div>
+          </div>
+
+          {/* GitHub Sync Settings */}
+          <div>
+            <GitHubSync />
           </div>
         </div>
       </SheetContent>
