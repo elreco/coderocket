@@ -22,6 +22,7 @@ export default function ComponentSettings({
 }) {
   const { isVisible, setVisible, chatId } = useComponentContext();
   const [isVisibilityLoading, setIsVisibilityLoading] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
   const handleVisibility = async () => {
     if (isVisibilityLoading) return;
     try {
@@ -41,7 +42,7 @@ export default function ComponentSettings({
   };
 
   return (
-    <Sheet>
+    <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>{children}</SheetTrigger>
       <SheetContent className="overflow-auto">
         <SheetTitle className="mb-4">Component Settings</SheetTitle>
@@ -70,7 +71,7 @@ export default function ComponentSettings({
 
           {/* GitHub Sync Settings */}
           <div>
-            <GitHubSync />
+            <GitHubSync closeSheet={() => setIsOpen(false)} />
           </div>
         </div>
       </SheetContent>

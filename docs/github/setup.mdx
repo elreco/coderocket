@@ -1,0 +1,199 @@
+---
+title: 'GitHub Setup'
+description: 'Connect your GitHub account to CodeRocket in just a few steps'
+---
+
+## Prerequisites
+
+Before setting up GitHub integration, make sure you have:
+
+<Check>A CodeRocket account with Pro subscription or higher</Check>
+<Check>A GitHub account</Check>
+<Check>At least one component created in CodeRocket</Check>
+
+<Warning>
+  GitHub integration is available for Pro and Enterprise subscribers only.
+  [Upgrade your account](https://coderocket.app/pricing) if you haven't already.
+</Warning>
+
+## Step 1: Connect Your GitHub Account
+
+<Steps>
+  <Step title="Navigate to Account Settings">
+    Click on your profile picture in the top-right corner and select **Account Settings**.
+  </Step>
+
+  <Step title="Find GitHub Integration">
+    Scroll down to the **Integrations** section and locate the GitHub integration card.
+  </Step>
+
+  <Step title="Authorize CodeRocket">
+    Click **Connect GitHub Account**. You'll be redirected to GitHub to authorize CodeRocket.
+
+    <Frame>
+      <img src="/images/github-oauth.png" alt="GitHub OAuth" />
+    </Frame>
+
+    Grant the following permissions:
+    - **Repository access**: Create and manage repositories
+    - **Content access**: Read and write repository contents
+    - **Metadata access**: Access repository information
+  </Step>
+
+  <Step title="Confirm Connection">
+    After authorization, you'll be redirected back to CodeRocket. You should see your GitHub username displayed in the integration section.
+  </Step>
+</Steps>
+
+## Step 2: Set Up Repository for Your Component
+
+Once your GitHub account is connected, you can set up repository sync for any component.
+
+<Steps>
+  <Step title="Open Component Settings">
+    Navigate to one of your components and click the **Settings** button (gear icon) in the top-right corner.
+  </Step>
+
+  <Step title="Access GitHub Sync">
+    In the settings panel, scroll down to the **GitHub Sync** section.
+  </Step>
+
+  <Step title="Create Repository">
+    Click **Create GitHub Repository**. CodeRocket will:
+    - Generate a repository name based on your component
+    - Create the repository under your GitHub account
+    - Set up the initial project structure
+
+    <Frame>
+      <img src="/images/create-repo.png" alt="Create Repository" />
+    </Frame>
+  </Step>
+
+  <Step title="Enable Automatic Sync">
+    Toggle the **Enable GitHub Sync** switch to automatically sync future AI iterations to your repository.
+  </Step>
+</Steps>
+
+## Step 3: Verify Setup
+
+<AccordionGroup>
+  <Accordion title="Check GitHub Repository">
+    Visit your GitHub profile and verify that the new repository has been created with your component's code.
+
+    The repository should contain:
+    - `README.md` with project description
+    - `package.json` with dependencies
+    - Source code files in appropriate structure
+  </Accordion>
+
+  <Accordion title="Test Synchronization">
+    Make a change to your component in CodeRocket (ask the AI to modify something) and verify that:
+    - A new commit appears in your GitHub repository
+    - The commit message reflects the changes made
+    - All files are updated correctly
+  </Accordion>
+
+  <Accordion title="Verify Settings">
+    In your component settings, you should see:
+    - ✅ **Connected to GitHub** status
+    - Repository name and link
+    - Last sync timestamp
+    - Sync toggle in enabled state
+  </Accordion>
+</AccordionGroup>
+
+## Repository Naming Convention
+
+CodeRocket automatically generates repository names using this pattern:
+
+<CodeGroup>
+```bash Default Pattern
+coderocket-{component-slug}
+```
+
+```bash Examples
+coderocket-todo-app
+coderocket-landing-page
+coderocket-pricing-table
+```
+</CodeGroup>
+
+You can customize the repository name during creation, but it must:
+- Be unique within your GitHub account
+- Follow GitHub naming conventions
+- Use only alphanumeric characters and hyphens
+
+## Permissions and Security
+
+### What CodeRocket Can Access
+
+<Tabs>
+  <Tab title="Repository Contents">
+    - Read and write files in connected repositories
+    - Create commits and manage version history
+    - Access repository metadata (name, description, etc.)
+  </Tab>
+
+  <Tab title="Repository Management">
+    - Create new repositories under your account
+    - Update repository settings and description
+    - Manage repository topics and visibility
+  </Tab>
+
+  <Tab title="What CodeRocket Cannot Access">
+    - Your other repositories (unless explicitly connected)
+    - Personal information beyond public profile
+    - Repositories from organizations you don't own
+    - GitHub account settings or billing information
+  </Tab>
+</Tabs>
+
+### Revoking Access
+
+You can revoke CodeRocket's access to your GitHub account at any time:
+
+1. Go to [GitHub Settings → Applications](https://github.com/settings/applications)
+2. Find "CodeRocket" in the authorized OAuth apps
+3. Click **Revoke** to remove access
+
+<Warning>
+  Revoking access will disable GitHub sync for all your components. You'll need to reconnect to resume synchronization.
+</Warning>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Connection Failed">
+    If the GitHub connection fails:
+    - Check your internet connection
+    - Ensure you're logged into the correct GitHub account
+    - Try the connection process again
+    - Contact support if the issue persists
+  </Accordion>
+
+  <Accordion title="Repository Creation Failed">
+    Common causes and solutions:
+    - **Repository name already exists**: Choose a different name
+    - **Insufficient permissions**: Check your GitHub account permissions
+    - **Rate limit exceeded**: Wait a few minutes and try again
+  </Accordion>
+
+  <Accordion title="Sync Not Working">
+    If synchronization stops working:
+    - Check if GitHub access token is still valid
+    - Verify repository still exists and is accessible
+    - Try disconnecting and reconnecting your GitHub account
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+Now that you've set up GitHub integration, learn how to use the synchronization features:
+
+<Card
+  title="Synchronization Guide"
+  icon="sync"
+  href="/github/synchronization"
+>
+  Learn about different sync modes and how to use them effectively
+</Card>

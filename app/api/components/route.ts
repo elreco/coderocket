@@ -9,6 +9,7 @@ import {
 import { after } from "next/server";
 
 import { buildComponent } from "@/app/(default)/components/[slug]/actions";
+import { autoSyncToGithubAfterGeneration } from "@/app/(default)/components/[slug]/github-sync-actions";
 import {
   decrementExtraMessagesCount,
   fetchChatById,
@@ -634,8 +635,11 @@ const updateDataAfterCompletion = async (
     }
     if (chat.framework === Framework.HTML) {
       await takeScreenshot(chatId, version, theme, Framework.HTML);
-      return;
+    } else {
+      await buildComponent(chatId, version);
     }
-    await buildComponent(chatId, version);
+
+    // Auto-sync to GitHub après génération d'une nouvelle version
+    await autoSyncToGithubAfterGeneration(chatId, version);
   });
 };

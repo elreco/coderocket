@@ -1,0 +1,136 @@
+---
+title: 'GitHub Integration Overview'
+description: 'Seamlessly connect your CodeRocket projects with GitHub repositories'
+---
+
+## What is GitHub Integration?
+
+CodeRocket's GitHub integration allows you to automatically sync your AI-generated projects with GitHub repositories, providing version control, collaboration capabilities, and professional development workflows.
+
+<CardGroup cols={2}>
+  <Card
+    title="Automatic Sync"
+    icon="sync"
+  >
+    Every AI iteration automatically creates a new commit in your GitHub repository
+  </Card>
+  <Card
+    title="Bidirectional Sync"
+    icon="arrows-rotate"
+  >
+    Pull changes from GitHub back into CodeRocket or push your changes to GitHub
+  </Card>
+  <Card
+    title="Repository Management"
+    icon="folder-open"
+  >
+    Create and manage GitHub repositories directly from CodeRocket
+  </Card>
+  <Card
+    title="Conflict Resolution"
+    icon="merge"
+  >
+    Smart conflict handling with "Last Write Wins" strategy
+  </Card>
+</CardGroup>
+
+## Key Features
+
+### 🔄 Automatic Synchronization
+Every time you generate a new version of your project with AI, CodeRocket automatically:
+- Creates a new commit in your GitHub repository
+- Updates all project files
+- Generates appropriate commit messages
+- Maintains version history
+
+### 📤 Manual Sync Options
+You have full control over when and how to sync:
+
+<Tabs>
+  <Tab title="Pull from GitHub">
+    Download the latest changes from your GitHub repository and create a new version in CodeRocket.
+
+    **Use when**: You've made changes directly in GitHub and want to bring them into CodeRocket.
+  </Tab>
+
+  <Tab title="Push to GitHub">
+    Upload your current CodeRocket version to GitHub only if the web version is newer.
+
+    **Use when**: You want to push changes while respecting GitHub modifications.
+  </Tab>
+
+  <Tab title="Force Push">
+    Upload your current CodeRocket version to GitHub, overriding any GitHub changes.
+
+    **Use when**: You want to ensure your CodeRocket version becomes the source of truth.
+  </Tab>
+</Tabs>
+
+### 🏗️ Repository Structure
+CodeRocket automatically creates a professional repository structure:
+
+```
+your-repository/
+├── README.md              # Project documentation
+├── package.json           # Dependencies and scripts
+├── src/
+│   ├── App.js            # Main application file
+│   ├── components/       # React components
+│   └── styles/           # CSS and styling files
+└── public/
+    └── index.html        # HTML template
+```
+
+### 🔐 Security & Authentication
+- Secure OAuth integration with GitHub
+- Repositories are created under your GitHub account
+- You maintain full ownership and control
+- Access tokens are encrypted and stored securely
+
+## Workflow Examples
+
+<AccordionGroup>
+  <Accordion title="Solo Development">
+    1. Create a component in CodeRocket
+    2. Connect your GitHub account
+    3. Create a new repository
+    4. Enable automatic sync
+    5. Iterate with AI - each change auto-syncs to GitHub
+  </Accordion>
+
+  <Accordion title="Team Collaboration">
+    1. Create and sync your project to GitHub
+    2. Team members can clone the repository
+    3. Make changes in GitHub
+    4. Pull changes back into CodeRocket
+    5. Continue iterating with AI
+  </Accordion>
+
+  <Accordion title="External Development">
+    1. Start with CodeRocket AI generation
+    2. Sync to GitHub
+    3. Continue development in your favorite IDE
+    4. Push changes to GitHub
+    5. Pull back into CodeRocket for AI assistance
+  </Accordion>
+</AccordionGroup>
+
+## Benefits
+
+<Check>**Version Control**: Every AI iteration is tracked and versioned in GitHub</Check>
+<Check>**Collaboration**: Share your projects with team members effortlessly</Check>
+<Check>**Backup**: Your code is safely stored in GitHub's infrastructure</Check>
+<Check>**Professional Workflow**: Integrate with existing development processes</Check>
+<Check>**Open Source**: Make your projects publicly available</Check>
+
+## Getting Started
+
+Ready to connect your CodeRocket projects with GitHub? Let's set up the integration.
+
+<Card
+  title="Setup GitHub Integration"
+  icon="github"
+  href="/github/setup"
+>
+  Follow our step-by-step guide to connect your GitHub account
+</Card>

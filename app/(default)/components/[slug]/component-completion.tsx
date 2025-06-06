@@ -570,6 +570,7 @@ export default function ComponentCompletion({
     setMessages(refreshedChatMessages);
     const refreshedChat = await fetchChatById(chatId);
     if (!refreshedChat) return;
+    setFetchedChat(refreshedChat);
     setArtifactCode(refreshedChat.artifact_code || "");
     const title = refreshedChat.title || `Version #${selectedVersion}`;
     setTitle(title);

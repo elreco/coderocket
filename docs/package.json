@@ -1,0 +1,23 @@
+{
+  "name": "coderocket-docs",
+  "version": "1.0.0",
+  "description": "CodeRocket Documentation built with Mintlify",
+  "scripts": {
+    "dev": "mintlify dev",
+    "start": "mintlify dev",
+    "build": "mintlify build",
+    "preview": "mintlify preview"
+  },
+  "devDependencies": {
+    "mintlify": "latest"
+  },
+  "keywords": [
+    "documentation",
+    "mintlify",
+    "coderocket",
+    "github",
+    "integration"
+  ],
+  "author": "CodeRocket Team",
+  "license": "MIT"
+}
