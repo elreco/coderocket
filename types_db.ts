@@ -51,10 +51,14 @@ export type Database = {
           clone_url: string | null;
           created_at: string | null;
           framework: string | null;
+          github_repo_name: string | null;
+          github_repo_url: string | null;
+          github_sync_enabled: boolean | null;
           id: string;
           input_tokens: number | null;
           is_featured: boolean | null;
           is_private: boolean | null;
+          last_github_sync: string | null;
           likes: number | null;
           metadata: Json | null;
           output_tokens: number | null;
@@ -71,10 +75,14 @@ export type Database = {
           clone_url?: string | null;
           created_at?: string | null;
           framework?: string | null;
+          github_repo_name?: string | null;
+          github_repo_url?: string | null;
+          github_sync_enabled?: boolean | null;
           id?: string;
           input_tokens?: number | null;
           is_featured?: boolean | null;
           is_private?: boolean | null;
+          last_github_sync?: string | null;
           likes?: number | null;
           metadata?: Json | null;
           output_tokens?: number | null;
@@ -91,10 +99,14 @@ export type Database = {
           clone_url?: string | null;
           created_at?: string | null;
           framework?: string | null;
+          github_repo_name?: string | null;
+          github_repo_url?: string | null;
+          github_sync_enabled?: boolean | null;
           id?: string;
           input_tokens?: number | null;
           is_featured?: boolean | null;
           is_private?: boolean | null;
+          last_github_sync?: string | null;
           likes?: number | null;
           metadata?: Json | null;
           output_tokens?: number | null;
@@ -196,6 +208,44 @@ export type Database = {
           user_id?: string;
         };
         Relationships: [];
+      };
+      github_connections: {
+        Row: {
+          access_token: string;
+          connected_at: string;
+          github_username: string;
+          id: number;
+          last_sync_at: string | null;
+          refresh_token: string | null;
+          user_id: string;
+        };
+        Insert: {
+          access_token: string;
+          connected_at?: string;
+          github_username: string;
+          id?: number;
+          last_sync_at?: string | null;
+          refresh_token?: string | null;
+          user_id: string;
+        };
+        Update: {
+          access_token?: string;
+          connected_at?: string;
+          github_username?: string;
+          id?: number;
+          last_sync_at?: string | null;
+          refresh_token?: string | null;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "github_connections_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       messages: {
         Row: {

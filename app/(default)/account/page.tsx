@@ -21,6 +21,8 @@ import { createClient } from "@/utils/supabase/server";
 
 import { getUser, updateEmail, updateName } from "./actions";
 import { BuyExtraMessages } from "./components/buy-extra-messages";
+import GitHubConnection from "./components/github-connection";
+import { getGithubConnection } from "./github-actions";
 import ManageSubscriptionButton from "./manage-subscription-button";
 import UnsubscribeSurveyDialog from "./unsubscribe-survey-dialog";
 
@@ -42,11 +44,13 @@ export const metadata = {
 };
 
 export default async function Account() {
-  const [userData, userDetails, subscription] = await Promise.all([
-    getUser(),
-    getUserDetails(),
-    getSubscription(),
-  ]);
+  const [userData, userDetails, subscription, githubConnection] =
+    await Promise.all([
+      getUser(),
+      getUserDetails(),
+      getSubscription(),
+      getGithubConnection(),
+    ]);
 
   const user = userData.data.user;
   const supabase = await createClient();
@@ -267,6 +271,19 @@ export default async function Account() {
           </form>
         </Card>
       </div>
+
+      {/* GitHub Integration Section */}
+      <div className="mb-4">
+        <Card
+          title="GitHub Integration"
+          description="Connect your GitHub account to sync your components to repositories."
+        >
+          <div className="mt-8">
+            <GitHubConnection initialConnection={githubConnection} />
+          </div>
+        </Card>
+      </div>
+
       <div className="grid grid-cols-1 gap-4 pb-10 xl:grid-cols-2">
         {/* Composant pour acheter des messages supplémentaires */}
         <Card
