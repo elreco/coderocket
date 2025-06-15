@@ -72,7 +72,8 @@ export default async function Account() {
         .select("*, chats!inner(*)", { count: "exact", head: true })
         .eq("chats.user_id", user.id)
         .gte("created_at", formatToTimestamp(currentPeriodStart))
-        .is("chats.remix_chat_id", null);
+        .is("chats.remix_chat_id", null)
+        .neq("is_github_pull", true);
 
       const { count: remixCount } = await supabase
         .from("messages")
@@ -80,7 +81,8 @@ export default async function Account() {
         .eq("chats.user_id", user.id)
         .gte("created_at", formatToTimestamp(currentPeriodStart))
         .not("chats.remix_chat_id", "is", null)
-        .gt("version", 0);
+        .gt("version", 0)
+        .neq("is_github_pull", true);
 
       usage = (originalCount || 0) + (remixCount || 0);
       maxMessages = getMaxMessagesPerPeriod(subscription);
@@ -100,7 +102,8 @@ export default async function Account() {
         .select("*, chats!inner(*)", { count: "exact", head: true })
         .eq("chats.user_id", user.id)
         .gte("created_at", formatToTimestamp(currentPeriodStart))
-        .is("chats.remix_chat_id", null);
+        .is("chats.remix_chat_id", null)
+        .neq("is_github_pull", true);
 
       const { count: remixCount } = await supabase
         .from("messages")
@@ -108,7 +111,8 @@ export default async function Account() {
         .eq("chats.user_id", user.id)
         .gte("created_at", formatToTimestamp(currentPeriodStart))
         .not("chats.remix_chat_id", "is", null)
-        .gt("version", 0);
+        .gt("version", 0)
+        .neq("is_github_pull", true);
 
       usage = (originalCount || 0) + (remixCount || 0);
       maxMessages = TRIAL_PLAN_MESSAGES_PER_MONTH;

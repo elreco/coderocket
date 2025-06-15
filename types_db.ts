@@ -258,6 +258,7 @@ export type Database = {
           id: number;
           input_tokens: number | null;
           is_built: boolean | null;
+          is_github_pull: boolean | null;
           output_tokens: number | null;
           prompt_image: string | null;
           role: string;
@@ -276,6 +277,7 @@ export type Database = {
           id?: number;
           input_tokens?: number | null;
           is_built?: boolean | null;
+          is_github_pull?: boolean | null;
           output_tokens?: number | null;
           prompt_image?: string | null;
           role: string;
@@ -294,6 +296,7 @@ export type Database = {
           id?: number;
           input_tokens?: number | null;
           is_built?: boolean | null;
+          is_github_pull?: boolean | null;
           output_tokens?: number | null;
           prompt_image?: string | null;
           role?: string;
