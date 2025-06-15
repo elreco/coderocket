@@ -120,7 +120,6 @@ export async function createGithubRepo(
       .update({
         github_repo_url: repoData.html_url,
         github_repo_name: repoData.full_name,
-        github_sync_enabled: true,
       })
       .eq("id", chatId);
 
@@ -176,10 +175,9 @@ export async function syncComponentToGithub(
     return { success: false, error: "Chat not found or access denied" };
   }
 
-  if (!chat.github_repo_name || !chat.github_sync_enabled) {
+  if (!chat.github_repo_name) {
     console.error("❌ GitHub sync issue:", {
       github_repo_name: chat.github_repo_name,
-      github_sync_enabled: chat.github_sync_enabled,
     });
     return {
       success: false,
@@ -190,7 +188,6 @@ export async function syncComponentToGithub(
   console.log("🔍 DEBUG - Repository info:", {
     github_repo_name: chat.github_repo_name,
     github_repo_url: chat.github_repo_url,
-    github_sync_enabled: chat.github_sync_enabled,
   });
 
   // Récupérer le message assistant pour la version spécifiée
@@ -559,33 +556,6 @@ async function createOrUpdateGithubFile(
   }
 }
 
-export async function toggleGithubSync(
-  chatId: string,
-  enabled: boolean,
-): Promise<{ success: boolean; error?: string }> {
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-  if (userError || !user) {
-    return { success: false, error: "Unauthorized" };
-  }
-
-  const { error } = await supabase
-    .from("chats")
-    .update({ github_sync_enabled: enabled })
-    .eq("id", chatId)
-    .eq("user_id", user.id);
-
-  if (error) {
-    return { success: false, error: error.message };
-  }
-
-  return { success: true };
-}
-
 async function getGithubFileLastModified(
   accessToken: string,
   repoFullName: string,
@@ -620,6 +590,44 @@ async function getGithubFileLastModified(
   } catch (error) {
     return {
       lastModified: null,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
+async function getGithubLatestCommitSha(
+  accessToken: string,
+  repoFullName: string,
+): Promise<{ sha: string | null; error?: string }> {
+  try {
+    console.log(`🔍 DEBUG - Getting latest commit SHA for: ${repoFullName}`);
+
+    const response = await fetch(
+      `https://api.github.com/repos/${repoFullName}/commits?per_page=1`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          Accept: "application/vnd.github.v3+json",
+        },
+      },
+    );
+
+    if (!response.ok) {
+      throw new Error(`GitHub API error: ${response.status}`);
+    }
+
+    const commits = await response.json();
+    if (commits.length === 0) {
+      return { sha: null };
+    }
+
+    const latestCommitSha = commits[0].sha;
+    console.log(`🔍 DEBUG - Latest commit SHA: ${latestCommitSha}`);
+    return { sha: latestCommitSha };
+  } catch (error) {
+    console.error("❌ Error getting GitHub commit SHA:", error);
+    return {
+      sha: null,
       error: error instanceof Error ? error.message : "Unknown error",
     };
   }
@@ -900,7 +908,7 @@ export async function pullFromGithub(
     return { success: false, error: "Chat not found or access denied" };
   }
 
-  if (!chat.github_repo_name || !chat.github_sync_enabled) {
+  if (!chat.github_repo_name) {
     return {
       success: false,
       error: "GitHub sync not enabled for this component",
@@ -912,7 +920,31 @@ export async function pullFromGithub(
     chat.github_repo_name,
   );
 
+  // Vérifier d'abord le dernier commit SHA pour éviter les pulls inutiles
+  const latestCommitResult = await getGithubLatestCommitSha(
+    githubConnection.access_token,
+    chat.github_repo_name,
+  );
+
   try {
+    if (latestCommitResult.error) {
+      console.warn(
+        "⚠️ Could not get latest commit SHA:",
+        latestCommitResult.error,
+      );
+      // Continue avec le pull même si on ne peut pas vérifier le SHA
+    } else if (latestCommitResult.sha) {
+      // Comparer avec le SHA du dernier pull
+      if (chat.last_github_commit_sha === latestCommitResult.sha) {
+        console.log("🔍 DEBUG - Same commit SHA, skipping pull");
+        return {
+          success: false,
+          error: "No new changes in GitHub repository (same commit)",
+        };
+      }
+      console.log("🔍 DEBUG - New commit detected, proceeding with pull");
+    }
+
     // Récupérer les fichiers depuis GitHub
     const githubFilesResult = await getGithubRepositoryFiles(
       githubConnection.access_token,
@@ -1005,17 +1037,27 @@ export async function pullFromGithub(
       );
     }
 
-    // Mettre à jour seulement la date de sync, ne pas modifier l'artifact_code principal
+    // Mettre à jour la date de sync et le SHA du commit, ne pas modifier l'artifact_code principal
     // car nous avons créé une nouvelle version avec le code de GitHub
+    const updateData: {
+      last_github_sync: string;
+      last_github_commit_sha?: string;
+    } = {
+      last_github_sync: new Date().toISOString(),
+    };
+
+    // Ajouter le SHA du commit si disponible
+    if (latestCommitResult.sha) {
+      updateData.last_github_commit_sha = latestCommitResult.sha;
+    }
+
     const { error: updateChatError } = await supabase
       .from("chats")
-      .update({
-        last_github_sync: new Date().toISOString(),
-      })
+      .update(updateData)
       .eq("id", chatId);
 
     if (updateChatError) {
-      console.warn("⚠️ Could not update chat sync date:", updateChatError);
+      console.warn("⚠️ Could not update chat sync data:", updateChatError);
     }
 
     console.log(
@@ -1056,7 +1098,7 @@ export async function autoSyncToGithubAfterGeneration(
     // Vérifier si le chat a GitHub activé
     const { data: chat, error: chatError } = await supabase
       .from("chats")
-      .select("github_repo_name, github_sync_enabled, title")
+      .select("github_repo_name, title")
       .eq("id", chatId)
       .eq("user_id", user.id)
       .single();
@@ -1066,7 +1108,7 @@ export async function autoSyncToGithubAfterGeneration(
       return;
     }
 
-    if (!chat.github_repo_name || !chat.github_sync_enabled) {
+    if (!chat.github_repo_name) {
       console.log(
         "🔍 Auto-sync skipped: GitHub sync not enabled for this component",
       );

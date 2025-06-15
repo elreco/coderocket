@@ -14,7 +14,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { useComponentContext } from "@/context/component-context";
 import { useToast } from "@/hooks/use-toast";
 import { Tables } from "@/types_db";
@@ -22,14 +21,18 @@ import { Tables } from "@/types_db";
 import {
   createGithubRepo,
   syncComponentToGithub,
-  toggleGithubSync,
   getGithubConnectionForUser,
   pullFromGithub,
 } from "../github-sync-actions";
 
 export default function GitHubSync({ closeSheet }: { closeSheet: () => void }) {
-  const { chatId, fetchedChat, selectedVersion, refreshChatData } =
-    useComponentContext();
+  const {
+    chatId,
+    fetchedChat,
+    selectedVersion,
+    refreshChatData,
+    handleVersionSelect,
+  } = useComponentContext();
   const { toast } = useToast();
 
   const [githubConnection, setGithubConnection] =
@@ -44,7 +47,6 @@ export default function GitHubSync({ closeSheet }: { closeSheet: () => void }) {
   // États dérivés
   const isGithubConnected = !!githubConnection;
   const hasGithubRepo = !!fetchedChat?.github_repo_url;
-  const isSyncEnabled = fetchedChat?.github_sync_enabled || false;
 
   useEffect(() => {
     loadGithubConnection();
@@ -214,10 +216,21 @@ export default function GitHubSync({ closeSheet }: { closeSheet: () => void }) {
           description:
             result.message || "Changes pulled from GitHub successfully",
         });
-        // Refresh to show new changes
-        if (refreshChatData) {
-          await refreshChatData();
+        const refreshedChatMessages =
+          refreshChatData !== undefined ? await refreshChatData() : [];
+
+        if (refreshedChatMessages) {
+          const refreshedLastAssistantMessage = refreshedChatMessages.reduce(
+            (prev, current) =>
+              prev.version > current.version ? prev : current,
+            { version: 0 },
+          );
+
+          if (refreshedLastAssistantMessage) {
+            handleVersionSelect(refreshedLastAssistantMessage.version);
+          }
         }
+
         closeSheet();
       } else {
         console.error("❌ Pull failed:", result.error);
@@ -226,6 +239,7 @@ export default function GitHubSync({ closeSheet }: { closeSheet: () => void }) {
           description: result.error || "Failed to pull from GitHub",
           variant: "destructive",
         });
+        closeSheet();
       }
     } catch (error) {
       console.error("❌ Pull error:", error);
@@ -234,38 +248,9 @@ export default function GitHubSync({ closeSheet }: { closeSheet: () => void }) {
         description: "An unexpected error occurred",
         variant: "destructive",
       });
+      closeSheet();
     } finally {
       setIsPulling(false);
-    }
-  };
-
-  const handleToggleSync = async (enabled: boolean) => {
-    try {
-      const result = await toggleGithubSync(chatId, enabled);
-
-      if (result.success) {
-        toast({
-          title: enabled ? "GitHub sync enabled" : "GitHub sync disabled",
-          description: enabled
-            ? "This component will be synced to GitHub."
-            : "This component will no longer be synced to GitHub.",
-          duration: 4000,
-        });
-        // Refresh to update sync settings
-        if (refreshChatData) {
-          await refreshChatData();
-        }
-      } else {
-        throw new Error(result.error || "Failed to update sync settings");
-      }
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Failed to update settings",
-        description:
-          error instanceof Error ? error.message : "Unknown error occurred",
-        duration: 4000,
-      });
     }
   };
 
@@ -404,22 +389,8 @@ export default function GitHubSync({ closeSheet }: { closeSheet: () => void }) {
             </a>
           </Button>
 
-          {/* Sync Settings */}
-          <div className="flex items-center justify-between rounded-lg border p-4">
-            <div className="space-y-0.5">
-              <Label>Enable GitHub Sync</Label>
-              <p className="text-sm text-muted-foreground">
-                Automatically sync changes to your GitHub repository.
-              </p>
-            </div>
-            <Switch
-              checked={isSyncEnabled}
-              onCheckedChange={handleToggleSync}
-            />
-          </div>
-
           {/* Manual Sync */}
-          {isSyncEnabled && (
+          {hasGithubRepo && (
             <div className="space-y-3">
               <div className="rounded-lg border p-4">
                 <div className="mb-3 flex items-center justify-between">
