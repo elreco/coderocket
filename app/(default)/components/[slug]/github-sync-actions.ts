@@ -5,6 +5,7 @@ import {
   extractFilesFromArtifact,
   ChatFile,
   extractFilesFromCompletion,
+  getUpdatedArtifactCode,
 } from "@/utils/completion-parser";
 import { createClient } from "@/utils/supabase/server";
 
@@ -932,57 +933,89 @@ export async function pullFromGithub(
     }
 
     // Convertir les fichiers en format artifact
-    const newArtifactCode = convertGithubFilesToArtifact(
+    const githubArtifactCode = convertGithubFilesToArtifact(
       githubFilesResult.files,
       chat.title || "Pulled from GitHub",
     );
 
     console.log(
-      "🔍 DEBUG - Generated artifact code length:",
-      newArtifactCode.length,
+      "🔍 DEBUG - Generated GitHub artifact code length:",
+      githubArtifactCode.length,
     );
 
-    // Récupérer la dernière version du message assistant
-    const { data: lastMessage, error: messageError } = await supabase
-      .from("messages")
-      .select("*")
-      .eq("chat_id", chatId)
-      .eq("role", "assistant")
-      .order("version", { ascending: false })
-      .limit(1)
-      .single();
+    // Combiner l'artifact code existant avec les nouveaux fichiers de GitHub
+    const combinedArtifactCode = getUpdatedArtifactCode(
+      githubArtifactCode,
+      chat.artifact_code || "",
+    );
 
-    if (messageError || !lastMessage) {
+    console.log(
+      "🔍 DEBUG - Combined artifact code length:",
+      combinedArtifactCode.length,
+    );
+
+    // Récupérer la dernière version pour créer une nouvelle version
+    const { data: lastMessages, error: messageError } = await supabase
+      .from("messages")
+      .select("version")
+      .eq("chat_id", chatId)
+      .order("version", { ascending: false })
+      .limit(1);
+
+    if (messageError) {
       return {
         success: false,
-        error: "Could not find existing message to update",
+        error: "Could not retrieve latest version",
       };
     }
 
-    // Mettre à jour le message existant au lieu de créer une nouvelle version
-    const { error: updateError } = await supabase
-      .from("messages")
-      .update({
-        content: `Updated with changes from GitHub repository.\n\n${newArtifactCode}`,
-        artifact_code: newArtifactCode,
-      })
-      .eq("id", lastMessage.id);
+    const nextVersion = (lastMessages?.[0]?.version || 0) + 1;
 
-    if (updateError) {
-      throw new Error(`Failed to update message: ${updateError.message}`);
+    // Créer un nouveau message utilisateur pour la version GitHub
+    const { error: userMessageError } = await supabase.from("messages").insert({
+      chat_id: chatId,
+      role: "user",
+      content: "Pull latest changes from GitHub repository",
+      version: nextVersion,
+      is_github_pull: true,
+    });
+
+    if (userMessageError) {
+      throw new Error(
+        `Failed to create user message: ${userMessageError.message}`,
+      );
     }
 
-    // Mettre à jour le chat avec le nouvel artifact code
+    // Créer le nouveau message assistant avec le code de GitHub
+    const { error: assistantMessageError } = await supabase
+      .from("messages")
+      .insert({
+        chat_id: chatId,
+        role: "assistant",
+        content: `Updated with changes from GitHub repository.\n\n${combinedArtifactCode}`,
+        artifact_code: combinedArtifactCode,
+        version: nextVersion,
+        is_github_pull: true,
+        is_built: false,
+      });
+
+    if (assistantMessageError) {
+      throw new Error(
+        `Failed to create assistant message: ${assistantMessageError.message}`,
+      );
+    }
+
+    // Mettre à jour seulement la date de sync, ne pas modifier l'artifact_code principal
+    // car nous avons créé une nouvelle version avec le code de GitHub
     const { error: updateChatError } = await supabase
       .from("chats")
       .update({
-        artifact_code: newArtifactCode,
         last_github_sync: new Date().toISOString(),
       })
       .eq("id", chatId);
 
     if (updateChatError) {
-      console.warn("⚠️ Could not update chat artifact_code:", updateChatError);
+      console.warn("⚠️ Could not update chat sync date:", updateChatError);
     }
 
     console.log(
@@ -991,7 +1024,7 @@ export async function pullFromGithub(
 
     return {
       success: true,
-      message: `Successfully pulled ${githubFilesResult.files.length} files from GitHub repository. Updated current version.`,
+      message: `Successfully pulled ${githubFilesResult.files.length} files from GitHub repository. Created new version ${nextVersion}.`,
     };
   } catch (error) {
     console.error("❌ GitHub pull error:", error);
