@@ -674,7 +674,6 @@ export const remixChat = async (
   chatId: string,
   selectedVersion: number | undefined,
 ) => {
-  console.log("remixChat", chatId, selectedVersion);
   const supabase = await createClient();
 
   // Get the original chat

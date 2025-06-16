@@ -253,14 +253,14 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
           message.type === "PREVIEW_UNCAUGHT_EXCEPTION" ||
           message.type === "PREVIEW_UNHANDLED_REJECTION"
         ) {
-          const isPromise = message.type === "PREVIEW_UNHANDLED_REJECTION";
+          /* const isPromise = message.type === "PREVIEW_UNHANDLED_REJECTION";
           setBuildError({
             title: isPromise
               ? "Unhandled Promise Rejection"
               : "Uncaught Exception",
             description: message.message,
             content: `Error occurred at ${message.pathname}${message.search}${message.hash}`,
-          });
+          }); */
         }
       });
 
