@@ -1,136 +1,116 @@
 ---
-title: 'GitHub Integration Overview'
-description: 'Seamlessly connect your CodeRocket projects with GitHub repositories'
+title: 'GitHub Integration (Beta)'
+description: 'Connect your CodeRocket components with GitHub repositories'
 ---
+
+<Warning>
+**Beta Feature**: GitHub integration is currently in beta. If you experience any issues or need help, join our Discord and ask in the **#support** channel.
+
+[Join Discord Community](https://discord.gg/t7dQgcYJ5t)
+</Warning>
 
 ## What is GitHub Integration?
 
-CodeRocket's GitHub integration allows you to automatically sync your AI-generated projects with GitHub repositories, providing version control, collaboration capabilities, and professional development workflows.
+The GitHub integration allows you to sync your AI-generated components with GitHub repositories. This gives you version control and lets you continue developing your projects in your favorite code editor.
 
 <CardGroup cols={2}>
   <Card
-    title="Automatic Sync"
+    title="Automatic Backup"
     icon="sync"
   >
-    Every AI iteration automatically creates a new commit in your GitHub repository
+    Your components are automatically saved to GitHub as you iterate with AI
   </Card>
   <Card
-    title="Bidirectional Sync"
-    icon="arrows-rotate"
+    title="Continue Development"
+    icon="code"
   >
-    Pull changes from GitHub back into CodeRocket or push your changes to GitHub
+    Take your generated code and continue building in VS Code, WebStorm, or any editor
   </Card>
   <Card
-    title="Repository Management"
-    icon="folder-open"
+    title="Version History"
+    icon="clock"
   >
-    Create and manage GitHub repositories directly from CodeRocket
+    Keep track of all your AI iterations in GitHub's commit history
   </Card>
   <Card
-    title="Conflict Resolution"
-    icon="merge"
+    title="Team Sharing"
+    icon="users"
   >
-    Smart conflict handling with "Last Write Wins" strategy
+    Share your components with team members or make them open source
   </Card>
 </CardGroup>
 
+## How It Works
+
+1. **Generate** a component with AI in CodeRocket
+2. **Connect** your GitHub account
+3. **Create** a repository for your component
+4. **Sync** automatically - every AI change creates a new commit
+5. **Continue** developing in GitHub or pull changes back to CodeRocket
+
+<Note>
+**Important**: To modify your code, you need to edit files directly in GitHub or in your local development environment. CodeRocket cannot edit code that has been modified outside the platform.
+</Note>
+
 ## Key Features
 
-### 🔄 Automatic Synchronization
-Every time you generate a new version of your project with AI, CodeRocket automatically:
-- Creates a new commit in your GitHub repository
-- Updates all project files
-- Generates appropriate commit messages
-- Maintains version history
+### 🔄 Two-Way Sync
+- **Push to GitHub**: Send your CodeRocket changes to GitHub
+- **Pull from GitHub**: Bring external changes back into CodeRocket
 
-### 📤 Manual Sync Options
-You have full control over when and how to sync:
+### 📁 Clean Repository Structure
+Your repository will include:
+- Your component code (React, HTML, etc.)
+- A README with instructions
+- Package.json with dependencies
+- Professional project structure
 
-<Tabs>
-  <Tab title="Pull from GitHub">
-    Download the latest changes from your GitHub repository and create a new version in CodeRocket.
-
-    **Use when**: You've made changes directly in GitHub and want to bring them into CodeRocket.
-  </Tab>
-
-  <Tab title="Push to GitHub">
-    Upload your current CodeRocket version to GitHub only if the web version is newer.
-
-    **Use when**: You want to push changes while respecting GitHub modifications.
-  </Tab>
-
-  <Tab title="Force Push">
-    Upload your current CodeRocket version to GitHub, overriding any GitHub changes.
-
-    **Use when**: You want to ensure your CodeRocket version becomes the source of truth.
-  </Tab>
-</Tabs>
-
-### 🏗️ Repository Structure
-CodeRocket automatically creates a professional repository structure:
-
-```
-your-repository/
-├── README.md              # Project documentation
-├── package.json           # Dependencies and scripts
-├── src/
-│   ├── App.js            # Main application file
-│   ├── components/       # React components
-│   └── styles/           # CSS and styling files
-└── public/
-    └── index.html        # HTML template
-```
-
-### 🔐 Security & Authentication
-- Secure OAuth integration with GitHub
+### 🛡️ Safe & Secure
+- Uses GitHub OAuth (no passwords stored)
 - Repositories are created under your GitHub account
 - You maintain full ownership and control
-- Access tokens are encrypted and stored securely
-
-## Workflow Examples
-
-<AccordionGroup>
-  <Accordion title="Solo Development">
-    1. Create a component in CodeRocket
-    2. Connect your GitHub account
-    3. Create a new repository
-    4. Enable automatic sync
-    5. Iterate with AI - each change auto-syncs to GitHub
-  </Accordion>
-
-  <Accordion title="Team Collaboration">
-    1. Create and sync your project to GitHub
-    2. Team members can clone the repository
-    3. Make changes in GitHub
-    4. Pull changes back into CodeRocket
-    5. Continue iterating with AI
-  </Accordion>
-
-  <Accordion title="External Development">
-    1. Start with CodeRocket AI generation
-    2. Sync to GitHub
-    3. Continue development in your favorite IDE
-    4. Push changes to GitHub
-    5. Pull back into CodeRocket for AI assistance
-  </Accordion>
-</AccordionGroup>
-
-## Benefits
-
-<Check>**Version Control**: Every AI iteration is tracked and versioned in GitHub</Check>
-<Check>**Collaboration**: Share your projects with team members effortlessly</Check>
-<Check>**Backup**: Your code is safely stored in GitHub's infrastructure</Check>
-<Check>**Professional Workflow**: Integrate with existing development processes</Check>
-<Check>**Open Source**: Make your projects publicly available</Check>
 
 ## Getting Started
 
-Ready to connect your CodeRocket projects with GitHub? Let's set up the integration.
+Ready to sync your components with GitHub?
+
+<Steps>
+  <Step title="Connect GitHub">
+    Go to your account settings and connect your GitHub account
+  </Step>
+  <Step title="Create Repository">
+    Open any component and click the settings gear to set up GitHub sync
+  </Step>
+  <Step title="Start Syncing">
+    Enable automatic sync and continue iterating with AI
+  </Step>
+</Steps>
+
+## Need Help?
 
 <Card
-  title="Setup GitHub Integration"
-  icon="github"
-  href="/github/setup"
+  title="Join Our Discord"
+  icon="discord"
+  href="https://discord.gg/t7dQgcYJ5t"
 >
-  Follow our step-by-step guide to connect your GitHub account
+  Get help in the **#support** channel or ask questions about the GitHub integration
 </Card>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Setup Guide"
+    icon="github"
+    href="/github/setup"
+  >
+    Step-by-step instructions to connect your GitHub account
+  </Card>
+  <Card
+    title="Sync Guide"
+    icon="sync"
+    href="/github/synchronization"
+  >
+    Learn how to use push and pull functionality
+  </Card>
+</CardGroup>

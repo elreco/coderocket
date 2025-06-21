@@ -38,7 +38,7 @@
     {
       "name": "Community",
       "icon": "discord",
-      "url": "https://discord.gg/coderocket"
+      "url": "https://discord.gg/t7dQgcYJ5t"
     }
   ],
   "navigation": {
@@ -62,8 +62,6 @@
     ]
   },
   "footerSocials": {
-    "x": "https://x.com/coderocket",
-    "github": "https://github.com/coderocket",
-    "linkedin": "https://www.linkedin.com/company/coderocket"
+    "discord": "https://discord.gg/t7dQgcYJ5t"
   }
 }
