@@ -300,10 +300,13 @@ export async function syncComponentToGithub(
       `🔍 DEBUG - Web version last modified: ${webLastModified.toISOString()}`,
     );
 
+    // Process files sequentially to avoid SHA conflicts
+    // When multiple files are updated in parallel, each update changes the repo state
+    // which can cause SHA mismatches for subsequent files
     for (const file of githubFiles) {
       console.log(`🔍 DEBUG - Checking sync eligibility for: ${file.path}`);
 
-      // Vérifier si on doit synchroniser ce fichier (stratégie "Last Write Wins")
+      // Check if we should sync this file (Last Write Wins strategy)
       const syncDecision = await shouldSyncFile(
         githubConnection.access_token,
         chat.github_repo_name,
@@ -327,6 +330,9 @@ export async function syncComponentToGithub(
       console.log(
         `🔍 DEBUG - Syncing file: ${file.path} (${file.content.length} chars)`,
       );
+
+      // Process files one by one to avoid conflicts
+      // Each file update changes the repository state, so we need to wait for completion
       const result = await createOrUpdateGithubFile(
         githubConnection.access_token,
         chat.github_repo_name,
@@ -335,8 +341,17 @@ export async function syncComponentToGithub(
         `Update ${file.path} - Version ${version || message.version}`,
         githubConnection.github_username || "coderocket-user",
       );
+
       console.log(`🔍 DEBUG - Sync result for ${file.path}:`, result);
       commitResults.push(result);
+
+      // If this file failed, log it but continue with other files
+      if (!result.success) {
+        console.warn(`⚠️ Failed to sync ${file.path}: ${result.error}`);
+      } else {
+        // Small delay between successful file updates to ensure GitHub processes them properly
+        await new Promise((resolve) => setTimeout(resolve, 500));
+      }
     }
 
     // Log des fichiers ignorés
@@ -471,89 +486,130 @@ async function createOrUpdateGithubFile(
   commitMessage: string,
   username: string,
 ): Promise<{ success: boolean; error?: string }> {
-  try {
-    console.log(
-      `🔍 DEBUG - Creating/updating file: ${filePath} in ${repoFullName}`,
-    );
-    console.log(`🔍 DEBUG - Content length: ${content.length} chars`);
-    console.log(`🔍 DEBUG - Content preview: ${content.substring(0, 100)}...`);
+  const maxRetries = 3;
+  let lastError: string = "";
 
-    // D'abord, essayer de récupérer le fichier existant pour obtenir le SHA
-    let sha: string | undefined;
-    const getFileUrl = `https://api.github.com/repos/${repoFullName}/contents/${filePath}`;
-    console.log(`🔍 DEBUG - GET request to: ${getFileUrl}`);
-
-    const getFileResponse = await fetch(getFileUrl, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        Accept: "application/vnd.github.v3+json",
-      },
-    });
-
-    console.log(`🔍 DEBUG - GET response status: ${getFileResponse.status}`);
-
-    if (getFileResponse.ok) {
-      const fileData = await getFileResponse.json();
-      sha = fileData.sha;
-      console.log(`🔍 DEBUG - Found existing file with SHA: ${sha}`);
-    } else {
-      console.log(`🔍 DEBUG - File does not exist, will create new file`);
-    }
-
-    // Créer ou mettre à jour le fichier
-    const base64Content = Buffer.from(content).toString("base64");
-    console.log(`🔍 DEBUG - Base64 content length: ${base64Content.length}`);
-
-    const payload = {
-      message: commitMessage,
-      content: base64Content,
-      sha: sha, // Inclure le SHA si le fichier existe déjà
-      committer: {
-        name: username,
-        email: `${username}@users.noreply.github.com`,
-      },
-    };
-
-    console.log(`🔍 DEBUG - PUT payload:`, {
-      message: payload.message,
-      contentLength: payload.content.length,
-      hasSha: !!payload.sha,
-      committer: payload.committer,
-    });
-
-    const updateResponse = await fetch(getFileUrl, {
-      method: "PUT",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        Accept: "application/vnd.github.v3+json",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
-
-    console.log(`🔍 DEBUG - PUT response status: ${updateResponse.status}`);
-
-    if (!updateResponse.ok) {
-      const errorData = await updateResponse.json();
-      console.error(`❌ GitHub API error for ${filePath}:`, errorData);
-      throw new Error(
-        errorData.message || `Failed to update file: ${updateResponse.status}`,
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      console.log(
+        `🔍 DEBUG - Creating/updating file: ${filePath} in ${repoFullName} (attempt ${attempt}/${maxRetries})`,
       );
+      console.log(`🔍 DEBUG - Content length: ${content.length} chars`);
+
+      // Get the current file to obtain the latest SHA
+      let sha: string | undefined;
+      const getFileUrl = `https://api.github.com/repos/${repoFullName}/contents/${filePath}`;
+      console.log(`🔍 DEBUG - GET request to: ${getFileUrl}`);
+
+      const getFileResponse = await fetch(getFileUrl, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          Accept: "application/vnd.github.v3+json",
+          "Cache-Control": "no-cache", // Prevent caching issues
+        },
+      });
+
+      console.log(`🔍 DEBUG - GET response status: ${getFileResponse.status}`);
+
+      if (getFileResponse.ok) {
+        const fileData = await getFileResponse.json();
+        sha = fileData.sha;
+        console.log(`🔍 DEBUG - Found existing file with SHA: ${sha}`);
+      } else if (getFileResponse.status === 404) {
+        console.log(`🔍 DEBUG - File does not exist, will create new file`);
+      } else {
+        const errorData = await getFileResponse.json();
+        throw new Error(
+          `Failed to get file info: ${errorData.message || getFileResponse.status}`,
+        );
+      }
+
+      // Create or update the file
+      const base64Content = Buffer.from(content).toString("base64");
+      console.log(`🔍 DEBUG - Base64 content length: ${base64Content.length}`);
+
+      const payload = {
+        message: commitMessage,
+        content: base64Content,
+        ...(sha && { sha }), // Only include SHA if file exists
+        committer: {
+          name: username,
+          email: `${username}@users.noreply.github.com`,
+        },
+      };
+
+      console.log(`🔍 DEBUG - PUT payload:`, {
+        message: payload.message,
+        contentLength: payload.content.length,
+        hasSha: !!sha,
+        committer: payload.committer,
+      });
+
+      const updateResponse = await fetch(getFileUrl, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          Accept: "application/vnd.github.v3+json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      console.log(`🔍 DEBUG - PUT response status: ${updateResponse.status}`);
+
+      if (updateResponse.ok) {
+        const responseData = await updateResponse.json();
+        console.log(
+          `✅ Successfully updated ${filePath}, commit SHA: ${responseData.commit?.sha}`,
+        );
+        return { success: true };
+      }
+
+      // Handle errors
+      const errorData = await updateResponse.json();
+      console.error(
+        `❌ GitHub API error for ${filePath} (attempt ${attempt}):`,
+        errorData,
+      );
+
+      // Check if it's a SHA mismatch error (409 conflict)
+      if (
+        updateResponse.status === 409 ||
+        errorData.message?.includes("does not match")
+      ) {
+        if (attempt < maxRetries) {
+          console.log(
+            `🔄 SHA mismatch detected, retrying in ${attempt * 1000}ms...`,
+          );
+          await new Promise((resolve) => setTimeout(resolve, attempt * 1000)); // Progressive delay
+          continue; // Retry with fresh SHA
+        }
+      }
+
+      lastError = errorData.message || `HTTP ${updateResponse.status}`;
+      break; // Don't retry for other types of errors
+    } catch (error) {
+      lastError = error instanceof Error ? error.message : "Unknown error";
+      console.error(
+        `❌ Error updating ${filePath} (attempt ${attempt}):`,
+        error,
+      );
+
+      if (attempt < maxRetries) {
+        console.log(`🔄 Retrying in ${attempt * 1000}ms...`);
+        await new Promise((resolve) => setTimeout(resolve, attempt * 1000));
+        continue;
+      }
     }
-
-    const responseData = await updateResponse.json();
-    console.log(
-      `✅ Successfully updated ${filePath}, commit SHA: ${responseData.commit?.sha}`,
-    );
-
-    return { success: true };
-  } catch (error) {
-    console.error(`❌ Error updating ${filePath}:`, error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Unknown error",
-    };
   }
+
+  console.error(
+    `❌ Failed to update ${filePath} after ${maxRetries} attempts. Last error: ${lastError}`,
+  );
+  return {
+    success: false,
+    error: `Failed to update file after ${maxRetries} attempts: ${lastError}`,
+  };
 }
 
 async function getGithubFileLastModified(
