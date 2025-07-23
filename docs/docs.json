@@ -3,9 +3,10 @@
   "name": "CodeRocket Documentation",
   "theme": "mint",
   "logo": {
-    "dark": "https://www.coderocket.app/logo-with-white-bg.png",
-    "light": "https://www.coderocket.app/logo-with-bg.png"
+    "dark": "https://www.coderocket.app/logo-white.png",
+    "light": "https://www.coderocket.app/logo-alternate.png"
   },
+  "logoLabel": "CodeRocket",
   "logoHref": "https://coderocket.app",
   "favicon": "https://www.coderocket.app/favicon.ico",
   "icons": {
