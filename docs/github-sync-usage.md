@@ -71,11 +71,20 @@ repository/
 └── README.md           # Documentation
 ```
 
-### For React/Next.js Components
+### For React Components
 ```
 repository/
 ├── src/
-│   └── App.jsx         # Component React code
+│   └── App.tsx         # Component React code
+├── package.json        # Dependencies and scripts
+└── README.md           # Documentation
+```
+
+### For Vue.js Components
+```
+repository/
+├── src/
+│   └── App.vue         # Component Vue code
 ├── package.json        # Dependencies and scripts
 └── README.md           # Documentation
 ```
