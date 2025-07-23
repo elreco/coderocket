@@ -7,6 +7,7 @@ import {
   Globe,
   Heart,
   Rocket,
+  ShoppingCart,
   SquareTerminal,
   SquareUserRoundIcon,
 } from "lucide-react";
@@ -45,6 +46,11 @@ const data = {
       url: "/components",
       icon: Globe,
     },
+    {
+      title: "Marketplace",
+      url: "/marketplace",
+      icon: ShoppingCart,
+    },
   ],
   myComponents: [
     {
@@ -56,6 +62,16 @@ const data = {
       title: "Liked Components",
       url: "/account/liked-components",
       icon: Heart,
+    },
+    {
+      title: "My Listings",
+      url: "/account/marketplace/listings",
+      icon: ShoppingCart,
+    },
+    {
+      title: "My Purchases",
+      url: "/account/marketplace/purchases",
+      icon: CreditCard,
     },
   ],
   community: [
@@ -202,13 +218,7 @@ export function AppSidebar({
       </SidebarContent>
       <SidebarFooter>
         {notification?.is_active && (
-          <div
-            className={`flex p-1 ${
-              open
-                ? "visible opacity-100 transition-opacity delay-200 duration-500"
-                : "invisible opacity-0"
-            }`}
-          >
+          <div className={`flex p-1 ${open ? "block" : "hidden"}`}>
             <SidebarNotification
               title={notification.title}
               description={notification.description}
