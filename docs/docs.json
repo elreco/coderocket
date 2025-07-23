@@ -22,15 +22,15 @@
   },
   "navbar": {
     "primary": {
-      "type": "link",
+      "type": "button",
       "label": "Back to CodeRocket",
-      "url": "https://www.coderocket.app"
+      "href": "https://www.coderocket.app"
     },
     "links": [
       {
         "icon": "discord",
         "label": "Discord",
-        "url": "https://discord.gg/t7dQgcYJ5t"
+        "href": "https://discord.gg/t7dQgcYJ5t"
       }
     ]
   },
