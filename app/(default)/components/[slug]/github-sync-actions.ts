@@ -300,9 +300,9 @@ export async function syncComponentToGithub(
       `🔍 DEBUG - Web version last modified: ${webLastModified.toISOString()}`,
     );
 
-    // Process files sequentially to avoid SHA conflicts
-    // When multiple files are updated in parallel, each update changes the repo state
-    // which can cause SHA mismatches for subsequent files
+    // Collect all files that need to be synced
+    const filesToSync = [];
+
     for (const file of githubFiles) {
       console.log(`🔍 DEBUG - Checking sync eligibility for: ${file.path}`);
 
@@ -327,30 +327,27 @@ export async function syncComponentToGithub(
         continue;
       }
 
-      console.log(
-        `🔍 DEBUG - Syncing file: ${file.path} (${file.content.length} chars)`,
-      );
+      filesToSync.push(file);
+    }
 
-      // Process files one by one to avoid conflicts
-      // Each file update changes the repository state, so we need to wait for completion
-      const result = await createOrUpdateGithubFile(
+    console.log(`🔍 DEBUG - Files to sync: ${filesToSync.length}`);
+
+    if (filesToSync.length > 0) {
+      // Create a single commit with all files
+      const commitResult = await createSingleCommitWithMultipleFiles(
         githubConnection.access_token,
         chat.github_repo_name,
-        file.path,
-        file.content,
-        `Update ${file.path} - Version ${version || message.version}`,
+        filesToSync,
+        `Update files - Version ${version || message.version}`,
         githubConnection.github_username || "coderocket-user",
       );
 
-      console.log(`🔍 DEBUG - Sync result for ${file.path}:`, result);
-      commitResults.push(result);
+      console.log(`🔍 DEBUG - Single commit result:`, commitResult);
 
-      // If this file failed, log it but continue with other files
-      if (!result.success) {
-        console.warn(`⚠️ Failed to sync ${file.path}: ${result.error}`);
+      if (commitResult.success) {
+        commitResults.push(commitResult);
       } else {
-        // Small delay between successful file updates to ensure GitHub processes them properly
-        await new Promise((resolve) => setTimeout(resolve, 500));
+        throw new Error(`Failed to create commit: ${commitResult.error}`);
       }
     }
 
@@ -362,16 +359,7 @@ export async function syncComponentToGithub(
       );
     }
 
-    // Vérifier que tous les commits ont réussi
-    const failedCommits = commitResults.filter((r) => !r.success);
-    if (failedCommits.length > 0) {
-      console.error("❌ Failed commits:", failedCommits);
-      throw new Error(
-        `Failed to update ${failedCommits.length} files: ${failedCommits.map((f) => f.error).join(", ")}`,
-      );
-    }
-
-    const syncedCount = commitResults.length;
+    const syncedCount = filesToSync.length;
     const skippedCount = skippedFiles.length;
 
     console.log(
@@ -379,7 +367,11 @@ export async function syncComponentToGithub(
     );
 
     // Mettre à jour la date de dernière sync seulement si au moins un fichier a été synchronisé
-    if (syncedCount > 0) {
+    if (
+      syncedCount > 0 &&
+      commitResults.length > 0 &&
+      commitResults[0].success
+    ) {
       await supabase
         .from("chats")
         .update({
@@ -390,7 +382,7 @@ export async function syncComponentToGithub(
 
     return {
       success: true,
-      message: `Sync completed: ${syncedCount} files synced, ${skippedCount} files skipped due to newer GitHub versions`,
+      message: `Sync completed: ${syncedCount} files in 1 commit, ${skippedCount} files skipped due to newer GitHub versions`,
     };
   } catch (error) {
     console.error("GitHub sync error:", error);
@@ -478,138 +470,186 @@ CodeRocket is an AI-powered tool for generating beautiful UI components. Visit [
   return githubFiles;
 }
 
-async function createOrUpdateGithubFile(
+async function createSingleCommitWithMultipleFiles(
   accessToken: string,
   repoFullName: string,
-  filePath: string,
-  content: string,
+  files: Array<{ path: string; content: string }>,
   commitMessage: string,
   username: string,
-): Promise<{ success: boolean; error?: string }> {
-  const maxRetries = 3;
-  let lastError: string = "";
+): Promise<{ success: boolean; error?: string; commitSha?: string }> {
+  try {
+    console.log(
+      `🔍 DEBUG - Creating single commit with ${files.length} files in ${repoFullName}`,
+    );
 
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      console.log(
-        `🔍 DEBUG - Creating/updating file: ${filePath} in ${repoFullName} (attempt ${attempt}/${maxRetries})`,
-      );
-      console.log(`🔍 DEBUG - Content length: ${content.length} chars`);
-
-      // Get the current file to obtain the latest SHA
-      let sha: string | undefined;
-      const getFileUrl = `https://api.github.com/repos/${repoFullName}/contents/${filePath}`;
-      console.log(`🔍 DEBUG - GET request to: ${getFileUrl}`);
-
-      const getFileResponse = await fetch(getFileUrl, {
+    // Step 1: Get the latest commit SHA (HEAD of default branch)
+    // Try main first, fallback to master for older repos
+    let branchResponse = await fetch(
+      `https://api.github.com/repos/${repoFullName}/git/refs/heads/main`,
+      {
         headers: {
           Authorization: `Bearer ${accessToken}`,
           Accept: "application/vnd.github.v3+json",
-          "Cache-Control": "no-cache", // Prevent caching issues
         },
-      });
+      },
+    );
 
-      console.log(`🔍 DEBUG - GET response status: ${getFileResponse.status}`);
+    let defaultBranch = "main";
 
-      if (getFileResponse.ok) {
-        const fileData = await getFileResponse.json();
-        sha = fileData.sha;
-        console.log(`🔍 DEBUG - Found existing file with SHA: ${sha}`);
-      } else if (getFileResponse.status === 404) {
-        console.log(`🔍 DEBUG - File does not exist, will create new file`);
-      } else {
-        const errorData = await getFileResponse.json();
-        throw new Error(
-          `Failed to get file info: ${errorData.message || getFileResponse.status}`,
-        );
-      }
-
-      // Create or update the file
-      const base64Content = Buffer.from(content).toString("base64");
-      console.log(`🔍 DEBUG - Base64 content length: ${base64Content.length}`);
-
-      const payload = {
-        message: commitMessage,
-        content: base64Content,
-        ...(sha && { sha }), // Only include SHA if file exists
-        committer: {
-          name: username,
-          email: `${username}@users.noreply.github.com`,
+    if (!branchResponse.ok && branchResponse.status === 404) {
+      console.log(`🔍 DEBUG - main branch not found, trying master...`);
+      branchResponse = await fetch(
+        `https://api.github.com/repos/${repoFullName}/git/refs/heads/master`,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            Accept: "application/vnd.github.v3+json",
+          },
         },
-      };
+      );
+      defaultBranch = "master";
+    }
 
-      console.log(`🔍 DEBUG - PUT payload:`, {
-        message: payload.message,
-        contentLength: payload.content.length,
-        hasSha: !!sha,
-        committer: payload.committer,
-      });
+    if (!branchResponse.ok) {
+      throw new Error(`Failed to get branch info: ${branchResponse.status}`);
+    }
 
-      const updateResponse = await fetch(getFileUrl, {
-        method: "PUT",
+    const branchData = await branchResponse.json();
+    const latestCommitSha = branchData.object.sha;
+    console.log(`🔍 DEBUG - Latest commit SHA: ${latestCommitSha}`);
+
+    // Step 2: Get the current tree SHA from the latest commit
+    const commitResponse = await fetch(
+      `https://api.github.com/repos/${repoFullName}/git/commits/${latestCommitSha}`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          Accept: "application/vnd.github.v3+json",
+        },
+      },
+    );
+
+    if (!commitResponse.ok) {
+      throw new Error(`Failed to get commit info: ${commitResponse.status}`);
+    }
+
+    const commitData = await commitResponse.json();
+    const baseTreeSha = commitData.tree.sha;
+    console.log(`🔍 DEBUG - Base tree SHA: ${baseTreeSha}`);
+
+    // Step 3: Create tree entries for all files
+    const treeEntries = files.map((file) => ({
+      path: file.path,
+      mode: "100644", // Regular file
+      type: "blob",
+      content: file.content,
+    }));
+
+    console.log(`🔍 DEBUG - Creating tree with ${treeEntries.length} entries`);
+
+    // Step 4: Create a new tree
+    const treeResponse = await fetch(
+      `https://api.github.com/repos/${repoFullName}/git/trees`,
+      {
+        method: "POST",
         headers: {
           Authorization: `Bearer ${accessToken}`,
           Accept: "application/vnd.github.v3+json",
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(payload),
-      });
+        body: JSON.stringify({
+          base_tree: baseTreeSha,
+          tree: treeEntries,
+        }),
+      },
+    );
 
-      console.log(`🔍 DEBUG - PUT response status: ${updateResponse.status}`);
-
-      if (updateResponse.ok) {
-        const responseData = await updateResponse.json();
-        console.log(
-          `✅ Successfully updated ${filePath}, commit SHA: ${responseData.commit?.sha}`,
-        );
-        return { success: true };
-      }
-
-      // Handle errors
-      const errorData = await updateResponse.json();
-      console.error(
-        `❌ GitHub API error for ${filePath} (attempt ${attempt}):`,
-        errorData,
+    if (!treeResponse.ok) {
+      const errorData = await treeResponse.json();
+      throw new Error(
+        `Failed to create tree: ${errorData.message || treeResponse.status}`,
       );
-
-      // Check if it's a SHA mismatch error (409 conflict)
-      if (
-        updateResponse.status === 409 ||
-        errorData.message?.includes("does not match")
-      ) {
-        if (attempt < maxRetries) {
-          console.log(
-            `🔄 SHA mismatch detected, retrying in ${attempt * 1000}ms...`,
-          );
-          await new Promise((resolve) => setTimeout(resolve, attempt * 1000)); // Progressive delay
-          continue; // Retry with fresh SHA
-        }
-      }
-
-      lastError = errorData.message || `HTTP ${updateResponse.status}`;
-      break; // Don't retry for other types of errors
-    } catch (error) {
-      lastError = error instanceof Error ? error.message : "Unknown error";
-      console.error(
-        `❌ Error updating ${filePath} (attempt ${attempt}):`,
-        error,
-      );
-
-      if (attempt < maxRetries) {
-        console.log(`🔄 Retrying in ${attempt * 1000}ms...`);
-        await new Promise((resolve) => setTimeout(resolve, attempt * 1000));
-        continue;
-      }
     }
-  }
 
-  console.error(
-    `❌ Failed to update ${filePath} after ${maxRetries} attempts. Last error: ${lastError}`,
-  );
-  return {
-    success: false,
-    error: `Failed to update file after ${maxRetries} attempts: ${lastError}`,
-  };
+    const treeData = await treeResponse.json();
+    const newTreeSha = treeData.sha;
+    console.log(`🔍 DEBUG - New tree SHA: ${newTreeSha}`);
+
+    // Step 5: Create a new commit
+    const newCommitResponse = await fetch(
+      `https://api.github.com/repos/${repoFullName}/git/commits`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          Accept: "application/vnd.github.v3+json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          message: commitMessage,
+          tree: newTreeSha,
+          parents: [latestCommitSha],
+          author: {
+            name: username,
+            email: `${username}@users.noreply.github.com`,
+          },
+          committer: {
+            name: username,
+            email: `${username}@users.noreply.github.com`,
+          },
+        }),
+      },
+    );
+
+    if (!newCommitResponse.ok) {
+      const errorData = await newCommitResponse.json();
+      throw new Error(
+        `Failed to create commit: ${errorData.message || newCommitResponse.status}`,
+      );
+    }
+
+    const newCommitData = await newCommitResponse.json();
+    const newCommitSha = newCommitData.sha;
+    console.log(`🔍 DEBUG - New commit SHA: ${newCommitSha}`);
+
+    // Step 6: Update the branch reference to point to the new commit
+    const updateRefResponse = await fetch(
+      `https://api.github.com/repos/${repoFullName}/git/refs/heads/${defaultBranch}`,
+      {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          Accept: "application/vnd.github.v3+json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          sha: newCommitSha,
+        }),
+      },
+    );
+
+    if (!updateRefResponse.ok) {
+      const errorData = await updateRefResponse.json();
+      throw new Error(
+        `Failed to update branch: ${errorData.message || updateRefResponse.status}`,
+      );
+    }
+
+    console.log(
+      `✅ Successfully created single commit with ${files.length} files`,
+    );
+
+    return {
+      success: true,
+      commitSha: newCommitSha,
+    };
+  } catch (error) {
+    console.error(`❌ Error creating single commit:`, error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
 }
 
 async function getGithubFileLastModified(
