@@ -7,7 +7,6 @@ import {
   Globe,
   Heart,
   Rocket,
-  ShoppingCart,
   SquareTerminal,
   SquareUserRoundIcon,
 } from "lucide-react";
@@ -46,11 +45,6 @@ const data = {
       url: "/components",
       icon: Globe,
     },
-    {
-      title: "Marketplace",
-      url: "/marketplace",
-      icon: ShoppingCart,
-    },
   ],
   myComponents: [
     {
@@ -62,16 +56,6 @@ const data = {
       title: "Liked Components",
       url: "/account/liked-components",
       icon: Heart,
-    },
-    {
-      title: "My Listings",
-      url: "/account/marketplace/listings",
-      icon: ShoppingCart,
-    },
-    {
-      title: "My Purchases",
-      url: "/account/marketplace/purchases",
-      icon: CreditCard,
     },
   ],
   community: [
