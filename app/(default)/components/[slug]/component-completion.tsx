@@ -513,7 +513,6 @@ export default function ComponentCompletion({
         selectedAssistantMessage.artifact_code,
       );
       setArtifactFiles(newArtifactFiles);
-      console.log("newArtifactFiles", newArtifactFiles);
       // Handle file selection
       const files = extractFilesFromCompletion(
         selectedAssistantMessage.content,

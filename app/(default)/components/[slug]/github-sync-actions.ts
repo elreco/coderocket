@@ -132,7 +132,6 @@ export async function createGithubRepo(
       repoUrl: repoData.html_url,
     };
   } catch (error) {
-    console.error("GitHub repo creation error:", error);
     return {
       success: false,
       error:
@@ -176,19 +175,11 @@ export async function syncComponentToGithub(
   }
 
   if (!chat.github_repo_name) {
-    console.error("❌ GitHub sync issue:", {
-      github_repo_name: chat.github_repo_name,
-    });
     return {
       success: false,
       error: "GitHub sync not enabled for this component",
     };
   }
-
-  console.log("🔍 DEBUG - Repository info:", {
-    github_repo_name: chat.github_repo_name,
-    github_repo_url: chat.github_repo_url,
-  });
 
   // Récupérer le message assistant pour la version spécifiée
   let messageQuery = supabase
@@ -207,53 +198,29 @@ export async function syncComponentToGithub(
   const { data: message, error: messageError } = await messageQuery.single();
 
   if (messageError || !message) {
-    console.error("❌ Message query error:", messageError);
     return {
       success: false,
       error: `Message version ${version || "latest"} not found`,
     };
   }
 
-  console.log(`🔍 DEBUG - Found message for version ${message.version}`);
-
   if (!message.artifact_code && !message.content) {
     return { success: false, error: "No code found for this version" };
   }
 
   try {
-    // Debug: Vérifier le contenu de l'artifact
-    console.log(
-      "🔍 DEBUG - artifact_code:",
-      message.artifact_code ? "Present" : "Empty",
-    );
-    console.log("🔍 DEBUG - chat framework:", chat.framework);
-
     // Créer/mettre à jour les fichiers dans le repo GitHub
     let chatFiles = message.artifact_code
       ? extractFilesFromArtifact(message.artifact_code)
       : [];
-    console.log(
-      "🔍 DEBUG - extractFilesFromArtifact result:",
-      chatFiles.length,
-      "files",
-    );
 
     // Si pas de fichiers extraits de l'artifact, essayer avec le contenu du message
     if (chatFiles.length === 0 && message.content) {
-      console.log(
-        "🔍 DEBUG - Trying extractFilesFromCompletion on message content",
-      );
       chatFiles = extractFilesFromCompletion(message.content);
-      console.log(
-        "🔍 DEBUG - extractFilesFromCompletion result:",
-        chatFiles.length,
-        "files",
-      );
     }
 
     // Si toujours pas de fichiers, créer un fichier par défaut avec le contenu de l'artifact
     if (chatFiles.length === 0 && message.artifact_code) {
-      console.log("🔍 DEBUG - Creating default file from artifact_code");
       const fileName = chat.framework === "html" ? "index.html" : "src/App.jsx";
       chatFiles = [
         {
@@ -267,25 +234,9 @@ export async function syncComponentToGithub(
       ];
     }
 
-    console.log(
-      "🔍 DEBUG - Final chatFiles:",
-      chatFiles.map((f) => ({
-        name: f.name,
-        contentLength: f.content?.length || 0,
-      })),
-    );
-
     const githubFiles = convertChatFilesToGithubFiles(
       chatFiles,
       chat.framework,
-    );
-    console.log("🔍 DEBUG - GitHub files to sync:", githubFiles.length);
-    console.log(
-      "🔍 DEBUG - Files details:",
-      githubFiles.map((f) => ({
-        path: f.path,
-        contentLength: f.content.length,
-      })),
     );
 
     if (githubFiles.length === 0) {
@@ -295,16 +246,10 @@ export async function syncComponentToGithub(
     const skippedFiles: Array<{ path: string; reason: string }> = [];
     const webLastModified = new Date(message.created_at);
 
-    console.log(
-      `🔍 DEBUG - Web version last modified: ${webLastModified.toISOString()}`,
-    );
-
     // Collect all files that need to be synced
     const filesToSync: Array<{ path: string; content: string }> = [];
 
     for (const file of githubFiles) {
-      console.log(`🔍 DEBUG - Checking sync eligibility for: ${file.path}`);
-
       // Check if we should sync this file (Last Write Wins strategy)
       const syncDecision = await shouldSyncFile(
         githubConnection.access_token,
@@ -312,10 +257,6 @@ export async function syncComponentToGithub(
         file.path,
         webLastModified,
         forceSync,
-      );
-
-      console.log(
-        `🔍 DEBUG - Sync decision for ${file.path}: ${syncDecision.shouldSync ? "SYNC" : "SKIP"} - ${syncDecision.reason}`,
       );
 
       if (!syncDecision.shouldSync) {
@@ -329,8 +270,6 @@ export async function syncComponentToGithub(
       filesToSync.push(file);
     }
 
-    console.log(`🔍 DEBUG - Files to sync: ${filesToSync.length}`);
-
     if (filesToSync.length > 0) {
       // Check if files actually have changes compared to GitHub
       const filesWithChanges = await getFilesWithActualChanges(
@@ -339,17 +278,14 @@ export async function syncComponentToGithub(
         filesToSync,
       );
 
-      console.log(
-        `🔍 DEBUG - Files with actual changes: ${filesWithChanges.length}`,
-      );
-
       if (filesWithChanges.length === 0) {
-        console.log(
-          "ℹ️ No actual file changes detected, skipping commit creation",
-        );
+        const message = forceSync
+          ? `Force sync completed: All ${filesToSync.length} files were already up-to-date on GitHub`
+          : `No changes detected: All ${filesToSync.length} files are identical to GitHub versions (tip: files may have been auto-synced after AI generation)`;
+
         return {
           success: true,
-          message: `No changes detected - all ${filesToSync.length} files are identical to GitHub versions`,
+          message,
         };
       }
 
@@ -362,17 +298,14 @@ export async function syncComponentToGithub(
         githubConnection.github_username || "coderocket-user",
       );
 
-      console.log(`🔍 DEBUG - Single commit result:`, commitResult);
-
       if (commitResult.success) {
         // Update sync stats for changed files only
         const syncedCount = filesWithChanges.length;
         const skippedCount =
           skippedFiles.length + (filesToSync.length - filesWithChanges.length);
 
-        console.log(
-          `✅ Sync completed: ${syncedCount} files in 1 commit, ${skippedCount} files skipped (${filesToSync.length - filesWithChanges.length} unchanged)`,
-        );
+        const syncType = forceSync ? "Force sync" : "Sync";
+        const successMessage = `${syncType} completed: ${syncedCount} files in 1 commit, ${skippedCount} files skipped${filesToSync.length - filesWithChanges.length > 0 ? ` (${filesToSync.length - filesWithChanges.length} unchanged)` : ""}`;
 
         // Update last sync date
         await supabase
@@ -384,7 +317,7 @@ export async function syncComponentToGithub(
 
         return {
           success: true,
-          message: `Sync completed: ${syncedCount} files in 1 commit, ${skippedCount} files skipped (${filesToSync.length - filesWithChanges.length} unchanged)`,
+          message: successMessage,
         };
       } else {
         throw new Error(`Failed to create commit: ${commitResult.error}`);
@@ -392,13 +325,11 @@ export async function syncComponentToGithub(
     }
 
     // If we reach here, no files needed syncing
-    console.log("ℹ️ No files to sync after filtering");
     return {
       success: true,
       message: `No files to sync - ${skippedFiles.length} files skipped due to newer GitHub versions`,
     };
   } catch (error) {
-    console.error("GitHub sync error:", error);
     return {
       success: false,
       error:
@@ -491,10 +422,6 @@ async function createSingleCommitWithMultipleFiles(
   username: string,
 ): Promise<{ success: boolean; error?: string; commitSha?: string }> {
   try {
-    console.log(
-      `🔍 DEBUG - Creating single commit with ${files.length} files in ${repoFullName}`,
-    );
-
     // Step 1: Get the latest commit SHA (HEAD of default branch)
     // Try main first, fallback to master for older repos
     let branchResponse = await fetch(
@@ -510,7 +437,6 @@ async function createSingleCommitWithMultipleFiles(
     let defaultBranch = "main";
 
     if (!branchResponse.ok && branchResponse.status === 404) {
-      console.log(`🔍 DEBUG - main branch not found, trying master...`);
       branchResponse = await fetch(
         `https://api.github.com/repos/${repoFullName}/git/refs/heads/master`,
         {
@@ -529,7 +455,6 @@ async function createSingleCommitWithMultipleFiles(
 
     const branchData = await branchResponse.json();
     const latestCommitSha = branchData.object.sha;
-    console.log(`🔍 DEBUG - Latest commit SHA: ${latestCommitSha}`);
 
     // Step 2: Get the current tree SHA from the latest commit
     const commitResponse = await fetch(
@@ -548,7 +473,6 @@ async function createSingleCommitWithMultipleFiles(
 
     const commitData = await commitResponse.json();
     const baseTreeSha = commitData.tree.sha;
-    console.log(`🔍 DEBUG - Base tree SHA: ${baseTreeSha}`);
 
     // Step 3: Create tree entries for all files
     const treeEntries = files.map((file) => ({
@@ -557,8 +481,6 @@ async function createSingleCommitWithMultipleFiles(
       type: "blob",
       content: file.content,
     }));
-
-    console.log(`🔍 DEBUG - Creating tree with ${treeEntries.length} entries`);
 
     // Step 4: Create a new tree
     const treeResponse = await fetch(
@@ -586,7 +508,6 @@ async function createSingleCommitWithMultipleFiles(
 
     const treeData = await treeResponse.json();
     const newTreeSha = treeData.sha;
-    console.log(`🔍 DEBUG - New tree SHA: ${newTreeSha}`);
 
     // Step 5: Create a new commit
     const newCommitResponse = await fetch(
@@ -657,7 +578,6 @@ async function createSingleCommitWithMultipleFiles(
       commitSha: newCommitSha,
     };
   } catch (error) {
-    console.error(`❌ Error creating single commit:`, error);
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error",
@@ -709,8 +629,6 @@ async function getGithubLatestCommitSha(
   repoFullName: string,
 ): Promise<{ sha: string | null; error?: string }> {
   try {
-    console.log(`🔍 DEBUG - Getting latest commit SHA for: ${repoFullName}`);
-
     const response = await fetch(
       `https://api.github.com/repos/${repoFullName}/commits?per_page=1`,
       {
@@ -731,10 +649,8 @@ async function getGithubLatestCommitSha(
     }
 
     const latestCommitSha = commits[0].sha;
-    console.log(`🔍 DEBUG - Latest commit SHA: ${latestCommitSha}`);
     return { sha: latestCommitSha };
   } catch (error) {
-    console.error("❌ Error getting GitHub commit SHA:", error);
     return {
       sha: null,
       error: error instanceof Error ? error.message : "Unknown error",
@@ -760,10 +676,6 @@ async function shouldSyncFile(
   );
 
   if (githubFileInfo.error) {
-    console.warn(
-      `⚠️ Could not check GitHub file modification date for ${filePath}:`,
-      githubFileInfo.error,
-    );
     // En cas d'erreur, on assume qu'on peut synchroniser
     return {
       shouldSync: true,
@@ -831,28 +743,17 @@ async function getFilesWithActualChanges(
           .trim();
 
         if (normalizedLocalContent !== normalizedGithubContent) {
-          console.log(`📝 ${file.path}: Content differs, will update`);
           filesWithChanges.push(file);
-        } else {
-          console.log(`✅ ${file.path}: No changes detected`);
         }
       } else if (response.status === 404) {
         // File doesn't exist on GitHub, it's a new file
-        console.log(`📝 ${file.path}: New file, will create`);
         filesWithChanges.push(file);
       } else {
         // Error getting file, assume it needs to be synced to be safe
-        console.warn(
-          `⚠️ ${file.path}: Could not check (${response.status}), assuming changes needed`,
-        );
         filesWithChanges.push(file);
       }
-    } catch (error) {
+    } catch {
       // Error checking file, assume it needs to be synced to be safe
-      console.warn(
-        `⚠️ ${file.path}: Error checking file, assuming changes needed`,
-        error,
-      );
       filesWithChanges.push(file);
     }
   }
@@ -865,8 +766,6 @@ async function getGithubRepositoryFiles(
   repoFullName: string,
 ): Promise<{ success: boolean; files?: ChatFile[]; error?: string }> {
   try {
-    console.log(`🔍 DEBUG - Fetching repository contents for: ${repoFullName}`);
-
     const files: ChatFile[] = [];
 
     // Fonction récursive pour explorer tous les dossiers
@@ -887,7 +786,6 @@ async function getGithubRepositoryFiles(
       }
 
       const contents: GitHubContentItem[] = await response.json();
-      console.log("🔍 DEBUG - Contents:", contents);
       for (const item of contents) {
         if (item.type === "dir") {
           // Récursivement explorer les dossiers (sauf node_modules, .git, etc.)
@@ -1024,10 +922,8 @@ async function getGithubRepositoryFiles(
       files[0].isActive = true;
     }
 
-    console.log(`✅ Successfully fetched ${files.length} files from GitHub`);
     return { success: true, files };
   } catch (error) {
-    console.error("❌ Error fetching GitHub repository files:", error);
     return {
       success: false,
       error:
@@ -1094,11 +990,6 @@ export async function pullFromGithub(
     };
   }
 
-  console.log(
-    "🔍 DEBUG - Pulling from GitHub repository:",
-    chat.github_repo_name,
-  );
-
   // Vérifier d'abord le dernier commit SHA pour éviter les pulls inutiles
   const latestCommitResult = await getGithubLatestCommitSha(
     githubConnection.access_token,
@@ -1107,21 +998,15 @@ export async function pullFromGithub(
 
   try {
     if (latestCommitResult.error) {
-      console.warn(
-        "⚠️ Could not get latest commit SHA:",
-        latestCommitResult.error,
-      );
       // Continue avec le pull même si on ne peut pas vérifier le SHA
     } else if (latestCommitResult.sha) {
       // Comparer avec le SHA du dernier pull
       if (chat.last_github_commit_sha === latestCommitResult.sha) {
-        console.log("🔍 DEBUG - Same commit SHA, skipping pull");
         return {
           success: false,
           error: "No new changes in GitHub repository (same commit)",
         };
       }
-      console.log("🔍 DEBUG - New commit detected, proceeding with pull");
     }
 
     // Récupérer les fichiers depuis GitHub
@@ -1129,7 +1014,6 @@ export async function pullFromGithub(
       githubConnection.access_token,
       chat.github_repo_name,
     );
-    console.log("🔍 DEBUG - Github files result:", githubFilesResult);
     if (!githubFilesResult.success || !githubFilesResult.files) {
       throw new Error(
         githubFilesResult.error || "Failed to fetch files from GitHub",
@@ -1149,20 +1033,10 @@ export async function pullFromGithub(
       chat.title || "Pulled from GitHub",
     );
 
-    console.log(
-      "🔍 DEBUG - Generated GitHub artifact code length:",
-      githubArtifactCode.length,
-    );
-
     // Combiner l'artifact code existant avec les nouveaux fichiers de GitHub
     const combinedArtifactCode = getUpdatedArtifactCode(
       githubArtifactCode,
       chat.artifact_code || "",
-    );
-
-    console.log(
-      "🔍 DEBUG - Combined artifact code length:",
-      combinedArtifactCode.length,
     );
 
     // Récupérer la dernière version pour créer une nouvelle version
@@ -1236,19 +1110,14 @@ export async function pullFromGithub(
       .eq("id", chatId);
 
     if (updateChatError) {
-      console.warn("⚠️ Could not update chat sync data:", updateChatError);
+      // Could not update chat sync data
     }
-
-    console.log(
-      `✅ Successfully pulled ${githubFilesResult.files.length} files from GitHub`,
-    );
 
     return {
       success: true,
       message: `Successfully pulled ${githubFilesResult.files.length} files from GitHub repository. Created new version ${nextVersion}.`,
     };
   } catch (error) {
-    console.error("❌ GitHub pull error:", error);
     return {
       success: false,
       error:
@@ -1270,7 +1139,6 @@ export async function autoSyncToGithubAfterGeneration(
       error: userError,
     } = await supabase.auth.getUser();
     if (userError || !user) {
-      console.log("🔍 Auto-sync skipped: User not authenticated");
       return;
     }
 
@@ -1283,43 +1151,22 @@ export async function autoSyncToGithubAfterGeneration(
       .single();
 
     if (chatError || !chat) {
-      console.log("🔍 Auto-sync skipped: Chat not found");
       return;
     }
 
     if (!chat.github_repo_name) {
-      console.log(
-        "🔍 Auto-sync skipped: GitHub sync not enabled for this component",
-      );
       return;
     }
 
     // Vérifier la connexion GitHub
     const githubConnection = await getGithubConnectionForUser();
     if (!githubConnection) {
-      console.log("🔍 Auto-sync skipped: GitHub not connected");
       return;
     }
 
-    console.log(
-      `🚀 Auto-syncing version ${version} to GitHub for chat ${chatId}`,
-    );
-
     // Utiliser Force Sync pour s'assurer que les nouvelles générations sont toujours poussées
-    const result = await syncComponentToGithub(chatId, version, true);
-
-    if (result.success) {
-      console.log(
-        `✅ Auto-sync successful for version ${version}:`,
-        result.message,
-      );
-    } else {
-      console.error(
-        `❌ Auto-sync failed for version ${version}:`,
-        result.error,
-      );
-    }
-  } catch (error) {
-    console.error("❌ Auto-sync error:", error);
+    await syncComponentToGithub(chatId, version, true);
+  } catch {
+    // Auto-sync error
   }
 }

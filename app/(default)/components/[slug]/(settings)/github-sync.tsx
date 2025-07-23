@@ -128,10 +128,13 @@ export default function GitHubSync({ closeSheet }: { closeSheet: () => void }) {
       console.log("🔍 Sync result:", result);
 
       if (result.success) {
+        const isNoChanges = result.message?.includes("No changes detected");
+
         toast({
-          title: "Success",
+          title: isNoChanges ? "Already Up-to-Date" : "Success",
           description:
             result.message || "Component synced to GitHub successfully",
+          duration: isNoChanges ? 6000 : 4000, // Show longer for informational messages
         });
         // Refresh to update last_github_sync
         if (refreshChatData) {
@@ -172,10 +175,13 @@ export default function GitHubSync({ closeSheet }: { closeSheet: () => void }) {
       console.log("🔍 Force sync result:", result);
 
       if (result.success) {
+        const isNoChanges = result.message?.includes("already up-to-date");
+
         toast({
-          title: "Force Sync Complete",
+          title: isNoChanges ? "Already Up-to-Date" : "Force Sync Complete",
           description:
             result.message || "All files have been force synced to GitHub",
+          duration: isNoChanges ? 6000 : 4000,
         });
         // Refresh to update last_github_sync
         if (refreshChatData) {

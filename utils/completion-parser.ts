@@ -1035,7 +1035,6 @@ export const setDataTheme = (completion: string, theme: string): string => {
 };
 
 export const extractFilesFromArtifact = (artifactCode: string): ChatFile[] => {
-  console.log("artifactCode", artifactCode);
   if (!artifactCode) return [];
 
   const currentFiles = new Map<string, string>();
