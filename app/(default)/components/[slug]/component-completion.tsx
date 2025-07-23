@@ -513,7 +513,7 @@ export default function ComponentCompletion({
         selectedAssistantMessage.artifact_code,
       );
       setArtifactFiles(newArtifactFiles);
-
+      console.log("newArtifactFiles", newArtifactFiles);
       // Handle file selection
       const files = extractFilesFromCompletion(
         selectedAssistantMessage.content,
@@ -570,6 +570,7 @@ export default function ComponentCompletion({
     setMessages(refreshedChatMessages);
     const refreshedChat = await fetchChatById(chatId);
     if (!refreshedChat) return;
+    setFetchedChat(refreshedChat);
     setArtifactCode(refreshedChat.artifact_code || "");
     const title = refreshedChat.title || `Version #${selectedVersion}`;
     setTitle(title);
@@ -1000,7 +1001,7 @@ export default function ComponentCompletion({
               </div>
               <div className="relative m-0 flex h-full max-h-full flex-1 flex-col border-b lg:border-b-0">
                 {!isLoading && isCanvas && (
-                  <div className="absolute bottom-0 right-0 z-[9000] flex w-full items-center justify-end p-2">
+                  <div className="absolute bottom-0 right-0 z-[9000] flex w-full items-center justify-end gap-2 p-2">
                     {fetchedChat?.clone_url && (
                       <Tooltip>
                         <TooltipTrigger asChild>

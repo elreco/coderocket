@@ -1,0 +1,144 @@
+---
+title: 'GitHub Synchronization (Beta)'
+description: 'Understand how to sync between CodeRocket and GitHub'
+---
+
+<Warning>
+**Beta Feature**: GitHub sync is currently in beta. Questions? Join our [Discord](https://discord.gg/t7dQgcYJ5t) and ask in **#support**.
+</Warning>
+
+## Sync Modes
+
+<CardGroup cols={2}>
+  <Card
+    title="Push to GitHub"
+    icon="upload"
+    color="#3b82f6"
+  >
+    Send your CodeRocket changes to GitHub
+  </Card>
+  <Card
+    title="Pull from GitHub"
+    icon="download"
+    color="#22c55e"
+  >
+    Bring GitHub changes back to CodeRocket
+  </Card>
+</CardGroup>
+
+## Automatic Sync
+
+When enabled, CodeRocket automatically pushes every AI iteration to GitHub:
+
+1. You ask AI to modify your component
+2. CodeRocket creates a new commit in GitHub
+3. Your repository stays up-to-date automatically
+
+<Info>
+**Commit messages** look like: "Update files - Version 3"
+</Info>
+
+## Manual Sync Options
+
+### Push to GitHub
+Use when you want to send your current CodeRocket version to GitHub.
+
+**Smart Push**: Only updates files if CodeRocket version is newer
+**Force Push**: Overwrites all GitHub changes with CodeRocket version
+
+### Pull from GitHub
+Use when you've made changes in GitHub and want to bring them into CodeRocket.
+
+- Fetches all code files from your repository
+- Creates a new version in CodeRocket
+- Ignores generated files like README.md
+
+<Note>
+**Important for Code Editing**: To modify your component's code, you must edit the files directly in GitHub or clone the repository to your local machine. CodeRocket cannot edit code that has been modified outside the platform.
+
+This is by design - once you start developing in GitHub, continue your development there and use CodeRocket's pull feature to bring changes back when you need AI assistance.
+</Note>
+
+## When to Use Each Mode
+
+<Tabs>
+  <Tab title="Working Solo">
+    - **Enable automatic sync** for hands-off versioning
+    - **Push to GitHub** when you make manual changes in GitHub
+    - **Pull from GitHub** to bring back your GitHub edits
+  </Tab>
+
+  <Tab title="Working with Team">
+    - **Pull from GitHub** regularly to get team changes
+    - **Push carefully** to avoid overwriting team work
+    - **Communicate** when you'll be making AI iterations
+  </Tab>
+
+  <Tab title="External Development">
+    - **Start with CodeRocket** to generate initial code
+    - **Push to GitHub** to establish your repository
+    - **Continue in your IDE** (VS Code, WebStorm, etc.)
+    - **Pull back** when you need AI help
+  </Tab>
+</Tabs>
+
+## Repository Structure
+
+CodeRocket creates a clean, professional structure:
+
+```
+your-repository/
+├── README.md              # Project documentation
+├── package.json           # Dependencies
+├── src/
+│   ├── App.jsx           # Your main component
+│   └── components/       # Additional components
+└── public/
+    └── index.html        # HTML template
+```
+
+## Best Practices
+
+<Steps>
+  <Step title="Start with AI">
+    Generate your initial component structure with CodeRocket's AI
+  </Step>
+
+  <Step title="Push to GitHub">
+    Create your repository and enable automatic sync
+  </Step>
+
+  <Step title="Develop in GitHub">
+    Clone the repository and continue development in your preferred editor
+  </Step>
+
+  <Step title="Pull When Needed">
+    Use CodeRocket's pull feature to bring changes back for AI assistance
+  </Step>
+</Steps>
+
+## Common Issues
+
+<AccordionGroup>
+  <Accordion title="Sync Failed">
+    - Check that your repository still exists
+    - Make sure you're still connected to GitHub
+    - Try reconnecting your GitHub account
+  </Accordion>
+
+  <Accordion title="Changes Not Appearing">
+    - Wait a few minutes for GitHub to update
+    - Check the repository's commit history
+    - Verify you're looking at the right branch (usually 'main')
+  </Accordion>
+
+  <Accordion title="Need More Help?">
+    Join our [Discord community](https://discord.gg/t7dQgcYJ5t) and ask in the **#support** channel. We're here to help!
+  </Accordion>
+</AccordionGroup>
+
+## Remember
+
+<Card title="Key Point" icon="lightbulb">
+**For code modifications**: Edit your files in GitHub or your local development environment. CodeRocket is designed to work with your existing development workflow, not replace it.
+</Card>

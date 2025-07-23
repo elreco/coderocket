@@ -1,0 +1,178 @@
+---
+title: 'GitHub Troubleshooting (Beta)'
+description: 'Solutions to common GitHub integration issues'
+---
+
+<Warning>
+**Beta Feature**: GitHub integration is currently in beta. If you can't find a solution here, join our [Discord](https://discord.gg/t7dQgcYJ5t) and ask in the **#support** channel for direct help.
+</Warning>
+
+## Quick Fixes
+
+Try these solutions first for most GitHub sync issues:
+
+<Steps>
+  <Step title="Refresh the Page">
+    Sometimes a simple page refresh resolves display issues
+  </Step>
+
+  <Step title="Check Your Connection">
+    Go to Account Settings and verify your GitHub account is still connected
+  </Step>
+
+  <Step title="Reconnect GitHub">
+    Disconnect and reconnect your GitHub account in Account Settings
+  </Step>
+
+  <Step title="Wait a Few Minutes">
+    GitHub can take time to update - wait 2-3 minutes and try again
+  </Step>
+</Steps>
+
+## Common Issues
+
+### Connection Problems
+
+<AccordionGroup>
+  <Accordion title="GitHub Connection Failed">
+    **Symptoms**: Can't connect your GitHub account
+
+    **Solutions**:
+    - Make sure you're logged into GitHub
+    - Clear your browser cache and cookies
+    - Try using an incognito/private browser window
+    - Check if GitHub is experiencing outages
+  </Accordion>
+
+  <Accordion title="Lost GitHub Connection">
+    **Symptoms**: Was connected but now shows disconnected
+
+    **Solutions**:
+    - Go to [GitHub Settings → Applications](https://github.com/settings/applications)
+    - Check if CodeRocket is still authorized
+    - Reconnect your account in CodeRocket settings
+  </Accordion>
+</AccordionGroup>
+
+### Repository Issues
+
+<AccordionGroup>
+  <Accordion title="Can't Create Repository">
+    **Symptoms**: Repository creation fails
+
+    **Solutions**:
+    - Repository name might already exist - try a different name
+    - Check your GitHub account has permission to create repositories
+    - Wait a few minutes and try again (rate limiting)
+  </Accordion>
+
+  <Accordion title="Repository Not Found">
+    **Symptoms**: CodeRocket can't find your repository
+
+    **Solutions**:
+    - Check the repository wasn't deleted or made private
+    - Verify you're the owner of the repository
+    - Repository name might have changed
+  </Accordion>
+</AccordionGroup>
+
+### Sync Issues
+
+<AccordionGroup>
+  <Accordion title="Changes Not Syncing">
+    **Symptoms**: Updates in CodeRocket don't appear in GitHub
+
+    **Solutions**:
+    - Check if automatic sync is enabled in component settings
+    - Try manual sync using the "Push to GitHub" button
+    - Verify the repository exists and is accessible
+    - Check GitHub's status page for outages
+  </Accordion>
+
+  <Accordion title="Pull Not Working">
+    **Symptoms**: Can't pull changes from GitHub to CodeRocket
+
+    **Solutions**:
+    - Make sure there are code files in your repository
+    - Check that files are in supported formats (JS, JSX, HTML, CSS)
+    - Verify repository permissions allow reading
+  </Accordion>
+</AccordionGroup>
+
+## Advanced Troubleshooting
+
+### Check Repository Status
+1. Visit your repository on GitHub
+2. Look for recent commits
+3. Check if files are present and correct
+4. Verify repository is public or accessible
+
+### Verify Permissions
+1. Go to [GitHub Settings → Applications](https://github.com/settings/applications)
+2. Find "CodeRocket" in OAuth Apps
+3. Check granted permissions include:
+   - Repository access
+   - Content read/write
+   - Metadata access
+
+### Test with New Component
+1. Create a new simple component in CodeRocket
+2. Try setting up GitHub sync with the new component
+3. If it works, the issue might be with the specific component
+
+## Reset Everything
+
+If nothing else works, try a complete reset:
+
+<Steps>
+  <Step title="Disconnect GitHub">
+    Remove GitHub connection in Account Settings
+  </Step>
+
+  <Step title="Clear Browser Data">
+    Clear cache, cookies, and local storage for CodeRocket
+  </Step>
+
+  <Step title="Reconnect">
+    Connect your GitHub account again
+  </Step>
+
+  <Step title="Create New Repository">
+    Set up GitHub sync with a test component
+  </Step>
+</Steps>
+
+## Still Need Help?
+
+<Card
+  title="Join Our Discord Community"
+  icon="discord"
+  href="https://discord.gg/t7dQgcYJ5t"
+>
+  **Can't solve your issue?** Our community and support team are ready to help in the **#support** channel. We usually respond within a few hours during business hours.
+</Card>
+
+## Known Beta Limitations
+
+Since GitHub integration is in beta, some features are still being refined:
+
+- **Branch support**: Currently only works with the main/master branch
+- **Large repositories**: Very large repositories might sync slowly
+- **File types**: Only syncs common code files (JS, JSX, HTML, CSS, etc.)
+- **Rate limits**: GitHub API limits may cause temporary delays
+
+<Info>
+We're actively working on improvements! Your feedback in Discord helps us prioritize what to fix first.
+</Info>
+
+## Reporting Bugs
+
+When reporting issues in Discord, please include:
+
+- **What you were trying to do**
+- **What happened instead**
+- **Your browser and operating system**
+- **Component name or repository name**
+- **Any error messages you saw**
+
+This helps our team resolve issues much faster!

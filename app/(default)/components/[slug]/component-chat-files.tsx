@@ -1,5 +1,6 @@
 "use client";
 
+import { SiGithub } from "@icons-pack/react-simple-icons";
 import { Trash2 } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 
@@ -15,6 +16,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { UserWidget } from "@/components/user-widget";
 import { useComponentContext } from "@/context/component-context";
@@ -420,14 +422,27 @@ ${extractedFiles
           <div className="flex w-full flex-col gap-2 overflow-x-auto text-sm">
             <div className="flex items-center justify-between">
               <div className="mr-2 flex items-center">
-                <Avatar className="size-10 rounded-none">
-                  <AvatarImage src="/logo-white.png" />
-                  <AvatarFallback>T</AvatarFallback>
-                </Avatar>
+                {message.is_github_pull ? (
+                  <Avatar className="size-10 rounded-none bg-gray-900">
+                    <SiGithub className="size-6 text-white" />
+                  </Avatar>
+                ) : (
+                  <Avatar className="size-10 rounded-none">
+                    <AvatarImage src="/logo-white.png" />
+                    <AvatarFallback>T</AvatarFallback>
+                  </Avatar>
+                )}
                 <div className="ml-2 flex flex-col items-start">
-                  <h2 className={cn("text-lg font-semibold")}>
-                    Version #{message.version}
-                  </h2>
+                  <div className="flex items-center gap-2">
+                    <h2 className={cn("text-lg font-semibold")}>
+                      Version #{message.version}
+                    </h2>
+                    {message.is_github_pull && (
+                      <Badge variant="outline" className="h-5 text-xs">
+                        GitHub Pull
+                      </Badge>
+                    )}
+                  </div>
                   <p className="text-xs text-muted-foreground">
                     {getRelativeDate(message.created_at)}
                   </p>

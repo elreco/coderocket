@@ -1,0 +1,67 @@
+{
+  "$schema": "https://mintlify.com/schema.json",
+  "name": "CodeRocket Documentation",
+  "theme": "mint",
+  "logo": {
+    "dark": "https://www.coderocket.app/logo-white.png",
+    "light": "https://www.coderocket.app/logo-alternate.png"
+  },
+  "logoLabel": "CodeRocket",
+  "favicon": "https://www.coderocket.app/favicon.ico",
+  "icons": {
+    "library": "lucide"
+  },
+  "fonts": {
+    "family": "Plus Jakarta Sans"
+  },
+  "colors": {
+    "primary": "#6366F1",
+    "light": "#6366F1",
+    "dark": "#6366F1"
+  },
+  "topbarLinks": [
+    {
+      "name": "Support",
+      "url": "mailto:support@coderocket.app"
+    }
+  ],
+  "topbarCtaButton": {
+    "name": "Get Started",
+    "url": "https://coderocket.app"
+  },
+  "anchors": [
+    {
+      "name": "Website",
+      "icon": "globe",
+      "url": "https://coderocket.app"
+    },
+    {
+      "name": "Community",
+      "icon": "discord",
+      "url": "https://discord.gg/t7dQgcYJ5t"
+    }
+  ],
+  "navigation": {
+    "groups": [
+      {
+        "group": "Getting Started",
+        "pages": [
+          "introduction",
+          "quickstart"
+        ]
+      },
+      {
+        "group": "GitHub Integration",
+        "pages": [
+          "github/overview",
+          "github/setup",
+          "github/synchronization",
+          "github/troubleshooting"
+        ]
+      }
+    ]
+  },
+  "footerSocials": {
+    "discord": "https://discord.gg/t7dQgcYJ5t"
+  }
+}
