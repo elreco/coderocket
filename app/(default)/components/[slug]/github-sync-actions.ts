@@ -1164,8 +1164,9 @@ export async function autoSyncToGithubAfterGeneration(
       return;
     }
 
-    // Utiliser Force Sync pour s'assurer que les nouvelles générations sont toujours poussées
-    await syncComponentToGithub(chatId, version, true);
+    // Utiliser un sync normal pour respecter les modifications GitHub
+    // Si des modifications GitHub sont plus récentes, elles ne seront pas écrasées
+    await syncComponentToGithub(chatId, version, false);
   } catch {
     // Auto-sync error
   }
