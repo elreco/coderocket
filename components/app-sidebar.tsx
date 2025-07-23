@@ -2,6 +2,7 @@
 
 import { SiDiscord } from "@icons-pack/react-simple-icons";
 import {
+  BookOpen,
   CreditCard,
   Globe,
   Heart,
@@ -84,6 +85,11 @@ const data = {
       title: "Pricing",
       url: "/pricing",
       icon: CreditCard,
+    },
+    {
+      title: "Documentation",
+      url: "https://docs.coderocket.app",
+      icon: BookOpen,
     },
   ],
 };

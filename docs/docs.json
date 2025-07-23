@@ -3,8 +3,8 @@
   "name": "CodeRocket Documentation",
   "theme": "mint",
   "logo": {
-    "dark": "https://www.coderocket.app/logo-white.png",
-    "light": "https://www.coderocket.app/logo-alternate.png"
+    "dark": "https://www.coderocket.app/logo-with-white-bg.png",
+    "light": "https://www.coderocket.app/logo-with-bg.png"
   },
   "logoHref": "https://coderocket.app",
   "favicon": "https://www.coderocket.app/favicon.ico",
@@ -23,6 +23,10 @@
     {
       "name": "Support",
       "url": "mailto:support@coderocket.app"
+    },
+    {
+      "name": "Back to Site",
+      "url": "https://coderocket.app"
     }
   ],
   "topbarCtaButton": {
