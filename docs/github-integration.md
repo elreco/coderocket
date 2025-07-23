@@ -1,78 +1,78 @@
 # GitHub Integration Setup
 
-Cette documentation explique comment configurer l'intégration GitHub pour permettre aux utilisateurs de synchroniser leurs composants avec des repos GitHub.
+This documentation explains how to configure GitHub integration to allow users to sync their components with GitHub repositories.
 
-## Configuration GitHub OAuth App
+## GitHub OAuth App Configuration
 
-1. **Créer une GitHub OAuth App** :
-   - Aller sur https://github.com/settings/developers
-   - Cliquer sur "New OAuth App"
-   - Remplir les informations :
+1. **Create a GitHub OAuth App**:
+   - Go to https://github.com/settings/developers
+   - Click "New OAuth App"
+   - Fill in the information:
      - **Application name**: `CodeRocket - Component Sync`
      - **Homepage URL**: `https://www.coderocket.app`
      - **Authorization callback URL**: `https://www.coderocket.app/api/github/callback`
 
-2. **Récupérer les credentials** :
-   - Noter le `Client ID` et générer un `Client Secret`
+2. **Get the credentials**:
+   - Note the `Client ID` and generate a `Client Secret`
 
-## Variables d'environnement
+## Environment Variables
 
-Ajouter ces variables à votre fichier `.env.local` :
+Add these variables to your `.env.local` file:
 
 ```bash
 # GitHub OAuth App Credentials
 GITHUB_CLIENT_ID=your_github_client_id_here
 GITHUB_CLIENT_SECRET=your_github_client_secret_here
 
-# Site URL (déjà existant normalement)
+# Site URL (should already exist)
 NEXT_PUBLIC_SITE_URL=https://www.coderocket.app
 ```
 
-## Migration de base de données
+## Database Migration
 
-Exécuter la migration pour créer la table `github_connections` :
+Run the migration to create the `github_connections` table:
 
 ```bash
-# Si vous utilisez Supabase CLI
+# If using Supabase CLI
 supabase migration up
 
-# Ou appliquer manuellement le fichier :
+# Or manually apply the file:
 # supabase/migrations/20241220000000_add_github_connections.sql
 ```
 
-## Permissions GitHub
+## GitHub Permissions
 
-L'application demande ces permissions lors de la connexion :
-- `repo` : Accès en lecture/écriture aux repositories publics et privés
-- `user:email` : Accès à l'adresse email (pour identification)
+The application requests these permissions during connection:
+- `repo`: Read/write access to public and private repositories
+- `user:email`: Access to email address (for identification)
 
-## Flux d'authentification
+## Authentication Flow
 
-1. **Connexion** : L'utilisateur clique sur "Connect GitHub" dans `/account`
-2. **Redirection** : Vers GitHub OAuth avec les permissions nécessaires
-3. **Callback** : GitHub redirige vers `/api/github/callback`
-4. **Stockage** : Le token est stocké dans la table `github_connections`
-5. **Confirmation** : Redirection vers `/account` avec message de succès
+1. **Connection**: User clicks "Connect GitHub" in `/account`
+2. **Redirection**: To GitHub OAuth with required permissions
+3. **Callback**: GitHub redirects to `/api/github/callback`
+4. **Storage**: Token is stored in the `github_connections` table
+5. **Confirmation**: Redirect to `/account` with success message
 
-## Sécurité
+## Security
 
-⚠️ **Important** : En production, les tokens GitHub doivent être chiffrés avant stockage en base.
+⚠️ **Important**: In production, GitHub tokens must be encrypted before database storage.
 
-## Utilisation
+## Usage
 
-Une fois GitHub connecté, les utilisateurs peuvent :
-- Voir leur nom d'utilisateur GitHub connecté
-- Se déconnecter de GitHub
-- Accéder aux futures fonctionnalités de synchronisation
+Once GitHub is connected, users can:
+- See their connected GitHub username
+- Disconnect from GitHub
+- Access future synchronization features
 
 ## Troubleshooting
 
-### Erreurs communes
+### Common Errors
 
-- `invalid_state` : Problème de sécurité, l'utilisateur doit reconnecter
-- `access_denied` : L'utilisateur a refusé les permissions
-- `oauth_failed` : Erreur générale, vérifier les credentials
+- `invalid_state`: Security issue, user must reconnect
+- `access_denied`: User denied permissions
+- `oauth_failed`: General error, check credentials
 
 ### Debug
 
-Les erreurs sont loggées côté serveur et affichées à l'utilisateur via des toasts.
+Errors are logged server-side and displayed to users via toasts.
