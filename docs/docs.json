@@ -20,25 +20,29 @@
     "light": "#6366F1",
     "dark": "#6366F1"
   },
-  "topbarLinks": [
-    {
-      "name": "Support",
-      "url": "mailto:support@coderocket.app"
+  "navbar": {
+    "primary": {
+      "type": "link",
+      "label": "Back to CodeRocket",
+      "url": "https://www.coderocket.app"
     },
-    {
-      "name": "Back to Site",
-      "url": "https://coderocket.app"
-    }
-  ],
+    "links": [
+      {
+        "icon": "fa-brands:discord",
+        "label": "Discord",
+        "url": "https://discord.gg/t7dQgcYJ5t"
+      }
+    ]
+  },
   "topbarCtaButton": {
     "name": "Get Started",
-    "url": "https://coderocket.app"
+    "url": "https://www.coderocket.app"
   },
   "anchors": [
     {
       "name": "Website",
       "icon": "globe",
-      "url": "https://coderocket.app"
+      "url": "https://www.  coderocket.app"
     },
     {
       "name": "Community",
