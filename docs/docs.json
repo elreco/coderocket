@@ -6,7 +6,7 @@
     "dark": "https://www.coderocket.app/logo-white.png",
     "light": "https://www.coderocket.app/logo-alternate.png"
   },
-  "logoLabel": "CodeRocket",
+  "logoHref": "https://coderocket.app",
   "favicon": "https://www.coderocket.app/favicon.ico",
   "icons": {
     "library": "lucide"
