@@ -292,8 +292,7 @@ export async function syncComponentToGithub(
       return { success: false, error: "No files found to sync" };
     }
 
-    const commitResults = [];
-    const skippedFiles = [];
+    const skippedFiles: Array<{ path: string; reason: string }> = [];
     const webLastModified = new Date(message.created_at);
 
     console.log(
@@ -301,7 +300,7 @@ export async function syncComponentToGithub(
     );
 
     // Collect all files that need to be synced
-    const filesToSync = [];
+    const filesToSync: Array<{ path: string; content: string }> = [];
 
     for (const file of githubFiles) {
       console.log(`🔍 DEBUG - Checking sync eligibility for: ${file.path}`);
@@ -333,11 +332,32 @@ export async function syncComponentToGithub(
     console.log(`🔍 DEBUG - Files to sync: ${filesToSync.length}`);
 
     if (filesToSync.length > 0) {
-      // Create a single commit with all files
-      const commitResult = await createSingleCommitWithMultipleFiles(
+      // Check if files actually have changes compared to GitHub
+      const filesWithChanges = await getFilesWithActualChanges(
         githubConnection.access_token,
         chat.github_repo_name,
         filesToSync,
+      );
+
+      console.log(
+        `🔍 DEBUG - Files with actual changes: ${filesWithChanges.length}`,
+      );
+
+      if (filesWithChanges.length === 0) {
+        console.log(
+          "ℹ️ No actual file changes detected, skipping commit creation",
+        );
+        return {
+          success: true,
+          message: `No changes detected - all ${filesToSync.length} files are identical to GitHub versions`,
+        };
+      }
+
+      // Create a single commit with only files that have changes
+      const commitResult = await createSingleCommitWithMultipleFiles(
+        githubConnection.access_token,
+        chat.github_repo_name,
+        filesWithChanges,
         `Update files - Version ${version || message.version}`,
         githubConnection.github_username || "coderocket-user",
       );
@@ -345,44 +365,37 @@ export async function syncComponentToGithub(
       console.log(`🔍 DEBUG - Single commit result:`, commitResult);
 
       if (commitResult.success) {
-        commitResults.push(commitResult);
+        // Update sync stats for changed files only
+        const syncedCount = filesWithChanges.length;
+        const skippedCount =
+          skippedFiles.length + (filesToSync.length - filesWithChanges.length);
+
+        console.log(
+          `✅ Sync completed: ${syncedCount} files in 1 commit, ${skippedCount} files skipped (${filesToSync.length - filesWithChanges.length} unchanged)`,
+        );
+
+        // Update last sync date
+        await supabase
+          .from("chats")
+          .update({
+            last_github_sync: new Date().toISOString(),
+          })
+          .eq("id", chatId);
+
+        return {
+          success: true,
+          message: `Sync completed: ${syncedCount} files in 1 commit, ${skippedCount} files skipped (${filesToSync.length - filesWithChanges.length} unchanged)`,
+        };
       } else {
         throw new Error(`Failed to create commit: ${commitResult.error}`);
       }
     }
 
-    // Log des fichiers ignorés
-    if (skippedFiles.length > 0) {
-      console.log(
-        "📋 Files skipped due to Last Write Wins strategy:",
-        skippedFiles,
-      );
-    }
-
-    const syncedCount = filesToSync.length;
-    const skippedCount = skippedFiles.length;
-
-    console.log(
-      `✅ Sync completed: ${syncedCount} files synced, ${skippedCount} files skipped`,
-    );
-
-    // Mettre à jour la date de dernière sync seulement si au moins un fichier a été synchronisé
-    if (
-      syncedCount > 0 &&
-      commitResults.length > 0 &&
-      commitResults[0].success
-    ) {
-      await supabase
-        .from("chats")
-        .update({
-          last_github_sync: new Date().toISOString(),
-        })
-        .eq("id", chatId);
-    }
-
+    // If we reach here, no files needed syncing
+    console.log("ℹ️ No files to sync after filtering");
     return {
       success: true,
-      message: `Sync completed: ${syncedCount} files in 1 commit, ${skippedCount} files skipped due to newer GitHub versions`,
+      message: `No files to sync - ${skippedFiles.length} files skipped due to newer GitHub versions`,
     };
   } catch (error) {
     console.error("GitHub sync error:", error);
@@ -775,6 +788,76 @@ async function shouldSyncFile(
       reason: `GitHub version newer (${githubFileInfo.lastModified.toISOString()} >= ${webLastModified.toISOString()})`,
     };
   }
+}
+
+async function getFilesWithActualChanges(
+  accessToken: string,
+  repoFullName: string,
+  files: Array<{ path: string; content: string }>,
+): Promise<Array<{ path: string; content: string }>> {
+  const filesWithChanges: Array<{ path: string; content: string }> = [];
+
+  console.log(
+    `🔍 DEBUG - Checking ${files.length} files for actual changes...`,
+  );
+
+  for (const file of files) {
+    try {
+      // Get current file content from GitHub
+      const response = await fetch(
+        `https://api.github.com/repos/${repoFullName}/contents/${encodeURIComponent(file.path)}`,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            Accept: "application/vnd.github.v3+json",
+          },
+        },
+      );
+
+      if (response.ok) {
+        // File exists, compare content
+        const githubFileData = await response.json();
+        const githubContent = Buffer.from(
+          githubFileData.content,
+          "base64",
+        ).toString("utf-8");
+
+        // Normalize line endings for comparison
+        const normalizedLocalContent = file.content
+          .replace(/\r\n/g, "\n")
+          .trim();
+        const normalizedGithubContent = githubContent
+          .replace(/\r\n/g, "\n")
+          .trim();
+
+        if (normalizedLocalContent !== normalizedGithubContent) {
+          console.log(`📝 ${file.path}: Content differs, will update`);
+          filesWithChanges.push(file);
+        } else {
+          console.log(`✅ ${file.path}: No changes detected`);
+        }
+      } else if (response.status === 404) {
+        // File doesn't exist on GitHub, it's a new file
+        console.log(`📝 ${file.path}: New file, will create`);
+        filesWithChanges.push(file);
+      } else {
+        // Error getting file, assume it needs to be synced to be safe
+        console.warn(
+          `⚠️ ${file.path}: Could not check (${response.status}), assuming changes needed`,
+        );
+        filesWithChanges.push(file);
+      }
+    } catch (error) {
+      // Error checking file, assume it needs to be synced to be safe
+      console.warn(
+        `⚠️ ${file.path}: Error checking file, assuming changes needed`,
+        error,
+      );
+      filesWithChanges.push(file);
+    }
+  }
+
+  return filesWithChanges;
 }
 
 async function getGithubRepositoryFiles(
