@@ -1,0 +1,78 @@
+"use client";
+
+import { Loader, ShoppingCart } from "lucide-react";
+import { useState } from "react";
+
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
+
+import { type MarketplaceListing } from "../actions";
+
+interface PurchaseButtonProps {
+  listing: MarketplaceListing;
+}
+
+export function PurchaseButton({ listing }: PurchaseButtonProps) {
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
+
+  const handlePurchase = async () => {
+    setIsLoading(true);
+
+    try {
+      const response = await fetch("/api/marketplace/create-checkout-session", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          listingId: listing.id,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to create checkout session");
+      }
+
+      // Redirect to Stripe Checkout
+      window.location.href = data.url;
+    } catch (error) {
+      console.error("Purchase error:", error);
+      toast({
+        title: "Purchase Failed",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const priceFormatted = `$${(listing.price_cents / 100).toFixed(2)}`;
+
+  return (
+    <Button
+      onClick={handlePurchase}
+      disabled={isLoading}
+      className="w-full"
+      size="lg"
+    >
+      {isLoading ? (
+        <div className="flex items-center gap-2">
+          <Loader className="size-4 animate-spin" />
+          <span>Processing...</span>
+        </div>
+      ) : (
+        <div className="flex items-center gap-2">
+          <ShoppingCart className="size-4" />
+          <span>Purchase for {priceFormatted}</span>
+        </div>
+      )}
+    </Button>
+  );
+}

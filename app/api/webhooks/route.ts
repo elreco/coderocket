@@ -69,9 +69,25 @@ export async function POST(req: Request) {
               true,
             );
           } else if (checkoutSession.mode === "payment") {
-            // Gérer les paiements uniques pour les messages supplémentaires
             const metadata = checkoutSession.metadata;
-            if (metadata && metadata.extraMessages && metadata.userId) {
+
+            // Handle marketplace purchases
+            if (metadata && metadata.type === "marketplace_purchase") {
+              const { handleMarketplacePurchase } = await import(
+                "@/app/(default)/marketplace/marketplace-purchase-handler"
+              );
+              const result = await handleMarketplacePurchase(metadata);
+
+              if (!result.success) {
+                console.error(
+                  "Failed to process marketplace purchase:",
+                  result.error,
+                );
+                // Don't fail the webhook, but log the error
+              }
+            }
+            // Handle extra messages purchases
+            else if (metadata && metadata.extraMessages && metadata.userId) {
               const userId = metadata.userId;
               const extraMessages = parseInt(metadata.extraMessages, 10);
 

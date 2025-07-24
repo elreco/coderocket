@@ -3,6 +3,7 @@ import {
   ChevronsUpDown,
   CreditCard,
   LogOut,
+  ShoppingCart,
   User,
   UserCircle,
 } from "lucide-react";
@@ -135,6 +136,24 @@ export function NavUser({
                 <Link href="/pricing" onClick={() => setOpenMobile(false)}>
                   <CreditCard />
                   Subscribe
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild className="cursor-pointer">
+                <Link
+                  href="/account/marketplace/listings"
+                  onClick={() => setOpenMobile(false)}
+                >
+                  <ShoppingCart />
+                  My Listings
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild className="cursor-pointer">
+                <Link
+                  href="/account/marketplace/purchases"
+                  onClick={() => setOpenMobile(false)}
+                >
+                  <CreditCard />
+                  My Purchases
                 </Link>
               </DropdownMenuItem>
             </DropdownMenuGroup>

@@ -7,8 +7,11 @@ import {
   Globe,
   Heart,
   Rocket,
+  ShoppingBag,
+  ShoppingCart,
   SquareTerminal,
   SquareUserRoundIcon,
+  Store,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -45,6 +48,11 @@ const data = {
       url: "/components",
       icon: Globe,
     },
+    {
+      title: "Marketplace",
+      url: "/marketplace",
+      icon: Store,
+    },
   ],
   myComponents: [
     {
@@ -56,6 +64,16 @@ const data = {
       title: "Liked Components",
       url: "/account/liked-components",
       icon: Heart,
+    },
+    {
+      title: "My Listings",
+      url: "/account/marketplace/listings",
+      icon: ShoppingBag,
+    },
+    {
+      title: "My Purchases",
+      url: "/account/marketplace/purchases",
+      icon: ShoppingCart,
     },
   ],
   community: [
@@ -89,6 +107,11 @@ const data = {
     {
       title: "Documentation",
       url: "https://docs.coderocket.app",
+      icon: BookOpen,
+    },
+    {
+      title: "Marketplace Guide",
+      url: "https://docs.coderocket.app/marketplace/overview",
       icon: BookOpen,
     },
   ],
