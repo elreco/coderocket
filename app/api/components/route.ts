@@ -84,7 +84,7 @@ export async function POST(req: Request) {
         },
         ...messages,
       ],
-      model: anthropicModel("claude-3-7-sonnet-latest"),
+      model: anthropicModel("claude-4-sonnet-latest"),
       toolChoice: "none",
       maxTokens: MAX_TOKENS_PER_REQUEST,
       onFinish: async ({ text, usage, finishReason, providerMetadata }) => {
