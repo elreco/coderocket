@@ -265,7 +265,10 @@ export default function GitHubSync({ closeSheet }: { closeSheet: () => void }) {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-base font-semibold">Modify Code on GitHub</h3>
-          <Badge variant="outline">Beta</Badge>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline">Beta</Badge>
+            <Badge>New</Badge>
+          </div>
         </div>
         <div className="text-sm text-muted-foreground">
           Loading GitHub connection...
@@ -279,7 +282,10 @@ export default function GitHubSync({ closeSheet }: { closeSheet: () => void }) {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-base font-semibold">Modify Code on GitHub</h3>
-          <Badge variant="outline">Beta</Badge>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline">Beta</Badge>
+            <Badge>New</Badge>
+          </div>
         </div>
         <div className="flex items-center space-x-3 rounded-lg border border-orange-200 bg-orange-50 p-4">
           <AlertCircle className="size-5 text-orange-600" />
@@ -307,7 +313,10 @@ export default function GitHubSync({ closeSheet }: { closeSheet: () => void }) {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="text-base font-semibold">Modify Code on GitHub</h3>
-        <Badge variant="outline">Beta</Badge>
+        <div className="flex items-center gap-2">
+          <Badge variant="outline">Beta</Badge>
+          <Badge>New</Badge>
+        </div>
       </div>
 
       {!hasGithubRepo ? (

@@ -975,10 +975,12 @@ export default function ComponentCompletion({
                       <Button
                         type="button"
                         size="sm"
+                        className="flex items-center gap-2"
                         variant="secondary"
                         disabled={isLoading}
                       >
                         <Settings className="w-5" />
+                        <Badge>New</Badge>
                       </Button>
                     </ComponentSettings>
                   )}
