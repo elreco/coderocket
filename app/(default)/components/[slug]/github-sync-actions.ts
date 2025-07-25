@@ -1,5 +1,6 @@
 "use server";
 
+import { getSubscription } from "@/app/supabase-server";
 import { Tables } from "@/types_db";
 import {
   extractFilesFromArtifact,
@@ -60,6 +61,15 @@ export async function createGithubRepo(
   } = await supabase.auth.getUser();
   if (userError || !user) {
     return { success: false, error: "Unauthorized" };
+  }
+
+  // Vérifier l'abonnement premium
+  const subscription = await getSubscription();
+  if (!subscription) {
+    return {
+      success: false,
+      error: "Premium subscription required for GitHub sync",
+    };
   }
 
   // Récupérer la connexion GitHub
@@ -154,6 +164,15 @@ export async function syncComponentToGithub(
   } = await supabase.auth.getUser();
   if (userError || !user) {
     return { success: false, error: "Unauthorized" };
+  }
+
+  // Vérifier l'abonnement premium
+  const subscription = await getSubscription();
+  if (!subscription) {
+    return {
+      success: false,
+      error: "Premium subscription required for GitHub sync",
+    };
   }
 
   // Récupérer la connexion GitHub
@@ -963,6 +982,15 @@ export async function pullFromGithub(
   } = await supabase.auth.getUser();
   if (userError || !user) {
     return { success: false, error: "Unauthorized" };
+  }
+
+  // Vérifier l'abonnement premium
+  const subscription = await getSubscription();
+  if (!subscription) {
+    return {
+      success: false,
+      error: "Premium subscription required for GitHub sync",
+    };
   }
 
   // Récupérer la connexion GitHub

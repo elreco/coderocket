@@ -10,13 +10,14 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 
+import { getSubscription } from "@/app/supabase-server";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useComponentContext } from "@/context/component-context";
 import { useToast } from "@/hooks/use-toast";
-import { Tables } from "@/types_db";
+import { Database, Tables } from "@/types_db";
 
 import {
   createGithubRepo,
@@ -24,6 +25,12 @@ import {
   getGithubConnectionForUser,
   pullFromGithub,
 } from "../github-sync-actions";
+
+type Subscription = Database["public"]["Tables"]["subscriptions"]["Row"] & {
+  prices: Database["public"]["Tables"]["prices"]["Row"] & {
+    products: Database["public"]["Tables"]["products"]["Row"];
+  };
+};
 
 export default function GitHubSync({ closeSheet }: { closeSheet: () => void }) {
   const {
@@ -37,6 +44,7 @@ export default function GitHubSync({ closeSheet }: { closeSheet: () => void }) {
 
   const [githubConnection, setGithubConnection] =
     useState<Tables<"github_connections"> | null>(null);
+  const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [repoName, setRepoName] = useState("");
@@ -47,9 +55,26 @@ export default function GitHubSync({ closeSheet }: { closeSheet: () => void }) {
   // États dérivés
   const isGithubConnected = !!githubConnection;
   const hasGithubRepo = !!fetchedChat?.github_repo_url;
+  const isPremium = !!subscription;
 
   useEffect(() => {
-    loadGithubConnection();
+    const loadData = async () => {
+      setIsLoading(true);
+      try {
+        const [connectionData, subscriptionData] = await Promise.all([
+          getGithubConnectionForUser(),
+          getSubscription(),
+        ]);
+        setGithubConnection(connectionData);
+        setSubscription(subscriptionData as Subscription | null);
+      } catch (error) {
+        console.error("Error loading data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
     // Générer un nom de repo par défaut basé sur le slug ou titre
     if (fetchedChat?.slug) {
       setRepoName(`coderocket-${fetchedChat.slug}`);
@@ -64,18 +89,6 @@ export default function GitHubSync({ closeSheet }: { closeSheet: () => void }) {
       setRepoName(`coderocket-component-${chatId.slice(0, 8)}`);
     }
   }, [fetchedChat, chatId]);
-
-  const loadGithubConnection = async () => {
-    setIsLoading(true);
-    try {
-      const connection = await getGithubConnectionForUser();
-      setGithubConnection(connection);
-    } catch (error) {
-      console.error("Failed to load GitHub connection:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleCreateRepo = async () => {
     if (!repoName.trim()) {
@@ -273,6 +286,37 @@ export default function GitHubSync({ closeSheet }: { closeSheet: () => void }) {
         <div className="text-sm text-muted-foreground">
           Loading GitHub connection...
         </div>
+      </div>
+    );
+  }
+
+  if (!isPremium) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-base font-semibold">Modify Code on GitHub</h3>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline">Beta</Badge>
+            <Badge>New</Badge>
+          </div>
+        </div>
+        <div className="flex items-center space-x-3 rounded-lg border border-amber-200 bg-amber-50 p-4">
+          <AlertCircle className="size-5 text-amber-600" />
+          <div className="flex-1">
+            <p className="text-sm font-medium text-amber-800">
+              Premium feature required
+            </p>
+            <p className="text-sm text-amber-700">
+              GitHub sync is available for premium users only. Upgrade your plan
+              to sync your components with GitHub repositories.
+            </p>
+          </div>
+        </div>
+        <Button variant="outline" asChild>
+          <a href="/pricing" className="flex items-center space-x-2">
+            <span>Upgrade to Premium</span>
+          </a>
+        </Button>
       </div>
     );
   }
