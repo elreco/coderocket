@@ -1,7 +1,6 @@
 import {
   Download,
   ExternalLink,
-  Calendar,
   DollarSign,
   ShoppingCart,
   Eye,

@@ -1,47 +1,130 @@
-import { Plus, Eye, Edit, TrendingUp, DollarSign } from "lucide-react";
+"use client";
+
+import { SiHtml5, SiReact, SiVuedotjs } from "@icons-pack/react-simple-icons";
+import {
+  Plus,
+  Edit,
+  Eye,
+  EyeOff,
+  Play,
+  TrendingUp,
+  DollarSign,
+} from "lucide-react";
 import Link from "next/link";
+import { useState, useEffect } from "react";
 
 import { Container } from "@/components/container";
 import { PageTitle } from "@/components/page-title";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
+import { Framework } from "@/utils/config";
 import { getRelativeDate } from "@/utils/date";
 
 import {
   getUserMarketplaceListings,
-  getMarketplaceCategories,
+  deactivateMarketplaceListing,
+  reactivateMarketplaceListing,
 } from "../../../marketplace/actions";
-import { ListingForm } from "../../../marketplace/listing-form";
 
-export const metadata = {
-  title: "My Listings - CodeRocket",
-  description:
-    "Manage your marketplace listings and track your component sales.",
-};
+type ListingData = Awaited<ReturnType<typeof getUserMarketplaceListings>>[0];
 
-export default async function MyListingsPage() {
-  const [listings, categories] = await Promise.all([
-    getUserMarketplaceListings(),
-    getMarketplaceCategories(),
-  ]);
+export default function MyListingsPage() {
+  const [listings, setListings] = useState<ListingData[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const listingsData = await getUserMarketplaceListings();
+        setListings(listingsData);
+      } catch (error) {
+        console.error("Error loading data:", error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to load your listings",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
+  }, [toast]);
+
+  const handleDeactivateListing = async (listingId: string) => {
+    const result = await deactivateMarketplaceListing(listingId);
+
+    if (result.success) {
+      setListings((prev) =>
+        prev.map((listing) =>
+          listing.id === listingId ? { ...listing, is_active: false } : listing,
+        ),
+      );
+      toast({
+        title: "Success",
+        description: "Listing has been deactivated",
+      });
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: result.error || "Failed to deactivate listing",
+      });
+    }
+  };
+
+  const handleReactivateListing = async (listingId: string) => {
+    const result = await reactivateMarketplaceListing(listingId);
+
+    if (result.success) {
+      setListings((prev) =>
+        prev.map((listing) =>
+          listing.id === listingId ? { ...listing, is_active: true } : listing,
+        ),
+      );
+      toast({
+        title: "Success",
+        description: "Listing has been reactivated",
+      });
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: result.error || "Failed to reactivate listing",
+      });
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <Container className="pr-2 sm:pr-11">
+        <div className="flex items-center justify-center py-8">
+          <div className="text-center">
+            <div className="mx-auto size-8 animate-spin rounded-full border-b-2 border-primary"></div>
+            <p className="mt-2 text-muted-foreground">
+              Loading your listings...
+            </p>
+          </div>
+        </div>
+      </Container>
+    );
+  }
 
   const activeListings = listings.filter((l) => l.is_active);
   const inactiveListings = listings.filter((l) => !l.is_active);
   const totalSales = listings.reduce(
-    (sum, listing) => sum + (listing.total_sales ?? 0),
+    (sum, listing) => sum + (listing.total_sales || 0),
     0,
   );
   const totalEarnings = listings.reduce((sum, listing) => {
     // Calculate estimated earnings (70% of sales)
     const earnings =
-      (listing.price_cents * (listing.total_sales ?? 0) * 0.7) / 100;
+      (listing.price_cents * (listing.total_sales || 0) * 0.7) / 100;
     return sum + earnings;
   }, 0);
 
@@ -52,15 +135,12 @@ export default async function MyListingsPage() {
           title="My Listings"
           subtitle="Manage your marketplace components and track sales"
         />
-        <ListingForm
-          categories={categories}
-          trigger={
-            <Button>
-              <Plus className="mr-2 size-4" />
-              Create Listing
-            </Button>
-          }
-        />
+        <Button size="lg" asChild>
+          <Link href="/marketplace/create">
+            <Plus className="mr-2 size-4" />
+            Create New Listing
+          </Link>
+        </Button>
       </div>
 
       {/* Stats Cards */}
@@ -137,57 +217,28 @@ export default async function MyListingsPage() {
 
       {listings.length === 0 ? (
         <Card className="p-8 text-center">
-          <CardContent className="space-y-4">
-            <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-muted">
-              <Plus className="size-8 text-muted-foreground" />
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold">No listings yet</h3>
-              <p className="text-muted-foreground">
-                Start selling your components on the marketplace to earn money
-                from your creations.
-              </p>
-            </div>
-            <ListingForm
-              categories={categories}
-              trigger={
-                <Button>
-                  <Plus className="mr-2 size-4" />
-                  Create Your First Listing
-                </Button>
-              }
-            />
-          </CardContent>
+          <CardTitle className="mb-4">No Listings Yet</CardTitle>
+          <p className="mb-6 text-muted-foreground">
+            You haven&apos;t created any marketplace listings yet. Start selling
+            your components to earn money!
+          </p>
+          <Button asChild>
+            <Link href="/marketplace/create">
+              <Plus className="mr-2 size-4" />
+              Create Your First Listing
+            </Link>
+          </Button>
         </Card>
       ) : (
-        <div className="space-y-6">
-          {/* Active Listings */}
-          {activeListings.length > 0 && (
-            <div className="space-y-4">
-              <h2 className="text-xl font-semibold">
-                Active Listings ({activeListings.length})
-              </h2>
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {activeListings.map((listing) => (
-                  <ListingCard key={listing.id} listing={listing} />
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Inactive Listings */}
-          {inactiveListings.length > 0 && (
-            <div className="space-y-4">
-              <h2 className="text-xl font-semibold text-muted-foreground">
-                Inactive Listings ({inactiveListings.length})
-              </h2>
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {inactiveListings.map((listing) => (
-                  <ListingCard key={listing.id} listing={listing} />
-                ))}
-              </div>
-            </div>
-          )}
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {listings.map((listing) => (
+            <ListingCard
+              key={listing.id}
+              listing={listing}
+              onDeactivate={handleDeactivateListing}
+              onReactivate={handleReactivateListing}
+            />
+          ))}
         </div>
       )}
     </Container>
@@ -196,8 +247,12 @@ export default async function MyListingsPage() {
 
 function ListingCard({
   listing,
+  onDeactivate,
+  onReactivate,
 }: {
-  listing: Awaited<ReturnType<typeof getUserMarketplaceListings>>[0];
+  listing: ListingData;
+  onDeactivate: (id: string) => void;
+  onReactivate: (id: string) => void;
 }) {
   const priceFormatted = new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -205,68 +260,117 @@ function ListingCard({
   }).format(listing.price_cents / 100);
 
   const estimatedEarnings =
-    (listing.price_cents * (listing.total_sales ?? 0) * 0.7) / 100;
+    (listing.price_cents * (listing.total_sales || 0) * 0.7) / 100;
+
+  const FrameworkIcon =
+    listing.chat.framework === Framework.REACT
+      ? SiReact
+      : listing.chat.framework === Framework.VUE
+        ? SiVuedotjs
+        : SiHtml5;
 
   return (
-    <Card
-      className={`transition-opacity ${!listing.is_active ? "opacity-60" : ""}`}
+    <div
+      className={cn(
+        "w-full bg-center overflow-hidden relative card rounded-md mx-auto transition-opacity",
+        !listing.is_active ? "opacity-60" : "bg-secondary",
+      )}
     >
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
-          <Badge variant={listing.is_active ? "default" : "secondary"}>
-            {listing.category.name}
-          </Badge>
-          <Badge variant="outline" className="font-mono text-xs">
-            {listing.chat.framework?.toUpperCase()}
-          </Badge>
-        </div>
-        <CardTitle className="text-base leading-tight">
-          {listing.title}
-        </CardTitle>
-        <CardDescription className="line-clamp-2">
-          {listing.description}
-        </CardDescription>
-      </CardHeader>
-
-      <CardContent className="space-y-4">
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-muted-foreground">Price:</span>
-          <span className="font-semibold">{priceFormatted}</span>
-        </div>
-
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-muted-foreground">Sales:</span>
-          <span className="font-semibold">{listing.total_sales}</span>
-        </div>
-
-        {listing.total_sales && listing.total_sales > 0 && (
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">Earnings:</span>
-            <span className="font-semibold text-green-600">
-              ${estimatedEarnings.toFixed(2)}
-            </span>
+      {/* Image */}
+      <Link href={`/marketplace/${listing.id}`}>
+        <div
+          className="group relative aspect-video w-full bg-cover bg-center bg-no-repeat"
+          style={{
+            backgroundImage: `url(${
+              listing.screenshot || "https://www.coderocket.app/placeholder.svg"
+            })`,
+          }}
+        >
+          <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-all duration-300 ease-in-out group-hover:opacity-100">
+            <Eye className="size-8 translate-y-4 text-white transition-transform duration-300 ease-in-out group-hover:translate-y-0" />
           </div>
-        )}
 
-        <div className="text-xs text-muted-foreground">
-          Listed {getRelativeDate(listing.created_at)}
+          {/* Price badge */}
+          <div className="absolute right-3 top-3">
+            <Badge className="bg-green-600 text-white shadow-sm">
+              {priceFormatted}
+            </Badge>
+          </div>
+
+          {/* Status badge */}
+          <div className="absolute left-3 top-3">
+            <Badge variant={listing.is_active ? "default" : "secondary"}>
+              {listing.is_active ? "Active" : "Inactive"}
+            </Badge>
+          </div>
+        </div>
+      </Link>
+
+      {/* Content */}
+      <div className="flex h-44 flex-col justify-between p-4">
+        {/* Title and Category */}
+        <div className="flex flex-col gap-0.5">
+          <Link href={`/marketplace/${listing.id}`}>
+            <h1 className="line-clamp-2 max-w-full whitespace-pre-wrap text-sm font-medium text-foreground hover:text-foreground/80">
+              {listing.title}
+            </h1>
+          </Link>
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <span>{listing.category.name}</span>
+            <span className="text-muted-foreground/60">•</span>
+            <span>{getRelativeDate(listing.created_at)}</span>
+          </div>
+          {(listing.total_sales || 0) > 0 && (
+            <div className="mt-1 text-xs text-green-600">
+              ${estimatedEarnings.toFixed(2)} earned
+            </div>
+          )}
         </div>
 
-        <div className="flex items-center gap-2 pt-2">
-          <Button size="sm" variant="outline" asChild className="flex-1">
-            <Link href={`/marketplace/${listing.id}`}>
-              <Eye className="mr-1 size-3" />
-              View
-            </Link>
-          </Button>
-          <Button size="sm" variant="outline" asChild className="flex-1">
-            <Link href={`/components/${listing.chat.slug}`}>
-              <Edit className="mr-1 size-3" />
-              Component
-            </Link>
-          </Button>
+        {/* Framework Badge and Actions */}
+        <div className="mt-5 flex items-center justify-between">
+          <Badge className="hover:bg-primary">
+            <FrameworkIcon className="mr-1 size-3" />
+            <span className="first-letter:uppercase">
+              {listing.chat.framework}
+            </span>
+          </Badge>
+
+          <div className="flex items-center gap-1">
+            <Button size="sm" variant="outline" asChild>
+              <Link href={`/marketplace/${listing.id}`}>
+                <Eye className="size-3" />
+              </Link>
+            </Button>
+            <Button size="sm" variant="outline" asChild>
+              <Link href={`/marketplace/${listing.id}/manage`}>
+                <Edit className="size-3" />
+              </Link>
+            </Button>
+            {listing.is_active ? (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => onDeactivate(listing.id)}
+                className="text-orange-600 hover:bg-orange-50 hover:text-orange-700"
+                title="Hide from marketplace"
+              >
+                <EyeOff className="size-3" />
+              </Button>
+            ) : (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => onReactivate(listing.id)}
+                className="text-green-600 hover:bg-green-50 hover:text-green-700"
+                title="Show in marketplace"
+              >
+                <Play className="size-3" />
+              </Button>
+            )}
+          </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

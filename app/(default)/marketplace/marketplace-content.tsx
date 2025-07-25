@@ -1,15 +1,6 @@
 "use client";
 
-import {
-  Search,
-  Filter,
-  Grid,
-  List,
-  DollarSign,
-  Heart,
-  ShoppingCart,
-  Star,
-} from "lucide-react";
+import { Search, Grid, List, ShoppingCart } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useMemo } from "react";
@@ -31,16 +22,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { UserWidget } from "@/components/user-widget";
 import { avatarApi } from "@/utils/config";
 import { getRelativeDate } from "@/utils/date";
 
-import {
-  MarketplaceCategory,
-  MarketplaceListing,
-  getMarketplaceListings,
-} from "./actions";
+import { MarketplaceCategory, MarketplaceListing } from "./actions";
 
 interface MarketplaceContentProps {
   categories: MarketplaceCategory[];
@@ -60,21 +45,12 @@ export function MarketplaceContent({
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const [listings, setListings] =
-    useState<MarketplaceListing[]>(initialListings);
+  const [listings] = useState<MarketplaceListing[]>(initialListings);
   const [searchQuery, setSearchQuery] = useState(initialSearchQuery);
   const [sortBy, setSortBy] = useState<
     "recent" | "popular" | "price_low" | "price_high"
   >(initialSortBy);
-  const [isLoading, setIsLoading] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-
-  const formatPrice = (cents: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(cents / 100);
-  };
 
   const updateURL = (params: Record<string, string | undefined>) => {
     const newSearchParams = new URLSearchParams(searchParams);
@@ -286,7 +262,7 @@ function MarketplaceCard({ listing }: { listing: MarketplaceListing }) {
 
       <CardFooter className="flex items-center justify-between border-t pt-3">
         <div className="flex items-center gap-4 text-sm text-muted-foreground">
-          {listing.total_sales > 0 && (
+          {listing.total_sales && listing.total_sales > 0 && (
             <div className="flex items-center gap-1">
               <ShoppingCart className="size-3" />
               <span>{listing.total_sales}</span>
@@ -349,7 +325,7 @@ function MarketplaceListItem({ listing }: { listing: MarketplaceListing }) {
                 <span>{listing.seller.full_name || "Anonymous"}</span>
               </div>
 
-              {listing.total_sales > 0 && (
+              {listing.total_sales && listing.total_sales > 0 && (
                 <div className="flex items-center gap-1">
                   <ShoppingCart className="size-3" />
                   <span>{listing.total_sales} sales</span>

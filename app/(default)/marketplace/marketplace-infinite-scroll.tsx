@@ -10,6 +10,7 @@ import {
   SearchX,
   X,
 } from "lucide-react";
+import Link from "next/link";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
 
@@ -30,7 +31,6 @@ import {
   type MarketplaceListing,
   type MarketplaceCategory,
 } from "./actions";
-import { ListingForm } from "./listing-form";
 import { MarketplaceCard } from "./marketplace-card";
 
 const PAGE_SIZE = 20;
@@ -136,8 +136,8 @@ export function MarketplaceInfiniteScroll({
           limit: PAGE_SIZE,
           offset: pageToFetch * PAGE_SIZE,
           categoryId,
-          searchQuery: search,
-          sortBy: "recent",
+          search: search,
+          sortBy: "newest",
         });
 
       if (reset) {
@@ -164,7 +164,7 @@ export function MarketplaceInfiniteScroll({
       limit: 4,
       offset: 0,
       categoryId,
-      searchQuery: search,
+      search: search,
       sortBy: "popular",
     });
     setPopularListings(data);
@@ -360,15 +360,12 @@ export function MarketplaceInfiniteScroll({
           </DropdownMenu>
 
           {/* Create Listing Button */}
-          <ListingForm
-            categories={categories}
-            trigger={
-              <Button size="lg" className="p-[22px]">
-                <Plus className="mr-2 size-4" />
-                Create Listing
-              </Button>
-            }
-          />
+          <Button asChild>
+            <Link href="/marketplace/create">
+              <Plus className="mr-2 size-4" />
+              Create Listing
+            </Link>
+          </Button>
         </div>
       </div>
 
@@ -395,19 +392,16 @@ export function MarketplaceInfiniteScroll({
               <RefreshCcw className="size-4" />
               <span>Clear search</span>
             </Button>
-            <ListingForm
-              categories={categories}
-              trigger={
-                <Button>
-                  <Plus className="mr-2 size-4" />
-                  Create Listing
-                </Button>
-              }
-            />
+            <Button asChild>
+              <Link href="/marketplace/create">
+                <Plus className="mr-2 size-4" />
+                Create Listing
+              </Link>
+            </Button>
           </div>
         </div>
       ) : (
-        <div className="mt-6 grid grid-cols-1 gap-x-4 gap-y-10 pb-5 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+        <div className="mt-6 grid grid-cols-1 gap-4 pb-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {showSkeleton
             ? // Loading skeleton
               [...Array(12)].map((_, i) => (

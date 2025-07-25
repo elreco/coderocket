@@ -177,10 +177,4 @@ Planned documentation areas:
 ## 📞 Support
 
 For documentation issues or suggestions:
-- Create an issue in the repository
-- Contact support@coderocket.app
 - Join our Discord community
-
----
-
-Built with ❤️ using [Mintlify](https://mintlify.com)

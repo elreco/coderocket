@@ -1,3 +1,4 @@
+import { SiHtml5, SiReact, SiVuedotjs } from "@icons-pack/react-simple-icons";
 import {
   ArrowLeft,
   Calendar,
@@ -24,7 +25,9 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { avatarApi } from "@/utils/config";
+import { Framework } from "@/utils/config";
 import { getRelativeDate } from "@/utils/date";
+import { createClient } from "@/utils/supabase/server";
 
 import { getMarketplaceListing } from "../actions";
 
@@ -68,10 +71,22 @@ export default async function MarketplaceListingPage({
     notFound();
   }
 
+  // Check if current user is the seller
+  const supabase = await createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  const isOwnListing = userData.user?.id === listing.seller_id;
+
   const priceFormatted = new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: listing.currency,
   }).format(listing.price_cents / 100);
+
+  const FrameworkIcon =
+    listing.chat.framework === Framework.REACT
+      ? SiReact
+      : listing.chat.framework === Framework.VUE
+        ? SiVuedotjs
+        : SiHtml5;
 
   return (
     <Container className="pr-2 sm:pr-11">
@@ -85,7 +100,7 @@ export default async function MarketplaceListingPage({
         </Button>
       </div>
 
-      <div className="grid gap-8 lg:grid-cols-3">
+      <div className="grid gap-8 pb-5 lg:grid-cols-3">
         {/* Main Content */}
         <div className="space-y-6 lg:col-span-2">
           {/* Component Preview Image */}
@@ -106,10 +121,13 @@ export default async function MarketplaceListingPage({
           <div className="space-y-4">
             <div className="flex flex-wrap items-center gap-2">
               <Badge variant="secondary">{listing.category.name}</Badge>
-              <Badge variant="outline" className="font-mono">
-                {listing.chat.framework?.toUpperCase()}
+              <Badge className="hover:bg-primary">
+                <FrameworkIcon className="mr-1 size-3" />
+                <span className="first-letter:uppercase">
+                  {listing.chat.framework}
+                </span>
               </Badge>
-              {listing.total_sales > 0 && (
+              {(listing.total_sales || 0) > 0 && (
                 <Badge variant="outline">
                   {listing.total_sales} sale
                   {listing.total_sales !== 1 ? "s" : ""}
@@ -178,16 +196,19 @@ export default async function MarketplaceListingPage({
               <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="flex items-center gap-2 text-base">
-                    <ExternalLink className="size-4" />
+                    <FrameworkIcon className="size-4" />
                     Framework
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="font-mono font-medium">
-                    {listing.chat.framework?.toUpperCase()}
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <FrameworkIcon className="size-5" />
+                    <span className="font-medium first-letter:uppercase">
+                      {listing.chat.framework}
+                    </span>
+                  </div>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    Version {listing.version}
+                    AI-generated component
                   </p>
                 </CardContent>
               </Card>
@@ -241,9 +262,41 @@ export default async function MarketplaceListingPage({
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Suspense fallback={<Button disabled>Loading...</Button>}>
-                <PurchaseButton listing={listing} />
-              </Suspense>
+              {isOwnListing ? (
+                /* User's own listing */
+                <div className="space-y-3">
+                  <div className="rounded-lg bg-muted/50 p-4 text-center">
+                    <p className="text-sm font-medium text-muted-foreground">
+                      This is your listing
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      You cannot purchase your own component
+                    </p>
+                  </div>
+                  <Button className="w-full" asChild>
+                    <Link href={`/components/${listing.chat.slug}`}>
+                      View Component
+                    </Link>
+                  </Button>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button variant="outline" asChild>
+                      <Link href="/account/marketplace/listings">
+                        Manage Listings
+                      </Link>
+                    </Button>
+                    <Button variant="outline" asChild>
+                      <Link href={`/marketplace/${listing.id}/manage`}>
+                        Edit Listing
+                      </Link>
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                /* Other user's listing */
+                <Suspense fallback={<Button disabled>Loading...</Button>}>
+                  <PurchaseButton listing={listing} />
+                </Suspense>
+              )}
 
               <div className="space-y-2 text-sm text-muted-foreground">
                 <div className="flex items-center gap-2">
@@ -353,7 +406,11 @@ export default async function MarketplaceListingPage({
                   className="h-auto p-0"
                   asChild
                 >
-                  <Link href="mailto:support@coderocket.app">
+                  <Link
+                    href="https://discord.gg/t7dQgcYJ5t"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     Contact Support →
                   </Link>
                 </Button>

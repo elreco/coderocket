@@ -81,18 +81,17 @@ export async function getMarketplaceListings(params: {
   limit?: number;
   offset?: number;
   categoryId?: number;
-  searchQuery?: string;
-  sortBy?: "recent" | "popular" | "price_low" | "price_high";
+  search?: string;
+  sortBy?: "newest" | "oldest" | "price_low" | "price_high" | "popular";
 }): Promise<{ listings: MarketplaceListing[]; hasMore: boolean }> {
+  const supabase = await createClient();
   const {
-    limit = 20,
+    limit = 12,
     offset = 0,
     categoryId,
-    searchQuery,
-    sortBy = "recent",
+    search,
+    sortBy = "newest",
   } = params;
-
-  const supabase = await createClient();
 
   let query = supabase
     .from("marketplace_listings")
@@ -110,16 +109,14 @@ export async function getMarketplaceListings(params: {
     query = query.eq("category_id", categoryId);
   }
 
-  if (searchQuery && searchQuery.trim()) {
-    query = query.or(
-      `title.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`,
-    );
+  if (search) {
+    query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%`);
   }
 
   // Apply sorting
   switch (sortBy) {
-    case "popular":
-      query = query.order("total_sales", { ascending: false });
+    case "oldest":
+      query = query.order("created_at", { ascending: true });
       break;
     case "price_low":
       query = query.order("price_cents", { ascending: true });
@@ -127,12 +124,19 @@ export async function getMarketplaceListings(params: {
     case "price_high":
       query = query.order("price_cents", { ascending: false });
       break;
-    case "recent":
+    case "popular":
+      query = query.order("total_sales", {
+        ascending: false,
+        nullsFirst: false,
+      });
+      break;
+    case "newest":
     default:
       query = query.order("created_at", { ascending: false });
       break;
   }
 
+  // Add one extra to check if there are more results
   const { data, error } = await query.range(offset, offset + limit);
 
   if (error) {
@@ -194,6 +198,22 @@ export async function createMarketplaceListing(params: {
     return {
       success: false,
       error: "Premium subscription required to list components",
+    };
+  }
+
+  // Check if this component already has an active listing
+  const { data: existingListing } = await supabase
+    .from("marketplace_listings")
+    .select("id")
+    .eq("chat_id", params.chatId)
+    .eq("seller_id", userData.user.id)
+    .eq("is_active", true)
+    .single();
+
+  if (existingListing) {
+    return {
+      success: false,
+      error: "This component is already listed on the marketplace",
     };
   }
 
@@ -387,35 +407,460 @@ export async function getUserPrivateComponents() {
   const { data: userData } = await supabase.auth.getUser();
   if (!userData.user) return [];
 
-  // Get private components
+  // First get all private chats for the user
   const { data: chats, error: chatsError } = await supabase
     .from("chats")
-    .select("id, title, slug, framework, created_at")
+    .select(
+      `
+      id,
+      title,
+      slug,
+      framework,
+      created_at,
+      messages!inner(version, created_at)
+    `,
+    )
     .eq("user_id", userData.user.id)
     .eq("is_private", true)
+    .eq("messages.role", "assistant")
     .order("created_at", { ascending: false });
 
-  if (chatsError || !chats) {
-    console.error("Error fetching private components:", chatsError);
+  if (chatsError) {
+    console.error("Error fetching private chats:", chatsError);
     return [];
   }
 
-  // Get versions for each chat
-  const componentsWithVersions = await Promise.all(
-    chats.map(async (chat) => {
-      const { data: messages } = await supabase
-        .from("messages")
-        .select("version, created_at")
-        .eq("chat_id", chat.id)
-        .eq("role", "assistant")
-        .order("version", { ascending: false });
+  if (!chats) return [];
 
-      return {
-        ...chat,
-        versions: messages || [],
-      };
-    }),
+  // Get all active marketplace listings to exclude components already listed
+  const { data: activeListings } = await supabase
+    .from("marketplace_listings")
+    .select("chat_id")
+    .eq("seller_id", userData.user.id)
+    .eq("is_active", true);
+
+  const listedChatIds = new Set(
+    activeListings?.map((listing) => listing.chat_id) || [],
   );
 
-  return componentsWithVersions;
+  // Filter out chats that already have active listings and format the response
+  const availableChats = chats
+    .filter((chat) => !listedChatIds.has(chat.id))
+    .map((chat) => ({
+      id: chat.id,
+      title: chat.title,
+      slug: chat.slug,
+      framework: chat.framework,
+      created_at: chat.created_at || "",
+      versions: chat.messages
+        .map((msg) => ({
+          version: msg.version,
+          created_at: msg.created_at,
+        }))
+        .sort((a, b) => b.version - a.version),
+    }));
+
+  return availableChats;
+}
+
+export async function getUserPrivateComponentsPaginated(params: {
+  limit?: number;
+  offset?: number;
+  search?: string;
+}): Promise<{
+  components: Array<{
+    id: string;
+    title: string | null;
+    slug: string | null;
+    framework: string | null;
+    created_at: string;
+    latest_version: number;
+    total_versions: number;
+    screenshot?: string | null;
+  }>;
+  hasMore: boolean;
+}> {
+  const supabase = await createClient();
+  const { limit = 20, offset = 0, search = "" } = params;
+
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) return { components: [], hasMore: false };
+
+  // Build the query for private chats
+  let query = supabase
+    .from("chats")
+    .select(
+      `
+      id,
+      title,
+      slug,
+      framework,
+      created_at
+    `,
+    )
+    .eq("user_id", userData.user.id)
+    .eq("is_private", true);
+
+  // Add search filter if provided
+  if (search.trim()) {
+    query = query.or(`title.ilike.%${search}%,framework.ilike.%${search}%`);
+  }
+
+  // Add pagination and ordering
+  const { data: chats, error: chatsError } = await query
+    .order("created_at", { ascending: false })
+    .range(offset, offset + limit);
+
+  if (chatsError) {
+    console.error("Error fetching private chats:", chatsError);
+    return { components: [], hasMore: false };
+  }
+
+  if (!chats || chats.length === 0) {
+    return { components: [], hasMore: false };
+  }
+
+  // Get all active marketplace listings to exclude components already listed
+  const { data: activeListings } = await supabase
+    .from("marketplace_listings")
+    .select("chat_id")
+    .eq("seller_id", userData.user.id)
+    .eq("is_active", true);
+
+  const listedChatIds = new Set(
+    activeListings?.map((listing) => listing.chat_id) || [],
+  );
+
+  // Filter out chats that already have active listings
+  const availableChats = chats.filter((chat) => !listedChatIds.has(chat.id));
+
+  if (availableChats.length === 0) {
+    return { components: [], hasMore: false };
+  }
+
+  // Get version information for these chats in a separate optimized query
+  const { data: versionData } = await supabase
+    .from("messages")
+    .select("chat_id, version")
+    .in(
+      "chat_id",
+      availableChats.map((chat) => chat.id),
+    )
+    .eq("role", "assistant");
+
+  // Calculate version stats for each chat
+  const versionStats =
+    versionData?.reduce(
+      (acc, msg) => {
+        if (!acc[msg.chat_id]) {
+          acc[msg.chat_id] = { versions: [], max: 0, count: 0 };
+        }
+        acc[msg.chat_id].versions.push(msg.version);
+        acc[msg.chat_id].max = Math.max(acc[msg.chat_id].max, msg.version);
+        acc[msg.chat_id].count++;
+        return acc;
+      },
+      {} as Record<string, { versions: number[]; max: number; count: number }>,
+    ) || {};
+
+  // Get screenshots for the latest version of each component
+  const { data: screenshots } = await supabase
+    .from("messages")
+    .select("chat_id, screenshot")
+    .in(
+      "chat_id",
+      availableChats.map((chat) => chat.id),
+    )
+    .in(
+      "version",
+      availableChats.map((chat) => versionStats[chat.id]?.max || 0),
+    )
+    .eq("role", "assistant");
+
+  const screenshotMap =
+    screenshots?.reduce(
+      (acc, msg) => {
+        acc[msg.chat_id] = msg.screenshot;
+        return acc;
+      },
+      {} as Record<string, string | null>,
+    ) || {};
+
+  // Format the response
+  const components = availableChats.map((chat) => ({
+    id: chat.id,
+    title: chat.title,
+    slug: chat.slug,
+    framework: chat.framework,
+    created_at: chat.created_at || "",
+    latest_version: versionStats[chat.id]?.max || 0,
+    total_versions: versionStats[chat.id]?.count || 0,
+    screenshot: screenshotMap[chat.id] || null,
+  }));
+
+  return {
+    components,
+    hasMore: chats.length === limit + 1,
+  };
+}
+
+export async function getComponentVersions(chatId: string): Promise<
+  Array<{
+    version: number;
+    created_at: string;
+  }>
+> {
+  const supabase = await createClient();
+
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) return [];
+
+  // Verify the user owns this chat
+  const { data: chatData } = await supabase
+    .from("chats")
+    .select("id")
+    .eq("id", chatId)
+    .eq("user_id", userData.user.id)
+    .eq("is_private", true)
+    .single();
+
+  if (!chatData) return [];
+
+  // Get versions for this specific chat
+  const { data: versions } = await supabase
+    .from("messages")
+    .select("version, created_at")
+    .eq("chat_id", chatId)
+    .eq("role", "assistant")
+    .order("version", { ascending: false });
+
+  return versions || [];
+}
+
+export async function deactivateMarketplaceListing(listingId: string): Promise<{
+  success: boolean;
+  error?: string;
+}> {
+  const supabase = await createClient();
+
+  // Get current user
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) {
+    return {
+      success: false,
+      error: "You must be logged in to perform this action",
+    };
+  }
+
+  try {
+    // Verify the user owns this listing
+    const { data: listing, error: fetchError } = await supabase
+      .from("marketplace_listings")
+      .select("id, seller_id, is_active")
+      .eq("id", listingId)
+      .single();
+
+    if (fetchError || !listing) {
+      return {
+        success: false,
+        error: "Listing not found",
+      };
+    }
+
+    if (listing.seller_id !== userData.user.id) {
+      return {
+        success: false,
+        error: "You can only deactivate your own listings",
+      };
+    }
+
+    if (!listing.is_active) {
+      return {
+        success: false,
+        error: "Listing is already inactive",
+      };
+    }
+
+    // Deactivate the listing
+    const { error: updateError } = await supabase
+      .from("marketplace_listings")
+      .update({
+        is_active: false,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", listingId);
+
+    if (updateError) {
+      console.error("Error deactivating listing:", updateError);
+      return {
+        success: false,
+        error: "Failed to deactivate listing",
+      };
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error in deactivateMarketplaceListing:", error);
+    return {
+      success: false,
+      error: "An unexpected error occurred",
+    };
+  }
+}
+
+export async function reactivateMarketplaceListing(listingId: string): Promise<{
+  success: boolean;
+  error?: string;
+}> {
+  const supabase = await createClient();
+
+  // Get current user
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) {
+    return {
+      success: false,
+      error: "You must be logged in to perform this action",
+    };
+  }
+
+  try {
+    // Verify the user owns this listing
+    const { data: listing, error: fetchError } = await supabase
+      .from("marketplace_listings")
+      .select("id, seller_id, is_active")
+      .eq("id", listingId)
+      .single();
+
+    if (fetchError || !listing) {
+      return {
+        success: false,
+        error: "Listing not found",
+      };
+    }
+
+    if (listing.seller_id !== userData.user.id) {
+      return {
+        success: false,
+        error: "You can only reactivate your own listings",
+      };
+    }
+
+    if (listing.is_active) {
+      return {
+        success: false,
+        error: "Listing is already active",
+      };
+    }
+
+    // Verify user still has premium subscription (skip for now)
+    // TODO: Add proper subscription check when schema is updated
+
+    // Reactivate the listing
+    const { error: updateError } = await supabase
+      .from("marketplace_listings")
+      .update({
+        is_active: true,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", listingId);
+
+    if (updateError) {
+      console.error("Error reactivating listing:", updateError);
+      return {
+        success: false,
+        error: "Failed to reactivate listing",
+      };
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error in reactivateMarketplaceListing:", error);
+    return {
+      success: false,
+      error: "An unexpected error occurred",
+    };
+  }
+}
+
+export async function updateMarketplaceListing(params: {
+  listingId: string;
+  title: string;
+  description: string;
+  priceCents: number;
+}): Promise<{ success: boolean; error?: string }> {
+  const supabase = await createClient();
+
+  // Get current user
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) {
+    return {
+      success: false,
+      error: "You must be logged in to perform this action",
+    };
+  }
+
+  try {
+    // Verify the user owns this listing
+    const { data: listing, error: fetchError } = await supabase
+      .from("marketplace_listings")
+      .select("id, seller_id")
+      .eq("id", params.listingId)
+      .single();
+
+    if (fetchError || !listing) {
+      return {
+        success: false,
+        error: "Listing not found",
+      };
+    }
+
+    if (listing.seller_id !== userData.user.id) {
+      return {
+        success: false,
+        error: "You can only edit your own listings",
+      };
+    }
+
+    // Validate inputs
+    if (!params.title.trim() || !params.description.trim()) {
+      return {
+        success: false,
+        error: "Title and description are required",
+      };
+    }
+
+    if (params.priceCents <= 0) {
+      return {
+        success: false,
+        error: "Price must be greater than $0",
+      };
+    }
+
+    // Update the listing
+    const { error: updateError } = await supabase
+      .from("marketplace_listings")
+      .update({
+        title: params.title.trim(),
+        description: params.description.trim(),
+        price_cents: params.priceCents,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", params.listingId);
+
+    if (updateError) {
+      console.error("Error updating listing:", updateError);
+      return {
+        success: false,
+        error: "Failed to update listing",
+      };
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error in updateMarketplaceListing:", error);
+    return {
+      success: false,
+      error: "An unexpected error occurred",
+    };
+  }
 }

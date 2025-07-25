@@ -106,7 +106,7 @@ export async function handleMarketplacePurchase(
     }
 
     // Record the purchase in the database
-    const { error: purchaseError } = await supabase
+    const { error: purchaseError, data: purchaseData } = await supabase
       .from("marketplace_purchases")
       .insert({
         buyer_id,
@@ -118,9 +118,11 @@ export async function handleMarketplacePurchase(
         currency: "USD",
         platform_commission_cents: parseInt(platform_commission_cents),
         seller_earning_cents: parseInt(seller_earning_cents),
-      });
+      })
+      .select("id")
+      .single();
 
-    if (purchaseError) {
+    if (purchaseError || !purchaseData) {
       throw new Error("Failed to record purchase");
     }
 
@@ -128,6 +130,7 @@ export async function handleMarketplacePurchase(
     const { error: earningsError } = await supabase
       .from("marketplace_earnings")
       .insert({
+        purchase_id: purchaseData?.id,
         seller_id,
         amount_cents: parseInt(seller_earning_cents),
         currency: "USD",

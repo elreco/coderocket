@@ -20,6 +20,10 @@ export function PurchaseButton({ listing }: PurchaseButtonProps) {
     setIsLoading(true);
 
     try {
+      // Calculate commission (30% to platform, 70% to seller)
+      const platformCommissionCents = Math.round(listing.price_cents * 0.3);
+      const sellerEarningCents = listing.price_cents - platformCommissionCents;
+
       const response = await fetch("/api/marketplace/create-checkout-session", {
         method: "POST",
         headers: {
@@ -27,6 +31,14 @@ export function PurchaseButton({ listing }: PurchaseButtonProps) {
         },
         body: JSON.stringify({
           listingId: listing.id,
+          sellerId: listing.seller_id,
+          chatId: listing.chat_id,
+          version: listing.version,
+          priceCents: listing.price_cents,
+          platformCommissionCents,
+          sellerEarningCents,
+          productName: listing.title,
+          productDescription: listing.description,
         }),
       });
 
@@ -37,7 +49,7 @@ export function PurchaseButton({ listing }: PurchaseButtonProps) {
       }
 
       // Redirect to Stripe Checkout
-      window.location.href = data.url;
+      window.location.href = data.sessionUrl;
     } catch (error) {
       console.error("Purchase error:", error);
       toast({

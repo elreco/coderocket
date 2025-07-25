@@ -5,12 +5,8 @@ import {
   BookOpen,
   CreditCard,
   Globe,
-  Heart,
   Rocket,
-  ShoppingBag,
-  ShoppingCart,
   SquareTerminal,
-  SquareUserRoundIcon,
   Store,
 } from "lucide-react";
 import Link from "next/link";
@@ -54,28 +50,6 @@ const data = {
       icon: Store,
     },
   ],
-  myComponents: [
-    {
-      title: "My Components",
-      url: "/account/components",
-      icon: SquareUserRoundIcon,
-    },
-    {
-      title: "Liked Components",
-      url: "/account/liked-components",
-      icon: Heart,
-    },
-    {
-      title: "My Listings",
-      url: "/account/marketplace/listings",
-      icon: ShoppingBag,
-    },
-    {
-      title: "My Purchases",
-      url: "/account/marketplace/purchases",
-      icon: ShoppingCart,
-    },
-  ],
   community: [
     {
       title: "Discord",
@@ -107,11 +81,6 @@ const data = {
     {
       title: "Documentation",
       url: "https://docs.coderocket.app",
-      icon: BookOpen,
-    },
-    {
-      title: "Marketplace Guide",
-      url: "https://docs.coderocket.app/marketplace/overview",
       icon: BookOpen,
     },
   ],
@@ -173,12 +142,6 @@ export function AppSidebar({
       ...item,
       isActive: pathname === item.url,
     })),
-    ...(user
-      ? data.myComponents.map((item) => ({
-          ...item,
-          isActive: pathname === item.url,
-        }))
-      : []),
   ];
 
   const communityItems = data.community.map((item) => ({

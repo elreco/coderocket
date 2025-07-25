@@ -151,4 +151,3 @@ repository/
 
 For any questions or issues:
 - Complete documentation: [docs/github-integration.md](./github-integration.md)
-- Support contact: support@coderocket.app
