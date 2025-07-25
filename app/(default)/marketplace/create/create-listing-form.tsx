@@ -169,12 +169,34 @@ export function CreateListingForm({ categories }: CreateListingFormProps) {
       const versions = await getComponentVersions(chatId);
       setComponentVersions(versions);
 
-      // Set the latest version as default
+      // Set the latest version as default and update screenshot
       if (versions.length > 0) {
+        const latestVersion = versions[0].version;
         setFormData((prev) => ({
           ...prev,
-          version: versions[0].version,
+          version: latestVersion,
         }));
+
+        // Update the screenshot for the latest version
+        try {
+          const supabase = createClient();
+          const { data: message } = await supabase
+            .from("messages")
+            .select("screenshot")
+            .eq("chat_id", chatId)
+            .eq("version", latestVersion)
+            .eq("role", "assistant")
+            .single();
+
+          setSelectedComponent((prev) =>
+            prev ? { ...prev, screenshot: message?.screenshot || null } : prev,
+          );
+        } catch (error) {
+          console.error(
+            "Error fetching screenshot for default version:",
+            error,
+          );
+        }
       }
     } catch (error) {
       console.error("Error loading component versions:", error);
@@ -553,21 +575,22 @@ export function CreateListingForm({ categories }: CreateListingFormProps) {
                 {/* Version Selection */}
                 <div className="space-y-2">
                   <Label htmlFor="version">Version *</Label>
-                  <Select
-                    onValueChange={handleVersionSelect}
-                    value={formData.version.toString()}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select version to list" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {isLoadingVersions ? (
-                        <div className="flex items-center justify-center p-4">
-                          <Loader2 className="mr-2 size-4 animate-spin" />
-                          Loading versions...
-                        </div>
-                      ) : (
-                        componentVersions.map((version) => (
+                  {isLoadingVersions ? (
+                    <div className="flex items-center justify-center rounded-md border p-4">
+                      <Loader2 className="mr-2 size-4 animate-spin" />
+                      Loading versions...
+                    </div>
+                  ) : componentVersions.length > 0 ? (
+                    <Select
+                      key={`${selectedComponent.id}-${formData.version}`} // Force re-render when component or version changes
+                      onValueChange={handleVersionSelect}
+                      value={formData.version.toString()}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select version to list" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {componentVersions.map((version) => (
                           <SelectItem
                             key={version.version}
                             value={version.version.toString()}
@@ -575,10 +598,14 @@ export function CreateListingForm({ categories }: CreateListingFormProps) {
                             Version {version.version} (
                             {getRelativeDate(version.created_at)})
                           </SelectItem>
-                        ))
-                      )}
-                    </SelectContent>
-                  </Select>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <div className="flex items-center justify-center rounded-md border p-4 text-muted-foreground">
+                      No versions available
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>

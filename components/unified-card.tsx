@@ -97,7 +97,7 @@ export function UnifiedCard({
   const cardContent = (
     <div
       className={cn(
-        "w-full bg-center overflow-hidden relative card rounded-md mx-auto cursor-pointer transition-all duration-200 hover:scale-[1.02] hover:shadow-lg",
+        "w-full bg-center overflow-hidden relative card rounded-md mx-auto cursor-pointer transition-all duration-200 hover:shadow-lg",
         isReverse ? "bg-background" : "bg-secondary",
         data.isLiked && "border border-pink-500",
         className,

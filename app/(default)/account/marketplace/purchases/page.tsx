@@ -12,7 +12,7 @@ import { getUserMarketplacePurchases } from "@/app/(default)/marketplace/actions
 import { Container } from "@/components/container";
 import { PageTitle } from "@/components/page-title";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { UnifiedCard, UnifiedCardData } from "@/components/unified-card";
 import { Framework } from "@/utils/config";
 
@@ -196,7 +196,7 @@ function PurchaseCard({
   const cardData: UnifiedCardData = {
     id: purchase.id,
     title: purchase.listing.title,
-    imageUrl: purchase.listing.screenshot || undefined,
+    imageUrl: purchase.listing.preview_image_url || undefined,
     framework: (purchase.listing.chat.framework || Framework.HTML) as Framework,
     createdAt: purchase.created_at,
     author: {
