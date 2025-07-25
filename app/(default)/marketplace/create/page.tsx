@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { Container } from "@/components/container";
+import { PageTitle } from "@/components/page-title";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/utils/supabase/server";
 
@@ -43,14 +44,10 @@ export default async function CreateListingPage() {
         </Button>
       </div>
 
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">Create Listing</h1>
-        <p className="mt-2 text-muted-foreground">
-          List your private component on the marketplace and earn 70% from each
-          sale.
-        </p>
-      </div>
+      <PageTitle
+        title="Create Listing"
+        subtitle="List your private component on the marketplace and earn 70% from each sale."
+      />
 
       {/* Form */}
       <CreateListingForm categories={categories} />

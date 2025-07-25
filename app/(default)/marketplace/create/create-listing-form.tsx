@@ -31,6 +31,7 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { Framework } from "@/utils/config";
 import { getRelativeDate } from "@/utils/date";
+import { createClient } from "@/utils/supabase/client";
 
 import {
   MarketplaceCategory,
@@ -90,6 +91,7 @@ export function CreateListingForm({ categories }: CreateListingFormProps) {
     title: "",
     description: "",
     price: "",
+    demo_url: "",
   });
 
   // Debounced search function
@@ -219,12 +221,32 @@ export function CreateListingForm({ categories }: CreateListingFormProps) {
   };
 
   // Handle version selection
-  const handleVersionSelect = (version: string) => {
+  const handleVersionSelect = async (version: string) => {
     const versionNum = parseInt(version);
     setFormData((prev) => ({
       ...prev,
       version: versionNum,
     }));
+
+    // Update the screenshot for the selected version
+    if (selectedComponent) {
+      try {
+        const supabase = createClient();
+        const { data: message } = await supabase
+          .from("messages")
+          .select("screenshot")
+          .eq("chat_id", selectedComponent.id)
+          .eq("version", versionNum)
+          .eq("role", "assistant")
+          .single();
+
+        setSelectedComponent((prev) =>
+          prev ? { ...prev, screenshot: message?.screenshot || null } : prev,
+        );
+      } catch (error) {
+        console.error("Error fetching screenshot for version:", error);
+      }
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -264,6 +286,7 @@ export function CreateListingForm({ categories }: CreateListingFormProps) {
         title: formData.title,
         description: formData.description,
         priceCents: Math.round(price * 100),
+        demoUrl: formData.demo_url?.trim() || undefined,
       });
 
       if (result.success) {
@@ -300,7 +323,7 @@ export function CreateListingForm({ categories }: CreateListingFormProps) {
   );
 
   return (
-    <div className="max-w-6xl pb-8">
+    <div className="w-full pb-8">
       <form onSubmit={handleSubmit} className="space-y-8">
         {/* Component Selection Section */}
         <Card>
@@ -631,6 +654,27 @@ export function CreateListingForm({ categories }: CreateListingFormProps) {
                   />
                 </div>
 
+                {/* Demo URL */}
+                <div className="space-y-2">
+                  <Label htmlFor="demo_url">Demo URL (Optional)</Label>
+                  <Input
+                    id="demo_url"
+                    type="url"
+                    value={formData.demo_url || ""}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        demo_url: e.target.value,
+                      }))
+                    }
+                    placeholder="https://your-demo-site.com"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Provide a link to a live demo of your component to help
+                    buyers see it in action.
+                  </p>
+                </div>
+
                 {/* Price */}
                 <div className="space-y-2">
                   <Label htmlFor="price">Price (USD) *</Label>
@@ -708,11 +752,7 @@ export function CreateListingForm({ categories }: CreateListingFormProps) {
           >
             Cancel
           </Button>
-          <Button
-            type="submit"
-            disabled={isLoading || !selectedComponent}
-            size="lg"
-          >
+          <Button type="submit" disabled={isLoading || !selectedComponent}>
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 size-4 animate-spin" />

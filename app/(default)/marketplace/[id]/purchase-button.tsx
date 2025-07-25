@@ -68,12 +68,7 @@ export function PurchaseButton({ listing }: PurchaseButtonProps) {
   const priceFormatted = `$${(listing.price_cents / 100).toFixed(2)}`;
 
   return (
-    <Button
-      onClick={handlePurchase}
-      disabled={isLoading}
-      className="w-full"
-      size="lg"
-    >
+    <Button onClick={handlePurchase} disabled={isLoading} className="w-full">
       {isLoading ? (
         <div className="flex items-center gap-2">
           <Loader className="size-4 animate-spin" />

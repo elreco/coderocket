@@ -1,7 +1,7 @@
 "use client";
 
 import { SiHtml5, SiReact, SiVuedotjs } from "@icons-pack/react-simple-icons";
-import { Eye, ShoppingCart, Tag, User } from "lucide-react";
+import { Eye, ShoppingCart, Tag, User, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -61,22 +61,34 @@ export function MarketplaceCard({ listing, isReverse }: MarketplaceCardProps) {
             <Eye className="size-8 translate-y-4 text-white transition-transform duration-300 ease-in-out group-hover:translate-y-0" />
           </div>
 
-          {/* Price badge in top-right */}
+          {/* Badges in top corners */}
           <div className="absolute right-3 top-3">
             <Badge className="bg-green-600 text-white shadow-sm">
               {priceFormatted}
             </Badge>
           </div>
 
-          {/* Your Listing badge in top-left */}
-          {isOwnListing && (
-            <div className="absolute left-3 top-3">
+          <div className="absolute left-3 top-3 flex flex-col gap-2">
+            {isOwnListing && (
               <Badge className="bg-blue-600 text-white shadow-sm">
                 <User className="mr-1 size-3" />
                 Your Listing
               </Badge>
-            </div>
-          )}
+            )}
+            {listing.demo_url && (
+              <a
+                href={listing.demo_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                title="View Live Demo"
+                onClick={(e) => e.stopPropagation()}
+                className="inline-flex items-center rounded-md bg-purple-600 px-2 py-1 text-xs font-medium text-white shadow-sm transition-colors hover:bg-purple-700"
+              >
+                <ExternalLink className="mr-1 size-3" />
+                Demo
+              </a>
+            )}
+          </div>
         </div>
       </Link>
 
@@ -98,17 +110,6 @@ export function MarketplaceCard({ listing, isReverse }: MarketplaceCardProps) {
             <span className="text-muted-foreground/60">•</span>
             <span>{getRelativeDate(listing.created_at)}</span>
           </div>
-          {listing.demo_url && (
-            <a
-              href={listing.demo_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-1 block truncate text-xs text-blue-500 hover:text-blue-600 hover:underline"
-              title={listing.demo_url}
-            >
-              Live Demo
-            </a>
-          )}
         </div>
 
         {/* Category Badge and Stats */}

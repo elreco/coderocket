@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import { Container } from "@/components/container";
+import { PageTitle } from "@/components/page-title";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/utils/supabase/server";
 
@@ -43,13 +44,10 @@ export default async function ManageListingPage({
         </Button>
       </div>
 
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold">Edit Listing</h1>
-        <p className="mt-2 text-muted-foreground">
-          Update your component listing details
-        </p>
-      </div>
+      <PageTitle
+        title="Edit Listing"
+        subtitle="Update your component listing details"
+      />
 
       {/* Edit Form */}
       <EditListingForm listing={listing} />

@@ -4,9 +4,11 @@ import {
   DollarSign,
   ShoppingCart,
   Eye,
+  Plus,
 } from "lucide-react";
 import Link from "next/link";
 
+import { getUserMarketplacePurchases } from "@/app/(default)/marketplace/actions";
 import { Container } from "@/components/container";
 import { PageTitle } from "@/components/page-title";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -21,8 +23,6 @@ import {
 } from "@/components/ui/card";
 import { avatarApi } from "@/utils/config";
 import { getRelativeDate } from "@/utils/date";
-
-import { getUserMarketplacePurchases } from "../../../marketplace/actions";
 
 export const metadata = {
   title: "My Purchases - CodeRocket",
@@ -52,6 +52,20 @@ export default async function MyPurchasesPage({
         title="My Purchases"
         subtitle="Access and download your purchased components"
       />
+      <div className="mb-8 flex gap-4">
+        <Button asChild>
+          <Link href="/marketplace" className="flex items-center gap-2">
+            <ShoppingCart className="size-4" />
+            <span>Browse Marketplace</span>
+          </Link>
+        </Button>
+        <Button asChild variant="secondary">
+          <Link href="/marketplace/create" className="flex items-center gap-2">
+            <Plus className="size-4" />
+            <span>Sell Components</span>
+          </Link>
+        </Button>
+      </div>
 
       {/* Success Message */}
       {showSuccessMessage && (

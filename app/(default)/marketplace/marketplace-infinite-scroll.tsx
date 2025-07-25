@@ -313,9 +313,8 @@ export function MarketplaceInfiniteScroll({
           <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
             <DropdownMenuTrigger asChild>
               <Button
-                size="lg"
                 variant="secondary"
-                className="flex items-center gap-2 border border-border p-[22px]"
+                className="flex items-center gap-2 border border-border"
               >
                 {selectedCategories.length > 0
                   ? selectedCategories

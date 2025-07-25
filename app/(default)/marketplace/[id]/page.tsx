@@ -7,12 +7,14 @@ import {
   Tag,
   User,
   BookOpen,
+  Wrench,
 } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
 import { Container } from "@/components/container";
+import { PageTitle } from "@/components/page-title";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -100,6 +102,11 @@ export default async function MarketplaceListingPage({
         </Button>
       </div>
 
+      <PageTitle
+        title="Component Details"
+        subtitle="View and purchase premium AI-generated components"
+      />
+
       <div className="grid gap-8 pb-5 lg:grid-cols-3">
         {/* Main Content */}
         <div className="space-y-6 lg:col-span-2">
@@ -151,9 +158,12 @@ export default async function MarketplaceListingPage({
                     />
                   </AvatarFallback>
                 </Avatar>
-                <span className="font-medium">
+                <Link
+                  href={`/users/${listing.seller.id}`}
+                  className="font-medium hover:text-primary"
+                >
                   {listing.seller.full_name || "Anonymous"}
-                </span>
+                </Link>
               </div>
               <div className="flex items-center gap-1">
                 <Calendar className="size-4" />
@@ -196,7 +206,7 @@ export default async function MarketplaceListingPage({
               <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="flex items-center gap-2 text-base">
-                    <FrameworkIcon className="size-4" />
+                    <Wrench className="size-4" />
                     Framework
                   </CardTitle>
                 </CardHeader>
@@ -210,36 +220,6 @@ export default async function MarketplaceListingPage({
                   <p className="mt-1 text-sm text-muted-foreground">
                     AI-generated component
                   </p>
-                </CardContent>
-              </Card>
-
-              <Card className="sm:col-span-2">
-                <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center gap-2 text-base">
-                    <ExternalLink className="size-4" />
-                    Actions
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center gap-2">
-                    {listing.demo_url && (
-                      <Button variant="outline" size="sm" asChild>
-                        <Link href={listing.demo_url} target="_blank">
-                          <ExternalLink className="mr-2 size-4" />
-                          Live Demo
-                        </Link>
-                      </Button>
-                    )}
-                    <Button variant="outline" size="sm" asChild>
-                      <Link
-                        href={`/components/${listing.chat.slug}`}
-                        target="_blank"
-                      >
-                        <ExternalLink className="mr-2 size-4" />
-                        View Original Component
-                      </Link>
-                    </Button>
-                  </div>
                 </CardContent>
               </Card>
             </div>
@@ -352,9 +332,12 @@ export default async function MarketplaceListingPage({
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <p className="font-medium">
+                  <Link
+                    href={`/users/${listing.seller.id}`}
+                    className="font-medium hover:text-primary"
+                  >
                     {listing.seller.full_name || "Anonymous"}
-                  </p>
+                  </Link>
                   <p className="text-sm text-muted-foreground">
                     Premium Creator
                   </p>

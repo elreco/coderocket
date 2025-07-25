@@ -26,6 +26,7 @@ export function EditListingForm({ listing }: EditListingFormProps) {
     title: listing.title,
     description: listing.description,
     price: (listing.price_cents / 100).toFixed(2),
+    demo_url: listing.demo_url || "",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -61,6 +62,7 @@ export function EditListingForm({ listing }: EditListingFormProps) {
         title: formData.title,
         description: formData.description,
         priceCents: Math.round(price * 100),
+        demoUrl: formData.demo_url?.trim() || undefined,
       });
 
       if (result.success) {
@@ -137,6 +139,28 @@ export function EditListingForm({ listing }: EditListingFormProps) {
             />
             <p className="text-xs text-muted-foreground">
               {formData.description.length}/1000 characters
+            </p>
+          </div>
+
+          {/* Demo URL */}
+          <div className="space-y-2">
+            <Label htmlFor="demo_url">Demo URL (Optional)</Label>
+            <Input
+              id="demo_url"
+              type="url"
+              value={formData.demo_url}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  demo_url: e.target.value,
+                }))
+              }
+              placeholder="https://your-demo-site.com"
+              disabled={isLoading}
+            />
+            <p className="text-xs text-muted-foreground">
+              Provide a link to a live demo of your component to help buyers see
+              it in action.
             </p>
           </div>
 
