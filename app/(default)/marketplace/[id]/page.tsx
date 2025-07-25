@@ -3,7 +3,6 @@ import {
   ArrowLeft,
   Calendar,
   Download,
-  ExternalLink,
   Tag,
   User,
   BookOpen,
@@ -112,16 +111,34 @@ export default async function MarketplaceListingPage({
         <div className="space-y-6 lg:col-span-2">
           {/* Component Preview Image */}
           {listing.screenshot && (
-            <div className="space-y-4">
-              <h2 className="text-xl font-semibold">Preview</h2>
-              <div className="overflow-hidden rounded-lg border border-border">
-                <img
-                  src={listing.screenshot}
-                  alt={`Preview of ${listing.title}`}
-                  className="h-auto w-full object-cover"
-                />
+            <Link href={`/marketplace/${listing.id}/demo`}>
+              <div className="group relative cursor-pointer overflow-hidden rounded-xl border-2 border-primary/20 bg-gradient-to-br from-primary/5 via-transparent to-primary/10 p-1 shadow-lg transition-all duration-300 hover:border-primary/40 hover:shadow-xl">
+                {/* Decorative gradient overlay */}
+                <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-primary/10 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+
+                {/* Demo button - floating */}
+                <div className="absolute right-4 top-4 z-10 translate-y-2 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
+                  <div className="rounded-md border border-primary/20 bg-primary/90 px-3 py-1 text-xs font-medium text-primary-foreground shadow-lg backdrop-blur-sm">
+                    Live Demo
+                  </div>
+                </div>
+
+                {/* Image container */}
+                <div className="relative overflow-hidden rounded-lg bg-background/50 backdrop-blur-sm">
+                  <img
+                    src={listing.screenshot}
+                    alt={`Preview of ${listing.title}`}
+                    className="h-auto w-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+                  />
+
+                  {/* Subtle overlay on hover */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+                </div>
+
+                {/* Bottom accent line */}
+                <div className="absolute bottom-0 left-1/2 h-1 w-0 bg-gradient-to-r from-primary to-primary/60 transition-all duration-500 group-hover:left-0 group-hover:w-full" />
               </div>
-            </div>
+            </Link>
           )}
 
           {/* Header */}
@@ -282,10 +299,6 @@ export default async function MarketplaceListingPage({
                 <div className="flex items-center gap-2">
                   <Download className="size-4" />
                   <span>Instant download after purchase</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <ExternalLink className="size-4" />
-                  <span>GitHub export included</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <User className="size-4" />

@@ -11,18 +11,10 @@ import Link from "next/link";
 import { getUserMarketplacePurchases } from "@/app/(default)/marketplace/actions";
 import { Container } from "@/components/container";
 import { PageTitle } from "@/components/page-title";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { avatarApi } from "@/utils/config";
-import { getRelativeDate } from "@/utils/date";
+import { Card, CardContent } from "@/components/ui/card";
+import { UnifiedCard, UnifiedCardData } from "@/components/unified-card";
+import { Framework } from "@/utils/config";
 
 export const metadata = {
   title: "My Purchases - CodeRocket",
@@ -160,7 +152,7 @@ export default async function MyPurchasesPage({
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-4 pb-10">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {purchases.map((purchase) => (
               <PurchaseCard key={purchase.id} purchase={purchase} />
@@ -177,100 +169,84 @@ function PurchaseCard({
 }: {
   purchase: Awaited<ReturnType<typeof getUserMarketplacePurchases>>[0];
 }) {
-  const priceFormatted = new Intl.NumberFormat("en-US", {
-    style: "currency",
+  const actionsContent = (
+    <>
+      <Button size="sm" variant="outline" asChild className="flex-1">
+        <Link href={`/marketplace/${purchase.listing.id}`}>
+          <Eye className="mr-1 size-3" />
+          View
+        </Link>
+      </Button>
+      {purchase.purchased_chat_id ? (
+        <Button size="sm" asChild className="flex-1">
+          <Link href={`/components/${purchase.purchased_chat_id}`}>
+            <Download className="mr-1 size-3" />
+            Access
+          </Link>
+        </Button>
+      ) : (
+        <Button size="sm" variant="outline" className="flex-1" disabled>
+          <Download className="mr-1 size-3" />
+          Processing...
+        </Button>
+      )}
+    </>
+  );
+
+  const cardData: UnifiedCardData = {
+    id: purchase.id,
+    title: purchase.listing.title,
+    imageUrl: purchase.listing.screenshot || undefined,
+    framework: (purchase.listing.chat.framework || Framework.HTML) as Framework,
+    createdAt: purchase.created_at,
+    author: {
+      id: purchase.listing.seller.id,
+      name: purchase.listing.seller.full_name || "Anonymous",
+    },
+    href: `/marketplace/${purchase.listing.id}`,
+    price: purchase.price_paid_cents,
     currency: purchase.currency,
-  }).format(purchase.price_paid_cents / 100);
+    category: {
+      name: purchase.listing.category.name,
+    },
+    badges: [
+      {
+        text: purchase.listing.chat.framework?.toUpperCase() || "HTML",
+        variant: "outline",
+        className: "font-mono text-xs",
+      },
+    ],
+    actions: actionsContent,
+    stats: [
+      {
+        icon: <DollarSign className="size-3" />,
+        value: `Paid: ${new Intl.NumberFormat("en-US", {
+          style: "currency",
+          currency: purchase.currency,
+        }).format(purchase.price_paid_cents / 100)}`,
+        className: "font-semibold",
+      },
+    ],
+  };
 
   return (
-    <Card className="group transition-all duration-200 hover:shadow-lg">
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
-          <Badge variant="secondary" className="text-xs">
-            {purchase.listing.category.name}
-          </Badge>
-          <Badge variant="outline" className="font-mono text-xs">
-            {purchase.listing.chat.framework?.toUpperCase()}
-          </Badge>
-        </div>
-        <CardTitle className="text-base leading-tight transition-colors group-hover:text-primary">
-          {purchase.listing.title}
-        </CardTitle>
-        <CardDescription className="line-clamp-2">
-          {purchase.listing.description}
-        </CardDescription>
-      </CardHeader>
+    <div className="group transition-all duration-200 hover:shadow-lg">
+      <UnifiedCard data={cardData} showActions className="cursor-default" />
 
-      <CardContent className="space-y-4">
-        {/* Seller Info */}
-        <div className="flex items-center space-x-2">
-          <Avatar className="size-6 border border-primary">
-            <AvatarImage
-              src={purchase.listing.seller.avatar_url || undefined}
-            />
-            <AvatarFallback>
-              <img
-                src={`${avatarApi}${purchase.listing.seller.full_name}`}
-                alt="seller"
-                className="size-full"
-              />
-            </AvatarFallback>
-          </Avatar>
-          <span className="text-sm text-muted-foreground">
-            by {purchase.listing.seller.full_name || "Anonymous"}
-          </span>
-        </div>
-
-        {/* Purchase Details */}
-        <div className="space-y-2 text-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-muted-foreground">Paid:</span>
-            <span className="font-semibold">{priceFormatted}</span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-muted-foreground">Purchased:</span>
-            <span>{getRelativeDate(purchase.created_at)}</span>
-          </div>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex items-center gap-2 pt-2">
-          <Button size="sm" variant="outline" asChild className="flex-1">
-            <Link href={`/marketplace/${purchase.listing.id}`}>
-              <Eye className="mr-1 size-3" />
-              View
-            </Link>
-          </Button>
-          {purchase.purchased_chat_id ? (
-            <Button size="sm" asChild className="flex-1">
-              <Link href={`/components/${purchase.purchased_chat_id}`}>
-                <Download className="mr-1 size-3" />
-                Access
-              </Link>
-            </Button>
-          ) : (
-            <Button size="sm" variant="outline" className="flex-1" disabled>
-              <Download className="mr-1 size-3" />
-              Processing...
-            </Button>
-          )}
-        </div>
-
-        {/* Help Text */}
-        <div className="border-t pt-2 text-xs text-muted-foreground">
-          <p className="flex items-center gap-1">
-            <ExternalLink className="size-3" />
-            Need to modify this component?{" "}
-            <Link
-              href="https://docs.coderocket.app/github"
-              target="_blank"
-              className="underline hover:no-underline"
-            >
-              View docs
-            </Link>
-          </p>
-        </div>
-      </CardContent>
-    </Card>
+      {/* Help Text */}
+      <div className="rounded-b-md border-t bg-card px-4 pb-4 pt-2 text-xs text-muted-foreground">
+        <p className="flex items-center gap-1">
+          <ExternalLink className="size-3" />
+          Need to modify this component?{" "}
+          <Link
+            href="https://docs.coderocket.app/github"
+            target="_blank"
+            className="underline hover:no-underline"
+          >
+            View docs
+          </Link>
+        </p>
+      </div>
+    </div>
   );
 }

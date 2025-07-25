@@ -91,7 +91,6 @@ export function CreateListingForm({ categories }: CreateListingFormProps) {
     title: "",
     description: "",
     price: "",
-    demo_url: "",
   });
 
   // Debounced search function
@@ -286,15 +285,14 @@ export function CreateListingForm({ categories }: CreateListingFormProps) {
         title: formData.title,
         description: formData.description,
         priceCents: Math.round(price * 100),
-        demoUrl: formData.demo_url?.trim() || undefined,
       });
 
-      if (result.success) {
+      if (result.success && result.listingId) {
         toast({
           title: "Success!",
           description: "Your component has been listed on the marketplace.",
         });
-        router.push("/account/marketplace/listings");
+        router.push(`/marketplace/${result.listingId}`);
       } else {
         toast({
           variant: "destructive",
@@ -654,27 +652,6 @@ export function CreateListingForm({ categories }: CreateListingFormProps) {
                   />
                 </div>
 
-                {/* Demo URL */}
-                <div className="space-y-2">
-                  <Label htmlFor="demo_url">Demo URL (Optional)</Label>
-                  <Input
-                    id="demo_url"
-                    type="url"
-                    value={formData.demo_url || ""}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        demo_url: e.target.value,
-                      }))
-                    }
-                    placeholder="https://your-demo-site.com"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Provide a link to a live demo of your component to help
-                    buyers see it in action.
-                  </p>
-                </div>
-
                 {/* Price */}
                 <div className="space-y-2">
                   <Label htmlFor="price">Price (USD) *</Label>
@@ -854,15 +831,9 @@ function ComponentCard({
         style={{
           backgroundImage: component.screenshot
             ? `url(${component.screenshot})`
-            : undefined,
+            : "url(/placeholder.svg)",
         }}
       >
-        {!component.screenshot && (
-          <div className="flex size-full items-center justify-center text-muted-foreground">
-            No preview available
-          </div>
-        )}
-
         {/* Selection indicator */}
         {isSelected && (
           <div className="absolute inset-0 flex items-center justify-center bg-primary/10">

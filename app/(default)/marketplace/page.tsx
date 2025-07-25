@@ -62,13 +62,15 @@ export default async function MarketplacePage({
         title="Marketplace"
         subtitle="Discover and purchase premium AI-generated components"
       />
-      <MarketplaceInfiniteScroll
-        initialListings={initialListingsData.listings}
-        initialPopularListings={initialPopularListingsData.listings}
-        initialCategories={initialCategories}
-        initialSearchQuery={searchQuery}
-        initialSelectedCategories={initialSelectedCategories}
-      />
+      <div className="pb-10">
+        <MarketplaceInfiniteScroll
+          initialListings={initialListingsData.listings}
+          initialPopularListings={initialPopularListingsData.listings}
+          initialCategories={initialCategories}
+          initialSearchQuery={searchQuery}
+          initialSelectedCategories={initialSelectedCategories}
+        />
+      </div>
     </Container>
   );
 }

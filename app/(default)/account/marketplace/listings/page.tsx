@@ -1,4 +1,3 @@
-import { SiHtml5, SiReact, SiVuedotjs } from "@icons-pack/react-simple-icons";
 import {
   Plus,
   Edit,
@@ -7,20 +6,17 @@ import {
   Play,
   TrendingUp,
   DollarSign,
-  ExternalLink,
-  Calendar,
 } from "lucide-react";
 import Link from "next/link";
 
 import { getUserMarketplaceListings } from "@/app/(default)/marketplace/actions";
 import { Container } from "@/components/container";
 import { PageTitle } from "@/components/page-title";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { UnifiedCard, UnifiedCardData } from "@/components/unified-card";
 import { cn } from "@/lib/utils";
 import { Framework } from "@/utils/config";
-import { getRelativeDate } from "@/utils/date";
 
 import { MyListingsClient } from "./my-listings-client";
 
@@ -135,7 +131,7 @@ export default async function MyListingsPage() {
       </div>
 
       {listings.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-border bg-muted/50 p-12 text-center">
+        <div className="rounded-lg border border-dashed border-border bg-muted/50 p-12 pb-10 text-center">
           <h3 className="mb-4 text-lg font-semibold">No Listings Yet</h3>
           <p className="mb-6 text-muted-foreground">
             You haven&apos;t created any marketplace listings yet. Start selling
@@ -149,7 +145,9 @@ export default async function MyListingsPage() {
           </Button>
         </div>
       ) : (
-        <MyListingsClient initialListings={listings} />
+        <div className="pb-10">
+          <MyListingsClient initialListings={listings} />
+        </div>
       )}
     </Container>
   );
@@ -164,151 +162,80 @@ function ListingCard({
   onDeactivate: (id: string) => void;
   onReactivate: (id: string) => void;
 }) {
-  const priceFormatted = new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: listing.currency,
-  }).format(listing.price_cents / 100);
-
   const estimatedEarnings =
     (listing.price_cents * (listing.total_sales || 0) * 0.7) / 100;
 
-  const FrameworkIcon =
-    listing.chat.framework === Framework.REACT
-      ? SiReact
-      : listing.chat.framework === Framework.VUE
-        ? SiVuedotjs
-        : SiHtml5;
+  const actionsContent = (
+    <>
+      <Button size="sm" variant="outline" asChild>
+        <Link href={`/marketplace/${listing.id}`} title="View listing">
+          <Eye className="size-3" />
+        </Link>
+      </Button>
+      <Button size="sm" variant="outline" asChild>
+        <Link href={`/marketplace/${listing.id}/manage`} title="Edit listing">
+          <Edit className="size-3" />
+        </Link>
+      </Button>
+      {listing.is_active ? (
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => onDeactivate(listing.id)}
+          className="text-orange-600 hover:bg-orange-50 hover:text-orange-700"
+          title="Hide from marketplace"
+        >
+          <EyeOff className="size-3" />
+        </Button>
+      ) : (
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => onReactivate(listing.id)}
+          className="text-green-600 hover:bg-green-50 hover:text-green-700"
+          title="Show in marketplace"
+        >
+          <Play className="size-3" />
+        </Button>
+      )}
+    </>
+  );
+
+  const cardData: UnifiedCardData = {
+    id: listing.id,
+    title: listing.title,
+    imageUrl: listing.screenshot || undefined,
+    framework: (listing.chat.framework || Framework.HTML) as Framework,
+    createdAt: listing.created_at,
+    href: `/marketplace/${listing.id}/demo`,
+    price: listing.price_cents,
+    currency: listing.currency,
+    category: {
+      name: listing.category.name,
+    },
+    totalSales: listing.total_sales || 0,
+    badges: [
+      {
+        text: listing.is_active ? "Active" : "Inactive",
+        variant: listing.is_active ? "default" : "secondary",
+      },
+    ],
+    actions: actionsContent,
+    stats:
+      (listing.total_sales || 0) > 0
+        ? [
+            {
+              icon: <DollarSign className="size-3 text-green-600" />,
+              value: `$${estimatedEarnings.toFixed(2)} earned`,
+              className: "text-green-600",
+            },
+          ]
+        : undefined,
+  };
 
   return (
-    <div
-      className={cn(
-        "w-full bg-center overflow-hidden relative card rounded-md mx-auto",
-        "bg-secondary",
-        !listing.is_active && "opacity-60",
-      )}
-    >
-      {/* Image */}
-      <Link href={`/marketplace/${listing.id}`}>
-        <div
-          className="group relative aspect-video w-full bg-cover bg-center bg-no-repeat"
-          style={{
-            backgroundImage: `url(${
-              listing.screenshot || "https://www.coderocket.app/placeholder.svg"
-            })`,
-          }}
-        >
-          <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-all duration-300 ease-in-out group-hover:opacity-100">
-            <Eye className="size-8 translate-y-4 text-white transition-transform duration-300 ease-in-out group-hover:translate-y-0" />
-          </div>
-
-          {/* Badges in top corners */}
-          <div className="absolute right-3 top-3">
-            <Badge className="bg-green-600 text-white shadow-sm">
-              {priceFormatted}
-            </Badge>
-          </div>
-
-          <div className="absolute left-3 top-3 flex flex-col gap-2">
-            <Badge variant={listing.is_active ? "default" : "secondary"}>
-              {listing.is_active ? "Active" : "Inactive"}
-            </Badge>
-            {listing.demo_url && (
-              <a
-                href={listing.demo_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                title="View Live Demo"
-                onClick={(e) => e.stopPropagation()}
-                className="inline-flex items-center rounded-md bg-purple-600 px-2 py-1 text-xs font-medium text-white shadow-sm transition-colors hover:bg-purple-700"
-              >
-                <ExternalLink className="mr-1 size-3" />
-                Demo
-              </a>
-            )}
-          </div>
-        </div>
-      </Link>
-
-      {/* Content */}
-      <div className="flex h-36 flex-col justify-between p-4">
-        {/* Title and Category */}
-        <div className="flex flex-col gap-0.5">
-          <Link href={`/marketplace/${listing.id}`}>
-            <h1 className="line-clamp-2 max-w-full whitespace-pre-wrap text-sm font-medium text-foreground hover:text-foreground/80">
-              {listing.title}
-            </h1>
-          </Link>
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Badge variant="secondary" className="text-xs">
-              {listing.category.name}
-            </Badge>
-            <span className="text-muted-foreground/60">•</span>
-            <div className="flex items-center gap-1">
-              <Calendar className="size-3" />
-              {getRelativeDate(listing.created_at)}
-            </div>
-          </div>
-        </div>
-
-        {/* Sales info */}
-        {(listing.total_sales || 0) > 0 && (
-          <div className="rounded-lg bg-green-50 p-2 text-center">
-            <p className="text-sm font-medium text-green-800">
-              ${estimatedEarnings.toFixed(2)} earned
-            </p>
-            <p className="text-xs text-green-600">
-              {listing.total_sales} sale{listing.total_sales !== 1 ? "s" : ""}
-            </p>
-          </div>
-        )}
-
-        {/* Framework and Actions */}
-        <div className="flex items-center justify-between">
-          <Badge className="hover:bg-primary">
-            <FrameworkIcon className="mr-1 size-3" />
-            <span className="first-letter:uppercase">
-              {listing.chat.framework}
-            </span>
-          </Badge>
-
-          <div className="flex items-center gap-1">
-            <Button size="sm" variant="outline" asChild>
-              <Link href={`/marketplace/${listing.id}`} title="View listing">
-                <Eye className="size-3" />
-              </Link>
-            </Button>
-            <Button size="sm" variant="outline" asChild>
-              <Link
-                href={`/marketplace/${listing.id}/manage`}
-                title="Edit listing"
-              >
-                <Edit className="size-3" />
-              </Link>
-            </Button>
-            {listing.is_active ? (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => onDeactivate(listing.id)}
-                className="text-orange-600 hover:bg-orange-50 hover:text-orange-700"
-                title="Hide from marketplace"
-              >
-                <EyeOff className="size-3" />
-              </Button>
-            ) : (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => onReactivate(listing.id)}
-                className="text-green-600 hover:bg-green-50 hover:text-green-700"
-                title="Show in marketplace"
-              >
-                <Play className="size-3" />
-              </Button>
-            )}
-          </div>
-        </div>
-      </div>
+    <div className={cn(!listing.is_active && "opacity-60")}>
+      <UnifiedCard data={cardData} showActions className="cursor-default" />
     </div>
   );
 }

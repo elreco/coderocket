@@ -183,7 +183,6 @@ export async function createMarketplaceListing(params: {
   title: string;
   description: string;
   priceCents: number;
-  demoUrl?: string;
 }): Promise<{ success: boolean; error?: string; listingId?: string }> {
   const supabase = await createClient();
 
@@ -262,7 +261,6 @@ export async function createMarketplaceListing(params: {
       description: params.description,
       price_cents: params.priceCents,
       currency: "USD",
-      demo_url: params.demoUrl || null,
     })
     .select("id")
     .single();
@@ -789,7 +787,6 @@ export async function updateMarketplaceListing(params: {
   title: string;
   description: string;
   priceCents: number;
-  demoUrl?: string;
 }): Promise<{ success: boolean; error?: string }> {
   const supabase = await createClient();
 
@@ -846,7 +843,6 @@ export async function updateMarketplaceListing(params: {
         title: params.title.trim(),
         description: params.description.trim(),
         price_cents: params.priceCents,
-        demo_url: params.demoUrl || null,
         updated_at: new Date().toISOString(),
       })
       .eq("id", params.listingId);
