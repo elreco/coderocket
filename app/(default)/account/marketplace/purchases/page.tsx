@@ -4,13 +4,14 @@ import {
   DollarSign,
   ShoppingCart,
   Eye,
-  Plus,
 } from "lucide-react";
 import Link from "next/link";
 
 import { getUserMarketplacePurchases } from "@/app/(default)/marketplace/actions";
 import { Container } from "@/components/container";
 import { PageTitle } from "@/components/page-title";
+import { SmartCreateListingButton } from "@/components/smart-create-listing-button";
+import { StripeDashboardButton } from "@/components/stripe-dashboard-button";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { UnifiedCard, UnifiedCardData } from "@/components/unified-card";
@@ -51,12 +52,16 @@ export default async function MyPurchasesPage({
             <span>Browse Marketplace</span>
           </Link>
         </Button>
-        <Button asChild variant="secondary">
-          <Link href="/marketplace/create" className="flex items-center gap-2">
-            <Plus className="size-4" />
-            <span>Sell Components</span>
-          </Link>
-        </Button>
+        <SmartCreateListingButton
+          variant="secondary"
+          customText={{
+            create: "Sell Components",
+            becomeSeller: "Become a Seller",
+          }}
+        >
+          Sell Components
+        </SmartCreateListingButton>
+        <StripeDashboardButton />
       </div>
 
       {/* Success Message */}
@@ -84,46 +89,68 @@ export default async function MyPurchasesPage({
       {/* Stats Cards */}
       <div className="mb-8 grid gap-4 md:grid-cols-3">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Purchases
-            </CardTitle>
-            <ShoppingCart className="size-4 text-muted-foreground" />
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Total Purchases
+                </CardTitle>
+                <div className="text-2xl font-bold">{totalComponents}</div>
+              </div>
+              <div className="rounded-full bg-muted p-2">
+                <ShoppingCart className="size-4 text-muted-foreground" />
+              </div>
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalComponents}</div>
-            <p className="text-xs text-muted-foreground">Components owned</p>
+          <CardContent className="pt-0">
+            <p className="text-sm text-muted-foreground">Components owned</p>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Spent</CardTitle>
-            <DollarSign className="size-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              ${(totalSpent / 100).toFixed(2)}
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Total Spent
+                </CardTitle>
+                <div className="text-2xl font-bold">
+                  ${(totalSpent / 100).toFixed(2)}
+                </div>
+              </div>
+              <div className="rounded-full bg-muted p-2">
+                <DollarSign className="size-4 text-muted-foreground" />
+              </div>
             </div>
-            <p className="text-xs text-muted-foreground">
+          </CardHeader>
+          <CardContent className="pt-0">
+            <p className="text-sm text-muted-foreground">
               Across all purchases
             </p>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg. Purchase</CardTitle>
-            <DollarSign className="size-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              $
-              {totalComponents > 0
-                ? (totalSpent / totalComponents / 100).toFixed(2)
-                : "0.00"}
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Avg. Purchase
+                </CardTitle>
+                <div className="text-2xl font-bold">
+                  $
+                  {totalComponents > 0
+                    ? (totalSpent / totalComponents / 100).toFixed(2)
+                    : "0.00"}
+                </div>
+              </div>
+              <div className="rounded-full bg-muted p-2">
+                <DollarSign className="size-4 text-muted-foreground" />
+              </div>
             </div>
-            <p className="text-xs text-muted-foreground">
+          </CardHeader>
+          <CardContent className="pt-0">
+            <p className="text-sm text-muted-foreground">
               Average component price
             </p>
           </CardContent>

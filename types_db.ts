@@ -823,31 +823,87 @@ export type Database = {
         Row: {
           avatar_url: string | null;
           billing_address: Json | null;
-          created_at: string | null;
           full_name: string | null;
           id: string;
-          ip_address: string | null;
           payment_method: Json | null;
+          stripe_account_id: string | null;
+          stripe_account_status: string | null;
+          stripe_onboarding_completed: boolean;
+          stripe_payouts_enabled: boolean;
+          stripe_charges_enabled: boolean;
         };
         Insert: {
           avatar_url?: string | null;
           billing_address?: Json | null;
-          created_at?: string | null;
           full_name?: string | null;
           id: string;
-          ip_address?: string | null;
           payment_method?: Json | null;
+          stripe_account_id?: string | null;
+          stripe_account_status?: string | null;
+          stripe_onboarding_completed?: boolean;
+          stripe_payouts_enabled?: boolean;
+          stripe_charges_enabled?: boolean;
         };
         Update: {
           avatar_url?: string | null;
           billing_address?: Json | null;
-          created_at?: string | null;
           full_name?: string | null;
           id?: string;
-          ip_address?: string | null;
           payment_method?: Json | null;
+          stripe_account_id?: string | null;
+          stripe_account_status?: string | null;
+          stripe_onboarding_completed?: boolean;
+          stripe_payouts_enabled?: boolean;
+          stripe_charges_enabled?: boolean;
         };
         Relationships: [];
+      };
+      marketplace_payouts: {
+        Row: {
+          id: string;
+          seller_id: string;
+          amount_cents: number;
+          currency: string;
+          stripe_payout_id: string | null;
+          status: string;
+          created_at: string;
+          arrival_date: string | null;
+          failure_reason: string | null;
+          earnings_ids: string[];
+        };
+        Insert: {
+          id?: string;
+          seller_id: string;
+          amount_cents: number;
+          currency?: string;
+          stripe_payout_id?: string | null;
+          status?: string;
+          created_at?: string;
+          arrival_date?: string | null;
+          failure_reason?: string | null;
+          earnings_ids: string[];
+        };
+        Update: {
+          id?: string;
+          seller_id?: string;
+          amount_cents?: number;
+          currency?: string;
+          stripe_payout_id?: string | null;
+          status?: string;
+          created_at?: string;
+          arrival_date?: string | null;
+          failure_reason?: string | null;
+          earnings_ids?: string[];
+        };
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_payouts_seller_id_fkey";
+            columns: ["seller_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
       };
     };
     Views: {

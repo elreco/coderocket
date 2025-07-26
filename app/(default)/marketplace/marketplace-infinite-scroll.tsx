@@ -4,16 +4,15 @@ import {
   ArrowDown,
   ChevronDown,
   Loader,
-  Plus,
   RefreshCcw,
   Search,
   SearchX,
   X,
 } from "lucide-react";
-import Link from "next/link";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
 
+import { SmartCreateListingButton } from "@/components/smart-create-listing-button";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -359,12 +358,7 @@ export function MarketplaceInfiniteScroll({
           </DropdownMenu>
 
           {/* Create Listing Button */}
-          <Button asChild>
-            <Link href="/marketplace/create">
-              <Plus className="mr-2 size-4" />
-              Create Listing
-            </Link>
-          </Button>
+          <SmartCreateListingButton>Create Listing</SmartCreateListingButton>
         </div>
       </div>
 
@@ -391,12 +385,7 @@ export function MarketplaceInfiniteScroll({
               <RefreshCcw className="size-4" />
               <span>Clear search</span>
             </Button>
-            <Button asChild>
-              <Link href="/marketplace/create">
-                <Plus className="mr-2 size-4" />
-                Create Listing
-              </Link>
-            </Button>
+            <SmartCreateListingButton>Create Listing</SmartCreateListingButton>
           </div>
         </div>
       ) : (

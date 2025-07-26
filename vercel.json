@@ -1,9 +1,15 @@
 {
   "functions": {
-    "app/**/*": {
-      "maxDuration": 300
+    "app/api/**/*.ts": {
+      "maxDuration": 30
     }
   },
+  "crons": [
+    {
+      "path": "/api/cron/update-earnings",
+      "schedule": "0 */6 * * *"
+    }
+  ],
   "build": {
     "env": {
       "PLAYWRIGHT_BROWSERS_PATH": "0"

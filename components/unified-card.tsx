@@ -1,23 +1,12 @@
 "use client";
 
 import { SiHtml5, SiReact, SiVuedotjs } from "@icons-pack/react-simple-icons";
-import {
-  Eye,
-  ShoppingCart,
-  Tag,
-  User,
-  Heart,
-  GitFork,
-  Download,
-  Calendar,
-  DollarSign,
-} from "lucide-react";
+import { Eye, ShoppingCart, Tag, User, Heart, GitFork } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ReactNode } from "react";
 
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Framework } from "@/utils/config";
 import { getRelativeDate } from "@/utils/date";
@@ -146,7 +135,12 @@ export function UnifiedCard({
       </div>
 
       {/* Content */}
-      <div className="flex h-36 flex-col justify-between p-4">
+      <div
+        className={cn(
+          "flex flex-col justify-between p-4",
+          showActions ? "min-h-36" : "h-36",
+        )}
+      >
         {/* Title and Author */}
         <div className="flex flex-col gap-0.5">
           <h1 className="line-clamp-2 max-w-full whitespace-pre-wrap text-sm font-medium text-foreground hover:text-foreground/80">
@@ -232,14 +226,31 @@ export function UnifiedCard({
 
         {/* Actions */}
         {showActions && data.actions && (
-          <div className="mt-2 flex items-center gap-2">{data.actions}</div>
+          <div className="mt-4 flex items-center justify-between border-t pt-3">
+            <div className="flex items-center gap-2">{data.actions}</div>
+            {data.href && (
+              <Link
+                href={data.href}
+                className="rounded p-1 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
+                onClick={(e) => e.stopPropagation()}
+                title="View listing"
+              >
+                <Eye className="size-3.5" />
+              </Link>
+            )}
+          </div>
         )}
       </div>
     </div>
   );
 
   return showActions ? (
-    <div>{cardContent}</div>
+    <div
+      className="cursor-pointer"
+      onClick={() => data.href && router.push(data.href)}
+    >
+      {cardContent}
+    </div>
   ) : (
     <Link href={data.href}>{cardContent}</Link>
   );

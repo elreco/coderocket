@@ -93,6 +93,128 @@ export function CreateListingForm({ categories }: CreateListingFormProps) {
     price: "",
   });
 
+  // Load component versions
+  const loadComponentVersions = useCallback(
+    async (chatId: string) => {
+      setIsLoadingVersions(true);
+      try {
+        const versions = await getComponentVersions(chatId);
+        setComponentVersions(versions);
+
+        // Set the latest version as default and update screenshot
+        if (versions.length > 0) {
+          const latestVersion = versions[0].version;
+          setFormData((prev) => ({
+            ...prev,
+            version: latestVersion,
+          }));
+
+          // Update the screenshot for the latest version
+          try {
+            const supabase = createClient();
+            const { data: message } = await supabase
+              .from("messages")
+              .select("screenshot")
+              .eq("chat_id", chatId)
+              .eq("version", latestVersion)
+              .eq("role", "assistant")
+              .single();
+
+            setSelectedComponent((prev) =>
+              prev
+                ? { ...prev, screenshot: message?.screenshot || null }
+                : prev,
+            );
+          } catch (error) {
+            console.error(
+              "Error fetching screenshot for default version:",
+              error,
+            );
+          }
+        }
+      } catch (error) {
+        console.error("Error loading component versions:", error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to load component versions.",
+        });
+      } finally {
+        setIsLoadingVersions(false);
+      }
+    },
+    [toast],
+  );
+
+  // Handle component selection
+  const handleComponentSelect = useCallback(
+    async (component: Component) => {
+      setSelectedComponent(component);
+      setFormData((prev) => ({
+        ...prev,
+        chatId: component.id,
+        title: component.title || "Untitled Component",
+      }));
+
+      // Load versions for this component
+      await loadComponentVersions(component.id);
+
+      // Minimize the component selection section and clear search
+      setIsComponentSectionMinimized(true);
+      setSearchQuery("");
+    },
+    [loadComponentVersions],
+  );
+
+  // Check for restored form data from Stripe onboarding return
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const isStripeReturn = urlParams.get("stripe-return");
+
+    if (isStripeReturn) {
+      const savedData = localStorage.getItem("pendingListingData");
+      if (savedData) {
+        try {
+          const parsedData = JSON.parse(savedData);
+          setFormData({
+            chatId: parsedData.chatId || "",
+            version: parsedData.version || 0,
+            categoryId: parsedData.categoryId || "",
+            title: parsedData.title || "",
+            description: parsedData.description || "",
+            price: parsedData.price || "",
+          });
+
+          // If we have a selected component ID, try to restore it
+          if (parsedData.selectedComponentId && components.length > 0) {
+            const component = components.find(
+              (c) => c.id === parsedData.selectedComponentId,
+            );
+            if (component) {
+              // Restore the component selection asynchronously
+              handleComponentSelect(component).catch(console.error);
+            }
+          }
+
+          localStorage.removeItem("pendingListingData");
+          toast({
+            title: "Welcome back!",
+            description:
+              "Your Stripe account is now set up. You can complete your listing.",
+          });
+
+          // Clean up URL
+          const newUrl = new URL(window.location.href);
+          newUrl.searchParams.delete("stripe-return");
+          window.history.replaceState({}, "", newUrl.toString());
+        } catch (error) {
+          console.error("Failed to restore form data:", error);
+          localStorage.removeItem("pendingListingData");
+        }
+      }
+    }
+  }, [components, toast, handleComponentSelect]);
+
   // Debounced search function
   const debouncedSearch = useCallback(
     async (query: string) => {
@@ -120,7 +242,7 @@ export function CreateListingForm({ categories }: CreateListingFormProps) {
   );
 
   // Load initial components
-  const loadInitialComponents = async () => {
+  const loadInitialComponents = useCallback(async () => {
     setIsLoading(true);
     try {
       const result = await getUserPrivateComponentsPaginated({
@@ -140,7 +262,7 @@ export function CreateListingForm({ categories }: CreateListingFormProps) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [searchQuery, toast]);
 
   // Load more components (pagination)
   const loadMoreComponents = async () => {
@@ -162,54 +284,6 @@ export function CreateListingForm({ categories }: CreateListingFormProps) {
     }
   };
 
-  // Load component versions
-  const loadComponentVersions = async (chatId: string) => {
-    setIsLoadingVersions(true);
-    try {
-      const versions = await getComponentVersions(chatId);
-      setComponentVersions(versions);
-
-      // Set the latest version as default and update screenshot
-      if (versions.length > 0) {
-        const latestVersion = versions[0].version;
-        setFormData((prev) => ({
-          ...prev,
-          version: latestVersion,
-        }));
-
-        // Update the screenshot for the latest version
-        try {
-          const supabase = createClient();
-          const { data: message } = await supabase
-            .from("messages")
-            .select("screenshot")
-            .eq("chat_id", chatId)
-            .eq("version", latestVersion)
-            .eq("role", "assistant")
-            .single();
-
-          setSelectedComponent((prev) =>
-            prev ? { ...prev, screenshot: message?.screenshot || null } : prev,
-          );
-        } catch (error) {
-          console.error(
-            "Error fetching screenshot for default version:",
-            error,
-          );
-        }
-      }
-    } catch (error) {
-      console.error("Error loading component versions:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to load component versions.",
-      });
-    } finally {
-      setIsLoadingVersions(false);
-    }
-  };
-
   // Handle search with debouncing
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -222,24 +296,7 @@ export function CreateListingForm({ categories }: CreateListingFormProps) {
   // Load components on mount
   useEffect(() => {
     loadInitialComponents();
-  }, []);
-
-  // Handle component selection
-  const handleComponentSelect = async (component: Component) => {
-    setSelectedComponent(component);
-    setFormData((prev) => ({
-      ...prev,
-      chatId: component.id,
-      title: component.title || "Untitled Component",
-    }));
-
-    // Load versions for this component
-    await loadComponentVersions(component.id);
-
-    // Minimize the component selection section and clear search
-    setIsComponentSectionMinimized(true);
-    setSearchQuery("");
-  };
+  }, [loadInitialComponents]);
 
   // Handle version selection
   const handleVersionSelect = async (version: string) => {
@@ -299,7 +356,85 @@ export function CreateListingForm({ categories }: CreateListingFormProps) {
     }
 
     setIsLoading(true);
+
     try {
+      // Check Stripe account status before creating listing
+      const stripeResponse = await fetch("/api/stripe-connect/account-status");
+      const stripeStatus = stripeResponse.ok
+        ? await stripeResponse.json()
+        : { hasAccount: false, onboardingComplete: false };
+
+      // If no Stripe account, create one and redirect to onboarding
+      if (!stripeStatus.hasAccount) {
+        toast({
+          title: "Setting up payments",
+          description:
+            "We'll help you set up your Stripe account to receive payments.",
+        });
+
+        const createAccountResponse = await fetch(
+          "/api/stripe-connect/create-account",
+          {
+            method: "POST",
+          },
+        );
+
+        const createAccountData = await createAccountResponse.json();
+
+        if (!createAccountResponse.ok) {
+          throw new Error(
+            createAccountData.error || "Failed to create Stripe account",
+          );
+        }
+
+        // Save form data in localStorage for restoration
+        localStorage.setItem(
+          "pendingListingData",
+          JSON.stringify({
+            ...formData,
+            selectedComponentId: selectedComponent?.id,
+          }),
+        );
+
+        // Redirect to Stripe onboarding with return URL
+        const returnUrl = encodeURIComponent(
+          `${window.location.origin}/marketplace/create?stripe-return=true`,
+        );
+        window.location.href = createAccountData.onboardingUrl.replace(
+          "stripe-onboarding?success=true",
+          `stripe-onboarding?success=true&return=${returnUrl}`,
+        );
+        return;
+      }
+
+      // If account exists but onboarding not complete
+      if (stripeStatus.hasAccount && !stripeStatus.onboardingComplete) {
+        toast({
+          title: "Complete setup required",
+          description:
+            "Please complete your Stripe account setup to start selling.",
+        });
+
+        // Save form data in localStorage for restoration
+        localStorage.setItem(
+          "pendingListingData",
+          JSON.stringify({
+            ...formData,
+            selectedComponentId: selectedComponent?.id,
+          }),
+        );
+
+        // Redirect to complete onboarding
+        const returnUrl = encodeURIComponent(
+          `${window.location.origin}/marketplace/create?stripe-return=true`,
+        );
+        router.push(
+          `/account/marketplace/stripe-onboarding?return=${returnUrl}`,
+        );
+        return;
+      }
+
+      // Stripe account is ready, proceed with listing creation
       const result = await createMarketplaceListing({
         chatId: formData.chatId,
         version: formData.version,
@@ -321,7 +456,6 @@ export function CreateListingForm({ categories }: CreateListingFormProps) {
           title: "Error",
           description: result.error || "Failed to create listing.",
         });
-        // Allow user to change component if creation failed
         setIsComponentSectionMinimized(false);
       }
     } catch (error) {
@@ -329,9 +463,11 @@ export function CreateListingForm({ categories }: CreateListingFormProps) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "An unexpected error occurred. Please try again.",
+        description:
+          error instanceof Error
+            ? error.message
+            : "An unexpected error occurred. Please try again.",
       });
-      // Don't minimize section if there's an error, so user can change component
       setIsComponentSectionMinimized(false);
     } finally {
       setIsLoading(false);
@@ -702,6 +838,11 @@ export function CreateListingForm({ categories }: CreateListingFormProps) {
                   </div>
                   <p className="text-xs text-muted-foreground">
                     Minimum price is $1.00. You&apos;ll earn 70% of each sale.
+                    <br />
+                    <em>
+                      Note: First-time sellers will be guided through a quick
+                      Stripe setup to receive payments.
+                    </em>
                   </p>
                 </div>
               </CardContent>
@@ -760,7 +901,7 @@ export function CreateListingForm({ categories }: CreateListingFormProps) {
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 size-4 animate-spin" />
-                Creating Listing...
+                Processing...
               </>
             ) : (
               <>

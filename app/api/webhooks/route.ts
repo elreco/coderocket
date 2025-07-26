@@ -1,7 +1,80 @@
 import Stripe from "stripe";
 
 import { stripe } from "@/utils/stripe";
+// eslint-disable-next-line import/order
 import { createClient } from "@/utils/supabase/server";
+
+async function handleStripeAccountUpdate(account: Stripe.Account) {
+  try {
+    const supabase = await createClient();
+
+    // Update user's Stripe account status
+    const { error } = await supabase
+      .from("users")
+      .update({
+        stripe_account_status: account.charges_enabled
+          ? "enabled"
+          : account.details_submitted
+            ? "restricted"
+            : "pending",
+        stripe_onboarding_completed: account.details_submitted,
+        stripe_payouts_enabled: account.payouts_enabled,
+        stripe_charges_enabled: account.charges_enabled,
+      })
+      .eq("stripe_account_id", account.id);
+
+    if (error) {
+      console.error("Failed to update user Stripe account status:", error);
+    }
+  } catch (error) {
+    console.error("Error handling Stripe account update:", error);
+  }
+}
+
+async function handleTransferUpdate(
+  transfer: Stripe.Transfer & { failure_message?: string; date?: number },
+  eventType: string,
+) {
+  try {
+    const supabase = await createClient();
+
+    let status = "pending";
+    let arrivalDate = null;
+    let failureReason = null;
+
+    switch (eventType) {
+      case "transfer.paid":
+        status = "paid";
+        break;
+      case "transfer.failed":
+        status = "failed";
+        failureReason = transfer.failure_message || "Transfer failed";
+        break;
+      case "transfer.created":
+        status = "in_transit";
+        if (transfer.date) {
+          arrivalDate = new Date(transfer.date * 1000).toISOString();
+        }
+        break;
+    }
+
+    // Update payout status
+    const { error } = await supabase
+      .from("marketplace_payouts")
+      .update({
+        status,
+        arrival_date: arrivalDate,
+        failure_reason: failureReason,
+      })
+      .eq("stripe_payout_id", transfer.id);
+
+    if (error) {
+      console.error("Failed to update payout status:", error);
+    }
+  } catch (error) {
+    console.error("Error handling transfer update:", error);
+  }
+}
 import {
   upsertProductRecord,
   upsertPriceRecord,
@@ -19,6 +92,9 @@ const relevantEvents = new Set([
   "customer.subscription.updated",
   "customer.subscription.deleted",
   "payment_intent.succeeded",
+  "account.updated",
+  "transfer.created",
+  "transfer.updated",
 ]);
 
 export async function POST(req: Request) {
@@ -30,10 +106,10 @@ export async function POST(req: Request) {
   try {
     if (!sig || !webhookSecret) return;
     event = stripe.webhooks.constructEvent(body, sig, webhookSecret);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (err: any) {
-    console.log(`❌ Error message: ${err.message}`);
-    return new Response(`Webhook Error: ${err.message}`, { status: 400 });
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : "Unknown error";
+    console.log(`❌ Error message: ${errorMessage}`);
+    return new Response(`Webhook Error: ${errorMessage}`, { status: 400 });
   }
 
   if (relevantEvents.has(event.type)) {
@@ -57,6 +133,22 @@ export async function POST(req: Request) {
             subscription.customer as string,
             event.type === "customer.subscription.created",
           );
+          break;
+        case "account.updated":
+          // Handle Stripe Connect account updates
+          // eslint-disable-next-line no-case-declarations
+          const account = event.data.object as Stripe.Account;
+          await handleStripeAccountUpdate(account);
+          break;
+        case "transfer.created":
+        case "transfer.updated":
+          // Handle payout status updates
+          // eslint-disable-next-line no-case-declarations
+          const transfer = event.data.object as Stripe.Transfer & {
+            failure_message?: string;
+            date?: number;
+          };
+          await handleTransferUpdate(transfer, event.type);
           break;
         case "checkout.session.completed":
           // eslint-disable-next-line no-case-declarations
