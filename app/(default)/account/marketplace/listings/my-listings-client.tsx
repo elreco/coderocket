@@ -9,7 +9,7 @@ import {
 } from "@/app/(default)/marketplace/actions";
 import { useToast } from "@/hooks/use-toast";
 
-import { ListingCard } from "./page";
+import { ListingCard } from "./listing-card";
 
 type ListingData = Awaited<ReturnType<typeof getUserMarketplaceListings>>[0];
 

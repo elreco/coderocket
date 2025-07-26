@@ -364,7 +364,6 @@ export type Database = {
           chat_id: string;
           created_at: string;
           currency: string;
-          demo_url: string | null;
           description: string;
           id: string;
           is_active: boolean | null;
@@ -381,7 +380,6 @@ export type Database = {
           chat_id: string;
           created_at?: string;
           currency?: string;
-          demo_url?: string | null;
           description: string;
           id?: string;
           is_active?: boolean | null;
@@ -398,7 +396,6 @@ export type Database = {
           chat_id?: string;
           created_at?: string;
           currency?: string;
-          demo_url?: string | null;
           description?: string;
           id?: string;
           is_active?: boolean | null;
@@ -427,6 +424,53 @@ export type Database = {
           },
           {
             foreignKeyName: "marketplace_listings_seller_id_fkey";
+            columns: ["seller_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      marketplace_payouts: {
+        Row: {
+          amount_cents: number;
+          arrival_date: string | null;
+          created_at: string;
+          currency: string;
+          earnings_ids: string[];
+          failure_reason: string | null;
+          id: string;
+          seller_id: string;
+          status: string | null;
+          stripe_payout_id: string | null;
+        };
+        Insert: {
+          amount_cents: number;
+          arrival_date?: string | null;
+          created_at?: string;
+          currency?: string;
+          earnings_ids: string[];
+          failure_reason?: string | null;
+          id?: string;
+          seller_id: string;
+          status?: string | null;
+          stripe_payout_id?: string | null;
+        };
+        Update: {
+          amount_cents?: number;
+          arrival_date?: string | null;
+          created_at?: string;
+          currency?: string;
+          earnings_ids?: string[];
+          failure_reason?: string | null;
+          id?: string;
+          seller_id?: string;
+          status?: string | null;
+          stripe_payout_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_payouts_seller_id_fkey";
             columns: ["seller_id"];
             isOneToOne: false;
             referencedRelation: "users";
@@ -823,87 +867,46 @@ export type Database = {
         Row: {
           avatar_url: string | null;
           billing_address: Json | null;
+          created_at: string | null;
           full_name: string | null;
           id: string;
+          ip_address: string | null;
           payment_method: Json | null;
           stripe_account_id: string | null;
           stripe_account_status: string | null;
-          stripe_onboarding_completed: boolean;
-          stripe_payouts_enabled: boolean;
-          stripe_charges_enabled: boolean;
+          stripe_charges_enabled: boolean | null;
+          stripe_onboarding_completed: boolean | null;
+          stripe_payouts_enabled: boolean | null;
         };
         Insert: {
           avatar_url?: string | null;
           billing_address?: Json | null;
+          created_at?: string | null;
           full_name?: string | null;
           id: string;
+          ip_address?: string | null;
           payment_method?: Json | null;
           stripe_account_id?: string | null;
           stripe_account_status?: string | null;
-          stripe_onboarding_completed?: boolean;
-          stripe_payouts_enabled?: boolean;
-          stripe_charges_enabled?: boolean;
+          stripe_charges_enabled?: boolean | null;
+          stripe_onboarding_completed?: boolean | null;
+          stripe_payouts_enabled?: boolean | null;
         };
         Update: {
           avatar_url?: string | null;
           billing_address?: Json | null;
+          created_at?: string | null;
           full_name?: string | null;
           id?: string;
+          ip_address?: string | null;
           payment_method?: Json | null;
           stripe_account_id?: string | null;
           stripe_account_status?: string | null;
-          stripe_onboarding_completed?: boolean;
-          stripe_payouts_enabled?: boolean;
-          stripe_charges_enabled?: boolean;
+          stripe_charges_enabled?: boolean | null;
+          stripe_onboarding_completed?: boolean | null;
+          stripe_payouts_enabled?: boolean | null;
         };
         Relationships: [];
-      };
-      marketplace_payouts: {
-        Row: {
-          id: string;
-          seller_id: string;
-          amount_cents: number;
-          currency: string;
-          stripe_payout_id: string | null;
-          status: string;
-          created_at: string;
-          arrival_date: string | null;
-          failure_reason: string | null;
-          earnings_ids: string[];
-        };
-        Insert: {
-          id?: string;
-          seller_id: string;
-          amount_cents: number;
-          currency?: string;
-          stripe_payout_id?: string | null;
-          status?: string;
-          created_at?: string;
-          arrival_date?: string | null;
-          failure_reason?: string | null;
-          earnings_ids: string[];
-        };
-        Update: {
-          id?: string;
-          seller_id?: string;
-          amount_cents?: number;
-          currency?: string;
-          stripe_payout_id?: string | null;
-          status?: string;
-          created_at?: string;
-          arrival_date?: string | null;
-          failure_reason?: string | null;
-          earnings_ids?: string[];
-        };
-        Relationships: [
-          {
-            foreignKeyName: "marketplace_payouts_seller_id_fkey";
-            columns: ["seller_id"];
-            isOneToOne: false;
-            referencedRelation: "users";
-            referencedColumns: ["id"];
-          },
-        ];
       };
     };
     Views: {
@@ -941,6 +944,10 @@ export type Database = {
       add_client_credit: {
         Args: { client_id_param: string; amount_to_add: number };
         Returns: undefined;
+      };
+      calculate_available_earnings: {
+        Args: { seller_uuid: string };
+        Returns: number;
       };
       generate_api_key: {
         Args: Record<PropertyKey, never>;
@@ -1075,6 +1082,10 @@ export type Database = {
       increment_listing_sales: {
         Args: { listing_id_param: string };
         Returns: undefined;
+      };
+      update_pending_earnings_to_available: {
+        Args: Record<PropertyKey, never>;
+        Returns: number;
       };
     };
     Enums: {

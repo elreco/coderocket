@@ -1,7 +1,7 @@
 "use client";
 
 import { SiHtml5, SiReact, SiVuedotjs } from "@icons-pack/react-simple-icons";
-import { Eye, ShoppingCart, Tag, User, Heart, GitFork } from "lucide-react";
+import { Eye, ShoppingCart, Tag, User, GitFork } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ReactNode } from "react";
@@ -194,16 +194,6 @@ export function UnifiedCard({
               <div className="flex items-center gap-1">
                 <ShoppingCart className="size-3" />
                 <span>{data.totalSales}</span>
-              </div>
-            )}
-            {data.likes !== undefined && (
-              <div className="flex items-center gap-1.5">
-                <Heart
-                  className={cn("size-3.5", data.isLiked && "text-pink-500")}
-                />
-                <span className={cn(data.isLiked && "text-pink-500")}>
-                  {data.likes}
-                </span>
               </div>
             )}
             {data.category && (
