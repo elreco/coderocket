@@ -24,9 +24,9 @@ async function getUserEarningsData(userId: string) {
     .select(
       `
       *,
-      marketplace_purchases!inner(
+      marketplace_purchases!purchase_id(
         listing_id,
-        marketplace_listings!inner(
+        marketplace_listings!listing_id(
           title,
           price_cents
         )
@@ -69,6 +69,13 @@ export default async function EarningsPage() {
     redirect("/login");
   }
 
+  // Check if user has premium subscription
+  const { getSubscription } = await import("@/app/supabase-server");
+  const subscription = await getSubscription();
+  if (!subscription) {
+    redirect("/pricing?reason=marketplace-earnings");
+  }
+
   const data = await getUserEarningsData(user.id);
 
   return (
@@ -78,7 +85,12 @@ export default async function EarningsPage() {
         subtitle="Track your marketplace earnings and manage payouts"
       />
 
-      <EarningsClient {...data} />
+      <EarningsClient
+        userStripeData={data.userStripeData}
+        earnings={data.earnings || []}
+        payouts={data.payouts || []}
+        availableEarnings={data.availableEarnings}
+      />
     </Container>
   );
 }

@@ -47,6 +47,7 @@ const data = {
     {
       title: "Marketplace",
       url: "/marketplace",
+      isNew: true,
       icon: Store,
     },
   ],

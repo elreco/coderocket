@@ -22,6 +22,7 @@ interface SmartCreateListingButtonProps {
   customText?: {
     create?: string;
     becomeSeller?: string;
+    upgradeToPremium?: string;
   };
 }
 
@@ -34,7 +35,7 @@ export function SmartCreateListingButton({
   customText,
   ...props
 }: SmartCreateListingButtonProps) {
-  const { canCreateListing, isLoading } = useStripeStatus();
+  const { canCreateListing, needsPremium, isLoading } = useStripeStatus();
 
   // Show loading state while checking Stripe status
   if (isLoading) {
@@ -53,13 +54,21 @@ export function SmartCreateListingButton({
   }
 
   // Determine the correct href and content based on user status
-  const href = canCreateListing
-    ? "/marketplace/create"
-    : "/account/marketplace/stripe-onboarding";
+  let href: string;
+  let text: ReactNode;
+
+  if (needsPremium) {
+    href = "/pricing?reason=marketplace-create";
+    text = children || customText?.upgradeToPremium || "Upgrade to Premium";
+  } else if (canCreateListing) {
+    href = "/marketplace/create";
+    text = children || customText?.create || "Create New Listing";
+  } else {
+    href = "/account/marketplace/stripe-onboarding";
+    text = children || customText?.becomeSeller || "Become a Seller";
+  }
+
   const IconComponent = Plus; // Always use Plus icon for consistency
-  const text = canCreateListing
-    ? children || customText?.create || "Create New Listing"
-    : children || customText?.becomeSeller || "Become a Seller";
 
   return (
     <Button

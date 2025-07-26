@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint --fix .",
+    "type-check": "tsc --noEmit --skipLibCheck",
     "stripe:listen": "stripe listen --forward-to=localhost:3000/api/webhooks",
     "generate-types": "npx supabase gen types typescript --project-id jojdwiugelqhcajbccxn --schema public > types_db.ts"
   },

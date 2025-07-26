@@ -44,18 +44,92 @@ export async function generateMetadata({
 
   if (!listing) {
     return {
-      title: "Listing Not Found - CodeRocket Marketplace",
+      title: "Component Not Found - CodeRocket Marketplace",
+      description:
+        "This component does not exist or is no longer available on the CodeRocket marketplace.",
     };
   }
 
+  const priceFormatted = new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: listing.currency,
+  }).format(listing.price_cents / 100);
+
+  const title = `${listing.title} - ${priceFormatted} | CodeRocket Marketplace`;
+  const description = `${listing.description} | Premium ${listing.chat.framework} component with source code included. Instant download and GitHub export available.`;
+
   return {
-    title: `${listing.title} - CodeRocket Marketplace`,
-    description: listing.description,
+    title,
+    description,
+    keywords: [
+      listing.title,
+      `${listing.chat.framework} component`,
+      "marketplace",
+      "CodeRocket",
+      "premium template",
+      "source code",
+      listing.category?.name,
+      "GitHub export",
+      "instant download",
+    ]
+      .filter(Boolean)
+      .join(", "),
+    authors: [{ name: listing.seller?.full_name || "CodeRocket Creator" }],
+    creator: "CodeRocket",
+    publisher: "CodeRocket",
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        "max-video-preview": -1,
+        "max-image-preview": "large",
+        "max-snippet": -1,
+      },
+    },
     openGraph: {
-      title: listing.title,
-      description: listing.description,
       type: "website",
-      images: listing.screenshot ? [listing.screenshot] : undefined,
+      locale: "en_US",
+      url: `https://www.coderocket.app/marketplace/${id}`,
+      title,
+      description,
+      siteName: "CodeRocket Marketplace",
+      images: listing.screenshot
+        ? [
+            {
+              url: listing.screenshot,
+              width: 1200,
+              height: 630,
+              alt: `Preview of ${listing.title} - ${listing.chat.framework} Component`,
+            },
+          ]
+        : [
+            {
+              url: "/og-marketplace.png",
+              width: 1200,
+              height: 630,
+              alt: "CodeRocket Marketplace",
+            },
+          ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      creator: "@coderocket_app",
+      images: listing.screenshot
+        ? [listing.screenshot]
+        : ["/og-marketplace.png"],
+    },
+    alternates: {
+      canonical: `https://www.coderocket.app/marketplace/${id}`,
+    },
+    other: {
+      "product:price:amount": (listing.price_cents / 100).toString(),
+      "product:price:currency": listing.currency,
+      "product:availability": "in stock",
+      "product:category": listing.category?.name || "Components",
     },
   };
 }

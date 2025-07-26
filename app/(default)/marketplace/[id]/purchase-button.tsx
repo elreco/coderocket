@@ -1,6 +1,7 @@
 "use client";
 
 import { Loader, ShoppingCart } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,7 @@ interface PurchaseButtonProps {
 export function PurchaseButton({ listing }: PurchaseButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const router = useRouter();
 
   const handlePurchase = async () => {
     setIsLoading(true);
@@ -45,6 +47,14 @@ export function PurchaseButton({ listing }: PurchaseButtonProps) {
       const data = await response.json();
 
       if (!response.ok) {
+        // Check if user needs to authenticate
+        if (response.status === 401 && data.requiresAuth) {
+          // Store the current URL to redirect back after login
+          const currentUrl = window.location.pathname;
+          router.push(`/login?redirect=${encodeURIComponent(currentUrl)}`);
+          return;
+        }
+
         throw new Error(data.error || "Failed to create checkout session");
       }
 

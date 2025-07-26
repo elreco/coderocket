@@ -1,62 +1,133 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 
 export interface StripeStatus {
   hasAccount: boolean;
   onboardingComplete: boolean;
+  isPremium: boolean;
   isLoading: boolean;
   error: string | null;
 }
 
-export function useStripeStatus() {
-  const [status, setStatus] = useState<StripeStatus>({
-    hasAccount: false,
-    onboardingComplete: false,
-    isLoading: true,
-    error: null,
-  });
+const CACHE_KEY = "stripe_status_cache";
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
-  useEffect(() => {
-    const fetchStripeStatus = async () => {
-      try {
-        const response = await fetch("/api/stripe-connect/account-status");
+function getCachedStatus(): StripeStatus | null {
+  if (typeof window === "undefined") return null;
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch Stripe status");
-        }
+  try {
+    const cached = sessionStorage.getItem(CACHE_KEY);
+    if (!cached) return null;
 
-        const data = await response.json();
+    const { data, timestamp } = JSON.parse(cached);
+    const now = Date.now();
 
-        setStatus({
-          hasAccount: data.hasAccount || false,
-          onboardingComplete: data.onboardingComplete || false,
-          isLoading: false,
-          error: null,
-        });
-      } catch (error) {
-        setStatus({
-          hasAccount: false,
-          onboardingComplete: false,
-          isLoading: false,
-          error: error instanceof Error ? error.message : "Unknown error",
-        });
-      }
+    if (now - timestamp > CACHE_DURATION) {
+      sessionStorage.removeItem(CACHE_KEY);
+      return null;
+    }
+
+    return data;
+  } catch {
+    return null;
+  }
+}
+
+function setCachedStatus(status: StripeStatus) {
+  if (typeof window === "undefined") return;
+
+  try {
+    const cacheData = {
+      data: status,
+      timestamp: Date.now(),
     };
+    sessionStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
+  } catch {
+    // Ignore storage errors
+  }
+}
 
-    fetchStripeStatus();
+export function useStripeStatus() {
+  const initialCachedStatus = getCachedStatus();
+  const [status, setStatus] = useState<StripeStatus>(
+    initialCachedStatus || {
+      hasAccount: false,
+      onboardingComplete: false,
+      isPremium: false,
+      isLoading: initialCachedStatus ? false : true, // Don't show loading if we have cache
+      error: null,
+    },
+  );
+
+  const fetchStripeStatus = useCallback(async () => {
+    // Check for cached data each time we call this function
+    const currentCachedStatus = getCachedStatus();
+
+    if (currentCachedStatus) {
+      setStatus({ ...currentCachedStatus, isLoading: false });
+      return;
+    }
+
+    // Set loading only if we don't have cached data
+    setStatus((prev) => ({ ...prev, isLoading: true }));
+
+    try {
+      const response = await fetch("/api/stripe-connect/account-status");
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch Stripe status");
+      }
+
+      const data = await response.json();
+
+      const newStatus = {
+        hasAccount: data.hasAccount || false,
+        onboardingComplete: data.onboardingComplete || false,
+        isPremium: data.isPremium || false,
+        isLoading: false,
+        error: null,
+      };
+
+      setStatus(newStatus);
+      setCachedStatus(newStatus);
+    } catch (error) {
+      const errorStatus = {
+        hasAccount: false,
+        onboardingComplete: false,
+        isPremium: false,
+        isLoading: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+
+      setStatus(errorStatus);
+    }
   }, []);
 
-  const canCreateListing = status.hasAccount && status.onboardingComplete;
+  useEffect(() => {
+    // Always try to fetch/use cache on mount
+    fetchStripeStatus();
+  }, [fetchStripeStatus]);
+
+  const canCreateListing =
+    status.isPremium && status.hasAccount && status.onboardingComplete;
   const needsOnboarding = !status.hasAccount || !status.onboardingComplete;
+  const needsPremium = !status.isPremium;
+
+  const refresh = useCallback(() => {
+    // Clear cache and refetch
+    if (typeof window !== "undefined") {
+      sessionStorage.removeItem(CACHE_KEY);
+    }
+    setStatus((prev) => ({ ...prev, isLoading: true }));
+    fetchStripeStatus();
+  }, [fetchStripeStatus]);
 
   return {
     ...status,
     canCreateListing,
     needsOnboarding,
-    refresh: () => {
-      setStatus((prev) => ({ ...prev, isLoading: true }));
-      // Re-trigger the effect by updating a dependency
-    },
+    needsPremium,
+    refresh,
   };
 }

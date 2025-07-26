@@ -54,7 +54,7 @@ export const fetchChatById = async (idOrSlug: string) => {
     .select(
       `
     *,
-    user:users (*)
+    user:users!user_id (*)
 `,
     )
     .eq(isUuid ? "id" : "slug", idOrSlug)

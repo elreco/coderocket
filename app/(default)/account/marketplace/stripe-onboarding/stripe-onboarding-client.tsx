@@ -25,8 +25,8 @@ interface StripeOnboardingClientProps {
   userData: {
     stripe_account_id: string | null;
     stripe_account_status: string | null;
-    stripe_onboarding_completed: boolean;
-    stripe_payouts_enabled: boolean;
+    stripe_onboarding_completed: boolean | null;
+    stripe_payouts_enabled: boolean | null;
   } | null;
   showSuccessMessage: boolean;
   needsRefresh: boolean;
@@ -169,7 +169,7 @@ export function StripeOnboardingClient({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="space-y-1">
               <div className="font-medium">
                 {userData?.stripe_onboarding_completed ? (
@@ -198,11 +198,12 @@ export function StripeOnboardingClient({
               </p>
             </div>
 
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-wrap gap-2">
               <Badge
                 variant={
                   userData?.stripe_payouts_enabled ? "default" : "secondary"
                 }
+                className="whitespace-nowrap"
               >
                 Payouts:{" "}
                 {userData?.stripe_payouts_enabled ? "Enabled" : "Disabled"}
@@ -213,6 +214,7 @@ export function StripeOnboardingClient({
                     ? "default"
                     : "secondary"
                 }
+                className="whitespace-nowrap"
               >
                 Status: {userData?.stripe_account_status || "Not Created"}
               </Badge>
@@ -221,27 +223,30 @@ export function StripeOnboardingClient({
         </CardContent>
       </Card>
 
-      {/* Action Cards */}
-      <div className="grid gap-6 md:grid-cols-2">
-        {/* Setup Actions */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Settings className="size-5" />
-              Account Setup
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {!userData?.stripe_account_id ? (
-              <div className="space-y-3">
+      {/* Main Action Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Settings className="size-5" />
+            Account Setup
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {!userData?.stripe_account_id ? (
+            <div className="flex flex-col items-center space-y-4 text-center sm:flex-row sm:items-start sm:space-x-6 sm:space-y-0 sm:text-left">
+              <div className="flex-1 space-y-2">
+                <h3 className="font-medium">Create Your Stripe Account</h3>
                 <p className="text-sm text-muted-foreground">
-                  Create your Stripe Express account to start accepting
-                  payments.
+                  Set up your Stripe Express account to start accepting payments
+                  and manage your marketplace earnings.
                 </p>
+              </div>
+              <div className="flex flex-col gap-2 sm:flex-row">
                 <Button
                   onClick={handleCreateAccount}
                   disabled={isLoading}
-                  className="w-full"
+                  size="lg"
+                  className="min-w-[180px]"
                 >
                   {isLoading ? (
                     <>
@@ -256,174 +261,200 @@ export function StripeOnboardingClient({
                   )}
                 </Button>
               </div>
-            ) : !userData.stripe_onboarding_completed ? (
-              <div className="space-y-3">
+            </div>
+          ) : !userData?.stripe_onboarding_completed ? (
+            <div className="flex flex-col items-center space-y-4 text-center sm:flex-row sm:items-start sm:space-x-6 sm:space-y-0 sm:text-left">
+              <div className="flex-1 space-y-2">
+                <h3 className="font-medium">Complete Your Setup</h3>
                 <p className="text-sm text-muted-foreground">
-                  Complete your account setup to start receiving payments.
+                  Finish configuring your Stripe account to start receiving
+                  payments from your marketplace sales.
                 </p>
-                <div className="space-y-2">
-                  <Button
-                    onClick={handleContinueOnboarding}
-                    disabled={isLoading}
-                    className="w-full"
-                  >
-                    {isLoading ? (
-                      <>
-                        <RefreshCw className="mr-2 size-4 animate-spin" />
-                        Loading...
-                      </>
-                    ) : (
-                      <>
-                        <FileText className="mr-2 size-4" />
-                        Complete Setup
-                      </>
-                    )}
-                  </Button>
-                  <Button
-                    onClick={handleSyncStatus}
-                    variant="outline"
-                    size="sm"
-                    disabled={isRefreshing}
-                    className="w-full"
-                  >
-                    {isRefreshing ? (
-                      <>
-                        <RefreshCw className="mr-2 size-3 animate-spin" />
-                        Syncing...
-                      </>
-                    ) : (
-                      <>
-                        <RefreshCw className="mr-2 size-3" />
-                        Force Sync with Stripe
-                      </>
-                    )}
-                  </Button>
-                </div>
               </div>
-            ) : showSuccessMessage && !userData.stripe_onboarding_completed ? (
-              <div className="space-y-3">
-                <p className="text-sm text-muted-foreground">
-                  Your Stripe setup is complete! Click &quot;Refresh
-                  Status&quot; to update your account information.
-                </p>
-                <div className="space-y-2">
-                  <Button
-                    onClick={handleRefreshStatus}
-                    disabled={isRefreshing}
-                    className="w-full"
-                  >
-                    {isRefreshing ? (
-                      <>
-                        <RefreshCw className="mr-2 size-4 animate-spin" />
-                        Refreshing...
-                      </>
-                    ) : (
-                      <>
-                        <RefreshCw className="mr-2 size-4" />
-                        Refresh Status
-                      </>
-                    )}
-                  </Button>
-                  <Button
-                    onClick={handleSyncStatus}
-                    variant="secondary"
-                    size="sm"
-                    disabled={isRefreshing}
-                    className="w-full"
-                  >
-                    {isRefreshing ? (
-                      <>
-                        <RefreshCw className="mr-2 size-3 animate-spin" />
-                        Syncing...
-                      </>
-                    ) : (
-                      <>
-                        <RefreshCw className="mr-2 size-3" />
-                        Force Sync with Stripe
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                <p className="text-sm text-muted-foreground">
-                  Your account is fully set up and ready to receive payments.
-                </p>
-                <div className="space-y-2">
-                  <Button
-                    onClick={handleOpenDashboard}
-                    disabled={isOpeningDashboard}
-                    className="w-full"
-                  >
-                    {isOpeningDashboard ? (
-                      <>
-                        <RefreshCw className="mr-2 size-4 animate-spin" />
-                        Opening...
-                      </>
-                    ) : (
-                      <>
-                        <ExternalLink className="mr-2 size-4" />
-                        Open Stripe Dashboard
-                      </>
-                    )}
-                  </Button>
-                  <Button
-                    onClick={handleRefreshStatus}
-                    variant="outline"
-                    disabled={isRefreshing}
-                    className="w-full"
-                  >
-                    {isRefreshing ? (
-                      <>
-                        <RefreshCw className="mr-2 size-4 animate-spin" />
-                        Refreshing...
-                      </>
-                    ) : (
-                      <>
-                        <RefreshCw className="mr-2 size-4" />
-                        Refresh Status
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Quick Actions */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Building className="size-5" />
-              Marketplace Actions
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-3">
-              <p className="text-sm text-muted-foreground">
-                Access your marketplace tools and manage your listings.
-              </p>
-              <div className="space-y-2">
-                <SmartCreateListingButton className="w-full">
-                  Create New Listing
-                </SmartCreateListingButton>
-                <Button asChild variant="outline" className="w-full">
-                  <Link href="/account/marketplace/listings">
-                    View My Listings
-                  </Link>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <Button
+                  onClick={handleContinueOnboarding}
+                  disabled={isLoading}
+                  size="lg"
+                  className="min-w-[160px]"
+                >
+                  {isLoading ? (
+                    <>
+                      <RefreshCw className="mr-2 size-4 animate-spin" />
+                      Loading...
+                    </>
+                  ) : (
+                    <>
+                      <FileText className="mr-2 size-4" />
+                      Complete Setup
+                    </>
+                  )}
                 </Button>
-                <Button asChild variant="outline" className="w-full">
-                  <Link href="/account/marketplace/earnings">
-                    Earnings & Payouts
-                  </Link>
+                <Button
+                  onClick={handleSyncStatus}
+                  variant="outline"
+                  size="lg"
+                  disabled={isRefreshing}
+                  className="min-w-[120px]"
+                >
+                  {isRefreshing ? (
+                    <>
+                      <RefreshCw className="mr-2 size-4 animate-spin" />
+                      Syncing...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="mr-2 size-4" />
+                      Force Sync
+                    </>
+                  )}
                 </Button>
               </div>
             </div>
-          </CardContent>
-        </Card>
-      </div>
+          ) : showSuccessMessage && !userData?.stripe_onboarding_completed ? (
+            <div className="flex flex-col items-center space-y-4 text-center sm:flex-row sm:items-start sm:space-x-6 sm:space-y-0 sm:text-left">
+              <div className="flex-1 space-y-2">
+                <h3 className="font-medium">Setup Complete!</h3>
+                <p className="text-sm text-muted-foreground">
+                  Your Stripe setup is complete! Update your account information
+                  to reflect the latest status.
+                </p>
+              </div>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <Button
+                  onClick={handleRefreshStatus}
+                  disabled={isRefreshing}
+                  size="lg"
+                  className="min-w-[140px]"
+                >
+                  {isRefreshing ? (
+                    <>
+                      <RefreshCw className="mr-2 size-4 animate-spin" />
+                      Refreshing...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="mr-2 size-4" />
+                      Refresh Status
+                    </>
+                  )}
+                </Button>
+                <Button
+                  onClick={handleSyncStatus}
+                  variant="outline"
+                  size="lg"
+                  disabled={isRefreshing}
+                  className="min-w-[120px]"
+                >
+                  {isRefreshing ? (
+                    <>
+                      <RefreshCw className="mr-2 size-4 animate-spin" />
+                      Syncing...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="mr-2 size-4" />
+                      Force Sync
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center space-y-4 text-center sm:flex-row sm:items-start sm:space-x-6 sm:space-y-0 sm:text-left">
+              <div className="flex-1 space-y-2">
+                <h3 className="flex items-center gap-2 font-medium text-green-600">
+                  <CheckCircle className="size-4" />
+                  Account Ready
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Your account is fully set up and ready to receive payments.
+                  Access your Stripe dashboard to manage your account.
+                </p>
+              </div>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <Button
+                  onClick={handleOpenDashboard}
+                  disabled={isOpeningDashboard}
+                  size="lg"
+                  className="min-w-[180px]"
+                >
+                  {isOpeningDashboard ? (
+                    <>
+                      <RefreshCw className="mr-2 size-4 animate-spin" />
+                      Opening...
+                    </>
+                  ) : (
+                    <>
+                      <ExternalLink className="mr-2 size-4" />
+                      Open Stripe Dashboard
+                    </>
+                  )}
+                </Button>
+                <Button
+                  onClick={handleRefreshStatus}
+                  variant="outline"
+                  size="lg"
+                  disabled={isRefreshing}
+                  className="min-w-[140px]"
+                >
+                  {isRefreshing ? (
+                    <>
+                      <RefreshCw className="mr-2 size-4 animate-spin" />
+                      Refreshing...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="mr-2 size-4" />
+                      Refresh Status
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Quick Actions */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Building className="size-5" />
+            Marketplace Actions
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
+            <div className="flex-1">
+              <p className="text-sm text-muted-foreground">
+                Access your marketplace tools and manage your listings.
+              </p>
+            </div>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <SmartCreateListingButton size="lg" className="min-w-[140px]">
+                Create Listing
+              </SmartCreateListingButton>
+              <Button
+                asChild
+                variant="outline"
+                size="lg"
+                className="min-w-[120px]"
+              >
+                <Link href="/account/marketplace/listings">My Listings</Link>
+              </Button>
+              <Button
+                asChild
+                variant="outline"
+                size="lg"
+                className="min-w-[120px]"
+              >
+                <Link href="/account/marketplace/earnings">Earnings</Link>
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Requirements Info */}
       <Card>

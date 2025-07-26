@@ -1,16 +1,37 @@
 import { Eye, TrendingUp, DollarSign, Settings } from "lucide-react";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 import { getUserMarketplaceListings } from "@/app/(default)/marketplace/actions";
+import { getSubscription } from "@/app/supabase-server";
 import { Container } from "@/components/container";
 import { PageTitle } from "@/components/page-title";
 import { SmartCreateListingButton } from "@/components/smart-create-listing-button";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { createClient } from "@/utils/supabase/server";
 
 import { MyListingsClient } from "./my-listings-client";
 
+async function checkUserAccess() {
+  const supabase = await createClient();
+  const { data: userData } = await supabase.auth.getUser();
+
+  if (!userData.user) {
+    redirect("/login");
+  }
+
+  // Check if user has premium subscription
+  const subscription = await getSubscription();
+  if (!subscription) {
+    redirect("/pricing?reason=marketplace-listings");
+  }
+
+  return userData.user;
+}
+
 export default async function MyListingsPage() {
+  await checkUserAccess();
   const listings = await getUserMarketplaceListings();
 
   const activeListings = listings.filter((l) => l.is_active);

@@ -1,21 +1,21 @@
-import {
-  Download,
-  ExternalLink,
-  DollarSign,
-  ShoppingCart,
-  Eye,
-} from "lucide-react";
+import { DollarSign, ShoppingCart, Eye, Calendar, Tag } from "lucide-react";
 import Link from "next/link";
+import { Suspense } from "react";
+import { SiHtml5, SiReact, SiVuedotjs } from "react-icons/si";
 
 import { getUserMarketplacePurchases } from "@/app/(default)/marketplace/actions";
 import { Container } from "@/components/container";
 import { PageTitle } from "@/components/page-title";
 import { SmartCreateListingButton } from "@/components/smart-create-listing-button";
 import { StripeDashboardButton } from "@/components/stripe-dashboard-button";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { UnifiedCard, UnifiedCardData } from "@/components/unified-card";
 import { Framework } from "@/utils/config";
+import { getRelativeDate } from "@/utils/date";
+
+import { DownloadCodeButton } from "./download-code-button";
+import { PurchasesClient } from "./purchases-client";
 
 export const metadata = {
   title: "My Purchases - CodeRocket",
@@ -40,154 +40,160 @@ export default async function MyPurchasesPage({
   const showSuccessMessage = params.purchase === "success" && params.listing;
 
   return (
-    <Container className="pr-2 sm:pr-11">
-      <PageTitle
-        title="My Purchases"
-        subtitle="Access and download your purchased components"
-      />
-      <div className="mb-8 flex gap-4">
-        <Button asChild>
-          <Link href="/marketplace" className="flex items-center gap-2">
-            <ShoppingCart className="size-4" />
-            <span>Browse Marketplace</span>
-          </Link>
-        </Button>
-        <SmartCreateListingButton
-          variant="secondary"
-          customText={{
-            create: "Sell Components",
-            becomeSeller: "Become a Seller",
-          }}
-        >
-          Sell Components
-        </SmartCreateListingButton>
-        <StripeDashboardButton />
-      </div>
-
-      {/* Success Message */}
-      {showSuccessMessage && (
-        <Card className="mb-6 border-green-200 bg-green-50">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2">
-              <div className="flex size-8 items-center justify-center rounded-full bg-green-100">
-                <ShoppingCart className="size-4 text-green-600" />
-              </div>
-              <div>
-                <p className="font-medium text-green-800">
-                  Purchase Successful!
-                </p>
-                <p className="text-sm text-green-600">
-                  Your component has been added to your purchases. You can now
-                  download it and access the code.
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Stats Cards */}
-      <div className="mb-8 grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Total Purchases
-                </CardTitle>
-                <div className="text-2xl font-bold">{totalComponents}</div>
-              </div>
-              <div className="rounded-full bg-muted p-2">
-                <ShoppingCart className="size-4 text-muted-foreground" />
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <p className="text-sm text-muted-foreground">Components owned</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Total Spent
-                </CardTitle>
-                <div className="text-2xl font-bold">
-                  ${(totalSpent / 100).toFixed(2)}
-                </div>
-              </div>
-              <div className="rounded-full bg-muted p-2">
-                <DollarSign className="size-4 text-muted-foreground" />
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <p className="text-sm text-muted-foreground">
-              Across all purchases
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Avg. Purchase
-                </CardTitle>
-                <div className="text-2xl font-bold">
-                  $
-                  {totalComponents > 0
-                    ? (totalSpent / totalComponents / 100).toFixed(2)
-                    : "0.00"}
-                </div>
-              </div>
-              <div className="rounded-full bg-muted p-2">
-                <DollarSign className="size-4 text-muted-foreground" />
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <p className="text-sm text-muted-foreground">
-              Average component price
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {purchases.length === 0 ? (
-        <Card className="p-8 text-center">
-          <CardContent className="space-y-4">
-            <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-muted">
-              <ShoppingCart className="size-8 text-muted-foreground" />
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold">No purchases yet</h3>
-              <p className="text-muted-foreground">
-                Browse the marketplace to find amazing components created by the
-                community.
-              </p>
-            </div>
+    <Suspense fallback={<div>Loading...</div>}>
+      <PurchasesClient>
+        <Container className="pr-2 sm:pr-11">
+          <PageTitle
+            title="My Purchases"
+            subtitle="Access and download your purchased components"
+          />
+          <div className="mb-8 flex gap-4">
             <Button asChild>
-              <Link href="/marketplace">
-                <ShoppingCart className="mr-2 size-4" />
-                Browse Marketplace
+              <Link href="/marketplace" className="flex items-center gap-2">
+                <ShoppingCart className="size-4" />
+                <span>Browse Marketplace</span>
               </Link>
             </Button>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="space-y-4 pb-10">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {purchases.map((purchase) => (
-              <PurchaseCard key={purchase.id} purchase={purchase} />
-            ))}
+            <SmartCreateListingButton
+              variant="secondary"
+              customText={{
+                create: "Sell Components",
+                becomeSeller: "Become a Seller",
+              }}
+            >
+              Sell Components
+            </SmartCreateListingButton>
+            <StripeDashboardButton />
           </div>
-        </div>
-      )}
-    </Container>
+
+          {/* Success Message */}
+          {showSuccessMessage && (
+            <Card className="mb-6 border-green-200 bg-green-50">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2">
+                  <div className="flex size-8 items-center justify-center rounded-full bg-green-100">
+                    <ShoppingCart className="size-4 text-green-600" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-green-800">
+                      Purchase Successful!
+                    </p>
+                    <p className="text-sm text-green-600">
+                      Your component has been added to your purchases. You can
+                      now download it and access the code.
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Stats Cards */}
+          <div className="mb-8 grid gap-4 md:grid-cols-3">
+            <Card>
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <CardTitle className="text-sm font-medium text-muted-foreground">
+                      Total Purchases
+                    </CardTitle>
+                    <div className="text-2xl font-bold">{totalComponents}</div>
+                  </div>
+                  <div className="rounded-full bg-muted p-2">
+                    <ShoppingCart className="size-4 text-muted-foreground" />
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <p className="text-sm text-muted-foreground">
+                  Components owned
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <CardTitle className="text-sm font-medium text-muted-foreground">
+                      Total Spent
+                    </CardTitle>
+                    <div className="text-2xl font-bold">
+                      ${(totalSpent / 100).toFixed(2)}
+                    </div>
+                  </div>
+                  <div className="rounded-full bg-muted p-2">
+                    <DollarSign className="size-4 text-muted-foreground" />
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <p className="text-sm text-muted-foreground">
+                  Across all purchases
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <CardTitle className="text-sm font-medium text-muted-foreground">
+                      Avg. Purchase
+                    </CardTitle>
+                    <div className="text-2xl font-bold">
+                      $
+                      {totalComponents > 0
+                        ? (totalSpent / totalComponents / 100).toFixed(2)
+                        : "0.00"}
+                    </div>
+                  </div>
+                  <div className="rounded-full bg-muted p-2">
+                    <DollarSign className="size-4 text-muted-foreground" />
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <p className="text-sm text-muted-foreground">
+                  Average component price
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {purchases.length === 0 ? (
+            <Card className="p-8 text-center">
+              <CardContent className="space-y-4">
+                <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-muted">
+                  <ShoppingCart className="size-8 text-muted-foreground" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold">No purchases yet</h3>
+                  <p className="text-muted-foreground">
+                    Browse the marketplace to find amazing components created by
+                    the community.
+                  </p>
+                </div>
+                <Button asChild>
+                  <Link href="/marketplace">
+                    <ShoppingCart className="mr-2 size-4" />
+                    Browse Marketplace
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-6 pb-10">
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {purchases.map((purchase) => (
+                  <PurchaseCard key={purchase.id} purchase={purchase} />
+                ))}
+              </div>
+            </div>
+          )}
+        </Container>
+      </PurchasesClient>
+    </Suspense>
   );
 }
 
@@ -196,84 +202,118 @@ function PurchaseCard({
 }: {
   purchase: Awaited<ReturnType<typeof getUserMarketplacePurchases>>[0];
 }) {
-  const actionsContent = (
-    <>
-      <Button size="sm" variant="outline" asChild className="flex-1">
-        <Link href={`/marketplace/${purchase.listing.id}`}>
-          <Eye className="mr-1 size-3" />
-          View
-        </Link>
-      </Button>
-      {purchase.purchased_chat_id ? (
-        <Button size="sm" asChild className="flex-1">
-          <Link href={`/components/${purchase.purchased_chat_id}`}>
-            <Download className="mr-1 size-3" />
-            Access
-          </Link>
-        </Button>
-      ) : (
-        <Button size="sm" variant="outline" className="flex-1" disabled>
-          <Download className="mr-1 size-3" />
-          Processing...
-        </Button>
-      )}
-    </>
-  );
+  const componentSlug =
+    purchase.purchased_chat?.slug || purchase.purchased_chat_id;
 
-  const cardData: UnifiedCardData = {
-    id: purchase.id,
-    title: purchase.listing.title,
-    imageUrl: purchase.listing.preview_image_url || undefined,
-    framework: (purchase.listing.chat.framework || Framework.HTML) as Framework,
-    createdAt: purchase.created_at,
-    author: {
-      id: purchase.listing.seller.id,
-      name: purchase.listing.seller.full_name || "Anonymous",
-    },
-    href: `/marketplace/${purchase.listing.id}`,
-    price: purchase.price_paid_cents,
-    currency: purchase.currency,
-    category: {
-      name: purchase.listing.category.name,
-    },
-    badges: [
-      {
-        text: purchase.listing.chat.framework?.toUpperCase() || "HTML",
-        variant: "outline",
-        className: "font-mono text-xs",
-      },
-    ],
-    actions: actionsContent,
-    stats: [
-      {
-        icon: <DollarSign className="size-3" />,
-        value: `Paid: ${new Intl.NumberFormat("en-US", {
-          style: "currency",
-          currency: purchase.currency,
-        }).format(purchase.price_paid_cents / 100)}`,
-        className: "font-semibold",
-      },
-    ],
-  };
+  const CardWrapper = componentSlug
+    ? ({ children }: { children: React.ReactNode }) => (
+        <Link href={`/components/${componentSlug}`} className="block">
+          {children}
+        </Link>
+      )
+    : ({ children }: { children: React.ReactNode }) => <>{children}</>;
+
+  // Framework icon logic to match other pages
+  const FrameworkIcon =
+    purchase.listing.chat.framework === Framework.REACT
+      ? SiReact
+      : purchase.listing.chat.framework === Framework.VUE
+        ? SiVuedotjs
+        : SiHtml5;
 
   return (
-    <div className="group transition-all duration-200 hover:shadow-lg">
-      <UnifiedCard data={cardData} showActions className="cursor-default" />
+    <CardWrapper>
+      <Card className="group flex h-full cursor-pointer flex-col overflow-hidden transition-all duration-200 hover:shadow-lg">
+        {/* Image */}
+        <div
+          className="relative aspect-video w-full bg-cover bg-center bg-no-repeat"
+          style={{
+            backgroundImage: `url(${
+              purchase.listing.screenshot ||
+              purchase.listing.preview_image_url ||
+              "https://www.coderocket.app/placeholder.svg"
+            })`,
+          }}
+        >
+          <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-all duration-300 ease-in-out group-hover:opacity-100">
+            <Eye className="size-8 translate-y-4 text-white transition-transform duration-300 ease-in-out group-hover:translate-y-0" />
+          </div>
 
-      {/* Help Text */}
-      <div className="rounded-b-md border-t bg-card px-4 pb-4 pt-2 text-xs text-muted-foreground">
-        <p className="flex items-center gap-1">
-          <ExternalLink className="size-3" />
-          Need to modify this component?{" "}
-          <Link
-            href="https://docs.coderocket.app/github"
-            target="_blank"
-            className="underline hover:no-underline"
-          >
-            View docs
-          </Link>
-        </p>
-      </div>
-    </div>
+          {/* Price Badge */}
+          <div className="absolute right-3 top-3">
+            <Badge className="bg-green-600 text-white shadow-sm">
+              {new Intl.NumberFormat("en-US", {
+                style: "currency",
+                currency: purchase.currency,
+              }).format(purchase.price_paid_cents / 100)}
+            </Badge>
+          </div>
+
+          {/* Purchased Badge */}
+          <div className="absolute left-3 top-3">
+            <Badge className="bg-blue-600 text-white shadow-sm">
+              <ShoppingCart className="mr-1 size-3" />
+              Purchased
+            </Badge>
+          </div>
+        </div>
+
+        {/* Content */}
+        <CardContent className="flex flex-1 flex-col p-4">
+          <div className="flex flex-1 flex-col space-y-4">
+            {/* Title and Details */}
+            <div className="flex-1 space-y-2">
+              <h3 className="line-clamp-2 min-h-10 font-semibold text-foreground">
+                {purchase.listing.title}
+              </h3>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <span>
+                  by{" "}
+                  <Link
+                    href={`/users/${purchase.listing.seller.id}`}
+                    className="hover:text-primary hover:underline"
+                  >
+                    {purchase.listing.seller.full_name || "Anonymous"}
+                  </Link>
+                </span>
+                <span>•</span>
+                <div className="flex items-center gap-1">
+                  <Calendar className="size-3" />
+                  <span>{getRelativeDate(purchase.created_at)}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Framework and Category */}
+            <div className="flex items-center justify-between">
+              <Badge className="hover:bg-primary">
+                <FrameworkIcon className="mr-1 size-3" />
+                <span className="first-letter:uppercase">
+                  {purchase.listing.chat.framework || "html"}
+                </span>
+              </Badge>
+              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                <Tag className="size-3" />
+                <span>{purchase.listing.category.name}</span>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="grid grid-cols-2 gap-2">
+              <Button variant="outline" asChild size="sm">
+                <Link href={`/marketplace/${purchase.listing.id}`}>
+                  <Eye className="mr-1 size-3" />
+                  View Listing
+                </Link>
+              </Button>
+
+              {componentSlug && (
+                <DownloadCodeButton componentSlug={componentSlug} />
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </CardWrapper>
   );
 }

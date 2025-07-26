@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
+import { getSubscription } from "@/app/supabase-server";
 import { Container } from "@/components/container";
 import { PageTitle } from "@/components/page-title";
 import { createClient } from "@/utils/supabase/server";
@@ -22,6 +23,12 @@ export default async function StripeOnboardingPage({
 
   if (userError || !user) {
     redirect("/login");
+  }
+
+  // Check if user has premium subscription
+  const subscription = await getSubscription();
+  if (!subscription) {
+    redirect("/pricing?reason=marketplace-stripe");
   }
 
   // Get user's Stripe account status

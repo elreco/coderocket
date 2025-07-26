@@ -23,7 +23,7 @@ export type MarketplaceListing = {
   price_cents: number;
   currency: string;
   preview_image_url: string | null;
-  demo_url: string | null;
+  demo_url?: string | null;
   is_active: boolean | null;
   total_sales: number | null; // Changed to match database schema
   created_at: string;
@@ -57,6 +57,12 @@ export type MarketplacePurchase = {
   stripe_payment_intent_id: string | null;
   created_at: string;
   listing: MarketplaceListing;
+  purchased_chat?: {
+    id: string;
+    slug: string | null;
+    title: string | null;
+    framework: string | null;
+  } | null;
 };
 
 export async function getMarketplaceCategories(): Promise<
@@ -137,7 +143,7 @@ export async function getMarketplaceListings(params: {
   }
 
   // Add one extra to check if there are more results
-  const { data, error } = await query.range(offset, offset + limit);
+  const { data, error } = await query.range(offset, offset + limit - 1);
 
   if (error) {
     console.error("Error fetching marketplace listings:", error);
@@ -147,6 +153,10 @@ export async function getMarketplaceListings(params: {
   if (!data || data.length === 0) {
     return { listings: [], hasMore: false };
   }
+
+  // Check if there are more results by querying one extra
+  const { data: nextData } = await query.range(offset + limit, offset + limit);
+  const hasMore = Boolean(nextData && nextData.length > 0);
 
   // Get screenshots for all listings in one query
   const listingIds = data.map((listing) => listing.chat_id);
@@ -172,7 +182,7 @@ export async function getMarketplaceListings(params: {
 
   return {
     listings: listingsWithScreenshots,
-    hasMore: (data?.length || 0) === limit + 1,
+    hasMore,
   };
 }
 
@@ -332,7 +342,9 @@ export async function getUserMarketplaceListings(
   return listingsWithScreenshots;
 }
 
-export async function getUserMarketplacePurchases() {
+export async function getUserMarketplacePurchases(): Promise<
+  MarketplacePurchase[]
+> {
   const supabase = await createClient();
 
   const { data: userData } = await supabase.auth.getUser();
@@ -348,7 +360,8 @@ export async function getUserMarketplacePurchases() {
         category:marketplace_categories(*),
         seller:users!seller_id(id, full_name, avatar_url),
         chat:chats!chat_id(id, title, framework, slug)
-      )
+      ),
+      purchased_chat:chats!purchased_chat_id(id, slug, title, framework)
     `,
     )
     .eq("buyer_id", userData.user.id)
@@ -359,7 +372,38 @@ export async function getUserMarketplacePurchases() {
     return [];
   }
 
-  return data || [];
+  if (!data || data.length === 0) {
+    return [];
+  }
+
+  // Get screenshots for all listings in one query
+  const listingIds = data.map((purchase) => purchase.listing.chat_id);
+  const versions = data.map((purchase) => purchase.listing.version);
+
+  const { data: screenshots } = await supabase
+    .from("messages")
+    .select("chat_id, version, screenshot")
+    .in("chat_id", listingIds)
+    .in("version", versions)
+    .eq("role", "assistant");
+
+  // Map screenshots to purchases
+  const purchasesWithScreenshots = data.map((purchase) => {
+    const screenshot = screenshots?.find(
+      (s) =>
+        s.chat_id === purchase.listing.chat_id &&
+        s.version === purchase.listing.version,
+    );
+    return {
+      ...purchase,
+      listing: {
+        ...purchase.listing,
+        screenshot: screenshot?.screenshot || null,
+      },
+    };
+  });
+
+  return purchasesWithScreenshots;
 }
 
 export async function getMarketplaceListing(
@@ -509,7 +553,7 @@ export async function getUserPrivateComponentsPaginated(params: {
   // Add pagination and ordering
   const { data: chats, error: chatsError } = await query
     .order("created_at", { ascending: false })
-    .range(offset, offset + limit);
+    .range(offset, offset + limit - 1);
 
   if (chatsError) {
     console.error("Error fetching private chats:", chatsError);
@@ -519,6 +563,17 @@ export async function getUserPrivateComponentsPaginated(params: {
   if (!chats || chats.length === 0) {
     return { components: [], hasMore: false };
   }
+
+  // Check if there are more results
+  const { data: nextChats } = await supabase
+    .from("chats")
+    .select("id")
+    .eq("user_id", userData.user.id)
+    .eq("is_private", true)
+    .order("created_at", { ascending: false })
+    .range(offset + limit, offset + limit);
+
+  const hasMore = Boolean(nextChats && nextChats.length > 0);
 
   // Get all active marketplace listings to exclude components already listed
   const { data: activeListings } = await supabase
@@ -600,7 +655,7 @@ export async function getUserPrivateComponentsPaginated(params: {
 
   return {
     components,
-    hasMore: chats.length === limit + 1,
+    hasMore,
   };
 }
 

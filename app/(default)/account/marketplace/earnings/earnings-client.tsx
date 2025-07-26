@@ -28,31 +28,36 @@ interface EarningsClientProps {
   userStripeData: {
     stripe_account_id: string | null;
     stripe_account_status: string | null;
-    stripe_onboarding_completed: boolean;
-    stripe_payouts_enabled: boolean;
+    stripe_onboarding_completed: boolean | null;
+    stripe_payouts_enabled: boolean | null;
   } | null;
   earnings: Array<{
     id: string;
     amount_cents: number;
     currency: string;
-    status: string;
+    status: string | null;
     created_at: string;
+    purchase_id: string;
+    seller_id: string;
+    payout_date: string | null;
     marketplace_purchases: {
       listing_id: string;
       marketplace_listings: {
         title: string;
         price_cents: number;
       };
-    };
+    } | null;
   }>;
   payouts: Array<{
     id: string;
     amount_cents: number;
     currency: string;
-    status: string;
+    status: string | null;
     created_at: string;
     arrival_date: string | null;
     failure_reason: string | null;
+    earnings_ids: string[];
+    stripe_payout_id: string | null;
   }>;
   availableEarnings: number;
 }
@@ -330,7 +335,7 @@ export function EarningsClient({
               disabled={
                 isRequestingPayout ||
                 availableEarnings < 5000 ||
-                !userStripeData.stripe_payouts_enabled
+                !userStripeData?.stripe_payouts_enabled
               }
               className="flex-1"
             >
@@ -340,7 +345,7 @@ export function EarningsClient({
             <Button
               variant="outline"
               onClick={handleOpenDashboard}
-              disabled={!userStripeData.stripe_onboarding_completed}
+              disabled={!userStripeData?.stripe_onboarding_completed}
             >
               <ExternalLink className="mr-2 size-4" />
               Stripe Dashboard
@@ -429,7 +434,8 @@ export function EarningsClient({
                 >
                   <div>
                     <div className="line-clamp-1 font-medium">
-                      {earning.marketplace_purchases.marketplace_listings.title}
+                      {earning.marketplace_purchases?.marketplace_listings
+                        ?.title || "Unknown Component"}
                     </div>
                     <div className="text-sm text-muted-foreground">
                       {formatDistance(
@@ -452,7 +458,7 @@ export function EarningsClient({
                             : "outline"
                       }
                     >
-                      {earning.status}
+                      {earning.status || "unknown"}
                     </Badge>
                   </div>
                 </div>

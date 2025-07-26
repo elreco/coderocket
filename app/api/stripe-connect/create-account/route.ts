@@ -1,3 +1,4 @@
+import { getSubscription } from "@/app/supabase-server";
 import { getURL } from "@/utils/helpers";
 import { stripe } from "@/utils/stripe";
 import { createClient } from "@/utils/supabase/server";
@@ -14,6 +15,17 @@ export async function POST() {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
       });
+    }
+
+    // Check if user has premium subscription
+    const subscription = await getSubscription();
+    if (!subscription) {
+      return new Response(
+        JSON.stringify({
+          error: "Premium subscription required to create seller account",
+        }),
+        { status: 403 },
+      );
     }
 
     // Check if user already has a Stripe account
@@ -47,10 +59,14 @@ export async function POST() {
       }
     }
 
-    // Create Stripe Express account
+    console.log(
+      "Creating Stripe account - letting user choose country in Stripe form",
+    );
+
+    // Create Stripe Express account without specifying country
+    // This allows Stripe to ask the user for their country during onboarding
     const account = await stripe.accounts.create({
       type: "express",
-      country: "US", // You can make this dynamic based on user location
       email: user.email,
       capabilities: {
         card_payments: { requested: true },

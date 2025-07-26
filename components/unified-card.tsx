@@ -15,7 +15,7 @@ export interface UnifiedCardData {
   id: string;
   title: string;
   imageUrl?: string;
-  framework: Framework;
+  framework: string;
   createdAt: string;
   author?: {
     id: string;

@@ -32,9 +32,17 @@ export async function POST(req: Request) {
     } = await supabase.auth.getUser();
 
     if (userError || !user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-      });
+      console.error("User error:", userError);
+      console.error("User:", user);
+      return new Response(
+        JSON.stringify({
+          error: "Please sign in to purchase components",
+          requiresAuth: true,
+        }),
+        {
+          status: 401,
+        },
+      );
     }
 
     // Verify the listing exists and is active
@@ -63,17 +71,26 @@ export async function POST(req: Request) {
       });
     }
 
-    // Check if user already purchased this component
-    const { data: existingPurchase } = await supabase
+    // Check if user already purchased this component (stronger validation)
+    const { data: existingPurchase, error: purchaseCheckError } = await supabase
       .from("marketplace_purchases")
       .select("id")
       .eq("buyer_id", user.id)
       .eq("listing_id", listingId)
-      .single();
+      .maybeSingle();
+
+    // If there's an error checking, it might be a race condition, so be safe and deny
+    if (purchaseCheckError) {
+      console.error("Error checking existing purchase:", purchaseCheckError);
+      return new Response(
+        JSON.stringify({ error: "Unable to verify purchase status" }),
+        { status: 500 },
+      );
+    }
 
     if (existingPurchase) {
       return new Response(
-        JSON.stringify({ error: "Component already purchased" }),
+        JSON.stringify({ error: "You have already purchased this component" }),
         { status: 400 },
       );
     }

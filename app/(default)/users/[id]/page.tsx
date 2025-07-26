@@ -1,4 +1,13 @@
-import { Calendar, Plus, Heart, GitFork } from "lucide-react";
+import {
+  Calendar,
+  Plus,
+  Heart,
+  GitFork,
+  ShoppingBag,
+  DollarSign,
+  Star,
+  TrendingUp,
+} from "lucide-react";
 import { Metadata, ResolvingMetadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -26,6 +35,7 @@ import {
   getLikesCountByUserId,
   getComponentsCountByUserId,
   getRemixesCountByUserId,
+  getMarketplaceStats,
 } from "./actions";
 
 interface Props {
@@ -82,6 +92,7 @@ export default async function UserPage({
   const getComponentsCount = await getComponentsCountByUserId(user.id);
   const getRemixesCount = await getRemixesCountByUserId(user.id);
   const getLikesCount = await getLikesCountByUserId(user.id);
+  const marketplaceStats = await getMarketplaceStats(user.id);
 
   return (
     <Container>
@@ -222,6 +233,129 @@ export default async function UserPage({
               </div>
             </CardContent>
           </Card>
+
+          {marketplaceStats.isMarketplaceSeller && (
+            <Card>
+              <CardContent>
+                <h5 className="my-4 text-lg font-semibold">
+                  Marketplace Seller
+                </h5>
+                <div className="space-y-4">
+                  {/* Stats Grid */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="flex items-center gap-3 rounded-lg bg-green-50 p-3 dark:bg-green-950/20">
+                      <div className="flex size-10 items-center justify-center rounded-full bg-green-500 text-white">
+                        <ShoppingBag className="size-5" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-green-700 dark:text-green-300">
+                          Total Sales
+                        </p>
+                        <p className="text-lg font-bold text-green-900 dark:text-green-100">
+                          {marketplaceStats.totalSales}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3 rounded-lg bg-blue-50 p-3 dark:bg-blue-950/20">
+                      <div className="flex size-10 items-center justify-center rounded-full bg-blue-500 text-white">
+                        <DollarSign className="size-5" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-blue-700 dark:text-blue-300">
+                          Earnings
+                        </p>
+                        <p className="text-lg font-bold text-blue-900 dark:text-blue-100">
+                          ${marketplaceStats.totalEarnings.toFixed(2)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Listings Stats */}
+                  <div className="grid grid-cols-2 gap-4 text-center">
+                    <div className="rounded-lg border p-3">
+                      <p className="text-2xl font-bold">
+                        {marketplaceStats.totalListings}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Total Listings
+                      </p>
+                    </div>
+                    <div className="rounded-lg border p-3">
+                      <p className="text-2xl font-bold">
+                        {marketplaceStats.activeListings}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Active Listings
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Top Selling Component */}
+                  {marketplaceStats.topSellingListing &&
+                    (marketplaceStats.topSellingListing.total_sales || 0) >
+                      0 && (
+                      <div className="rounded-lg border p-4">
+                        <div className="mb-2 flex items-center gap-2">
+                          <Star className="size-4 text-yellow-500" />
+                          <p className="font-medium">Top Selling Component</p>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="truncate font-medium">
+                              {marketplaceStats.topSellingListing.title}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              {marketplaceStats.topSellingListing.total_sales ||
+                                0}{" "}
+                              sales
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-medium">
+                              $
+                              {(
+                                marketplaceStats.topSellingListing.price_cents /
+                                100
+                              ).toFixed(2)}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              $
+                              {(
+                                (marketplaceStats.topSellingListing
+                                  .price_cents *
+                                  (marketplaceStats.topSellingListing
+                                    .total_sales || 0) *
+                                  0.7) /
+                                100
+                              ).toFixed(2)}{" "}
+                              earned
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                  {/* Marketplace Badge */}
+                  <div className="flex items-center justify-center gap-2 rounded-lg bg-primary/10 p-3">
+                    <TrendingUp className="size-4 text-primary" />
+                    <span className="text-sm font-medium text-primary">
+                      Marketplace Seller since{" "}
+                      {marketplaceStats.joinedMarketplaceAt
+                        ? new Date(
+                            marketplaceStats.joinedMarketplaceAt,
+                          ).toLocaleDateString("en-US", {
+                            month: "long",
+                            year: "numeric",
+                          })
+                        : "Unknown"}
+                    </span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
         <Card className="col-span-1 xl:col-span-2">
           <CardContent>

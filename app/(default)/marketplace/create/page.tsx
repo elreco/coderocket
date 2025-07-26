@@ -2,6 +2,7 @@ import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { getSubscription } from "@/app/supabase-server";
 import { Container } from "@/components/container";
 import { PageTitle } from "@/components/page-title";
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,12 @@ async function checkUserAccess() {
 
   if (!userData.user) {
     redirect("/login");
+  }
+
+  // Check if user has premium subscription
+  const subscription = await getSubscription();
+  if (!subscription) {
+    redirect("/pricing?reason=marketplace-create");
   }
 
   return userData.user;

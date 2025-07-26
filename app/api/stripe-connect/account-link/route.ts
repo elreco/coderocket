@@ -1,3 +1,4 @@
+import { getSubscription } from "@/app/supabase-server";
 import { getURL } from "@/utils/helpers";
 import { stripe } from "@/utils/stripe";
 import { createClient } from "@/utils/supabase/server";
@@ -16,6 +17,17 @@ export async function POST(req: Request) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
       });
+    }
+
+    // Check if user has premium subscription
+    const subscription = await getSubscription();
+    if (!subscription) {
+      return new Response(
+        JSON.stringify({
+          error: "Premium subscription required for Stripe account management",
+        }),
+        { status: 403 },
+      );
     }
 
     // Get user's Stripe account

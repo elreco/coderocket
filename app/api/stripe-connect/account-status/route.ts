@@ -1,3 +1,4 @@
+import { getSubscription } from "@/app/supabase-server";
 import { createClient } from "@/utils/supabase/server";
 
 export async function GET() {
@@ -14,6 +15,10 @@ export async function GET() {
       });
     }
 
+    // Check if user has premium subscription
+    const subscription = await getSubscription();
+    const isPremium = !!subscription;
+
     // Get user's Stripe account info
     const { data: userData } = await supabase
       .from("users")
@@ -29,6 +34,7 @@ export async function GET() {
         onboardingComplete: userData?.stripe_onboarding_completed || false,
         payoutsEnabled: userData?.stripe_payouts_enabled || false,
         accountStatus: userData?.stripe_account_status || null,
+        isPremium,
       }),
       { status: 200 },
     );
