@@ -5,7 +5,6 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { getClientIp } from "@/utils/client-ip";
-import { MAX_ACCOUNTS_PER_IP } from "@/utils/config";
 import { isTemporaryEmailDomain, normalizeEmail } from "@/utils/helpers";
 import { createClient } from "@/utils/supabase/server";
 import { createOrRetrieveCustomer } from "@/utils/supabase-admin";
@@ -29,7 +28,6 @@ export async function login(formData: FormData) {
 
 export async function register(formData: FormData) {
   const supabase = await createClient();
-  const headersList = headers();
 
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
@@ -53,7 +51,7 @@ export async function register(formData: FormData) {
     };
   }
 
-  const clientIp = getClientIp(headersList as unknown as Headers);
+  /* const clientIp = getClientIp(headersList as unknown as Headers);
 
   if (clientIp) {
     const { data: usersWithSameIp, error: ipLookupError } = await supabase
@@ -72,7 +70,7 @@ export async function register(formData: FormData) {
           "Too many accounts have been created from this IP address. Please contact support.",
       };
     }
-  }
+  } */
 
   const data = {
     email,
@@ -104,7 +102,6 @@ export async function register(formData: FormData) {
       .from("users")
       .update({
         full_name: formData.get("full_name") as string,
-        ip_address: clientIp,
       })
       .eq("id", returnedData.user.id);
   } catch (e) {

@@ -121,20 +121,32 @@ export const updatePaymentRecord = async (
 ) => {
   const supabase = await createClient();
 
-  const amount_euro = await getEuroAmount(
-    paymentIntent.amount_received,
-    paymentIntent.currency,
-  );
+  try {
+    const amount_euro = await getEuroAmount(
+      paymentIntent.amount_received,
+      paymentIntent.currency,
+    );
 
-  await supabase.from("payments").insert({
-    payment_id: paymentIntent.id,
-    created: new Date(paymentIntent.created * 1000).toISOString(),
-    amount: paymentIntent.amount,
-    amount_euro,
-    payment_currency: paymentIntent.currency,
-    description: paymentIntent.description,
-    stripe_customer_id: paymentIntent.customer?.toString(),
-  });
+    const { error } = await supabase.from("payments").insert({
+      payment_id: paymentIntent.id,
+      created: new Date(paymentIntent.created * 1000).toISOString(),
+      amount: paymentIntent.amount,
+      amount_euro,
+      payment_currency: paymentIntent.currency,
+      description: paymentIntent.description,
+      stripe_customer_id: paymentIntent.customer?.toString() || null,
+    });
+
+    if (error) {
+      console.error("Error inserting payment record:", error);
+      throw error;
+    }
+
+    console.log(`Payment record inserted: ${paymentIntent.id}`);
+  } catch (error) {
+    console.error("Failed to update payment record:", error);
+    throw error;
+  }
 };
 
 const manageSubscriptionStatusChange = async (
