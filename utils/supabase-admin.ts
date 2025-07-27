@@ -107,13 +107,36 @@ async function getEuroAmount(
   amount: number,
   currency: string,
 ): Promise<number> {
+  console.log(`💱 Converting ${amount} ${currency} to EUR`);
   if (currency === "eur") return amount / 100;
-  const res = await fetch(
-    `https://api.exchangerate.host/convert?from=${currency}&to=eur`,
-  );
-  const data = await res.json();
-  const rate = data.info.rate;
-  return (amount / 100) * rate;
+
+  try {
+    const res = await fetch(
+      `https://api.exchangerate.host/convert?from=${currency}&to=eur`,
+    );
+
+    if (!res.ok) {
+      console.error(
+        `❌ Exchange rate API error: ${res.status} ${res.statusText}`,
+      );
+      return amount / 100;
+    }
+
+    const data = await res.json();
+
+    if (!data.success || !data.info?.rate) {
+      console.error("❌ Invalid exchange rate response:", data);
+      return amount / 100;
+    }
+
+    const rate = data.info.rate;
+    const euroAmount = (amount / 100) * rate;
+    console.log(`✅ Converted to ${euroAmount} EUR (rate: ${rate})`);
+    return euroAmount;
+  } catch (error) {
+    console.error("❌ Error fetching exchange rate:", error);
+    return amount / 100;
+  }
 }
 
 export const updatePaymentRecord = async (
