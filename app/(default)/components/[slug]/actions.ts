@@ -33,6 +33,30 @@ export const changeVisibilityByChatId = async (
     throw new Error("payment-required");
   }
 
+  // If trying to make the component public, check if it's listed on marketplace
+  // Business rule: Components listed on marketplace must remain private to maintain
+  // exclusivity for buyers who purchase access to these components
+  if (isVisible) {
+    const { data: marketplaceListing, error: marketplaceError } = await supabase
+      .from("marketplace_listings")
+      .select("id, title")
+      .eq("chat_id", chatId)
+      .eq("seller_id", user.id)
+      .eq("is_active", true)
+      .single();
+
+    if (marketplaceError && marketplaceError.code !== "PGRST116") {
+      // PGRST116 is "no rows returned", which is fine
+      console.error("Error checking marketplace listing:", marketplaceError);
+    }
+
+    if (marketplaceListing) {
+      // This should not happen in normal usage as the UI prevents it,
+      // but we keep this as a security measure
+      throw new Error("marketplace-listed");
+    }
+  }
+
   const { error } = await supabase
     .from("chats")
     .update({ is_private: !isVisible })

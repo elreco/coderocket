@@ -767,7 +767,7 @@ export default function Hero() {
                             <div
                               key={theme}
                               className={cn(
-                                "relative aspect-video cursor-pointer rounded-md items-center justify-center border-2 opacity-75 hover:border-2 hover:border-primary hover:opacity-100 overflow-hidden",
+                                "relative aspect-video cursor-pointer rounded-md items-center justify-center border-2 border-primary/20 opacity-75 transition-all duration-300 hover:border-primary hover:opacity-100 overflow-hidden p-1",
                                 {
                                   "border-primary opacity-100":
                                     selectedTheme === theme,

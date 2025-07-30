@@ -86,9 +86,9 @@ export function UnifiedCard({
   const cardContent = (
     <div
       className={cn(
-        "w-full bg-center overflow-hidden relative card rounded-md mx-auto cursor-pointer transition-all duration-200 hover:shadow-lg",
+        "w-full bg-center overflow-hidden relative card rounded-md mx-auto cursor-pointer border-2 border-primary/20 transition-all duration-300 hover:border-primary hover:shadow-lg",
         isReverse ? "bg-background" : "bg-secondary",
-        data.isLiked && "border border-pink-500",
+        data.isLiked && "border-2 border-pink-500",
         className,
       )}
     >
@@ -112,6 +112,12 @@ export function UnifiedCard({
               {priceFormatted}
             </Badge>
           )}
+          {data.totalSales !== undefined && (
+            <Badge className="bg-blue-600 text-white shadow-sm">
+              <ShoppingCart className="mr-1 size-3" />
+              {data.totalSales} sale{data.totalSales !== 1 ? "s" : ""}
+            </Badge>
+          )}
           {data.badges?.map((badge, index) => (
             <Badge
               key={index}
@@ -126,7 +132,7 @@ export function UnifiedCard({
         {/* Top Left Badges */}
         <div className="absolute left-3 top-3 flex flex-col gap-2">
           {data.isOwnItem && (
-            <Badge className="bg-blue-600 text-white shadow-sm">
+            <Badge className="bg-purple-600 text-white shadow-sm">
               <User className="mr-1 size-3" />
               Your Item
             </Badge>
@@ -190,12 +196,7 @@ export function UnifiedCard({
                 <span>Remixed</span>
               </div>
             )}
-            {data.totalSales && data.totalSales > 0 && (
-              <div className="flex items-center gap-1">
-                <ShoppingCart className="size-3" />
-                <span>{data.totalSales}</span>
-              </div>
-            )}
+
             {data.category && (
               <div className="flex items-center gap-1.5">
                 <Tag className="size-3" />

@@ -1,13 +1,5 @@
 import { SiHtml5, SiReact, SiVuedotjs } from "@icons-pack/react-simple-icons";
-import {
-  ArrowLeft,
-  Calendar,
-  Download,
-  Tag,
-  User,
-  BookOpen,
-  Wrench,
-} from "lucide-react";
+import { Calendar, Download, Tag, User, BookOpen, Wrench } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
@@ -32,6 +24,7 @@ import { createClient } from "@/utils/supabase/server";
 
 import { getMarketplaceListing } from "../actions";
 
+import { BackButton } from "./back-button";
 import { PurchaseButton } from "./purchase-button";
 
 export async function generateMetadata({
@@ -167,12 +160,7 @@ export default async function MarketplaceListingPage({
     <Container className="pr-2 sm:pr-11">
       {/* Breadcrumb */}
       <div className="mb-6">
-        <Button variant="ghost" size="sm" asChild>
-          <Link href="/marketplace" className="flex items-center gap-2">
-            <ArrowLeft className="size-4" />
-            Back to Marketplace
-          </Link>
-        </Button>
+        <BackButton />
       </div>
 
       <PageTitle
@@ -186,13 +174,13 @@ export default async function MarketplaceListingPage({
           {/* Component Preview Image */}
           {listing.screenshot && (
             <Link href={`/marketplace/${listing.id}/demo`}>
-              <div className="group relative cursor-pointer overflow-hidden rounded-xl border-2 border-primary/20 bg-gradient-to-br from-primary/5 via-transparent to-primary/10 p-1 shadow-lg transition-all duration-300 hover:border-primary/40 hover:shadow-xl">
+              <div className="group relative cursor-pointer overflow-hidden rounded-xl border-2 border-primary/20 bg-gradient-to-br from-primary/5 via-transparent to-primary/10 p-1 shadow-lg transition-all duration-300 hover:border-primary hover:shadow-xl">
                 {/* Decorative gradient overlay */}
                 <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-primary/10 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
 
-                {/* Demo button - floating */}
-                <div className="absolute right-4 top-4 z-10 translate-y-2 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
-                  <div className="rounded-md border border-primary/20 bg-primary/90 px-3 py-1 text-xs font-medium text-primary-foreground shadow-lg backdrop-blur-sm">
+                {/* Demo button - always visible */}
+                <div className="absolute right-4 top-4 z-10">
+                  <div className="rounded-md border border-primary/20 bg-primary px-3 py-1 text-xs font-medium text-primary-foreground shadow-lg backdrop-blur-sm transition-all duration-300 group-hover:bg-primary/90">
                     Live Demo
                   </div>
                 </div>
@@ -208,9 +196,6 @@ export default async function MarketplaceListingPage({
                   {/* Subtle overlay on hover */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
                 </div>
-
-                {/* Bottom accent line */}
-                <div className="absolute bottom-0 left-1/2 h-1 w-0 bg-gradient-to-r from-primary to-primary/60 transition-all duration-500 group-hover:left-0 group-hover:w-full" />
               </div>
             </Link>
           )}
@@ -225,12 +210,10 @@ export default async function MarketplaceListingPage({
                   {listing.chat.framework}
                 </span>
               </Badge>
-              {(listing.total_sales || 0) > 0 && (
-                <Badge variant="outline">
-                  {listing.total_sales} sale
-                  {listing.total_sales !== 1 ? "s" : ""}
-                </Badge>
-              )}
+              <Badge variant="outline">
+                {listing.total_sales || 0} sale
+                {(listing.total_sales || 0) !== 1 ? "s" : ""}
+              </Badge>
             </div>
 
             <h1 className="text-3xl font-bold tracking-tight">

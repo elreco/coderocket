@@ -262,7 +262,7 @@ function MarketplaceCard({ listing }: { listing: MarketplaceListing }) {
 
       <CardFooter className="flex items-center justify-between border-t pt-3">
         <div className="flex items-center gap-4 text-sm text-muted-foreground">
-          {listing.total_sales && listing.total_sales > 0 && (
+          {listing.total_sales !== undefined && (
             <div className="flex items-center gap-1">
               <ShoppingCart className="size-3" />
               <span>{listing.total_sales}</span>
@@ -325,7 +325,7 @@ function MarketplaceListItem({ listing }: { listing: MarketplaceListing }) {
                 <span>{listing.seller.full_name || "Anonymous"}</span>
               </div>
 
-              {listing.total_sales && listing.total_sales > 0 && (
+              {listing.total_sales !== undefined && (
                 <div className="flex items-center gap-1">
                   <ShoppingCart className="size-3" />
                   <span>{listing.total_sales} sales</span>

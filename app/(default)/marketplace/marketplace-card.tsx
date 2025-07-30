@@ -29,7 +29,7 @@ export function MarketplaceCard({ listing, isReverse }: MarketplaceCardProps) {
   const cardData: UnifiedCardData = {
     id: listing.id,
     title: listing.title,
-    imageUrl: listing.screenshot || undefined,
+    imageUrl: listing.preview_image_url || listing.screenshot || undefined,
     framework: (listing.chat.framework || Framework.HTML) as Framework,
     createdAt: listing.created_at,
     author: {

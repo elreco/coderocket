@@ -7,6 +7,7 @@ import {
   RefreshCcw,
   Search,
   SearchX,
+  Tag,
   X,
 } from "lucide-react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
@@ -338,6 +339,7 @@ export function MarketplaceInfiniteScroll({
                   setDropdownOpen(false);
                 }}
               >
+                <Tag className="size-3" />
                 All Categories
               </DropdownMenuItem>
               {categories.map((category) => (
@@ -351,7 +353,10 @@ export function MarketplaceInfiniteScroll({
                     setDropdownOpen(false);
                   }}
                 >
-                  <span>{category.name}</span>
+                  <div className="flex items-center gap-2">
+                    <Tag className="size-3" />
+                    <span>{category.name}</span>
+                  </div>
                 </DropdownMenuCheckboxItem>
               ))}
             </DropdownMenuContent>

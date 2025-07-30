@@ -941,10 +941,10 @@ function ComponentCard({
         type="button"
         onClick={onSelect}
         className={cn(
-          "w-full p-4 rounded-lg border text-left transition-all hover:border-primary/50",
+          "w-full p-4 rounded-lg border-2 text-left transition-all duration-300 hover:border-primary",
           isSelected
             ? "border-primary bg-primary/5 ring-2 ring-primary/20"
-            : "border-border",
+            : "border-primary/20",
         )}
       >
         <div className="flex items-center gap-4">
@@ -990,8 +990,10 @@ function ComponentCard({
       type="button"
       onClick={onSelect}
       className={cn(
-        "group relative overflow-hidden rounded-lg border transition-all hover:border-primary/50",
-        isSelected ? "border-primary ring-2 ring-primary/20" : "border-border",
+        "group relative overflow-hidden rounded-lg border-2 transition-all duration-300 hover:border-primary bg-secondary",
+        isSelected
+          ? "border-primary ring-2 ring-primary/20"
+          : "border-primary/20",
       )}
     >
       <div

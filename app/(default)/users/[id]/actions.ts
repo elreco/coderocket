@@ -30,7 +30,7 @@ export async function getMarketplaceStats(userId: string) {
         updated_at
       `,
       )
-      .eq("user_id", userId);
+      .eq("seller_id", userId);
 
     if (!listings || listings.length === 0) {
       return {
@@ -40,6 +40,7 @@ export async function getMarketplaceStats(userId: string) {
         totalSales: 0,
         totalEarnings: 0,
         topSellingListing: null,
+        joinedMarketplaceAt: null,
       };
     }
 
@@ -78,7 +79,9 @@ export async function getMarketplaceStats(userId: string) {
       topSellingListing,
       joinedMarketplaceAt:
         listings.length > 0
-          ? listings.map((l) => l.created_at).sort()[0]
+          ? listings
+              .map((l) => l.created_at)
+              .sort((a, b) => new Date(a).getTime() - new Date(b).getTime())[0]
           : null,
     };
   } catch (error) {
@@ -90,6 +93,7 @@ export async function getMarketplaceStats(userId: string) {
       totalSales: 0,
       totalEarnings: 0,
       topSellingListing: null,
+      joinedMarketplaceAt: null,
     };
   }
 }
@@ -301,4 +305,74 @@ export const getLikesCountByUserId = async (userId: string) => {
     return 0;
   }
   return count;
+};
+
+export const getLatestMarketplaceListingsByUserId = async (
+  userId: string,
+  limit: number = 5,
+) => {
+  const supabase = await createClient();
+
+  try {
+    const { data: listings, error } = await supabase
+      .from("marketplace_listings")
+      .select(
+        `
+        id,
+        title,
+        price_cents,
+        currency,
+        total_sales,
+        is_active,
+        created_at,
+        chat_id,
+        version,
+        chat:chat_id (
+          id,
+          title,
+          framework,
+          slug
+        ),
+        category:category_id (
+          id,
+          name
+        )
+      `,
+      )
+      .eq("seller_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      console.error("Error fetching marketplace listings:", error);
+      return [];
+    }
+
+    if (!listings || listings.length === 0) {
+      return [];
+    }
+
+    // Get screenshots for each listing
+    const listingsWithScreenshots = await Promise.all(
+      listings.map(async (listing) => {
+        const { data: message } = await supabase
+          .from("messages")
+          .select("screenshot")
+          .eq("chat_id", listing.chat_id)
+          .eq("version", listing.version)
+          .eq("role", "assistant")
+          .single();
+
+        return {
+          ...listing,
+          screenshot: message?.screenshot || null,
+        };
+      }),
+    );
+
+    return listingsWithScreenshots;
+  } catch (error) {
+    console.error("Error in getLatestMarketplaceListingsByUserId:", error);
+    return [];
+  }
 };

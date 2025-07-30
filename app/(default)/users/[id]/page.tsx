@@ -3,10 +3,9 @@ import {
   Plus,
   Heart,
   GitFork,
-  ShoppingBag,
-  DollarSign,
   Star,
   TrendingUp,
+  ShoppingCart,
 } from "lucide-react";
 import { Metadata, ResolvingMetadata } from "next";
 import Link from "next/link";
@@ -25,7 +24,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { avatarApi } from "@/utils/config";
+import { UnifiedCard, UnifiedCardData } from "@/components/unified-card";
+import { avatarApi, Framework } from "@/utils/config";
 import { getRelativeDate } from "@/utils/date";
 
 import {
@@ -36,6 +36,7 @@ import {
   getComponentsCountByUserId,
   getRemixesCountByUserId,
   getMarketplaceStats,
+  getLatestMarketplaceListingsByUserId,
 } from "./actions";
 
 interface Props {
@@ -93,6 +94,10 @@ export default async function UserPage({
   const getRemixesCount = await getRemixesCountByUserId(user.id);
   const getLikesCount = await getLikesCountByUserId(user.id);
   const marketplaceStats = await getMarketplaceStats(user.id);
+  const latestMarketplaceListings = await getLatestMarketplaceListingsByUserId(
+    user.id,
+    5,
+  );
 
   return (
     <Container>
@@ -234,128 +239,113 @@ export default async function UserPage({
             </CardContent>
           </Card>
 
-          {marketplaceStats.isMarketplaceSeller && (
-            <Card>
-              <CardContent>
-                <h5 className="my-4 text-lg font-semibold">
-                  Marketplace Seller
-                </h5>
-                <div className="space-y-4">
-                  {/* Stats Grid */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="flex items-center gap-3 rounded-lg bg-green-50 p-3 dark:bg-green-950/20">
-                      <div className="flex size-10 items-center justify-center rounded-full bg-green-500 text-white">
-                        <ShoppingBag className="size-5" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-green-700 dark:text-green-300">
-                          Total Sales
-                        </p>
-                        <p className="text-lg font-bold text-green-900 dark:text-green-100">
-                          {marketplaceStats.totalSales}
-                        </p>
-                      </div>
+          <Card className="mt-4">
+            <CardContent>
+              <h5 className="my-4 text-lg font-semibold">
+                {marketplaceStats.isMarketplaceSeller
+                  ? "Marketplace Seller"
+                  : "Marketplace Stats"}
+              </h5>
+              <div className="space-y-4">
+                {/* Stats Grid */}
+                <div className="flex justify-center">
+                  <div className="flex items-center gap-3 rounded-lg bg-green-50 p-3 dark:bg-green-950/20">
+                    <div className="flex size-10 items-center justify-center rounded-full bg-green-500 text-white">
+                      <ShoppingCart className="size-5" />
                     </div>
-
-                    <div className="flex items-center gap-3 rounded-lg bg-blue-50 p-3 dark:bg-blue-950/20">
-                      <div className="flex size-10 items-center justify-center rounded-full bg-blue-500 text-white">
-                        <DollarSign className="size-5" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-blue-700 dark:text-blue-300">
-                          Earnings
-                        </p>
-                        <p className="text-lg font-bold text-blue-900 dark:text-blue-100">
-                          ${marketplaceStats.totalEarnings.toFixed(2)}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Listings Stats */}
-                  <div className="grid grid-cols-2 gap-4 text-center">
-                    <div className="rounded-lg border p-3">
-                      <p className="text-2xl font-bold">
-                        {marketplaceStats.totalListings}
+                    <div>
+                      <p className="text-sm font-medium text-green-700 dark:text-green-300">
+                        Total Sales
                       </p>
-                      <p className="text-sm text-muted-foreground">
-                        Total Listings
+                      <p className="text-lg font-bold text-green-900 dark:text-green-100">
+                        {marketplaceStats.totalSales}
                       </p>
                     </div>
-                    <div className="rounded-lg border p-3">
-                      <p className="text-2xl font-bold">
-                        {marketplaceStats.activeListings}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        Active Listings
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Top Selling Component */}
-                  {marketplaceStats.topSellingListing &&
-                    (marketplaceStats.topSellingListing.total_sales || 0) >
-                      0 && (
-                      <div className="rounded-lg border p-4">
-                        <div className="mb-2 flex items-center gap-2">
-                          <Star className="size-4 text-yellow-500" />
-                          <p className="font-medium">Top Selling Component</p>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="truncate font-medium">
-                              {marketplaceStats.topSellingListing.title}
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                              {marketplaceStats.topSellingListing.total_sales ||
-                                0}{" "}
-                              sales
-                            </p>
-                          </div>
-                          <div className="text-right">
-                            <p className="font-medium">
-                              $
-                              {(
-                                marketplaceStats.topSellingListing.price_cents /
-                                100
-                              ).toFixed(2)}
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                              $
-                              {(
-                                (marketplaceStats.topSellingListing
-                                  .price_cents *
-                                  (marketplaceStats.topSellingListing
-                                    .total_sales || 0) *
-                                  0.7) /
-                                100
-                              ).toFixed(2)}{" "}
-                              earned
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                  {/* Marketplace Badge */}
-                  <div className="flex items-center justify-center gap-2 rounded-lg bg-primary/10 p-3">
-                    <TrendingUp className="size-4 text-primary" />
-                    <span className="text-sm font-medium text-primary">
-                      Marketplace Seller since{" "}
-                      {marketplaceStats.joinedMarketplaceAt
-                        ? new Date(
-                            marketplaceStats.joinedMarketplaceAt,
-                          ).toLocaleDateString("en-US", {
-                            month: "long",
-                            year: "numeric",
-                          })
-                        : "Unknown"}
-                    </span>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          )}
+
+                {/* Listings Stats */}
+                <div className="grid grid-cols-2 gap-4 text-center">
+                  <div className="rounded-lg border p-3">
+                    <p className="text-2xl font-bold">
+                      {marketplaceStats.totalListings}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Total Listings
+                    </p>
+                  </div>
+                  <div className="rounded-lg border p-3">
+                    <p className="text-2xl font-bold">
+                      {marketplaceStats.activeListings}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Active Listings
+                    </p>
+                  </div>
+                </div>
+
+                {/* Top Selling Component */}
+                {marketplaceStats.topSellingListing &&
+                  (marketplaceStats.topSellingListing.total_sales || 0) > 0 && (
+                    <div className="rounded-lg border p-4">
+                      <div className="mb-2 flex items-center gap-2">
+                        <Star className="size-4 text-yellow-500" />
+                        <p className="font-medium">Top Selling Component</p>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="truncate font-medium">
+                            {marketplaceStats.topSellingListing.title}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {marketplaceStats.topSellingListing.total_sales ||
+                              0}{" "}
+                            sales
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-medium">
+                            $
+                            {(
+                              marketplaceStats.topSellingListing.price_cents /
+                              100
+                            ).toFixed(2)}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            $
+                            {(
+                              (marketplaceStats.topSellingListing.price_cents *
+                                (marketplaceStats.topSellingListing
+                                  .total_sales || 0) *
+                                0.7) /
+                              100
+                            ).toFixed(2)}{" "}
+                            earned
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                {/* Marketplace Badge */}
+                {marketplaceStats.isMarketplaceSeller &&
+                  marketplaceStats.joinedMarketplaceAt && (
+                    <div className="flex items-center justify-center gap-2 rounded-lg bg-primary/10 p-3">
+                      <TrendingUp className="size-4 text-primary" />
+                      <span className="text-sm font-medium text-primary">
+                        Marketplace Seller since{" "}
+                        {new Date(
+                          marketplaceStats.joinedMarketplaceAt,
+                        ).toLocaleDateString("en-US", {
+                          month: "long",
+                          year: "numeric",
+                        })}
+                      </span>
+                    </div>
+                  )}
+              </div>
+            </CardContent>
+          </Card>
         </div>
         <Card className="col-span-1 xl:col-span-2">
           <CardContent>
@@ -399,7 +389,133 @@ export default async function UserPage({
             )}
           </CardContent>
         </Card>
+
+        {/* Latest Marketplace Listings */}
+        <Card className="col-span-1 xl:col-span-2">
+          <CardContent>
+            <h5 className="my-4 text-base font-semibold lg:text-lg">
+              Latest marketplace listings
+            </h5>
+            {latestMarketplaceListings.length > 0 ? (
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-6">
+                {latestMarketplaceListings.length > 0 && (
+                  <div className="sm:col-span-3">
+                    <UnifiedCard
+                      data={formatListingForUnifiedCard(
+                        latestMarketplaceListings[0],
+                        user.id,
+                      )}
+                      isReverse
+                    />
+                  </div>
+                )}
+                {latestMarketplaceListings.length > 1 && (
+                  <div className="sm:col-span-3">
+                    <UnifiedCard
+                      data={formatListingForUnifiedCard(
+                        latestMarketplaceListings[1],
+                        user.id,
+                      )}
+                      isReverse
+                    />
+                  </div>
+                )}
+                {latestMarketplaceListings.length > 2 && (
+                  <div className="sm:col-span-2">
+                    <UnifiedCard
+                      data={formatListingForUnifiedCard(
+                        latestMarketplaceListings[2],
+                        user.id,
+                      )}
+                      isReverse
+                    />
+                  </div>
+                )}
+                {latestMarketplaceListings.length > 3 && (
+                  <div className="sm:col-span-2">
+                    <UnifiedCard
+                      data={formatListingForUnifiedCard(
+                        latestMarketplaceListings[3],
+                        user.id,
+                      )}
+                      isReverse
+                    />
+                  </div>
+                )}
+                {latestMarketplaceListings.length > 4 && (
+                  <div className="sm:col-span-2">
+                    <UnifiedCard
+                      data={formatListingForUnifiedCard(
+                        latestMarketplaceListings[4],
+                        user.id,
+                      )}
+                      isReverse
+                    />
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
+                <p className="text-sm text-muted-foreground">
+                  No marketplace listings yet
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </Container>
   );
+}
+
+// Type pour les listings avec relations
+type MarketplaceListingWithRelations = {
+  id: string;
+  title: string;
+  price_cents: number;
+  currency: string;
+  total_sales: number | null;
+  is_active: boolean | null;
+  created_at: string;
+  chat_id: string;
+  version: number;
+  screenshot: string | null;
+  chat: {
+    id: string;
+    title: string | null;
+    framework: string | null;
+    slug: string | null;
+  } | null;
+  category: {
+    id: number;
+    name: string;
+  } | null;
+};
+
+// Fonction pour formater les données de listing pour UnifiedCard
+function formatListingForUnifiedCard(
+  listing: MarketplaceListingWithRelations,
+  currentUserId?: string,
+): UnifiedCardData {
+  console.log("Formatting listing:", listing); // Debug
+  console.log("Screenshot URL:", listing.screenshot); // Debug
+  return {
+    id: listing.id,
+    title: listing.title,
+    imageUrl: listing.screenshot || undefined,
+    framework: (listing.chat?.framework || Framework.HTML) as Framework,
+    createdAt: listing.created_at,
+    author: {
+      id: currentUserId || "unknown",
+      name: "You",
+    },
+    href: `/marketplace/${listing.id}`,
+    price: listing.price_cents,
+    currency: listing.currency,
+    category: {
+      name: listing.category?.name || "Uncategorized",
+    },
+    totalSales: listing.total_sales || 0,
+    isOwnItem: true, // Toujours true car c'est le profil de l'utilisateur
+  };
 }

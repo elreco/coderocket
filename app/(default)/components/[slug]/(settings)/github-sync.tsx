@@ -283,6 +283,17 @@ export default function GitHubSync({ closeSheet }: { closeSheet: () => void }) {
             <Badge>New</Badge>
           </div>
         </div>
+        <p className="text-sm text-muted-foreground">
+          Synchronize your component code with GitHub for local development.{" "}
+          <a
+            href="https://docs.coderocket.app/github/overview"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-foreground underline decoration-dotted underline-offset-4 hover:decoration-solid"
+          >
+            View documentation
+          </a>
+        </p>
         <div className="text-sm text-muted-foreground">
           Loading GitHub connection...
         </div>
@@ -300,6 +311,17 @@ export default function GitHubSync({ closeSheet }: { closeSheet: () => void }) {
             <Badge>New</Badge>
           </div>
         </div>
+        <p className="text-sm text-muted-foreground">
+          Synchronize your component code with GitHub for local development.{" "}
+          <a
+            href="https://docs.coderocket.app/github/overview"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-foreground underline decoration-dotted underline-offset-4 hover:decoration-solid"
+          >
+            View documentation
+          </a>
+        </p>
         <div className="flex items-center space-x-3 rounded-lg border border-amber-200 bg-amber-50 p-4">
           <AlertCircle className="size-5 text-amber-600" />
           <div className="flex-1">
@@ -331,6 +353,17 @@ export default function GitHubSync({ closeSheet }: { closeSheet: () => void }) {
             <Badge>New</Badge>
           </div>
         </div>
+        <p className="text-sm text-muted-foreground">
+          Synchronize your component code with GitHub for local development.{" "}
+          <a
+            href="https://docs.coderocket.app/github/overview"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-foreground underline decoration-dotted underline-offset-4 hover:decoration-solid"
+          >
+            View documentation
+          </a>
+        </p>
         <div className="flex items-center space-x-3 rounded-lg border border-orange-200 bg-orange-50 p-4">
           <AlertCircle className="size-5 text-orange-600" />
           <div className="flex-1">
@@ -362,6 +395,17 @@ export default function GitHubSync({ closeSheet }: { closeSheet: () => void }) {
           <Badge>New</Badge>
         </div>
       </div>
+      <p className="text-sm text-muted-foreground">
+        Synchronize your component code with GitHub for local development.{" "}
+        <a
+          href="https://docs.coderocket.app/github/overview"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-foreground underline decoration-dotted underline-offset-4 hover:decoration-solid"
+        >
+          View documentation
+        </a>
+      </p>
 
       {!hasGithubRepo ? (
         // Create Repository Section

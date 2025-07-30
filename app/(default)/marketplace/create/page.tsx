@@ -1,15 +1,13 @@
-import { ArrowLeft } from "lucide-react";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { getSubscription } from "@/app/supabase-server";
 import { Container } from "@/components/container";
 import { PageTitle } from "@/components/page-title";
-import { Button } from "@/components/ui/button";
 import { createClient } from "@/utils/supabase/server";
 
 import { getMarketplaceCategories } from "../actions";
 
+import { BackButton } from "./back-button";
 import { CreateListingForm } from "./create-listing-form";
 
 export const metadata = {
@@ -43,12 +41,7 @@ export default async function CreateListingPage() {
     <Container className="pr-2 sm:pr-11">
       {/* Breadcrumb */}
       <div className="mb-6">
-        <Button variant="ghost" size="sm" asChild>
-          <Link href="/marketplace" className="flex items-center gap-2">
-            <ArrowLeft className="size-4" />
-            Back to Marketplace
-          </Link>
-        </Button>
+        <BackButton />
       </div>
 
       <PageTitle
