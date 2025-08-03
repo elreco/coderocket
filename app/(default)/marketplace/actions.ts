@@ -88,6 +88,7 @@ export async function getMarketplaceListings(params: {
   offset?: number;
   categoryId?: number;
   search?: string;
+  framework?: string;
   sortBy?: "newest" | "oldest" | "price_low" | "price_high" | "popular";
 }): Promise<{ listings: MarketplaceListing[]; hasMore: boolean }> {
   const supabase = await createClient();
@@ -96,6 +97,7 @@ export async function getMarketplaceListings(params: {
     offset = 0,
     categoryId,
     search,
+    framework,
     sortBy = "newest",
   } = params;
 
@@ -118,6 +120,8 @@ export async function getMarketplaceListings(params: {
   if (search) {
     query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%`);
   }
+
+  // Framework filtering will be done after data retrieval since it's a joined field
 
   // Apply sorting
   switch (sortBy) {
@@ -170,7 +174,7 @@ export async function getMarketplaceListings(params: {
     .eq("role", "assistant");
 
   // Map screenshots to listings
-  const listingsWithScreenshots = data.map((listing) => {
+  let listingsWithScreenshots = data.map((listing) => {
     const screenshot = screenshots?.find(
       (s) => s.chat_id === listing.chat_id && s.version === listing.version,
     );
@@ -179,6 +183,13 @@ export async function getMarketplaceListings(params: {
       screenshot: screenshot?.screenshot || null,
     };
   });
+
+  // Filter by framework if specified
+  if (framework) {
+    listingsWithScreenshots = listingsWithScreenshots.filter(
+      (listing) => listing.chat.framework === framework,
+    );
+  }
 
   return {
     listings: listingsWithScreenshots,

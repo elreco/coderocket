@@ -1,5 +1,6 @@
 "use client";
 
+import { SiHtml5, SiReact, SiVuedotjs } from "@icons-pack/react-simple-icons";
 import {
   ArrowDown,
   ChevronDown,
@@ -24,7 +25,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MAX_SEARCH_LENGTH } from "@/utils/config";
+import { MAX_SEARCH_LENGTH, Framework } from "@/utils/config";
 
 import {
   getMarketplaceListings,
@@ -42,6 +43,7 @@ interface MarketplaceInfiniteScrollProps {
   initialCategories: MarketplaceCategory[];
   initialSearchQuery?: string;
   initialSelectedCategories?: string[];
+  initialSelectedFramework?: string;
 }
 
 export function MarketplaceInfiniteScroll({
@@ -50,6 +52,7 @@ export function MarketplaceInfiniteScroll({
   initialCategories,
   initialSearchQuery = "",
   initialSelectedCategories = [],
+  initialSelectedFramework = "",
 }: MarketplaceInfiniteScrollProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -59,6 +62,9 @@ export function MarketplaceInfiniteScroll({
   const [searchQuery, setSearchQuery] = useState<string>(initialSearchQuery);
   const [selectedCategories, setSelectedCategories] = useState<string[]>(
     initialSelectedCategories,
+  );
+  const [selectedFramework, setSelectedFramework] = useState<string>(
+    initialSelectedFramework,
   );
   const [categories] = useState<MarketplaceCategory[]>(initialCategories);
 
@@ -78,6 +84,13 @@ export function MarketplaceInfiniteScroll({
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [showSkeleton, setShowSkeleton] = useState<boolean>(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [frameworkDropdownOpen, setFrameworkDropdownOpen] = useState(false);
+
+  const frameworks = [
+    { value: Framework.REACT, label: "React", icon: SiReact },
+    { value: Framework.VUE, label: "Vue", icon: SiVuedotjs },
+    { value: Framework.HTML, label: "HTML", icon: SiHtml5 },
+  ];
 
   const [searchParamsString, setSearchParamsString] = useState(
     searchParams.toString(),
@@ -92,7 +105,11 @@ export function MarketplaceInfiniteScroll({
   }, [searchParamsString, searchParams, router, pathname]);
 
   // --- URL utility ---
-  function updateURLQuery(query: string, categories?: string[]) {
+  function updateURLQuery(
+    query: string,
+    categories?: string[],
+    framework?: string,
+  ) {
     const params = new URLSearchParams(searchParams.toString());
 
     if (query) {
@@ -107,6 +124,12 @@ export function MarketplaceInfiniteScroll({
       params.delete("categories");
     }
 
+    if (framework) {
+      params.set("framework", framework);
+    } else {
+      params.delete("framework");
+    }
+
     setSearchParamsString(params.toString());
   }
 
@@ -115,11 +138,13 @@ export function MarketplaceInfiniteScroll({
     pageToFetch,
     search = "",
     categories = [],
+    framework = "",
     reset = false,
   }: {
     pageToFetch: number;
     search?: string;
     categories?: string[];
+    framework?: string;
     reset?: boolean;
   }) {
     try {
@@ -137,6 +162,7 @@ export function MarketplaceInfiniteScroll({
           offset: pageToFetch * PAGE_SIZE,
           categoryId,
           search: search,
+          framework: framework || undefined,
           sortBy: "newest",
         });
 
@@ -157,6 +183,7 @@ export function MarketplaceInfiniteScroll({
   async function doFetchPopularListings(
     search?: string,
     categories?: string[],
+    framework?: string,
   ) {
     const categoryId =
       categories && categories.length > 0 ? Number(categories[0]) : undefined;
@@ -165,6 +192,7 @@ export function MarketplaceInfiniteScroll({
       offset: 0,
       categoryId,
       search: search,
+      framework: framework || undefined,
       sortBy: "popular",
     });
     setPopularListings(data);
@@ -189,15 +217,20 @@ export function MarketplaceInfiniteScroll({
     setIsLoading(true);
     setShowSkeleton(true);
 
-    updateURLQuery(searchQuery, selectedCategories);
+    updateURLQuery(searchQuery, selectedCategories, selectedFramework);
 
     await doFetchListings({
       pageToFetch: 0,
       search: searchQuery,
       categories: selectedCategories,
+      framework: selectedFramework,
       reset: true,
     });
-    await doFetchPopularListings(searchQuery, selectedCategories);
+    await doFetchPopularListings(
+      searchQuery,
+      selectedCategories,
+      selectedFramework,
+    );
 
     setIsLoading(false);
     setTimeout(() => setShowSkeleton(false), 300);
@@ -208,15 +241,16 @@ export function MarketplaceInfiniteScroll({
     setIsLoading(false);
     setShowSkeleton(false);
 
-    updateURLQuery("");
+    updateURLQuery("", selectedCategories, selectedFramework);
 
     await doFetchListings({
       pageToFetch: 0,
       search: "",
       categories: selectedCategories,
+      framework: selectedFramework,
       reset: true,
     });
-    await doFetchPopularListings("", selectedCategories);
+    await doFetchPopularListings("", selectedCategories, selectedFramework);
   }
 
   async function handleCategorySelection(categoryId: string | null) {
@@ -236,15 +270,37 @@ export function MarketplaceInfiniteScroll({
     }
 
     setSelectedCategories(newCategories);
-    updateURLQuery(searchQuery, newCategories);
+    updateURLQuery(searchQuery, newCategories, selectedFramework);
 
     await doFetchListings({
       pageToFetch: 0,
       search: searchQuery,
       categories: newCategories,
+      framework: selectedFramework,
       reset: true,
     });
-    await doFetchPopularListings(searchQuery, newCategories);
+    await doFetchPopularListings(searchQuery, newCategories, selectedFramework);
+
+    setIsLoading(false);
+    setTimeout(() => setShowSkeleton(false), 300);
+  }
+
+  async function handleFrameworkSelection(framework: string | null) {
+    setIsLoading(true);
+    setShowSkeleton(true);
+
+    const newFramework = framework || "";
+    setSelectedFramework(newFramework);
+    updateURLQuery(searchQuery, selectedCategories, newFramework);
+
+    await doFetchListings({
+      pageToFetch: 0,
+      search: searchQuery,
+      categories: selectedCategories,
+      framework: newFramework,
+      reset: true,
+    });
+    await doFetchPopularListings(searchQuery, selectedCategories, newFramework);
 
     setIsLoading(false);
     setTimeout(() => setShowSkeleton(false), 300);
@@ -257,8 +313,16 @@ export function MarketplaceInfiniteScroll({
       pageToFetch: page + 1,
       search: searchQuery,
       categories: selectedCategories,
+      framework: selectedFramework,
     });
-  }, [hasMore, isFetchingMore, page, searchQuery, selectedCategories]);
+  }, [
+    hasMore,
+    isFetchingMore,
+    page,
+    searchQuery,
+    selectedCategories,
+    selectedFramework,
+  ]);
 
   // Filter out popular from the public list to avoid duplicates
   const filteredListings = listings.filter(
@@ -362,6 +426,71 @@ export function MarketplaceInfiniteScroll({
             </DropdownMenuContent>
           </DropdownMenu>
 
+          {/* Frameworks Filter */}
+          <DropdownMenu
+            open={frameworkDropdownOpen}
+            onOpenChange={setFrameworkDropdownOpen}
+          >
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="secondary"
+                className="flex items-center gap-2 border border-border"
+              >
+                {selectedFramework ? (
+                  <>
+                    {(() => {
+                      const framework = frameworks.find(
+                        (f) => f.value === selectedFramework,
+                      );
+                      const IconComponent = framework?.icon || SiHtml5;
+                      return (
+                        <>
+                          <IconComponent className="size-3" />
+                          {framework?.label}
+                        </>
+                      );
+                    })()}
+                  </>
+                ) : (
+                  "All Frameworks"
+                )}
+                <ChevronDown className="size-4" />
+              </Button>
+            </DropdownMenuTrigger>
+
+            <DropdownMenuContent>
+              <DropdownMenuItem
+                key="all-frameworks"
+                className="flex cursor-pointer items-center space-x-2 capitalize text-primary"
+                onClick={() => {
+                  handleFrameworkSelection(null);
+                  setFrameworkDropdownOpen(false);
+                }}
+              >
+                <SiHtml5 className="size-3" />
+                All Frameworks
+              </DropdownMenuItem>
+              {frameworks.map((framework) => {
+                const IconComponent = framework.icon;
+                return (
+                  <DropdownMenuItem
+                    key={framework.value}
+                    className="flex cursor-pointer items-center space-x-2 capitalize"
+                    onClick={() => {
+                      handleFrameworkSelection(framework.value);
+                      setFrameworkDropdownOpen(false);
+                    }}
+                  >
+                    <div className="flex items-center gap-2">
+                      <IconComponent className="size-3" />
+                      <span>{framework.label}</span>
+                    </div>
+                  </DropdownMenuItem>
+                );
+              })}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           {/* Create Listing Button */}
           <SmartCreateListingButton>Create Listing</SmartCreateListingButton>
         </div>
@@ -382,7 +511,9 @@ export function MarketplaceInfiniteScroll({
               onClick={async () => {
                 await handleClearSearch();
                 await handleCategorySelection(null);
+                await handleFrameworkSelection(null);
                 setDropdownOpen(false);
+                setFrameworkDropdownOpen(false);
               }}
               variant="secondary"
               className="flex items-center gap-2"

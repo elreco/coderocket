@@ -86,13 +86,18 @@ export async function generateMetadata({
 export default async function MarketplacePage({
   searchParams,
 }: {
-  searchParams: Promise<{ search?: string; categories?: string }>;
+  searchParams: Promise<{
+    search?: string;
+    categories?: string;
+    framework?: string;
+  }>;
 }) {
-  const { search, categories } = await searchParams;
+  const { search, categories, framework } = await searchParams;
   const searchQuery = search || "";
   const initialSelectedCategories = categories
     ? categories.split(",").filter(Boolean)
     : [];
+  const initialSelectedFramework = framework || "";
 
   const categoryId =
     initialSelectedCategories.length > 0
@@ -106,6 +111,7 @@ export default async function MarketplacePage({
         offset: 0,
         categoryId,
         search: searchQuery,
+        framework: initialSelectedFramework || undefined,
         sortBy: "newest",
       }),
       getMarketplaceListings({
@@ -113,6 +119,7 @@ export default async function MarketplacePage({
         offset: 0,
         categoryId,
         search: searchQuery,
+        framework: initialSelectedFramework || undefined,
         sortBy: "popular",
       }),
       getMarketplaceCategories(),
@@ -179,6 +186,7 @@ export default async function MarketplacePage({
           initialCategories={initialCategories}
           initialSearchQuery={searchQuery}
           initialSelectedCategories={initialSelectedCategories}
+          initialSelectedFramework={initialSelectedFramework}
         />
       </div>
     </Container>

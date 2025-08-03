@@ -55,7 +55,7 @@ export function useStripeStatus() {
       hasAccount: false,
       onboardingComplete: false,
       isPremium: false,
-      isLoading: initialCachedStatus ? false : true, // Don't show loading if we have cache
+      isLoading: false, // Don't show loading by default
       error: null,
     },
   );
@@ -105,9 +105,12 @@ export function useStripeStatus() {
   }, []);
 
   useEffect(() => {
-    // Always try to fetch/use cache on mount
-    fetchStripeStatus();
-  }, [fetchStripeStatus]);
+    // Only use cache on mount, don't make API call automatically
+    const cachedStatus = getCachedStatus();
+    if (cachedStatus) {
+      setStatus({ ...cachedStatus, isLoading: false });
+    }
+  }, []);
 
   const canCreateListing =
     status.isPremium && status.hasAccount && status.onboardingComplete;
