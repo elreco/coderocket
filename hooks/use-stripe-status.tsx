@@ -15,7 +15,7 @@ export function useStripeStatus() {
     hasAccount: false,
     onboardingComplete: false,
     isPremium: false,
-    isLoading: true,
+    isLoading: false,
     error: null,
   });
 

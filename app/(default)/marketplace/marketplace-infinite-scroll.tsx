@@ -378,8 +378,9 @@ export function MarketplaceInfiniteScroll({
           <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
             <DropdownMenuTrigger asChild>
               <Button
+                size="lg"
                 variant="secondary"
-                className="flex items-center gap-2 border border-border"
+                className="flex w-full items-center gap-2 border border-border p-[22px] sm:w-auto"
               >
                 {selectedCategories.length > 0
                   ? selectedCategories
@@ -434,8 +435,9 @@ export function MarketplaceInfiniteScroll({
           >
             <DropdownMenuTrigger asChild>
               <Button
+                size="lg"
                 variant="secondary"
-                className="flex items-center gap-2 border border-border"
+                className="flex w-full items-center gap-2 border border-border p-[22px] sm:w-auto"
               >
                 {selectedFramework ? (
                   <>
@@ -492,8 +494,45 @@ export function MarketplaceInfiniteScroll({
             </DropdownMenuContent>
           </DropdownMenu>
 
+          {/* Reset Filters Button */}
+          {(selectedCategories.length > 0 ||
+            selectedFramework ||
+            searchQuery) && (
+            <Button
+              size="lg"
+              variant="secondary"
+              className="flex w-full items-center gap-2 border border-border p-[22px] sm:w-auto"
+              onClick={async () => {
+                setSearchQuery("");
+                setSelectedCategories([]);
+                setSelectedFramework("");
+                updateURLQuery("", [], "");
+                setIsLoading(true);
+                setShowSkeleton(true);
+                await doFetchListings({
+                  pageToFetch: 0,
+                  search: "",
+                  categories: [],
+                  framework: "",
+                  reset: true,
+                });
+                await doFetchPopularListings("", [], "");
+                setIsLoading(false);
+                setTimeout(() => setShowSkeleton(false), 300);
+              }}
+            >
+              <RefreshCcw className="size-4" />
+              Reset Filters
+            </Button>
+          )}
+
           {/* Create Listing Button */}
-          <SmartCreateListingButton>Create Listing</SmartCreateListingButton>
+          <SmartCreateListingButton
+            size="lg"
+            className="flex w-full items-center gap-2 border border-border p-[22px] sm:w-auto"
+          >
+            Create Listing
+          </SmartCreateListingButton>
         </div>
       </div>
 
@@ -510,11 +549,24 @@ export function MarketplaceInfiniteScroll({
           <div className="mt-4 flex items-center gap-2">
             <Button
               onClick={async () => {
-                await handleClearSearch();
-                await handleCategorySelection(null);
-                await handleFrameworkSelection(null);
+                setSearchQuery("");
+                setSelectedCategories([]);
+                setSelectedFramework("");
+                updateURLQuery("", [], "");
                 setDropdownOpen(false);
                 setFrameworkDropdownOpen(false);
+                setIsLoading(true);
+                setShowSkeleton(true);
+                await doFetchListings({
+                  pageToFetch: 0,
+                  search: "",
+                  categories: [],
+                  framework: "",
+                  reset: true,
+                });
+                await doFetchPopularListings("", [], "");
+                setIsLoading(false);
+                setTimeout(() => setShowSkeleton(false), 300);
               }}
               variant="secondary"
               className="flex items-center gap-2"
@@ -522,7 +574,12 @@ export function MarketplaceInfiniteScroll({
               <RefreshCcw className="size-4" />
               <span>Clear search</span>
             </Button>
-            <SmartCreateListingButton>Create Listing</SmartCreateListingButton>
+            <SmartCreateListingButton
+              size="lg"
+              className="flex w-full items-center gap-2 border border-border p-[22px] sm:w-auto"
+            >
+              Create Listing
+            </SmartCreateListingButton>
           </div>
         </div>
       ) : (

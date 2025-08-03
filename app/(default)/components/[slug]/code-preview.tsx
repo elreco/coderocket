@@ -8,7 +8,7 @@ import CodeMirror, {
 } from "@uiw/react-codemirror";
 import saveAs from "file-saver";
 import JSZip from "jszip";
-import { Clipboard, Download } from "lucide-react";
+import { Clipboard, Download, Pencil } from "lucide-react";
 import { useRef, useEffect } from "react";
 import React from "react";
 import { useCopyToClipboard } from "usehooks-ts";
@@ -25,6 +25,7 @@ import { ChatFile } from "@/utils/completion-parser";
 import { Framework } from "@/utils/config";
 import { getLanguageExtension } from "@/utils/file-extensions";
 
+import ComponentSettings from "./(settings)/component-settings";
 import { CodePreviewFileTree } from "./code-preview-filetree";
 import ChatSkeleton from "./component-skeleton";
 
@@ -221,6 +222,18 @@ export default function CodePreview() {
                       </span>{" "}
                       <Clipboard className="w-4" />
                     </Button>
+
+                    <ComponentSettings>
+                      <Button
+                        variant="outline"
+                        className="flex items-center rounded-sm"
+                      >
+                        <span className="mr-1 hidden text-nowrap text-xs xl:block">
+                          Modify code
+                        </span>{" "}
+                        <Pencil className="w-4" />
+                      </Button>
+                    </ComponentSettings>
 
                     <Button
                       variant="outline"
