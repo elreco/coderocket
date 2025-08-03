@@ -58,7 +58,6 @@ export default async function MyPurchasesPage({
               variant="secondary"
               customText={{
                 create: "Sell Components",
-                becomeSeller: "Become a Seller",
               }}
             >
               Sell Components

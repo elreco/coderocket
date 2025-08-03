@@ -21,7 +21,6 @@ interface SmartCreateListingButtonProps {
   showIcon?: boolean;
   customText?: {
     create?: string;
-    becomeSeller?: string;
     upgradeToPremium?: string;
   };
 }
@@ -37,34 +36,27 @@ export function SmartCreateListingButton({
 }: SmartCreateListingButtonProps) {
   const router = useRouter();
   const [isNavigating, setIsNavigating] = useState(false);
-  const { canCreateListing, needsPremium, isLoading, refresh } =
-    useStripeStatus();
+  const { canCreateListing, needsPremium, isLoading } = useStripeStatus();
 
-  const handleClick = async () => {
-    setIsNavigating(true);
-
-    // If we have cached data, use it immediately
-    if (!isLoading && (canCreateListing || needsPremium)) {
-      let href: string;
-      if (needsPremium) {
-        href = "/pricing?reason=marketplace-create";
-      } else if (canCreateListing) {
-        href = "/marketplace/create";
-      } else {
-        href = "/account/marketplace/stripe-onboarding";
-      }
-      router.push(href);
+  const handleClick = () => {
+    // Don't navigate if still loading
+    if (isLoading) {
       return;
     }
 
-    // If no cached data, refresh in background and go to default page
-    refresh().catch(() => {
-      // Ignore errors, user will still get to create page
-    });
+    setIsNavigating(true);
 
-    // Always go to create page - if user doesn't have permission,
-    // the create page will handle redirecting them appropriately
-    router.push("/marketplace/create");
+    // Navigate based on current status
+    let href: string;
+    if (canCreateListing) {
+      href = "/marketplace/create";
+    } else if (needsPremium) {
+      href = "/pricing?reason=marketplace-create";
+    } else {
+      href = "/account/marketplace/stripe-onboarding";
+    }
+
+    router.push(href);
   };
 
   // Always show "Create Listing" by default, let the routing handle the specifics
@@ -76,12 +68,12 @@ export function SmartCreateListingButton({
       size={size}
       className={className}
       onClick={handleClick}
-      disabled={isNavigating}
+      disabled={isNavigating || isLoading}
       {...props}
     >
       {showIcon && (
         <>
-          {isNavigating ? (
+          {isNavigating || isLoading ? (
             <Loader2 className="mr-2 size-4 animate-spin" />
           ) : (
             <Plus className="mr-2 size-4" />

@@ -188,7 +188,6 @@ export default async function MyListingsPage() {
           <SmartCreateListingButton
             customText={{
               create: "Create Your First Listing",
-              becomeSeller: "Become a Seller",
             }}
           >
             Create Your First Listing

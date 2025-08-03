@@ -4,6 +4,7 @@ import { SiHtml5, SiReact, SiVuedotjs } from "@icons-pack/react-simple-icons";
 import {
   ArrowDown,
   ChevronDown,
+  Wrench,
   Loader,
   RefreshCcw,
   Search,
@@ -467,7 +468,7 @@ export function MarketplaceInfiniteScroll({
                   setFrameworkDropdownOpen(false);
                 }}
               >
-                <SiHtml5 className="size-3" />
+                <Wrench className="size-3" />
                 All Frameworks
               </DropdownMenuItem>
               {frameworks.map((framework) => {
