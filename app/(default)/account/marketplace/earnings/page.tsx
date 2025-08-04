@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 
+import { getSubscription } from "@/app/supabase-server";
 import { Container } from "@/components/container";
 import { PageTitle } from "@/components/page-title";
 import { createClient } from "@/utils/supabase/server";
@@ -70,7 +71,6 @@ export default async function EarningsPage() {
   }
 
   // Check if user has premium subscription
-  const { getSubscription } = await import("@/app/supabase-server");
   const subscription = await getSubscription();
   if (!subscription) {
     redirect("/pricing?reason=marketplace-earnings");

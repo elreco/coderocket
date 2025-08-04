@@ -2,6 +2,7 @@
 import {
   ChevronsUpDown,
   CreditCard,
+  DollarSign,
   Heart,
   LogOut,
   ShoppingCart,
@@ -167,6 +168,15 @@ export function NavUser({
                 >
                   <ShoppingCart />
                   My Listings
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild className="cursor-pointer">
+                <Link
+                  href="/account/marketplace/earnings"
+                  onClick={() => setOpenMobile(false)}
+                >
+                  <DollarSign />
+                  My Earnings
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild className="cursor-pointer">
