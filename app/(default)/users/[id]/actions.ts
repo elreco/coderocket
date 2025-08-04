@@ -2,36 +2,101 @@ import { MAX_SEARCH_LENGTH } from "@/utils/config";
 import { Framework } from "@/utils/config";
 import { createClient } from "@/utils/supabase/server";
 
-export const getUser = async (id: string) => {
+export async function getUser(id: string) {
   const supabase = await createClient();
-
-  // Récupérer les données utilisateur de la table users
-  const { data, error } = await supabase
+  const { data: user } = await supabase
     .from("users")
     .select("*")
     .eq("id", id)
     .single();
+  return user;
+}
 
-  if (error) {
-    throw new Error(error.message);
-  }
+export async function getMarketplaceStats(userId: string) {
+  const supabase = await createClient();
 
-  const { data: authData, error: authError } =
-    await supabase.auth.admin.getUserById(id);
+  try {
+    // Get user's marketplace listings
+    const { data: listings } = await supabase
+      .from("marketplace_listings")
+      .select(
+        `
+        id,
+        title,
+        price_cents,
+        total_sales,
+        is_active,
+        created_at,
+        updated_at
+      `,
+      )
+      .eq("seller_id", userId);
 
-  if (authError) {
-    console.error(
-      "Erreur lors de la récupération des données d'authentification:",
-      authError,
+    if (!listings || listings.length === 0) {
+      return {
+        isMarketplaceSeller: false,
+        totalListings: 0,
+        activeListings: 0,
+        totalSales: 0,
+        totalEarnings: 0,
+        topSellingListing: null,
+        joinedMarketplaceAt: null,
+      };
+    }
+
+    // Calculate stats
+    const totalListings = listings.length;
+    const activeListings = listings.filter((l) => l.is_active).length;
+    const totalSales = listings.reduce(
+      (sum, listing) => sum + (listing.total_sales || 0),
+      0,
     );
-  }
 
-  return {
-    ...data,
-    email: authData?.user?.email,
-    last_sign_in_at: authData?.user?.last_sign_in_at,
-  };
-};
+    // Calculate total earnings (70% revenue share)
+    const totalEarnings = listings.reduce((sum, listing) => {
+      const earnings =
+        (listing.price_cents * (listing.total_sales || 0) * 0.7) / 100;
+      return sum + earnings;
+    }, 0);
+
+    // Find top selling listing
+    const topSellingListing = listings.reduce(
+      (top: (typeof listings)[0] | null, current) => {
+        if (!top || (current.total_sales || 0) > (top.total_sales || 0)) {
+          return current;
+        }
+        return top;
+      },
+      null as (typeof listings)[0] | null,
+    );
+
+    return {
+      isMarketplaceSeller: true,
+      totalListings,
+      activeListings,
+      totalSales,
+      totalEarnings,
+      topSellingListing,
+      joinedMarketplaceAt:
+        listings.length > 0
+          ? listings
+              .map((l) => l.created_at)
+              .sort((a, b) => new Date(a).getTime() - new Date(b).getTime())[0]
+          : null,
+    };
+  } catch (error) {
+    console.error("Error fetching marketplace stats:", error);
+    return {
+      isMarketplaceSeller: false,
+      totalListings: 0,
+      activeListings: 0,
+      totalSales: 0,
+      totalEarnings: 0,
+      topSellingListing: null,
+      joinedMarketplaceAt: null,
+    };
+  }
+}
 
 export const getLikedComponentsByUserId = async (userId: string) => {
   const supabase = await createClient();
@@ -240,4 +305,74 @@ export const getLikesCountByUserId = async (userId: string) => {
     return 0;
   }
   return count;
+};
+
+export const getLatestMarketplaceListingsByUserId = async (
+  userId: string,
+  limit: number = 5,
+) => {
+  const supabase = await createClient();
+
+  try {
+    const { data: listings, error } = await supabase
+      .from("marketplace_listings")
+      .select(
+        `
+        id,
+        title,
+        price_cents,
+        currency,
+        total_sales,
+        is_active,
+        created_at,
+        chat_id,
+        version,
+        chat:chat_id (
+          id,
+          title,
+          framework,
+          slug
+        ),
+        category:category_id (
+          id,
+          name
+        )
+      `,
+      )
+      .eq("seller_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      console.error("Error fetching marketplace listings:", error);
+      return [];
+    }
+
+    if (!listings || listings.length === 0) {
+      return [];
+    }
+
+    // Get screenshots for each listing
+    const listingsWithScreenshots = await Promise.all(
+      listings.map(async (listing) => {
+        const { data: message } = await supabase
+          .from("messages")
+          .select("screenshot")
+          .eq("chat_id", listing.chat_id)
+          .eq("version", listing.version)
+          .eq("role", "assistant")
+          .single();
+
+        return {
+          ...listing,
+          screenshot: message?.screenshot || null,
+        };
+      }),
+    );
+
+    return listingsWithScreenshots;
+  } catch (error) {
+    console.error("Error in getLatestMarketplaceListingsByUserId:", error);
+    return [];
+  }
 };

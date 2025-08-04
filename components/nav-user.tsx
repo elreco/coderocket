@@ -2,7 +2,10 @@
 import {
   ChevronsUpDown,
   CreditCard,
+  Heart,
   LogOut,
+  ShoppingCart,
+  SquareUserRoundIcon,
   User,
   UserCircle,
 } from "lucide-react";
@@ -135,6 +138,44 @@ export function NavUser({
                 <Link href="/pricing" onClick={() => setOpenMobile(false)}>
                   <CreditCard />
                   Subscribe
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild className="cursor-pointer">
+                <Link
+                  href="/account/components"
+                  onClick={() => setOpenMobile(false)}
+                >
+                  <SquareUserRoundIcon />
+                  My Components
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild className="cursor-pointer">
+                <Link
+                  href="/account/liked-components"
+                  onClick={() => setOpenMobile(false)}
+                >
+                  <Heart />
+                  Liked Components
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild className="cursor-pointer">
+                <Link
+                  href="/account/marketplace/listings"
+                  onClick={() => setOpenMobile(false)}
+                >
+                  <ShoppingCart />
+                  My Listings
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild className="cursor-pointer">
+                <Link
+                  href="/account/marketplace/purchases"
+                  onClick={() => setOpenMobile(false)}
+                >
+                  <CreditCard />
+                  My Purchases
                 </Link>
               </DropdownMenuItem>
             </DropdownMenuGroup>

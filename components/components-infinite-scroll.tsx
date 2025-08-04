@@ -377,6 +377,34 @@ export function ComponentsInfiniteScroll({
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
+
+        {/* Reset Filters Button */}
+        {(selectedFrameworks.length > 0 || searchQuery) && (
+          <Button
+            size="lg"
+            variant="secondary"
+            className="flex w-full items-center gap-2 border border-border p-[22px] sm:w-auto"
+            onClick={async () => {
+              setSearchQuery("");
+              setSelectedFrameworks([]);
+              updateURLQuery("", []);
+              setIsLoading(true);
+              setShowSkeleton(true);
+              await doFetchPublicChats({
+                pageToFetch: 0,
+                search: "",
+                frameworks: [],
+                reset: true,
+              });
+              await doFetchPopularChats("", []);
+              setIsLoading(false);
+              setTimeout(() => setShowSkeleton(false), 300);
+            }}
+          >
+            <RefreshCcw className="size-4" />
+            Reset Filters
+          </Button>
+        )}
       </div>
 
       {/* Popular first, then Public */}

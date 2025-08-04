@@ -9,7 +9,7 @@ import { isTemporaryEmailDomain, normalizeEmail } from "@/utils/helpers";
 import { createClient } from "@/utils/supabase/server";
 import { createOrRetrieveCustomer } from "@/utils/supabase-admin";
 
-export async function login(formData: FormData) {
+export async function login(formData: FormData, redirectTo?: string) {
   const supabase = await createClient();
 
   const data = {
@@ -23,10 +23,10 @@ export async function login(formData: FormData) {
     return { error: error.message };
   }
 
-  return { url: "/" };
+  return { url: redirectTo || "/" };
 }
 
-export async function register(formData: FormData) {
+export async function register(formData: FormData, redirectTo?: string) {
   const supabase = await createClient();
 
   const email = formData.get("email") as string;
@@ -115,7 +115,10 @@ export async function register(formData: FormData) {
     });
   }
 
-  return { url: "/login" };
+  // After successful registration, redirect to login with redirect parameter preserved
+  return {
+    url: `/login${redirectTo ? `?redirect=${encodeURIComponent(redirectTo)}` : ""}`,
+  };
 }
 
 export async function signInWithEmail(formData: FormData) {

@@ -8,6 +8,7 @@ import React, {
   useEffect,
   ReactNode,
   useRef,
+  useCallback,
 } from "react";
 import stripAnsi from "strip-ansi";
 
@@ -73,7 +74,7 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
     setPreviewId(undefined);
     setLoadingState(null);
     oldArtifactFilesRef.current = [];
-  }, [chatId]);
+  }, [chatId, setLoadingState]);
 
   useEffect(() => {
     if (shellProcessRef.current) {
@@ -88,56 +89,72 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
     setPreviewId(undefined);
     setLoadingState(null);
     oldArtifactFilesRef.current = [];
-  }, []);
+  }, [setLoadingState]);
+
+  // Clear errors when framework changes to prevent showing old framework errors
+  useEffect(() => {
+    setBuildError(null);
+    setLoadingState(null);
+  }, [selectedFramework, setLoadingState]);
+
+  // Clear errors when selected version changes (new component)
+  useEffect(() => {
+    setBuildError(null);
+    setLoadingState(null);
+  }, [selectedVersion, setLoadingState]);
 
   /**
    * Compare artifact files to detect whether `package.json` content has changed.
    */
-  const hasPackageJsonChanged = (
-    oldFiles: typeof artifactFiles,
-    newFiles: typeof artifactFiles,
-  ) => {
-    const oldPkg = oldFiles.find((f) => f.name === "package.json");
-    const newPkg = newFiles.find((f) => f.name === "package.json");
+  const hasPackageJsonChanged = useCallback(
+    (oldFiles: typeof artifactFiles, newFiles: typeof artifactFiles) => {
+      const oldPkg = oldFiles.find((f) => f.name === "package.json");
+      const newPkg = newFiles.find((f) => f.name === "package.json");
 
-    // Handle cases where package.json might not exist in old or new files
-    if (!oldPkg && newPkg) return true; // New package.json added
-    if (!newPkg && oldPkg) return true; // package.json removed
-    if (!oldPkg && !newPkg) return false; // No package.json in either
+      // Handle cases where package.json might not exist in old or new files
+      if (!oldPkg && newPkg) return true; // New package.json added
+      if (!newPkg && oldPkg) return true; // package.json removed
+      if (!oldPkg && !newPkg) return false; // No package.json in either
 
-    // Both exist; compare content
-    return oldPkg?.content !== newPkg?.content;
-  };
+      // Both exist; compare content
+      return oldPkg?.content !== newPkg?.content;
+    },
+    [],
+  );
 
-  const addToBuildError = (data: string) => {
-    const possibleError = formatBuildError(data);
-    if (possibleError) {
-      setBuildError((prevError) => {
-        if (!prevError) return possibleError;
+  const addToBuildError = useCallback(
+    (data: string) => {
+      const possibleError = formatBuildError(data);
+      if (possibleError) {
+        // Only set error if we haven't recently cleared it (avoid race conditions)
+        setBuildError((prevError) => {
+          if (!prevError) return possibleError;
 
-        // Avoid duplicating similar error messages
-        if (prevError.content.includes(possibleError.content)) {
-          return prevError;
-        }
+          // Avoid duplicating similar error messages
+          if (prevError.content.includes(possibleError.content)) {
+            return prevError;
+          }
 
-        // Limit the total content length to prevent overwhelming the UI
-        const combinedContent =
-          prevError.content + "\n" + possibleError.content;
-        const maxLength = 2000;
-        const trimmedContent =
-          combinedContent.length > maxLength
-            ? combinedContent.substring(combinedContent.length - maxLength)
-            : combinedContent;
+          // Limit the total content length to prevent overwhelming the UI
+          const combinedContent =
+            prevError.content + "\n" + possibleError.content;
+          const maxLength = 2000;
+          const trimmedContent =
+            combinedContent.length > maxLength
+              ? combinedContent.substring(combinedContent.length - maxLength)
+              : combinedContent;
 
-        return {
-          ...prevError,
-          description: prevError.description,
-          content: trimmedContent,
-        };
-      });
-      setLoadingState("error");
-    }
-  };
+          return {
+            ...prevError,
+            description: prevError.description,
+            content: trimmedContent,
+          };
+        });
+        setLoadingState("error");
+      }
+    },
+    [setLoadingState],
+  );
 
   /**
    * The main effect that re-initializes everything whenever `artifactFiles` changes.
@@ -287,6 +304,9 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
     chatId,
     isWebcontainerReady,
     isLengthError,
+    setLoadingState,
+    addToBuildError,
+    hasPackageJsonChanged,
   ]);
 
   return (
@@ -325,6 +345,16 @@ function formatBuildError(data: string): BuildError | null {
     "waiting for changes",
     "starting development server",
     "listening on",
+    "webpack compiled",
+    "hot reload",
+    "hmr update",
+    "local:",
+    "network:",
+    "press r to restart",
+    "press o to open",
+    "press q to quit",
+    "ready - started server",
+    "event - compiled",
   ];
 
   for (const pattern of ignorePatterns) {

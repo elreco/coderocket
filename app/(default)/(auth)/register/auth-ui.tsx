@@ -1,7 +1,7 @@
 "use client";
 import { SiFacebook, SiGithub, SiGoogle } from "@icons-pack/react-simple-icons";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -14,12 +14,14 @@ import { register, signInWithOAuth } from "../actions";
 export default function AuthUI() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get("redirect");
 
   const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     setIsLoading(true);
-    const result = await register(formData);
+    const result = await register(formData, redirectTo || undefined);
     if (result?.error) {
       toast({
         variant: "destructive",
@@ -60,6 +62,11 @@ export default function AuthUI() {
       <h1 className="mb-4 text-center text-lg font-medium  sm:text-2xl">
         Register
       </h1>
+      {redirectTo && (
+        <div className="mb-4 rounded-md bg-blue-50 p-3 text-sm text-blue-800">
+          Create an account to continue to your purchase.
+        </div>
+      )}
       <div className="grid gap-4">
         <div className="grid gap-2">
           <div className="grid gap-1">
@@ -165,7 +172,9 @@ export default function AuthUI() {
             </span>
           </div>
         </div>
-        <Link href="/login">
+        <Link
+          href={`/login${redirectTo ? `?redirect=${encodeURIComponent(redirectTo)}` : ""}`}
+        >
           <Button
             className="flex w-full items-center space-x-2"
             variant="secondary"

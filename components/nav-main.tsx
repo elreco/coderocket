@@ -5,6 +5,7 @@ import { type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { type ReactNode } from "react";
 
+import { Badge } from "@/components/ui/badge";
 import {
   SidebarGroup,
   SidebarGroupLabel,
@@ -23,6 +24,7 @@ export function NavMain({
     url: string;
     icon: LucideIcon | IconType;
     isActive?: boolean;
+    isNew?: boolean;
   }[];
   label: string;
 }) {
@@ -35,9 +37,18 @@ export function NavMain({
         {items.map((item) => (
           <SidebarMenuItem key={item.url}>
             <SidebarMenuButton isActive={item.isActive} asChild>
-              <Link href={item.url} onClick={() => setOpenMobile(false)}>
+              <Link
+                className="flex items-center gap-2"
+                href={item.url}
+                onClick={() => setOpenMobile(false)}
+              >
                 <item.icon />
                 <span>{item.title}</span>
+                {item.isNew && !item.isActive && (
+                  <Badge variant="default" className="text-xs">
+                    New
+                  </Badge>
+                )}
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

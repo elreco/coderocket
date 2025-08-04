@@ -42,7 +42,7 @@
     {
       "name": "Website",
       "icon": "globe",
-      "url": "https://www.  coderocket.app"
+      "url": "https://www.coderocket.app"
     },
     {
       "name": "Community",
@@ -66,6 +66,15 @@
           "github/setup",
           "github/synchronization",
           "github/troubleshooting"
+        ]
+      },
+      {
+        "group": "Marketplace",
+        "pages": [
+          "marketplace/overview",
+          "marketplace/selling",
+          "marketplace/purchasing",
+          "marketplace/customization"
         ]
       }
     ]

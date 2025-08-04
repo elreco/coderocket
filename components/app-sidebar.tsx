@@ -5,10 +5,9 @@ import {
   BookOpen,
   CreditCard,
   Globe,
-  Heart,
   Rocket,
   SquareTerminal,
-  SquareUserRoundIcon,
+  Store,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -45,17 +44,11 @@ const data = {
       url: "/components",
       icon: Globe,
     },
-  ],
-  myComponents: [
     {
-      title: "My Components",
-      url: "/account/components",
-      icon: SquareUserRoundIcon,
-    },
-    {
-      title: "Liked Components",
-      url: "/account/liked-components",
-      icon: Heart,
+      title: "Marketplace",
+      url: "/marketplace",
+      isNew: true,
+      icon: Store,
     },
   ],
   community: [
@@ -150,12 +143,6 @@ export function AppSidebar({
       ...item,
       isActive: pathname === item.url,
     })),
-    ...(user
-      ? data.myComponents.map((item) => ({
-          ...item,
-          isActive: pathname === item.url,
-        }))
-      : []),
   ];
 
   const communityItems = data.community.map((item) => ({

@@ -58,18 +58,38 @@ export default async function Components({ params }: Props) {
   const userData = await supabase.auth.getUser();
   const connectedUser = userData.data.user;
   const chat = await fetchChatById(slug);
-  const isNotFound = chat?.is_private && chat?.user?.id !== connectedUser?.id;
+
+  // Use user_id directly for more reliable access control
+  const isNotFound = chat?.is_private && chat?.user_id !== connectedUser?.id;
+
   if (!chat || isNotFound) {
-    return notFound();
-  }
-  const lastUserMessage = await fetchLastUserMessageByChatId(chat.id);
-  const messages = await fetchMessagesByChatId(chat.id);
-  if (!lastUserMessage || !messages) {
+    console.log("404 because chat not found or access denied:", {
+      chat: !!chat,
+      isNotFound,
+    });
     return notFound();
   }
 
-  const authorized = connectedUser?.id === chat?.user?.id;
-  const user = chat?.user;
+  const lastUserMessage = await fetchLastUserMessageByChatId(chat.id);
+  const messages = await fetchMessagesByChatId(chat.id);
+
+  console.log("Messages check:", {
+    chatId: chat.id,
+    lastUserMessage: !!lastUserMessage,
+    messages: !!messages,
+    messagesCount: messages?.length || 0,
+  });
+
+  if (!lastUserMessage || !messages) {
+    console.log("404 because no messages found:", {
+      lastUserMessage: !!lastUserMessage,
+      messages: !!messages,
+    });
+    return notFound();
+  }
+
+  const authorized = connectedUser?.id === chat?.user_id;
+  const user = chat?.user || { id: chat?.user_id };
 
   return (
     <ComponentCompletion chatId={chat.id} authorized={authorized} user={user} />
