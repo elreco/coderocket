@@ -63,15 +63,12 @@ export async function POST() {
       "Creating Stripe account - letting user choose country in Stripe form",
     );
 
-    // Create Stripe Express account without specifying country
+    // Create Stripe Express account without specifying country or capabilities
     // This allows Stripe to ask the user for their country during onboarding
+    // Capabilities will be automatically requested based on the selected country
     const account = await stripe.accounts.create({
       type: "express",
       email: user.email,
-      capabilities: {
-        card_payments: { requested: true },
-        transfers: { requested: true },
-      },
       business_profile: {
         product_description: "Digital components and templates marketplace",
         mcc: "5734", // Computer Software Stores

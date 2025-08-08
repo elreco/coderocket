@@ -34,6 +34,79 @@ export async function POST() {
     // Fetch account from Stripe
     const account = await stripe.accounts.retrieve(userData.stripe_account_id);
 
+    // Check if we need to request capabilities for marketplace functionality
+    const cardPayments = account.capabilities?.card_payments;
+    const transfers = account.capabilities?.transfers;
+
+    const needsCapabilities =
+      !cardPayments ||
+      !transfers ||
+      cardPayments === "inactive" ||
+      transfers === "inactive";
+
+    // If the account has a country but missing capabilities, request them
+    if (account.country && needsCapabilities) {
+      console.log(
+        `Requesting missing capabilities for account ${account.id} in ${account.country}`,
+      );
+
+      try {
+        await stripe.accounts.update(userData.stripe_account_id, {
+          capabilities: {
+            card_payments: { requested: true },
+            transfers: { requested: true },
+          },
+        });
+
+        // Fetch updated account
+        const updatedAccount = await stripe.accounts.retrieve(
+          userData.stripe_account_id,
+        );
+
+        // Update user's Stripe account status with updated info
+        const { error: updateError } = await supabase
+          .from("users")
+          .update({
+            stripe_account_status: updatedAccount.charges_enabled
+              ? "enabled"
+              : updatedAccount.details_submitted
+                ? "restricted"
+                : "pending",
+            stripe_onboarding_completed: updatedAccount.details_submitted,
+            stripe_payouts_enabled: updatedAccount.payouts_enabled,
+            stripe_charges_enabled: updatedAccount.charges_enabled,
+          })
+          .eq("id", user.id);
+
+        if (updateError) {
+          console.error(
+            "Failed to update user Stripe account status:",
+            updateError,
+          );
+          return new Response(
+            JSON.stringify({ error: "Failed to update account status" }),
+            { status: 500 },
+          );
+        }
+
+        return new Response(
+          JSON.stringify({
+            success: true,
+            capabilitiesUpdated: true,
+            status: {
+              charges_enabled: updatedAccount.charges_enabled,
+              details_submitted: updatedAccount.details_submitted,
+              payouts_enabled: updatedAccount.payouts_enabled,
+            },
+          }),
+          { status: 200 },
+        );
+      } catch (capabilityError) {
+        console.error("Failed to request capabilities:", capabilityError);
+        // Continue with normal flow even if capability request fails
+      }
+    }
+
     // Update user's Stripe account status
     const { error: updateError } = await supabase
       .from("users")
