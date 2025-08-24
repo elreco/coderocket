@@ -172,7 +172,7 @@ export default async function MarketplacePage({
         </div>
         <div className="mb-8">
           <Button variant="outline" asChild>
-            <Link href="/docs/marketplace/overview">
+            <Link href="https://docs.coderocket.app/marketplace/overview">
               <HelpCircle className="mr-2 size-4" />
               How it works?
             </Link>
