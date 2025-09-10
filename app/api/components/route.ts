@@ -43,6 +43,146 @@ import { createClient } from "@/utils/supabase/server";
 import { systemPrompt } from "@/utils/system-prompts";
 import { htmlSystemPrompt } from "@/utils/system-prompts/html";
 
+interface ContextResult {
+  limitedMessages: Tables<"messages">[];
+  contextSummary?: string;
+}
+
+const buildIntelligentContext = async (
+  messages: Tables<"messages">[],
+): Promise<ContextResult> => {
+  // Smart context management with dynamic limits based on content complexity
+  const baseMaxMessages = 30; // Increased base limit
+  const maxCriticalMessages = 8; // More critical messages preserved
+
+  if (messages.length <= baseMaxMessages) {
+    return { limitedMessages: messages };
+  }
+
+  // Analyze message complexity to determine optimal context size
+  const avgContentLength =
+    messages.reduce((sum, m) => sum + (m.content?.length || 0), 0) /
+    messages.length;
+  const complexityFactor = avgContentLength > 500 ? 0.7 : 1.2; // Adjust based on content complexity
+  const dynamicMaxMessages = Math.floor(baseMaxMessages * complexityFactor);
+
+  // Always preserve critical messages (early project context)
+  const criticalMessages = messages.slice(0, maxCriticalMessages);
+
+  // Preserve key milestone messages (every 5th version after critical)
+  const milestoneMessages = messages
+    .slice(maxCriticalMessages)
+    .filter(
+      (m, index) =>
+        (index + maxCriticalMessages) % 5 === 0 && m.role === "assistant",
+    )
+    .slice(-3); // Keep last 3 milestones
+
+  // Get the most recent messages
+  const recentMessages = messages.slice(-dynamicMaxMessages);
+
+  // Check for overlaps and create unique message set
+  const criticalVersions = new Set(criticalMessages.map((m) => m.version));
+  const milestoneVersions = new Set(milestoneMessages.map((m) => m.version));
+
+  const isNotDuplicate = (m: Tables<"messages">) =>
+    !criticalVersions.has(m.version) && !milestoneVersions.has(m.version);
+
+  const uniqueRecentMessages = recentMessages.filter(isNotDuplicate);
+
+  // Create enhanced context summary with more detail
+  let contextSummary: string | undefined;
+
+  if (messages.length > dynamicMaxMessages + maxCriticalMessages) {
+    const skippedMessages = messages.slice(
+      maxCriticalMessages,
+      -dynamicMaxMessages,
+    );
+    const userRequests = skippedMessages.filter((m) => m.role === "user");
+    const aiResponses = skippedMessages.filter((m) => m.role === "assistant");
+
+    // Extract key themes from skipped user messages
+    const themes = userRequests.slice(-5).map((m) => {
+      const content = m.content?.toLowerCase() || "";
+
+      const isAddition = content.includes("add") || content.includes("create");
+      const isFix = content.includes("fix") || content.includes("bug");
+      const isStyling = content.includes("style") || content.includes("design");
+      const isImprovement =
+        content.includes("improve") || content.includes("enhance");
+
+      if (isAddition) return "feature additions";
+      if (isFix) return "bug fixes";
+      if (isStyling) return "styling updates";
+      if (isImprovement) return "improvements";
+      return "modifications";
+    });
+
+    const uniqueThemes = Array.from(new Set(themes));
+
+    contextSummary = `[Context Bridge: ${userRequests.length} user requests and ${aiResponses.length} AI responses were processed in the middle of this conversation, focusing on: ${uniqueThemes.join(", ")}. The project has evolved through multiple iterations while maintaining its core structure. Key architectural decisions and component patterns from earlier iterations remain relevant.]`;
+  }
+
+  // Combine all messages and maintain chronological order
+  const combinedMessages = [
+    ...criticalMessages,
+    ...milestoneMessages,
+    ...uniqueRecentMessages,
+  ].sort((a, b) => a.version - b.version);
+
+  // Save context summary to database for persistence
+  if (contextSummary && messages.length > 0) {
+    await saveContextToDatabase(
+      messages[0].chat_id,
+      contextSummary,
+      messages.length,
+    );
+  }
+
+  return {
+    limitedMessages: combinedMessages,
+    contextSummary,
+  };
+};
+
+const saveContextToDatabase = async (
+  chatId: string,
+  contextSummary: string,
+  totalMessages: number,
+) => {
+  try {
+    const supabase = await createClient();
+
+    // Get existing metadata
+    const { data: existingChat } = await supabase
+      .from("chats")
+      .select("metadata")
+      .eq("id", chatId)
+      .single();
+
+    // Safely handle metadata using Object.assign to avoid TypeScript spread issues
+    const existingMetadata = existingChat?.metadata || {};
+    const newContextHistory = {
+      lastSaved: new Date().toISOString(),
+      totalMessages,
+      contextSummary,
+    };
+
+    // Update metadata with context information
+    const updatedMetadata = Object.assign({}, existingMetadata, {
+      contextHistory: newContextHistory,
+    });
+
+    await supabase
+      .from("chats")
+      .update({ metadata: updatedMetadata })
+      .eq("id", chatId);
+  } catch (error) {
+    console.error("Failed to save context to database:", error);
+    // Non-critical error, continue execution
+  }
+};
+
 export async function POST(req: Request) {
   try {
     const formData = await req.formData();
@@ -127,25 +267,35 @@ const buildMessagesToOpenAi = async (
       ? messages.filter((m) => m.version <= selectedVersion)
       : messages;
 
-  // Limiter le nombre de messages à envoyer à l'API (par exemple, les 10 derniers)
-  const maxMessagesToSend = 15;
-  const limitedMessages =
-    filteredMessages.length > maxMessagesToSend
-      ? filteredMessages.slice(-maxMessagesToSend)
-      : filteredMessages;
+  // Intelligent context management instead of hard limit
+  const { limitedMessages, contextSummary } =
+    await buildIntelligentContext(filteredMessages);
 
   // Map messages to OpenAI format
-  const messagesToOpenAI = limitedMessages.map((m) => {
+  const messagesToOpenAI = limitedMessages.map((m, index) => {
+    // Add context summary after the first few critical messages if available
+    const hasSummary = Boolean(contextSummary);
+    const isOptimalPosition = index === Math.min(5, limitedMessages.length - 1);
+    const isUserMessage = m.role === "user";
+    const shouldAddSummary = hasSummary && isOptimalPosition && isUserMessage;
+
     if (m.role === "user" && m.prompt_image) {
+      const isNewProject = limitedMessages.length === 1;
+      const baseContent = m.content || "";
+
+      let textContent = baseContent;
+      if (isNewProject) {
+        textContent = `NEW PROJECT CodeRocket - ${baseContent}`;
+      } else if (shouldAddSummary) {
+        textContent = `${contextSummary}\n\n${baseContent}`;
+      }
+
       return {
         role: m.role as "user" | "assistant" | "tool" | "system",
         content: [
           {
             type: "text",
-            text:
-              limitedMessages.length === 1
-                ? `NEW PROJECT CodeRocket - ${m.content}`
-                : m.content,
+            text: textContent,
           },
           {
             type: "image",
@@ -155,12 +305,19 @@ const buildMessagesToOpenAi = async (
       };
     }
 
+    const isNewProject = limitedMessages.length === 1 && m.role === "user";
+    const baseContent = m.content || "";
+
+    let textContent = baseContent;
+    if (isNewProject) {
+      textContent = `NEW PROJECT CodeRocket - ${baseContent}`;
+    } else if (shouldAddSummary) {
+      textContent = `${contextSummary}\n\n${baseContent}`;
+    }
+
     return {
       role: m.role as "user" | "assistant" | "tool" | "system",
-      content:
-        limitedMessages.length === 1 && m.role === "user"
-          ? `NEW PROJECT CodeRocket - ${m.content}`
-          : m.content,
+      content: textContent,
     };
   }) as CoreMessage[];
 
