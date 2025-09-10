@@ -122,12 +122,11 @@ export function ChunkReader({
                                 "text-foreground",
                             )}
                           >
-                            {file.isIncomplete && (
-                              <Loader className="mr-1 size-4 animate-spin" />
-                            )}
-                            {file.isDelete && (
+                            {file.isDelete ? (
                               <Trash2 className="mr-1 size-4" />
-                            )}
+                            ) : file.isIncomplete ? (
+                              <Loader className="mr-1 size-4 animate-spin" />
+                            ) : null}
                             <span>
                               {file.name
                                 ? file.name.split("/").pop()

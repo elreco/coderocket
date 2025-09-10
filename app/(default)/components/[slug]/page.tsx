@@ -63,28 +63,13 @@ export default async function Components({ params }: Props) {
   const isNotFound = chat?.is_private && chat?.user_id !== connectedUser?.id;
 
   if (!chat || isNotFound) {
-    console.log("404 because chat not found or access denied:", {
-      chat: !!chat,
-      isNotFound,
-    });
     return notFound();
   }
 
   const lastUserMessage = await fetchLastUserMessageByChatId(chat.id);
   const messages = await fetchMessagesByChatId(chat.id);
 
-  console.log("Messages check:", {
-    chatId: chat.id,
-    lastUserMessage: !!lastUserMessage,
-    messages: !!messages,
-    messagesCount: messages?.length || 0,
-  });
-
   if (!lastUserMessage || !messages) {
-    console.log("404 because no messages found:", {
-      lastUserMessage: !!lastUserMessage,
-      messages: !!messages,
-    });
     return notFound();
   }
 

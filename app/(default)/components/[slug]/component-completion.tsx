@@ -583,7 +583,11 @@ export default function ComponentCompletion({
     tabName?: string,
   ) => {
     const newArtifactCode = getUpdatedArtifactCode(_completion, artifactCode);
-    const newArtifactFiles = extractFilesFromArtifact(newArtifactCode);
+    const newArtifactFiles = extractFilesFromArtifact(
+      newArtifactCode,
+      artifactCode,
+      _completion, // Pass current completion to detect active file
+    );
     setArtifactFiles(newArtifactFiles);
 
     const files = extractFilesFromCompletion(_completion);
