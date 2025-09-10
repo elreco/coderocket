@@ -300,6 +300,18 @@ export default function Hero() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    const { data } = await supabase.auth.getSession();
+    if (!data?.session?.user?.id) {
+      toast({
+        variant: "destructive",
+        title: "Premium account required",
+        description:
+          "You are not logged in. Please login and upgrade to premium and try again.",
+        duration: 4000,
+      });
+      return;
+    }
+
     // Create a proper prompt for clone mode by including the URL
     let finalPrompt = prompt;
     if (generationMode === "clone" && websiteUrl) {
