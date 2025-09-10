@@ -563,7 +563,6 @@ async function createSingleCommitWithMultipleFiles(
 
     const newCommitData = await newCommitResponse.json();
     const newCommitSha = newCommitData.sha;
-    console.log(`🔍 DEBUG - New commit SHA: ${newCommitSha}`);
 
     // Step 6: Update the branch reference to point to the new commit
     const updateRefResponse = await fetch(
@@ -587,10 +586,6 @@ async function createSingleCommitWithMultipleFiles(
         `Failed to update branch: ${errorData.message || updateRefResponse.status}`,
       );
     }
-
-    console.log(
-      `✅ Successfully created single commit with ${files.length} files`,
-    );
 
     return {
       success: true,
@@ -728,10 +723,6 @@ async function getFilesWithActualChanges(
 ): Promise<Array<{ path: string; content: string }>> {
   const filesWithChanges: Array<{ path: string; content: string }> = [];
 
-  console.log(
-    `🔍 DEBUG - Checking ${files.length} files for actual changes...`,
-  );
-
   for (const file of files) {
     try {
       // Get current file content from GitHub
@@ -825,10 +816,6 @@ async function getGithubRepositoryFiles(
               if (fileResponse.ok) {
                 const content = await fileResponse.text();
                 const filePath = path ? `${path}/${item.name}` : item.name;
-
-                console.log(
-                  `🔍 DEBUG - Fetched ${filePath}: ${content.length} chars`,
-                );
 
                 files.push({
                   name: filePath,

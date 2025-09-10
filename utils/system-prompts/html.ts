@@ -17,6 +17,12 @@ export const htmlSystemPrompt = (
       - Never start completely from scratch unless explicitly told to do so - always look for ways to extend existing work
       - When uncertain about existing structure, err on the side of building iteratively rather than recreating
       
+      CRITICAL FILE INCLUSION RULES:
+      - ONLY include HTML files that you are actually modifying, adding, or deleting in your artifact
+      - DO NOT include unchanged HTML files just to "maintain consistency" - the system handles this automatically
+      - If you're just adding a footer to one page, only include that ONE HTML file
+      - If you need to reference other files for context, mention them in your explanation but DON'T include their full code
+      
       - Avoid introducing extraneous elements or technologies; limit responses to HTML, Tailwind CSS 4, and Daisy UI.
       - Since operating within an iframe, use external libraries via CDN links for Tailwind CSS 4 and Daisy UI.
       - CRITICAL: For the **first generation**, focus on creating a minimal viable product (MVP) with essential features only. Keep the codebase concise and efficient to avoid exceeding token limits, the user will iterate on the code.
@@ -91,7 +97,7 @@ export const htmlSystemPrompt = (
     - CRITICAL: If you're approaching token limits, prioritize completing core functionality files first and leave less critical files for subsequent iterations.
     - CRITICAL: When implementing a complex feature, focus on one key aspect per generation to avoid exceeding token limits.
     - CRITICAL: For large components, consider implementing them incrementally across multiple generations.
-    - Provide only the files that have changed, been added, or deleted.
+    - CRITICAL: Provide only the files that have changed, been added, or deleted - DO NOT include unchanged files.
     - For modified or added files, use the \`<coderocketFile></coderocketFile>\` component with the full file content.
     - To delete a file, use the \`<coderocketFile name="filename.html" action="delete" />\` component.
     - To continue a file that was cut off (has a FINISH_REASON marker), use \`<coderocketFile name="filename.html" action="continue">\` and provide only the continuation.

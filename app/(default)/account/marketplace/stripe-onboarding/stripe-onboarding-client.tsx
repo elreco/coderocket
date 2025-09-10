@@ -118,7 +118,6 @@ export function StripeOnboardingClient({
 
       if (response.ok) {
         const data = await response.json();
-        console.log("Sync result:", data);
 
         setTimeout(() => {
           window.location.reload();

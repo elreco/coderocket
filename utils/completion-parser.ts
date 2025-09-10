@@ -37,8 +37,9 @@ export interface ChatMessage {
   ai_prompt?: string;
 }
 
-let previousFiles = new Map<string, string>(); // Pour stocker l'état précédent
-let lastActiveFile: string | null = null; // Pour stocker le nom du dernier fichier actif
+// FIXED: Remove global state variables that cause corruption between calls
+// let previousFiles = new Map<string, string>(); // Pour stocker l'état précédent
+// let lastActiveFile: string | null = null; // Pour stocker le nom du dernier fichier actif
 
 export const getUpdatedArtifactCode = (
   completion: string,
@@ -88,21 +89,24 @@ export const getUpdatedArtifactCode = (
     const action = match[2];
     let content = match[3].trim();
 
-    // Nettoyage du contenu
+    // FIXED: Safe content cleaning without destroying legitimate content
     content = content
-      .replace(/<\/coderocketFile>.*$/g, "")
-      .replace(/<\/coderocketArtifact>.*$/g, "")
+      .replace(/<\/coderocketFile>\s*$/gm, "") // Only remove closing tags at end of line
+      .replace(/<\/coderocketArtifact>\s*$/gm, "") // Only remove closing tags at end of line
+      .replace(/^\s*$\n/gm, "") // Remove empty lines
       .trim();
 
     if (action === "delete") {
       filesToDelete.add(fileName);
     } else if (action === "continue") {
-      // Nouvelle action "continue" pour continuer un fichier incomplet
+      // FIXED: Exact name matching to prevent file confusion
       const normalizedFileName = fileName.trim();
-      // Check if the file exists with exact name or similar name (case insensitive)
-      const existingFileKey = Array.from(allFiles.keys()).find(
-        (key) => key.toLowerCase() === normalizedFileName.toLowerCase(),
-      );
+      // Check if the file exists with EXACT name (case sensitive) first
+      const existingFileKey =
+        Array.from(allFiles.keys()).find((key) => key === normalizedFileName) ||
+        Array.from(allFiles.keys()).find(
+          (key) => key.toLowerCase() === normalizedFileName.toLowerCase(),
+        );
 
       if (existingFileKey) {
         const existingContent = allFiles.get(existingFileKey);
@@ -1034,12 +1038,27 @@ export const setDataTheme = (completion: string, theme: string): string => {
   );
 };
 
-export const extractFilesFromArtifact = (artifactCode: string): ChatFile[] => {
+export const extractFilesFromArtifact = (
+  artifactCode: string,
+  previousArtifactCode?: string,
+  currentCompletion?: string,
+): ChatFile[] => {
   if (!artifactCode) return [];
 
-  const currentFiles = new Map<string, string>();
   const filesArray: ChatFile[] = [];
-  let newActiveFile: string | null = null;
+  let activeFile: string | null = null;
+
+  // Strategy: If we have the current completion being streamed, use it to detect the active file
+  if (currentCompletion) {
+    // Find the last file mentioned in the current completion (most likely being written)
+    const fileMatches = Array.from(
+      currentCompletion.matchAll(/<coderocketFile[^>]*name=["']([^"']*?)["']/g),
+    );
+    if (fileMatches.length > 0) {
+      // The last file mentioned is most likely the one being worked on
+      activeFile = fileMatches[fileMatches.length - 1][1];
+    }
+  }
 
   const fileRegex =
     /<coderocketFile.*?name=["']([^"']*?)["'].*?(?:action=["']([^"']*?)["'].*?)?>([\s\S]*?)(?=<\/coderocketFile>|<coderocketFile|$)/g;
@@ -1077,38 +1096,18 @@ export const extractFilesFromArtifact = (artifactCode: string): ChatFile[] => {
       .join("\n")
       .trim();
 
-    // Stocker le contenu actuel
-    currentFiles.set(fileName, content);
-
-    // Si le contenu a changé, c'est le nouveau fichier actif
-    const previousFileKey = Array.from(previousFiles.keys()).find(
-      (key) => key.toLowerCase() === fileName.toLowerCase(),
-    );
-
-    if (previousFileKey && previousFiles.get(previousFileKey) !== content) {
-      newActiveFile = fileName;
+    // If no active file detected from streaming, fall back to simple logic
+    if (!activeFile) {
+      activeFile = fileName; // Last processed file as fallback
     }
 
     filesArray.push({
       name: fileName || null,
       content: content,
       isDelete: action === "delete",
-      isActive: false, // On mettra à jour après la boucle
+      isActive: fileName === activeFile, // Mark as active if this is the detected file
     });
   }
-
-  // Mettre à jour le fichier actif
-  lastActiveFile = newActiveFile || lastActiveFile;
-
-  // Mettre à jour isActive pour le fichier actif
-  filesArray.forEach((file) => {
-    if (file.name === lastActiveFile) {
-      file.isActive = true;
-    }
-  });
-
-  // Mettre à jour previousFiles pour la prochaine comparaison
-  previousFiles = currentFiles;
 
   return filesArray;
 };
