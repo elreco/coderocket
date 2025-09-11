@@ -201,9 +201,12 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
       setPreviewId(undefined);
       setLoadingState("initializing");
 
+      // If the component is already built via API, skip webcontainer setup
+      // This prioritizes the reliable built API over StackBlitz webcontainer
       if (isWebcontainerReady) {
         setLoadingState(null);
         setBuildError(null);
+        setPreviewId(undefined); // Clear webcontainer preview to use built API
         oldArtifactFilesRef.current = [];
         return;
       }

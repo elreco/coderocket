@@ -39,6 +39,7 @@ import {
 } from "@/utils/config";
 // import { promptEnhancer } from "@/utils/prompt-enhancer";
 import { formatToTimestamp } from "@/utils/date";
+import { getPreviousArtifactCode } from "@/utils/supabase/artifact-helpers";
 import { createClient } from "@/utils/supabase/server";
 import { systemPrompt } from "@/utils/system-prompts";
 import { htmlSystemPrompt } from "@/utils/system-prompts/html";
@@ -690,7 +691,11 @@ const updateDataAfterCompletion = async (
   if (!text) return console.error("No completion");
 
   const version = lastUserMessage.version + 1;
-  const artifactCode = getUpdatedArtifactCode(text, chat.artifact_code || "");
+
+  // FIXED: Use previous artifact code from messages instead of chats table
+  const previousArtifactCode =
+    (await getPreviousArtifactCode(chatId, version)) || "";
+  const artifactCode = getUpdatedArtifactCode(text, previousArtifactCode);
 
   // Fetch current tokens
   const { data: currentChatData, error } = await supabase

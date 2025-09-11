@@ -57,6 +57,7 @@ export default function ComponentChatFiles({
     handleVersionSelect,
     refreshChatData,
     setForceBuild,
+    setWebcontainerReady,
   } = useComponentContext();
 
   const [files, setFiles] = useState<ChatFile[]>([]);
@@ -347,8 +348,13 @@ ${extractedFiles
   const handleDeleteVersion = async (messageId: number) => {
     try {
       setIsDeleting(true);
-      await deleteVersionByMessageId(messageId);
+
+      // Mark webcontainer as not ready since we're deleting a version
+      setWebcontainerReady(false);
       setForceBuild(true);
+
+      await deleteVersionByMessageId(messageId);
+
       const refreshedChatMessages =
         refreshChatData !== undefined ? await refreshChatData() : [];
 

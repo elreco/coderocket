@@ -130,24 +130,25 @@ export default function ComponentPreview() {
           </Alert>
         </div>
       )}
-      {!isWebcontainerReady &&
-        previewId &&
-        !buildError &&
-        !isLoading &&
-        !loadingState && <WebcontainerRender previewId={previewId} />}
+      {/* Priority: Use built API if available, otherwise fallback to webcontainer */}
       {chatId &&
         selectedVersion !== undefined &&
         !isLoading &&
         !buildError &&
-        !loadingState &&
-        isWebcontainerReady && (
-          <iframe
-            src={`https://${chatId}-${selectedVersion}.webcontainer.coderocket.app`}
-            className="size-full border-none"
-            sandbox="allow-scripts allow-forms allow-popups allow-modals allow-storage-access-by-user-activation allow-same-origin"
-            allow="credentialless"
-            loading="eager"
-          />
+        !loadingState && (
+          <>
+            {isWebcontainerReady ? (
+              <iframe
+                src={`https://${chatId}-${selectedVersion}.webcontainer.coderocket.app`}
+                className="size-full border-none"
+                sandbox="allow-scripts allow-forms allow-popups allow-modals allow-storage-access-by-user-activation allow-same-origin"
+                allow="credentialless"
+                loading="eager"
+              />
+            ) : previewId ? (
+              <WebcontainerRender previewId={previewId} />
+            ) : null}
+          </>
         )}
     </>
   );
