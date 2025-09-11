@@ -6,11 +6,11 @@ import { getSubscription } from "@/app/supabase-server";
 import { takeScreenshot } from "@/utils/capture-screenshot";
 import {
   extractFilesFromArtifact,
-  getUpdatedArtifactCode,
   hasArtifacts,
 } from "@/utils/completion-parser";
 import { builderApiUrl, Framework } from "@/utils/config";
 import { promptEnhancer } from "@/utils/prompt-enhancer";
+import { getLatestArtifactCode } from "@/utils/supabase/artifact-helpers";
 import { createClient } from "@/utils/supabase/server";
 
 import {
@@ -152,27 +152,63 @@ export const deleteVersionByMessageId = async (messageId: number) => {
   if (!refreshedChatMessages) {
     throw new Error("No refreshed chat messages found");
   }
-  // get chat
-  const { data: chat } = await supabase
-    .from("chats")
-    .select("id, artifact_code, framework")
-    .eq("id", message.chat_id)
-    .single();
 
-  if (!chat) {
-    throw new Error("No chat found");
+  // FIXED: Use latest artifact code from messages instead of chats table
+  const latestArtifactCode = await getLatestArtifactCode(message.chat_id);
+  const finalArtifactCode =
+    refreshedChatMessages.artifact_code || latestArtifactCode || "";
+
+  // Note: No need to delete builds manually - forceBuild: true will handle cleanup
+
+  // Mark remaining versions as not built if we deleted a version that impacts the build chain
+  const { data: remainingMessages } = await supabase
+    .from("messages")
+    .select("id, version")
+    .eq("chat_id", message.chat_id)
+    .eq("role", "assistant")
+    .gt("version", message.version); // Versions after the deleted one
+
+  if (remainingMessages && remainingMessages.length > 0) {
+    // Mark subsequent versions as not built since the build chain is broken
+    await supabase
+      .from("messages")
+      .update({ is_built: false })
+      .eq("chat_id", message.chat_id)
+      .eq("role", "assistant")
+      .gt("version", message.version);
+
+    console.log(
+      `Marked ${remainingMessages.length} subsequent versions as not built`,
+    );
   }
-  const artifactCode = getUpdatedArtifactCode(
-    refreshedChatMessages.content,
-    chat.artifact_code || "",
-  );
+
+  // Update chats table with the artifact code from the new latest version
   await supabase
     .from("chats")
-    .update({ artifact_code: artifactCode })
+    .update({ artifact_code: finalArtifactCode })
     .eq("id", message.chat_id);
-  after(async () => {
-    await buildComponent(message.chat_id, message.version, true);
-  });
+
+  // Find what will be the displayed version after deletion and renaming
+  // After deletion and version renaming, the new highest version will need to be built
+  if (refreshedChatMessages && refreshedChatMessages.version >= 0) {
+    // Get the framework to know if we should build
+    const { data: chat } = await supabase
+      .from("chats")
+      .select("framework")
+      .eq("id", message.chat_id)
+      .single();
+
+    // Build the new latest version if it's a web framework
+    if (chat?.framework !== Framework.HTML) {
+      after(async () => {
+        await buildComponent(
+          message.chat_id,
+          refreshedChatMessages.version,
+          true,
+        );
+      });
+    }
+  }
 };
 
 export const updateTheme = async (

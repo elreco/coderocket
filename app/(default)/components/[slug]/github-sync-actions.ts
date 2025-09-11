@@ -1,5 +1,4 @@
 "use server";
-
 import { getSubscription } from "@/app/supabase-server";
 import { Tables } from "@/types_db";
 import {
@@ -8,6 +7,7 @@ import {
   extractFilesFromCompletion,
   getUpdatedArtifactCode,
 } from "@/utils/completion-parser";
+import { getLatestArtifactCode } from "@/utils/supabase/artifact-helpers";
 import { createClient } from "@/utils/supabase/server";
 
 interface GitHubRepoResponse {
@@ -1048,10 +1048,11 @@ export async function pullFromGithub(
       chat.title || "Pulled from GitHub",
     );
 
-    // Combiner l'artifact code existant avec les nouveaux fichiers de GitHub
+    // FIXED: Use latest artifact code from messages instead of chats table
+    const latestArtifactCode = await getLatestArtifactCode(chatId);
     const combinedArtifactCode = getUpdatedArtifactCode(
       githubArtifactCode,
-      chat.artifact_code || "",
+      latestArtifactCode || "",
     );
 
     // Récupérer la dernière version pour créer une nouvelle version

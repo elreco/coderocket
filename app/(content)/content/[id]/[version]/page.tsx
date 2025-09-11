@@ -7,10 +7,8 @@ import {
 } from "@/app/(default)/components/actions";
 import RenderHtmlComponent from "@/components/renders/render-html-component";
 import { Watermark } from "@/components/watermark";
-import {
-  extractFilesFromArtifact,
-  getUpdatedArtifactCode,
-} from "@/utils/completion-parser";
+import { extractFilesFromArtifact } from "@/utils/completion-parser";
+import { getArtifactCodeByVersion } from "@/utils/supabase/artifact-helpers";
 
 interface Props {
   params: Promise<{ id: string; version: string }>;
@@ -70,11 +68,14 @@ export default async function Content({ params, searchParams }: Props) {
     return <div>No content found</div>;
   }
 
-  const newArtifactCode = getUpdatedArtifactCode(
-    lastAssistantMessage.content,
-    chat.artifact_code || "",
+  // FIXED: Use artifact code from the specific version instead of chats table
+  const versionArtifactCode = await getArtifactCodeByVersion(
+    id,
+    parseInt(version),
   );
-  const files = extractFilesFromArtifact(newArtifactCode);
+  const finalArtifactCode =
+    lastAssistantMessage.artifact_code || versionArtifactCode || "";
+  const files = extractFilesFromArtifact(finalArtifactCode);
   return (
     <>
       {!noWatermark && <Watermark slug={chat.slug || ""} />}

@@ -65,6 +65,7 @@ import {
   crispWebsiteId,
   getMaxMessagesPerPeriod,
 } from "@/utils/config";
+import { getArtifactCodeByVersion } from "@/utils/supabase/artifact-helpers";
 import { createClient } from "@/utils/supabase/client";
 
 import {
@@ -542,7 +543,9 @@ export default function ComponentCompletion({
       }
     }
 
-    setWebcontainerReady(selectedAssistantMessage.is_built || false);
+    // Set webcontainer ready based on build status, but reset if version was just deleted
+    const shouldBeReady = selectedAssistantMessage.is_built && !forceBuild;
+    setWebcontainerReady(shouldBeReady || false);
   };
 
   const share = () => {
@@ -570,7 +573,12 @@ export default function ComponentCompletion({
     const refreshedChat = await fetchChatById(chatId);
     if (!refreshedChat) return;
     setFetchedChat(refreshedChat);
-    setArtifactCode(refreshedChat.artifact_code || "");
+    // Always get artifact code from the selected version, not from chats table
+    const artifactCodeFromVersion = await getArtifactCodeByVersion(
+      chatId,
+      selectedVersion,
+    );
+    setArtifactCode(artifactCodeFromVersion || "");
     const title = refreshedChat.title || `Version #${selectedVersion}`;
     setTitle(title);
     document.title = `${title} - CodeRocket`;
@@ -795,6 +803,7 @@ export default function ComponentCompletion({
             !isLoading
           ) {
             setWebcontainerReady(true);
+            setForceBuild(false); // Reset force build flag when build is complete
           }
         },
       )
