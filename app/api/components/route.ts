@@ -207,6 +207,37 @@ export async function POST(req: Request) {
       selectedVersion,
     );
 
+    // Add detailed logging for debugging
+    // Add detailed logging for debugging cloning issues
+    console.log("=== AI Generation Debug Info ===");
+    console.log("Chat ID:", id);
+    console.log("Framework:", framework);
+    console.log("Messages count:", messages.length);
+    console.log("Prompt length:", updatedPrompt.length);
+    console.log("Has image:", !!updatedImage);
+    console.log(
+      "Is clone request:",
+      updatedPrompt.includes("Clone this website:"),
+    );
+
+    if (updatedPrompt.includes("Clone this website:")) {
+      console.log(
+        "Clone URL:",
+        updatedPrompt.split("Clone this website: ")[1]?.split("\n")[0],
+      );
+      console.log(
+        "First 200 chars of clone prompt:",
+        updatedPrompt.substring(0, 200),
+      );
+    }
+
+    // Log the actual prompt being sent to AI (truncated for readability)
+    console.log(
+      "Final prompt preview:",
+      updatedPrompt.substring(0, 500) + "...",
+    );
+
+    console.log("=== Starting AI Stream ===");
     const stream = streamText({
       messages: [
         {
@@ -229,12 +260,24 @@ export async function POST(req: Request) {
       toolChoice: "none",
       maxTokens: MAX_TOKENS_PER_REQUEST,
       onFinish: async ({ text, usage, finishReason, providerMetadata }) => {
+        console.log("=== AI Generation Finished ===");
+        console.log("Generated text length:", text?.length || 0);
+        console.log("Finish reason:", finishReason);
+        console.log("Usage:", usage);
+
         // Check if generation actually produced content
         if (!text || text.trim().length === 0) {
-          console.error("AI generation failed - no content produced");
+          console.error("❌ AI generation failed - no content produced");
+          console.error("Finish reason was:", finishReason);
+          console.error("Usage tokens:", usage);
           finishReason = "error";
           text =
             "AI generation failed to produce content. This may be due to prompt complexity or API issues. Please try again with a simpler prompt.";
+        } else {
+          console.log(
+            "✅ AI generation successful, content length:",
+            text.length,
+          );
         }
 
         await updateDataAfterCompletion(
@@ -246,6 +289,14 @@ export async function POST(req: Request) {
           finishReason,
           providerMetadata,
         );
+      },
+      onError: (error) => {
+        console.error("=== AI Generation Error ===");
+        console.error("Error details:", error);
+        if (error instanceof Error) {
+          console.error("Error message:", error.message);
+          console.error("Error stack:", error.stack);
+        }
       },
     });
 
@@ -628,7 +679,15 @@ const updateDataAfterCompletion = async (
   if (!lastUserMessage) return console.error("Could not get chat messages");
   const newMessages = [];
 
-  if (!text) return console.error("No completion");
+  if (!text) {
+    console.error("❌ updateDataAfterCompletion: No completion text provided");
+    return;
+  }
+
+  console.log("=== updateDataAfterCompletion Debug ===");
+  console.log("Text length:", text.length);
+  console.log("Chat ID:", chatId);
+  console.log("Finish reason:", finishReason);
 
   const version = lastUserMessage.version + 1;
 
