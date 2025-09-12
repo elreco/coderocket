@@ -543,7 +543,8 @@ export default function ComponentCompletion({
       }
     }
 
-    // Set webcontainer ready based on build status, but reset if version was just deleted
+    // Always check latest build status and force rebuild if needed
+    // When versions are deleted, all builds become invalid
     const shouldBeReady = selectedAssistantMessage.is_built && !forceBuild;
     setWebcontainerReady(shouldBeReady || false);
   };

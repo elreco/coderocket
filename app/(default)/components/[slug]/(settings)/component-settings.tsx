@@ -45,17 +45,24 @@ export default function ComponentSettings({
           return;
         }
 
-        const { data: marketplaceListing } = await supabase
+        // Use maybeSingle() instead of single() to avoid errors when no listing exists
+        const { data: marketplaceListing, error } = await supabase
           .from("marketplace_listings")
           .select("id")
           .eq("chat_id", chatId)
           .eq("seller_id", userData.user.id)
           .eq("is_active", true)
-          .single();
+          .maybeSingle();
+
+        // Only log actual errors, not "no rows found"
+        if (error && error.code !== "PGRST116") {
+          console.error("Error checking marketplace listing:", error);
+        }
 
         setIsListedOnMarketplace(!!marketplaceListing);
       } catch (error) {
         console.error("Error checking marketplace listing:", error);
+        setIsListedOnMarketplace(false);
       } finally {
         setIsCheckingMarketplace(false);
       }

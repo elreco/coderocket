@@ -43,7 +43,7 @@ export const changeVisibilityByChatId = async (
       .eq("chat_id", chatId)
       .eq("seller_id", user.id)
       .eq("is_active", true)
-      .single();
+      .maybeSingle(); // Use maybeSingle() to avoid 406 errors
 
     if (marketplaceError && marketplaceError.code !== "PGRST116") {
       // PGRST116 is "no rows returned", which is fine
@@ -160,25 +160,24 @@ export const deleteVersionByMessageId = async (messageId: number) => {
 
   // Note: No need to delete builds manually - forceBuild: true will handle cleanup
 
-  // Mark remaining versions as not built if we deleted a version that impacts the build chain
-  const { data: remainingMessages } = await supabase
+  // Mark ALL remaining versions as not built since build environment may have changed
+  // When we delete a version, the build chain is broken and all versions need to be rebuilt
+  const { data: allRemainingMessages } = await supabase
     .from("messages")
     .select("id, version")
     .eq("chat_id", message.chat_id)
-    .eq("role", "assistant")
-    .gt("version", message.version); // Versions after the deleted one
+    .eq("role", "assistant");
 
-  if (remainingMessages && remainingMessages.length > 0) {
-    // Mark subsequent versions as not built since the build chain is broken
+  if (allRemainingMessages && allRemainingMessages.length > 0) {
+    // Mark ALL versions as not built since the build environment is reset
     await supabase
       .from("messages")
       .update({ is_built: false })
       .eq("chat_id", message.chat_id)
-      .eq("role", "assistant")
-      .gt("version", message.version);
+      .eq("role", "assistant");
 
     console.log(
-      `Marked ${remainingMessages.length} subsequent versions as not built`,
+      `Marked ${allRemainingMessages.length} versions as not built after deletion`,
     );
   }
 

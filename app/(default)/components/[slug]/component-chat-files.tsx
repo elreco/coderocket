@@ -365,6 +365,9 @@ ${extractedFiles
         );
 
         if (refreshedLastAssistantMessage) {
+          // Force webcontainer to be not ready for the new displayed version
+          // This ensures it will go through the full build process
+          setWebcontainerReady(false);
           handleVersionSelect(refreshedLastAssistantMessage.version);
         }
       }
