@@ -283,7 +283,7 @@ async function extractSiteStructure(
           colorSet.add(style.backgroundColor);
         }
       });
-    structure.colors = Array.from(colorSet).slice(0, 5);
+    structure.colors = Array.from(colorSet).slice(0, 15); // More colors for better accuracy
 
     const fontSet = new Set<string>();
     document.querySelectorAll("body, h1, h2, h3, p").forEach((el) => {
@@ -292,7 +292,7 @@ async function extractSiteStructure(
         fontSet.add(style.fontFamily);
       }
     });
-    structure.fonts = Array.from(fontSet).slice(0, 3);
+    structure.fonts = Array.from(fontSet).slice(0, 8); // More fonts for better typography matching
 
     return structure;
   });
@@ -605,8 +605,8 @@ export async function scrapeWebsite(url: string): Promise<WebsiteContent> {
       return { pageHeight, pageWidth };
     });
 
-    // Anthropic limit is 8000px, use 7500px as a safe limit
-    const maxHeight = 4000;
+    // Anthropic limit is 8000px per dimension, use much more conservative limit
+    const maxHeight = 3000; // More conservative to prevent API errors
     let screenshot;
 
     if (measurements.pageHeight <= maxHeight) {
@@ -621,11 +621,14 @@ export async function scrapeWebsite(url: string): Promise<WebsiteContent> {
       // For very tall pages, scale down the page
       const scaleFactor = maxHeight / measurements.pageHeight;
 
-      // First capture the full content with proper aspect ratio
+      // First capture with conservative dimensions to prevent API errors
+      const safeWidth = Math.min(measurements.pageWidth, 1200); // Conservative width
+      const safeHeight = Math.min(maxHeight, 3000); // Conservative height
+
       await page.setViewport({
-        width: Math.min(measurements.pageWidth, 1280),
-        height: Math.floor(maxHeight),
-        deviceScaleFactor: scaleFactor,
+        width: safeWidth,
+        height: safeHeight,
+        deviceScaleFactor: Math.min(scaleFactor, 0.5), // Conservative scale factor
       });
 
       screenshot = await page.screenshot({

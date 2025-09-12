@@ -451,64 +451,176 @@ const validateRequest = async (
       const cloneResult = await cloneWebsite(chat.clone_url);
 
       if (cloneResult.success && cloneResult.data) {
-        // Build a more concise, token-efficient prompt
+        // Build balanced prompt with essential information for accurate cloning
         const data = cloneResult.data;
 
-        // Limit and filter data to prevent token overflow
-        const essentialColors = data.structure.colors?.slice(0, 8) || [];
-        const essentialFonts = data.structure.fonts?.slice(0, 3) || [];
-        const essentialSections = data.structure.sections?.slice(0, 3) || [];
-        const essentialMenu = data.structure.menu?.slice(0, 5) || [];
-        const essentialImages = data.heroImages?.slice(0, 3) || [];
+        // Organize data by importance for better cloning accuracy
+        const structure = data.structure || {};
+        const htmlStructure = data.htmlStructure || {};
 
-        // Create simplified, token-efficient prompt for cloning
+        // Enhanced data extraction for better cloning accuracy
+        const colors = structure.colors || [];
+        const fonts = structure.fonts || [];
+        const cssVariables = Object.entries(structure.cssVariables || {}).slice(
+          0,
+          15,
+        );
+
+        // Layout and structure information
+        const sections = structure.sections || [];
+        const menu = structure.menu || [];
+        const buttons = structure.buttons?.slice(0, 8) || [];
+
+        // Media resources (more comprehensive)
+        const heroImages = data.heroImages?.slice(0, 8) || [];
+        const logoImages = data.logoImages || [];
+        const visibleImages = data.visibleImages?.slice(0, 12) || [];
+
+        // Rich HTML structure data (with safe access)
+        const htmlData = htmlStructure as Record<string, unknown>;
+        const significantElements = Array.isArray(htmlData?.significantElements)
+          ? htmlData.significantElements.slice(0, 6)
+          : [];
+        const semanticInfo = Object.entries(
+          htmlData?.semanticElements || {},
+        ).slice(0, 5);
+        const mainContentSample =
+          typeof htmlData?.mainContentHtml === "string"
+            ? htmlData.mainContentHtml.substring(0, 2000)
+            : "";
+
+        // Create comprehensive, accurate prompt using rich scraped data
         enhancedPrompt = `Clone this website: ${chat.clone_url}
 
-## LAYOUT & DESIGN
-${data.structure.layoutDescription || "Standard website layout"}
+## LAYOUT STRUCTURE
+Layout Type: ${structure.layoutDescription || "Standard layout"}
+Components: ${structure.layout?.header ? "Header" : ""} ${structure.layout?.sidebar ? "Sidebar" : ""} ${structure.layout?.footer ? "Footer" : ""}
+Main Layout: ${structure.layout?.mainContent || "standard"} (${(htmlData?.domStats as Record<string, unknown>)?.totalElements || 0} total elements)
 
-Colors: ${essentialColors.join(", ")}
-Fonts: ${essentialFonts.join(", ")}
+## VISUAL DESIGN SYSTEM
+Colors: ${colors.join(", ")}
+Typography: ${fonts.join(", ")}
+${cssVariables.length > 0 ? `CSS Variables: ${cssVariables.map(([k, v]) => `${k}: ${v}`).join(", ")}` : ""}
 
-## SECTIONS
-${essentialSections.map((s) => `- ${s.type}: ${s.content || s.title || ""}`).join("\n")}
+## CONTENT STRUCTURE
+${sections.map((s) => `${s.type.toUpperCase()}: ${s.title || ""} - ${s.content?.substring(0, 120) || ""}`).join("\n")}
 
-## NAVIGATION  
-${essentialMenu.map((m) => `- ${m.text} (${m.url || "#"})`).join("\n")}
+## NAVIGATION SYSTEM
+${menu.map((m) => `- ${m.text} → ${m.url}`).join("\n")}
 
-## IMAGES
-${essentialImages.map((img) => `- ${img.url} (${img.alt || "Image"})`).join("\n")}
+## COMPONENT PATTERNS
+${significantElements.map((el: Record<string, unknown>) => `${el.selector}: ${el.count} instances - ${(el.sample as string).substring(0, 200)}`).join("\n")}
 
-Focus on recreating the visual layout and core functionality.`;
+## SEMANTIC STRUCTURE
+${semanticInfo.map(([tag, info]: [string, Record<string, unknown>]) => `${tag}: ${info.count} elements`).join(", ")}
 
-        // Handle screenshot upload if available
+## INTERACTIVE ELEMENTS  
+${buttons.map((b) => `Button: "${b.text}" (${b.style || "default"})`).join("\n")}
+
+## MEDIA RESOURCES
+Hero Images: ${heroImages.map((img) => `${img.url} (${img.alt})`).join(", ")}
+Logo Images: ${logoImages.map((img) => `${img.url} (${img.alt})`).join(", ")}
+Content Images: ${visibleImages.map((img) => `${img.url}`).join(", ")}
+
+## HTML SAMPLE (Main Content)
+${mainContentSample}
+
+## DESIGN SPECIFICATIONS
+Spacing: ${structure.spacingPattern || "Standard spacing"}
+${structure.imageStyles?.length ? `Image Styling: ${structure.imageStyles.slice(0, 5).join(", ")}` : ""}
+
+CRITICAL: Recreate the exact visual hierarchy, component patterns, and responsive behavior using the above detailed specifications.`;
+
+        // Handle screenshot with proper dimension validation and resizing
         if (cloneResult.data.screenshot) {
           try {
             const buffer = Buffer.from(cloneResult.data.screenshot, "base64");
-            const screenshotFileName = `${Date.now()}-${user?.id}-screenshot.jpg`;
+            console.log("Screenshot buffer size:", buffer.length, "bytes");
 
+            // Import sharp for proper image processing
+            const { default: sharp } = await import("sharp");
+            const metadata = await sharp(buffer).metadata();
+
+            console.log(
+              "Original image dimensions:",
+              metadata.width,
+              "x",
+              metadata.height,
+            );
+
+            // Check if either dimension exceeds Anthropic's 8000px limit
+            const maxDimension = 8000;
+            const needsResize =
+              metadata.width > maxDimension || metadata.height > maxDimension;
+
+            let processedBuffer = buffer;
+            if (needsResize) {
+              console.log("⚠️ Image exceeds 8000px limit, resizing...");
+
+              // Calculate new dimensions maintaining aspect ratio
+              const aspectRatio = metadata.width / metadata.height;
+              let newWidth = metadata.width;
+              let newHeight = metadata.height;
+
+              if (metadata.width > maxDimension) {
+                newWidth = maxDimension;
+                newHeight = Math.round(maxDimension / aspectRatio);
+              }
+
+              if (newHeight > maxDimension) {
+                newHeight = maxDimension;
+                newWidth = Math.round(maxDimension * aspectRatio);
+              }
+
+              console.log("Resizing to:", newWidth, "x", newHeight);
+              processedBuffer = await sharp(buffer)
+                .resize(newWidth, newHeight, {
+                  fit: "inside",
+                  withoutEnlargement: true,
+                })
+                .jpeg({ quality: 80 })
+                .toBuffer();
+
+              console.log(
+                "Resized buffer size:",
+                processedBuffer.length,
+                "bytes",
+              );
+            }
+
+            const screenshotFileName = `${Date.now()}-${user?.id}-screenshot.jpg`;
             const { data: imageData, error: imageError } =
               await supabase.storage
                 .from("images")
-                .upload(screenshotFileName, buffer, {
+                .upload(screenshotFileName, processedBuffer, {
                   contentType: "image/jpeg",
                   cacheControl: "3600",
                 });
 
             if (!imageError && imageData?.path) {
               updatedImage = imageData.path;
+              console.log("✅ Screenshot uploaded successfully");
+            } else {
+              console.error("❌ Failed to upload screenshot:", imageError);
             }
           } catch (screenshotError) {
             console.error("Error processing screenshot:", screenshotError);
+            console.log("Continuing without screenshot");
           }
         }
       } else {
         console.error("Failed to clone website:", cloneResult.error);
-        enhancedPrompt = finalPrompt; // fallback au prompt original
+        // Use fallback prompt without enhanced data
+        enhancedPrompt = `Clone this website: ${chat.clone_url}
+
+Recreate the visual layout and core functionality of this website using modern web components and responsive design.`;
       }
     } catch (error) {
       console.error("Error during website cloning:", error);
-      enhancedPrompt = finalPrompt; // fallback au prompt original
+      // Use fallback prompt without enhanced data
+      enhancedPrompt = `Clone this website: ${chat.clone_url}
+
+Recreate the visual layout and core functionality of this website using modern web components and responsive design.`;
     }
   }
 
