@@ -454,6 +454,19 @@ export default function ComponentCompletion({
           } else {
             setIsLengthError(false);
           }
+        } else {
+          // Handle case where no assistant message was generated
+          console.error(
+            "No assistant message generated - AI generation may have failed",
+          );
+          setIsLengthError(true);
+          toast({
+            variant: "destructive",
+            title: "Generation failed",
+            description:
+              "The AI failed to generate content. This may be due to prompt complexity. Please try again or simplify your request.",
+            duration: 6000,
+          });
         }
 
         setCanvas(true);

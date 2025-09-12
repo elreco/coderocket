@@ -229,6 +229,14 @@ export async function POST(req: Request) {
       toolChoice: "none",
       maxTokens: MAX_TOKENS_PER_REQUEST,
       onFinish: async ({ text, usage, finishReason, providerMetadata }) => {
+        // Check if generation actually produced content
+        if (!text || text.trim().length === 0) {
+          console.error("AI generation failed - no content produced");
+          finishReason = "error";
+          text =
+            "AI generation failed to produce content. This may be due to prompt complexity or API issues. Please try again with a simpler prompt.";
+        }
+
         await updateDataAfterCompletion(
           id,
           text,
@@ -392,132 +400,64 @@ const validateRequest = async (
       const cloneResult = await cloneWebsite(chat.clone_url);
 
       if (cloneResult.success && cloneResult.data) {
-        // Construire un prompt détaillé avec les informations du site
+        // Build a more concise, token-efficient prompt
+        const data = cloneResult.data;
+
+        // Limit and filter data to prevent token overflow
+        const essentialColors = data.structure.colors?.slice(0, 8) || [];
+        const essentialFonts = data.structure.fonts?.slice(0, 3) || [];
+        const essentialSections = data.structure.sections?.slice(0, 3) || [];
+        const essentialMenu = data.structure.menu?.slice(0, 5) || [];
+        const essentialImages = data.heroImages?.slice(0, 3) || [];
+
+        // Create simplified, token-efficient prompt for cloning
         enhancedPrompt = `Clone this website: ${chat.clone_url}
 
-## GENERAL STRUCTURE
-LAYOUT STRUCTURE:
-${cloneResult.data.structure.layoutDescription || ""}
+## LAYOUT & DESIGN
+${data.structure.layoutDescription || "Standard website layout"}
 
-MAIN CONTENT STRUCTURE:
-${JSON.stringify(cloneResult.data.structure.layout?.mainContentStructure || {})}
+Colors: ${essentialColors.join(", ")}
+Fonts: ${essentialFonts.join(", ")}
 
-RESPONSIVE DESIGN DETAILS:
-${JSON.stringify(cloneResult.data.structure.layout?.responsiveDetails || {})}
+## SECTIONS
+${essentialSections.map((s) => `- ${s.type}: ${s.content || s.title || ""}`).join("\n")}
 
-SECTIONS:
-${JSON.stringify(cloneResult.data.structure.sections?.slice(0, 5) || [])}
+## NAVIGATION  
+${essentialMenu.map((m) => `- ${m.text} (${m.url || "#"})`).join("\n")}
 
-## HTML STRUCTURE DETAILS
-HTML STRUCTURE: The website contains detailed HTML structure information including head tags, semantic elements, DOM statistics, and significant elements. This information has been extracted to help you better recreate the website.
+## IMAGES
+${essentialImages.map((img) => `- ${img.url} (${img.alt || "Image"})`).join("\n")}
 
-## VISUAL DESIGN
-VISUAL PATTERNS:
-${JSON.stringify(cloneResult.data.structure.visualPatterns || {})}
+Focus on recreating the visual layout and core functionality.`;
 
-COLORS:
-${JSON.stringify(cloneResult.data.structure.colors || [])}
+        // Handle screenshot upload if available
+        if (cloneResult.data.screenshot) {
+          try {
+            const buffer = Buffer.from(cloneResult.data.screenshot, "base64");
+            const screenshotFileName = `${Date.now()}-${user?.id}-screenshot.jpg`;
 
-FONTS:
-${JSON.stringify(cloneResult.data.structure.fonts || [])}
+            const { data: imageData, error: imageError } =
+              await supabase.storage
+                .from("images")
+                .upload(screenshotFileName, buffer, {
+                  contentType: "image/jpeg",
+                  cacheControl: "3600",
+                });
 
-FONT SOURCES:
-${JSON.stringify(cloneResult.data.structure.fontSources || [])}
-
-CSS VARIABLES:
-${JSON.stringify(cloneResult.data.structure.cssVariables || {})}
-
-## MEDIA RESOURCES
-VIDEOS:
-${JSON.stringify(cloneResult.data.videos?.slice(0, 5) || [])}
-
-## INTERACTION ELEMENTS
-MENU ITEMS:
-${JSON.stringify(cloneResult.data.structure.menu || [])}
-
-CALLS TO ACTION:
-${JSON.stringify(cloneResult.data.structure.cta || [])}
-
-BUTTON STYLES:
-${JSON.stringify(cloneResult.data.structure.buttons || [])}
-
-## STYLES AND DESIGN PATTERNS
-IMAGE STYLES:
-${JSON.stringify(cloneResult.data.structure.imageStyles || [])}
-
-SPACING PATTERNS:
-${cloneResult.data.structure.spacingPattern || ""}
-
-META TAGS:
-${JSON.stringify(cloneResult.data.metaTags || {})}
-
-CSS CONTENT SAMPLES:
-${JSON.stringify(cloneResult.data.cssContent?.slice(0, 10) || [])}
-
-## IMAGE COLLECTIONS
-IMAGES COUNT: ${cloneResult.data.imageCount || 0}
-
-HERO/BACKGROUND IMAGES (${cloneResult.data.heroImages?.length || 0}):
-${JSON.stringify(cloneResult.data.heroImages?.slice(0, 5) || [])}
-
-LOGO IMAGES (${cloneResult.data.logoImages?.length || 0}):
-${JSON.stringify(cloneResult.data.logoImages || [])}
-
-BACKGROUND IMAGES (${cloneResult.data.backgroundImages?.length || 0}):
-${JSON.stringify(cloneResult.data.backgroundImages?.slice(0, 5) || [])}
-
-IMPORTANT VISIBLE IMAGES (${cloneResult.data.visibleImages?.length || 0}):
-${JSON.stringify(cloneResult.data.visibleImages?.slice(0, 10) || [])}
-`;
-
-        // Si nous avons des captures d'écran, ajouter des instructions pour les consulter
-        if (
-          cloneResult.data.screenshot ||
-          cloneResult.data.sectionScreenshots
-        ) {
-          enhancedPrompt += `\n\n## SCREENSHOT
-NOTE: A screenshot of the website is included in this message. Use it as a reference to faithfully reproduce the layout and appearance. Pay attention to the following elements:
-- Respect the visual hierarchy and spacing between elements
-- Reproduce important visual effects such as shadows and rounded corners
-- Ensure the color palette matches the original
-- Maintain the responsive layout and identified breakpoints`;
-
-          // Enregistrer la capture d'écran du site si disponible
-          if (cloneResult.data.screenshot) {
-            try {
-              // Convertir base64 en Buffer
-              const buffer = Buffer.from(cloneResult.data.screenshot, "base64");
-
-              // Générer un nom de fichier unique
-              const screenshotFileName = `${Date.now()}-${user?.id}-screenshot.jpg`;
-
-              // Enregistrer le screenshot dans le bucket 'images'
-              const { data: imageData, error: imageError } =
-                await supabase.storage
-                  .from("images")
-                  .upload(screenshotFileName, buffer, {
-                    contentType: "image/jpeg",
-                    cacheControl: "3600",
-                  });
-
-              if (imageError) {
-                console.error("Failed to upload screenshot:", imageError);
-              } else {
-                // Utiliser le chemin du screenshot pour le message multimodal
-                updatedImage = imageData?.path;
-              }
-            } catch (screenshotError) {
-              console.error("Error processing screenshot:", screenshotError);
+            if (!imageError && imageData?.path) {
+              updatedImage = imageData.path;
             }
+          } catch (screenshotError) {
+            console.error("Error processing screenshot:", screenshotError);
           }
         }
+      } else {
+        console.error("Failed to clone website:", cloneResult.error);
+        enhancedPrompt = finalPrompt; // fallback au prompt original
       }
     } catch (error) {
-      console.error(
-        "Erreur lors de la récupération des détails du site:",
-        error,
-      );
-      // Continuer avec le prompt simple en cas d'erreur
+      console.error("Error during website cloning:", error);
+      enhancedPrompt = finalPrompt; // fallback au prompt original
     }
   }
 
