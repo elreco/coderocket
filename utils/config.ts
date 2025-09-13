@@ -99,7 +99,7 @@ export const TRIAL_PLAN_MESSAGES_PER_MONTH = 6;
 
 export const MAX_SEARCH_LENGTH = 50;
 
-export const MAX_TOKENS_PER_REQUEST = 64000;
+export const MAX_TOKENS_PER_REQUEST = 32000; // Reduced from 64000 to prevent context overflow
 export const CHAR_PER_TOKEN = 2;
 export const MAX_ACCOUNTS_PER_IP = 5;
 

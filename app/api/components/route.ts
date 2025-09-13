@@ -52,20 +52,36 @@ interface ContextResult {
 const buildIntelligentContext = async (
   messages: Tables<"messages">[],
 ): Promise<ContextResult> => {
-  // Smart context management with dynamic limits based on content complexity
-  const baseMaxMessages = 30; // Increased base limit
-  const maxCriticalMessages = 8; // More critical messages preserved
+  // Smart context management with token-aware limits
+  const baseMaxMessages = 20; // Reduced from 30 to prevent token overflow
+  const maxCriticalMessages = 5; // Reduced from 8 to save tokens
 
   if (messages.length <= baseMaxMessages) {
     return { limitedMessages: messages };
   }
 
-  // Analyze message complexity to determine optimal context size
+  // Analyze message complexity with token awareness
   const avgContentLength =
     messages.reduce((sum, m) => sum + (m.content?.length || 0), 0) /
     messages.length;
-  const complexityFactor = avgContentLength > 500 ? 0.7 : 1.2; // Adjust based on content complexity
-  const dynamicMaxMessages = Math.floor(baseMaxMessages * complexityFactor);
+  const totalContentLength = messages.reduce(
+    (sum, m) => sum + (m.content?.length || 0),
+    0,
+  );
+
+  // More aggressive reduction for large contexts
+  const complexityFactor =
+    avgContentLength > 1000 ? 0.5 : avgContentLength > 500 ? 0.7 : 1.0;
+  let dynamicMaxMessages = Math.floor(baseMaxMessages * complexityFactor);
+
+  // Emergency reduction if total content is massive
+  if (totalContentLength > 50000) {
+    // ~12k tokens
+    console.warn(
+      "⚠️ Very large conversation detected, aggressive context reduction",
+    );
+    dynamicMaxMessages = Math.min(dynamicMaxMessages, 10);
+  }
 
   // Always preserve critical messages (early project context)
   const criticalMessages = messages.slice(0, maxCriticalMessages);
@@ -238,18 +254,76 @@ export async function POST(req: Request) {
     );
 
     console.log("=== Starting AI Stream ===");
+    // Calculate input tokens to prevent context overflow
+    const systemPromptContent =
+      framework === Framework.HTML
+        ? htmlSystemPrompt(
+            messagesFromDatabase.length === 1
+              ? messagesFromDatabase[0]?.theme
+              : null,
+          )
+        : systemPrompt(framework as Framework);
+
+    // Rough token estimation (4 chars ≈ 1 token)
+    const systemTokens = Math.ceil(systemPromptContent.length / 4);
+    const messagesTokens = Math.ceil(JSON.stringify(messages).length / 4);
+    const totalInputTokens = systemTokens + messagesTokens;
+
+    console.log("=== Token Management ===");
+    console.log("System prompt tokens (est):", systemTokens);
+    console.log("Messages tokens (est):", messagesTokens);
+    console.log("Total input tokens (est):", totalInputTokens);
+
+    // Anthropic context limit is 200,000 tokens
+    const contextLimit = 200000;
+    const safetyMargin = 10000; // Safety margin for estimation errors
+    const maxAllowedInput = contextLimit - safetyMargin;
+
+    // Dynamically adjust max_tokens based on input size
+    let dynamicMaxTokens = MAX_TOKENS_PER_REQUEST;
+    if (totalInputTokens > maxAllowedInput) {
+      console.warn(
+        `⚠️ Input too large (${totalInputTokens} tokens), reducing context...`,
+      );
+
+      // Emergency context reduction - keep only most recent messages
+      const reducedMessages = messages.slice(-5); // Keep only last 5 messages
+      const reducedTokens = Math.ceil(
+        JSON.stringify(reducedMessages).length / 4,
+      );
+      const newTotalInput = systemTokens + reducedTokens;
+
+      console.log("Reduced to:", reducedMessages.length, "messages");
+      console.log("New input tokens (est):", newTotalInput);
+
+      // Update messages and recalculate
+      messages.splice(0, messages.length, ...reducedMessages);
+
+      // Still too big? Reduce max_tokens
+      if (newTotalInput + dynamicMaxTokens > contextLimit) {
+        dynamicMaxTokens = Math.max(
+          8000,
+          contextLimit - newTotalInput - safetyMargin,
+        );
+        console.log("Adjusted max_tokens to:", dynamicMaxTokens);
+      }
+    } else if (totalInputTokens + dynamicMaxTokens > contextLimit) {
+      // Input OK but total would exceed limit
+      dynamicMaxTokens = contextLimit - totalInputTokens - safetyMargin;
+      console.log(
+        "Adjusted max_tokens to:",
+        dynamicMaxTokens,
+        "to fit context limit",
+      );
+    }
+
+    console.log("Final max_tokens:", dynamicMaxTokens);
+
     const stream = streamText({
       messages: [
         {
           role: "system",
-          content:
-            framework === Framework.HTML
-              ? htmlSystemPrompt(
-                  messagesFromDatabase.length === 1
-                    ? messagesFromDatabase[0]?.theme
-                    : null,
-                )
-              : systemPrompt(framework as Framework),
+          content: systemPromptContent,
           providerOptions: {
             anthropic: { cacheControl: { type: "ephemeral" } },
           },
@@ -258,7 +332,7 @@ export async function POST(req: Request) {
       ],
       model: anthropicModel("claude-4-sonnet-20250514"),
       toolChoice: "none",
-      maxTokens: MAX_TOKENS_PER_REQUEST,
+      maxTokens: dynamicMaxTokens,
       onFinish: async ({ text, usage, finishReason, providerMetadata }) => {
         console.log("=== AI Generation Finished ===");
         console.log("Generated text length:", text?.length || 0);
