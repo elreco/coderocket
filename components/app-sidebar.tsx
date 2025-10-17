@@ -7,7 +7,7 @@ import {
   Globe,
   Rocket,
   SquareTerminal,
-  Store,
+  Sparkles,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -44,14 +44,14 @@ const data = {
       url: "/components",
       icon: Globe,
     },
-    {
-      title: "Marketplace",
-      url: "/marketplace",
-      isNew: true,
-      icon: Store,
-    },
   ],
   community: [
+    {
+      title: "Ekinox - AI Workflows",
+      url: "/ekinox",
+      icon: Sparkles,
+      isNew: true,
+    },
     {
       title: "Discord",
       url: discordLink,

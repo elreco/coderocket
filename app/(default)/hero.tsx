@@ -11,8 +11,11 @@ import {
   Lightbulb,
   Rocket,
   Loader,
+  Sparkles,
+  ArrowRight,
 } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef, useState, useEffect, useCallback } from "react";
 
@@ -558,7 +561,18 @@ export default function Hero() {
         className="-top-40 left-0 md:-top-20 md:left-60"
         fill="hsl(var(--primary))"
       />
-      <div className="flex w-full flex-col items-center space-y-1.5">
+      <div className="flex w-full flex-col items-center space-y-4">
+        <Link
+          href="/ekinox"
+          className="group flex items-center gap-2 rounded-full border border-primary/40 bg-primary/5 px-4 py-2 text-sm transition-all hover:border-primary/60 hover:bg-primary/10 hover:shadow-lg hover:shadow-primary/20"
+        >
+          <Sparkles className="size-4 text-primary" />
+          <span className="font-medium">
+            New: Ekinox - Build AI Workflows Visually
+          </span>
+          <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
+        </Link>
+
         <h2
           className="text-4xl font-medium tracking-tighter sm:text-5xl"
           data-testid="home-h2"

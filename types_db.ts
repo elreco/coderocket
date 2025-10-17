@@ -7,7 +7,7 @@ export type Json =
   | Json[];
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "11.2.0 (c820efb)";
@@ -226,6 +226,30 @@ export type Database = {
         Update: {
           id?: string;
           stripe_customer_id?: string | null;
+        };
+        Relationships: [];
+      };
+      ekinox_waitlist: {
+        Row: {
+          created_at: string;
+          email: string;
+          id: string;
+          ip_address: string | null;
+          user_agent: string | null;
+        };
+        Insert: {
+          created_at?: string;
+          email: string;
+          id?: string;
+          ip_address?: string | null;
+          user_agent?: string | null;
+        };
+        Update: {
+          created_at?: string;
+          email?: string;
+          id?: string;
+          ip_address?: string | null;
+          user_agent?: string | null;
         };
         Relationships: [];
       };
@@ -942,7 +966,7 @@ export type Database = {
     };
     Functions: {
       add_client_credit: {
-        Args: { client_id_param: string; amount_to_add: number };
+        Args: { amount_to_add: number; client_id_param: string };
         Returns: undefined;
       };
       calculate_available_earnings: {
@@ -957,126 +981,126 @@ export type Database = {
         Args: Record<PropertyKey, never>;
         Returns: {
           chat_id: string;
-          user_id: string;
-          user_full_name: string;
-          user_avatar_url: string;
+          created_at: string;
+          first_user_message: string;
+          framework: string;
           is_featured: boolean;
           is_private: boolean;
-          created_at: string;
-          slug: string;
-          first_user_message: string;
           last_assistant_message: string;
           last_assistant_message_theme: string;
-          framework: string;
+          slug: string;
+          user_avatar_url: string;
+          user_full_name: string;
+          user_id: string;
         }[];
       };
       get_components: {
         Args: Record<PropertyKey, never>;
         Returns: {
           chat_id: string;
-          user_id: string;
-          user_full_name: string;
-          user_avatar_url: string;
+          clone_url: string;
+          created_at: string;
+          first_user_message: string;
+          framework: string;
           is_featured: boolean;
           is_private: boolean;
-          created_at: string;
-          slug: string;
-          title: string;
-          likes: number;
-          first_user_message: string;
           last_assistant_message: string;
           last_assistant_message_theme: string;
-          framework: string;
+          likes: number;
           remix_chat_id: string;
+          slug: string;
+          title: string;
+          user_avatar_url: string;
+          user_full_name: string;
+          user_id: string;
           views: number;
-          clone_url: string;
         }[];
       };
       get_components_with_theme_and_slug: {
         Args: Record<PropertyKey, never>;
         Returns: {
           chat_id: string;
-          user_id: string;
-          user_full_name: string;
-          user_avatar_url: string;
+          created_at: string;
+          first_user_message: string;
           is_featured: boolean;
           is_private: boolean;
-          created_at: string;
-          slug: string;
-          first_user_message: string;
           last_assistant_message: string;
           last_assistant_message_theme: string;
+          slug: string;
+          user_avatar_url: string;
+          user_full_name: string;
+          user_id: string;
         }[];
       };
       get_components2: {
         Args: Record<PropertyKey, never>;
         Returns: {
           chat_id: string;
-          user_id: string;
-          user_full_name: string;
-          user_avatar_url: string;
+          created_at: string;
+          first_user_message: string;
+          framework: string;
           is_featured: boolean;
           is_private: boolean;
-          created_at: string;
-          slug: string;
-          title: string;
-          likes: number;
-          first_user_message: string;
           last_assistant_message: string;
           last_assistant_message_theme: string;
-          framework: string;
+          likes: number;
           remix_chat_id: string;
+          slug: string;
+          title: string;
+          user_avatar_url: string;
+          user_full_name: string;
+          user_id: string;
         }[];
       };
       get_components3: {
         Args: Record<PropertyKey, never>;
         Returns: {
           chat_id: string;
-          user_id: string;
-          user_full_name: string;
-          user_avatar_url: string;
+          created_at: string;
+          first_user_message: string;
+          framework: string;
           is_featured: boolean;
           is_private: boolean;
-          created_at: string;
-          slug: string;
-          title: string;
-          likes: number;
-          first_user_message: string;
           last_assistant_message: string;
           last_assistant_message_theme: string;
-          framework: string;
+          likes: number;
           remix_chat_id: string;
+          slug: string;
+          title: string;
+          user_avatar_url: string;
+          user_full_name: string;
+          user_id: string;
         }[];
       };
       get_components4: {
         Args: Record<PropertyKey, never>;
         Returns: {
           chat_id: string;
-          user_id: string;
-          user_full_name: string;
-          user_avatar_url: string;
+          created_at: string;
+          first_user_message: string;
+          framework: string;
           is_featured: boolean;
           is_private: boolean;
-          created_at: string;
-          slug: string;
-          title: string;
-          likes: number;
-          first_user_message: string;
           last_assistant_message: string;
           last_assistant_message_theme: string;
-          framework: string;
+          likes: number;
           remix_chat_id: string;
+          slug: string;
+          title: string;
+          user_avatar_url: string;
+          user_full_name: string;
+          user_id: string;
           views: number;
         }[];
       };
       get_median_message_cost: {
         Args: Record<PropertyKey, never>;
         Returns: {
-          month: string;
-          processing_engine: string;
-          message_count: number;
           average_cost: string;
           median_cost: string;
+          message_count: number;
+          month: string;
+          processing_engine: string;
         }[];
       };
       increment_listing_sales: {
