@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
 
     await sendEmail({
       to: email,
-      subject: "Welcome to the Ekinox Early Access List! 🚀",
+      subject: "Your CODEROCKET15 Promo Code is Here! 🎁",
       html: `
         <!DOCTYPE html>
         <html>
@@ -106,10 +106,25 @@ export async function POST(request: NextRequest) {
                 padding: 30px 20px;
                 border-radius: 0 0 10px 10px;
               }
-              .badge {
+              .promo-code {
+                background: #fff;
+                border: 3px dashed #667eea;
+                padding: 20px;
+                margin: 25px 0;
+                text-align: center;
+                border-radius: 10px;
+              }
+              .promo-code-text {
+                font-size: 32px;
+                font-weight: bold;
+                color: #667eea;
+                letter-spacing: 2px;
+                font-family: 'Courier New', monospace;
+              }
+              .discount-badge {
                 display: inline-block;
-                background: #ffd700;
-                color: #333;
+                background: #10b981;
+                color: white;
                 padding: 8px 16px;
                 border-radius: 20px;
                 font-weight: bold;
@@ -134,56 +149,61 @@ export async function POST(request: NextRequest) {
                 border-radius: 8px;
                 display: inline-block;
                 font-weight: bold;
+                font-size: 16px;
               }
             </style>
           </head>
           <body>
             <div class="header">
-              <h1>🎉 You're In!</h1>
-              <p style="font-size: 18px; margin: 10px 0 0 0;">Welcome to the Ekinox Early Access Community</p>
+              <h1>🎉 Welcome to Ekinox!</h1>
+              <p style="font-size: 18px; margin: 10px 0 0 0;">Your Exclusive Discount Code is Ready</p>
             </div>
 
             <div class="content">
-              <p>Hey there, AI automation enthusiast!</p>
+              <p>Hey there!</p>
 
-              <p>Thank you for joining the Ekinox waitlist! You're now part of an exclusive group that will experience the future of AI workflow automation before anyone else.</p>
+              <p><strong>Great news!</strong> Ekinox is now LIVE and you have an exclusive discount waiting for you! 🚀</p>
 
-              <div class="badge">✨ EARLY ACCESS RESERVED ✨</div>
+              <div class="discount-badge">✨ 15% OFF ANY PLAN ✨</div>
 
-              <h2>What You'll Get:</h2>
-
-              <div class="feature">
-                <strong>🔔 Launch Notification</strong><br>
-                Be the first to know when Ekinox goes live
-              </div>
-
-              <div class="feature">
-                <strong>🎁 Exclusive Discount Code</strong><br>
-                Special promo code reserved just for early supporters like you
-              </div>
-
-              <div class="feature">
-                <strong>⚡ Beta Access</strong><br>
-                Test new features and shape the future of Ekinox
+              <div class="promo-code">
+                <p style="margin: 0 0 10px 0; font-size: 14px; color: #666;">Your Exclusive Promo Code:</p>
+                <div class="promo-code-text">CODEROCKET15</div>
+                <p style="margin: 10px 0 0 0; font-size: 14px; color: #666;">Click to copy when you sign up!</p>
               </div>
 
               <h2>What is Ekinox?</h2>
               <p>Ekinox lets you create powerful AI agents in under 60 seconds. No code. No complexity. Just pure AI magic.</p>
 
-              <ul>
-                <li>Visual drag-and-drop workflow builder</li>
-                <li>100+ integrations (Gmail, Slack, Discord, and more)</li>
-                <li>AI-powered automation</li>
-                <li>Deploy in minutes, not hours</li>
-              </ul>
-
-              <div class="cta">
-                <a href="https://www.coderocket.app/ekinox">Learn More About Ekinox</a>
+              <div class="feature">
+                <strong>⚡ Create AI Agents in 60 Seconds</strong><br>
+                Visual drag-and-drop workflow builder
               </div>
 
-              <p>We're putting the final touches on something amazing. Can't wait to share it with you!</p>
+              <div class="feature">
+                <strong>🔌 100+ Integrations</strong><br>
+                Gmail, Slack, Discord, Notion, and more
+              </div>
 
-              <p>Stay tuned! 🚀</p>
+              <div class="feature">
+                <strong>🤖 AI-Powered Automation</strong><br>
+                Smart workflows that actually work
+              </div>
+
+              <div class="feature">
+                <strong>🚀 Deploy Instantly</strong><br>
+                No setup required, start in minutes
+              </div>
+
+              <div class="cta">
+                <a href="https://www.ekinox.app/signup">Start Building Your First AI Agent →</a>
+              </div>
+
+              <p style="background: #fff3cd; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                <strong>💡 Pro Tip:</strong> Use code <strong>CODEROCKET15</strong> at checkout to get 15% off any plan!
+              </p>
+
+              <p>Ready to automate your life with AI? Click the button above and let's get started! 🎯</p>
 
               <p style="margin-top: 40px;">
                 <strong>The Ekinox Team</strong><br>
@@ -193,7 +213,7 @@ export async function POST(request: NextRequest) {
               <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
 
               <p style="font-size: 12px; color: #666;">
-                You received this email because you signed up for early access to Ekinox at coderocket.app.
+                You received this email because you signed up for Ekinox at coderocket.app.
               </p>
             </div>
           </body>
@@ -203,7 +223,7 @@ export async function POST(request: NextRequest) {
 
     await sendEmail({
       to: ADMIN_EMAIL,
-      subject: "🎯 New Ekinox Waitlist Signup!",
+      subject: "🎯 New Ekinox Promo Code Request!",
       html: `
         <!DOCTYPE html>
         <html>
@@ -245,11 +265,11 @@ export async function POST(request: NextRequest) {
           </head>
           <body>
             <div class="header">
-              <h1>🎉 New Waitlist Signup!</h1>
+              <h1>🎉 New Promo Code Request!</h1>
             </div>
 
             <div class="content">
-              <p>Someone just joined the Ekinox waitlist!</p>
+              <p>Someone just requested the CODEROCKET15 promo code!</p>
 
               <div class="info-row">
                 <span class="label">Email:</span> ${email}
@@ -269,9 +289,9 @@ export async function POST(request: NextRequest) {
 
               <p style="margin-top: 20px;">
                 <strong>Action Items:</strong><br>
-                • Welcome email sent to user ✅<br>
-                • User added to waitlist database ✅<br>
-                • Remember to send them their promo code when launching! 🎁
+                • Promo code email sent to user ✅<br>
+                • User added to database ✅<br>
+                • Code: <strong>CODEROCKET15</strong> (15% off) 🎁
               </p>
             </div>
           </body>

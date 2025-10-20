@@ -12,6 +12,7 @@ import {
   Clock,
   Bell,
 } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 
 import { Container } from "@/components/container";
@@ -25,19 +26,19 @@ import { cn } from "@/lib/utils";
 
 const benefits = [
   {
-    icon: Bell,
-    title: "Launch Notification",
-    description: "Be the first to know when Ekinox goes live",
+    icon: Gift,
+    title: "15% OFF Discount",
+    description: "Exclusive promo code sent instantly to your email",
   },
   {
-    icon: Gift,
-    title: "Exclusive Discount Code",
-    description: "Get a special promo code reserved for early supporters",
+    icon: Bell,
+    title: "Product Updates",
+    description: "Be notified of new features and improvements",
   },
   {
     icon: Zap,
-    title: "Early Access to Beta",
-    description: "Test features before anyone else",
+    title: "Priority Support",
+    description: "Get help from our team when you need it",
   },
 ];
 
@@ -127,9 +128,12 @@ export default function EkinoxPage() {
         transition={{ duration: 0.6 }}
         className="relative z-10 flex w-full max-w-5xl flex-col items-center space-y-6 text-center"
       >
-        <Badge variant="outline" className="mb-2 animate-pulse">
+        <Badge
+          variant="default"
+          className="mb-2 bg-green-600 text-white hover:bg-green-700"
+        >
           <Sparkles className="mr-2 size-4" />
-          Coming Soon
+          NOW LIVE! 🎉
         </Badge>
 
         <h1 className="text-5xl font-bold tracking-tighter sm:text-6xl md:text-7xl">
@@ -209,6 +213,24 @@ export default function EkinoxPage() {
             No Code Required
           </Badge>
         </div>
+
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.5 }}
+          className="mt-8"
+        >
+          <Button asChild size="lg" className="group h-16 text-xl font-bold">
+            <Link
+              href="https://www.ekinox.app"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Launch Ekinox Now
+              <ArrowRight className="ml-2 size-6 transition-transform group-hover:translate-x-1" />
+            </Link>
+          </Button>
+        </motion.div>
       </motion.div>
 
       <motion.div
@@ -219,10 +241,10 @@ export default function EkinoxPage() {
       >
         <div className="mb-8 text-center">
           <h2 className="mb-4 text-3xl font-bold tracking-tight sm:text-4xl">
-            Want Early Access + Exclusive Promo Code? 🎁
+            Get Your Exclusive 15% Discount Code! 🎁
           </h2>
           <p className="text-lg text-muted-foreground">
-            Join the waitlist and get notified when Ekinox launches
+            Enter your email to receive an exclusive discount code for Ekinox
           </p>
         </div>
 
@@ -265,10 +287,18 @@ export default function EkinoxPage() {
           >
             <CheckCircle2 className="mx-auto mb-4 size-16 text-primary" />
             <h3 className="mb-2 text-2xl font-bold">You&apos;re In! 🎉</h3>
-            <p className="text-muted-foreground">
-              Check your inbox for a confirmation email. We&apos;ll notify you
-              as soon as Ekinox launches!
+            <p className="mb-4 text-muted-foreground">
+              Check your inbox for your exclusive 15% discount code!
             </p>
+            <Button asChild className="mt-4">
+              <Link
+                href="https://www.ekinox.app"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Start Using Ekinox Now
+              </Link>
+            </Button>
           </motion.div>
         )}
 
@@ -323,16 +353,38 @@ export default function EkinoxPage() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1.2 }}
-        className="relative z-10 w-full max-w-3xl text-center"
+        className="relative z-10 w-full max-w-4xl rounded-lg border border-primary/40 bg-primary/5 p-8 text-center sm:p-12"
       >
-        <h2 className="mb-4 text-2xl font-bold sm:text-3xl">
-          The Future of AI Workflow Automation is Coming Soon
+        <h2 className="mb-4 text-3xl font-bold tracking-tight sm:text-4xl">
+          Ready to Build Your First AI Agent?
         </h2>
-        <p className="mb-6 text-lg text-muted-foreground">
-          And it&apos;s going to change everything.
+        <p className="mb-8 text-lg text-muted-foreground">
+          Join thousands of users already automating their workflows with
+          Ekinox.
         </p>
-        <p className="text-sm text-muted-foreground">
-          Who&apos;s ready to automate their life with AI? 🤖💪
+        <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
+          <Button asChild size="lg" className="group text-lg">
+            <Link
+              href="https://www.ekinox.app/signup"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Start Building Free
+              <ArrowRight className="ml-2 size-5 transition-transform group-hover:translate-x-1" />
+            </Link>
+          </Button>
+          <Button asChild size="lg" variant="outline" className="text-lg">
+            <Link
+              href="https://www.ekinox.app/login"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Sign In
+            </Link>
+          </Button>
+        </div>
+        <p className="mt-6 text-sm text-muted-foreground">
+          Sign up above to get your exclusive 15% discount code! 🚀
         </p>
       </motion.div>
     </Container>
