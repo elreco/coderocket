@@ -816,7 +816,7 @@ export default function Hero() {
                   }
                 }}
               >
-                <SelectTrigger className="w-full rounded-md border-background sm:w-auto">
+                <SelectTrigger className="h-8 w-full rounded-md border-background sm:w-auto">
                   <SelectValue
                     className="mr-2"
                     placeholder="Select a framework"
