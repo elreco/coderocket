@@ -5,10 +5,11 @@ import { useEffect } from "react";
 import { crispWebsiteId } from "@/utils/config";
 import { createClient } from "@/utils/supabase/client";
 
-// Fonction globale pour ouvrir le chat Crisp
+// Fonctions globales pour gérer le chat Crisp
 declare global {
   interface Window {
     openCrispChat: () => void;
+    closeCrispChat: () => void;
   }
 }
 
@@ -44,7 +45,7 @@ export function PluginWidget() {
         }
       }
 
-      // Exposer la fonction pour ouvrir le chat
+      // Exposer les fonctions pour gérer le chat
       window.openCrispChat = () => {
         Crisp.chat.show();
         // Ouvrir directement la conversation
@@ -52,6 +53,15 @@ export function PluginWidget() {
           Crisp.chat.open();
         }, 100);
       };
+
+      window.closeCrispChat = () => {
+        Crisp.chat.hide();
+      };
+
+      // Écouter les événements de fermeture du chat
+      Crisp.on("chat:closed", () => {
+        Crisp.chat.hide();
+      });
     };
 
     fetchUserData();

@@ -685,8 +685,6 @@ export default function ComponentCompletion({
 
     if (isModalOpen) {
       Crisp.chat.hide();
-    } else {
-      Crisp.chat.show();
     }
   }, [isModalOpen]);
 
