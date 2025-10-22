@@ -273,20 +273,9 @@ export async function handleMarketplacePurchase(
     );
 
     if (salesUpdateError) {
-      console.error("Failed to update uses count:", salesUpdateError);
-      // Try direct update as fallback using RPC
-      const { error: directUpdateError } = await supabase.rpc(
-        "increment_listing_sales",
-        { listing_id_param: listing_id },
-      );
-
-      if (directUpdateError) {
-        console.error("Direct update also failed:", directUpdateError);
-      } else {
-        console.log("Successfully updated total_sales via direct update");
-      }
+      console.error("Failed to update total_sales:", salesUpdateError);
     } else {
-      console.log("Successfully updated total_sales via RPC");
+      console.log("Successfully updated total_sales");
     }
 
     // Build the component in the background after successful purchase
