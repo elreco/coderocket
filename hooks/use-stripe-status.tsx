@@ -23,6 +23,38 @@ export function useStripeStatus() {
     setStatus((prev) => ({ ...prev, isLoading: true }));
 
     try {
+      // First check if user has any marketplace listings to determine if they need Stripe Connect
+      const listingsResponse = await fetch("/api/marketplace/user-listings");
+
+      if (!listingsResponse.ok) {
+        // If user has no listings and no need for Stripe Connect, return default status
+        const defaultStatus = {
+          hasAccount: false,
+          onboardingComplete: false,
+          isPremium: false,
+          isLoading: false,
+          error: null,
+        };
+        setStatus(defaultStatus);
+        return;
+      }
+
+      const listings = await listingsResponse.json();
+
+      // If user has no marketplace activity, skip Stripe Connect verification
+      if (!listings || listings.length === 0) {
+        const defaultStatus = {
+          hasAccount: false,
+          onboardingComplete: false,
+          isPremium: false,
+          isLoading: false,
+          error: null,
+        };
+        setStatus(defaultStatus);
+        return;
+      }
+
+      // Only fetch Stripe status if user has marketplace activity
       const response = await fetch("/api/stripe-connect/account-status");
 
       if (!response.ok) {

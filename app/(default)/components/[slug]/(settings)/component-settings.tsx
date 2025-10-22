@@ -28,10 +28,44 @@ export default function ComponentSettings({
   children: React.ReactNode;
 }) {
   const { isVisible, setVisible, chatId } = useComponentContext();
+  const [isPremium, setIsPremium] = useState(false);
+  const [isCheckingPremium, setIsCheckingPremium] = useState(true);
   const [isVisibilityLoading, setIsVisibilityLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [isListedOnMarketplace, setIsListedOnMarketplace] = useState(false);
   const [isCheckingMarketplace, setIsCheckingMarketplace] = useState(true);
+
+  // Check premium status
+  useEffect(() => {
+    const checkPremiumStatus = async () => {
+      try {
+        const supabase = createClient();
+        const { data: userData } = await supabase.auth.getUser();
+
+        if (!userData.user) {
+          setIsPremium(false);
+          setIsCheckingPremium(false);
+          return;
+        }
+
+        const { data: subscription } = await supabase
+          .from("subscriptions")
+          .select("*, prices(*, products(*))")
+          .in("status", ["trialing", "active"])
+          .eq("user_id", userData.user.id)
+          .maybeSingle();
+
+        setIsPremium(!!subscription);
+        setIsCheckingPremium(false);
+      } catch (error) {
+        console.error("Error checking premium status:", error);
+        setIsPremium(false);
+        setIsCheckingPremium(false);
+      }
+    };
+
+    checkPremiumStatus();
+  }, []);
 
   // Check if component is listed on marketplace
   useEffect(() => {
@@ -73,7 +107,7 @@ export default function ComponentSettings({
     }
   }, [chatId]);
   const handleVisibility = async () => {
-    if (isVisibilityLoading || isListedOnMarketplace) return;
+    if (isVisibilityLoading || isListedOnMarketplace || !isPremium) return;
     try {
       setIsVisibilityLoading(true);
       await changeVisibilityByChatId(chatId, !isVisible);
@@ -119,6 +153,12 @@ export default function ComponentSettings({
                     public. Components listed on the marketplace must remain
                     private to maintain exclusivity for buyers.
                   </p>
+                  {!isPremium && (
+                    <p className="text-sm text-amber-600">
+                      ⚠️ Premium subscription required to change component
+                      visibility.
+                    </p>
+                  )}
                   {isListedOnMarketplace && (
                     <p className="text-sm text-amber-600">
                       ⚠️ This component is listed on the marketplace and cannot
@@ -136,12 +176,24 @@ export default function ComponentSettings({
                           disabled={
                             isVisibilityLoading ||
                             isCheckingMarketplace ||
+                            isCheckingPremium ||
+                            !isPremium ||
                             (isListedOnMarketplace && !isVisible)
                           }
                         />
                       </div>
                     </TooltipTrigger>
-                    {isListedOnMarketplace && !isVisible && (
+                    {!isPremium && (
+                      <TooltipContent>
+                        <p>
+                          Premium subscription required to change component
+                          visibility.
+                          <br />
+                          Upgrade to premium to make your components private.
+                        </p>
+                      </TooltipContent>
+                    )}
+                    {isListedOnMarketplace && !isVisible && isPremium && (
                       <TooltipContent>
                         <p>
                           Cannot make public: component is listed on
