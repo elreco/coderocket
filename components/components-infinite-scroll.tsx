@@ -438,7 +438,7 @@ export function ComponentsInfiniteScroll({
           </Button>
         </div>
       ) : (
-        <div className="mt-6 grid grid-cols-1 gap-x-4 gap-y-10 pb-5 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+        <div className="mt-6 grid grid-cols-1 gap-4 pb-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {showSkeleton
             ? // Loading skeleton
               [...Array(12)].map((_, i) => (

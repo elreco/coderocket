@@ -5,6 +5,20 @@ const nextConfig = {
       bodySizeLimit: "2mb",
     },
   },
+  async redirects() {
+    return [
+      {
+        source: '/marketplace',
+        destination: '/templates',
+        permanent: true,
+      },
+      {
+        source: '/marketplace/:path*',
+        destination: '/templates/:path*',
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     return [
       {

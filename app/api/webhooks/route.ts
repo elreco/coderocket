@@ -166,7 +166,7 @@ export async function POST(req: Request) {
             // Handle marketplace purchases
             if (metadata && metadata.type === "marketplace_purchase") {
               const { handleMarketplacePurchase } = await import(
-                "@/app/(default)/marketplace/marketplace-purchase-handler"
+                "@/app/(default)/templates/templates-purchase-handler"
               );
               const result = await handleMarketplacePurchase(metadata);
 

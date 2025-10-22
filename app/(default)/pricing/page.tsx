@@ -33,50 +33,51 @@ export default async function PricingPage({
     <Container className="pr-2 sm:pr-11">
       <PageTitle title="Pricing Plans" subtitle="Start building for free" />
 
-      {reason === "marketplace-create" && (
+      {reason === "templates-create" && (
         <div className="mb-8">
           <Alert className="border-amber-200 bg-amber-50">
             <AlertDescription className="text-amber-800">
-              <strong>Premium subscription required</strong> - To create
-              listings on the marketplace and earn money from sales, you need a
-              premium subscription. Upgrade now to start selling your
-              components!
+              <strong>Premium subscription required</strong> - To create premium
+              templates and earn money from sales, you need a premium
+              subscription. You can still create free templates without a
+              subscription. Upgrade now to start earning from your templates!
             </AlertDescription>
           </Alert>
         </div>
       )}
 
-      {reason === "marketplace-stripe" && (
+      {reason === "templates-stripe" && (
         <div className="mb-8">
           <Alert className="border-amber-200 bg-amber-50">
             <AlertDescription className="text-amber-800">
               <strong>Premium subscription required</strong> - To set up payment
-              processing and receive earnings from marketplace sales, you need a
-              premium subscription. Upgrade now to configure your Stripe
-              account!
+              processing and receive earnings from template sales, you need a
+              premium subscription. Upgrade now to configure your Stripe account
+              and start earning!
             </AlertDescription>
           </Alert>
         </div>
       )}
 
-      {reason === "marketplace-listings" && (
+      {reason === "templates-listings" && (
         <div className="mb-8">
           <Alert className="border-amber-200 bg-amber-50">
             <AlertDescription className="text-amber-800">
               <strong>Premium subscription required</strong> - To manage your
-              marketplace listings and track sales, you need a premium
-              subscription. Upgrade now to access your seller dashboard!
+              premium templates and track earnings, you need a premium
+              subscription. You can still create free templates without a
+              subscription. Upgrade now to access your template dashboard!
             </AlertDescription>
           </Alert>
         </div>
       )}
 
-      {reason === "marketplace-earnings" && (
+      {reason === "templates-earnings" && (
         <div className="mb-8">
           <Alert className="border-amber-200 bg-amber-50">
             <AlertDescription className="text-amber-800">
               <strong>Premium subscription required</strong> - To view your
-              marketplace earnings and manage payouts, you need a premium
+              template earnings and manage payouts, you need a premium
               subscription. Upgrade now to access your financial dashboard!
             </AlertDescription>
           </Alert>

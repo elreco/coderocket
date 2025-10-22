@@ -43,7 +43,7 @@ export function StripeDashboardButton({
         {...props}
       >
         <Link
-          href="/account/marketplace/stripe-onboarding"
+          href="/account/templates/stripe-onboarding"
           className="flex items-center gap-2"
         >
           {IconComponent && <IconComponent className="size-4" />}
@@ -61,7 +61,7 @@ export function StripeDashboardButton({
       asChild
       {...props}
     >
-      <Link href="/account/marketplace/stripe-onboarding">
+      <Link href="/account/templates/stripe-onboarding">
         {IconComponent && <IconComponent className="mr-2 size-4" />}
         {children}
       </Link>

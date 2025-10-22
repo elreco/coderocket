@@ -41,8 +41,8 @@ export async function POST() {
         const baseUrl = getURL();
         const accountLink = await stripe.accountLinks.create({
           account: userData.stripe_account_id,
-          refresh_url: `${baseUrl}account/marketplace/stripe-onboarding?error=refresh_needed`,
-          return_url: `${baseUrl}account/marketplace/stripe-onboarding?success=true`,
+          refresh_url: `${baseUrl}account/templates/stripe-onboarding?error=refresh_needed`,
+          return_url: `${baseUrl}account/templates/stripe-onboarding?success=true`,
           type: "account_onboarding",
         });
 
@@ -99,8 +99,8 @@ export async function POST() {
     const baseUrl = getURL();
     const accountLink = await stripe.accountLinks.create({
       account: account.id,
-      refresh_url: `${baseUrl}account/marketplace/stripe-onboarding?refresh=true`,
-      return_url: `${baseUrl}account/marketplace/stripe-onboarding?success=true`,
+      refresh_url: `${baseUrl}account/templates/stripe-onboarding?refresh=true`,
+      return_url: `${baseUrl}account/templates/stripe-onboarding?success=true`,
       type: "account_onboarding",
     });
 

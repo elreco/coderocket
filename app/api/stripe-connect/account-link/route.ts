@@ -49,12 +49,12 @@ export async function POST(req: Request) {
     let returnUrl: string;
 
     if (type === "account_onboarding") {
-      refreshUrl = `${baseUrl}account/marketplace/stripe-onboarding?refresh=true`;
-      returnUrl = `${baseUrl}account/marketplace/stripe-onboarding?success=true`;
+      refreshUrl = `${baseUrl}account/templates/stripe-onboarding?refresh=true`;
+      returnUrl = `${baseUrl}account/templates/stripe-onboarding?success=true`;
     } else {
       // account_update
-      refreshUrl = `${baseUrl}account/marketplace/listings`;
-      returnUrl = `${baseUrl}account/marketplace/listings?updated=true`;
+      refreshUrl = `${baseUrl}account/templates/listings`;
+      returnUrl = `${baseUrl}account/templates/listings?updated=true`;
     }
 
     // Create account link

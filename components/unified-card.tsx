@@ -1,7 +1,7 @@
 "use client";
 
 import { SiHtml5, SiReact, SiVuedotjs } from "@icons-pack/react-simple-icons";
-import { Eye, ShoppingCart, Tag, User, GitFork } from "lucide-react";
+import { Eye, Activity, Tag, User, GitFork, Heart } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ReactNode } from "react";
@@ -68,12 +68,15 @@ export function UnifiedCard({
         ? SiVuedotjs
         : SiHtml5;
 
-  const priceFormatted = data.price
-    ? new Intl.NumberFormat("en-US", {
-        style: "currency",
-        currency: data.currency || "USD",
-      }).format(data.price / 100)
-    : null;
+  const priceFormatted =
+    data.price !== undefined
+      ? data.price === 0
+        ? "FREE"
+        : new Intl.NumberFormat("en-US", {
+            style: "currency",
+            currency: data.currency || "USD",
+          }).format(data.price / 100)
+      : null;
 
   const handleAuthorClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -108,14 +111,27 @@ export function UnifiedCard({
         {/* Top Right Badges */}
         <div className="absolute right-3 top-3 flex flex-col gap-2">
           {priceFormatted && (
-            <Badge className="bg-green-600 text-white shadow-sm">
+            <Badge
+              className={cn(
+                "font-semibold shadow-sm",
+                data.price === 0
+                  ? "bg-emerald-500 text-white hover:bg-emerald-600"
+                  : "bg-green-600 text-white hover:bg-green-700",
+              )}
+            >
               {priceFormatted}
             </Badge>
           )}
           {data.totalSales !== undefined && (
-            <Badge className="bg-blue-600 text-white shadow-sm">
-              <ShoppingCart className="mr-1 size-3" />
-              {data.totalSales} sale{data.totalSales !== 1 ? "s" : ""}
+            <Badge className="bg-blue-600 text-white shadow-sm hover:bg-blue-700">
+              <Activity className="mr-1 size-3" />
+              {data.totalSales} use{data.totalSales !== 1 ? "s" : ""}
+            </Badge>
+          )}
+          {data.likes !== undefined && data.likes > 0 && (
+            <Badge className="bg-pink-500 text-white shadow-sm hover:bg-pink-600">
+              <Heart className="mr-1 size-3" />
+              {data.likes} like{data.likes !== 1 ? "s" : ""}
             </Badge>
           )}
           {data.badges?.map((badge, index) => (

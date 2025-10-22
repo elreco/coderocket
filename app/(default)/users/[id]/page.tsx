@@ -300,7 +300,7 @@ export default async function UserPage({
                           <p className="text-sm text-muted-foreground">
                             {marketplaceStats.topSellingListing.total_sales ||
                               0}{" "}
-                            sales
+                            uses
                           </p>
                         </div>
                         <div className="text-right">
@@ -509,7 +509,7 @@ function formatListingForUnifiedCard(
       id: currentUserId || "unknown",
       name: "You",
     },
-    href: `/marketplace/${listing.id}`,
+    href: `/templates/${listing.id}`,
     price: listing.price_cents,
     currency: listing.currency,
     category: {

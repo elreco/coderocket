@@ -5,7 +5,7 @@ import {
   DollarSign,
   Heart,
   LogOut,
-  ShoppingCart,
+  Box,
   SquareUserRoundIcon,
   User,
   UserCircle,
@@ -163,16 +163,16 @@ export function NavUser({
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild className="cursor-pointer">
                 <Link
-                  href="/account/marketplace/listings"
+                  href="/account/templates/listings"
                   onClick={() => setOpenMobile(false)}
                 >
-                  <ShoppingCart />
-                  My Listings
+                  <Box />
+                  My Listed Templates
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild className="cursor-pointer">
                 <Link
-                  href="/account/marketplace/earnings"
+                  href="/account/templates/earnings"
                   onClick={() => setOpenMobile(false)}
                 >
                   <DollarSign />
@@ -181,11 +181,11 @@ export function NavUser({
               </DropdownMenuItem>
               <DropdownMenuItem asChild className="cursor-pointer">
                 <Link
-                  href="/account/marketplace/purchases"
+                  href="/account/templates/purchases"
                   onClick={() => setOpenMobile(false)}
                 >
-                  <CreditCard />
-                  My Purchases
+                  <Box />
+                  My Templates
                 </Link>
               </DropdownMenuItem>
             </DropdownMenuGroup>

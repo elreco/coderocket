@@ -7,6 +7,7 @@ import {
   Globe,
   Rocket,
   SquareTerminal,
+  Box,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -42,6 +43,12 @@ const data = {
       title: "Browse Components",
       url: "/components",
       icon: Globe,
+    },
+    {
+      title: "Templates",
+      url: "/templates",
+      icon: Box,
+      isNew: true,
     },
   ],
   community: [
