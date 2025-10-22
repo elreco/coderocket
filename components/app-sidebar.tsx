@@ -7,7 +7,6 @@ import {
   Globe,
   Rocket,
   SquareTerminal,
-  Sparkles,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -46,12 +45,6 @@ const data = {
     },
   ],
   community: [
-    {
-      title: "Ekinox - AI Workflows",
-      url: "/ekinox",
-      icon: Sparkles,
-      isNew: true,
-    },
     {
       title: "Discord",
       url: discordLink,

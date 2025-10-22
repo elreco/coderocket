@@ -562,19 +562,6 @@ export default function Hero() {
         fill="hsl(var(--primary))"
       />
       <div className="flex w-full flex-col items-center space-y-4">
-        <Link
-          href="https://www.ekinox.app"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="group flex items-center gap-2 rounded-full border border-primary/40 bg-primary/5 px-4 py-2 text-sm transition-all hover:border-primary/60 hover:bg-primary/10 hover:shadow-lg hover:shadow-primary/20"
-        >
-          <Sparkles className="size-4 text-primary" />
-          <span className="font-medium">
-            🚀 Ekinox is LIVE - Build AI Workflows Visually
-          </span>
-          <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
-        </Link>
-
         <h2
           className="text-4xl font-medium tracking-tighter sm:text-5xl"
           data-testid="home-h2"
@@ -1066,6 +1053,17 @@ export default function Hero() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Link
+        href="https://www.ekinox.app"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="group fixed right-4 top-4 z-20 flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs backdrop-blur-sm transition-all hover:border-primary/50 hover:bg-primary/15 hover:shadow-lg hover:shadow-primary/20"
+      >
+        <Sparkles className="size-3 text-primary" />
+        <span className="font-medium text-primary">Ekinox - AI Workflows</span>
+        <ArrowRight className="size-3 text-primary transition-transform group-hover:translate-x-1" />
+      </Link>
     </Container>
   );
 }

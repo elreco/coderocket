@@ -69,7 +69,7 @@ export default function Video() {
             className="aspect-video rounded-lg border"
             controls
             preload="none"
-            muted
+            muted={false}
             loop
           >
             <source src="/demo.mp4" type="video/mp4" />
