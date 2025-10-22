@@ -194,6 +194,8 @@ export async function handleMarketplacePurchase(
       );
     }
 
+    // Don't track template usage - it's just a copy, not a real AI request
+
     console.log("Successfully created purchased component:", {
       purchasedChatId: purchasedChat.id,
       buyerId: buyer_id,
@@ -236,20 +238,22 @@ export async function handleMarketplacePurchase(
       throw new Error("Failed to record purchase");
     }
 
-    // Create earning record for the seller
-    const { error: earningsError } = await supabase
-      .from("marketplace_earnings")
-      .insert({
-        purchase_id: purchaseData?.id,
-        seller_id,
-        amount_cents: parseInt(seller_earning_cents),
-        currency: "USD",
-        status: "pending",
-      });
+    // Create earning record for the seller only if there are actual earnings (price > 0)
+    if (parseInt(price_cents) > 0) {
+      const { error: earningsError } = await supabase
+        .from("marketplace_earnings")
+        .insert({
+          purchase_id: purchaseData?.id,
+          seller_id,
+          amount_cents: parseInt(seller_earning_cents),
+          currency: "USD",
+          status: "pending",
+        });
 
-    if (earningsError) {
-      console.error("Failed to create earnings record:", earningsError);
-      // Don't fail the entire purchase for earnings record failure
+      if (earningsError) {
+        console.error("Failed to create earnings record:", earningsError);
+        // Don't fail the entire purchase for earnings record failure
+      }
     }
 
     // Update listing uses count

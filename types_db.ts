@@ -932,6 +932,41 @@ export type Database = {
         };
         Relationships: [];
       };
+      version_usage_tracking: {
+        Row: {
+          chat_id: string;
+          created_at: string | null;
+          id: string;
+          usage_type: string;
+          user_id: string;
+          version: number;
+        };
+        Insert: {
+          chat_id: string;
+          created_at?: string | null;
+          id?: string;
+          usage_type: string;
+          user_id: string;
+          version: number;
+        };
+        Update: {
+          chat_id?: string;
+          created_at?: string | null;
+          id?: string;
+          usage_type?: string;
+          user_id?: string;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "version_usage_tracking_chat_id_fkey";
+            columns: ["chat_id"];
+            isOneToOne: false;
+            referencedRelation: "chats";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: {
       messages_view: {
@@ -973,12 +1008,9 @@ export type Database = {
         Args: { seller_uuid: string };
         Returns: number;
       };
-      generate_api_key: {
-        Args: Record<PropertyKey, never>;
-        Returns: string;
-      };
+      generate_api_key: { Args: never; Returns: string };
       get_all_components: {
-        Args: Record<PropertyKey, never>;
+        Args: never;
         Returns: {
           chat_id: string;
           created_at: string;
@@ -995,7 +1027,7 @@ export type Database = {
         }[];
       };
       get_components: {
-        Args: Record<PropertyKey, never>;
+        Args: never;
         Returns: {
           chat_id: string;
           clone_url: string;
@@ -1017,7 +1049,7 @@ export type Database = {
         }[];
       };
       get_components_with_theme_and_slug: {
-        Args: Record<PropertyKey, never>;
+        Args: never;
         Returns: {
           chat_id: string;
           created_at: string;
@@ -1033,7 +1065,7 @@ export type Database = {
         }[];
       };
       get_components2: {
-        Args: Record<PropertyKey, never>;
+        Args: never;
         Returns: {
           chat_id: string;
           created_at: string;
@@ -1053,7 +1085,7 @@ export type Database = {
         }[];
       };
       get_components3: {
-        Args: Record<PropertyKey, never>;
+        Args: never;
         Returns: {
           chat_id: string;
           created_at: string;
@@ -1073,7 +1105,7 @@ export type Database = {
         }[];
       };
       get_components4: {
-        Args: Record<PropertyKey, never>;
+        Args: never;
         Returns: {
           chat_id: string;
           created_at: string;
@@ -1094,7 +1126,7 @@ export type Database = {
         }[];
       };
       get_median_message_cost: {
-        Args: Record<PropertyKey, never>;
+        Args: never;
         Returns: {
           average_cost: string;
           median_cost: string;
@@ -1107,10 +1139,7 @@ export type Database = {
         Args: { listing_id_param: string };
         Returns: undefined;
       };
-      update_pending_earnings_to_available: {
-        Args: Record<PropertyKey, never>;
-        Returns: number;
-      };
+      update_pending_earnings_to_available: { Args: never; Returns: number };
     };
     Enums: {
       pricing_plan_interval: "day" | "week" | "month" | "year";

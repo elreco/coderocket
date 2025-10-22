@@ -43,6 +43,7 @@ import { getPreviousArtifactCode } from "@/utils/supabase/artifact-helpers";
 import { createClient } from "@/utils/supabase/server";
 import { systemPrompt } from "@/utils/system-prompts";
 import { htmlSystemPrompt } from "@/utils/system-prompts/html";
+import { trackVersionUsage } from "@/utils/version-usage-tracking";
 
 interface ContextResult {
   limitedMessages: Tables<"messages">[];
@@ -588,7 +589,7 @@ ${significantElements.map((el: Record<string, unknown>) => `${el.selector}: ${el
 ## SEMANTIC STRUCTURE
 ${semanticInfo.map(([tag, info]: [string, Record<string, unknown>]) => `${tag}: ${info.count} elements`).join(", ")}
 
-## INTERACTIVE ELEMENTS  
+## INTERACTIVE ELEMENTS
 ${buttons.map((b) => `Button: "${b.text}" (${b.style || "default"})`).join("\n")}
 
 ## MEDIA RESOURCES
@@ -979,6 +980,9 @@ const updateDataAfterCompletion = async (
   if (newMessagesError) {
     console.error("Error inserting new messages:", newMessagesError);
   }
+
+  // Track version usage for accurate pricing
+  await trackVersionUsage(user.id, chatId, version);
 
   after(async () => {
     if (hasError) {

@@ -17,6 +17,7 @@ import {
 import { formatToTimestamp } from "@/utils/date";
 import { defaultArtifactCode } from "@/utils/default-artifact-code";
 import { createClient } from "@/utils/supabase/server";
+import { trackVersionUsage } from "@/utils/version-usage-tracking";
 
 import { buildComponent } from "./[slug]/actions";
 
@@ -451,6 +452,9 @@ export const createChat = async (prompt: string, formData: FormData) => {
 
   await supabase.from("messages").insert(messageData);
 
+  // Track version usage for accurate pricing
+  await trackVersionUsage(user.id, data.id, messageData.version);
+
   return { slug: data.slug };
 };
 
@@ -807,6 +811,8 @@ export const remixChat = async (
   if (messagesError) {
     throw new Error("Failed to copy messages");
   }
+
+  // Don't track remix usage - it's just a copy, not a real AI request
 
   after(async () => {
     // Get the latest assistant message from the newly created chat
