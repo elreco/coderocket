@@ -78,6 +78,16 @@ export async function handleMarketplacePurchase(
     // Create a new chat for the buyer (copy of the original)
     const purchasedChatSlug = await generateUniqueNanoid();
 
+    // Check if buyer has premium subscription to determine privacy setting
+    const { data: buyerSubscription } = await supabase
+      .from("subscriptions")
+      .select("id")
+      .eq("user_id", buyer_id)
+      .eq("status", "active")
+      .single();
+
+    const isPrivate = !!buyerSubscription; // Only premium users can have private components
+
     const { data: purchasedChat, error: purchasedChatError } = await supabase
       .from("chats")
       .insert({
@@ -85,7 +95,7 @@ export async function handleMarketplacePurchase(
         title: `${originalChat.title} (Purchased)`,
         slug: purchasedChatSlug,
         framework: originalChat.framework,
-        is_private: true, // Purchased components are private to the buyer
+        is_private: isPrivate, // Private only for premium users
         artifact_code:
           originalChat.artifact_code ||
           originalMessage.artifact_code ||

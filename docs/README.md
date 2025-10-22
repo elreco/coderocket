@@ -38,11 +38,16 @@ docs/
 ├── docs.json              # Mintlify configuration (new format)
 ├── introduction.mdx       # Homepage
 ├── quickstart.mdx         # Getting started guide
-└── github/               # GitHub integration docs
-    ├── overview.mdx      # Feature overview
-    ├── setup.mdx         # Setup instructions
-    ├── synchronization.mdx # Sync guide
-    └── troubleshooting.mdx # Common issues
+├── github/               # GitHub integration docs
+│   ├── overview.mdx      # Feature overview
+│   ├── setup.mdx         # Setup instructions
+│   ├── synchronization.mdx # Sync guide
+│   └── troubleshooting.mdx # Common issues
+└── templates/            # Templates documentation
+    ├── overview.mdx      # Templates overview
+    ├── using.mdx         # Using templates guide
+    ├── sharing.mdx       # Sharing templates guide
+    └── customization.mdx # Customizing templates
 ```
 
 ## ✏️ Writing Documentation
@@ -165,6 +170,15 @@ Complete documentation for:
 - ✅ Conflict resolution strategies
 - ✅ Troubleshooting common issues
 - ✅ Best practices and workflows
+
+### Templates
+Complete documentation for:
+- ✅ Templates overview and concepts
+- ✅ Using free and premium templates
+- ✅ Sharing templates with the community
+- ✅ Customizing and modifying templates
+- ✅ Best practices for template creation
+- ✅ Pricing strategies for premium templates
 
 ### Future Sections
 Planned documentation areas:

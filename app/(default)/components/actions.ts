@@ -14,10 +14,12 @@ import {
   MAX_TOKENS_PER_REQUEST,
   PREMIUM_CHAR_LIMIT,
 } from "@/utils/config";
-import { formatToTimestamp } from "@/utils/date";
 import { defaultArtifactCode } from "@/utils/default-artifact-code";
 import { createClient } from "@/utils/supabase/server";
-import { trackVersionUsage } from "@/utils/version-usage-tracking";
+import {
+  trackVersionUsage,
+  getUserUsageCount,
+} from "@/utils/version-usage-tracking";
 
 import { buildComponent } from "./[slug]/actions";
 
@@ -243,26 +245,19 @@ export const createChat = async (prompt: string, formData: FormData) => {
       today.getMonth(),
       1,
     );
+    const currentPeriodEnd = new Date(
+      today.getFullYear(),
+      today.getMonth() + 1,
+      1,
+    );
 
-    // Vérifier la limite mensuelle pour les utilisateurs gratuits
-    const { count: originalCount } = await supabase
-      .from("messages")
-      .select("*, chats!inner(*)", { count: "exact", head: true })
-      .eq("chats.user_id", user.id)
-      .gte("created_at", formatToTimestamp(currentPeriodStart))
-      .is("chats.remix_chat_id", null)
-      .neq("is_github_pull", true);
-
-    const { count: remixCount } = await supabase
-      .from("messages")
-      .select("*, chats!inner(*)", { count: "exact", head: true })
-      .eq("chats.user_id", user.id)
-      .gte("created_at", formatToTimestamp(currentPeriodStart))
-      .not("chats.remix_chat_id", "is", null)
-      .gt("version", 0)
-      .neq("is_github_pull", true);
-
-    const count = (originalCount || 0) + (remixCount || 0);
+    // Use new tracking system for accurate counting
+    const usageResult = await getUserUsageCount(
+      user.id,
+      currentPeriodStart,
+      currentPeriodEnd,
+    );
+    const count = usageResult.success ? usageResult.count : 0;
 
     if (count >= TRIAL_PLAN_MESSAGES_PER_MONTH) {
       // Si l'utilisateur a des messages supplémentaires, utiliser un message supplémentaire
@@ -306,26 +301,15 @@ export const createChat = async (prompt: string, formData: FormData) => {
   } else {
     // Calculate the start of the current billing month based on current_period_start
     const currentPeriodStart = new Date(subscription.current_period_start);
+    const currentPeriodEnd = new Date(subscription.current_period_end);
 
-    // Vérifier la limite mensuelle pour les abonnés
-    const { count: originalCount } = await supabase
-      .from("messages")
-      .select("*, chats!inner(*)", { count: "exact", head: true })
-      .eq("chats.user_id", user.id)
-      .gte("created_at", formatToTimestamp(currentPeriodStart))
-      .is("chats.remix_chat_id", null)
-      .neq("is_github_pull", true);
-
-    const { count: remixCount } = await supabase
-      .from("messages")
-      .select("*, chats!inner(*)", { count: "exact", head: true })
-      .eq("chats.user_id", user.id)
-      .gte("created_at", formatToTimestamp(currentPeriodStart))
-      .not("chats.remix_chat_id", "is", null)
-      .gt("version", 0)
-      .neq("is_github_pull", true);
-
-    const count = (originalCount || 0) + (remixCount || 0);
+    // Use new tracking system for accurate counting
+    const usageResult = await getUserUsageCount(
+      user.id,
+      currentPeriodStart,
+      currentPeriodEnd,
+    );
+    const count = usageResult.success ? usageResult.count : 0;
 
     const maxMessagesPerPeriod = getMaxMessagesPerPeriod(subscription);
 

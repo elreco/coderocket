@@ -16,8 +16,6 @@ import {
   PRO_PLAN_MESSAGES_PER_PERIOD,
   STARTER_PLAN_MESSAGES_PER_PERIOD,
 } from "@/utils/config";
-import { formatToTimestamp } from "@/utils/date";
-import { createClient } from "@/utils/supabase/server";
 import { getUserUsageCount } from "@/utils/version-usage-tracking";
 
 import { getUser, updateEmail, updateName } from "./actions";
@@ -54,7 +52,6 @@ export default async function Account() {
     ]);
 
   const user = userData.data.user;
-  const supabase = await createClient();
 
   // Calculer l'utilisation et la date de réinitialisation
   let usage = 0;
@@ -70,35 +67,13 @@ export default async function Account() {
       const currentPeriodStart = new Date(subscription.current_period_start);
       const currentPeriodEnd = new Date(subscription.current_period_end);
 
-      // Use new tracking system for more accurate counting
+      // Use new tracking system for accurate counting
       const usageResult = await getUserUsageCount(
         user.id,
         currentPeriodStart,
         currentPeriodEnd,
       );
-      if (usageResult.success) {
-        usage = usageResult.count;
-      } else {
-        // Fallback to old system if new tracking fails
-        const { count: originalCount } = await supabase
-          .from("messages")
-          .select("*, chats!inner(*)", { count: "exact", head: true })
-          .eq("chats.user_id", user.id)
-          .gte("created_at", formatToTimestamp(currentPeriodStart))
-          .is("chats.remix_chat_id", null)
-          .neq("is_github_pull", true);
-
-        const { count: remixCount } = await supabase
-          .from("messages")
-          .select("*, chats!inner(*)", { count: "exact", head: true })
-          .eq("chats.user_id", user.id)
-          .gte("created_at", formatToTimestamp(currentPeriodStart))
-          .not("chats.remix_chat_id", "is", null)
-          .gt("version", 0)
-          .neq("is_github_pull", true);
-
-        usage = (originalCount || 0) + (remixCount || 0);
-      }
+      usage = usageResult.success ? usageResult.count : 0;
 
       maxMessages = getMaxMessagesPerPeriod(subscription);
       resetDate = currentPeriodEnd;
@@ -116,35 +91,13 @@ export default async function Account() {
         1,
       );
 
-      // Use new tracking system for more accurate counting
+      // Use new tracking system for accurate counting
       const usageResult = await getUserUsageCount(
         user.id,
         currentPeriodStart,
         currentPeriodEnd,
       );
-      if (usageResult.success) {
-        usage = usageResult.count;
-      } else {
-        // Fallback to old system if new tracking fails
-        const { count: originalCount } = await supabase
-          .from("messages")
-          .select("*, chats!inner(*)", { count: "exact", head: true })
-          .eq("chats.user_id", user.id)
-          .gte("created_at", formatToTimestamp(currentPeriodStart))
-          .is("chats.remix_chat_id", null)
-          .neq("is_github_pull", true);
-
-        const { count: remixCount } = await supabase
-          .from("messages")
-          .select("*, chats!inner(*)", { count: "exact", head: true })
-          .eq("chats.user_id", user.id)
-          .gte("created_at", formatToTimestamp(currentPeriodStart))
-          .not("chats.remix_chat_id", "is", null)
-          .gt("version", 0)
-          .neq("is_github_pull", true);
-
-        usage = (originalCount || 0) + (remixCount || 0);
-      }
+      usage = usageResult.success ? usageResult.count : 0;
 
       maxMessages = TRIAL_PLAN_MESSAGES_PER_MONTH;
       resetDate = currentPeriodEnd;

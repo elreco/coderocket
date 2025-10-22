@@ -1,14 +1,14 @@
 ---
-title: "Customizing Components"
-description: "Learn how to modify and customize your purchased marketplace components"
+title: "Customizing Templates"
+description: "Learn how to modify and customize your used templates"
 icon: "code"
 ---
 
-Learn how to customize and modify your purchased components to perfectly match your project needs.
+Learn how to customize and modify your used templates to perfectly match your project needs.
 
 ## Getting Started
 
-After purchasing a component, you have full access to its source code. This guide will help you understand how to modify and customize these components effectively.
+After using a template, you have full access to its source code. This guide will help you understand how to modify and customize these templates effectively.
 
 ### What You Can Customize
 
@@ -23,19 +23,19 @@ After purchasing a component, you have full access to its source code. This guid
     Behavior, interactions, and business logic
   </Card>
   <Card title="Structure" icon="box">
-    Component architecture and organization
+    Template architecture and organization
   </Card>
 </CardGroup>
 
 ## File Structure Overview
 
-Most components follow a standard structure:
+Most templates follow a standard structure:
 
 ```
-component-name/
+template-name/
 ├── src/
-│   ├── components/     # Main component files
-│   │   ├── Component.tsx
+│   ├── components/     # Main template files
+│   │   ├── Template.tsx
 │   │   ├── subcomponents/
 │   │   └── index.ts
 │   ├── styles/        # Styling files
@@ -46,13 +46,13 @@ component-name/
 │   │   └── constants.ts
 │   └── types/         # TypeScript definitions
 ├── assets/
-│   ├── images/        # Component images
+│   ├── images/        # Template images
 │   └── icons/         # Icon files
 ├── public/            # Static assets
 ├── package.json       # Dependencies
 ├── tailwind.config.js # Tailwind configuration
 ├── README.md         # Usage instructions
-└── preview.html      # Component preview
+└── preview.html      # Template preview
 ```
 
 ## Common Customizations
@@ -91,8 +91,8 @@ component-name/
       --background-color: #ffffff;
     }
 
-    /* Component uses these variables */
-    .component {
+    /* Template uses these variables */
+    .template {
       background-color: var(--primary-color);
       color: var(--text-color);
     }
@@ -151,7 +151,7 @@ import Image from 'next/image'
 
 ### 4. Layout & Structure
 
-Modify component layouts:
+Modify template layouts:
 
 ```jsx
 // Change from flex row to column
@@ -213,8 +213,8 @@ useEffect(() => {
 
 <Accordion title="Add New Props">
 ```jsx
-// Extend component props
-interface ComponentProps {
+// Extend template props
+interface TemplateProps {
   title: string
   description?: string
   variant?: 'primary' | 'secondary'
@@ -224,15 +224,15 @@ interface ComponentProps {
   customClass?: string
 }
 
-export function Component({
+export function Template({
   title,
   description,
   variant = 'primary',
   onAction,
   showIcon = true,
   customClass
-}: ComponentProps) {
-  // Component logic
+}: TemplateProps) {
+  // Template logic
 }
 ```
 </Accordion>
@@ -267,7 +267,7 @@ export function Component({
 ### Code Organization
 <CardGroup cols={2}>
   <Card title="Keep Original Structure" icon="folder">
-    Maintain the component's architecture to preserve functionality
+    Maintain the template's architecture to preserve functionality
   </Card>
   <Card title="Create Backup" icon="copy">
     Keep a copy of the original files before making major changes
@@ -313,11 +313,11 @@ export function Component({
     - Validate image file formats
   </Accordion>
 
-  <Accordion title="Component Not Rendering">
+  <Accordion title="Template Not Rendering">
     - Check for JavaScript errors in console
     - Verify all imports are correct
     - Ensure dependencies are installed
-    - Check component prop requirements
+    - Check template prop requirements
   </Accordion>
 
   <Accordion title="Responsive Issues">
@@ -334,21 +334,21 @@ export function Component({
   <Card title="Community Discord" icon="discord">
     Join our [Discord](https://discord.gg/t7dQgcYJ5t) for community help and tips
   </Card>
-  <Card title="Component Documentation" icon="book">
-    Check the README.md file included with each component
+  <Card title="Template Documentation" icon="book">
+    Check the README.md file included with each template
   </Card>
   <Card title="Contact Creator" icon="user">
-    Reach out to the component creator for specific guidance
+    Reach out to the template creator for specific guidance
   </Card>
 </CardGroup>
 
 ## Next Steps
 
-Once you've customized your component:
+Once you've customized your template:
 
-1. **Deploy**: Deploy your customized component to production
+1. **Deploy**: Deploy your customized template to production
 2. **Share**: Consider sharing your improvements with the community
 3. **Iterate**: Continue refining based on user feedback
-4. **Scale**: Apply learnings to other components
+4. **Scale**: Apply learnings to other templates
 
-Ready to start customizing? Download your purchased components from [My Purchases](https://coderocket.app/account/marketplace/purchases) and begin making them your own!
+Ready to start customizing? Download your used templates from [My Templates](https://coderocket.app/account/templates/purchases) and begin making them your own!

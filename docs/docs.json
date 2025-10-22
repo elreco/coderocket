@@ -69,12 +69,12 @@
         ]
       },
       {
-        "group": "Marketplace",
+        "group": "Templates",
         "pages": [
-          "marketplace/overview",
-          "marketplace/selling",
-          "marketplace/purchasing",
-          "marketplace/customization"
+          "templates/overview",
+          "templates/using",
+          "templates/sharing",
+          "templates/customization"
         ]
       }
     ]

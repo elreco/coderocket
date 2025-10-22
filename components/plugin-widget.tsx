@@ -5,6 +5,13 @@ import { useEffect } from "react";
 import { crispWebsiteId } from "@/utils/config";
 import { createClient } from "@/utils/supabase/client";
 
+// Fonction globale pour ouvrir le chat Crisp
+declare global {
+  interface Window {
+    openCrispChat: () => void;
+  }
+}
+
 export function PluginWidget() {
   const supabase = createClient();
   useEffect(() => {
@@ -14,6 +21,10 @@ export function PluginWidget() {
       const userId = authData?.session?.user?.id;
       // Initialisation de Crisp avec ton ID
       Crisp.configure(crispWebsiteId);
+
+      // Masquer le chat par défaut
+      Crisp.chat.hide();
+
       // Si l'utilisateur est connecté, récupérer les détails supplémentaires
       if (userId) {
         const { data: userDetails } = await supabase
@@ -32,6 +43,15 @@ export function PluginWidget() {
           }
         }
       }
+
+      // Exposer la fonction pour ouvrir le chat
+      window.openCrispChat = () => {
+        Crisp.chat.show();
+        // Ouvrir directement la conversation
+        setTimeout(() => {
+          Crisp.chat.open();
+        }, 100);
+      };
     };
 
     fetchUserData();

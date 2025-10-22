@@ -5,6 +5,7 @@ import {
   BookOpen,
   CreditCard,
   Globe,
+  MessageCircle,
   Rocket,
   SquareTerminal,
   Box,
@@ -56,6 +57,17 @@ const data = {
       title: "Discord",
       url: discordLink,
       icon: SiDiscord,
+    },
+    {
+      title: "Support Chat",
+      url: "#",
+      icon: MessageCircle,
+      external: false,
+      onClick: () => {
+        if (typeof window !== "undefined" && window.openCrispChat) {
+          window.openCrispChat();
+        }
+      },
     },
     {
       title: "Changelog",

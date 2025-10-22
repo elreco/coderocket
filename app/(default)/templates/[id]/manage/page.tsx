@@ -9,7 +9,7 @@ import { createClient } from "@/utils/supabase/server";
 
 import { getMarketplaceListing } from "../../actions";
 
-import { EditListingForm } from "./edit-listing-form";
+import { EditTemplateForm } from "./edit-template-form";
 
 export default async function ManageListingPage({
   params,
@@ -19,8 +19,8 @@ export default async function ManageListingPage({
   const { id } = await params;
 
   // Get the listing
-  const listing = await getMarketplaceListing(id);
-  if (!listing) {
+  const template = await getMarketplaceListing(id);
+  if (!template) {
     notFound();
   }
 
@@ -28,7 +28,7 @@ export default async function ManageListingPage({
   const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
 
-  if (!userData.user || userData.user.id !== listing.seller_id) {
+  if (!userData.user || userData.user.id !== template.seller_id) {
     redirect("/templates");
   }
 
@@ -45,12 +45,12 @@ export default async function ManageListingPage({
       </div>
 
       <PageTitle
-        title="Edit Listing"
+        title="Edit Template"
         subtitle="Update your component listing details"
       />
 
       {/* Edit Form */}
-      <EditListingForm listing={listing} />
+      <EditTemplateForm template={template} />
     </Container>
   );
 }

@@ -13,19 +13,19 @@ import { useToast } from "@/hooks/use-toast";
 
 import { MarketplaceListing, updateMarketplaceListing } from "../../actions";
 
-interface EditListingFormProps {
-  listing: MarketplaceListing;
+interface EditTemplateFormProps {
+  template: MarketplaceListing;
 }
 
-export function EditListingForm({ listing }: EditListingFormProps) {
+export function EditTemplateForm({ template }: EditTemplateFormProps) {
   const router = useRouter();
   const { toast } = useToast();
 
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
-    title: listing.title,
-    description: listing.description,
-    price: (listing.price_cents / 100).toFixed(2),
+    title: template.title,
+    description: template.description,
+    price: (template.price_cents / 100).toFixed(2),
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -57,7 +57,7 @@ export function EditListingForm({ listing }: EditListingFormProps) {
     setIsLoading(true);
     try {
       const result = await updateMarketplaceListing({
-        listingId: listing.id,
+        listingId: template.id,
         title: formData.title,
         description: formData.description,
         priceCents: Math.round(price * 100),
@@ -68,7 +68,7 @@ export function EditListingForm({ listing }: EditListingFormProps) {
           title: "Success!",
           description: "Your template has been updated.",
         });
-        router.push(`/templates/${listing.id}`);
+        router.push(`/templates/${template.id}`);
         router.refresh();
       } else {
         toast({
@@ -92,7 +92,7 @@ export function EditListingForm({ listing }: EditListingFormProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Listing Details</CardTitle>
+        <CardTitle>Template Details</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -176,7 +176,7 @@ export function EditListingForm({ listing }: EditListingFormProps) {
                   Updating...
                 </>
               ) : (
-                "Update Listing"
+                "Update Template"
               )}
             </Button>
             <Button

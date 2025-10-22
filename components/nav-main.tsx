@@ -25,6 +25,8 @@ export function NavMain({
     icon: LucideIcon | IconType;
     isActive?: boolean;
     isNew?: boolean;
+    external?: boolean;
+    onClick?: () => void;
   }[];
   label: string;
 }) {
@@ -37,19 +39,53 @@ export function NavMain({
         {items.map((item) => (
           <SidebarMenuItem key={item.url}>
             <SidebarMenuButton isActive={item.isActive} asChild>
-              <Link
-                className="flex items-center gap-2"
-                href={item.url}
-                onClick={() => setOpenMobile(false)}
-              >
-                <item.icon />
-                <span>{item.title}</span>
-                {item.isNew && !item.isActive && (
-                  <Badge variant="default" className="text-xs">
-                    New
-                  </Badge>
-                )}
-              </Link>
+              {item.onClick ? (
+                <button
+                  className="flex w-full items-center gap-2 text-left"
+                  onClick={() => {
+                    setOpenMobile(false);
+                    item.onClick?.();
+                  }}
+                >
+                  <item.icon />
+                  <span>{item.title}</span>
+                  {item.isNew && !item.isActive && (
+                    <Badge variant="default" className="text-xs">
+                      New
+                    </Badge>
+                  )}
+                </button>
+              ) : item.external ? (
+                <a
+                  className="flex items-center gap-2"
+                  href={item.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setOpenMobile(false)}
+                >
+                  <item.icon />
+                  <span>{item.title}</span>
+                  {item.isNew && !item.isActive && (
+                    <Badge variant="default" className="text-xs">
+                      New
+                    </Badge>
+                  )}
+                </a>
+              ) : (
+                <Link
+                  className="flex items-center gap-2"
+                  href={item.url}
+                  onClick={() => setOpenMobile(false)}
+                >
+                  <item.icon />
+                  <span>{item.title}</span>
+                  {item.isNew && !item.isActive && (
+                    <Badge variant="default" className="text-xs">
+                      New
+                    </Badge>
+                  )}
+                </Link>
+              )}
             </SidebarMenuButton>
           </SidebarMenuItem>
         ))}
