@@ -1,4 +1,9 @@
-import { SiHtml5, SiReact, SiVuedotjs } from "@icons-pack/react-simple-icons";
+import {
+  SiHtml5,
+  SiReact,
+  SiVuedotjs,
+  SiSvelte,
+} from "@icons-pack/react-simple-icons";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -91,6 +96,8 @@ export default async function MarketplaceDemoPage({
                 <SiReact className="size-3" />
               ) : listing.chat.framework === Framework.VUE ? (
                 <SiVuedotjs className="size-3" />
+              ) : listing.chat.framework === Framework.SVELTE ? (
+                <SiSvelte className="size-3" />
               ) : (
                 <SiHtml5 className="size-3" />
               )}

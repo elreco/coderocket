@@ -1,6 +1,11 @@
 "use client";
 
-import { SiHtml5, SiReact, SiVuedotjs } from "@icons-pack/react-simple-icons";
+import {
+  SiHtml5,
+  SiReact,
+  SiVuedotjs,
+  SiSvelte,
+} from "@icons-pack/react-simple-icons";
 import {
   ArrowDown,
   ChevronDown,
@@ -96,6 +101,7 @@ export function TemplatesInfiniteScroll({
   const frameworks = [
     { value: Framework.REACT, label: "React", icon: SiReact },
     { value: Framework.VUE, label: "Vue", icon: SiVuedotjs },
+    { value: Framework.SVELTE, label: "Svelte", icon: SiSvelte },
     { value: Framework.HTML, label: "HTML", icon: SiHtml5 },
   ];
 

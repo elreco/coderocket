@@ -37,7 +37,7 @@ export const promptEnhancer = async (
       `,
       },
     ],
-    model: anthropicModel("claude-3-5-haiku-latest"),
+    model: anthropicModel("claude-haiku-4-5"),
     system: contentMd,
     toolChoice: "none",
     maxOutputTokens: 800,

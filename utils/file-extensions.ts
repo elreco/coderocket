@@ -2,6 +2,7 @@ import { css } from "@codemirror/lang-css";
 import { html } from "@codemirror/lang-html";
 import { javascript } from "@codemirror/lang-javascript";
 import { json } from "@codemirror/lang-json";
+import { markdown } from "@codemirror/lang-markdown";
 import { vue } from "@codemirror/lang-vue";
 import {
   SiHtml5,
@@ -11,7 +12,9 @@ import {
   SiCss3,
   SiSvelte,
   SiVuedotjs,
+  SiMarkdown,
 } from "@icons-pack/react-simple-icons";
+import { svelte } from "@replit/codemirror-lang-svelte";
 import { Braces } from "lucide-react";
 
 interface FileExtensionConfig {
@@ -57,6 +60,10 @@ const FILE_EXTENSIONS: Record<string, FileExtensionConfig> = {
     icon: SiVuedotjs,
     color: "text-[#4FC08D]",
   },
+  md: {
+    icon: SiMarkdown,
+    color: "text-[#000000]",
+  },
 };
 
 export const getFileConfig = (fileName: string): FileExtensionConfig => {
@@ -83,10 +90,13 @@ export const getLanguageExtension = (filename: string) => {
     case "json":
       return json();
     case "html":
+      return html();
     case "svelte":
-      return javascript({ jsx: true });
+      return svelte();
     case "vue":
       return vue();
+    case "md":
+      return markdown();
     default:
       return html();
   }

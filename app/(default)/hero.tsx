@@ -1,5 +1,10 @@
 "use client";
-import { SiHtml5, SiReact, SiVuedotjs } from "@icons-pack/react-simple-icons";
+import {
+  SiHtml5,
+  SiReact,
+  SiVuedotjs,
+  SiSvelte,
+} from "@icons-pack/react-simple-icons";
 import {
   X as XIcon,
   Terminal,
@@ -143,6 +148,7 @@ const additionalPromptIdeas = [
 const frameworkConfig = {
   [Framework.REACT]: { icon: SiReact, badge: null, disabled: false },
   [Framework.VUE]: { icon: SiVuedotjs, badge: null, disabled: false },
+  [Framework.SVELTE]: { icon: SiSvelte, badge: null, disabled: false },
   [Framework.HTML]: { icon: SiHtml5, badge: null, disabled: false },
 };
 

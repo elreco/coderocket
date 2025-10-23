@@ -1,6 +1,11 @@
 import { StateField } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
-import { SiHtml5, SiReact, SiVuedotjs } from "@icons-pack/react-simple-icons";
+import {
+  SiHtml5,
+  SiReact,
+  SiVuedotjs,
+  SiSvelte,
+} from "@icons-pack/react-simple-icons";
 import { draculaInit } from "@uiw/codemirror-theme-dracula";
 import CodeMirror, {
   ReactCodeMirrorRef,
@@ -176,7 +181,9 @@ export default function CodePreview() {
       ? SiHtml5
       : selectedFramework === Framework.REACT
         ? SiReact
-        : SiVuedotjs;
+        : selectedFramework === Framework.SVELTE
+          ? SiSvelte
+          : SiVuedotjs;
 
   return (
     <div className="flex size-full flex-col overflow-hidden xl:flex-row">

@@ -1,6 +1,11 @@
 "use client";
 
-import { SiHtml5, SiReact, SiVuedotjs } from "@icons-pack/react-simple-icons";
+import {
+  SiHtml5,
+  SiReact,
+  SiVuedotjs,
+  SiSvelte,
+} from "@icons-pack/react-simple-icons";
 import {
   ArrowDown,
   ChevronDown,
@@ -276,6 +281,8 @@ export function ComponentsInfiniteScroll({
         return <SiHtml5 className="size-4" />;
       case "vue":
         return <SiVuedotjs className="size-4" />;
+      case "svelte":
+        return <SiSvelte className="size-4" />;
       default:
         return null;
     }

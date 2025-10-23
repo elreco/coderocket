@@ -1,4 +1,9 @@
-import { SiHtml5, SiReact, SiVuedotjs } from "@icons-pack/react-simple-icons";
+import {
+  SiHtml5,
+  SiReact,
+  SiVuedotjs,
+  SiSvelte,
+} from "@icons-pack/react-simple-icons";
 import { Calendar, Download, Tag, User, BookOpen, Wrench } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -161,7 +166,9 @@ export default async function MarketplaceListingPage({
       ? SiReact
       : listing.chat.framework === Framework.VUE
         ? SiVuedotjs
-        : SiHtml5;
+        : listing.chat.framework === Framework.SVELTE
+          ? SiSvelte
+          : SiHtml5;
 
   return (
     <Container className="pr-2 sm:pr-11">

@@ -1,6 +1,11 @@
 "use client";
 
-import { SiHtml5, SiReact, SiVuedotjs } from "@icons-pack/react-simple-icons";
+import {
+  SiHtml5,
+  SiReact,
+  SiVuedotjs,
+  SiSvelte,
+} from "@icons-pack/react-simple-icons";
 import { Eye, Activity, Tag, User, GitFork, Heart } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -66,7 +71,9 @@ export function UnifiedCard({
       ? SiReact
       : data.framework === Framework.VUE
         ? SiVuedotjs
-        : SiHtml5;
+        : data.framework === Framework.SVELTE
+          ? SiSvelte
+          : SiHtml5;
 
   const priceFormatted =
     data.price !== undefined

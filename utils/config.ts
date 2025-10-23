@@ -60,6 +60,7 @@ export const themes = [
 export enum Framework {
   REACT = "react",
   VUE = "vue",
+  SVELTE = "svelte",
   HTML = "html",
 }
 

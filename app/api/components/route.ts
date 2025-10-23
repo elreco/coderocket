@@ -333,7 +333,7 @@ export async function POST(req: Request) {
         },
         ...messages,
       ],
-      model: anthropicModel("claude-4-sonnet-20250514"),
+      model: anthropicModel("claude-sonnet-4-5"),
       toolChoice: "none",
       maxOutputTokens: dynamicMaxTokens,
       onStepFinish: async ({ text, usage, finishReason }) => {
@@ -630,7 +630,7 @@ CRITICAL: Recreate the exact visual hierarchy, component patterns, and responsiv
             const needsResize =
               metadata.width > maxDimension || metadata.height > maxDimension;
 
-            let processedBuffer = buffer;
+            let processedBuffer: Buffer = buffer;
             if (needsResize) {
               console.log("⚠️ Image exceeds 8000px limit, resizing...");
 

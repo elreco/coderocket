@@ -217,7 +217,20 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
           },
         }),
       );
-      // 6) Mount/update all files
+
+      // 6) Clean up old files before mounting new ones
+      try {
+        const files = await webcontainer.fs.readdir("/");
+        for (const file of files) {
+          if (file !== "tmp" && file !== ".webcontainer") {
+            await webcontainer.fs.rm(file, { recursive: true, force: true });
+          }
+        }
+      } catch (error) {
+        console.log("Cleanup error (non-critical):", error);
+      }
+
+      // 7) Mount/update all files
       const fsTree = buildFileSystemTree(artifactFiles);
       await webcontainer.mount(fsTree);
 
@@ -237,11 +250,12 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
       const exitCode = await installProcess.exit;
 
       if (exitCode !== 0) {
-        const friendlyError = getUserFriendlyNpmError(installOutput);
+        const cleanedOutput = cleanOutput(installOutput);
+        const friendlyError = getUserFriendlyNpmError(cleanedOutput);
         setBuildError({
           title: friendlyError.title,
           description: friendlyError.message,
-          content: installOutput,
+          content: cleanedOutput,
         });
         setLoadingState("error");
         return;
@@ -324,8 +338,25 @@ export const useWebcontainer = (): WebcontainerContextType => {
   return context;
 };
 
+function cleanOutput(data: string): string {
+  let cleaned = stripAnsi(data);
+  cleaned = cleaned
+    .replace(/\r\n/g, "\n")
+    .replace(/\r/g, "\n")
+    .replace(/[|/\-\\]{2,}/g, "")
+    .split("\n")
+    .filter((line) => {
+      const trimmed = line.trim();
+      return trimmed && !/^[|/\-\\]+$/.test(trimmed);
+    })
+    .join("\n")
+    .trim();
+
+  return cleaned;
+}
+
 function formatBuildError(data: string): BuildError | null {
-  const cleanedData = stripAnsi(data);
+  const cleanedData = cleanOutput(data);
 
   const ignorePatterns = [
     "compiled successfully",
@@ -344,6 +375,8 @@ function formatBuildError(data: string): BuildError | null {
     "press q to quit",
     "ready - started server",
     "event - compiled",
+    "found 0 errors",
+    "svelte check found 0",
   ];
 
   for (const pattern of ignorePatterns) {
