@@ -14,6 +14,10 @@ import stripAnsi from "strip-ansi";
 
 import { webcontainer as webcontainerPromise } from "@/lib/webcontainer";
 import { Framework } from "@/utils/config";
+import {
+  getUserFriendlyNpmError,
+  getUserFriendlyBuildError,
+} from "@/utils/npm-error-handler";
 import { buildFileSystemTree, getPreviewId } from "@/utils/webcontainer";
 
 import {
@@ -218,15 +222,30 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
       await webcontainer.mount(fsTree);
 
       setLoadingState("processing");
+      let installOutput = "";
       const installProcess = await webcontainer.spawn("npm", ["install"]);
       installProcess.output.pipeTo(
         new WritableStream({
           write(data) {
+            const text = stripAnsi(data);
+            installOutput += text;
             addToBuildError(data);
           },
         }),
       );
-      await installProcess.exit;
+
+      const exitCode = await installProcess.exit;
+
+      if (exitCode !== 0) {
+        const friendlyError = getUserFriendlyNpmError(installOutput);
+        setBuildError({
+          title: friendlyError.title,
+          description: friendlyError.message,
+          content: installOutput,
+        });
+        setLoadingState("error");
+        return;
+      }
 
       // 8) Always run "npm run dev"
       setLoadingState("starting");
@@ -305,11 +324,9 @@ export const useWebcontainer = (): WebcontainerContextType => {
   return context;
 };
 
-// Utility to detect build errors
 function formatBuildError(data: string): BuildError | null {
   const cleanedData = stripAnsi(data);
 
-  // Skip certain non-critical messages that might be mistaken for errors
   const ignorePatterns = [
     "compiled successfully",
     "compiled with warnings",
@@ -372,28 +389,12 @@ function formatBuildError(data: string): BuildError | null {
     return null;
   }
 
-  // Improve error description based on content
-  let description = "An error occurred during build.";
-
-  // Extract specific error details if available
-  const errorLines = cleanedData
-    .split("\n")
-    .filter((line) =>
-      errorPatterns.some((pattern) =>
-        line.toLowerCase().includes(pattern.toLowerCase()),
-      ),
-    );
-
-  if (errorLines.length > 0) {
-    description = errorLines[0].trim();
-  }
-
-  // Limit the display of errors to 20 lines maximum
+  const friendlyError = getUserFriendlyBuildError(cleanedData);
   const truncatedContent = cleanedData.split("\n").slice(0, 20).join("\n");
 
   return {
-    title: "Build Error",
-    description,
+    title: friendlyError.title,
+    description: friendlyError.message,
     content: truncatedContent,
   };
 }

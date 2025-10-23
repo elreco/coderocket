@@ -273,6 +273,7 @@ export const buildComponent = async (
     if (chat.framework === Framework.HTML) {
       return;
     }
+
     const newArtifactFiles = extractFilesFromArtifact(
       lastAssistantMessage.artifact_code || "",
     );
@@ -281,7 +282,7 @@ export const buildComponent = async (
       console.warn("No files found in completion - skipping build");
       return;
     }
-    // Make the POST request to the builder API
+
     const builderResponse = await fetch(`${builderApiUrl}/build`, {
       method: "POST",
       headers: {
@@ -295,13 +296,11 @@ export const buildComponent = async (
       }),
     });
 
-    // Parse the response
     const responseData = await builderResponse.json();
     if (responseData.errors) {
       throw new Error(responseData.errors);
     }
 
-    // update the message with the build status
     const supabase = await createClient();
     await supabase
       .from("messages")
