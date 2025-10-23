@@ -1,9 +1,9 @@
 function App() {
   return (
-    <div className="min-h-screen flex items-center justify-center">
+    <div className="flex min-h-screen items-center justify-center">
       <h1 className="text-4xl font-bold">Hello CodeRocket</h1>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;

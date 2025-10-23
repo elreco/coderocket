@@ -18,8 +18,9 @@ import {
   Heart,
   Globe,
   Info,
+  Share,
+  MoreHorizontal,
 } from "lucide-react";
-import { Share } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useCopyToClipboard } from "usehooks-ts";
@@ -36,6 +37,13 @@ import {
   DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -491,7 +499,13 @@ export default function ComponentCompletion({
   };
 
   const handleVersionSelect = (version: number, tabName?: string) => {
-    setSelectedVersion(version);
+    // If we're just changing tabs on the same version, don't trigger a rebuild
+    const isTabChangeOnly = version === selectedVersion && tabName;
+
+    if (!isTabChangeOnly) {
+      setSelectedVersion(version);
+    }
+
     const selectedMessages = messages.filter((m) => m.version == version);
     if (selectedMessages.length !== 2) {
       return;
@@ -504,50 +518,63 @@ export default function ComponentCompletion({
       return;
     }
 
-    if (
-      selectedAssistantMessage.content.includes(
-        "<!-- FINISH_REASON: length -->",
-      ) ||
-      selectedAssistantMessage.content.includes("<!-- FINISH_REASON: error -->")
-    ) {
-      setIsLengthError(true);
-    } else {
-      setIsLengthError(false);
-    }
+    // Only update these states if version actually changed
+    if (!isTabChangeOnly) {
+      if (
+        selectedAssistantMessage.content.includes(
+          "<!-- FINISH_REASON: length -->",
+        ) ||
+        selectedAssistantMessage.content.includes(
+          "<!-- FINISH_REASON: error -->",
+        )
+      ) {
+        setIsLengthError(true);
+      } else {
+        setIsLengthError(false);
+      }
 
-    setCompletion(selectedAssistantMessage.content);
+      setCompletion(selectedAssistantMessage.content);
+    }
 
     // Use the message's artifact_code if available, otherwise calculate it
     if (selectedAssistantMessage.artifact_code) {
-      // Set the artifact code from the message
-      setArtifactCode(selectedAssistantMessage.artifact_code);
+      // Only update artifact files if version changed
+      if (!isTabChangeOnly) {
+        // Set the artifact code from the message
+        setArtifactCode(selectedAssistantMessage.artifact_code);
 
-      // Extract files from the artifact code
-      const newArtifactFiles = extractFilesFromArtifact(
-        selectedAssistantMessage.artifact_code,
-      );
-      setArtifactFiles(newArtifactFiles);
-      // Handle file selection
-      const files = extractFilesFromCompletion(
-        selectedAssistantMessage.content,
-      );
-      if (files.length > 0) {
-        setChatFiles(files);
-      } else {
-        setChatFiles([]);
+        // Extract files from the artifact code
+        const newArtifactFiles = extractFilesFromArtifact(
+          selectedAssistantMessage.artifact_code,
+        );
+        setArtifactFiles(newArtifactFiles);
+        // Handle file selection
+        const files = extractFilesFromCompletion(
+          selectedAssistantMessage.content,
+        );
+        if (files.length > 0) {
+          setChatFiles(files);
+        } else {
+          setChatFiles([]);
+        }
       }
 
+      // Always handle tab selection (whether version changed or not)
+      const currentFiles = isTabChangeOnly
+        ? artifactFiles
+        : extractFilesFromArtifact(selectedAssistantMessage.artifact_code);
+
       if (tabName) {
-        const file = newArtifactFiles.find((file) => file.name === tabName);
+        const file = currentFiles.find((file) => file.name === tabName);
         if (file) {
           setEditorValue(file.content);
           setActiveTab(tabName);
           setCanvas(false);
         }
-      } else {
-        // Select appropriate file to display
+      } else if (!isTabChangeOnly) {
+        // Select appropriate file to display only if version changed
         const activeFile =
-          newArtifactFiles.find((file) => file.isActive) || newArtifactFiles[0];
+          currentFiles.find((file) => file.isActive) || currentFiles[0];
         if (activeFile) {
           setEditorValue(activeFile.content);
           setActiveTab(activeFile.name || "");
@@ -556,10 +583,13 @@ export default function ComponentCompletion({
       }
     }
 
-    // Always check latest build status and force rebuild if needed
-    // When versions are deleted, all builds become invalid
-    const shouldBeReady = selectedAssistantMessage.is_built && !forceBuild;
-    setWebcontainerReady(shouldBeReady || false);
+    // Only update webcontainer ready state if version changed
+    if (!isTabChangeOnly) {
+      // Always check latest build status and force rebuild if needed
+      // When versions are deleted, all builds become invalid
+      const shouldBeReady = selectedAssistantMessage.is_built && !forceBuild;
+      setWebcontainerReady(shouldBeReady || false);
+    }
   };
 
   const share = () => {
@@ -951,64 +981,51 @@ export default function ComponentCompletion({
                     </>
                   )}
 
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <span>
-                        <Button
-                          size="sm"
-                          variant="secondary"
-                          onClick={share}
-                          disabled={!isVisible || isLoading || isLengthError}
-                          className={isVisible ? "" : "cursor-not-allowed"}
-                        >
-                          <Share className="w-5" />
-                        </Button>
-                      </span>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>
-                        {isLoading
-                          ? "The component is loading"
-                          : isLengthError
-                            ? "The component has an error"
-                            : isVisible
-                              ? "Share Component"
-                              : "Your component needs to be public to share it. You can make it public by clicking the settings button."}
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <span>
-                        <Button
-                          size="sm"
-                          variant="secondary"
-                          onClick={() => setIsRemixModalOpen(true)}
-                          disabled={isRemixing || isLoading}
-                          className="text-xs"
-                        >
-                          <GitFork className="size-3.5" />
-                        </Button>
-                      </span>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Remix this component</p>
-                    </TooltipContent>
-                  </Tooltip>
-                  {!isLoading && title && authorized && (
-                    <ComponentSettings>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
                       <Button
-                        type="button"
                         size="sm"
-                        className="flex items-center gap-2"
                         variant="secondary"
                         disabled={isLoading}
                       >
-                        <Settings className="w-5" />
-                        <Badge>New</Badge>
+                        <MoreHorizontal className="w-5" />
                       </Button>
-                    </ComponentSettings>
-                  )}
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48">
+                      <DropdownMenuItem
+                        onClick={share}
+                        disabled={!isVisible || isLoading || isLengthError}
+                        className="cursor-pointer"
+                      >
+                        <Share className="mr-2 size-4" />
+                        <span>Share</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => setIsRemixModalOpen(true)}
+                        disabled={isRemixing || isLoading}
+                        className="cursor-pointer"
+                      >
+                        <GitFork className="mr-2 size-4" />
+                        <span>Remix</span>
+                      </DropdownMenuItem>
+                      {!isLoading && title && authorized && (
+                        <>
+                          <DropdownMenuSeparator />
+                          <ComponentSettings>
+                            <DropdownMenuItem
+                              className="cursor-pointer"
+                              onSelect={(e) => {
+                                e.preventDefault();
+                              }}
+                            >
+                              <Settings className="mr-2 size-4" />
+                              <span>Settings</span>
+                            </DropdownMenuItem>
+                          </ComponentSettings>
+                        </>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                   <Sheet>
                     <SheetTrigger asChild>
                       <Button

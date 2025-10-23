@@ -403,9 +403,9 @@ export default defineConfig({
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.16",
-    "tailwindcss": "^4.1.16",
     "clsx": "^2.1.1",
     "tailwind-merge": "^2.4.0",
+    "tailwindcss": "^4.1.16",
     "tailwindcss-animate": "^1.0.7"
   }
 }
@@ -422,8 +422,6 @@ export default defineConfig({
 </coderocketFile>
 <coderocketFile name="src/app.css">
 @import "tailwindcss";
-
-@import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
 

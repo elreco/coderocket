@@ -22,6 +22,11 @@ import RenderComponent from "@/app/(default)/components/[slug]/component-preview
 import RenderHtmlComponent from "@/components/renders/render-html-component";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useComponentContext } from "@/context/component-context";
 import { useWebcontainer } from "@/context/webcontainer-context";
 import { toast } from "@/hooks/use-toast";
@@ -210,7 +215,7 @@ export default function CodePreview() {
           <div className="relative flex flex-1 flex-col items-start justify-start">
             <div className="flex w-full items-center justify-between p-2">
               <CodePreviewFileTree />
-              <div className="flex items-center justify-center space-x-2">
+              <div className="flex items-center gap-1">
                 <Badge className="hover:bg-primary">
                   <FrameworkIcon className="mr-1 size-3" />
                   <span className="first-letter:uppercase">
@@ -218,41 +223,50 @@ export default function CodePreview() {
                   </span>
                 </Badge>
                 {!isLoading && !isLengthError && !buildError && (
-                  <>
-                    <Button
-                      variant="outline"
-                      onClick={copyRawHTML}
-                      className="flex items-center rounded-sm"
-                    >
-                      <span className="mr-1 hidden text-nowrap text-xs xl:block">
-                        Copy code
-                      </span>{" "}
-                      <Clipboard className="w-4" />
-                    </Button>
+                  <div className="flex items-center gap-1">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={copyRawHTML}
+                          className="size-8"
+                        >
+                          <Clipboard className="size-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Copy code</TooltipContent>
+                    </Tooltip>
 
                     <ComponentSettings>
-                      <Button
-                        variant="outline"
-                        className="flex items-center rounded-sm"
-                      >
-                        <span className="mr-1 hidden text-nowrap text-xs xl:block">
-                          Modify code
-                        </span>{" "}
-                        <Pencil className="w-4" />
-                      </Button>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="size-8"
+                          >
+                            <Pencil className="size-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Modify code</TooltipContent>
+                      </Tooltip>
                     </ComponentSettings>
 
-                    <Button
-                      variant="outline"
-                      onClick={downloadCode}
-                      className="flex items-center rounded-sm"
-                    >
-                      <span className="mr-1 hidden text-nowrap text-xs xl:block">
-                        Download project
-                      </span>{" "}
-                      <Download className="w-4" />
-                    </Button>
-                  </>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={downloadCode}
+                          className="size-8"
+                        >
+                          <Download className="size-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Download project</TooltipContent>
+                    </Tooltip>
+                  </div>
                 )}
               </div>
             </div>
