@@ -40,7 +40,7 @@ export const promptEnhancer = async (
     model: anthropicModel("claude-3-5-haiku-latest"),
     system: contentMd,
     toolChoice: "none",
-    maxTokens: 800,
+    maxOutputTokens: 800,
   });
 
   return text;

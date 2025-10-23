@@ -278,7 +278,8 @@ export const buildComponent = async (
     );
 
     if (!newArtifactFiles.length) {
-      throw new Error("No files found in completion");
+      console.warn("No files found in completion - skipping build");
+      return;
     }
     // Make the POST request to the builder API
     const builderResponse = await fetch(`${builderApiUrl}/build`, {

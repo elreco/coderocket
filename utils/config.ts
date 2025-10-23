@@ -1,5 +1,4 @@
 import { createAnthropic } from "@ai-sdk/anthropic";
-import { createOpenAI } from "@ai-sdk/openai";
 
 import { Tables } from "@/types_db";
 
@@ -20,12 +19,6 @@ export const MAX_GENERATIONS = 5;
 export const defaultTheme = "light";
 
 export const gaId = "G-0HBMKNN8MQ";
-
-export const openAINewModel = createOpenAI({
-  name: "gpt-4o-mini",
-  apiKey: process.env.OPEN_AI || "",
-  compatibility: "strict",
-});
 
 export const anthropicModel = createAnthropic({
   apiKey: process.env.ANTHROPIC_API_KEY || "",

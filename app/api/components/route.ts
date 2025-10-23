@@ -1,6 +1,6 @@
 export const maxDuration = 300;
 import {
-  CoreMessage,
+  ModelMessage,
   LanguageModelUsage,
   streamText,
   ImagePart,
@@ -335,20 +335,21 @@ export async function POST(req: Request) {
       ],
       model: anthropicModel("claude-4-sonnet-20250514"),
       toolChoice: "none",
-      maxTokens: dynamicMaxTokens,
-      onFinish: async ({ text, usage, finishReason, providerMetadata }) => {
-        console.log("=== AI Generation Finished ===");
+      maxOutputTokens: dynamicMaxTokens,
+      onStepFinish: async ({ text, usage, finishReason }) => {
+        console.log("=== AI Generation Step Finished ===");
         console.log("Generated text length:", text?.length || 0);
         console.log("Finish reason:", finishReason);
         console.log("Usage:", usage);
 
-        // Check if generation actually produced content
+        let finalText = text;
+        let finalFinishReason = finishReason;
         if (!text || text.trim().length === 0) {
           console.error("❌ AI generation failed - no content produced");
           console.error("Finish reason was:", finishReason);
           console.error("Usage tokens:", usage);
-          finishReason = "error";
-          text =
+          finalFinishReason = "error";
+          finalText =
             "AI generation failed to produce content. This may be due to prompt complexity or API issues. Please try again with a simpler prompt.";
         } else {
           console.log(
@@ -359,12 +360,11 @@ export async function POST(req: Request) {
 
         await updateDataAfterCompletion(
           id,
-          text,
+          finalText,
           updatedPrompt,
           usage,
           updatedImage,
-          finishReason,
-          providerMetadata,
+          finalFinishReason,
         );
       },
       onError: (error) => {
@@ -456,7 +456,7 @@ const buildMessagesToOpenAi = async (
       role: m.role as "user" | "assistant" | "tool" | "system",
       content: textContent,
     };
-  }) as CoreMessage[];
+  }) as ModelMessage[];
 
   // Préparer le contenu du message final de l'utilisateur
   const finalMessageContent: Array<TextPart | ImagePart> = [];
@@ -825,8 +825,6 @@ const updateDataAfterCompletion = async (
   usage: LanguageModelUsage,
   updatedImage: string | null,
   finishReason: string | null,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  providerMetadata: any,
 ) => {
   const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
@@ -887,8 +885,8 @@ const updateDataAfterCompletion = async (
       .from("chats")
       .update({
         artifact_code: artifactCode,
-        input_tokens: currentInputTokens + usage.promptTokens,
-        output_tokens: currentOutputTokens + usage.completionTokens,
+        input_tokens: currentInputTokens + (usage.inputTokens ?? 0),
+        output_tokens: currentOutputTokens + (usage.outputTokens ?? 0),
       })
       .eq("id", chatId);
   } else {
@@ -897,15 +895,13 @@ const updateDataAfterCompletion = async (
       .update({
         artifact_code: artifactCode,
         title: extractTitle(text),
-        input_tokens: currentInputTokens + usage.promptTokens,
-        output_tokens: currentOutputTokens + usage.completionTokens,
+        input_tokens: currentInputTokens + (usage.inputTokens ?? 0),
+        output_tokens: currentOutputTokens + (usage.outputTokens ?? 0),
       })
       .eq("id", chatId);
   }
-  const cacheCreationInputTokens =
-    providerMetadata?.anthropic?.cacheCreationInputTokens || 0;
-  const cacheReadInputTokens =
-    providerMetadata?.anthropic?.cacheReadInputTokens || 0;
+  const cacheCreationInputTokens = 0;
+  const cacheReadInputTokens = usage.cachedInputTokens ?? 0;
   if (version > 0) {
     newMessages.push({
       chat_id: chatId,
@@ -914,7 +910,7 @@ const updateDataAfterCompletion = async (
       content: updatedPrompt,
       role: "user",
       prompt_image: updatedImage,
-      input_tokens: usage.promptTokens,
+      input_tokens: usage.inputTokens ?? 0,
       subscription_type: subscriptionType,
       cache_creation_input_tokens: cacheCreationInputTokens,
       cache_read_input_tokens: cacheReadInputTokens,
@@ -924,7 +920,7 @@ const updateDataAfterCompletion = async (
       .from("messages")
       .update({
         version,
-        input_tokens: usage.promptTokens,
+        input_tokens: usage.inputTokens ?? 0,
         cache_creation_input_tokens: cacheCreationInputTokens,
         cache_read_input_tokens: cacheReadInputTokens,
         subscription_type: subscriptionType,
@@ -950,7 +946,7 @@ const updateDataAfterCompletion = async (
     content: content,
     theme,
     role: "assistant",
-    output_tokens: usage.completionTokens,
+    output_tokens: usage.outputTokens ?? 0,
     subscription_type: subscriptionType,
     artifact_code: artifactCode,
     cache_creation_input_tokens: cacheCreationInputTokens,

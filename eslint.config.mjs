@@ -11,4 +11,11 @@ const compat = new FlatCompat({
   recommendedConfig: js.configs.recommended,
   allConfig: js.configs.all,
 });
-export default [...compat.extends("eslint-config-elreco/next-ts")];
+export default [
+  ...compat.extends("eslint-config-elreco/next-ts"),
+  {
+    rules: {
+      "@typescript-eslint/triple-slash-reference": "off",
+    },
+  },
+];

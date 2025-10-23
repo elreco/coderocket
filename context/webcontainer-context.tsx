@@ -52,14 +52,15 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
     setLoadingState,
     loadingState,
     isLengthError,
+    forceBuild,
   } = useComponentContext();
 
   // References to hold the active processes and terminal
   const shellProcessRef = useRef<WebContainerProcess | null>(null);
   const devProcessRef = useRef<WebContainerProcess | null>(null);
 
-  // Keep track of the old artifact files so we can detect if package.json changed
-  const oldArtifactFilesRef = useRef<typeof artifactFiles>([]);
+  const lastBuiltVersionRef = useRef<number | undefined>(undefined);
+  const lastBuiltChatIdRef = useRef<string | undefined>(undefined);
 
   useEffect(() => {
     if (shellProcessRef.current) {
@@ -73,7 +74,8 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
     setBuildError(null);
     setPreviewId(undefined);
     setLoadingState(null);
-    oldArtifactFilesRef.current = [];
+    lastBuiltVersionRef.current = undefined;
+    lastBuiltChatIdRef.current = undefined;
   }, [chatId, setLoadingState]);
 
   useEffect(() => {
@@ -88,7 +90,8 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
     setBuildError(null);
     setPreviewId(undefined);
     setLoadingState(null);
-    oldArtifactFilesRef.current = [];
+    lastBuiltVersionRef.current = undefined;
+    lastBuiltChatIdRef.current = undefined;
   }, [setLoadingState]);
 
   // Clear errors when framework changes to prevent showing old framework errors
@@ -102,25 +105,6 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
     setBuildError(null);
     setLoadingState(null);
   }, [selectedVersion, setLoadingState]);
-
-  /**
-   * Compare artifact files to detect whether `package.json` content has changed.
-   */
-  const hasPackageJsonChanged = useCallback(
-    (oldFiles: typeof artifactFiles, newFiles: typeof artifactFiles) => {
-      const oldPkg = oldFiles.find((f) => f.name === "package.json");
-      const newPkg = newFiles.find((f) => f.name === "package.json");
-
-      // Handle cases where package.json might not exist in old or new files
-      if (!oldPkg && newPkg) return true; // New package.json added
-      if (!newPkg && oldPkg) return true; // package.json removed
-      if (!oldPkg && !newPkg) return false; // No package.json in either
-
-      // Both exist; compare content
-      return oldPkg?.content !== newPkg?.content;
-    },
-    [],
-  );
 
   const addToBuildError = useCallback(
     (data: string) => {
@@ -171,6 +155,7 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
       ) {
         setPreviewId(undefined);
         setBuildError(null);
+        setLoadingState(null);
         return;
       }
 
@@ -178,21 +163,15 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
         setLoadingState("token-limit");
         setBuildError(null);
         setPreviewId(undefined);
-        oldArtifactFilesRef.current = [];
+        lastBuiltVersionRef.current = undefined;
         return;
       }
 
-      // Check if the artifact files have changed based on their content
-      const filesChanged = !artifactFiles.every((file, index) => {
-        const oldFile = oldArtifactFilesRef.current[index];
-        return (
-          oldFile &&
-          file.name === oldFile.name &&
-          file.content === oldFile.content
-        );
-      });
+      const chatIdChanged = lastBuiltChatIdRef.current !== chatId;
+      const versionChanged = lastBuiltVersionRef.current !== selectedVersion;
+      const needsRebuild = chatIdChanged || versionChanged || forceBuild;
 
-      if (!filesChanged) {
+      if (!needsRebuild) {
         return;
       }
 
@@ -201,13 +180,12 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
       setPreviewId(undefined);
       setLoadingState("initializing");
 
-      // If the component is already built via API, skip webcontainer setup
-      // This prioritizes the reliable built API over StackBlitz webcontainer
-      if (isWebcontainerReady) {
+      if (isWebcontainerReady && !forceBuild) {
         setLoadingState(null);
         setBuildError(null);
-        setPreviewId(undefined); // Clear webcontainer preview to use built API
-        oldArtifactFilesRef.current = [];
+        setPreviewId(undefined);
+        lastBuiltVersionRef.current = selectedVersion;
+        lastBuiltChatIdRef.current = chatId;
         return;
       }
 
@@ -239,23 +217,16 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
       const fsTree = buildFileSystemTree(artifactFiles);
       await webcontainer.mount(fsTree);
 
-      // 7) If package.json changed, run "npm install"
-      const packageChanged = hasPackageJsonChanged(
-        oldArtifactFilesRef.current,
-        artifactFiles,
+      setLoadingState("processing");
+      const installProcess = await webcontainer.spawn("npm", ["install"]);
+      installProcess.output.pipeTo(
+        new WritableStream({
+          write(data) {
+            addToBuildError(data);
+          },
+        }),
       );
-      if (packageChanged) {
-        setLoadingState("processing");
-        const installProcess = await webcontainer.spawn("npm", ["install"]);
-        installProcess.output.pipeTo(
-          new WritableStream({
-            write(data) {
-              addToBuildError(data);
-            },
-          }),
-        );
-        await installProcess.exit;
-      }
+      await installProcess.exit;
 
       // 8) Always run "npm run dev"
       setLoadingState("starting");
@@ -284,18 +255,16 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
         }
       });
 
-      // The dev server is up and running
       webcontainer.on("server-ready", async (port, url) => {
         const newPreviewId = getPreviewId(url);
         if (newPreviewId) {
           setLoadingState(null);
           setPreviewId(newPreviewId);
           setBuildError(null);
+          lastBuiltVersionRef.current = selectedVersion;
+          lastBuiltChatIdRef.current = chatId;
         }
       });
-
-      // Save current files as "old" so we can detect package.json changes next time
-      oldArtifactFilesRef.current = artifactFiles;
     };
 
     setupProject();
@@ -309,7 +278,7 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
     isLengthError,
     setLoadingState,
     addToBuildError,
-    hasPackageJsonChanged,
+    forceBuild,
   ]);
 
   return (
