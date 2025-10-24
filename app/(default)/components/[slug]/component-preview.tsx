@@ -85,6 +85,13 @@ export default function ComponentPreview() {
     handleSubmitToAI,
   } = useComponentContext();
   const { previewId } = useWebcontainer();
+  const [iframeLoading, setIframeLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    if (isWebcontainerReady) {
+      setIframeLoading(true);
+    }
+  }, [chatId, selectedVersion, isWebcontainerReady]);
 
   return (
     <>
@@ -138,13 +145,21 @@ export default function ComponentPreview() {
         !loadingState && (
           <>
             {isWebcontainerReady ? (
-              <iframe
-                src={`https://${chatId}-${selectedVersion}.webcontainer.coderocket.app`}
-                className="size-full border-none"
-                sandbox="allow-scripts allow-forms allow-popups allow-modals allow-storage-access-by-user-activation allow-same-origin"
-                allow="credentialless"
-                loading="eager"
-              />
+              <div className="relative size-full">
+                {iframeLoading && (
+                  <div className="absolute inset-0 z-10 flex items-center justify-center bg-background">
+                    <LoadingStateComponent state="starting" />
+                  </div>
+                )}
+                <iframe
+                  src={`https://${chatId}-${selectedVersion}.webcontainer.coderocket.app`}
+                  className="size-full border-none"
+                  sandbox="allow-scripts allow-forms allow-popups allow-modals allow-storage-access-by-user-activation allow-same-origin"
+                  allow="credentialless"
+                  loading="eager"
+                  onLoad={() => setIframeLoading(false)}
+                />
+              </div>
             ) : previewId ? (
               <WebcontainerRender previewId={previewId} />
             ) : null}

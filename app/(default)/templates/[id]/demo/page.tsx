@@ -3,6 +3,7 @@ import {
   SiReact,
   SiVuedotjs,
   SiSvelte,
+  SiAngular,
 } from "@icons-pack/react-simple-icons";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import Link from "next/link";
@@ -98,6 +99,8 @@ export default async function MarketplaceDemoPage({
                 <SiVuedotjs className="size-3" />
               ) : listing.chat.framework === Framework.SVELTE ? (
                 <SiSvelte className="size-3" />
+              ) : listing.chat.framework === Framework.ANGULAR ? (
+                <SiAngular className="size-3" />
               ) : (
                 <SiHtml5 className="size-3" />
               )}

@@ -111,10 +111,9 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
   }, [selectedVersion, setLoadingState]);
 
   useEffect(() => {
-    if (isWebcontainerReady && loadingState !== null) {
+    if (isWebcontainerReady && loadingState === "starting") {
       setLoadingState(null);
       setBuildError(null);
-      setPreviewId(undefined);
     }
   }, [isWebcontainerReady, loadingState, setLoadingState]);
 

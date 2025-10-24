@@ -4,6 +4,7 @@ import {
   SiReact,
   SiVuedotjs,
   SiSvelte,
+  SiAngular,
 } from "@icons-pack/react-simple-icons";
 import {
   X as XIcon,
@@ -149,6 +150,7 @@ const frameworkConfig = {
   [Framework.REACT]: { icon: SiReact, badge: null, disabled: false },
   [Framework.VUE]: { icon: SiVuedotjs, badge: null, disabled: false },
   [Framework.SVELTE]: { icon: SiSvelte, badge: null, disabled: false },
+  [Framework.ANGULAR]: { icon: SiAngular, badge: null, disabled: false },
   [Framework.HTML]: { icon: SiHtml5, badge: null, disabled: false },
 };
 

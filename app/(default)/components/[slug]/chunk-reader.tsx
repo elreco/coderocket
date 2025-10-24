@@ -81,6 +81,7 @@ export function ChunkReader({
                   {artifactFiles.map((file, fileIndex) => {
                     const fileConfig = getFileConfig(
                       file.name || "untitled.html",
+                      selectedFramework,
                     );
                     const FileIcon = fileConfig.icon;
 

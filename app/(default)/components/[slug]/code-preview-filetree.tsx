@@ -31,6 +31,7 @@ interface FolderContentProps {
   isLoading: boolean;
   selectedVersion: number;
   handleVersionSelect: (version: number, tabName?: string) => void;
+  selectedFramework?: string;
 }
 
 const FolderContent = ({
@@ -39,6 +40,7 @@ const FolderContent = ({
   isLoading,
   selectedVersion,
   handleVersionSelect,
+  selectedFramework,
 }: FolderContentProps) => {
   // Mémoriser les fonctions de tri
   const sortFiles = React.useCallback((a: File, b: File) => {
@@ -77,6 +79,7 @@ const FolderContent = ({
               isLoading={isLoading}
               selectedVersion={selectedVersion}
               handleVersionSelect={handleVersionSelect}
+              selectedFramework={selectedFramework}
             />
           </DropdownMenuSubContent>
         </DropdownMenuSub>
@@ -84,7 +87,10 @@ const FolderContent = ({
 
       {/* Ensuite afficher les fichiers triés */}
       {sortedFiles.map((file) => {
-        const fileConfig = getFileConfig(file.name || "untitled.html");
+        const fileConfig = getFileConfig(
+          file.name || "untitled.html",
+          selectedFramework,
+        );
         const FileIcon = fileConfig.icon;
         const fullPath = path ? `${path}/${file.name}` : file.name || undefined;
         return (
@@ -148,6 +154,7 @@ export function CodePreviewFileTree() {
     artifactFiles,
     activeTab,
     handleVersionSelect,
+    selectedFramework,
   } = useComponentContext();
   const organizedFiles = React.useMemo(() => {
     return organizeFilesByFolder(artifactFiles);
@@ -182,6 +189,7 @@ export function CodePreviewFileTree() {
           isLoading={isLoading}
           selectedVersion={selectedVersion ?? 0}
           handleVersionSelect={handleVersionSelect}
+          selectedFramework={selectedFramework}
         />
       </DropdownMenuContent>
     </DropdownMenu>

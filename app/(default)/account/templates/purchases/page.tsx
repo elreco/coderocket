@@ -1,7 +1,13 @@
+import {
+  SiHtml5,
+  SiReact,
+  SiVuedotjs,
+  SiSvelte,
+  SiAngular,
+} from "@icons-pack/react-simple-icons";
 import { DollarSign, Box, Eye, Calendar, Tag, CheckCircle } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
-import { SiHtml5, SiReact, SiVuedotjs, SiSvelte } from "react-icons/si";
 
 import { getUserMarketplacePurchases } from "@/app/(default)/templates/actions";
 import { Container } from "@/components/container";
@@ -221,7 +227,9 @@ function PurchaseCard({
         ? SiVuedotjs
         : purchase.listing.chat.framework === Framework.SVELTE
           ? SiSvelte
-          : SiHtml5;
+          : purchase.listing.chat.framework === Framework.ANGULAR
+            ? SiAngular
+            : SiHtml5;
 
   return (
     <CardWrapper>

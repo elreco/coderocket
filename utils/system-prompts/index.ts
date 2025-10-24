@@ -7,6 +7,8 @@ import {
 
 const getShadcnLibrary = (framework: Framework): string => {
   switch (framework) {
+    case Framework.ANGULAR:
+      return "ZardUI";
     case Framework.SVELTE:
       return "shadcn-svelte";
     case Framework.VUE:
@@ -179,6 +181,28 @@ The container only supports executables compatible with Linux and does not suppo
       - Prioritize creating reusable, functional components from ${shadcnLib} if missing.
 
       ${
+        framework === Framework.ANGULAR
+          ? `- Always use ZardUI from https://zardui.com - the shadcn/ui alternative for Angular
+      - CRITICAL ANGULAR STANDALONE COMPONENTS: Always use standalone components (standalone: true)
+      - CRITICAL ANGULAR IMPORTS: Import CommonModule and required ZardUI components in the imports array
+      - For ZardUI components, install from npm: @zard/ui
+      - ZardUI provides 30+ production-ready components built with Angular, TypeScript and Tailwind CSS
+      - Example of ZardUI component usage:
+        import { Component } from '@angular/core';
+        import { CommonModule } from '@angular/common';
+        import { ButtonComponent } from '@zard/ui/button';
+
+        @Component({
+          selector: 'app-example',
+          standalone: true,
+          imports: [CommonModule, ButtonComponent],
+          template: '<zard-button>Click me</zard-button>'
+        })
+      - NEVER use JSX syntax in Angular, always use Angular template syntax
+      - Use Angular signals for reactive state management when appropriate`
+          : ""
+      }
+      ${
         framework === Framework.VUE
           ? "- Always create components with the .vue extension and use https://www.shadcn-vue.com"
           : ""
@@ -225,11 +249,27 @@ The container only supports executables compatible with Linux and does not suppo
         </script>`
           : ""
       }
-      - ALWAYS create ALL required ${shadcnLib} components in the src/components/ui folder.
+      ${
+        framework === Framework.ANGULAR
+          ? `- ALWAYS create ALL required ZardUI components in the src/app/components/ui folder.
+      - When a ZardUI component is referenced or imported, automatically generate it as an Angular standalone component.
+      - Never assume a ZardUI component exists - always generate it with proper Angular configuration and standalone: true.
+      - Follow ZardUI's component structure and styling patterns from https://zardui.com`
+          : `- ALWAYS create ALL required ${shadcnLib} components in the src/components/ui folder.
       - When a ${shadcnLib} component is referenced or imported, automatically generate it and its dependencies in src/components/ui.
-      - Never assume a ${shadcnLib} component exists - always generate it with the proper configuration.
+      - Never assume a ${shadcnLib} component exists - always generate it with the proper configuration.`
+      }
     </shadcn_ui_components>
     <typescript_and_aliases>
+      ${
+        framework === Framework.ANGULAR
+          ? `- CRITICAL: Always use .ts extension for Angular component files, NOT .tsx
+      - Use .html extension for Angular templates when template is in a separate file
+      - Component structure: @Component decorator with selector, standalone: true, imports, templateUrl/template
+      - When using Angular Router, import RouterModule in standalone components and use routerLink directives
+      - Configure path aliases in tsconfig.json (@ => src/)`
+          : ""
+      }
       ${
         framework === Framework.REACT
           ? "- NEVER use JSX File extensions only use TSX."
@@ -258,7 +298,7 @@ The container only supports executables compatible with Linux and does not suppo
       ${defaultArtifactCode[framework as keyof typeof defaultArtifactCode]}
     - IMPORTANT: You don't need to generate these files unless they need to be modified.
     - If you need to modify a default file, always provide the full file content or it will generate an error.
-    - For the **first generation**, modify the ${framework === Framework.VUE ? "App.vue" : "App.tsx"} file to adapt the project to the user's request.
+    - For the **first generation**, modify the ${framework === Framework.ANGULAR ? "app.component.ts" : framework === Framework.VUE ? "App.vue" : "App.tsx"} file to adapt the project to the user's request.
     - Don't modify the config files unless you have a good reason.
   </default_files>
 
@@ -316,8 +356,8 @@ The container only supports executables compatible with Linux and does not suppo
     - Be creative while ensuring that the output aligns with ${shadcnLib}'s component styling and behavior.
     - Ensure all image sources are valid and accessible, avoiding 404 errors.
     - Use picsum.photos for placeholder images and provide an id for the image. (e.g. https://picsum.photos/id/237/200/300)
-    - Use ${framework === Framework.SVELTE ? "lucide-svelte" : framework === Framework.VUE ? "lucide-vue-next" : "lucide-react"} for icons.
-    - Use ${framework === Framework.REACT ? "recharts" : "chart.js or a similar charting library"} for charts.
+    - Use ${framework === Framework.ANGULAR ? "lucide-angular" : framework === Framework.SVELTE ? "lucide-svelte" : framework === Framework.VUE ? "lucide-vue-next" : "lucide-react"} for icons.
+    - Use ${framework === Framework.REACT ? "recharts" : framework === Framework.ANGULAR ? "ng2-charts or a similar Angular charting library" : "chart.js or a similar charting library"} for charts.
   </design_system>
 </core_configuration>
 

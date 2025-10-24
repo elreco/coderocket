@@ -5,6 +5,7 @@ import {
   SiReact,
   SiVuedotjs,
   SiSvelte,
+  SiAngular,
 } from "@icons-pack/react-simple-icons";
 import {
   Plus,
@@ -561,7 +562,10 @@ export function CreateTemplateForm({ categories }: CreateListingFormProps) {
                               ? SiVuedotjs
                               : selectedComponent.framework === Framework.SVELTE
                                 ? SiSvelte
-                                : SiHtml5;
+                                : selectedComponent.framework ===
+                                    Framework.ANGULAR
+                                  ? SiAngular
+                                  : SiHtml5;
 
                         return (
                           <Badge className="hover:bg-primary">
@@ -689,7 +693,10 @@ export function CreateTemplateForm({ categories }: CreateListingFormProps) {
                             ? SiVuedotjs
                             : selectedComponent.framework === Framework.SVELTE
                               ? SiSvelte
-                              : SiHtml5;
+                              : selectedComponent.framework ===
+                                  Framework.ANGULAR
+                                ? SiAngular
+                                : SiHtml5;
 
                       return (
                         <>
@@ -1008,7 +1015,9 @@ function ComponentCard({
         ? SiVuedotjs
         : component.framework === Framework.SVELTE
           ? SiSvelte
-          : SiHtml5;
+          : component.framework === Framework.ANGULAR
+            ? SiAngular
+            : SiHtml5;
 
   if (viewMode === "list") {
     return (

@@ -19,6 +19,7 @@
   "dependencies": {
     "@ai-sdk/anthropic": "^2.0.35",
     "@ai-sdk/react": "^2.0.76",
+    "@codemirror/lang-angular": "^0.1.4",
     "@codemirror/lang-css": "^6.3.1",
     "@codemirror/lang-html": "^6.4.9",
     "@codemirror/lang-javascript": "^6.2.2",

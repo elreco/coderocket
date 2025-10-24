@@ -1,3 +1,4 @@
+import { angular } from "@codemirror/lang-angular";
 import { css } from "@codemirror/lang-css";
 import { html } from "@codemirror/lang-html";
 import { javascript } from "@codemirror/lang-javascript";
@@ -13,9 +14,12 @@ import {
   SiSvelte,
   SiVuedotjs,
   SiMarkdown,
+  SiAngular,
 } from "@icons-pack/react-simple-icons";
 import { svelte } from "@replit/codemirror-lang-svelte";
 import { Braces } from "lucide-react";
+
+import { Framework } from "./config";
 
 interface FileExtensionConfig {
   icon: typeof SiHtml5;
@@ -66,8 +70,34 @@ const FILE_EXTENSIONS: Record<string, FileExtensionConfig> = {
   },
 };
 
-export const getFileConfig = (fileName: string): FileExtensionConfig => {
+export const getFileConfig = (
+  fileName: string,
+  framework?: string,
+): FileExtensionConfig => {
   const extension = fileName.split(".").pop()?.toLowerCase() || "";
+
+  if (extension === "ts" && framework) {
+    switch (framework) {
+      case Framework.ANGULAR:
+        return {
+          icon: SiAngular,
+          color: "text-[#DD0031]",
+        };
+      case Framework.REACT:
+        return {
+          icon: SiReact,
+          color: "text-[#61DAFB]",
+        };
+      default:
+        return (
+          FILE_EXTENSIONS[extension] || {
+            icon: SiTypescript,
+            color: "text-[#3178C6]",
+          }
+        );
+    }
+  }
+
   return (
     FILE_EXTENSIONS[extension] || {
       icon: Braces,
@@ -76,28 +106,33 @@ export const getFileConfig = (fileName: string): FileExtensionConfig => {
   );
 };
 
-export const getLanguageExtension = (filename: string) => {
+export const getLanguageExtension = (filename: string, framework?: string) => {
   const ext = filename.split(".").pop()?.toLowerCase();
+
   switch (ext) {
     case "css":
-      return css();
+      return [css()];
     case "js":
     case "jsx":
-      return javascript({ jsx: true });
+      return [javascript({ jsx: true })];
     case "ts":
+      return [javascript({ typescript: true })];
     case "tsx":
-      return javascript({ typescript: true, jsx: true });
+      return [javascript({ typescript: true, jsx: true })];
     case "json":
-      return json();
+      return [json()];
     case "html":
-      return html();
-    case "svelte":
-      return svelte();
+      if (framework === Framework.ANGULAR) {
+        return [angular(), html()];
+      }
+      return [html()];
     case "vue":
-      return vue();
+      return [vue()];
+    case "svelte":
+      return [svelte()];
     case "md":
-      return markdown();
+      return [markdown()];
     default:
-      return html();
+      return [html()];
   }
 };

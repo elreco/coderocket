@@ -1,5 +1,414 @@
 export const defaultArtifactCode = {
   html: ``,
+  angular: `<coderocketArtifact title="Blank Angular App">
+<coderocketFile name=".postcssrc.json">
+{
+  "plugins": {
+    "@tailwindcss/postcss": {}
+  }
+}
+</coderocketFile>
+<coderocketFile name="angular.json">
+{
+  "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
+  "version": 1,
+  "newProjectRoot": "projects",
+  "projects": {
+    "angular": {
+      "projectType": "application",
+      "schematics": {},
+      "root": "",
+      "sourceRoot": "src",
+      "prefix": "app",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:application",
+          "options": {
+            "outputPath": {
+              "base": "dist"
+            },
+            "browser": "src/main.ts",
+            "polyfills": [
+              "zone.js"
+            ],
+            "tsConfig": "tsconfig.app.json",
+            "assets": [
+              {
+                "glob": "**/*",
+                "input": "public"
+              }
+            ],
+            "styles": [
+              "src/styles.css"
+            ]
+          },
+          "configurations": {
+            "production": {
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "500kB",
+                  "maximumError": "1MB"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "4kB",
+                  "maximumError": "8kB"
+                }
+              ],
+              "outputHashing": "all"
+            },
+            "development": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "serve": {
+          "builder": "@angular/build:dev-server",
+          "configurations": {
+            "production": {
+              "buildTarget": "angular:build:production"
+            },
+            "development": {
+              "buildTarget": "angular:build:development"
+            }
+          },
+          "defaultConfiguration": "development"
+        },
+        "extract-i18n": {
+          "builder": "@angular/build:extract-i18n"
+        },
+        "test": {
+          "builder": "@angular/build:karma",
+          "options": {
+            "polyfills": [
+              "zone.js",
+              "zone.js/testing"
+            ],
+            "tsConfig": "tsconfig.spec.json",
+            "assets": [
+              {
+                "glob": "**/*",
+                "input": "public"
+              }
+            ],
+            "styles": [
+              "src/styles.css"
+            ]
+          }
+        }
+      }
+    }
+  }
+}
+
+</coderocketFile>
+<coderocketFile name="components.json">
+{
+  "style": "css",
+  "packageManager": "npm",
+  "tailwind": {
+    "css": "src/styles.css",
+    "baseColor": "zinc",
+    "cssVariables": true
+  },
+  "aliases": {
+    "components": "src/app/shared/components",
+    "utils": "src/app/shared/utils"
+  }
+}
+</coderocketFile>
+<coderocketFile name="package.json">
+{
+  "name": "angular",
+  "version": "0.0.0",
+  "scripts": {
+    "ng": "ng",
+    "dev": "ng serve",
+    "build": "ng build",
+    "watch": "ng build --watch --configuration development",
+    "test": "ng test"
+  },
+  "prettier": {
+    "printWidth": 100,
+    "singleQuote": true,
+    "overrides": [
+      {
+        "files": "*.html",
+        "options": {
+          "parser": "angular"
+        }
+      }
+    ]
+  },
+  "private": true,
+  "dependencies": {
+    "@angular/cdk": "^20.2.10",
+    "@angular/common": "^20.3.0",
+    "@angular/compiler": "^20.3.0",
+    "@angular/core": "^20.3.0",
+    "@angular/forms": "^20.3.0",
+    "@angular/platform-browser": "^20.3.0",
+    "@angular/router": "^20.3.0",
+    "@tailwindcss/vite": "^4.1.16",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-angular": "^0.546.0",
+    "lucide-static": "^0.546.0",
+    "rxjs": "~7.8.0",
+    "tailwind-merge": "^3.3.1",
+    "tslib": "^2.3.0",
+    "zone.js": "~0.15.0"
+  },
+  "devDependencies": {
+    "@angular/build": "^20.3.7",
+    "@angular/cli": "^20.3.7",
+    "@angular/compiler-cli": "^20.3.0",
+    "@tailwindcss/postcss": "^4.1.16",
+    "@types/jasmine": "~5.1.0",
+    "jasmine-core": "~5.9.0",
+    "karma": "~6.4.0",
+    "karma-chrome-launcher": "~3.2.0",
+    "karma-coverage": "~2.2.0",
+    "karma-jasmine": "~5.1.0",
+    "karma-jasmine-html-reporter": "~2.1.0",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.16",
+    "tailwindcss-animate": "^1.0.7",
+    "typescript": "~5.9.2"
+  }
+}
+
+</coderocketFile>
+<coderocketFile name="src/app/app.config.ts">
+import {
+  ApplicationConfig,
+  provideBrowserGlobalErrorListeners,
+  provideZoneChangeDetection,
+} from '@angular/core';
+import { provideRouter } from '@angular/router';
+
+import { routes } from './app.routes';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideBrowserGlobalErrorListeners(),
+    provideZoneChangeDetection({ eventCoalescing: true }),
+    provideRouter(routes),
+  ],
+};
+
+</coderocketFile>
+<coderocketFile name="src/app/app.css">
+
+</coderocketFile>
+<coderocketFile name="src/app/app.html">
+<div class="min-h-screen flex items-center justify-center">
+  <h1 class="text-4xl font-bold">Hello CodeRocket</h1>
+</div>
+
+</coderocketFile>
+<coderocketFile name="src/app/app.routes.ts">
+import { Routes } from '@angular/router';
+
+export const routes: Routes = [];
+
+</coderocketFile>
+<coderocketFile name="src/app/app.spec.ts">
+import { TestBed } from '@angular/core/testing';
+
+import { App } from './app';
+
+describe('App', () => {
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [App],
+    }).compileComponents();
+  });
+
+  it('should create the app', () => {
+    const fixture = TestBed.createComponent(App);
+    const app = fixture.componentInstance;
+    expect(app).toBeTruthy();
+  });
+
+  it('should render title', () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('h1')?.textContent).toContain('Hello, angular');
+  });
+});
+
+</coderocketFile>
+<coderocketFile name="src/app/app.ts">
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  imports: [],
+  templateUrl: './app.html',
+})
+export class App {}
+
+</coderocketFile>
+<coderocketFile name="src/app/shared/utils/cn.ts">
+import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
+
+</coderocketFile>
+<coderocketFile name="src/app/shared/utils/merge-classes.ts">
+import { ClassValue, clsx } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+
+export type { ClassValue };
+
+export function mergeClasses(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
+
+export function transform(value: boolean | string): boolean {
+  return typeof value === 'string' ? value === '' : value;
+}
+
+export function generateId(prefix = ''): string {
+  const id = crypto.randomUUID();
+  return prefix ? \`\${prefix}-\${id}\` : id;
+}
+
+</coderocketFile>
+<coderocketFile name="src/app/shared/utils/number.ts">
+function clamp(value: number, [min, max]: [number, number]): number {
+  return Math.min(max, Math.max(min, value));
+}
+
+function roundToStep(value: number, min: number, step: number): number {
+  return Math.round((value - min) / step) * step + min;
+}
+
+function convertValueToPercentage(value: number, min: number, max: number): number {
+  return ((value - min) / (max - min)) * 100;
+}
+
+export { clamp, roundToStep, convertValueToPercentage };
+
+</coderocketFile>
+<coderocketFile name="src/index.html">
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Angular</title>
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+</head>
+<body>
+  <app-root></app-root>
+</body>
+</html>
+
+</coderocketFile>
+<coderocketFile name="src/main.ts">
+import { bootstrapApplication } from '@angular/platform-browser';
+
+import { App } from './app/app';
+import { appConfig } from './app/app.config';
+
+bootstrapApplication(App, appConfig).catch((err) => console.error(err));
+
+</coderocketFile>
+<coderocketFile name="src/styles.css">
+@import "tailwindcss";
+</coderocketFile>
+<coderocketFile name="tsconfig.app.json">
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./out-tsc/app",
+    "types": [],
+    "strict": false,
+    "skipLibCheck": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noFallthroughCasesInSwitch": false,
+    "noImplicitAny": false
+  },
+  "include": [
+    "src/**/*.ts"
+  ],
+  "exclude": [
+    "src/**/*.spec.ts"
+  ]
+}
+
+</coderocketFile>
+<coderocketFile name="tsconfig.json">
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "strict": false,
+    "noImplicitOverride": false,
+    "noPropertyAccessFromIndexSignature": false,
+    "noImplicitReturns": false,
+    "noFallthroughCasesInSwitch": false,
+    "noImplicitAny": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "experimentalDecorators": true,
+    "importHelpers": true,
+    "target": "ES2022",
+    "module": "preserve",
+    "baseUrl": "./",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "angularCompilerOptions": {
+    "enableI18nLegacyMessageIdFormat": false,
+    "strictInjectionParameters": false,
+    "strictInputAccessModifiers": false,
+    "typeCheckHostBindings": false,
+    "strictTemplates": false
+  },
+  "files": [],
+  "references": [
+    {
+      "path": "./tsconfig.app.json"
+    },
+    {
+      "path": "./tsconfig.spec.json"
+    }
+  ]
+}
+</coderocketFile>
+<coderocketFile name="tsconfig.spec.json">
+/* To learn more about Typescript configuration file: https://www.typescriptlang.org/docs/handbook/tsconfig-json.html. */
+/* To learn more about Angular compiler options: https://angular.dev/reference/configs/angular-compiler-options. */
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./out-tsc/spec",
+    "types": [
+      "jasmine"
+    ]
+  },
+  "include": [
+    "src/**/*.ts"
+  ]
+}
+
+</coderocketFile>
+</coderocketArtifact>`,
   react: `<coderocketArtifact title="Blank React App">
 <coderocketFile name="components.json">
 {
@@ -98,13 +507,14 @@ export const defaultArtifactCode = {
 <coderocketFile name="src/App.tsx">
 function App() {
   return (
-    <div className="min-h-screen flex items-center justify-center">
+    <div className="flex min-h-screen items-center justify-center">
       <h1 className="text-4xl font-bold">Hello CodeRocket</h1>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
+
 </coderocketFile>
 <coderocketFile name="src/globals.css">
 @import "tailwindcss";
@@ -167,24 +577,27 @@ export default App
 }
 </coderocketFile>
 <coderocketFile name="src/lib/utils.ts">
-import { type ClassValue, clsx } from "clsx"
-import { twMerge } from "tailwind-merge"
+import { type ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+  return twMerge(clsx(inputs));
 }
+
 </coderocketFile>
 <coderocketFile name="src/main.tsx">
-import React from 'react'
-import ReactDOM from 'react-dom/client'
-import App from './App.tsx'
-import './globals.css'
+import React from "react";
+import ReactDOM from "react-dom/client";
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
+import App from "./App.tsx";
+import "./globals.css";
+
+ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <App />
   </React.StrictMode>,
-)
+);
+
 </coderocketFile>
 <coderocketFile name="tailwind.config.js">
 /** @type {import('tailwindcss').Config} */
@@ -321,10 +734,11 @@ module.exports = {
 }
 </coderocketFile>
 <coderocketFile name="vite.config.ts">
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import path from 'path'
-import tailwindcss from '@tailwindcss/vite'
+import path from "path";
+
+import tailwindcss from "@tailwindcss/vite";
+import react from "@vitejs/plugin-react";
+import { defineConfig } from "vite";
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
@@ -341,7 +755,8 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-})
+});
+
 </coderocketFile>
 </coderocketArtifact>`,
   svelte: `<coderocketArtifact title="Blank Svelte App">
@@ -562,27 +977,32 @@ import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
-	return twMerge(clsx(inputs));
+  return twMerge(clsx(inputs));
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type WithoutChild<T> = T extends { child?: any } ? Omit<T, "child"> : T;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type WithoutChildren<T> = T extends { children?: any } ? Omit<T, "children"> : T;
+export type WithoutChildren<T> = T extends { children?: any }
+  ? Omit<T, "children">
+  : T;
 export type WithoutChildrenOrChild<T> = WithoutChildren<WithoutChild<T>>;
-export type WithElementRef<T, U extends HTMLElement = HTMLElement> = T & { ref?: U | null };
+export type WithElementRef<T, U extends HTMLElement = HTMLElement> = T & {
+  ref?: U | null;
+};
 
 </coderocketFile>
 <coderocketFile name="src/main.ts">
-import { mount } from 'svelte'
-import './app.css'
-import App from './App.svelte'
+import { mount } from "svelte";
+
+import "./app.css";
+import App from "./App.svelte";
 
 const app = mount(App, {
-  target: document.getElementById('app')!,
-})
+  target: document.getElementById("app")!,
+});
 
-export default app
+export default app;
 
 </coderocketFile>
 <coderocketFile name="svelte.config.js">
@@ -660,17 +1080,15 @@ export default {
 
 </coderocketFile>
 <coderocketFile name="vite.config.ts">
-import { defineConfig } from 'vite'
-import { svelte } from '@sveltejs/vite-plugin-svelte'
-import tailwindcss from '@tailwindcss/vite'
-import path from 'path'
+import path from "path";
+
+import { svelte } from "@sveltejs/vite-plugin-svelte";
+import tailwindcss from "@tailwindcss/vite";
+import { defineConfig } from "vite";
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [
-    svelte(),
-    tailwindcss(),
-  ],
+  plugins: [svelte(), tailwindcss()],
   build: {
     minify: false,
     sourcemap: false,
@@ -681,10 +1099,10 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
-      $lib: path.resolve("./src/lib")
+      $lib: path.resolve("./src/lib"),
     },
   },
-})
+});
 
 </coderocketFile>
 </coderocketArtifact>`,
@@ -830,22 +1248,26 @@ export default defineConfig({
 }
 </coderocketFile>
 <coderocketFile name="src/lib/utils.ts">
-import { type ClassValue, clsx } from "clsx"
-import { twMerge } from "tailwind-merge"
+import { type ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+  return twMerge(clsx(inputs));
 }
+
 </coderocketFile>
 <coderocketFile name="src/main.ts">
-import { createApp } from 'vue'
-import App from './App.vue'
-import './globals.css'
+import { createApp } from "vue";
 
-createApp(App).mount('#app')
+import App from "./App.vue";
+import "./globals.css";
+
+createApp(App).mount("#app");
+
 </coderocketFile>
 <coderocketFile name="src/vite-env.d.ts">
 /// <reference types="vite/client" />
+
 </coderocketFile>
 <coderocketFile name="tailwind.config.js">
 /** @type {import('tailwindcss').Config} */
@@ -957,10 +1379,11 @@ module.exports = {
 }
 </coderocketFile>
 <coderocketFile name="vite.config.ts">
-import { defineConfig } from 'vite'
-import vue from '@vitejs/plugin-vue'
-import path from 'path'
-import tailwindcss from '@tailwindcss/vite'
+import path from "path";
+
+import tailwindcss from "@tailwindcss/vite";
+import vue from "@vitejs/plugin-vue";
+import { defineConfig } from "vite";
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -975,10 +1398,11 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
+      "@": path.resolve(__dirname, "./src"),
     },
   },
-})
+});
+
 </coderocketFile>
 </coderocketArtifact>`,
 };

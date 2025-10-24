@@ -5,6 +5,7 @@ import {
   SiReact,
   SiVuedotjs,
   SiSvelte,
+  SiAngular,
 } from "@icons-pack/react-simple-icons";
 import { draculaInit } from "@uiw/codemirror-theme-dracula";
 import CodeMirror, {
@@ -188,7 +189,11 @@ export default function CodePreview() {
         ? SiReact
         : selectedFramework === Framework.SVELTE
           ? SiSvelte
-          : SiVuedotjs;
+          : selectedFramework === Framework.VUE
+            ? SiVuedotjs
+            : selectedFramework === Framework.ANGULAR
+              ? SiAngular
+              : SiHtml5;
 
   return (
     <div className="flex size-full flex-col overflow-hidden xl:flex-row">
@@ -286,7 +291,7 @@ export default function CodePreview() {
                 className={`size-full max-w-full ${
                   isLoading ? "pointer-events-none overflow-hidden" : ""
                 }`}
-                extensions={[getLanguageExtension(activeTab)]}
+                extensions={getLanguageExtension(activeTab, selectedFramework)}
                 readOnly
                 basicSetup={{
                   lineNumbers: true,

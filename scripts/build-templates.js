@@ -21,11 +21,28 @@ const IGNORED_PATTERNS = [
   ".env",
   ".env.local",
   ".gitignore",
+  ".angular",
+  ".editorconfig",
+];
+
+const ALLOWED_DOT_FILES = [
+  ".postcssrc.json",
+  ".postcssrc",
+  ".babelrc",
+  ".babelrc.json",
+  ".prettierrc",
+  ".prettierrc.json",
+  ".eslintrc",
+  ".eslintrc.json",
 ];
 
 function shouldIgnoreFile(fileName) {
+  if (ALLOWED_DOT_FILES.includes(fileName)) {
+    return false;
+  }
+
   return IGNORED_PATTERNS.some(
-    (pattern) => fileName === pattern || fileName.startsWith("."),
+    (pattern) => fileName === pattern || (fileName.startsWith(".") && !ALLOWED_DOT_FILES.includes(fileName)),
   );
 }
 

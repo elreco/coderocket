@@ -3,6 +3,7 @@ import {
   SiReact,
   SiVuedotjs,
   SiSvelte,
+  SiAngular,
 } from "@icons-pack/react-simple-icons";
 import { Calendar, Download, Tag, User, BookOpen, Wrench } from "lucide-react";
 import Link from "next/link";
@@ -168,7 +169,9 @@ export default async function MarketplaceListingPage({
         ? SiVuedotjs
         : listing.chat.framework === Framework.SVELTE
           ? SiSvelte
-          : SiHtml5;
+          : listing.chat.framework === Framework.ANGULAR
+            ? SiAngular
+            : SiHtml5;
 
   return (
     <Container className="pr-2 sm:pr-11">

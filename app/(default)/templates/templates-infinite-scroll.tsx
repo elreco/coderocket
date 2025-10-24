@@ -5,6 +5,7 @@ import {
   SiReact,
   SiVuedotjs,
   SiSvelte,
+  SiAngular,
 } from "@icons-pack/react-simple-icons";
 import {
   ArrowDown,
@@ -113,6 +114,7 @@ export function TemplatesInfiniteScroll({
     { value: Framework.REACT, label: "React", icon: SiReact },
     { value: Framework.VUE, label: "Vue", icon: SiVuedotjs },
     { value: Framework.SVELTE, label: "Svelte", icon: SiSvelte },
+    { value: Framework.ANGULAR, label: "Angular", icon: SiAngular },
     { value: Framework.HTML, label: "HTML", icon: SiHtml5 },
   ];
 

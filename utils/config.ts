@@ -61,6 +61,7 @@ export enum Framework {
   REACT = "react",
   VUE = "vue",
   SVELTE = "svelte",
+  ANGULAR = "angular",
   HTML = "html",
 }
 
