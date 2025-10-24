@@ -110,6 +110,14 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
     setLoadingState(null);
   }, [selectedVersion, setLoadingState]);
 
+  useEffect(() => {
+    if (isWebcontainerReady && loadingState !== null) {
+      setLoadingState(null);
+      setBuildError(null);
+      setPreviewId(undefined);
+    }
+  }, [isWebcontainerReady, loadingState, setLoadingState]);
+
   const addToBuildError = useCallback(
     (data: string) => {
       const possibleError = formatBuildError(data);
@@ -179,11 +187,6 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
-      // Reset error state when files change to avoid showing old component errors
-      setBuildError(null);
-      setPreviewId(undefined);
-      setLoadingState("initializing");
-
       if (isWebcontainerReady && !forceBuild) {
         setLoadingState(null);
         setBuildError(null);
@@ -192,6 +195,10 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
         lastBuiltChatIdRef.current = chatId;
         return;
       }
+
+      setBuildError(null);
+      setPreviewId(undefined);
+      setLoadingState("initializing");
 
       // Kill old processes before starting new ones
       if (shellProcessRef.current) {
