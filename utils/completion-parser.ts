@@ -10,7 +10,7 @@ const DAISYUI_CDN =
 
 // Ajoutez cette nouvelle interface et fonction
 export interface ContentChunk {
-  type: "text" | "artifact";
+  type: "text" | "artifact" | "thinking";
   content: string;
 }
 
@@ -973,9 +973,9 @@ export const splitContentIntoChunks = (completion: string): ContentChunk[] => {
 
   const chunks: ContentChunk[] = [];
 
-  // Expression régulière pour détecter les balises coderocketFile et coderocketArtifact
+  // Expression régulière pour détecter les balises thinking, coderocketFile et coderocketArtifact
   const combinedPattern =
-    /(<coderocketArtifact[^>]*>[\s\S]*?<\/coderocketArtifact>|<coderocketArtifact[^>]*>[\s\S]*?$|<coderocketFile[^>]*>[\s\S]*?<\/coderocketFile>|<coderocketFile[^>]*>[\s\S]*?$)/g;
+    /(<thinking>[\s\S]*?<\/thinking>|<coderocketArtifact[^>]*>[\s\S]*?<\/coderocketArtifact>|<coderocketArtifact[^>]*>[\s\S]*?$|<coderocketFile[^>]*>[\s\S]*?<\/coderocketFile>|<coderocketFile[^>]*>[\s\S]*?$)/g;
 
   // Diviser le texte en segments basés sur les balises trouvées
   const segments = completion.split(combinedPattern);
@@ -1000,10 +1000,21 @@ export const splitContentIntoChunks = (completion: string): ContentChunk[] => {
     } else {
       const matchIndex = Math.floor(i / 2);
       if (matchIndex < matches.length) {
-        chunks.push({
-          type: "artifact",
-          content: matches[matchIndex],
-        });
+        const match = matches[matchIndex];
+
+        // Détecter si c'est une balise thinking
+        if (match.startsWith("<thinking>")) {
+          const thinkingContent = match.replace(/<\/?thinking>/g, "").trim();
+          chunks.push({
+            type: "thinking",
+            content: thinkingContent,
+          });
+        } else {
+          chunks.push({
+            type: "artifact",
+            content: match,
+          });
+        }
       }
     }
   }

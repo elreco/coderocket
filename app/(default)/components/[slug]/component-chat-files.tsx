@@ -36,7 +36,7 @@ import { getRelativeDate } from "@/utils/date";
 import { deleteVersionByMessageId } from "./actions";
 import { ChunkReader } from "./chunk-reader";
 import { Markdown } from "./markdown";
-import { PromptImage } from "./prompt-image";
+import { PromptFiles } from "./prompt-file";
 
 export default function ComponentChatFiles({
   message,
@@ -419,12 +419,25 @@ ${extractedFiles
               userFullName={message.chats.user.full_name}
             />
             <Markdown>{message.content}</Markdown>
-            <PromptImage
-              image={
-                message.prompt_image
-                  ? `${storageUrl}/${message.prompt_image}`
-                  : null
-              }
+            <PromptFiles
+              fileUrls={(() => {
+                if (message.files && Array.isArray(message.files)) {
+                  const fileItems = message.files.filter(
+                    (item): item is { url: string; order: number } =>
+                      typeof item === "object" &&
+                      item !== null &&
+                      "url" in item &&
+                      typeof item.url === "string" &&
+                      "order" in item &&
+                      typeof item.order === "number",
+                  );
+                  return fileItems
+                    .sort((a, b) => a.order - b.order)
+                    .map((file) => file.url);
+                }
+                return message.prompt_image ? [message.prompt_image] : [];
+              })()}
+              storageUrl={storageUrl}
             />
           </div>
         ) : (

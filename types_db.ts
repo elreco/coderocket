@@ -591,6 +591,7 @@ export type Database = {
           chat_id: string;
           content: string;
           created_at: string;
+          files: Json | null;
           id: number;
           input_tokens: number | null;
           is_built: boolean | null;
@@ -610,6 +611,7 @@ export type Database = {
           chat_id: string;
           content: string;
           created_at?: string;
+          files?: Json | null;
           id?: number;
           input_tokens?: number | null;
           is_built?: boolean | null;
@@ -629,6 +631,7 @@ export type Database = {
           chat_id?: string;
           content?: string;
           created_at?: string;
+          files?: Json | null;
           id?: number;
           input_tokens?: number | null;
           is_built?: boolean | null;
@@ -1139,6 +1142,7 @@ export type Database = {
         Args: { listing_id_param: string };
         Returns: undefined;
       };
+      migrate_prompt_image_to_files: { Args: never; Returns: undefined };
       update_pending_earnings_to_available: { Args: never; Returns: number };
     };
     Enums: {

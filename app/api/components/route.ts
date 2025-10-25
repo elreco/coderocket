@@ -38,6 +38,7 @@ import {
   MAX_VERSIONS_PER_COMPONENT,
 } from "@/utils/config";
 // import { promptEnhancer } from "@/utils/prompt-enhancer";
+import { uploadFiles } from "@/utils/file-uploader";
 import { getPreviousArtifactCode } from "@/utils/supabase/artifact-helpers";
 import { createClient } from "@/utils/supabase/server";
 import { systemPrompt } from "@/utils/system-prompts";
@@ -210,20 +211,35 @@ export async function POST(req: Request) {
     const selectedVersion =
       Number(formData.get("selectedVersion")) || undefined;
     const image = formData.get("image") as File | null;
+    const files = formData.getAll("files") as File[];
     const prompt = formData.get("prompt") as string | null;
     const aiPrompt = formData.get("aiPrompt") as string | null;
 
     // Valider la requête et récupérer les messages, le framework, et le prompt mis à jour
     // Si un site est cloné, cette fonction va aussi capturer et enregistrer un screenshot
     // qui sera ensuite envoyé à Anthropic avec le prompt
-    const { messagesFromDatabase, framework, updatedPrompt, updatedImage } =
-      await validateRequest(id, image, prompt, aiPrompt, selectedVersion);
+
+    const {
+      messagesFromDatabase,
+      framework,
+      updatedPrompt,
+      updatedImages,
+      uploadedFilesInfo,
+    } = await validateRequest(
+      id,
+      image,
+      files,
+      prompt,
+      aiPrompt,
+      selectedVersion,
+    );
 
     const { messagesToOpenAI: messages } = await buildMessagesToOpenAi(
       messagesFromDatabase,
       updatedPrompt,
-      updatedImage, // Le chemin vers le screenshot capturé si disponible
+      updatedImages, // Le chemin vers le screenshot capturé si disponible ou tableau d'images
       selectedVersion,
+      uploadedFilesInfo,
     );
 
     // Add detailed logging for debugging
@@ -233,7 +249,7 @@ export async function POST(req: Request) {
     console.log("Framework:", framework);
     console.log("Messages count:", messages.length);
     console.log("Prompt length:", updatedPrompt.length);
-    console.log("Has image:", !!updatedImage);
+    console.log("Images count:", updatedImages.length);
     console.log(
       "Is clone request:",
       updatedPrompt.includes("Clone this website:"),
@@ -363,7 +379,7 @@ export async function POST(req: Request) {
           finalText,
           updatedPrompt,
           usage,
-          updatedImage,
+          updatedImages,
           finalFinishReason,
         );
       },
@@ -392,12 +408,53 @@ export async function POST(req: Request) {
   }
 }
 
+interface PromptFileItem {
+  url: string;
+  order: number;
+}
+
+function isValidFileItem(item: unknown): item is PromptFileItem {
+  return (
+    typeof item === "object" &&
+    item !== null &&
+    "url" in item &&
+    typeof item.url === "string" &&
+    "order" in item &&
+    typeof item.order === "number"
+  );
+}
+
+function parseFileItems(files: unknown): PromptFileItem[] {
+  if (!Array.isArray(files)) return [];
+  return files.filter(isValidFileItem);
+}
+
 const buildMessagesToOpenAi = async (
   messages: Tables<"messages">[],
   updatedPrompt: string, // Ce paramètre contient le prompt détaillé avec tous les détails du site
-  updatedImage: string | null,
+  updatedImages: string[],
   selectedVersion?: number,
+  uploadedFilesInfo?: {
+    path: string;
+    type: "image" | "pdf";
+    mimeType: string;
+  }[],
 ) => {
+  // Helper function to extract file URLs from message
+  const getMessageImages = (message: Tables<"messages">): string[] => {
+    // Priority: files (JSONB array) > prompt_image (legacy single image)
+    if (message.files) {
+      const fileItems = parseFileItems(message.files);
+      return fileItems
+        .sort((a, b) => a.order - b.order)
+        .map((file) => file.url);
+    }
+    if (message.prompt_image) {
+      return [message.prompt_image];
+    }
+    return [];
+  };
+
   // Filter messages based on selectedVersion if provided
   const filteredMessages =
     selectedVersion !== undefined
@@ -416,7 +473,9 @@ const buildMessagesToOpenAi = async (
     const isUserMessage = m.role === "user";
     const shouldAddSummary = hasSummary && isOptimalPosition && isUserMessage;
 
-    if (m.role === "user" && m.prompt_image) {
+    const messageImages = getMessageImages(m);
+
+    if (m.role === "user" && messageImages.length > 0) {
       const isNewProject = limitedMessages.length === 1;
       const baseContent = m.content || "";
 
@@ -427,18 +486,24 @@ const buildMessagesToOpenAi = async (
         textContent = `${contextSummary}\n\n${baseContent}`;
       }
 
+      const contentParts: Array<TextPart | ImagePart> = [
+        {
+          type: "text",
+          text: textContent,
+        },
+      ];
+
+      // Add all images from the message
+      messageImages.forEach((imageUrl) => {
+        contentParts.push({
+          type: "image",
+          image: new URL(`${storageUrl}/${imageUrl}`),
+        });
+      });
+
       return {
         role: m.role as "user" | "assistant" | "tool" | "system",
-        content: [
-          {
-            type: "text",
-            text: textContent,
-          },
-          {
-            type: "image",
-            image: new URL(`${storageUrl}/${m.prompt_image}`),
-          },
-        ],
+        content: contentParts,
       };
     }
 
@@ -467,12 +532,40 @@ const buildMessagesToOpenAi = async (
     text: updatedPrompt,
   });
 
-  // Si une image a été uploadée ou une capture d'écran est disponible
-  if (updatedImage) {
-    finalMessageContent.push({
-      type: "image",
-      image: new URL(`${storageUrl}/${updatedImage}`),
-    });
+  // Si des fichiers ont été uploadés (images ou PDFs)
+  if (
+    updatedImages.length > 0 &&
+    uploadedFilesInfo &&
+    uploadedFilesInfo.length > 0
+  ) {
+    for (let i = 0; i < updatedImages.length; i++) {
+      const filePath = updatedImages[i];
+      const fileInfo = uploadedFilesInfo.find((f) => f.path === filePath);
+
+      if (fileInfo?.type === "pdf") {
+        const response = await fetch(`${storageUrl}/${filePath}`);
+        const arrayBuffer = await response.arrayBuffer();
+        const uint8Array = new Uint8Array(arrayBuffer);
+
+        finalMessageContent.push({
+          type: "file",
+          data: uint8Array,
+          mimeType: fileInfo.mimeType,
+        } as unknown as ImagePart);
+      } else {
+        finalMessageContent.push({
+          type: "image",
+          image: new URL(`${storageUrl}/${filePath}`),
+        });
+      }
+    }
+  } else if (updatedImages.length > 0) {
+    for (const imageUrl of updatedImages) {
+      finalMessageContent.push({
+        type: "image",
+        image: new URL(`${storageUrl}/${imageUrl}`),
+      });
+    }
   }
 
   // Ajouter le dernier message de l'utilisateur avec le prompt détaillé et les images
@@ -488,10 +581,22 @@ const buildMessagesToOpenAi = async (
 const validateRequest = async (
   id: string,
   image: File | null,
+  files: File[],
   prompt: string | null,
   aiPrompt: string | null,
   selectedVersion?: number,
-) => {
+): Promise<{
+  messagesFromDatabase: Tables<"messages">[];
+  subscription: Tables<"subscriptions"> | null;
+  framework: Framework;
+  updatedPrompt: string;
+  updatedImages: string[];
+  uploadedFilesInfo: {
+    path: string;
+    type: "image" | "pdf";
+    mimeType: string;
+  }[];
+}> => {
   const supabase = await createClient();
   const {
     data: { user },
@@ -521,7 +626,7 @@ const validateRequest = async (
 
   // Vérifier si c'est un site cloné et récupérer les détails si nécessaire
   let enhancedPrompt = finalPrompt;
-  let updatedImage = null;
+  let cloneScreenshot: string | null = null;
 
   if (chat.clone_url && prompt?.includes("Clone this website:") && !aiPrompt) {
     try {
@@ -675,7 +780,7 @@ CRITICAL: Recreate the exact visual hierarchy, component patterns, and responsiv
                 });
 
             if (!imageError && imageData?.path) {
-              updatedImage = imageData.path;
+              cloneScreenshot = imageData.path;
               console.log("✅ Screenshot uploaded successfully");
             } else {
               console.error("❌ Failed to upload screenshot:", imageError);
@@ -777,7 +882,7 @@ Recreate the visual layout and core functionality of this website using modern w
     throw new Error("more-than-x-versions");
   }
 
-  if (!subscription && image) {
+  if (!subscription && (image || files.length > 0)) {
     throw new Error("payment-required-for-image");
   }
 
@@ -794,27 +899,59 @@ Recreate the visual layout and core functionality of this website using modern w
     updatedPrompt = lastUserMessage.content || "";
   }
 
-  if (image) {
-    const { data: imageData, error: imageError } = await supabase.storage
-      .from("images")
-      .upload(`${Date.now()}-${user?.id}`, image);
-    if (imageError) {
-      throw new Error("Failed to upload image");
-    }
+  const updatedImages: string[] = [];
+  const uploadedFilesInfo: {
+    path: string;
+    type: "image" | "pdf";
+    mimeType: string;
+  }[] = [];
 
-    updatedImage = imageData?.path;
+  // Add clone screenshot if available
+  if (cloneScreenshot) {
+    updatedImages.push(cloneScreenshot);
+    uploadedFilesInfo.push({
+      path: cloneScreenshot,
+      type: "image",
+      mimeType: "image/png",
+    });
   }
 
-  if (lastUserMessage.version === -1 && lastUserMessage.prompt_image) {
-    updatedImage = lastUserMessage.prompt_image;
+  // Support for multiple files (images + PDFs)
+  if (files.length > 0) {
+    const uploaded = await uploadFiles(files, user?.id);
+    uploadedFilesInfo.push(...uploaded);
+    uploaded.forEach((file) => {
+      updatedImages.push(file.path);
+    });
+  }
+  // Support for single file (legacy/backward compatibility)
+  else if (image) {
+    const uploaded = await uploadFiles([image], user?.id);
+    uploadedFilesInfo.push(...uploaded);
+    uploaded.forEach((file) => {
+      updatedImages.push(file.path);
+    });
+  }
+
+  // Legacy support: use existing files if version -1
+  if (lastUserMessage.version === -1) {
+    if (lastUserMessage.files && Array.isArray(lastUserMessage.files)) {
+      const parsedFiles = parseFileItems(lastUserMessage.files);
+      parsedFiles.forEach((file) => {
+        updatedImages.push(file.url);
+      });
+    } else if (lastUserMessage.prompt_image) {
+      updatedImages.push(lastUserMessage.prompt_image);
+    }
   }
 
   return {
     messagesFromDatabase,
     subscription,
-    framework: chat.framework,
+    framework: (chat.framework || "react") as Framework,
     updatedPrompt, // Contient maintenant le prompt détaillé avec tous les détails du site
-    updatedImage,
+    updatedImages,
+    uploadedFilesInfo,
   };
 };
 
@@ -823,7 +960,7 @@ const updateDataAfterCompletion = async (
   text: string,
   updatedPrompt: string,
   usage: LanguageModelUsage,
-  updatedImage: string | null,
+  updatedImages: string[],
   finishReason: string | null,
 ) => {
   const supabase = await createClient();
@@ -902,6 +1039,8 @@ const updateDataAfterCompletion = async (
   }
   const cacheCreationInputTokens = 0;
   const cacheReadInputTokens = usage.cachedInputTokens ?? 0;
+  const filesData = updatedImages.map((url, index) => ({ url, order: index }));
+
   if (version > 0) {
     newMessages.push({
       chat_id: chatId,
@@ -909,17 +1048,20 @@ const updateDataAfterCompletion = async (
       version,
       content: updatedPrompt,
       role: "user",
-      prompt_image: updatedImage,
+      prompt_image: updatedImages.length > 0 ? updatedImages[0] : null,
+      files: filesData,
       input_tokens: usage.inputTokens ?? 0,
       subscription_type: subscriptionType,
       cache_creation_input_tokens: cacheCreationInputTokens,
       cache_read_input_tokens: cacheReadInputTokens,
     });
   } else {
-    await supabase
+    const { error: updateError } = await supabase
       .from("messages")
       .update({
         version,
+        prompt_image: updatedImages.length > 0 ? updatedImages[0] : null,
+        files: filesData,
         input_tokens: usage.inputTokens ?? 0,
         cache_creation_input_tokens: cacheCreationInputTokens,
         cache_read_input_tokens: cacheReadInputTokens,
@@ -927,6 +1069,10 @@ const updateDataAfterCompletion = async (
       })
       .eq("chat_id", chatId)
       .eq("version", -1);
+
+    if (updateError) {
+      console.error("Error updating message:", updateError);
+    }
   }
 
   const theme = extractDataTheme(text);

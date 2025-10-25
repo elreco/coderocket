@@ -355,29 +355,40 @@ export const createChat = async (prompt: string, formData: FormData) => {
   }
 
   let imageUrl = null;
-  const image = formData.get("file") as File;
-  if (!subscription && image) {
+  const filesArray: { url: string; order: number }[] = [];
+  const files = formData.getAll("files") as File[];
+
+  if (!subscription && files.length > 0) {
     return {
       error: {
-        title: "You can't upload images with a free plan",
+        title: "You can't upload files with a free plan",
         description: "Please upgrade to continue.",
       },
     };
   }
-  if (image) {
-    const { data: imageData, error: imageError } = await supabase.storage
-      .from("images")
-      .upload(`${Date.now()}-${user?.id}`, image);
-    if (imageError) {
-      return {
-        error: {
-          title: "Failed to upload image",
-          description: "Please try again later.",
-        },
-      };
-    }
 
-    imageUrl = imageData?.path;
+  if (files.length > 0) {
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+
+      const { data: fileData, error: fileError } = await supabase.storage
+        .from("images")
+        .upload(`${Date.now()}-${i}-${user?.id}`, file);
+
+      if (fileError) {
+        return {
+          error: {
+            title: "Failed to upload file",
+            description: "Please try again later.",
+          },
+        };
+      }
+
+      filesArray.push({ url: fileData.path, order: i });
+      if (i === 0) {
+        imageUrl = fileData.path;
+      }
+    }
   }
 
   const uniqueSlug = await generateUniqueNanoid();
@@ -421,6 +432,7 @@ export const createChat = async (prompt: string, formData: FormData) => {
     role: string;
     theme: string;
     prompt_image?: string;
+    files?: { url: string; order: number }[];
     content: string;
     version: number;
     subscription_type: string;
@@ -429,6 +441,7 @@ export const createChat = async (prompt: string, formData: FormData) => {
     role: "user",
     theme,
     ...(imageUrl && { prompt_image: imageUrl }),
+    ...(filesArray.length > 0 && { files: filesArray }),
     content: prompt,
     version: -1,
     subscription_type: subscriptionType,

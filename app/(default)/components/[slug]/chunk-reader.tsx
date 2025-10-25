@@ -14,6 +14,7 @@ import { getFileConfig } from "@/utils/file-extensions";
 import { formatFileSize } from "@/utils/helpers";
 
 import { Markdown } from "./markdown";
+import { ThinkingBlock } from "./thinking-block";
 
 export function ChunkReader({
   chunks,
@@ -41,6 +42,7 @@ export function ChunkReader({
     return (
       <div key={index} className="text-sm">
         {chunk.type === "text" && <Markdown>{chunk.content}</Markdown>}
+        {chunk.type === "thinking" && <ThinkingBlock content={chunk.content} />}
         {chunk.type === "artifact" && (
           <div className="w-full space-y-2">
             <div

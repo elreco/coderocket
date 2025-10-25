@@ -5,7 +5,6 @@ import {
   MessageSquare,
   Paintbrush,
   WandSparkles,
-  X,
   RefreshCw,
   Image as ImageIcon,
   Palette,
@@ -14,11 +13,11 @@ import {
   CheckCircle,
   Loader,
 } from "lucide-react";
-import Image from "next/image";
 import { useEffect, useState, useRef, useCallback } from "react";
 
 import { getSubscription } from "@/app/supabase-server";
-import { ImageSelector } from "@/components/image-selector";
+import { FileBadge } from "@/components/file-badge";
+import { ImageUploadArea } from "@/components/image-upload-area";
 import { TextareaWithLimit } from "@/components/textarea-with-limit";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -50,10 +49,11 @@ import {
   avatarApi,
   Framework,
   FREE_CHAR_LIMIT,
-  maxImageSize,
+  maxImagesUpload,
   storageUrl,
 } from "@/utils/config";
 import { getRelativeDate } from "@/utils/date";
+import { validateFile } from "@/utils/file-helper";
 import { createClient } from "@/utils/supabase/client";
 
 import ComponentTheme from "./(settings)/component-theme";
@@ -62,7 +62,7 @@ import { ChunkReader } from "./chunk-reader";
 import ComponentChatFiles from "./component-chat-files";
 import { ComponentSidebarSkeleton } from "./component-sidebar-skeleton";
 import { Markdown } from "./markdown";
-import { PromptImage } from "./prompt-image";
+import { PromptFiles } from "./prompt-file";
 
 export default function ComponentSidebar({
   className,
@@ -82,9 +82,9 @@ export default function ComponentSidebar({
     setInput,
     chatId,
     selectedFramework,
-    image,
-    setImage,
-    defaultImage,
+    files,
+    setFiles,
+    defaultFiles,
     isLengthError,
     fetchedChat,
   } = useComponentContext();
@@ -97,7 +97,7 @@ export default function ComponentSidebar({
   const [activeTab, setActiveTab] = useState("chat");
   const [hasImproved, setHasImproved] = useState(false);
   const [isImprovingLoading, setIsImprovingLoading] = useState(false);
-  const [files, setFiles] = useState<ChatFile[]>([]);
+  const [chatFiles, setChatFiles] = useState<ChatFile[]>([]);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -222,9 +222,9 @@ export default function ComponentSidebar({
     }
   };
 
-  const handleImageRemove = () => {
-    setImage(null);
-    if (fileInputRef.current) {
+  const handleFileRemove = (index: number) => {
+    setFiles((prev) => prev.filter((_, i) => i !== index));
+    if (files.length === 1 && fileInputRef.current) {
       fileInputRef.current.value = "";
     }
   };
@@ -308,11 +308,11 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
 
       // Mettre à jour les états ensemble pour éviter les sauts
       setStreamingChunks(newChunks);
-      setFiles(extractedFiles);
+      setChatFiles(extractedFiles);
     } else if (!isLoading && !isLengthError && !buildError) {
       // Réinitialiser les états lorsque le chargement est terminé
       setStreamingChunks([]);
-      setFiles([]);
+      setChatFiles([]);
     }
   }, [completion, isLoading, isLengthError, buildError]);
 
@@ -330,16 +330,30 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
         const item = clipboardItems[i];
         if (item.type.startsWith("image/")) {
           const file = item.getAsFile();
-          if (file && file.size <= maxImageSize) {
-            setImage(file);
-          } else {
+          if (!file) continue;
+
+          const validation = validateFile(file);
+          if (!validation.valid) {
             toast({
               variant: "destructive",
-              title: "Image too large",
-              description: `The image must be less than ${maxImageSize / (1024 * 1024)} Mo.`,
+              title: "Invalid file",
+              description: validation.error,
               duration: 4000,
             });
+            break;
           }
+
+          if (files.length >= maxImagesUpload) {
+            toast({
+              variant: "destructive",
+              title: "Too many files",
+              description: `Maximum ${maxImagesUpload} files allowed`,
+              duration: 4000,
+            });
+            break;
+          }
+
+          setFiles((prev: File[]) => [...prev, file]);
           break;
         }
       }
@@ -355,25 +369,47 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
         textarea.removeEventListener("paste", handlePaste);
       }
     };
-  }, [inputRef, toast]);
+  }, [inputRef, toast, files.length, setFiles]);
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files?.[0]) {
-      return;
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return;
+
+    const newFiles = Array.from(e.target.files);
+    const validFiles: File[] = [];
+
+    for (const file of newFiles) {
+      const validation = validateFile(file);
+
+      if (!validation.valid) {
+        toast({
+          variant: "destructive",
+          title: "Invalid file",
+          description: validation.error,
+          duration: 4000,
+        });
+        continue;
+      }
+
+      if (files.length + validFiles.length >= maxImagesUpload) {
+        toast({
+          variant: "destructive",
+          title: "Too many files",
+          description: `Maximum ${maxImagesUpload} files allowed`,
+          duration: 4000,
+        });
+        break;
+      }
+
+      validFiles.push(file);
     }
-    const file = e.target.files[0];
 
-    if (file.size > maxImageSize) {
-      toast({
-        variant: "destructive",
-        title: "Image too large",
-        description: `The image must be less than ${maxImageSize / (1024 * 1024)} Mo.`,
-        duration: 4000,
-      });
-      return;
+    if (validFiles.length > 0) {
+      setFiles((prev) => [...prev, ...validFiles]);
     }
 
-    setImage(file);
+    if (e.target) {
+      e.target.value = "";
+    }
   };
 
   const fetchCloneData = useCallback(async (url: string) => {
@@ -692,15 +728,7 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
               userFullName={user?.full_name}
             />
             <Markdown>{input}</Markdown>
-            <PromptImage
-              image={
-                image
-                  ? URL.createObjectURL(image)
-                  : defaultImage
-                    ? `${storageUrl}/${defaultImage}`
-                    : null
-              }
-            />
+            <PromptFiles fileUrls={defaultFiles} storageUrl={storageUrl} />
           </div>
         </div>
         <div
@@ -874,7 +902,7 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
             )}
             <ChunkReader
               chunks={streamingChunks}
-              files={files}
+              files={chatFiles}
               handleFileClick={handleFileClick}
             />
             <div className="mt-2 flex gap-1">
@@ -948,37 +976,65 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
                     </ComponentTheme>
                   </div>
                 )}
-                <ImageSelector
+                <ImageUploadArea
                   fileInputRef={fileInputRef}
-                  disabled={isLoading || isLengthError || !!buildError}
+                  disabled={
+                    isLoading ||
+                    isLengthError ||
+                    !!buildError ||
+                    files.length >= maxImagesUpload
+                  }
                   handleButtonClick={handleButtonClick}
-                  handleImageChange={handleImageChange}
+                  handleImageChange={handleFileChange}
+                  onDrop={(droppedFiles) => {
+                    const validFiles: File[] = [];
+
+                    for (const file of droppedFiles) {
+                      if (files.length + validFiles.length >= maxImagesUpload) {
+                        toast({
+                          variant: "destructive",
+                          title: "Too many files",
+                          description: `Maximum ${maxImagesUpload} files allowed`,
+                          duration: 4000,
+                        });
+                        break;
+                      }
+
+                      const validation = validateFile(file);
+                      if (!validation.valid) {
+                        toast({
+                          variant: "destructive",
+                          title: "Invalid file",
+                          description: validation.error,
+                          duration: 4000,
+                        });
+                        continue;
+                      }
+
+                      validFiles.push(file);
+                    }
+
+                    if (validFiles.length > 0) {
+                      setFiles((prev) => [...prev, ...validFiles]);
+                    }
+                  }}
+                  isUploading={isLoading && files.length > 0}
+                  label="Files"
                 />
-                {image && (
-                  <div className="mr-2 size-12">
-                    <div className="relative size-12">
-                      <Image
-                        src={URL.createObjectURL(image)}
-                        alt="Uploaded"
-                        width={12}
-                        height={12}
-                        crossOrigin="anonymous"
-                        className="size-12 rounded-md object-contain"
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="absolute -right-2 -top-2 size-5 rounded-full bg-background p-0"
-                        onClick={handleImageRemove}
-                      >
-                        <X className="size-3" />
-                      </Button>
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
+            {files.length > 0 && (
+              <div className="flex gap-2 overflow-x-auto border-t p-2">
+                {files.map((file, index) => (
+                  <FileBadge
+                    key={`${file.name}-${index}`}
+                    file={file}
+                    onRemove={() => handleFileRemove(index)}
+                    disabled={isLoading || isLengthError || !!buildError}
+                  />
+                ))}
+              </div>
+            )}
             <div className="flex w-full flex-col items-start space-y-1 border-t p-2">
               <TextareaWithLimit
                 ref={inputRef}

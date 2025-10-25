@@ -10,7 +10,37 @@ export const screenshotApiUrl =
 
 export const discordLink = "https://discord.gg/t7dQgcYJ5t";
 
-export const maxImageSize = 2 * 1024 * 1024; // 2 Mo
+export const maxImageSize = 10 * 1024 * 1024; // 10 Mo
+export const maxPdfSize = 32 * 1024 * 1024; // 32 Mo (Anthropic limit)
+export const maxImagesUpload = 5;
+
+export const supportedImageTypes = [
+  "image/png",
+  "image/jpeg",
+  "image/jpg",
+  "image/gif",
+  "image/webp",
+];
+
+export const supportedDocumentTypes = ["application/pdf"];
+
+export const supportedFileTypes = [
+  ...supportedImageTypes,
+  ...supportedDocumentTypes,
+];
+
+export const fileTypeConfig = {
+  image: {
+    maxSize: maxImageSize,
+    accept: ".png, .jpeg, .jpg, .gif, .webp",
+    types: supportedImageTypes,
+  },
+  pdf: {
+    maxSize: maxPdfSize,
+    accept: ".pdf",
+    types: supportedDocumentTypes,
+  },
+};
 
 export const MAX_ITERATIONS = 4;
 

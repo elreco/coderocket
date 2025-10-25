@@ -56,9 +56,10 @@ interface ComponentContextType {
   artifactFiles: ChatFile[];
   chatId: string;
   selectedFramework: Framework;
-  image: File | null;
-  setImage: (image: File | null) => void;
+  files: File[];
+  setFiles: (files: File[] | ((prev: File[]) => File[])) => void;
   defaultImage: string | null;
+  defaultFiles: string[];
   loadingState: WebcontainerLoadingState;
   setLoadingState: (value: WebcontainerLoadingState) => void;
   fetchedChat: Tables<"chats"> | null;

@@ -7,7 +7,6 @@ import {
   SiAngular,
 } from "@icons-pack/react-simple-icons";
 import {
-  X as XIcon,
   Terminal,
   Paintbrush,
   Globe,
@@ -20,14 +19,14 @@ import {
   Sparkles,
   ArrowRight,
 } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef, useState, useEffect, useCallback } from "react";
 
 import { getSubscription } from "@/app/supabase-server";
 import { Container } from "@/components/container";
-import { ImageSelector } from "@/components/image-selector";
+import { FileBadge } from "@/components/file-badge";
+import { ImageUploadArea } from "@/components/image-upload-area";
 import { TextareaWithLimit } from "@/components/textarea-with-limit";
 import { AnimatedGridPattern } from "@/components/ui/animated-grid-pattern";
 import { Badge } from "@/components/ui/badge";
@@ -68,7 +67,8 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { Tables } from "@/types_db";
 import { Framework } from "@/utils/config";
-import { defaultTheme, maxImageSize, themes } from "@/utils/config";
+import { defaultTheme, maxImagesUpload, themes } from "@/utils/config";
+import { validateFile } from "@/utils/file-helper";
 import { promptEnhancer } from "@/utils/prompt-enhancer";
 import { createClient } from "@/utils/supabase/client";
 
@@ -172,7 +172,7 @@ export default function Hero() {
   const [loadingAction, setLoadingAction] = useState<
     "generate" | "improve" | null
   >(null);
-  const [image, setImage] = useState<File | null>(null);
+  const [images, setImages] = useState<File[]>([]);
   const [websiteUrl, setWebsiteUrl] = useState("");
   const [generationMode, setGenerationMode] = useState<"scratch" | "clone">(
     "scratch",
@@ -218,16 +218,30 @@ export default function Hero() {
         const item = clipboardItems[i];
         if (item.type.startsWith("image/")) {
           const file = item.getAsFile();
-          if (file && file.size <= maxImageSize) {
-            setImage(file);
-          } else {
+          if (!file) continue;
+
+          const validation = validateFile(file);
+          if (!validation.valid) {
             toast({
               variant: "destructive",
-              title: "Image too large",
-              description: `The image must be less than ${maxImageSize / (1024 * 1024)} Mo.`,
+              title: "Invalid file",
+              description: validation.error,
               duration: 4000,
             });
+            break;
           }
+
+          if (images.length >= maxImagesUpload) {
+            toast({
+              variant: "destructive",
+              title: "Too many files",
+              description: `Maximum ${maxImagesUpload} files allowed`,
+              duration: 4000,
+            });
+            break;
+          }
+
+          setImages((prev) => [...prev, file]);
           break;
         }
       }
@@ -266,24 +280,46 @@ export default function Hero() {
 
   const handleImageChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (!e.target.files?.[0]) {
-        return;
-      }
-      const file = e.target.files[0];
+      if (!e.target.files) return;
 
-      if (file.size > maxImageSize) {
-        toast({
-          variant: "destructive",
-          title: "Image too large",
-          description: `The image must be less than ${maxImageSize / (1024 * 1024)} Mo.`,
-          duration: 4000,
-        });
-        return;
+      const newFiles = Array.from(e.target.files);
+      const validFiles: File[] = [];
+
+      for (const file of newFiles) {
+        const validation = validateFile(file);
+
+        if (!validation.valid) {
+          toast({
+            variant: "destructive",
+            title: "Invalid file",
+            description: validation.error,
+            duration: 4000,
+          });
+          continue;
+        }
+
+        if (images.length + validFiles.length >= maxImagesUpload) {
+          toast({
+            variant: "destructive",
+            title: "Too many files",
+            description: `Maximum ${maxImagesUpload} files allowed`,
+            duration: 4000,
+          });
+          break;
+        }
+
+        validFiles.push(file);
       }
 
-      setImage(file);
+      if (validFiles.length > 0) {
+        setImages((prev) => [...prev, ...validFiles]);
+      }
+
+      if (e.target) {
+        e.target.value = "";
+      }
     },
-    [toast],
+    [toast, images.length],
   );
 
   const isRestrictedWebsite = (url: string): string | null => {
@@ -408,8 +444,10 @@ export default function Hero() {
     setLoading(true);
     setLoadingAction("generate");
     const formData = new FormData();
-    if (image) {
-      formData.append("file", image as File);
+    if (generationMode === "scratch") {
+      images.forEach((image) => {
+        formData.append("files", image);
+      });
     }
     formData.append("isVisible", isVisible.toString());
     formData.append("theme", selectedTheme);
@@ -446,9 +484,9 @@ export default function Hero() {
     }
   }, []);
 
-  const handleImageRemove = () => {
-    setImage(null);
-    if (fileInputRef.current) {
+  const handleImageRemove = (index: number) => {
+    setImages((prev) => prev.filter((_, i) => i !== index));
+    if (images.length === 1 && fileInputRef.current) {
       fileInputRef.current.value = "";
     }
   };
@@ -697,26 +735,17 @@ export default function Hero() {
           </TabsContent>
         </Tabs>
 
-        <div className="flex w-full flex-1 items-center justify-between lg:flex-row">
-          {image && (
-            <div className="mr-2 size-12">
-              <div className="relative size-12">
-                <Image
-                  src={URL.createObjectURL(image)}
-                  alt="Uploaded"
-                  width={12}
-                  height={12}
-                  crossOrigin="anonymous"
-                  className="size-12 rounded-md object-cover"
+        <div className="flex w-full flex-1 flex-col gap-3">
+          {generationMode === "scratch" && images.length > 0 && (
+            <div className="flex gap-2 overflow-x-auto pb-2">
+              {images.map((file, index) => (
+                <FileBadge
+                  key={`${file.name}-${index}`}
+                  file={file}
+                  onRemove={() => handleImageRemove(index)}
+                  disabled={loading}
                 />
-                <button
-                  type="button"
-                  className="absolute right-0 top-0 cursor-pointer rounded-full bg-black/50 p-1"
-                  onClick={handleImageRemove}
-                >
-                  <XIcon className="size-4 text-white" />
-                </button>
-              </div>
+              ))}
             </div>
           )}
 
@@ -751,12 +780,49 @@ export default function Hero() {
                 </TabsList>
               </Tabs>
               {generationMode === "scratch" && (
-                <ImageSelector
+                <ImageUploadArea
                   fileInputRef={fileInputRef}
-                  disabled={loading}
+                  disabled={loading || images.length >= maxImagesUpload}
                   handleButtonClick={handleButtonClick}
                   handleImageChange={handleImageChange}
+                  onDrop={(droppedFiles) => {
+                    const validFiles: File[] = [];
+
+                    for (const file of droppedFiles) {
+                      if (
+                        images.length + validFiles.length >=
+                        maxImagesUpload
+                      ) {
+                        toast({
+                          variant: "destructive",
+                          title: "Too many files",
+                          description: `Maximum ${maxImagesUpload} files allowed`,
+                          duration: 4000,
+                        });
+                        break;
+                      }
+
+                      const validation = validateFile(file);
+                      if (!validation.valid) {
+                        toast({
+                          variant: "destructive",
+                          title: "Invalid file",
+                          description: validation.error,
+                          duration: 4000,
+                        });
+                        continue;
+                      }
+
+                      validFiles.push(file);
+                    }
+
+                    if (validFiles.length > 0) {
+                      setImages((prev) => [...prev, ...validFiles]);
+                    }
+                  }}
                   isReverse={true}
+                  isUploading={loading && images.length > 0}
+                  label="Files"
                 />
               )}
               {selectedFramework === Framework.HTML && (

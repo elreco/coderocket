@@ -1,0 +1,144 @@
+"use client";
+
+import { Upload, FileUp, Loader2 } from "lucide-react";
+import { memo, useCallback, useState } from "react";
+
+import { cn } from "@/lib/utils";
+
+import { Button } from "./ui/button";
+
+interface ImageUploadAreaProps {
+  fileInputRef: React.RefObject<HTMLInputElement>;
+  disabled: boolean;
+  handleButtonClick: () => void;
+  handleImageChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onDrop?: (files: File[]) => void;
+  isReverse?: boolean;
+  isUploading?: boolean;
+  acceptedTypes?: string;
+  label?: string;
+}
+
+export const ImageUploadArea = memo(
+  ({
+    fileInputRef,
+    disabled,
+    handleButtonClick,
+    handleImageChange,
+    onDrop,
+    isReverse = false,
+    isUploading = false,
+    acceptedTypes = ".png, .jpeg, .jpg, .gif, .webp, .pdf",
+    label = "File",
+  }: ImageUploadAreaProps) => {
+    const [isDragOver, setIsDragOver] = useState(false);
+
+    const handleDragEnter = useCallback(
+      (e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!disabled) {
+          setIsDragOver(true);
+        }
+      },
+      [disabled],
+    );
+
+    const handleDragLeave = useCallback((e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (
+        e.currentTarget === e.target ||
+        !e.currentTarget.contains(e.relatedTarget as Node)
+      ) {
+        setIsDragOver(false);
+      }
+    }, []);
+
+    const handleDragOver = useCallback((e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+    }, []);
+
+    const handleDropEvent = useCallback(
+      (e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragOver(false);
+
+        if (disabled) return;
+
+        const files = Array.from(e.dataTransfer.files);
+        const validFiles = files.filter(
+          (file) =>
+            file.type.startsWith("image/") || file.type === "application/pdf",
+        );
+
+        if (validFiles.length > 0 && onDrop) {
+          onDrop(validFiles);
+        } else if (validFiles.length > 0 && fileInputRef.current) {
+          const dataTransfer = new DataTransfer();
+          validFiles.forEach((file) => dataTransfer.items.add(file));
+          fileInputRef.current.files = dataTransfer.files;
+          const event = new Event("change", { bubbles: true });
+          fileInputRef.current.dispatchEvent(event);
+        }
+      },
+      [disabled, onDrop, fileInputRef],
+    );
+
+    return (
+      <>
+        <input
+          ref={fileInputRef}
+          className="sr-only"
+          type="file"
+          accept={acceptedTypes}
+          multiple
+          onChange={handleImageChange}
+        />
+        <div
+          onDragEnter={handleDragEnter}
+          onDragLeave={handleDragLeave}
+          onDragOver={handleDragOver}
+          onDrop={handleDropEvent}
+        >
+          <Button
+            variant={isReverse ? "background" : "secondary"}
+            className={cn(
+              "w-full transition-all duration-200 lg:w-auto",
+              isDragOver &&
+                !disabled &&
+                "scale-105 border-2 border-dashed border-primary shadow-lg",
+            )}
+            size="sm"
+            type="button"
+            disabled={disabled || isUploading}
+            onClick={handleButtonClick}
+            title="Upload, paste, or drag & drop files (images or PDF)"
+          >
+            {isUploading ? (
+              <>
+                <Loader2 className="size-3 animate-spin" />
+                <span>Loading...</span>
+              </>
+            ) : isDragOver ? (
+              <>
+                <Upload className="size-3" />
+                <span>Drop file</span>
+              </>
+            ) : (
+              <>
+                <FileUp className="size-3" />
+                <span>{label}</span>
+              </>
+            )}
+          </Button>
+        </div>
+      </>
+    );
+  },
+);
+
+ImageUploadArea.displayName = "ImageUploadArea";

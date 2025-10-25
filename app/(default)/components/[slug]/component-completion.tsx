@@ -22,7 +22,7 @@ import {
   MoreHorizontal,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useCopyToClipboard } from "usehooks-ts";
 
 import { getSubscription } from "@/app/supabase-server";
@@ -139,8 +139,14 @@ export default function ComponentCompletion({
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [shareLink, setShareLink] = useState("");
 
-  const [image, setImage] = useState<File | null>(null);
+  const [uploadFiles, setUploadFiles] = useState<File[]>([]);
+  const uploadFilesRef = useRef<File[]>([]);
   const [defaultImage, setDefaultImage] = useState<string | null>(null);
+  const [defaultFiles, setDefaultFiles] = useState<string[]>([]);
+
+  useEffect(() => {
+    uploadFilesRef.current = uploadFiles;
+  }, [uploadFiles]);
 
   const [remixOriginalChat, setRemixOriginalChat] =
     useState<Tables<"chats"> | null>(null);
@@ -190,6 +196,17 @@ export default function ComponentCompletion({
         complete(userMsg?.content || "");
         setInput(userMsg?.content || "");
         setDefaultImage(userMsg?.prompt_image || null);
+
+        const filesFromMsg = userMsg?.files
+          ? Array.isArray(userMsg.files)
+            ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              userMsg.files.map((f: any) => f?.url)
+            : []
+          : userMsg?.prompt_image
+            ? [userMsg.prompt_image]
+            : [];
+        setDefaultFiles(filesFromMsg);
+
         setIsLoading(true);
         return;
       }
@@ -245,10 +262,12 @@ export default function ComponentCompletion({
         const requestBody = JSON.parse((options?.body as string) || "{}");
         const promptValue = requestBody.prompt || input;
 
+        const currentFiles = uploadFilesRef.current;
+
         const formData = new FormData();
-        if (image) {
-          formData.append("image", image);
-        }
+        currentFiles.forEach((file) => {
+          formData.append("files", file);
+        });
         formData.append("id", chatId);
         formData.append("selectedVersion", String(selectedVersion));
         formData.append("prompt", promptValue);
@@ -419,69 +438,76 @@ export default function ComponentCompletion({
         }
       },
       onFinish: async () => {
-        setIsSubmitting(false);
-        await refreshChatData();
-        const refreshedLastAssistantMessage =
-          await fetchLastAssistantMessageByChatId(chatId);
+        try {
+          setIsSubmitting(false);
+          await refreshChatData();
+          const refreshedLastAssistantMessage =
+            await fetchLastAssistantMessageByChatId(chatId);
 
-        if (refreshedLastAssistantMessage) {
-          handleVersionSelect(refreshedLastAssistantMessage.version);
+          if (refreshedLastAssistantMessage) {
+            handleVersionSelect(refreshedLastAssistantMessage.version);
 
-          // Check if we have a special marker for finish reason
-          const content = refreshedLastAssistantMessage.content || "";
-          if (content.includes("<!-- FINISH_REASON: length -->")) {
-            setIsLengthError(true);
-            toast({
-              variant: "default",
-              title: "Continue your work",
-              description: `The AI reached its token limit. No worries, you can continue by clicking the "Continue your work" button and iterate again.`,
-              duration: 6000,
-            });
+            // Check if we have a special marker for finish reason
+            const content = refreshedLastAssistantMessage.content || "";
+            if (content.includes("<!-- FINISH_REASON: length -->")) {
+              setIsLengthError(true);
+              toast({
+                variant: "default",
+                title: "Continue your work",
+                description: `The AI reached its token limit. No worries, you can continue by clicking the "Continue your work" button and iterate again.`,
+                duration: 6000,
+              });
 
-            // Remove the marker from the content
-            const cleanedContent = content.replace(
-              "\n\n<!-- FINISH_REASON: length -->",
-              "",
+              // Remove the marker from the content
+              const cleanedContent = content.replace(
+                "\n\n<!-- FINISH_REASON: length -->",
+                "",
+              );
+              setCompletion(cleanedContent);
+            } else if (content.includes("<!-- FINISH_REASON: error -->")) {
+              setIsLengthError(true);
+              toast({
+                variant: "destructive",
+                title: "Something went wrong",
+                description: "An error occurred during generation",
+                duration: 4000,
+              });
+
+              // Remove the marker from the content
+              const cleanedContent = content.replace(
+                "\n\n<!-- FINISH_REASON: error -->",
+                "",
+              );
+              setCompletion(cleanedContent);
+            } else {
+              setIsLengthError(false);
+            }
+          } else {
+            // Handle case where no assistant message was generated
+            console.error(
+              "No assistant message generated - AI generation may have failed",
             );
-            setCompletion(cleanedContent);
-          } else if (content.includes("<!-- FINISH_REASON: error -->")) {
             setIsLengthError(true);
             toast({
               variant: "destructive",
-              title: "Something went wrong",
-              description: "An error occurred during generation",
-              duration: 4000,
+              title: "Generation failed",
+              description:
+                "The AI failed to generate content. This may be due to prompt complexity. Please try again or simplify your request.",
+              duration: 6000,
             });
-
-            // Remove the marker from the content
-            const cleanedContent = content.replace(
-              "\n\n<!-- FINISH_REASON: error -->",
-              "",
-            );
-            setCompletion(cleanedContent);
-          } else {
-            setIsLengthError(false);
           }
-        } else {
-          // Handle case where no assistant message was generated
-          console.error(
-            "No assistant message generated - AI generation may have failed",
-          );
-          setIsLengthError(true);
-          toast({
-            variant: "destructive",
-            title: "Generation failed",
-            description:
-              "The AI failed to generate content. This may be due to prompt complexity. Please try again or simplify your request.",
-            duration: 6000,
-          });
-        }
 
-        setCanvas(true);
-        setInput("");
-        setImage(null);
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        setIsLoading(false);
+          setCanvas(true);
+          setInput("");
+          await new Promise((resolve) => setTimeout(resolve, 500));
+          setIsLoading(false);
+          setUploadFiles([]);
+        } catch (error) {
+          console.error("Error in onFinish:", error);
+          setIsLoading(false);
+          setIsSubmitting(false);
+          setCanvas(true);
+        }
       },
     });
 
@@ -809,9 +835,10 @@ export default function ComponentCompletion({
     setWebcontainerReady,
     forceBuild,
     setForceBuild,
-    image,
-    setImage,
+    files: uploadFiles,
+    setFiles: setUploadFiles,
     defaultImage,
+    defaultFiles,
     loadingState,
     setLoadingState,
     fetchedChat,
