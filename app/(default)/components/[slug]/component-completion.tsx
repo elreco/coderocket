@@ -46,6 +46,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useSidebar } from "@/components/ui/sidebar";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Tooltip,
@@ -105,6 +106,7 @@ export default function ComponentCompletion({
   const [, copy] = useCopyToClipboard();
   const { toast } = useToast();
   const router = useRouter();
+  const { setOpen: setSidebarOpen } = useSidebar();
   const [selectedVersion, setSelectedVersion] = useState<number | undefined>(
     undefined,
   );
@@ -147,6 +149,11 @@ export default function ComponentCompletion({
   useEffect(() => {
     uploadFilesRef.current = uploadFiles;
   }, [uploadFiles]);
+
+  useEffect(() => {
+    setSidebarOpen(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const [remixOriginalChat, setRemixOriginalChat] =
     useState<Tables<"chats"> | null>(null);
