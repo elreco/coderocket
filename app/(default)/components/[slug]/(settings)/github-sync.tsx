@@ -12,7 +12,6 @@ import {
 import { useState, useEffect } from "react";
 
 import { getSubscription } from "@/app/supabase-server";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -32,10 +31,6 @@ type Subscription = Database["public"]["Tables"]["subscriptions"]["Row"] & {
     products: Database["public"]["Tables"]["products"]["Row"];
   };
 };
-
-interface PageHeaderProps {
-  badges?: Array<{ label: string; variant?: "outline" | "default" }>;
-}
 
 interface AlertBoxProps {
   icon: LucideIcon;
@@ -86,20 +81,11 @@ const COLORS = {
   },
 };
 
-function PageHeader({
-  badges = [{ label: "Beta", variant: "outline" }],
-}: PageHeaderProps) {
+function PageHeader() {
   return (
     <>
       <div className="flex items-center justify-between">
         <h3 className="text-base font-semibold">Modify Code on GitHub</h3>
-        <div className="flex items-center gap-2">
-          {badges.map((badge, index) => (
-            <Badge key={index} variant={badge.variant}>
-              {badge.label}
-            </Badge>
-          ))}
-        </div>
       </div>
       <p className="text-sm text-muted-foreground">
         Synchronize your component code with GitHub for local development.{" "}
@@ -369,9 +355,7 @@ export default function GitHubSync({ closeSheet }: { closeSheet: () => void }) {
   if (!isPremium) {
     return (
       <div className="space-y-4">
-        <PageHeader
-          badges={[{ label: "Beta", variant: "outline" }, { label: "New" }]}
-        />
+        <PageHeader />
         <AlertBox
           icon={AlertCircle}
           title="Premium feature required"

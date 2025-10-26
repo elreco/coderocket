@@ -14,8 +14,6 @@ import { createClient } from "@/utils/supabase/client";
 
 import { changeVisibilityByChatId } from "../actions";
 
-import GitHubSync from "./github-sync";
-
 export default function SettingsContent() {
   const { isVisible, setVisible, chatId } = useComponentContext();
   const [isPremium, setIsPremium] = useState(false);
@@ -187,10 +185,6 @@ export default function SettingsContent() {
             </TooltipProvider>
           </div>
         </div>
-      </div>
-
-      <div>
-        <GitHubSync closeSheet={() => {}} />
       </div>
     </div>
   );

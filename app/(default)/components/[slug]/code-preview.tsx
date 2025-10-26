@@ -253,7 +253,7 @@ export default function CodePreview() {
                           variant="ghost"
                           size="icon"
                           className="size-8"
-                          onClick={() => setSidebarTab("settings")}
+                          onClick={() => setSidebarTab("github")}
                         >
                           <Pencil className="size-4" />
                         </Button>

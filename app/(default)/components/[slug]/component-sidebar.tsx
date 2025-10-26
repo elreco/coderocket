@@ -9,6 +9,7 @@ import {
   CheckCircle,
   Loader,
   Settings,
+  Github,
 } from "lucide-react";
 import { useEffect, useState, useRef, useCallback } from "react";
 
@@ -54,6 +55,7 @@ import { validateFile } from "@/utils/file-helper";
 import { createClient } from "@/utils/supabase/client";
 
 import ComponentTheme from "./(settings)/component-theme";
+import GithubSync from "./(settings)/github-sync";
 import SettingsContent from "./(settings)/settings-content";
 import { improvePromptByChatId } from "./actions";
 import { ChunkReader } from "./chunk-reader";
@@ -588,12 +590,15 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
         }}
         className="w-full xl:hidden"
       >
-        <TabsList className="grid w-full grid-cols-3 rounded-none">
+        <TabsList className="grid w-full grid-cols-4 rounded-none">
           <TabsTrigger value="chat" disabled={isLoading}>
             <MessageSquare className="size-4" />
           </TabsTrigger>
           <TabsTrigger value="history" disabled={isLoading}>
             <BookOpen className="size-4" />
+          </TabsTrigger>
+          <TabsTrigger value="github" disabled={isLoading}>
+            <Github className="size-4" />
           </TabsTrigger>
           <TabsTrigger value="settings" disabled={isLoading}>
             <Settings className="size-4" />
@@ -612,6 +617,12 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
           <div className="flex h-12 items-center gap-2 bg-background px-4 py-1.5">
             <BookOpen className="size-4" />
             <h3 className="text-base font-medium">History</h3>
+          </div>
+        )}
+        {activeTab === "github" && (
+          <div className="flex h-12 items-center gap-2 bg-background px-4 py-1.5">
+            <Github className="size-4" />
+            <h3 className="text-base font-medium">GitHub Sync</h3>
           </div>
         )}
         {activeTab === "settings" && (
@@ -713,6 +724,11 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
                       </Tooltip>
                     </TooltipProvider>
                   ))}
+            </div>
+          )}
+          {!isLoading && activeTab === "github" && (
+            <div className="p-4">
+              <GithubSync closeSheet={() => {}} />
             </div>
           )}
           {!isLoading && activeTab === "settings" && <SettingsContent />}
@@ -1140,6 +1156,18 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
           disabled={isLoading}
         >
           <BookOpen className="size-5" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className={cn(
+            "h-10 w-full rounded-lg",
+            activeTab === "github" && "bg-secondary text-primary",
+          )}
+          onClick={() => !isLoading && handleTabChange("github")}
+          disabled={isLoading}
+        >
+          <Github className="size-5" />
         </Button>
         <Button
           variant="ghost"
