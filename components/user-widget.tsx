@@ -33,10 +33,10 @@ export function UserWidget({
         </AvatarFallback>
       </Avatar>
       <div className="flex flex-col justify-center">
-        <p className="text-base font-semibold transition-colors duration-300 group-hover:text-secondary">
+        <p className="text-sm font-semibold transition-colors duration-300 group-hover:text-primary">
           {userFullName || "Anonymous user"}
         </p>
-        <p className="whitespace-nowrap text-xs font-medium transition-colors duration-300 group-hover:text-secondary">
+        <p className="whitespace-nowrap text-xs font-medium transition-colors duration-300 group-hover:text-primary/80">
           {getRelativeDate(createdAt)}
         </p>
       </div>
@@ -47,7 +47,7 @@ export function UserWidget({
     return (
       <div
         onClick={onClick}
-        className="group flex w-full cursor-pointer items-center justify-start rounded-md p-2 transition-all duration-300 hover:bg-foreground/50 hover:backdrop-blur-sm"
+        className="group flex w-full cursor-pointer items-center justify-start rounded-md p-2 transition-all duration-300 hover:bg-primary/10"
       >
         {content}
       </div>
@@ -58,7 +58,7 @@ export function UserWidget({
     <Link
       href={`/users/${id}`}
       onClick={onClick}
-      className="group flex w-full cursor-pointer items-center justify-start rounded-md p-2 transition-all duration-300 hover:bg-foreground/50 hover:backdrop-blur-sm"
+      className="group flex w-full cursor-pointer items-center justify-start rounded-md p-2 transition-all duration-300 hover:bg-primary/10"
     >
       {content}
     </Link>

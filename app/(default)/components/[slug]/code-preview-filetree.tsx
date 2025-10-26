@@ -1,16 +1,6 @@
-import { ChevronDown, Folder, Files, Loader } from "lucide-react";
+import { ChevronDown, ChevronRight, Folder, Loader } from "lucide-react";
 import * as React from "react";
 
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { useComponentContext } from "@/context/component-context";
 import { cn } from "@/lib/utils";
 import { getFileConfig } from "@/utils/file-extensions";
@@ -32,6 +22,9 @@ interface FolderContentProps {
   selectedVersion: number;
   handleVersionSelect: (version: number, tabName?: string) => void;
   selectedFramework?: string;
+  depth?: number;
+  activeTab: string;
+  onFileSelect?: () => void;
 }
 
 const FolderContent = ({
@@ -41,8 +34,14 @@ const FolderContent = ({
   selectedVersion,
   handleVersionSelect,
   selectedFramework,
+  depth = 0,
+  activeTab,
+  onFileSelect,
 }: FolderContentProps) => {
-  // Mémoriser les fonctions de tri
+  const [openFolders, setOpenFolders] = React.useState<Record<string, boolean>>(
+    {},
+  );
+
   const sortFiles = React.useCallback((a: File, b: File) => {
     return (a.name || "").localeCompare(b.name || "");
   }, []);
@@ -54,7 +53,6 @@ const FolderContent = ({
     [],
   );
 
-  // Mémoriser les listes triées
   const sortedFiles = React.useMemo(() => {
     return [...folder.files].sort(sortFiles);
   }, [folder.files, sortFiles]);
@@ -63,29 +61,47 @@ const FolderContent = ({
     return Object.entries(folder.subFolders).sort(sortFolders);
   }, [folder.subFolders, sortFolders]);
 
-  return (
-    <>
-      {/* Afficher d'abord les dossiers triés */}
-      {sortedFolders.map(([subFolderName, subFolder]) => (
-        <DropdownMenuSub key={`${path}/${subFolderName}`}>
-          <DropdownMenuSubTrigger className="flex cursor-pointer items-center gap-2">
-            <Folder className="size-4 text-muted-foreground" />
-            {subFolderName}
-          </DropdownMenuSubTrigger>
-          <DropdownMenuSubContent>
-            <FolderContent
-              folder={subFolder}
-              path={path ? `${path}/${subFolderName}` : subFolderName}
-              isLoading={isLoading}
-              selectedVersion={selectedVersion}
-              handleVersionSelect={handleVersionSelect}
-              selectedFramework={selectedFramework}
-            />
-          </DropdownMenuSubContent>
-        </DropdownMenuSub>
-      ))}
+  const toggleFolder = (folderName: string) => {
+    setOpenFolders((prev) => ({ ...prev, [folderName]: !prev[folderName] }));
+  };
 
-      {/* Ensuite afficher les fichiers triés */}
+  return (
+    <div className="w-full">
+      {sortedFolders.map(([subFolderName, subFolder]) => {
+        const isOpen = openFolders[subFolderName] ?? true;
+        const fullPath = path ? `${path}/${subFolderName}` : subFolderName;
+        return (
+          <div key={fullPath}>
+            <button
+              onClick={() => toggleFolder(subFolderName)}
+              className="flex w-full items-center gap-1.5 rounded px-2 py-1 text-sm hover:bg-accent"
+              style={{ paddingLeft: `${depth * 12 + 8}px` }}
+            >
+              {isOpen ? (
+                <ChevronDown className="size-3.5 shrink-0" />
+              ) : (
+                <ChevronRight className="size-3.5 shrink-0" />
+              )}
+              <Folder className="size-4 shrink-0 text-muted-foreground" />
+              <span className="truncate">{subFolderName}</span>
+            </button>
+            {isOpen && (
+              <FolderContent
+                folder={subFolder}
+                path={fullPath}
+                isLoading={isLoading}
+                selectedVersion={selectedVersion}
+                handleVersionSelect={handleVersionSelect}
+                selectedFramework={selectedFramework}
+                depth={depth + 1}
+                activeTab={activeTab}
+                onFileSelect={onFileSelect}
+              />
+            )}
+          </div>
+        );
+      })}
+
       {sortedFiles.map((file) => {
         const fileConfig = getFileConfig(
           file.name || "untitled.html",
@@ -93,19 +109,29 @@ const FolderContent = ({
         );
         const FileIcon = fileConfig.icon;
         const fullPath = path ? `${path}/${file.name}` : file.name || undefined;
+        const isActive = activeTab === fullPath;
         return (
-          <DropdownMenuItem
+          <button
             key={fullPath}
-            onClick={() => handleVersionSelect(selectedVersion, fullPath)}
+            onClick={() => {
+              handleVersionSelect(selectedVersion, fullPath);
+              onFileSelect?.();
+            }}
             disabled={isLoading}
-            className="flex cursor-pointer items-center gap-2"
+            className={cn(
+              "flex w-full items-center gap-1.5 rounded px-2 py-1 text-sm disabled:cursor-not-allowed disabled:opacity-50",
+              isActive
+                ? "bg-accent text-accent-foreground"
+                : "hover:bg-accent/50",
+            )}
+            style={{ paddingLeft: `${depth * 12 + 22}px` }}
           >
-            <FileIcon className={cn("size-4", fileConfig.color)} />
-            {file.name}
-          </DropdownMenuItem>
+            <FileIcon className={cn("size-4 shrink-0", fileConfig.color)} />
+            <span className="truncate">{file.name}</span>
+          </button>
         );
       })}
-    </>
+    </div>
   );
 };
 
@@ -147,7 +173,11 @@ const organizeFilesByFolder = (files: File[]): { root: Folder } => {
   return fileTree;
 };
 
-export function CodePreviewFileTree() {
+export function CodePreviewFileTree({
+  onFileSelect,
+}: {
+  onFileSelect?: () => void;
+}) {
   const {
     isLoading,
     selectedVersion,
@@ -160,38 +190,27 @@ export function CodePreviewFileTree() {
     return organizeFilesByFolder(artifactFiles);
   }, [artifactFiles]);
 
+  if (artifactFiles.length === 0) {
+    return (
+      <div className="flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground">
+        <Loader className="size-4 animate-spin" />
+        <span>Loading files...</span>
+      </div>
+    );
+  }
+
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="outline"
-          disabled={artifactFiles.length === 0}
-          className="flex cursor-pointer items-center gap-2"
-        >
-          {artifactFiles.length === 0 ? (
-            <>
-              <Loader className="size-4 animate-spin" />
-              <span>Loading</span>
-            </>
-          ) : (
-            <>
-              <Files className="size-4" />
-              {activeTab}
-              <ChevronDown className="size-4" />
-            </>
-          )}
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent>
-        <FolderContent
-          folder={organizedFiles.root}
-          path=""
-          isLoading={isLoading}
-          selectedVersion={selectedVersion ?? 0}
-          handleVersionSelect={handleVersionSelect}
-          selectedFramework={selectedFramework}
-        />
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <div className="w-full overflow-auto py-2">
+      <FolderContent
+        folder={organizedFiles.root}
+        path=""
+        isLoading={isLoading}
+        selectedVersion={selectedVersion ?? 0}
+        handleVersionSelect={handleVersionSelect}
+        selectedFramework={selectedFramework}
+        activeTab={activeTab}
+        onFileSelect={onFileSelect}
+      />
+    </div>
   );
 }
