@@ -633,85 +633,33 @@ const validateRequest = async (
       const cloneResult = await cloneWebsite(chat.clone_url);
 
       if (cloneResult.success && cloneResult.data) {
-        // Build balanced prompt with essential information for accurate cloning
         const data = cloneResult.data;
 
-        // Organize data by importance for better cloning accuracy
-        const structure = data.structure || {};
-        const htmlStructure = data.htmlStructure || {};
-
-        // Enhanced data extraction for better cloning accuracy
-        const colors = structure.colors || [];
-        const fonts = structure.fonts || [];
-        const cssVariables = Object.entries(structure.cssVariables || {}).slice(
-          0,
-          15,
-        );
-
-        // Layout and structure information
-        const sections = structure.sections || [];
-        const menu = structure.menu || [];
-        const buttons = structure.buttons?.slice(0, 8) || [];
-
-        // Media resources (more comprehensive)
-        const heroImages = data.heroImages?.slice(0, 8) || [];
-        const logoImages = data.logoImages || [];
-        const visibleImages = data.visibleImages?.slice(0, 12) || [];
-
-        // Rich HTML structure data (with safe access)
-        const htmlData = htmlStructure as Record<string, unknown>;
-        const significantElements = Array.isArray(htmlData?.significantElements)
-          ? htmlData.significantElements.slice(0, 6)
-          : [];
-        const semanticInfo = Object.entries(
-          htmlData?.semanticElements || {},
-        ).slice(0, 5);
-        const mainContentSample =
-          typeof htmlData?.mainContentHtml === "string"
-            ? htmlData.mainContentHtml.substring(0, 2000)
-            : "";
-
-        // Create comprehensive, accurate prompt using rich scraped data
         enhancedPrompt = `Clone this website: ${chat.clone_url}
 
-## LAYOUT STRUCTURE
-Layout Type: ${structure.layoutDescription || "Standard layout"}
-Components: ${structure.layout?.header ? "Header" : ""} ${structure.layout?.sidebar ? "Sidebar" : ""} ${structure.layout?.footer ? "Footer" : ""}
-Main Layout: ${structure.layout?.mainContent || "standard"} (${(htmlData?.domStats as Record<string, unknown>)?.totalElements || 0} total elements)
+## WEBSITE INFORMATION
+Title: ${data.title}
+${data.description ? `Description: ${data.description}` : ""}
 
-## VISUAL DESIGN SYSTEM
-Colors: ${colors.join(", ")}
-Typography: ${fonts.join(", ")}
-${cssVariables.length > 0 ? `CSS Variables: ${cssVariables.map(([k, v]) => `${k}: ${v}`).join(", ")}` : ""}
+## WEBSITE CONTENT (LLM-Ready Markdown from Firecrawl)
 
-## CONTENT STRUCTURE
-${sections.map((s) => `${s.type.toUpperCase()}: ${s.title || ""} - ${s.content?.substring(0, 120) || ""}`).join("\n")}
+${data.markdown ? data.markdown.substring(0, 15000) : ""}
 
-## NAVIGATION SYSTEM
-${menu.map((m) => `- ${m.text} → ${m.url}`).join("\n")}
+${data.markdown && data.markdown.length > 15000 ? "\n\n[Content truncated for length - full content captured in screenshot]" : ""}
 
-## COMPONENT PATTERNS
-${significantElements.map((el: Record<string, unknown>) => `${el.selector}: ${el.count} instances - ${(el.sample as string).substring(0, 200)}`).join("\n")}
+## META INFORMATION
+${Object.entries(data.metaTags || {})
+  .slice(0, 10)
+  .map(([key, value]) => `${key}: ${value}`)
+  .join("\n")}
 
-## SEMANTIC STRUCTURE
-${semanticInfo.map(([tag, info]: [string, Record<string, unknown>]) => `${tag}: ${info.count} elements`).join(", ")}
-
-## INTERACTIVE ELEMENTS
-${buttons.map((b) => `Button: "${b.text}" (${b.style || "default"})`).join("\n")}
-
-## MEDIA RESOURCES
-Hero Images: ${heroImages.map((img) => `${img.url} (${img.alt})`).join(", ")}
-Logo Images: ${logoImages.map((img) => `${img.url} (${img.alt})`).join(", ")}
-Content Images: ${visibleImages.map((img) => `${img.url}`).join(", ")}
-
-## HTML SAMPLE (Main Content)
-${mainContentSample}
-
-## DESIGN SPECIFICATIONS
-Spacing: ${structure.spacingPattern || "Standard spacing"}
-${structure.imageStyles?.length ? `Image Styling: ${structure.imageStyles.slice(0, 5).join(", ")}` : ""}
-
-CRITICAL: Recreate the exact visual hierarchy, component patterns, and responsive behavior using the above detailed specifications.`;
+CRITICAL INSTRUCTIONS:
+1. Analyze the markdown content above which represents the complete website structure
+2. Recreate the exact visual hierarchy, layout, and component patterns
+3. Use the screenshot (if provided) as visual reference for styling and spacing
+4. Maintain responsive design and interactive elements
+5. Preserve the navigation structure and content organization
+6. Match colors, typography, and overall aesthetic as closely as possible`;
 
         // Handle screenshot with proper dimension validation and resizing
         if (cloneResult.data.screenshot) {

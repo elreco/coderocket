@@ -6,10 +6,6 @@ import {
   Paintbrush,
   WandSparkles,
   RefreshCw,
-  Image as ImageIcon,
-  Palette,
-  LayoutGrid,
-  VideoIcon,
   CheckCircle,
   Loader,
   Settings,
@@ -121,6 +117,8 @@ export default function ComponentSidebar({
     screenshot?: string | null;
     videosCount: number;
     error?: string | null;
+    markdown?: string;
+    html?: string;
   }>({
     progress: 0,
     images: [],
@@ -130,6 +128,8 @@ export default function ComponentSidebar({
     screenshot: null,
     videosCount: 0,
     error: null,
+    markdown: undefined,
+    html: undefined,
   });
 
   useEffect(() => {
@@ -422,56 +422,28 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
       const result = await cloneWebsite(url);
 
       if (result.success && result.data) {
-        // Process real data
-        const images = [];
+        console.log("Clone data received:", {
+          hasScreenshot: !!result.data.screenshot,
+          screenshotType: typeof result.data.screenshot,
+          screenshotLength: result.data.screenshot?.length,
+          hasMarkdown: !!result.data.markdown,
+          hasHtml: !!result.data.html,
+        });
 
-        // Add hero images first if available
-        if (result.data.heroImages && result.data.heroImages.length > 0) {
-          for (const img of result.data.heroImages) {
-            images.push({
-              url: img.url,
-              alt: img.alt || "Hero image",
-            });
-          }
-        }
-
-        // Add visible images
-        if (result.data.visibleImages && result.data.visibleImages.length > 0) {
-          for (const img of result.data.visibleImages) {
-            if (!images.some((existing) => existing.url === img.url)) {
-              images.push({
-                url: img.url,
-                alt: img.alt || "Content image",
-              });
-            }
-          }
-        }
-
-        // Add logo images
-        if (result.data.logoImages && result.data.logoImages.length > 0) {
-          for (const img of result.data.logoImages) {
-            if (!images.some((existing) => existing.url === img.url)) {
-              images.push({
-                url: img.url,
-                alt: img.alt || "Logo image",
-              });
-            }
-          }
-        }
-
-        // Set real data
         setScrapingStatus({
           progress: 100,
-          images: images,
-          colors: result.data.structure.colors || [],
-          fonts: result.data.structure.fonts || [],
+          images: [],
+          colors: [],
+          fonts: [],
           structure: {
-            sections: result.data.structure.sections?.length || 0,
-            imageCount: result.data.imageCount || 0,
+            sections: 0,
+            imageCount: 0,
           },
           screenshot: result.data.screenshot || null,
-          videosCount: result.data.videos?.length || 0,
+          videosCount: 0,
           error: null,
+          markdown: result.data.markdown,
+          html: result.data.html,
         });
 
         return true;
@@ -804,7 +776,7 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
                       </p>
                     ) : (
                       <p className="font-medium text-primary">
-                        Analyzing website {fetchedChat.clone_url}
+                        Scraping {fetchedChat.clone_url}
                       </p>
                     )}
                   </div>
@@ -839,93 +811,69 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
 
                   {scrapingStatus.screenshot && !scrapingStatus.error && (
                     <div className="mt-3 overflow-hidden">
-                      <p className="mb-1 text-xs font-semibold text-foreground">
-                        Page Screenshot:
+                      <p className="mb-2 text-xs font-semibold text-foreground">
+                        Visual Reference:
                       </p>
-                      <div className="max-h-[300px] overflow-y-auto">
+                      <div className="max-h-[300px] overflow-y-auto rounded-lg border border-border">
                         <img
-                          src={`data:image/jpeg;base64,${scrapingStatus.screenshot}`}
+                          src={
+                            scrapingStatus.screenshot.startsWith("http")
+                              ? scrapingStatus.screenshot
+                              : `data:image/jpeg;base64,${scrapingStatus.screenshot}`
+                          }
                           alt="Website screenshot"
-                          className="w-full rounded-lg  border border-border object-cover"
+                          className="w-full object-cover"
+                          onError={() => {
+                            console.error("Screenshot load error");
+                          }}
                         />
                       </div>
                     </div>
                   )}
 
                   {!scrapingStatus.error && (
-                    <div className="flex flex-col gap-2 pt-1">
-                      <div className="flex items-center gap-2">
-                        <ImageIcon className="size-4 text-primary" />
-                        <span className="text-xs text-foreground">
-                          Images found: {scrapingStatus.images.length}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        <Palette className="size-4 text-primary" />
-                        <span className="text-xs text-foreground">
-                          Colors detected: {scrapingStatus.colors.length}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        <LayoutGrid className="size-4 text-primary" />
-                        <span className="text-xs text-foreground">
-                          Sections analyzed: {scrapingStatus.structure.sections}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        <VideoIcon className="size-4 text-primary" />
-                        <span className="text-xs text-foreground">
-                          Videos found: {scrapingStatus.videosCount}
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                  {scrapingStatus.images.length > 0 && (
-                    <div className="mt-2">
-                      <p className="mb-1 text-xs font-semibold text-foreground">
-                        Images discovered:
-                      </p>
-                      <div className="flex flex-wrap gap-2 overflow-hidden">
-                        {scrapingStatus.images.slice(0, 6).map((img, index) => (
-                          <div
-                            key={index}
-                            className="relative size-14 overflow-hidden rounded border border-gray-200"
-                          >
-                            <img
-                              src={img.url}
-                              alt={img.alt}
-                              className="size-full object-cover"
-                            />
+                    <div className="flex flex-col gap-3 pt-2">
+                      <div className="rounded-lg border border-primary/20 bg-primary/5 p-3">
+                        <div className="mb-2 flex items-center gap-2">
+                          <div className="flex size-6 items-center justify-center rounded-full bg-primary/10">
+                            <svg
+                              className="size-3.5 text-primary"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M5 13l4 4L19 7"
+                              />
+                            </svg>
                           </div>
-                        ))}
-                        {scrapingStatus.images.length > 6 && (
-                          <div className="flex size-14 items-center justify-center rounded border border-gray-200 bg-gray-50">
-                            <span className="text-xs text-background">
-                              +{scrapingStatus.images.length - 6} more
-                            </span>
+                          <span className="text-sm font-medium text-foreground">
+                            Content Ready
+                          </span>
+                        </div>
+                        <div className="flex flex-col gap-1.5 pl-8">
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <div className="size-1 rounded-full bg-primary/60" />
+                            Full content captured
                           </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {scrapingStatus.colors.length > 0 && (
-                    <div className="mt-2">
-                      <p className="mb-1 text-xs font-semibold text-foreground">
-                        Colors palette:
-                      </p>
-                      <div className="flex flex-wrap gap-2">
-                        {scrapingStatus.colors.map((color, index) => (
-                          <div
-                            key={index}
-                            className="size-6 rounded-full border border-gray-200"
-                            style={{ backgroundColor: color }}
-                            title={color}
-                          />
-                        ))}
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <div className="size-1 rounded-full bg-primary/60" />
+                            LLM-ready markdown
+                          </div>
+                          {scrapingStatus.screenshot && (
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                              <div className="size-1 rounded-full bg-primary/60" />
+                              Screenshot captured
+                            </div>
+                          )}
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <div className="size-1 rounded-full bg-primary/60" />
+                            Ready for generation
+                          </div>
+                        </div>
                       </div>
                     </div>
                   )}
