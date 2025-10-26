@@ -679,7 +679,7 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
                               handleFileClick(m.version)
                             }
                             className={cn(
-                              "rounded-lg bg-background p-4 shadow-sm",
+                              "rounded-lg border border-border bg-background p-4 shadow-sm",
                               m.version === selectedVersion
                                 ? "cursor-default hover:bg-background"
                                 : isLoading

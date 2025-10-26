@@ -229,7 +229,7 @@ export default function CodePreview() {
       >
         <div className="relative flex size-full flex-col rounded-none border-none">
           <div className="relative flex flex-1 flex-col items-start justify-start">
-            <div className="flex w-full items-center justify-between p-2">
+            <div className="flex w-full items-center justify-between border-b border-border p-2">
               <CodePreviewFileTree />
               <div className="flex items-center gap-1">
                 <Badge className="hover:bg-primary">
