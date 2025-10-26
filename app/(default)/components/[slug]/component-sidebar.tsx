@@ -756,7 +756,6 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
                 createdAt={new Date().toISOString()}
                 userAvatarUrl={user?.avatar_url}
                 userFullName={user?.full_name}
-                disableLink
               />
               <Markdown>{input}</Markdown>
               <PromptFiles fileUrls={defaultFiles} storageUrl={storageUrl} />
