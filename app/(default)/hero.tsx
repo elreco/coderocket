@@ -645,17 +645,17 @@ export default function Hero() {
             setGenerationMode(value as "scratch" | "clone");
           }}
         >
-          <TabsList className="mb-3 w-full">
+          <TabsList className="mb-3 w-full bg-secondary">
             <TabsTrigger
               value="scratch"
-              className="w-1/2 p-2"
+              className="w-1/2 bg-secondary p-2"
               disabled={loading} // Disable tab when loading
             >
               Generate from scratch
             </TabsTrigger>
             <TabsTrigger
               value="clone"
-              className="w-1/2 p-2"
+              className="w-1/2 bg-secondary p-2"
               disabled={selectedFramework === Framework.HTML || loading} // Also disable when loading
             >
               Generate using a URL
@@ -695,7 +695,7 @@ export default function Hero() {
                     }}
                     subscription={subscription}
                     isLoadingSubscription={isLoadingSubscription}
-                    className="max-h-[400px] min-h-[76px] bg-secondary pl-1 focus-visible:ring-0 focus-visible:ring-offset-0"
+                    className="max-h-[400px] min-h-[76px] border-none bg-secondary pl-1 focus-visible:ring-0 focus-visible:ring-offset-0"
                   />
                 </div>
               </div>
@@ -726,7 +726,7 @@ export default function Hero() {
                       placeholder="Enter website URL to clone (e.g., https://example.com)"
                       value={websiteUrl}
                       onChange={(e) => setWebsiteUrl(e.target.value)}
-                      className="bg-secondary pl-1 focus-visible:ring-0 focus-visible:ring-offset-0"
+                      className="border-none bg-secondary pl-1 focus-visible:ring-0 focus-visible:ring-offset-0"
                     />
                   </div>
                 </div>

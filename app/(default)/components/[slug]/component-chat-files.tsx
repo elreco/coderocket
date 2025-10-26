@@ -401,6 +401,7 @@ ${extractedFiles
         }
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSelectedVersion, messages.length, message.version]);
 
   return (
@@ -411,12 +412,13 @@ ${extractedFiles
     >
       <div className="flex w-full gap-2">
         {message.role === "user" ? (
-          <div className="flex w-full flex-col gap-2 rounded-lg border border-border bg-background p-3">
+          <div className="flex w-full flex-col gap-1 rounded-lg border border-primary/20 bg-primary/5 p-2 transition-all">
             <UserWidget
               id={message.chats.user.id}
               createdAt={message.created_at}
               userAvatarUrl={message.chats.user.avatar_url}
               userFullName={message.chats.user.full_name}
+              disableLink
             />
             <Markdown>{message.content}</Markdown>
             <PromptFiles

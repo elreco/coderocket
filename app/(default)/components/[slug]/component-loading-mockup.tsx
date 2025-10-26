@@ -19,7 +19,7 @@ export function ComponentLoadingMockup({ fileName }: { fileName?: string }) {
   return (
     <div className="flex size-full flex-col items-center justify-center bg-gradient-to-b from-background to-muted/20 p-8">
       <div className="w-full max-w-3xl">
-        <div className="overflow-hidden rounded-xl border border-border/50 bg-card shadow-2xl">
+        <div className="overflow-hidden rounded-lg border border-border/50 bg-card shadow-2xl">
           <div className="flex items-center gap-2 border-b border-border/50 bg-muted/30 px-4 py-3">
             <div className="size-3 rounded-full bg-red-500/80" />
             <div className="size-3 rounded-full bg-yellow-500/80" />
@@ -99,7 +99,7 @@ export function ComponentLoadingMockup({ fileName }: { fileName?: string }) {
                   <div className="h-12 animate-pulse rounded-lg bg-gradient-to-r from-primary/20 to-blue-500/20" />
 
                   <div className="flex gap-4">
-                    <div className="size-48 animate-pulse rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 shadow-lg [animation-delay:200ms]" />
+                    <div className="size-48 animate-pulse rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20 shadow-lg [animation-delay:200ms]" />
                     <div className="flex-1 space-y-3">
                       <div className="h-8 animate-pulse rounded bg-gradient-to-r from-emerald-500/20 to-cyan-500/20 [animation-delay:400ms]" />
                       <div className="h-6 w-3/4 animate-pulse rounded bg-muted/40 [animation-delay:600ms]" />

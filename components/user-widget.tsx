@@ -22,7 +22,7 @@ export function UserWidget({
 }) {
   const content = (
     <div className="flex items-center space-x-2">
-      <Avatar className="border border-primary">
+      <Avatar className="size-8 border border-primary">
         <AvatarImage src={userAvatarUrl || undefined} />
         <AvatarFallback>
           <img
@@ -47,7 +47,7 @@ export function UserWidget({
     return (
       <div
         onClick={onClick}
-        className="group flex w-full cursor-pointer items-center justify-start rounded-md p-2 transition-all duration-300 hover:bg-primary/10"
+        className="group flex w-full cursor-pointer items-center justify-start rounded-md p-1 transition-all duration-300 hover:bg-primary/10"
       >
         {content}
       </div>
@@ -58,7 +58,7 @@ export function UserWidget({
     <Link
       href={`/users/${id}`}
       onClick={onClick}
-      className="group flex w-full cursor-pointer items-center justify-start rounded-md p-2 transition-all duration-300 hover:bg-primary/10"
+      className="group flex w-full cursor-pointer items-center justify-start rounded-md p-1 transition-all duration-300 hover:bg-primary/10"
     >
       {content}
     </Link>

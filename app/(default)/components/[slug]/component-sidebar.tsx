@@ -679,17 +679,17 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
                               handleFileClick(m.version)
                             }
                             className={cn(
-                              "rounded-lg border border-border bg-background p-4 shadow-sm",
+                              "rounded-lg border border-primary/20 bg-primary/5 p-4 transition-all",
                               m.version === selectedVersion
-                                ? "cursor-default hover:bg-background"
+                                ? "cursor-default border-primary/30"
                                 : isLoading
                                   ? "cursor-not-allowed opacity-70"
-                                  : "cursor-pointer hover:bg-background/50",
+                                  : "cursor-pointer hover:border-primary/30",
                             )}
                           >
                             <div className="flex w-full items-center justify-between gap-2">
                               <div className="flex w-full items-center gap-2">
-                                <Avatar className="size-8">
+                                <Avatar className="size-8 border border-primary">
                                   <AvatarImage
                                     src={user?.avatar_url || undefined}
                                   />
@@ -702,7 +702,7 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
                                   </AvatarFallback>
                                 </Avatar>
                                 <div className="flex flex-col">
-                                  <span className="text-sm font-medium">
+                                  <span className="text-sm font-semibold">
                                     {user?.full_name}
                                   </span>
                                   <span className="text-xs text-muted-foreground">
@@ -750,12 +750,13 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
               isLoading && input ? "block" : "hidden",
             )}
           >
-            <div className="flex flex-col gap-2 rounded-lg border border-border bg-background p-5">
+            <div className="flex flex-col gap-3 rounded-lg border border-primary/20 bg-primary/5 p-2 transition-all">
               <UserWidget
                 id={user?.id}
                 createdAt={new Date().toISOString()}
                 userAvatarUrl={user?.avatar_url}
                 userFullName={user?.full_name}
+                disableLink
               />
               <Markdown>{input}</Markdown>
               <PromptFiles fileUrls={defaultFiles} storageUrl={storageUrl} />

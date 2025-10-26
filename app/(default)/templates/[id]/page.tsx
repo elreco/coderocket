@@ -191,7 +191,7 @@ export default async function MarketplaceListingPage({
           {/* Component Preview Image */}
           {listing.screenshot && (
             <Link href={`/templates/${listing.id}/demo`}>
-              <div className="group relative cursor-pointer overflow-hidden rounded-xl border-2 border-primary/20 bg-gradient-to-br from-primary/5 via-transparent to-primary/10 p-1 shadow-lg transition-all duration-300 hover:border-primary hover:shadow-xl">
+              <div className="group relative cursor-pointer overflow-hidden rounded-lg border-2 border-primary/20 bg-gradient-to-br from-primary/5 via-transparent to-primary/10 p-1 shadow-lg transition-all duration-300 hover:border-primary hover:shadow-xl">
                 {/* Decorative gradient overlay */}
                 <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-primary/10 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
 
