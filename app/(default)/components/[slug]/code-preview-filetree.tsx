@@ -25,6 +25,8 @@ interface FolderContentProps {
   depth?: number;
   activeTab: string;
   onFileSelect?: () => void;
+  openFolders: Record<string, boolean>;
+  toggleFolder: (folderPath: string) => void;
 }
 
 const FolderContent = ({
@@ -37,11 +39,9 @@ const FolderContent = ({
   depth = 0,
   activeTab,
   onFileSelect,
+  openFolders,
+  toggleFolder,
 }: FolderContentProps) => {
-  const [openFolders, setOpenFolders] = React.useState<Record<string, boolean>>(
-    {},
-  );
-
   const sortFiles = React.useCallback((a: File, b: File) => {
     return (a.name || "").localeCompare(b.name || "");
   }, []);
@@ -61,19 +61,15 @@ const FolderContent = ({
     return Object.entries(folder.subFolders).sort(sortFolders);
   }, [folder.subFolders, sortFolders]);
 
-  const toggleFolder = (folderName: string) => {
-    setOpenFolders((prev) => ({ ...prev, [folderName]: !prev[folderName] }));
-  };
-
   return (
     <div className="w-full">
       {sortedFolders.map(([subFolderName, subFolder]) => {
-        const isOpen = openFolders[subFolderName] ?? true;
         const fullPath = path ? `${path}/${subFolderName}` : subFolderName;
+        const isOpen = openFolders[fullPath] ?? true;
         return (
           <div key={fullPath}>
             <button
-              onClick={() => toggleFolder(subFolderName)}
+              onClick={() => toggleFolder(fullPath)}
               className="flex w-full items-center gap-1.5 rounded px-2 py-1 text-sm hover:bg-accent"
               style={{ paddingLeft: `${depth * 12 + 8}px` }}
             >
@@ -96,6 +92,8 @@ const FolderContent = ({
                 depth={depth + 1}
                 activeTab={activeTab}
                 onFileSelect={onFileSelect}
+                openFolders={openFolders}
+                toggleFolder={toggleFolder}
               />
             )}
           </div>
@@ -186,6 +184,18 @@ export function CodePreviewFileTree({
     handleVersionSelect,
     selectedFramework,
   } = useComponentContext();
+
+  const [openFolders, setOpenFolders] = React.useState<Record<string, boolean>>(
+    {},
+  );
+
+  const toggleFolder = React.useCallback((folderPath: string) => {
+    setOpenFolders((prev) => ({
+      ...prev,
+      [folderPath]: prev[folderPath] === undefined ? false : !prev[folderPath],
+    }));
+  }, []);
+
   const organizedFiles = React.useMemo(() => {
     return organizeFilesByFolder(artifactFiles);
   }, [artifactFiles]);
@@ -200,7 +210,7 @@ export function CodePreviewFileTree({
   }
 
   return (
-    <div className="w-full overflow-auto py-2">
+    <div className="w-full py-2">
       <FolderContent
         folder={organizedFiles.root}
         path=""
@@ -210,6 +220,8 @@ export function CodePreviewFileTree({
         selectedFramework={selectedFramework}
         activeTab={activeTab}
         onFileSelect={onFileSelect}
+        openFolders={openFolders}
+        toggleFolder={toggleFolder}
       />
     </div>
   );

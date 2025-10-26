@@ -238,7 +238,7 @@ export default function CodePreview() {
                 : "hidden -translate-x-full md:flex md:translate-x-0",
             )}
           >
-            <div className="flex items-center justify-between border-b border-border p-2 md:hidden">
+            <div className="flex shrink-0 items-center justify-between border-b border-border p-2 md:hidden">
               <span className="text-sm font-medium">Files</span>
               <Button
                 variant="ghost"
@@ -249,9 +249,11 @@ export default function CodePreview() {
                 <PanelLeftClose className="size-4" />
               </Button>
             </div>
-            <CodePreviewFileTree
-              onFileSelect={() => setIsFileTreeOpen(false)}
-            />
+            <div className="h-0 grow overflow-y-auto">
+              <CodePreviewFileTree
+                onFileSelect={() => setIsFileTreeOpen(false)}
+              />
+            </div>
           </div>
 
           {isFileTreeOpen && (

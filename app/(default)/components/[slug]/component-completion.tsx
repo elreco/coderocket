@@ -72,6 +72,7 @@ import {
   crispWebsiteId,
   getMaxMessagesPerPeriod,
 } from "@/utils/config";
+import { defaultArtifactCode } from "@/utils/default-artifact-code";
 import { getArtifactCodeByVersion } from "@/utils/supabase/artifact-helpers";
 import { createClient } from "@/utils/supabase/client";
 
@@ -219,23 +220,25 @@ export default function ComponentCompletion({
         setIsLoading(true);
         return;
       }
-      if (
-        chat?.framework !== Framework.HTML &&
-        chat.artifact_code &&
-        assistantMsg?.content
-      ) {
-        const newArtifactFiles = extractFilesFromArtifact(
-          chat.artifact_code || "",
-        );
-        setArtifactFiles(newArtifactFiles);
-        const firstFile = newArtifactFiles[0];
-        if (!firstFile) {
-          setEditorValue("");
-          setActiveTab("");
-          return;
+      if (chat?.framework !== Framework.HTML && chat.framework) {
+        const artifactCodeToUse =
+          chat.artifact_code ||
+          defaultArtifactCode[
+            chat.framework as keyof typeof defaultArtifactCode
+          ];
+
+        if (artifactCodeToUse && assistantMsg?.content) {
+          const newArtifactFiles = extractFilesFromArtifact(artifactCodeToUse);
+          setArtifactFiles(newArtifactFiles);
+          const firstFile = newArtifactFiles[0];
+          if (!firstFile) {
+            setEditorValue("");
+            setActiveTab("");
+            return;
+          }
+          setEditorValue(firstFile.content);
+          setActiveTab(firstFile.name || "");
         }
-        setEditorValue(firstFile.content);
-        setActiveTab(firstFile.name || "");
       }
       if (chat?.framework === Framework.HTML && assistantMsg?.content) {
         handleChatFiles(assistantMsg.content, true);
@@ -311,7 +314,14 @@ export default function ComponentCompletion({
         const newArtifactFiles = extractFilesFromArtifact(
           fetchedChat?.artifact_code || "",
         );
-        setArtifactFiles(newArtifactFiles);
+        // Merge new files with existing files to keep all project files
+        setArtifactFiles((prevFiles) => {
+          const fileMap = new Map(prevFiles.map((f) => [f.name, f]));
+          newArtifactFiles.forEach((file) => {
+            fileMap.set(file.name, file);
+          });
+          return Array.from(fileMap.values());
+        });
         if (error.message === "payment-required-for-image") {
           router.push("/pricing");
           toast({
@@ -533,24 +543,41 @@ export default function ComponentCompletion({
         const lastFileName = allFileNames[allFileNames.length - 1];
         if (lastFileName) {
           setCurrentGeneratingFile(lastFileName);
+          setActiveTab(lastFileName);
         }
       }
 
-      const files = extractFilesFromCompletion(completion);
-      if (files.length > 0) {
-        setArtifactFiles(files);
+      const newArtifactCode = getUpdatedArtifactCode(completion, artifactCode);
+      const newFiles = extractFilesFromArtifact(
+        newArtifactCode,
+        artifactCode,
+        completion,
+      );
+
+      if (newFiles.length > 0) {
+        setArtifactFiles((prevFiles) => {
+          const fileMap = new Map(prevFiles.map((f) => [f.name, f]));
+          newFiles.forEach((file) => {
+            fileMap.set(file.name, file);
+          });
+          return Array.from(fileMap.values());
+        });
+
+        const activeFile = newFiles.find((f) => f.name === activeTab);
+        if (activeFile) {
+          setEditorValue(activeFile.content);
+        }
       }
     } else if (!isLoading && currentGeneratingFile) {
       setCurrentGeneratingFile(null);
     }
-  }, [completion, isLoading, currentGeneratingFile]);
+  }, [completion, isLoading, currentGeneratingFile, artifactCode, activeTab]);
 
   const handleSubmitToAI = (inputData: string) => {
     if (isSubmitting) return;
     setIsSubmitting(true);
     setForceBuild(true);
     setCompletion("");
-    setArtifactFiles([]);
     setWebcontainerReady(false);
     setChatFiles([]);
     setCanvas(true);
@@ -608,7 +635,14 @@ export default function ComponentCompletion({
         const newArtifactFiles = extractFilesFromArtifact(
           selectedAssistantMessage.artifact_code,
         );
-        setArtifactFiles(newArtifactFiles);
+        // Merge new files with existing files to keep all project files
+        setArtifactFiles((prevFiles) => {
+          const fileMap = new Map(prevFiles.map((f) => [f.name, f]));
+          newArtifactFiles.forEach((file) => {
+            fileMap.set(file.name, file);
+          });
+          return Array.from(fileMap.values());
+        });
         // Handle file selection
         const files = extractFilesFromCompletion(
           selectedAssistantMessage.content,
@@ -701,7 +735,15 @@ export default function ComponentCompletion({
       artifactCode,
       _completion, // Pass current completion to detect active file
     );
-    setArtifactFiles(newArtifactFiles);
+
+    // Merge new files with existing files to keep all project files
+    setArtifactFiles((prevFiles) => {
+      const fileMap = new Map(prevFiles.map((f) => [f.name, f]));
+      newArtifactFiles.forEach((file) => {
+        fileMap.set(file.name, file);
+      });
+      return Array.from(fileMap.values());
+    });
 
     const files = extractFilesFromCompletion(_completion);
 
@@ -764,12 +806,6 @@ export default function ComponentCompletion({
       subscription.unsubscribe();
     };
   });
-
-  useEffect(() => {
-    if (isLoading) {
-      handleChatFiles(completion);
-    }
-  }, [completion]);
 
   useEffect(() => {
     Crisp.configure(crispWebsiteId);
