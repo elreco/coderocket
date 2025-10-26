@@ -106,6 +106,10 @@ const config: Config = {
           "50%": { opacity: "1" },
           "100%": { opacity: "0" },
         },
+        shimmer: {
+          "0%": { transform: "translateX(-100%)" },
+          "100%": { transform: "translateX(100%)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -114,6 +118,7 @@ const config: Config = {
         typing: "typing 1s infinite",
         "collapsible-down": "collapsible-down 0.2s ease-out",
         "collapsible-up": "collapsible-up 0.2s ease-out",
+        shimmer: "shimmer 2s infinite",
       },
       typography: {
         DEFAULT: {

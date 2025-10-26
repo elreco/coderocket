@@ -163,6 +163,9 @@ export default function ComponentCompletion({
 
   const [isRemixModalOpen, setIsRemixModalOpen] = useState(false);
   const [hasAlreadyRemixed, setHasAlreadyRemixed] = useState(false);
+  const [currentGeneratingFile, setCurrentGeneratingFile] = useState<
+    string | null
+  >(null);
 
   useEffect(() => {
     const loadInitialData = async () => {
@@ -198,7 +201,7 @@ export default function ComponentCompletion({
       }
 
       if (msgs?.length === 1) {
-        setCanvas(false);
+        setCanvas(true);
         complete(userMsg?.content || "");
         setInput(userMsg?.content || "");
         setDefaultImage(userMsg?.prompt_image || null);
@@ -503,10 +506,10 @@ export default function ComponentCompletion({
             });
           }
 
-          setCanvas(true);
           setInput("");
           await new Promise((resolve) => setTimeout(resolve, 500));
           setIsLoading(false);
+          setCanvas(true);
           setUploadFiles([]);
         } catch (error) {
           console.error("Error in onFinish:", error);
@@ -517,6 +520,31 @@ export default function ComponentCompletion({
       },
     });
 
+  useEffect(() => {
+    if (completion && isLoading) {
+      const fileNameMatch = completion.match(
+        /<coderocketFile\s+name=["']([^"']*?)["']/g,
+      );
+      if (fileNameMatch) {
+        const allFileNames = fileNameMatch.map((match) => {
+          const nameMatch = match.match(/name=["']([^"']*?)["']/);
+          return nameMatch ? nameMatch[1] : null;
+        });
+        const lastFileName = allFileNames[allFileNames.length - 1];
+        if (lastFileName) {
+          setCurrentGeneratingFile(lastFileName);
+        }
+      }
+
+      const files = extractFilesFromCompletion(completion);
+      if (files.length > 0) {
+        setArtifactFiles(files);
+      }
+    } else if (!isLoading && currentGeneratingFile) {
+      setCurrentGeneratingFile(null);
+    }
+  }, [completion, isLoading, currentGeneratingFile]);
+
   const handleSubmitToAI = (inputData: string) => {
     if (isSubmitting) return;
     setIsSubmitting(true);
@@ -525,8 +553,9 @@ export default function ComponentCompletion({
     setArtifactFiles([]);
     setWebcontainerReady(false);
     setChatFiles([]);
-    setCanvas(false);
+    setCanvas(true);
     setIsLoading(true);
+    setCurrentGeneratingFile(null);
     complete(inputData);
   };
 
@@ -851,6 +880,7 @@ export default function ComponentCompletion({
     isLengthError,
     sidebarTab,
     setSidebarTab,
+    currentGeneratingFile,
   };
 
   useEffect(() => {

@@ -66,6 +66,7 @@ interface ComponentContextType {
   isLengthError: boolean;
   sidebarTab: string;
   setSidebarTab: (tab: string) => void;
+  currentGeneratingFile: string | null;
 }
 
 export const ComponentContext = createContext<ComponentContextType | undefined>(

@@ -37,7 +37,7 @@ import { Framework } from "@/utils/config";
 import { getLanguageExtension } from "@/utils/file-extensions";
 
 import { CodePreviewFileTree } from "./code-preview-filetree";
-import ChatSkeleton from "./component-skeleton";
+import { ComponentLoadingMockup } from "./component-loading-mockup";
 
 const RenderContent = React.memo(
   ({
@@ -45,17 +45,17 @@ const RenderContent = React.memo(
     artifactFiles,
     selectedFramework,
     isLengthError,
+    currentGeneratingFile,
   }: {
     isLoading: boolean;
     artifactFiles: ChatFile[];
     selectedFramework: Framework;
     isLengthError: boolean;
+    currentGeneratingFile: string | null;
   }) => {
-    if (isLoading && artifactFiles.length === 0) {
+    if (isLoading) {
       return (
-        <div className="flex size-full items-center justify-center">
-          <ChatSkeleton />
-        </div>
+        <ComponentLoadingMockup fileName={currentGeneratingFile || undefined} />
       );
     }
     if (
@@ -79,6 +79,8 @@ const RenderContent = React.memo(
     if (prevProps.selectedFramework !== nextProps.selectedFramework)
       return false;
     if (prevProps.isLoading !== nextProps.isLoading) return false;
+    if (prevProps.currentGeneratingFile !== nextProps.currentGeneratingFile)
+      return false;
 
     const areFilesEqual = (prev: ChatFile[], next: ChatFile[]) => {
       if (prev.length !== next.length) return false;
@@ -112,6 +114,7 @@ export default function CodePreview() {
     selectedFramework,
     isLengthError,
     setSidebarTab,
+    currentGeneratingFile,
   } = useComponentContext();
   const { buildError } = useWebcontainer();
   const [, copy] = useCopyToClipboard();
@@ -208,6 +211,7 @@ export default function CodePreview() {
           artifactFiles={artifactFiles}
           selectedFramework={selectedFramework}
           isLengthError={isLengthError}
+          currentGeneratingFile={currentGeneratingFile}
         />
       </div>
       <div

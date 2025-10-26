@@ -103,7 +103,7 @@ export function ChunkReader({
                             "bg-gradient-to-l from-primary via-primary/90 to-primary/80 text-foreground",
                         )}
                         onClick={() =>
-                          version !== undefined
+                          version !== undefined && !isLoading && !file.isDelete
                             ? handleFileClick(version, file)
                             : null
                         }
