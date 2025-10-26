@@ -407,11 +407,11 @@ ${extractedFiles
     <div
       ref={messageRef}
       data-message-id={message.id}
-      className={cn("flex px-2 py-6 flex-col sm:px-4 transition-all")}
+      className={cn("flex p-3 flex-col transition-all")}
     >
       <div className="flex w-full gap-2">
         {message.role === "user" ? (
-          <div className="flex w-full flex-col gap-2 rounded-lg border border-border bg-background p-5">
+          <div className="flex w-full flex-col gap-2 rounded-lg bg-background p-3">
             <UserWidget
               id={message.chats.user.id}
               createdAt={message.created_at}

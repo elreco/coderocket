@@ -107,7 +107,7 @@ export default async function RootLayout({ children }: PropsWithChildren) {
         <SidebarProvider defaultOpen={defaultOpen} className="size-full">
           <AppSidebar defaultUser={user} />
           <main className="relative size-full">
-            <SidebarTrigger className="fixed z-50 m-2" />
+            <SidebarTrigger className="fixed z-50 size-12 rounded-none" />
             <TooltipProvider>{children}</TooltipProvider>
           </main>
         </SidebarProvider>

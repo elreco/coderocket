@@ -36,7 +36,6 @@ import { ChatFile } from "@/utils/completion-parser";
 import { Framework } from "@/utils/config";
 import { getLanguageExtension } from "@/utils/file-extensions";
 
-import ComponentSettings from "./(settings)/component-settings";
 import { CodePreviewFileTree } from "./code-preview-filetree";
 import ChatSkeleton from "./component-skeleton";
 
@@ -112,6 +111,7 @@ export default function CodePreview() {
     artifactFiles,
     selectedFramework,
     isLengthError,
+    setSidebarTab,
   } = useComponentContext();
   const { buildError } = useWebcontainer();
   const [, copy] = useCopyToClipboard();
@@ -243,20 +243,19 @@ export default function CodePreview() {
                       <TooltipContent>Copy code</TooltipContent>
                     </Tooltip>
 
-                    <ComponentSettings>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="size-8"
-                          >
-                            <Pencil className="size-4" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>Modify code</TooltipContent>
-                      </Tooltip>
-                    </ComponentSettings>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="size-8"
+                          onClick={() => setSidebarTab("settings")}
+                        >
+                          <Pencil className="size-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Modify code</TooltipContent>
+                    </Tooltip>
 
                     <Tooltip>
                       <TooltipTrigger asChild>

@@ -12,6 +12,7 @@ import {
   VideoIcon,
   CheckCircle,
   Loader,
+  Settings,
 } from "lucide-react";
 import { useEffect, useState, useRef, useCallback } from "react";
 
@@ -57,6 +58,7 @@ import { validateFile } from "@/utils/file-helper";
 import { createClient } from "@/utils/supabase/client";
 
 import ComponentTheme from "./(settings)/component-theme";
+import SettingsContent from "./(settings)/settings-content";
 import { improvePromptByChatId } from "./actions";
 import { ChunkReader } from "./chunk-reader";
 import ComponentChatFiles from "./component-chat-files";
@@ -94,7 +96,8 @@ export default function ComponentSidebar({
   const containerRef = useRef<HTMLDivElement>(null);
   const currentVersionRef = useRef<HTMLDivElement | null>(null);
   const [streamingChunks, setStreamingChunks] = useState<ContentChunk[]>([]);
-  const [activeTab, setActiveTab] = useState("chat");
+  const { sidebarTab: activeTab, setSidebarTab: setActiveTab } =
+    useComponentContext();
   const [hasImproved, setHasImproved] = useState(false);
   const [isImprovingLoading, setIsImprovingLoading] = useState(false);
   const [chatFiles, setChatFiles] = useState<ChatFile[]>([]);
@@ -600,7 +603,7 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
   return (
     <div
       className={cn(
-        "relative flex size-full flex-col overflow-hidden border-l-0 bg-secondary lg:border-l",
+        "relative flex size-full flex-col overflow-hidden border-l-0 bg-secondary xl:border-l xl:flex-row",
         className,
       )}
     >
@@ -611,525 +614,598 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
             handleTabChange(value);
           }
         }}
-        className="w-full rounded-none lg:w-auto"
+        className="w-full xl:hidden"
       >
-        <TabsList className="grid w-full grid-cols-2 rounded-none">
+        <TabsList className="grid w-full grid-cols-3 rounded-none">
           <TabsTrigger value="chat" disabled={isLoading}>
-            <MessageSquare className="block size-4 xl:hidden" />
-            <span className="hidden xl:block">Chat</span>
+            <MessageSquare className="size-4" />
           </TabsTrigger>
           <TabsTrigger value="history" disabled={isLoading}>
-            <BookOpen className="block size-4 xl:hidden" />
-            <span className="hidden xl:block">History</span>
+            <BookOpen className="size-4" />
+          </TabsTrigger>
+          <TabsTrigger value="settings" disabled={isLoading}>
+            <Settings className="size-4" />
           </TabsTrigger>
         </TabsList>
       </Tabs>
-      <div
-        ref={containerRef}
-        className="flex size-full max-h-full flex-col overflow-y-auto overflow-x-hidden scroll-smooth"
-      >
-        {isLoaderVisible && (
-          <div className="absolute inset-0 z-10 flex size-full flex-col items-start bg-secondary p-4">
-            <ComponentSidebarSkeleton />
+
+      <div className="flex flex-1 flex-col overflow-hidden bg-background">
+        {activeTab === "chat" && (
+          <div className="flex h-12 items-center gap-2 bg-background px-4 py-1.5">
+            <MessageSquare className="size-4" />
+            <h3 className="text-base font-medium">Chat</h3>
           </div>
         )}
-        {activeTab === "chat" &&
-          !isLoading &&
-          messages
-            .filter((m) => m.version === selectedVersion)
-            .map((m) => <ComponentChatFiles message={m} key={m.id} />)}
-        {!isLoading && activeTab === "history" && (
-          <div className="flex flex-col gap-4 p-4">
-            {messages
-              .filter((m) => m.role === "user")
-              .map((m) => (
-                <TooltipProvider key={m.id}>
-                  <Tooltip delayDuration={150}>
-                    <TooltipTrigger asChild>
-                      <div
-                        ref={
-                          m.version === selectedVersion
-                            ? currentVersionRef
-                            : null
-                        }
-                        onClick={() =>
-                          m.version !== selectedVersion &&
-                          handleFileClick(m.version)
-                        }
-                        className={cn(
-                          "rounded-lg border bg-background p-4 shadow-sm",
-                          m.version === selectedVersion
-                            ? "cursor-default hover:bg-background"
-                            : isLoading
-                              ? "cursor-not-allowed opacity-70"
-                              : "cursor-pointer hover:bg-secondary",
-                        )}
-                      >
-                        <div className="flex w-full items-center justify-between gap-2">
-                          <div className="flex w-full items-center gap-2">
-                            <Avatar className="size-8">
-                              <AvatarImage
-                                src={user?.avatar_url || undefined}
-                              />
-                              <AvatarFallback>
-                                <img
-                                  src={`${avatarApi}${user?.full_name}`}
-                                  alt="logo"
-                                  className="size-full"
-                                />
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="flex flex-col">
-                              <span className="text-sm font-medium">
-                                {user?.full_name}
-                              </span>
-                              <span className="text-xs text-muted-foreground">
-                                Version #{m.version}
-                              </span>
+        {activeTab === "history" && (
+          <div className="flex h-12 items-center gap-2 bg-background px-4 py-1.5">
+            <BookOpen className="size-4" />
+            <h3 className="text-base font-medium">History</h3>
+          </div>
+        )}
+        {activeTab === "settings" && (
+          <div className="flex h-12 items-center gap-2 bg-background px-4 py-1.5">
+            <Settings className="size-4" />
+            <h3 className="text-base font-medium">Settings</h3>
+          </div>
+        )}
+
+        <div
+          ref={containerRef}
+          className={cn(
+            "flex flex-1 flex-col overflow-y-auto overflow-x-hidden scroll-smooth border-r border-border bg-secondary",
+            activeTab === "chat" && "rounded-r-lg border-y",
+            activeTab !== "chat" && "rounded-tr-lg border-t",
+          )}
+        >
+          {isLoaderVisible && (
+            <div className="absolute inset-0 z-10 flex size-full flex-col items-start bg-secondary p-4">
+              <ComponentSidebarSkeleton />
+            </div>
+          )}
+          {activeTab === "chat" &&
+            !isLoading &&
+            messages
+              .filter((m) => m.version === selectedVersion)
+              .map((m) => <ComponentChatFiles message={m} key={m.id} />)}
+          {activeTab === "history" && (
+            <div className="flex flex-col gap-2 p-3">
+              {!isLoading &&
+                messages
+                  .filter((m) => m.role === "user")
+                  .map((m) => (
+                    <TooltipProvider key={m.id}>
+                      <Tooltip delayDuration={150}>
+                        <TooltipTrigger asChild>
+                          <div
+                            ref={
+                              m.version === selectedVersion
+                                ? currentVersionRef
+                                : null
+                            }
+                            onClick={() =>
+                              m.version !== selectedVersion &&
+                              handleFileClick(m.version)
+                            }
+                            className={cn(
+                              "rounded-lg bg-background p-4 shadow-sm",
+                              m.version === selectedVersion
+                                ? "cursor-default hover:bg-background"
+                                : isLoading
+                                  ? "cursor-not-allowed opacity-70"
+                                  : "cursor-pointer hover:bg-background/50",
+                            )}
+                          >
+                            <div className="flex w-full items-center justify-between gap-2">
+                              <div className="flex w-full items-center gap-2">
+                                <Avatar className="size-8">
+                                  <AvatarImage
+                                    src={user?.avatar_url || undefined}
+                                  />
+                                  <AvatarFallback>
+                                    <img
+                                      src={`${avatarApi}${user?.full_name}`}
+                                      alt="logo"
+                                      className="size-full"
+                                    />
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div className="flex flex-col">
+                                  <span className="text-sm font-medium">
+                                    {user?.full_name}
+                                  </span>
+                                  <span className="text-xs text-muted-foreground">
+                                    Version #{m.version}
+                                  </span>
+                                </div>
+                              </div>
+                              {m.version === selectedVersion ? (
+                                <Badge className="rounded-full">Current</Badge>
+                              ) : (
+                                <ChevronsRight className="size-4" />
+                              )}
                             </div>
+                            <p className="mt-2 truncate text-sm">{m.content}</p>
+                            <p className="mt-2 text-right text-xs text-muted-foreground">
+                              {getRelativeDate(m.created_at)}
+                            </p>
                           </div>
-                          {m.version === selectedVersion ? (
-                            <Badge className="rounded-full">Current</Badge>
-                          ) : (
-                            <ChevronsRight className="size-4" />
-                          )}
-                        </div>
-                        <p className="mt-2 truncate text-sm">{m.content}</p>
-                        <p className="mt-2 text-right text-xs text-muted-foreground">
-                          {getRelativeDate(m.created_at)}
-                        </p>
-                      </div>
-                    </TooltipTrigger>
-                    {isLoading && (
-                      <TooltipContent side="top">
-                        <p>
-                          Please wait for the component to load before changing
-                          versions
-                        </p>
-                      </TooltipContent>
-                    )}
-                  </Tooltip>
-                </TooltipProvider>
-              ))}
-          </div>
-        )}
-        <div
-          className={cn(
-            "flex flex-col px-2 py-6 sm:px-4",
-            "transition-all duration-200",
-            isLoading && input ? "block" : "hidden",
-          )}
-        >
-          <div className="flex flex-col gap-2 rounded-lg border border-border bg-background p-5">
-            <UserWidget
-              id={user?.id}
-              createdAt={new Date().toISOString()}
-              userAvatarUrl={user?.avatar_url}
-              userFullName={user?.full_name}
-            />
-            <Markdown>{input}</Markdown>
-            <PromptFiles fileUrls={defaultFiles} storageUrl={storageUrl} />
-          </div>
-        </div>
-        <div
-          className={cn(
-            "flex flex-col px-2 py-6 sm:px-4",
-            "transition-all duration-200",
-            isLoading ? "block" : "hidden",
-          )}
-        >
-          <div className="flex w-full flex-col gap-2 overflow-x-auto text-sm">
-            {input && (
-              <div className="flex items-center">
-                <Avatar className="mr-2 size-10 rounded-none">
-                  <AvatarImage src="/logo-white.png" />
-                  <AvatarFallback>T</AvatarFallback>
-                </Avatar>
-                <div className="ml-2 flex flex-col items-start">
-                  <h2
-                    className={cn(
-                      "text-lg font-semibold transition-all group-hover:text-primary",
-                    )}
-                  >
-                    Generating version...
-                  </h2>
-                  <p className="text-xs text-muted-foreground">
-                    {getRelativeDate(new Date().toISOString())}
-                  </p>
-                </div>
-              </div>
-            )}
-            {fetchedChat?.clone_url && selectedVersion === -1 && (
-              <div className="mb-4 mt-2 flex flex-col gap-3 rounded-lg border border-primary/30 bg-primary/10 p-4 text-sm">
-                <div className="flex items-center">
-                  {completion ? (
-                    <CheckCircle className="mr-2 size-5 text-green-500" />
-                  ) : (
-                    <Loader className="mr-2 size-5 animate-spin text-primary" />
-                  )}
-                  {completion ? (
-                    <p className="font-medium text-green-600">
-                      Website {fetchedChat.clone_url} analyzed
-                    </p>
-                  ) : (
-                    <p className="font-medium text-primary">
-                      Analyzing website {fetchedChat.clone_url}
-                    </p>
-                  )}
-                </div>
-                {!completion ? (
-                  <p className="ml-2 text-xs text-orange-500">
-                    This may take a while
-                  </p>
-                ) : null}
-
-                {scrapingStatus.error && (
-                  <div className="mt-2 rounded-lg border border-red-400/30 bg-red-500/10 p-2 text-xs">
-                    <p className="font-medium text-red-600">
-                      Analysis encountered an issue:
-                    </p>
-                    <p className="text-muted-foreground">
-                      {scrapingStatus.error}
-                    </p>
-                    <p className="mt-1 text-xs">
-                      Using fallback analysis methods instead.
-                    </p>
-                  </div>
-                )}
-
-                {!scrapingStatus.error && (
-                  <div className="relative h-2 w-full overflow-hidden rounded-full bg-primary/10">
-                    <div
-                      className="h-full bg-primary transition-all duration-500"
-                      style={{ width: `${scrapingStatus.progress}%` }}
-                    ></div>
-                  </div>
-                )}
-
-                {scrapingStatus.screenshot && !scrapingStatus.error && (
-                  <div className="mt-3 overflow-hidden">
-                    <p className="mb-1 text-xs font-semibold text-foreground">
-                      Page Screenshot:
-                    </p>
-                    <div className="max-h-[300px] overflow-y-auto">
-                      <img
-                        src={`data:image/jpeg;base64,${scrapingStatus.screenshot}`}
-                        alt="Website screenshot"
-                        className="w-full rounded-lg  border border-border object-cover"
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {!scrapingStatus.error && (
-                  <div className="flex flex-col gap-2 pt-1">
-                    <div className="flex items-center gap-2">
-                      <ImageIcon className="size-4 text-primary" />
-                      <span className="text-xs text-foreground">
-                        Images found: {scrapingStatus.images.length}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <Palette className="size-4 text-primary" />
-                      <span className="text-xs text-foreground">
-                        Colors detected: {scrapingStatus.colors.length}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <LayoutGrid className="size-4 text-primary" />
-                      <span className="text-xs text-foreground">
-                        Sections analyzed: {scrapingStatus.structure.sections}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <VideoIcon className="size-4 text-primary" />
-                      <span className="text-xs text-foreground">
-                        Videos found: {scrapingStatus.videosCount}
-                      </span>
-                    </div>
-                  </div>
-                )}
-                {scrapingStatus.images.length > 0 && (
-                  <div className="mt-2">
-                    <p className="mb-1 text-xs font-semibold text-foreground">
-                      Images discovered:
-                    </p>
-                    <div className="flex flex-wrap gap-2 overflow-hidden">
-                      {scrapingStatus.images.slice(0, 6).map((img, index) => (
-                        <div
-                          key={index}
-                          className="relative size-14 overflow-hidden rounded border border-gray-200"
-                        >
-                          <img
-                            src={img.url}
-                            alt={img.alt}
-                            className="size-full object-cover"
-                          />
-                        </div>
-                      ))}
-                      {scrapingStatus.images.length > 6 && (
-                        <div className="flex size-14 items-center justify-center rounded border border-gray-200 bg-gray-50">
-                          <span className="text-xs text-background">
-                            +{scrapingStatus.images.length - 6} more
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {scrapingStatus.colors.length > 0 && (
-                  <div className="mt-2">
-                    <p className="mb-1 text-xs font-semibold text-foreground">
-                      Colors palette:
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      {scrapingStatus.colors.map((color, index) => (
-                        <div
-                          key={index}
-                          className="size-6 rounded-full border border-gray-200"
-                          style={{ backgroundColor: color }}
-                          title={color}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-            <ChunkReader
-              chunks={streamingChunks}
-              files={chatFiles}
-              handleFileClick={handleFileClick}
-            />
-            <div className="mt-2 flex gap-1">
-              <span className="size-2 animate-[typing_1s_ease-in-out_infinite] rounded-full bg-foreground/50"></span>
-              <span className="size-2 animate-[typing_1s_ease-in-out_infinite] rounded-full bg-foreground/50 delay-300"></span>
-              <span className="delay-[600ms] size-2 animate-[typing_1s_ease-in-out_infinite] rounded-full bg-foreground/50"></span>
+                        </TooltipTrigger>
+                        {isLoading && (
+                          <TooltipContent side="top">
+                            <p>
+                              Please wait for the component to load before
+                              changing versions
+                            </p>
+                          </TooltipContent>
+                        )}
+                      </Tooltip>
+                    </TooltipProvider>
+                  ))}
             </div>
-          </div>
-        </div>
-      </div>
-      <form
-        className="flex w-full flex-1 items-center"
-        onSubmit={(e) => handleSubmit(e)}
-      >
-        {authorized && (
-          <div className="flex w-full flex-col bg-background">
-            <div className="flex w-full items-center justify-between space-x-1 border-t p-2">
-              <div className="flex items-center gap-2">
-                {/* Continue your work button */}
-                {!isLoading && isLengthError && (
-                  <Button
-                    type="button"
-                    size="sm"
-                    className="mr-2"
-                    onClick={() => {
-                      const continuePrompt = createContinuePrompt(messages);
-                      setInput(continuePrompt);
-                      submitPrompt(continuePrompt);
-                    }}
-                  >
-                    <RefreshCw className=" size-4" />
-                    Continue generation
-                  </Button>
-                )}
-                {!isLoading && buildError && (
-                  <Button
-                    type="button"
-                    size="sm"
-                    className="mr-2"
-                    onClick={() => {
-                      const errorContent = buildError.content;
-                      const truncatedContent =
-                        errorContent.length > FREE_CHAR_LIMIT
-                          ? errorContent.substring(0, FREE_CHAR_LIMIT)
-                          : errorContent;
-                      const continuePrompt =
-                        "Fix the following error: " + truncatedContent;
-                      setInput(continuePrompt);
-                      handleSubmitToAI(continuePrompt);
-                    }}
-                  >
-                    <WandSparkles className="size-4" />
-                    Fix errors
-                  </Button>
-                )}
-              </div>
-              <div className="flex items-center space-x-2">
-                {selectedFramework === Framework.HTML && !isLengthError && (
-                  <div className="text-sm font-semibold">
-                    <ComponentTheme>
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        size="sm"
-                        className="flex items-center"
-                        disabled={isLoading}
-                      >
-                        <Paintbrush className="size-4" />
-                        <span className="ml-0.5">Theme</span>
-                      </Button>
-                    </ComponentTheme>
-                  </div>
-                )}
-                <ImageUploadArea
-                  fileInputRef={fileInputRef}
-                  disabled={
-                    isLoading ||
-                    isLengthError ||
-                    !!buildError ||
-                    files.length >= maxImagesUpload
-                  }
-                  handleButtonClick={handleButtonClick}
-                  handleImageChange={handleFileChange}
-                  onDrop={(droppedFiles) => {
-                    const validFiles: File[] = [];
-
-                    for (const file of droppedFiles) {
-                      if (files.length + validFiles.length >= maxImagesUpload) {
-                        toast({
-                          variant: "destructive",
-                          title: "Too many files",
-                          description: `Maximum ${maxImagesUpload} files allowed`,
-                          duration: 4000,
-                        });
-                        break;
-                      }
-
-                      const validation = validateFile(file);
-                      if (!validation.valid) {
-                        toast({
-                          variant: "destructive",
-                          title: "Invalid file",
-                          description: validation.error,
-                          duration: 4000,
-                        });
-                        continue;
-                      }
-
-                      validFiles.push(file);
-                    }
-
-                    if (validFiles.length > 0) {
-                      setFiles((prev) => [...prev, ...validFiles]);
-                    }
-                  }}
-                  isUploading={isLoading && files.length > 0}
-                  label="Files"
-                />
-              </div>
-            </div>
-            {files.length > 0 && (
-              <div className="flex gap-2 overflow-x-auto border-t p-2">
-                {files.map((file, index) => (
-                  <FileBadge
-                    key={`${file.name}-${index}`}
-                    file={file}
-                    onRemove={() => handleFileRemove(index)}
-                    disabled={isLoading || isLengthError || !!buildError}
-                  />
-                ))}
-              </div>
+          )}
+          {!isLoading && activeTab === "settings" && <SettingsContent />}
+          <div
+            className={cn(
+              "flex flex-col px-2 py-6 sm:px-4",
+              "transition-all duration-200",
+              isLoading && input ? "block" : "hidden",
             )}
-            <div className="flex w-full flex-col items-start space-y-1 border-t p-2">
-              <TextareaWithLimit
-                ref={inputRef}
-                autoFocus
-                disabled={isLoading || isLengthError}
-                isLoading={isLoading}
-                value={input}
-                onChange={(value, isValid) => {
-                  setInput(value);
-                  setInputIsValid(isValid);
-                }}
-                displayMessage={false}
-                subscription={subscription}
-                isLoadingSubscription={isLoadingSubscription}
-                isLoggedIn={isLoggedIn}
-                showCounter={true}
-                minLength={2}
-                placeholder="Add a button, modify a div..."
-                required
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") {
-                    if (event.shiftKey) {
-                      return;
-                    }
-
-                    event.preventDefault();
-
-                    handleSubmit(event);
-                  }
-                }}
-                className="max-h-[400px] min-h-[76px] border-none bg-background pl-1 focus-visible:ring-0 focus-visible:ring-offset-0"
+          >
+            <div className="flex flex-col gap-2 rounded-lg border border-border bg-background p-5">
+              <UserWidget
+                id={user?.id}
+                createdAt={new Date().toISOString()}
+                userAvatarUrl={user?.avatar_url}
+                userFullName={user?.full_name}
               />
-              <div
-                className={cn(
-                  "my-0.5 text-xs text-foreground transition-opacity",
-                  input.length <= 3 && "opacity-0",
-                )}
-              >
-                Use <kbd className="rounded-sm bg-secondary p-1">Shift</kbd> +{" "}
-                <kbd className="rounded-sm bg-secondary p-1">Return</kbd> for a
-                new line
+              <Markdown>{input}</Markdown>
+              <PromptFiles fileUrls={defaultFiles} storageUrl={storageUrl} />
+            </div>
+          </div>
+          <div
+            className={cn(
+              "flex flex-col px-2 py-6 sm:px-4",
+              "transition-all duration-200",
+              isLoading ? "block" : "hidden",
+            )}
+          >
+            <div className="flex w-full flex-col gap-2 overflow-x-auto text-sm">
+              {input && (
+                <div className="flex items-center">
+                  <Avatar className="mr-2 size-10 rounded-none">
+                    <AvatarImage src="/logo-white.png" />
+                    <AvatarFallback>T</AvatarFallback>
+                  </Avatar>
+                  <div className="ml-2 flex flex-col items-start">
+                    <h2
+                      className={cn(
+                        "text-lg font-semibold transition-all group-hover:text-primary",
+                      )}
+                    >
+                      Generating version...
+                    </h2>
+                    <p className="text-xs text-muted-foreground">
+                      {getRelativeDate(new Date().toISOString())}
+                    </p>
+                  </div>
+                </div>
+              )}
+              {fetchedChat?.clone_url && selectedVersion === -1 && (
+                <div className="mb-4 mt-2 flex flex-col gap-3 rounded-lg border border-primary/30 bg-primary/10 p-4 text-sm">
+                  <div className="flex items-center">
+                    {completion ? (
+                      <CheckCircle className="mr-2 size-5 text-green-500" />
+                    ) : (
+                      <Loader className="mr-2 size-5 animate-spin text-primary" />
+                    )}
+                    {completion ? (
+                      <p className="font-medium text-green-600">
+                        Website {fetchedChat.clone_url} analyzed
+                      </p>
+                    ) : (
+                      <p className="font-medium text-primary">
+                        Analyzing website {fetchedChat.clone_url}
+                      </p>
+                    )}
+                  </div>
+                  {!completion ? (
+                    <p className="ml-2 text-xs text-orange-500">
+                      This may take a while
+                    </p>
+                  ) : null}
+
+                  {scrapingStatus.error && (
+                    <div className="mt-2 rounded-lg border border-red-400/30 bg-red-500/10 p-2 text-xs">
+                      <p className="font-medium text-red-600">
+                        Analysis encountered an issue:
+                      </p>
+                      <p className="text-muted-foreground">
+                        {scrapingStatus.error}
+                      </p>
+                      <p className="mt-1 text-xs">
+                        Using fallback analysis methods instead.
+                      </p>
+                    </div>
+                  )}
+
+                  {!scrapingStatus.error && (
+                    <div className="relative h-2 w-full overflow-hidden rounded-full bg-primary/10">
+                      <div
+                        className="h-full bg-primary transition-all duration-500"
+                        style={{ width: `${scrapingStatus.progress}%` }}
+                      ></div>
+                    </div>
+                  )}
+
+                  {scrapingStatus.screenshot && !scrapingStatus.error && (
+                    <div className="mt-3 overflow-hidden">
+                      <p className="mb-1 text-xs font-semibold text-foreground">
+                        Page Screenshot:
+                      </p>
+                      <div className="max-h-[300px] overflow-y-auto">
+                        <img
+                          src={`data:image/jpeg;base64,${scrapingStatus.screenshot}`}
+                          alt="Website screenshot"
+                          className="w-full rounded-lg  border border-border object-cover"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {!scrapingStatus.error && (
+                    <div className="flex flex-col gap-2 pt-1">
+                      <div className="flex items-center gap-2">
+                        <ImageIcon className="size-4 text-primary" />
+                        <span className="text-xs text-foreground">
+                          Images found: {scrapingStatus.images.length}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <Palette className="size-4 text-primary" />
+                        <span className="text-xs text-foreground">
+                          Colors detected: {scrapingStatus.colors.length}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <LayoutGrid className="size-4 text-primary" />
+                        <span className="text-xs text-foreground">
+                          Sections analyzed: {scrapingStatus.structure.sections}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <VideoIcon className="size-4 text-primary" />
+                        <span className="text-xs text-foreground">
+                          Videos found: {scrapingStatus.videosCount}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                  {scrapingStatus.images.length > 0 && (
+                    <div className="mt-2">
+                      <p className="mb-1 text-xs font-semibold text-foreground">
+                        Images discovered:
+                      </p>
+                      <div className="flex flex-wrap gap-2 overflow-hidden">
+                        {scrapingStatus.images.slice(0, 6).map((img, index) => (
+                          <div
+                            key={index}
+                            className="relative size-14 overflow-hidden rounded border border-gray-200"
+                          >
+                            <img
+                              src={img.url}
+                              alt={img.alt}
+                              className="size-full object-cover"
+                            />
+                          </div>
+                        ))}
+                        {scrapingStatus.images.length > 6 && (
+                          <div className="flex size-14 items-center justify-center rounded border border-gray-200 bg-gray-50">
+                            <span className="text-xs text-background">
+                              +{scrapingStatus.images.length - 6} more
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {scrapingStatus.colors.length > 0 && (
+                    <div className="mt-2">
+                      <p className="mb-1 text-xs font-semibold text-foreground">
+                        Colors palette:
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {scrapingStatus.colors.map((color, index) => (
+                          <div
+                            key={index}
+                            className="size-6 rounded-full border border-gray-200"
+                            style={{ backgroundColor: color }}
+                            title={color}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+              <ChunkReader
+                chunks={streamingChunks}
+                files={chatFiles}
+                handleFileClick={handleFileClick}
+              />
+              <div className="mt-2 flex gap-1">
+                <span className="size-2 animate-[typing_1s_ease-in-out_infinite] rounded-full bg-foreground/50"></span>
+                <span className="size-2 animate-[typing_1s_ease-in-out_infinite] rounded-full bg-foreground/50 delay-300"></span>
+                <span className="delay-[600ms] size-2 animate-[typing_1s_ease-in-out_infinite] rounded-full bg-foreground/50"></span>
               </div>
-              <div className="flex w-full items-center space-x-1">
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
+            </div>
+          </div>
+        </div>
+        {activeTab === "chat" && (
+          <form
+            className="flex w-full items-center"
+            onSubmit={(e) => handleSubmit(e)}
+          >
+            {authorized && (
+              <div className="flex w-full flex-col bg-background">
+                <div className="flex w-full items-center justify-between space-x-1 px-2 pt-2">
+                  <div className="flex items-center gap-2">
+                    {/* Continue your work button */}
+                    {!isLoading && isLengthError && (
                       <Button
                         type="button"
                         size="sm"
-                        variant="ghost"
-                        className="size-9 p-0 hover:bg-background"
-                        disabled={
-                          isLoading || isImprovingLoading || hasImproved
-                        }
-                        onClick={handleImprovePrompt}
+                        className="mr-2"
+                        onClick={() => {
+                          const continuePrompt = createContinuePrompt(messages);
+                          setInput(continuePrompt);
+                          submitPrompt(continuePrompt);
+                        }}
                       >
-                        <WandSparkles
-                          className={cn(
-                            "size-4",
-                            isImprovingLoading && "animate-spin",
-                            hasImproved && "text-primary",
-                          )}
-                        />
-                        <span className="sr-only">
+                        <RefreshCw className=" size-4" />
+                        Continue generation
+                      </Button>
+                    )}
+                    {!isLoading && buildError && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        className="mr-2"
+                        onClick={() => {
+                          const errorContent = buildError.content;
+                          const truncatedContent =
+                            errorContent.length > FREE_CHAR_LIMIT
+                              ? errorContent.substring(0, FREE_CHAR_LIMIT)
+                              : errorContent;
+                          const continuePrompt =
+                            "Fix the following error: " + truncatedContent;
+                          setInput(continuePrompt);
+                          handleSubmitToAI(continuePrompt);
+                        }}
+                      >
+                        <WandSparkles className="size-4" />
+                        Fix errors
+                      </Button>
+                    )}
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    {selectedFramework === Framework.HTML && !isLengthError && (
+                      <div className="text-sm font-semibold">
+                        <ComponentTheme>
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            size="sm"
+                            className="flex items-center"
+                            disabled={isLoading}
+                          >
+                            <Paintbrush className="size-4" />
+                            <span className="ml-0.5">Theme</span>
+                          </Button>
+                        </ComponentTheme>
+                      </div>
+                    )}
+                    <ImageUploadArea
+                      fileInputRef={fileInputRef}
+                      disabled={
+                        isLoading ||
+                        isLengthError ||
+                        !!buildError ||
+                        files.length >= maxImagesUpload
+                      }
+                      handleButtonClick={handleButtonClick}
+                      handleImageChange={handleFileChange}
+                      onDrop={(droppedFiles) => {
+                        const validFiles: File[] = [];
+
+                        for (const file of droppedFiles) {
+                          if (
+                            files.length + validFiles.length >=
+                            maxImagesUpload
+                          ) {
+                            toast({
+                              variant: "destructive",
+                              title: "Too many files",
+                              description: `Maximum ${maxImagesUpload} files allowed`,
+                              duration: 4000,
+                            });
+                            break;
+                          }
+
+                          const validation = validateFile(file);
+                          if (!validation.valid) {
+                            toast({
+                              variant: "destructive",
+                              title: "Invalid file",
+                              description: validation.error,
+                              duration: 4000,
+                            });
+                            continue;
+                          }
+
+                          validFiles.push(file);
+                        }
+
+                        if (validFiles.length > 0) {
+                          setFiles((prev) => [...prev, ...validFiles]);
+                        }
+                      }}
+                      isUploading={isLoading && files.length > 0}
+                      label="Files"
+                    />
+                  </div>
+                </div>
+                {files.length > 0 && (
+                  <div className="flex gap-2 overflow-x-auto p-2">
+                    {files.map((file, index) => (
+                      <FileBadge
+                        key={`${file.name}-${index}`}
+                        file={file}
+                        onRemove={() => handleFileRemove(index)}
+                        disabled={isLoading || isLengthError || !!buildError}
+                      />
+                    ))}
+                  </div>
+                )}
+                <div className="flex w-full flex-col items-start space-y-1 p-2">
+                  <TextareaWithLimit
+                    ref={inputRef}
+                    autoFocus
+                    disabled={isLoading || isLengthError}
+                    isLoading={isLoading}
+                    value={input}
+                    onChange={(value, isValid) => {
+                      setInput(value);
+                      setInputIsValid(isValid);
+                    }}
+                    displayMessage={false}
+                    subscription={subscription}
+                    isLoadingSubscription={isLoadingSubscription}
+                    isLoggedIn={isLoggedIn}
+                    showCounter={true}
+                    minLength={2}
+                    placeholder="Add a button, modify a div..."
+                    required
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") {
+                        if (event.shiftKey) {
+                          return;
+                        }
+
+                        event.preventDefault();
+
+                        handleSubmit(event);
+                      }
+                    }}
+                    className="max-h-[400px] min-h-[76px] border-none bg-background pl-1 focus-visible:ring-0 focus-visible:ring-offset-0"
+                  />
+                  <div
+                    className={cn(
+                      "my-0.5 text-xs text-foreground transition-opacity",
+                      input.length <= 3 && "opacity-0",
+                    )}
+                  >
+                    Use <kbd className="rounded-sm bg-secondary p-1">Shift</kbd>{" "}
+                    + <kbd className="rounded-sm bg-secondary p-1">Return</kbd>{" "}
+                    for a new line
+                  </div>
+                  <div className="flex w-full items-center space-x-1">
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            className="size-9 p-0 hover:bg-background"
+                            disabled={
+                              isLoading || isImprovingLoading || hasImproved
+                            }
+                            onClick={handleImprovePrompt}
+                          >
+                            <WandSparkles
+                              className={cn(
+                                "size-4",
+                                isImprovingLoading && "animate-spin",
+                                hasImproved && "text-primary",
+                              )}
+                            />
+                            <span className="sr-only">
+                              {isImprovingLoading
+                                ? "Improving prompt..."
+                                : hasImproved
+                                  ? "Prompt improved"
+                                  : "Improve prompt"}
+                            </span>
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
                           {isImprovingLoading
                             ? "Improving prompt..."
                             : hasImproved
                               ? "Prompt improved"
                               : "Improve prompt"}
-                        </span>
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      {isImprovingLoading
-                        ? "Improving prompt..."
-                        : hasImproved
-                          ? "Prompt improved"
-                          : "Improve prompt"}
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-                <Button
-                  size="sm"
-                  loading={isLoading}
-                  type="submit"
-                  className="flex w-full items-center"
-                >
-                  <CircleFadingArrowUp className="size-3" />
-                  <span>Iterate</span>
-                </Button>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                    <Button
+                      size="sm"
+                      loading={isLoading}
+                      type="submit"
+                      className="flex w-full items-center"
+                    >
+                      <CircleFadingArrowUp className="size-3" />
+                      <span>Iterate</span>
+                    </Button>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
+            )}
+          </form>
         )}
-      </form>
+      </div>
+
+      <div className="hidden h-full w-14 flex-col space-y-4 bg-background p-2 xl:flex">
+        <Button
+          variant="ghost"
+          size="icon"
+          className={cn(
+            "h-10 w-full rounded-lg",
+            activeTab === "chat" && "bg-secondary text-primary",
+          )}
+          onClick={() => !isLoading && handleTabChange("chat")}
+          disabled={isLoading}
+        >
+          <MessageSquare className="size-5" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className={cn(
+            "h-10 w-full rounded-lg",
+            activeTab === "history" && "bg-secondary text-primary",
+          )}
+          onClick={() => !isLoading && handleTabChange("history")}
+          disabled={isLoading}
+        >
+          <BookOpen className="size-5" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className={cn(
+            "h-10 w-full rounded-lg",
+            activeTab === "settings" && "bg-secondary text-primary",
+          )}
+          onClick={() => !isLoading && handleTabChange("settings")}
+          disabled={isLoading}
+        >
+          <Settings className="size-5" />
+        </Button>
+      </div>
     </div>
   );
 }

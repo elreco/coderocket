@@ -8,7 +8,6 @@ import {
   Fullscreen,
   Layers,
   Loader,
-  Settings,
   ExternalLink,
   Copy,
   GitFork,
@@ -41,7 +40,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
@@ -87,7 +85,6 @@ import {
   remixChat,
 } from "../actions";
 
-import ComponentSettings from "./(settings)/component-settings";
 import CodePreview from "./code-preview";
 import ComponentSidebar from "./component-sidebar";
 
@@ -138,6 +135,7 @@ export default function ComponentCompletion({
 
   const [isLiked, setIsLiked] = useState(false);
 
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [shareLink, setShareLink] = useState("");
 
@@ -145,6 +143,7 @@ export default function ComponentCompletion({
   const uploadFilesRef = useRef<File[]>([]);
   const [defaultImage, setDefaultImage] = useState<string | null>(null);
   const [defaultFiles, setDefaultFiles] = useState<string[]>([]);
+  const [sidebarTab, setSidebarTab] = useState("chat");
 
   useEffect(() => {
     uploadFilesRef.current = uploadFiles;
@@ -850,6 +849,8 @@ export default function ComponentCompletion({
     setLoadingState,
     fetchedChat,
     isLengthError,
+    sidebarTab,
+    setSidebarTab,
   };
 
   useEffect(() => {
@@ -894,9 +895,9 @@ export default function ComponentCompletion({
     <ComponentContext.Provider value={contextValue}>
       <WebcontainerProvider>
         <Container className="!p-0 lg:overflow-hidden">
-          <div className="grid size-full max-h-full grid-cols-1 justify-center lg:grid-cols-3 lg:flex-row xl:grid-cols-4">
-            <div className="col-span-1 flex size-full min-h-full flex-col lg:col-span-2 xl:col-span-3 xl:mb-0">
-              <div className="relative flex flex-col items-center justify-start border-b py-1.5 pr-2 xl:flex-row xl:justify-between xl:pl-11">
+          <div className="grid size-full max-h-full grid-cols-1 justify-center xl:grid-cols-4 xl:flex-row">
+            <div className="col-span-1 flex size-full min-h-full flex-col xl:col-span-3 xl:mb-0">
+              <div className="relative flex h-auto flex-col items-center justify-start py-1.5 pr-2 xl:h-12 xl:flex-row xl:justify-between xl:pl-14">
                 <h1 className="mb-2 flex min-w-0 max-w-full flex-1 items-center font-medium lg:mb-0">
                   {title ? (
                     <p className="mx-10 min-w-0 max-w-full xl:mx-0">
@@ -1015,7 +1016,10 @@ export default function ComponentCompletion({
                     </>
                   )}
 
-                  <DropdownMenu>
+                  <DropdownMenu
+                    open={isDropdownOpen}
+                    onOpenChange={setIsDropdownOpen}
+                  >
                     <DropdownMenuTrigger asChild>
                       <Button
                         size="sm"
@@ -1027,7 +1031,14 @@ export default function ComponentCompletion({
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-48">
                       <DropdownMenuItem
-                        onClick={share}
+                        onSelect={(e) => {
+                          if (!isVisible || isLoading || isLengthError) {
+                            e.preventDefault();
+                            return;
+                          }
+                          setIsDropdownOpen(false);
+                          share();
+                        }}
                         disabled={!isVisible || isLoading || isLengthError}
                         className="cursor-pointer"
                       >
@@ -1035,29 +1046,20 @@ export default function ComponentCompletion({
                         <span>Share</span>
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        onClick={() => setIsRemixModalOpen(true)}
+                        onSelect={(e) => {
+                          if (isRemixing || isLoading) {
+                            e.preventDefault();
+                            return;
+                          }
+                          setIsDropdownOpen(false);
+                          setIsRemixModalOpen(true);
+                        }}
                         disabled={isRemixing || isLoading}
                         className="cursor-pointer"
                       >
                         <GitFork className="mr-2 size-4" />
                         <span>Remix</span>
                       </DropdownMenuItem>
-                      {!isLoading && title && authorized && (
-                        <>
-                          <DropdownMenuSeparator />
-                          <ComponentSettings>
-                            <DropdownMenuItem
-                              className="cursor-pointer"
-                              onSelect={(e) => {
-                                e.preventDefault();
-                              }}
-                            >
-                              <Settings className="mr-2 size-4" />
-                              <span>Settings</span>
-                            </DropdownMenuItem>
-                          </ComponentSettings>
-                        </>
-                      )}
                     </DropdownMenuContent>
                   </DropdownMenu>
                   <Sheet>
@@ -1065,18 +1067,18 @@ export default function ComponentCompletion({
                       <Button
                         size="sm"
                         variant="secondary"
-                        className="block lg:hidden"
+                        className="block xl:hidden"
                       >
                         <Layers className="size-5" />
                       </Button>
                     </SheetTrigger>
                     <SheetContent className="h-full p-0">
-                      <ComponentSidebar className="flex lg:hidden" />
+                      <ComponentSidebar className="flex xl:hidden" />
                     </SheetContent>
                   </Sheet>
                 </div>
               </div>
-              <div className="relative m-0 flex h-full max-h-full flex-1 flex-col border-b lg:border-b-0">
+              <div className="relative m-0 flex h-full max-h-full flex-1 flex-col border-t lg:border-b-0">
                 {!isLoading && isCanvas && (
                   <div className="absolute bottom-0 right-0 z-[9000] flex w-full items-center justify-end gap-2 p-2">
                     {fetchedChat?.clone_url && (
@@ -1159,7 +1161,7 @@ export default function ComponentCompletion({
                 <CodePreview />
               </div>
             </div>
-            <ComponentSidebar className="hidden lg:flex" />
+            <ComponentSidebar className="hidden xl:flex" />
           </div>
           <Dialog open={isShareModalOpen} onOpenChange={setIsShareModalOpen}>
             <DialogContent className="max-w-md sm:max-w-2xl">

@@ -64,6 +64,8 @@ interface ComponentContextType {
   setLoadingState: (value: WebcontainerLoadingState) => void;
   fetchedChat: Tables<"chats"> | null;
   isLengthError: boolean;
+  sidebarTab: string;
+  setSidebarTab: (tab: string) => void;
 }
 
 export const ComponentContext = createContext<ComponentContextType | undefined>(
