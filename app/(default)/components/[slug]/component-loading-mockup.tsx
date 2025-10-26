@@ -4,14 +4,17 @@ import { useEffect, useState } from "react";
 
 export function ComponentLoadingMockup({ fileName }: { fileName?: string }) {
   const [phase, setPhase] = useState(0);
+  const isGenerating = !!fileName;
 
   useEffect(() => {
+    if (!isGenerating) return;
+
     const timer = setInterval(() => {
       setPhase((prev) => (prev + 1) % 3);
     }, 4000);
 
     return () => clearInterval(timer);
-  }, []);
+  }, [isGenerating]);
 
   return (
     <div className="flex size-full flex-col items-center justify-center bg-gradient-to-b from-background to-muted/20 p-8">
@@ -22,12 +25,12 @@ export function ComponentLoadingMockup({ fileName }: { fileName?: string }) {
             <div className="size-3 rounded-full bg-yellow-500/80" />
             <div className="size-3 rounded-full bg-green-500/80" />
             <div className="ml-2 flex-1 text-center text-xs font-medium text-muted-foreground">
-              {fileName || "Generating..."}
+              {isGenerating ? fileName : "Loading"}
             </div>
           </div>
 
           <div className="relative min-h-[400px] p-8">
-            {phase === 0 && (
+            {(!isGenerating || phase === 0) && (
               <div className="absolute inset-8 duration-700 animate-in fade-in">
                 <div className="space-y-3.5">
                   <div className="flex animate-pulse items-center gap-3">
@@ -66,7 +69,7 @@ export function ComponentLoadingMockup({ fileName }: { fileName?: string }) {
               </div>
             )}
 
-            {phase === 1 && (
+            {isGenerating && phase === 1 && (
               <div className="absolute inset-8 duration-700 animate-in fade-in">
                 <div className="space-y-4">
                   <div className="flex gap-3">
@@ -90,7 +93,7 @@ export function ComponentLoadingMockup({ fileName }: { fileName?: string }) {
               </div>
             )}
 
-            {phase === 2 && (
+            {isGenerating && phase === 2 && (
               <div className="absolute inset-8 duration-700 animate-in fade-in">
                 <div className="space-y-4">
                   <div className="h-12 animate-pulse rounded-lg bg-gradient-to-r from-primary/20 to-blue-500/20" />
@@ -125,7 +128,7 @@ export function ComponentLoadingMockup({ fileName }: { fileName?: string }) {
                 <span className="absolute inline-flex size-full animate-ping rounded-full bg-primary/75 opacity-75" />
                 <span className="relative inline-flex size-3 rounded-full bg-primary" />
               </div>
-              <span>Creating component</span>
+              <span>{isGenerating ? "Creating component" : "Loading"}</span>
             </div>
             <div className="flex items-center gap-1.5">
               <div className="size-1 animate-bounce rounded-full bg-primary [animation-delay:-0.3s]" />

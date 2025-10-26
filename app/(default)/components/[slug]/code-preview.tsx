@@ -46,14 +46,16 @@ const RenderContent = React.memo(
     selectedFramework,
     isLengthError,
     currentGeneratingFile,
+    isWebcontainerReady,
   }: {
     isLoading: boolean;
     artifactFiles: ChatFile[];
     selectedFramework: Framework;
     isLengthError: boolean;
     currentGeneratingFile: string | null;
+    isWebcontainerReady: boolean;
   }) => {
-    if (isLoading) {
+    if (isLoading && !isWebcontainerReady) {
       return (
         <ComponentLoadingMockup fileName={currentGeneratingFile || undefined} />
       );
@@ -80,6 +82,8 @@ const RenderContent = React.memo(
       return false;
     if (prevProps.isLoading !== nextProps.isLoading) return false;
     if (prevProps.currentGeneratingFile !== nextProps.currentGeneratingFile)
+      return false;
+    if (prevProps.isWebcontainerReady !== nextProps.isWebcontainerReady)
       return false;
 
     const areFilesEqual = (prev: ChatFile[], next: ChatFile[]) => {
@@ -115,6 +119,7 @@ export default function CodePreview() {
     isLengthError,
     setSidebarTab,
     currentGeneratingFile,
+    isWebcontainerReady,
   } = useComponentContext();
   const { buildError } = useWebcontainer();
   const [, copy] = useCopyToClipboard();
@@ -212,6 +217,7 @@ export default function CodePreview() {
           selectedFramework={selectedFramework}
           isLengthError={isLengthError}
           currentGeneratingFile={currentGeneratingFile}
+          isWebcontainerReady={isWebcontainerReady}
         />
       </div>
       <div

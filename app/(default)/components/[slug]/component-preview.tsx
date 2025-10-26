@@ -85,11 +85,17 @@ export default function ComponentPreview() {
     handleSubmitToAI,
   } = useComponentContext();
   const { previewId } = useWebcontainer();
-  const [iframeLoading, setIframeLoading] = React.useState(true);
+  const [iframeLoading, setIframeLoading] = React.useState(false);
 
   React.useEffect(() => {
     if (isWebcontainerReady) {
       setIframeLoading(true);
+      const timeout = setTimeout(() => {
+        setIframeLoading(false);
+      }, 3000);
+      return () => clearTimeout(timeout);
+    } else {
+      setIframeLoading(false);
     }
   }, [chatId, selectedVersion, isWebcontainerReady]);
 
