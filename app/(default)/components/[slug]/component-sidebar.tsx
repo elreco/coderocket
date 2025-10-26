@@ -679,7 +679,7 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
                               handleFileClick(m.version)
                             }
                             className={cn(
-                              "rounded-lg border border-primary/20 bg-primary/5 p-4 transition-all",
+                              "rounded-lg border border-primary/20 bg-primary/5 p-2 transition-all",
                               m.version === selectedVersion
                                 ? "cursor-default border-primary/30"
                                 : isLoading
@@ -687,7 +687,7 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
                                   : "cursor-pointer hover:border-primary/30",
                             )}
                           >
-                            <div className="flex w-full items-center justify-between gap-2">
+                            <div className="flex w-full items-center justify-between gap-2 p-1">
                               <div className="flex w-full items-center gap-2">
                                 <Avatar className="size-8 border border-primary">
                                   <AvatarImage
