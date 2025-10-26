@@ -590,19 +590,28 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
         }}
         className="w-full xl:hidden"
       >
-        <TabsList className="grid w-full grid-cols-4 rounded-none">
+        <TabsList
+          className={cn(
+            "grid w-full rounded-none",
+            authorized ? "grid-cols-4" : "grid-cols-2",
+          )}
+        >
           <TabsTrigger value="chat" disabled={isLoading}>
             <MessageSquare className="size-4" />
           </TabsTrigger>
           <TabsTrigger value="history" disabled={isLoading}>
             <BookOpen className="size-4" />
           </TabsTrigger>
-          <TabsTrigger value="github" disabled={isLoading}>
-            <Github className="size-4" />
-          </TabsTrigger>
-          <TabsTrigger value="settings" disabled={isLoading}>
-            <Settings className="size-4" />
-          </TabsTrigger>
+          {authorized && (
+            <TabsTrigger value="github" disabled={isLoading}>
+              <Github className="size-4" />
+            </TabsTrigger>
+          )}
+          {authorized && (
+            <TabsTrigger value="settings" disabled={isLoading}>
+              <Settings className="size-4" />
+            </TabsTrigger>
+          )}
         </TabsList>
       </Tabs>
 
@@ -619,13 +628,13 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
             <h3 className="text-base font-medium">History</h3>
           </div>
         )}
-        {activeTab === "github" && (
+        {authorized && activeTab === "github" && (
           <div className="flex h-12 items-center gap-2 bg-background px-4 py-1.5">
             <Github className="size-4" />
             <h3 className="text-base font-medium">GitHub Sync</h3>
           </div>
         )}
-        {activeTab === "settings" && (
+        {authorized && activeTab === "settings" && (
           <div className="flex h-12 items-center gap-2 bg-background px-4 py-1.5">
             <Settings className="size-4" />
             <h3 className="text-base font-medium">Settings</h3>
@@ -726,12 +735,14 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
                   ))}
             </div>
           )}
-          {!isLoading && activeTab === "github" && (
+          {!isLoading && authorized && activeTab === "github" && (
             <div className="p-4">
               <GithubSync closeSheet={() => {}} />
             </div>
           )}
-          {!isLoading && activeTab === "settings" && <SettingsContent />}
+          {!isLoading && authorized && activeTab === "settings" && (
+            <SettingsContent />
+          )}
           <div
             className={cn(
               "flex flex-col px-2 py-6 sm:px-4",
@@ -1157,30 +1168,34 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
         >
           <BookOpen className="size-5" />
         </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className={cn(
-            "h-10 w-full rounded-lg",
-            activeTab === "github" && "bg-secondary text-primary",
-          )}
-          onClick={() => !isLoading && handleTabChange("github")}
-          disabled={isLoading}
-        >
-          <Github className="size-5" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className={cn(
-            "h-10 w-full rounded-lg",
-            activeTab === "settings" && "bg-secondary text-primary",
-          )}
-          onClick={() => !isLoading && handleTabChange("settings")}
-          disabled={isLoading}
-        >
-          <Settings className="size-5" />
-        </Button>
+        {authorized && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className={cn(
+              "h-10 w-full rounded-lg",
+              activeTab === "github" && "bg-secondary text-primary",
+            )}
+            onClick={() => !isLoading && handleTabChange("github")}
+            disabled={isLoading}
+          >
+            <Github className="size-5" />
+          </Button>
+        )}
+        {authorized && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className={cn(
+              "h-10 w-full rounded-lg",
+              activeTab === "settings" && "bg-secondary text-primary",
+            )}
+            onClick={() => !isLoading && handleTabChange("settings")}
+            disabled={isLoading}
+          >
+            <Settings className="size-5" />
+          </Button>
+        )}
       </div>
     </div>
   );

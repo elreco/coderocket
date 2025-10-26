@@ -120,6 +120,7 @@ export default function CodePreview() {
     setSidebarTab,
     currentGeneratingFile,
     isWebcontainerReady,
+    authorized,
   } = useComponentContext();
   const { buildError } = useWebcontainer();
   const [, copy] = useCopyToClipboard();
@@ -253,19 +254,21 @@ export default function CodePreview() {
                       <TooltipContent>Copy code</TooltipContent>
                     </Tooltip>
 
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="size-8"
-                          onClick={() => setSidebarTab("github")}
-                        >
-                          <Pencil className="size-4" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>Modify code</TooltipContent>
-                    </Tooltip>
+                    {authorized && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="size-8"
+                            onClick={() => setSidebarTab("github")}
+                          >
+                            <Pencil className="size-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Modify code</TooltipContent>
+                      </Tooltip>
+                    )}
 
                     <Tooltip>
                       <TooltipTrigger asChild>
