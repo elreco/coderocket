@@ -222,6 +222,7 @@ export default function ComponentCompletion({
       }
       if (chat?.framework !== Framework.HTML && chat.framework) {
         const artifactCodeToUse =
+          assistantMsg?.artifact_code ||
           chat.artifact_code ||
           defaultArtifactCode[
             chat.framework as keyof typeof defaultArtifactCode

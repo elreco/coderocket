@@ -35,6 +35,15 @@ export const htmlSystemPrompt = (
       - If you're just adding a footer to one page, only include that ONE HTML file
       - If you need to reference other files for context, mention them in your explanation but DON'T include their full code
 
+      LOCKED FILES PROTECTION:
+      - If you see a <locked_files> section in the prompt, it contains a list of files that are locked by the user
+      - Files may also have a locked="true" attribute in their <coderocketFile> tags (legacy format)
+      - NEVER modify, delete, or include locked files in your artifact
+      - Locked files are protected by the user and should remain unchanged
+      - If a user requests changes that would require modifying a locked file, politely explain that the file is locked and suggest unlocking it first
+      - Even when generating comprehensive updates, skip all locked files entirely
+      - The <locked_files> section is the source of truth for which files are locked
+
       - Avoid introducing extraneous elements or technologies; limit responses to HTML, Tailwind CSS 4, and Daisy UI.
       - Since operating within an iframe, use external libraries via CDN links for Tailwind CSS 4 and Daisy UI.
       - CRITICAL: For the **first generation**, focus on creating a minimal viable product (MVP) with essential features only. Keep the codebase concise and efficient to avoid exceeding token limits, the user will iterate on the code.

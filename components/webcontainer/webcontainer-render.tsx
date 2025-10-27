@@ -18,42 +18,42 @@ export function WebcontainerRender({
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const broadcastChannelRef = useRef<BroadcastChannel>();
   const [previewUrl, setPreviewUrl] = useState("");
+  const previewUrlRef = useRef("");
 
-  // Handle preview refresh
+  useEffect(() => {
+    previewUrlRef.current = previewUrl;
+  }, [previewUrl]);
+
   const handleRefresh = useCallback(() => {
-    if (iframeRef.current && previewUrl) {
-      // Force a clean reload
+    if (iframeRef.current && previewUrlRef.current) {
       iframeRef.current.src = "";
       requestAnimationFrame(() => {
-        if (iframeRef.current) {
-          iframeRef.current.src = previewUrl;
+        if (iframeRef.current && previewUrlRef.current) {
+          iframeRef.current.src = previewUrlRef.current;
         }
       });
     }
-  }, [previewUrl]);
+  }, []);
 
-  // Notify other tabs that this preview is ready
   const notifyPreviewReady = useCallback(() => {
-    if (broadcastChannelRef.current && previewUrl) {
+    if (broadcastChannelRef.current && previewUrlRef.current) {
       broadcastChannelRef.current.postMessage({
         type: "preview-ready",
         previewId,
-        url: previewUrl,
+        url: previewUrlRef.current,
         timestamp: Date.now(),
       });
     }
-  }, [previewId, previewUrl]);
+  }, [previewId]);
 
   useEffect(() => {
     if (!previewId) {
       throw new Error("Preview ID is required");
     }
 
-    // Initialize broadcast channel
     broadcastChannelRef.current = new BroadcastChannel(PREVIEW_CHANNEL);
 
-    // Listen for preview updates
-    broadcastChannelRef.current.onmessage = (event) => {
+    const messageHandler = (event: MessageEvent) => {
       if (event.data.previewId === previewId) {
         if (
           event.data.type === "refresh-preview" ||
@@ -64,21 +64,26 @@ export function WebcontainerRender({
       }
     };
 
-    // Construct the WebContainer preview URL
+    broadcastChannelRef.current.addEventListener("message", messageHandler);
+
     const url = `https://${previewId}.local-credentialless.webcontainer-api.io`;
     setPreviewUrl(url);
 
-    // Set the iframe src
     if (iframeRef.current) {
       iframeRef.current.src = url;
     }
 
-    // Notify other tabs that this preview is ready
     notifyPreviewReady();
 
-    // Cleanup
     return () => {
-      broadcastChannelRef.current?.close();
+      if (broadcastChannelRef.current) {
+        broadcastChannelRef.current.removeEventListener(
+          "message",
+          messageHandler,
+        );
+        broadcastChannelRef.current.close();
+        broadcastChannelRef.current = undefined;
+      }
     };
   }, [previewId, handleRefresh, notifyPreviewReady]);
 
