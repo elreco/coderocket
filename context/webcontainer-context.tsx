@@ -62,11 +62,29 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
   // References to hold the active processes and terminal
   const shellProcessRef = useRef<WebContainerProcess | null>(null);
   const devProcessRef = useRef<WebContainerProcess | null>(null);
+  const shellStreamAbortControllerRef = useRef<AbortController | null>(null);
+  const installStreamAbortControllerRef = useRef<AbortController | null>(null);
+  const devStreamAbortControllerRef = useRef<AbortController | null>(null);
 
   const lastBuiltVersionRef = useRef<number | undefined>(undefined);
   const lastBuiltChatIdRef = useRef<string | undefined>(undefined);
+  const setupIdRef = useRef<number>(0);
 
-  useEffect(() => {
+  const cleanupWebcontainer = useCallback(async () => {
+    setupIdRef.current += 1;
+
+    if (shellStreamAbortControllerRef.current) {
+      shellStreamAbortControllerRef.current.abort();
+      shellStreamAbortControllerRef.current = null;
+    }
+    if (installStreamAbortControllerRef.current) {
+      installStreamAbortControllerRef.current.abort();
+      installStreamAbortControllerRef.current = null;
+    }
+    if (devStreamAbortControllerRef.current) {
+      devStreamAbortControllerRef.current.abort();
+      devStreamAbortControllerRef.current = null;
+    }
     if (shellProcessRef.current) {
       shellProcessRef.current.kill();
       shellProcessRef.current = null;
@@ -75,28 +93,22 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
       devProcessRef.current.kill();
       devProcessRef.current = null;
     }
-    setBuildError(null);
-    setPreviewId(undefined);
-    setLoadingState(null);
-    lastBuiltVersionRef.current = undefined;
-    lastBuiltChatIdRef.current = undefined;
-  }, [chatId, setLoadingState]);
+  }, []);
 
   useEffect(() => {
-    if (shellProcessRef.current) {
-      shellProcessRef.current.kill();
-      shellProcessRef.current = null;
-    }
-    if (devProcessRef.current) {
-      devProcessRef.current.kill();
-      devProcessRef.current = null;
-    }
+    cleanupWebcontainer();
     setBuildError(null);
     setPreviewId(undefined);
     setLoadingState(null);
     lastBuiltVersionRef.current = undefined;
     lastBuiltChatIdRef.current = undefined;
-  }, [setLoadingState]);
+  }, [chatId, setLoadingState, cleanupWebcontainer]);
+
+  useEffect(() => {
+    return () => {
+      cleanupWebcontainer();
+    };
+  }, [cleanupWebcontainer]);
 
   // Clear errors when framework changes to prevent showing old framework errors
   useEffect(() => {
@@ -199,30 +211,23 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
       setPreviewId(undefined);
       setLoadingState("initializing");
 
-      // Kill old processes before starting new ones
-      if (shellProcessRef.current) {
-        shellProcessRef.current.kill();
-        shellProcessRef.current = null;
-      }
-      if (devProcessRef.current) {
-        devProcessRef.current.kill();
-        devProcessRef.current = null;
-      }
+      await cleanupWebcontainer();
 
-      // 4) Grab the WebContainer instance
       const webcontainer = await webcontainerPromise;
       if (!webcontainer) return;
 
-      // 5) Spawn a new shell process to show logs
-
       shellProcessRef.current = await webcontainer.spawn("jsh");
-      shellProcessRef.current.output.pipeTo(
-        new WritableStream({
-          write(data) {
-            addToBuildError(data);
-          },
-        }),
-      );
+      shellStreamAbortControllerRef.current = new AbortController();
+      shellProcessRef.current.output
+        .pipeTo(
+          new WritableStream({
+            write(data) {
+              addToBuildError(data);
+            },
+          }),
+          { signal: shellStreamAbortControllerRef.current.signal },
+        )
+        .catch(() => {});
 
       // 6) Clean up old files before mounting new ones
       try {
@@ -243,15 +248,19 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
       setLoadingState("processing");
       let installOutput = "";
       const installProcess = await webcontainer.spawn("npm", ["install"]);
-      installProcess.output.pipeTo(
-        new WritableStream({
-          write(data) {
-            const text = stripAnsi(data);
-            installOutput += text;
-            addToBuildError(data);
-          },
-        }),
-      );
+      installStreamAbortControllerRef.current = new AbortController();
+      installProcess.output
+        .pipeTo(
+          new WritableStream({
+            write(data) {
+              const text = stripAnsi(data);
+              installOutput += text;
+              addToBuildError(data);
+            },
+          }),
+          { signal: installStreamAbortControllerRef.current.signal },
+        )
+        .catch(() => {});
 
       const exitCode = await installProcess.exit;
 
@@ -267,18 +276,24 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
-      // 8) Always run "npm run dev"
       setLoadingState("starting");
       devProcessRef.current = await webcontainer.spawn("npm", ["run", "dev"]);
-      devProcessRef.current.output.pipeTo(
-        new WritableStream({
-          write(data) {
-            addToBuildError(data);
-          },
-        }),
-      );
+      devStreamAbortControllerRef.current = new AbortController();
+      devProcessRef.current.output
+        .pipeTo(
+          new WritableStream({
+            write(data) {
+              addToBuildError(data);
+            },
+          }),
+          { signal: devStreamAbortControllerRef.current.signal },
+        )
+        .catch(() => {});
+
+      const currentSetupId = setupIdRef.current;
 
       webcontainer.on("preview-message", (message) => {
+        if (currentSetupId !== setupIdRef.current) return;
         if (
           message.type === "PREVIEW_UNCAUGHT_EXCEPTION" ||
           message.type === "PREVIEW_UNHANDLED_REJECTION"
@@ -295,6 +310,7 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
       });
 
       webcontainer.on("server-ready", async (port, url) => {
+        if (currentSetupId !== setupIdRef.current) return;
         const newPreviewId = getPreviewId(url);
         if (newPreviewId) {
           setLoadingState(null);
@@ -318,6 +334,7 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
     setLoadingState,
     addToBuildError,
     forceBuild,
+    cleanupWebcontainer,
   ]);
 
   return (

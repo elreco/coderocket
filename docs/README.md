@@ -38,6 +38,7 @@ docs/
 ├── docs.json              # Mintlify configuration (new format)
 ├── introduction.mdx       # Homepage
 ├── quickstart.mdx         # Getting started guide
+├── file-locking.md       # File locking feature guide
 ├── github/               # GitHub integration docs
 │   ├── overview.mdx      # Feature overview
 │   ├── setup.mdx         # Setup instructions
@@ -179,6 +180,14 @@ Complete documentation for:
 - ✅ Customizing and modifying templates
 - ✅ Best practices for template creation
 - ✅ Pricing strategies for premium templates
+
+### File Locking
+Complete documentation for:
+- ✅ Locking/unlocking individual files
+- ✅ Locking/unlocking entire folders
+- ✅ AI behavior with locked files
+- ✅ Use cases and best practices
+- ✅ Troubleshooting guide
 
 ### Future Sections
 Planned documentation areas:

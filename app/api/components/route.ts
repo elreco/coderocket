@@ -39,7 +39,10 @@ import {
 } from "@/utils/config";
 // import { promptEnhancer } from "@/utils/prompt-enhancer";
 import { uploadFiles } from "@/utils/file-uploader";
-import { getPreviousArtifactCode } from "@/utils/supabase/artifact-helpers";
+import {
+  getPreviousArtifactCode,
+  getArtifactCodeByVersion,
+} from "@/utils/supabase/artifact-helpers";
 import { createClient } from "@/utils/supabase/server";
 import { systemPrompt } from "@/utils/system-prompts";
 import { htmlSystemPrompt } from "@/utils/system-prompts/html";
@@ -225,6 +228,7 @@ export async function POST(req: Request) {
       updatedPrompt,
       updatedImages,
       uploadedFilesInfo,
+      currentFilesContext,
     } = await validateRequest(
       id,
       image,
@@ -240,6 +244,7 @@ export async function POST(req: Request) {
       updatedImages, // Le chemin vers le screenshot capturé si disponible ou tableau d'images
       selectedVersion,
       uploadedFilesInfo,
+      currentFilesContext,
     );
 
     // Add detailed logging for debugging
@@ -439,6 +444,7 @@ const buildMessagesToOpenAi = async (
     type: "image" | "pdf";
     mimeType: string;
   }[],
+  currentFilesContext?: string,
 ) => {
   // Helper function to extract file URLs from message
   const getMessageImages = (message: Tables<"messages">): string[] => {
@@ -526,10 +532,14 @@ const buildMessagesToOpenAi = async (
   // Préparer le contenu du message final de l'utilisateur
   const finalMessageContent: Array<TextPart | ImagePart> = [];
 
-  // Toujours inclure le texte du prompt
+  // Toujours inclure le texte du prompt (avec le contexte des fichiers locked au début si présent)
+  const finalPromptText = currentFilesContext
+    ? currentFilesContext + updatedPrompt
+    : updatedPrompt;
+
   finalMessageContent.push({
     type: "text",
-    text: updatedPrompt,
+    text: finalPromptText,
   });
 
   // Si des fichiers ont été uploadés (images ou PDFs)
@@ -572,7 +582,7 @@ const buildMessagesToOpenAi = async (
   messagesToOpenAI.push({
     role: "user",
     content:
-      finalMessageContent.length > 1 ? finalMessageContent : updatedPrompt,
+      finalMessageContent.length > 1 ? finalMessageContent : finalPromptText,
   });
 
   return { messagesToOpenAI };
@@ -596,6 +606,7 @@ const validateRequest = async (
     type: "image" | "pdf";
     mimeType: string;
   }[];
+  currentFilesContext: string;
 }> => {
   const supabase = await createClient();
   const {
@@ -622,6 +633,26 @@ const validateRequest = async (
   // Validate user
   if (chat.user?.id !== user.id) {
     throw new Error("User is not authorized to modify chat");
+  }
+
+  const currentArtifactCode =
+    selectedVersion !== undefined
+      ? await getArtifactCodeByVersion(id, selectedVersion)
+      : chat.artifact_code || "";
+
+  let currentFilesContext = "";
+  if (currentArtifactCode) {
+    const lockedFilesRegex =
+      /<coderocketFile[^>]*locked=["']true["'][^>]*name=["']([^"']+)["'][^>]*>|<coderocketFile[^>]*name=["']([^"']+)["'][^>]*locked=["']true["'][^>]*>/g;
+    const lockedFiles: string[] = [];
+    let match;
+    while ((match = lockedFilesRegex.exec(currentArtifactCode)) !== null) {
+      lockedFiles.push(match[1] || match[2]);
+    }
+
+    if (lockedFiles.length > 0) {
+      currentFilesContext = `\n\n<locked_files>\nThe following files are locked and must NOT be modified, deleted, or included in your response:\n${lockedFiles.map((f) => `- ${f}`).join("\n")}\n</locked_files>\n\n`;
+    }
   }
 
   // Vérifier si c'est un site cloné et récupérer les détails si nécessaire
@@ -900,6 +931,7 @@ Recreate the visual layout and core functionality of this website using modern w
     updatedPrompt, // Contient maintenant le prompt détaillé avec tous les détails du site
     updatedImages,
     uploadedFilesInfo,
+    currentFilesContext,
   };
 };
 

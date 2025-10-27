@@ -21,6 +21,7 @@ export interface ChatFile {
   isActive: boolean;
   isIncomplete?: boolean;
   isContinue?: boolean;
+  isLocked?: boolean;
 }
 
 export interface ChatMessage {
@@ -62,14 +63,16 @@ export const getUpdatedArtifactCode = (
   // Parse existing files from artifactCode
   const allFiles = new Map();
   const filesToDelete = new Set();
+  const lockedFiles = new Set<string>();
 
-  // Extract existing files
+  // Extract existing files and locked status
   const existingFileRegex =
-    /<coderocketFile.*?name=["']([^"']*?)["'].*?>([\s\S]*?)<\/coderocketFile>/g;
+    /<coderocketFile.*?name=["']([^"']*?)["'](?:.*?locked=["']([^"']*?)["'])?[^>]*>([\s\S]*?)<\/coderocketFile>/g;
   let existingMatch;
   while ((existingMatch = existingFileRegex.exec(artifactCode)) !== null) {
     const fileName = existingMatch[1];
-    const content = existingMatch[2].trim();
+    const locked = existingMatch[2];
+    const content = existingMatch[3].trim();
 
     // Supprimer le marqueur FINISH_REASON s'il existe
     const cleanedContent = content.replace(
@@ -77,6 +80,9 @@ export const getUpdatedArtifactCode = (
       "",
     );
     allFiles.set(fileName, cleanedContent);
+    if (locked === "true") {
+      lockedFiles.add(fileName);
+    }
   }
 
   // Extract new/updated files from completion, including partial ones
@@ -328,12 +334,40 @@ export const getUpdatedArtifactCode = (
   let mergedArtifact = `<coderocketArtifact title="${artifactTitle}">\n`;
   allFiles.forEach((content, fileName) => {
     if (!filesToDelete.has(fileName)) {
-      mergedArtifact += `<coderocketFile name="${fileName}">\n${content}\n</coderocketFile>\n`;
+      const lockedAttr = lockedFiles.has(fileName) ? ' locked="true"' : "";
+      mergedArtifact += `<coderocketFile name="${fileName}"${lockedAttr}>\n${content}\n</coderocketFile>\n`;
     }
   });
   mergedArtifact += "</coderocketArtifact>";
 
   return mergedArtifact;
+};
+
+export const toggleFileLock = (
+  artifactCode: string,
+  filePath: string,
+): string => {
+  const fileRegex = new RegExp(
+    `<coderocketFile([^>]*?)name=["']${filePath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}["']([^>]*?)>([\\s\\S]*?)</coderocketFile>`,
+    "g",
+  );
+
+  return artifactCode.replace(fileRegex, (match, before, after, content) => {
+    const hasLocked = /locked=["']true["']/.test(before + after);
+    if (hasLocked) {
+      const beforeCleaned = before
+        .replace(/\s*locked=["']true["']\s*/, " ")
+        .trim();
+      const afterCleaned = after
+        .replace(/\s*locked=["']true["']\s*/, " ")
+        .trim();
+      const beforeSpace = beforeCleaned ? ` ${beforeCleaned}` : "";
+      const afterSpace = afterCleaned ? ` ${afterCleaned}` : "";
+      return `<coderocketFile${beforeSpace} name="${filePath}"${afterSpace}>${content}</coderocketFile>`;
+    } else {
+      return `<coderocketFile${before}name="${filePath}"${after} locked="true">${content}</coderocketFile>`;
+    }
+  });
 };
 
 export const ensureCDNsPresent = (htmlContent: string): string => {
@@ -1072,13 +1106,14 @@ export const extractFilesFromArtifact = (
   }
 
   const fileRegex =
-    /<coderocketFile.*?name=["']([^"']*?)["'].*?(?:action=["']([^"']*?)["'].*?)?>([\s\S]*?)(?=<\/coderocketFile>|<coderocketFile|$)/g;
+    /<coderocketFile.*?name=["']([^"']*?)["'](?:.*?action=["']([^"']*?)["'])?(?:.*?locked=["']([^"']*?)["'])?[^>]*>([\s\S]*?)(?=<\/coderocketFile>|<coderocketFile|$)/g;
 
   let match;
   while ((match = fileRegex.exec(artifactCode)) !== null) {
     const fileName = match[1].trim();
     const action = match[2];
-    let content = match[3].trim();
+    const locked = match[3];
+    let content = match[4].trim();
 
     // Si on trouve une balise fermante pour ce fichier, on l'utilise comme limite
     const closeTagIndex = content.indexOf("</coderocketFile>");
@@ -1117,6 +1152,7 @@ export const extractFilesFromArtifact = (
       content: content,
       isDelete: action === "delete",
       isActive: fileName === activeFile, // Mark as active if this is the detected file
+      isLocked: locked === "true",
     });
   }
 

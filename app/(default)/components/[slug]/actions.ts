@@ -19,6 +19,91 @@ import {
   fetchLastAssistantMessageByChatId,
 } from "../actions";
 
+export const updateArtifactCode = async (
+  chatId: string,
+  artifactCode: string,
+  selectedVersion?: number,
+) => {
+  const supabase = await createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  const user = userData?.user;
+
+  if (!user) throw new Error("User not authenticated");
+
+  const { data: chat } = await supabase
+    .from("chats")
+    .select("user_id")
+    .eq("id", chatId)
+    .single();
+
+  if (!chat || chat.user_id !== user.id) {
+    throw new Error("Unauthorized");
+  }
+
+  let targetMessage;
+
+  if (selectedVersion !== undefined) {
+    const { data: versionMessage } = await supabase
+      .from("messages")
+      .select("id, version")
+      .eq("chat_id", chatId)
+      .eq("role", "assistant")
+      .eq("version", selectedVersion)
+      .single();
+
+    targetMessage = versionMessage;
+  } else {
+    const { data: lastMessage } = await supabase
+      .from("messages")
+      .select("id, version")
+      .eq("chat_id", chatId)
+      .eq("role", "assistant")
+      .order("version", { ascending: false })
+      .limit(1)
+      .single();
+
+    targetMessage = lastMessage;
+  }
+
+  if (targetMessage) {
+    const { error: messageError } = await supabase
+      .from("messages")
+      .update({ artifact_code: artifactCode })
+      .eq("id", targetMessage.id);
+
+    if (messageError) {
+      console.error("Error updating message artifact code:", messageError);
+      throw new Error("Failed to update message artifact code");
+    }
+  }
+
+  const { data: latestMessage } = await supabase
+    .from("messages")
+    .select("id, version")
+    .eq("chat_id", chatId)
+    .eq("role", "assistant")
+    .order("version", { ascending: false })
+    .limit(1)
+    .single();
+
+  if (
+    selectedVersion === undefined ||
+    selectedVersion === latestMessage?.version
+  ) {
+    const { error } = await supabase
+      .from("chats")
+      .update({ artifact_code: artifactCode })
+      .eq("id", chatId);
+
+    if (error) {
+      console.error("Error updating artifact code:", error);
+      throw new Error("Failed to update artifact code");
+    }
+  }
+
+  return { success: true };
+};
+
 export const changeVisibilityByChatId = async (
   chatId: string,
   isVisible: boolean,
