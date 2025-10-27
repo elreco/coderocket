@@ -159,3 +159,13 @@
 .cm-scroller, .cm-editor {
   @apply rounded-bl-lg;
 }
+
+.cm-scroller {
+  overflow: auto !important;
+  overflow-x: auto !important;
+  overflow-y: auto !important;
+}
+
+.cm-content, .cm-line {
+  white-space: pre !important;
+}

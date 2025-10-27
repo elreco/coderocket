@@ -172,8 +172,19 @@ export default function CodePreview() {
     if (!view) return;
 
     const scrollToBottom = () => {
-      if (isLoading) {
-        view.scrollDOM.scrollTop = view.scrollDOM.scrollHeight;
+      if (isLoading && view && view.scrollDOM) {
+        try {
+          const cmScroller = view.scrollDOM.querySelector(
+            ".cm-scroller",
+          ) as HTMLElement;
+          if (cmScroller) {
+            cmScroller.scrollTop = cmScroller.scrollHeight;
+          } else if (view.scrollDOM) {
+            view.scrollDOM.scrollTop = view.scrollDOM.scrollHeight;
+          }
+        } catch (error) {
+          console.error("Scroll error:", error);
+        }
       }
     };
 
@@ -263,8 +274,8 @@ export default function CodePreview() {
             />
           )}
 
-          <div className="relative flex flex-1 flex-col items-start justify-start">
-            <div className="m-0 flex h-0 w-full max-w-full grow rounded-bl-lg border-b border-l border-border">
+          <div className="relative flex flex-1 flex-col items-start justify-start overflow-hidden">
+            <div className="m-0 flex h-0 w-full grow rounded-bl-lg border-b border-l border-border">
               <CodeMirror
                 ref={codeMirrorRef}
                 theme={draculaInit({
@@ -277,8 +288,8 @@ export default function CodePreview() {
                 lang={activeTab.split(".").pop() || Framework.HTML}
                 height="100%"
                 width="100%"
-                className={`size-full max-w-full rounded-bl-lg ${
-                  isLoading ? "pointer-events-none overflow-hidden" : ""
+                className={`size-full rounded-bl-lg ${
+                  isLoading ? "pointer-events-none" : ""
                 }`}
                 extensions={getLanguageExtension(activeTab, selectedFramework)}
                 readOnly
@@ -290,6 +301,7 @@ export default function CodePreview() {
                   highlightSpecialChars: true,
                   tabSize: 2,
                 }}
+                style={{ touchAction: "pan-x pan-y", overflow: "auto" }}
               />
             </div>
 

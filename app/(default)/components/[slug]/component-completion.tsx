@@ -311,9 +311,14 @@ export default function ComponentCompletion({
       experimental_throttle: 500,
       onError: async (error: Error) => {
         setIsSubmitting(false);
-        const newArtifactFiles = extractFilesFromArtifact(
-          fetchedChat?.artifact_code || "",
-        );
+        const artifactCodeToUse =
+          fetchedChat?.artifact_code ||
+          (fetchedChat?.framework && fetchedChat.framework !== Framework.HTML
+            ? defaultArtifactCode[
+                fetchedChat.framework as keyof typeof defaultArtifactCode
+              ]
+            : "");
+        const newArtifactFiles = extractFilesFromArtifact(artifactCodeToUse);
         // Merge new files with existing files to keep all project files
         setArtifactFiles((prevFiles) => {
           const fileMap = new Map(prevFiles.map((f) => [f.name, f]));
@@ -542,36 +547,45 @@ export default function ComponentCompletion({
         });
         const lastFileName = allFileNames[allFileNames.length - 1];
         if (lastFileName) {
-          setCurrentGeneratingFile(lastFileName);
-          setActiveTab(lastFileName);
-        }
-      }
+          if (lastFileName !== currentGeneratingFile) {
+            setCurrentGeneratingFile(lastFileName);
+            setActiveTab(lastFileName);
+          }
 
-      const newArtifactCode = getUpdatedArtifactCode(completion, artifactCode);
-      const newFiles = extractFilesFromArtifact(
-        newArtifactCode,
-        artifactCode,
-        completion,
-      );
+          setArtifactCode((prevArtifactCode) => {
+            const newArtifactCode = getUpdatedArtifactCode(
+              completion,
+              prevArtifactCode,
+            );
+            const newFiles = extractFilesFromArtifact(
+              newArtifactCode,
+              prevArtifactCode,
+              completion,
+            );
 
-      if (newFiles.length > 0) {
-        setArtifactFiles((prevFiles) => {
-          const fileMap = new Map(prevFiles.map((f) => [f.name, f]));
-          newFiles.forEach((file) => {
-            fileMap.set(file.name, file);
+            if (newFiles.length > 0) {
+              setArtifactFiles((prevFiles) => {
+                const fileMap = new Map(prevFiles.map((f) => [f.name, f]));
+                newFiles.forEach((file) => {
+                  fileMap.set(file.name, file);
+                });
+                return Array.from(fileMap.values());
+              });
+
+              const activeFile = newFiles.find((f) => f.name === lastFileName);
+              if (activeFile) {
+                setEditorValue(activeFile.content);
+              }
+            }
+
+            return newArtifactCode;
           });
-          return Array.from(fileMap.values());
-        });
-
-        const activeFile = newFiles.find((f) => f.name === activeTab);
-        if (activeFile) {
-          setEditorValue(activeFile.content);
         }
       }
     } else if (!isLoading && currentGeneratingFile) {
       setCurrentGeneratingFile(null);
     }
-  }, [completion, isLoading, currentGeneratingFile, artifactCode, activeTab]);
+  }, [completion, isLoading, currentGeneratingFile]);
 
   const handleSubmitToAI = (inputData: string) => {
     if (isSubmitting) return;
@@ -635,14 +649,31 @@ export default function ComponentCompletion({
         const newArtifactFiles = extractFilesFromArtifact(
           selectedAssistantMessage.artifact_code,
         );
-        // Merge new files with existing files to keep all project files
-        setArtifactFiles((prevFiles) => {
-          const fileMap = new Map(prevFiles.map((f) => [f.name, f]));
-          newArtifactFiles.forEach((file) => {
-            fileMap.set(file.name, file);
+
+        // Determine if we need to merge with default template files
+        const needsTemplateFiles =
+          newArtifactFiles.length === 0 &&
+          fetchedChat?.framework &&
+          fetchedChat.framework !== Framework.HTML;
+
+        if (needsTemplateFiles) {
+          const templateFiles = extractFilesFromArtifact(
+            defaultArtifactCode[
+              fetchedChat.framework as keyof typeof defaultArtifactCode
+            ],
+          );
+          setArtifactFiles(templateFiles);
+        } else {
+          // Merge new files with existing files to keep all project files
+          setArtifactFiles((prevFiles) => {
+            const fileMap = new Map(prevFiles.map((f) => [f.name, f]));
+            newArtifactFiles.forEach((file) => {
+              fileMap.set(file.name, file);
+            });
+            return Array.from(fileMap.values());
           });
-          return Array.from(fileMap.values());
-        });
+        }
+
         // Handle file selection
         const files = extractFilesFromCompletion(
           selectedAssistantMessage.content,
@@ -729,68 +760,75 @@ export default function ComponentCompletion({
     isFirstRun?: boolean,
     tabName?: string,
   ) => {
-    const newArtifactCode = getUpdatedArtifactCode(_completion, artifactCode);
-    const newArtifactFiles = extractFilesFromArtifact(
-      newArtifactCode,
-      artifactCode,
-      _completion, // Pass current completion to detect active file
-    );
+    setArtifactCode((prevArtifactCode) => {
+      const newArtifactCode = getUpdatedArtifactCode(
+        _completion,
+        prevArtifactCode,
+      );
+      const newArtifactFiles = extractFilesFromArtifact(
+        newArtifactCode,
+        prevArtifactCode,
+        _completion,
+      );
 
-    // Merge new files with existing files to keep all project files
-    setArtifactFiles((prevFiles) => {
-      const fileMap = new Map(prevFiles.map((f) => [f.name, f]));
-      newArtifactFiles.forEach((file) => {
-        fileMap.set(file.name, file);
+      // Merge new files with existing files to keep all project files
+      setArtifactFiles((prevFiles) => {
+        const fileMap = new Map(prevFiles.map((f) => [f.name, f]));
+        newArtifactFiles.forEach((file) => {
+          fileMap.set(file.name, file);
+        });
+        return Array.from(fileMap.values());
       });
-      return Array.from(fileMap.values());
+
+      const files = extractFilesFromCompletion(_completion);
+
+      if (files.length > 0) {
+        setChatFiles(files);
+      } else {
+        setChatFiles([]);
+      }
+      if (tabName) {
+        const file = newArtifactFiles.find((file) => file.name === tabName);
+
+        if (!file) {
+          setEditorValue("");
+          setActiveTab("");
+          return newArtifactCode;
+        }
+        setEditorValue(file.content);
+        setActiveTab(tabName);
+        setCanvas(false);
+        return newArtifactCode;
+      }
+
+      if (isFirstRun) {
+        const firstFile = newArtifactFiles[0];
+        if (!firstFile) {
+          setEditorValue("");
+          setActiveTab("");
+          return newArtifactCode;
+        }
+        setEditorValue(firstFile.content);
+        setActiveTab(firstFile.name || "");
+        setCanvas(true);
+        return newArtifactCode;
+      }
+      if (!newArtifactFiles.length) {
+        return newArtifactCode;
+      }
+      const activeFile = newArtifactFiles.find((file) => file.isActive);
+
+      if (!activeFile) {
+        return newArtifactCode;
+      }
+      setEditorValue(activeFile.content);
+      setActiveTab(activeFile.name || "");
+      if (!isLoading) {
+        setCanvas(true);
+      }
+
+      return newArtifactCode;
     });
-
-    const files = extractFilesFromCompletion(_completion);
-
-    if (files.length > 0) {
-      setChatFiles(files);
-    } else {
-      setChatFiles([]);
-    }
-    if (tabName) {
-      const file = newArtifactFiles.find((file) => file.name === tabName);
-
-      if (!file) {
-        setEditorValue("");
-        setActiveTab("");
-        return;
-      }
-      setEditorValue(file.content);
-      setActiveTab(tabName);
-      setCanvas(false);
-      return;
-    }
-
-    if (isFirstRun) {
-      const firstFile = newArtifactFiles[0];
-      if (!firstFile) {
-        setEditorValue("");
-        setActiveTab("");
-        return;
-      }
-      setEditorValue(firstFile.content);
-      setActiveTab(firstFile.name || "");
-      setCanvas(true);
-      return;
-    }
-    if (!newArtifactFiles.length) {
-      return;
-    }
-    const activeFile = newArtifactFiles.find((file) => file.isActive);
-
-    if (!activeFile) {
-      return;
-    }
-    setEditorValue(activeFile.content);
-    setActiveTab(activeFile.name || "");
-    if (!isLoading) {
-      setCanvas(true);
-    }
   };
 
   useEffect(() => {

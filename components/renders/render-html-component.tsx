@@ -74,6 +74,7 @@ export default function RenderHtmlComponent({ files }: { files: ChatFile[] }) {
     return () => {
       window.removeEventListener("message", handleMessage);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [files]); // Re-add listener when files change
 
   // Inject script to intercept link clicks
@@ -92,18 +93,22 @@ export default function RenderHtmlComponent({ files }: { files: ChatFile[] }) {
             const href = target.getAttribute('href');
 
             // Don't intercept anchor links (let browser handle them)
-            if (href.startsWith('#')) {
+            if (href && href.startsWith('#')) {
               return;
             }
 
-            // Prevent default navigation
+            // Always prevent default navigation
             e.preventDefault();
 
-            // Send message to parent
-            window.parent.postMessage({
-              type: 'linkClick',
-              href: href
-            }, '*');
+            // Only send message for relative links (internal navigation)
+            if (href && !href.startsWith('http://') && !href.startsWith('https://') && !href.startsWith('//')) {
+              // Send message to parent for internal links
+              window.parent.postMessage({
+                type: 'linkClick',
+                href: href
+              }, '*');
+            }
+            // For external links, do nothing (navigation is blocked)
           }
         }, true);
       </script>
