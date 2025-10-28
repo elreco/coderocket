@@ -935,6 +935,129 @@ export type Database = {
         };
         Relationships: [];
       };
+      user_integrations: {
+        Row: {
+          config: Json;
+          created_at: string;
+          id: string;
+          integration_type: string;
+          is_active: boolean;
+          name: string;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          config: Json;
+          created_at?: string;
+          id?: string;
+          integration_type: string;
+          is_active?: boolean;
+          name: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          config?: Json;
+          created_at?: string;
+          id?: string;
+          integration_type?: string;
+          is_active?: boolean;
+          name?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
+      chat_integrations: {
+        Row: {
+          chat_id: string;
+          config_override: Json | null;
+          created_at: string;
+          id: string;
+          integration_id: string;
+          is_enabled: boolean;
+          updated_at: string;
+        };
+        Insert: {
+          chat_id: string;
+          config_override?: Json | null;
+          created_at?: string;
+          id?: string;
+          integration_id: string;
+          is_enabled?: boolean;
+          updated_at?: string;
+        };
+        Update: {
+          chat_id?: string;
+          config_override?: Json | null;
+          created_at?: string;
+          id?: string;
+          integration_id?: string;
+          is_enabled?: boolean;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "chat_integrations_chat_id_fkey";
+            columns: ["chat_id"];
+            isOneToOne: false;
+            referencedRelation: "chats";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "chat_integrations_integration_id_fkey";
+            columns: ["integration_id"];
+            isOneToOne: false;
+            referencedRelation: "user_integrations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      integration_schemas: {
+        Row: {
+          chat_id: string;
+          created_at: string;
+          generated_files: Json;
+          id: string;
+          integration_id: string;
+          schema_definition: Json;
+          updated_at: string;
+        };
+        Insert: {
+          chat_id: string;
+          created_at?: string;
+          generated_files: Json;
+          id?: string;
+          integration_id: string;
+          schema_definition: Json;
+          updated_at?: string;
+        };
+        Update: {
+          chat_id?: string;
+          created_at?: string;
+          generated_files?: Json;
+          id?: string;
+          integration_id?: string;
+          schema_definition?: Json;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "integration_schemas_chat_id_fkey";
+            columns: ["chat_id"];
+            isOneToOne: false;
+            referencedRelation: "chats";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "integration_schemas_integration_id_fkey";
+            columns: ["integration_id"];
+            isOneToOne: false;
+            referencedRelation: "user_integrations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       version_usage_tracking: {
         Row: {
           chat_id: string;
