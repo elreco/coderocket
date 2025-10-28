@@ -1,5 +1,5 @@
 import { format } from "date-fns";
-import { Check, XIcon } from "lucide-react";
+import { Check, XIcon, Plug2 } from "lucide-react";
 import Link from "next/link";
 import { ReactNode, Suspense } from "react";
 
@@ -256,6 +256,33 @@ export default async function Account() {
               />
             </div>
           </form>
+        </Card>
+      </div>
+
+      {/* Integrations Section */}
+      <div className="mb-4">
+        <Card
+          title="Integrations"
+          description="Connect external services to add backend functionality to your generated apps."
+          footer={
+            <Button asChild>
+              <Link
+                href="/account/integrations"
+                className="flex items-center gap-2"
+              >
+                <Plug2 className="size-4" />
+                Manage Integrations
+              </Link>
+            </Button>
+          }
+        >
+          <div className="my-8">
+            <p className="text-sm text-muted-foreground">
+              Configure integrations like Supabase, Stripe, and more to
+              automatically generate full-stack applications with backend
+              functionality.
+            </p>
+          </div>
         </Card>
       </div>
 

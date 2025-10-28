@@ -1,0 +1,443 @@
+---
+title: Supabase Integration
+description: 'Complete guide to using Supabase with CodeRocket'
+---
+
+## What is Supabase?
+
+Supabase is an open-source Firebase alternative that provides:
+- **PostgreSQL Database** - Powerful relational database
+- **Authentication** - User management and auth
+- **Storage** - File uploads and CDN
+- **Real-time** - Database subscriptions
+- **Edge Functions** - Serverless functions
+
+## Getting Your Supabase Credentials
+
+### Step 1: Create a Supabase Project
+
+1. Go to [supabase.com](https://supabase.com)
+2. Sign in or create an account
+3. Click **New Project**
+4. Fill in your project details:
+   - Project name
+   - Database password
+   - Region (choose closest to your users)
+
+<Note>
+  Save your database password securely - you'll need it for direct database access.
+</Note>
+
+### Step 2: Get Your API Keys
+
+Once your project is created:
+
+1. Go to **Project Settings** (⚙️ icon in sidebar)
+2. Navigate to **API** section
+3. You'll find:
+   - **Project URL**: `https://xxxxx.supabase.co`
+   - **Anon Key**: Public API key (safe to use in client-side code)
+   - **Service Role Key**: Admin API key (use server-side only)
+
+<Warning>
+  **Never expose your Service Role Key in client-side code!**
+
+  It bypasses Row Level Security and has full database access.
+</Warning>
+
+## Configuring Supabase in CodeRocket
+
+### Adding the Integration
+
+1. Go to **Account → Integrations**
+2. Click **Add Integration** on Supabase
+3. Fill in the form:
+
+```
+Integration Name: My Blog Database
+Project URL: https://xxxxx.supabase.co
+Anon Key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Service Role Key: (optional) eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+4. Click **Test Connection** to verify
+5. Click **Create Integration**
+
+### When to Include Service Role Key
+
+<AccordionGroup>
+  <Accordion title="✅ Include it when...">
+    - You need admin operations (bypassing RLS)
+    - You want to manage users programmatically
+    - You need to perform database migrations
+    - You're building admin panels
+  </Accordion>
+
+  <Accordion title="❌ Skip it when...">
+    - Building standard CRUD applications
+    - User-facing applications with RLS
+    - You don't need admin privileges
+    - Security is your top concern
+  </Accordion>
+</AccordionGroup>
+
+## What Gets Generated
+
+When you enable Supabase for a project and generate code, CodeRocket automatically creates:
+
+### 1. Supabase Client Configuration
+
+```typescript src/lib/supabase.ts
+import { createClient } from '@supabase/supabase-js'
+
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+```
+
+### 2. TypeScript Types
+
+```typescript src/types/database.types.ts
+export type Database = {
+  public: {
+    Tables: {
+      posts: {
+        Row: {
+          id: string
+          title: string
+          content: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          content: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          content?: string
+          created_at?: string
+        }
+      }
+    }
+  }
+}
+```
+
+### 3. React Hooks (for React projects)
+
+```typescript src/hooks/usePosts.ts
+import { useEffect, useState } from 'react'
+import { supabase } from '@/lib/supabase'
+import { Database } from '@/types/database.types'
+
+type Post = Database['public']['Tables']['posts']['Row']
+
+export function usePosts() {
+  const [posts, setPosts] = useState<Post[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('posts')
+          .select('*')
+          .order('created_at', { ascending: false })
+
+        if (error) throw error
+        setPosts(data)
+      } catch (err) {
+        setError(err.message)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchPosts()
+  }, [])
+
+  return { posts, loading, error }
+}
+```
+
+### 4. Environment Variables
+
+```bash .env.example
+VITE_SUPABASE_URL=https://xxxxx.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-key-here
+```
+
+## Common Use Cases
+
+### Example 1: Simple Blog
+
+**Prompt:**
+```
+Create a blog with posts that have title, content, and author.
+Users should be able to create, read, update, and delete posts.
+```
+
+**Generated Structure:**
+- `posts` table schema
+- CRUD API routes
+- Post list component
+- Post creation form
+- Post editing interface
+
+### Example 2: Todo App
+
+**Prompt:**
+```
+Build a todo application with tasks that can be marked as complete.
+Each todo should have a title, description, and due date.
+```
+
+**Generated:**
+- `todos` table
+- Task components
+- Complete/incomplete toggle
+- Date picker for due dates
+- Filter by status
+
+### Example 3: User Authentication
+
+**Prompt:**
+```
+Add user authentication with login and signup forms.
+Users should only see their own data.
+```
+
+**Generated:**
+- Auth context and hooks
+- Login/signup components
+- Protected routes
+- Row Level Security policies
+
+## Setting Up Your Database Schema
+
+Before generating code, you may want to set up your database schema in Supabase:
+
+### Option 1: Let the AI Design It
+
+Simply describe what you want:
+```
+"Create a blog with posts, comments, and categories"
+```
+
+The AI will infer a suitable schema and suggest table structures.
+
+### Option 2: Pre-define Your Schema
+
+Create tables manually in Supabase first:
+
+1. Go to **Table Editor** in Supabase dashboard
+2. Click **New Table**
+3. Define columns and relationships
+4. Set up RLS policies
+
+Then tell CodeRocket:
+```
+"Build a UI for my existing posts table in Supabase"
+```
+
+### Option 3: Provide Schema in Integration Config
+
+When creating the integration, you can optionally provide your database schema:
+
+```json
+{
+  "tables": [
+    {
+      "name": "posts",
+      "columns": [
+        { "name": "id", "type": "uuid", "isPrimaryKey": true },
+        { "name": "title", "type": "text" },
+        { "name": "content", "type": "text" },
+        { "name": "author_id", "type": "uuid" },
+        { "name": "created_at", "type": "timestamptz" }
+      ]
+    }
+  ]
+}
+```
+
+<Info>
+  Providing the schema helps the AI generate more accurate types and queries.
+</Info>
+
+## Row Level Security (RLS)
+
+Supabase uses RLS to secure your data. The AI-generated code respects RLS policies.
+
+### Example RLS Policy
+
+```sql
+-- Enable RLS
+ALTER TABLE posts ENABLE ROW LEVEL SECURITY;
+
+-- Users can only read their own posts
+CREATE POLICY "Users can view own posts"
+  ON posts FOR SELECT
+  USING (auth.uid() = author_id);
+
+-- Users can insert their own posts
+CREATE POLICY "Users can create posts"
+  ON posts FOR INSERT
+  WITH CHECK (auth.uid() = author_id);
+```
+
+When you ask for authenticated features, the AI will generate code that works with these policies.
+
+## Real-time Subscriptions
+
+The AI can generate real-time features using Supabase subscriptions:
+
+**Prompt:**
+```
+"Make the posts list update in real-time when new posts are added"
+```
+
+**Generated Code:**
+```typescript
+useEffect(() => {
+  const subscription = supabase
+    .channel('posts')
+    .on('postgres_changes', {
+      event: 'INSERT',
+      schema: 'public',
+      table: 'posts'
+    }, (payload) => {
+      setPosts(prev => [payload.new, ...prev])
+    })
+    .subscribe()
+
+  return () => {
+    subscription.unsubscribe()
+  }
+}, [])
+```
+
+## Storage Integration
+
+For file uploads, Supabase Storage is automatically configured:
+
+**Prompt:**
+```
+"Add image upload functionality for post cover images"
+```
+
+**Generated:**
+- File upload component
+- Storage bucket configuration
+- Image preview
+- Public URL generation
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Use Environment Variables">
+    Never hardcode credentials. The AI generates `.env.example` files with all required variables.
+  </Accordion>
+
+  <Accordion title="Implement RLS">
+    Always enable Row Level Security for user data. The AI respects RLS in generated code.
+  </Accordion>
+
+  <Accordion title="Handle Errors Gracefully">
+    Generated code includes try-catch blocks and error states. Review and enhance as needed.
+  </Accordion>
+
+  <Accordion title="Type Everything">
+    Use the generated TypeScript types for better developer experience and fewer bugs.
+  </Accordion>
+
+  <Accordion title="Test Locally First">
+    Use a development Supabase project for testing before pointing to production.
+  </Accordion>
+</AccordionGroup>
+
+## Troubleshooting
+
+### "Failed to connect to Supabase"
+
+<Steps>
+  <Step title="Check Project URL">
+    Ensure the URL is in the format: `https://xxxxx.supabase.co`
+  </Step>
+  <Step title="Verify Anon Key">
+    Copy the key from Supabase dashboard → Settings → API
+  </Step>
+  <Step title="Check Project Status">
+    Make sure your Supabase project is active and not paused
+  </Step>
+  <Step title="Test in Supabase Dashboard">
+    Try running a query in the Supabase SQL Editor to confirm the project is working
+  </Step>
+</Steps>
+
+### "RLS policy prevents access"
+
+If generated code can't access data:
+1. Check your RLS policies in Supabase
+2. Ensure the user is authenticated if required
+3. Verify the policy allows the operation (SELECT, INSERT, etc.)
+4. Consider temporarily disabling RLS for testing
+
+### "TypeScript errors in generated code"
+
+- Make sure to install `@supabase/supabase-js`
+- Run `npm install` to ensure dependencies are installed
+- Check that environment variables are properly set
+
+## Migration from Other Databases
+
+If you're migrating from another database to Supabase:
+
+1. Export your existing schema
+2. Import into Supabase using the SQL Editor
+3. Update your CodeRocket integration
+4. Regenerate components with the new integration
+
+<Tip>
+  Supabase provides migration tools for Firebase, MongoDB, and other databases.
+</Tip>
+
+## Advanced Features
+
+### Edge Functions
+
+Ask the AI to generate Edge Functions:
+```
+"Create a Supabase Edge Function to send welcome emails"
+```
+
+### Database Functions
+
+Request stored procedures:
+```
+"Create a database function to calculate post statistics"
+```
+
+### Webhooks
+
+Integrate webhooks:
+```
+"Set up a webhook to notify Slack when new posts are created"
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Usage Examples" icon="code" href="/integrations/usage">
+    See more practical examples
+  </Card>
+  <Card title="Troubleshooting" icon="wrench" href="/integrations/troubleshooting">
+    Common issues and solutions
+  </Card>
+</CardGroup>
+

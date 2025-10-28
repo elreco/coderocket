@@ -1,0 +1,268 @@
+"use client";
+
+import { Plug2, Plus, Loader2, Database, ExternalLink } from "lucide-react";
+import Link from "next/link";
+import { useEffect, useState } from "react";
+
+import {
+  fetchUserIntegrations,
+  updateIntegration,
+  getChatIntegrations,
+  enableChatIntegration,
+  disableChatIntegration,
+} from "@/app/(default)/account/integrations/actions";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { IntegrationBadge } from "@/components/ui/integration-badge";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { useComponentContext } from "@/context/component-context";
+import { toast } from "@/hooks/use-toast";
+import {
+  IntegrationType,
+  UserIntegration,
+  ChatIntegrationWithDetails,
+} from "@/utils/integrations";
+
+export default function IntegrationsContent() {
+  const { chatId, user } = useComponentContext();
+  const [userIntegrations, setUserIntegrations] = useState<UserIntegration[]>(
+    [],
+  );
+  const [chatIntegrations, setChatIntegrations] = useState<
+    ChatIntegrationWithDetails[]
+  >([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedIntegrations, setSelectedIntegrations] = useState<
+    Map<IntegrationType, string>
+  >(new Map());
+
+  const loadData = async () => {
+    if (!user) return;
+
+    setIsLoading(true);
+    const [allIntegrations, enabledIntegrations] = await Promise.all([
+      fetchUserIntegrations(),
+      getChatIntegrations(chatId),
+    ]);
+
+    setUserIntegrations(allIntegrations);
+    setChatIntegrations(enabledIntegrations);
+
+    const selected = new Map<IntegrationType, string>();
+    enabledIntegrations.forEach((ci) => {
+      selected.set(ci.user_integrations.integration_type, ci.integration_id);
+    });
+    setSelectedIntegrations(selected);
+
+    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, [user, chatId]);
+
+  const handleToggleIntegration = async (
+    type: IntegrationType,
+    enabled: boolean,
+  ) => {
+    const integrationsOfType = getIntegrationsOfType(type);
+    const integrationId =
+      selectedIntegrations.get(type) || integrationsOfType[0]?.id;
+
+    if (!integrationId) {
+      toast({
+        variant: "destructive",
+        title: "No integration available",
+        description: "Please configure an integration in settings first",
+      });
+      return;
+    }
+
+    if (enabled) {
+      const result = await enableChatIntegration(chatId, integrationId);
+      if (result.success) {
+        toast({
+          title: "Integration enabled",
+          description: "The integration is now active for this project",
+        });
+        loadData();
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Failed to enable integration",
+          description: result.error,
+        });
+      }
+    } else {
+      const result = await disableChatIntegration(chatId, integrationId);
+      if (result.success) {
+        toast({
+          title: "Integration disabled",
+          description: "The integration is now inactive for this project",
+        });
+        loadData();
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Failed to disable integration",
+          description: result.error,
+        });
+      }
+    }
+  };
+
+  const handleSelectIntegration = (type: IntegrationType, id: string) => {
+    const newSelected = new Map(selectedIntegrations);
+    newSelected.set(type, id);
+    setSelectedIntegrations(newSelected);
+  };
+
+  const isIntegrationEnabled = (type: IntegrationType): boolean => {
+    return chatIntegrations.some(
+      (ci) => ci.user_integrations.integration_type === type,
+    );
+  };
+
+  const getIntegrationsOfType = (type: IntegrationType): UserIntegration[] => {
+    return userIntegrations.filter((i) => i.integration_type === type);
+  };
+
+  if (!user) {
+    return (
+      <div className="p-4">
+        <Alert>
+          <Plug2 className="size-4" />
+          <AlertDescription>
+            Please login to manage integrations
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <Loader2 className="size-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (userIntegrations.length === 0) {
+    return (
+      <div className="p-4">
+        <Alert>
+          <Plug2 className="size-4" />
+          <AlertDescription>
+            <div className="space-y-2">
+              <p>No integrations configured yet.</p>
+              <Button asChild size="sm" className="mt-2">
+                <Link
+                  href="/account/integrations"
+                  className="flex items-center gap-2"
+                >
+                  <Plus className="size-4" />
+                  Configure Integrations
+                  <ExternalLink className="size-3" />
+                </Link>
+              </Button>
+            </div>
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
+  const integrationTypes = Array.from(
+    new Set(userIntegrations.map((i) => i.integration_type)),
+  );
+
+  return (
+    <div className="space-y-4 p-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-medium">Active Integrations</h3>
+        <Button asChild size="sm" variant="outline">
+          <Link
+            href="/account/integrations"
+            className="flex items-center gap-2"
+          >
+            Manage
+            <ExternalLink className="size-3" />
+          </Link>
+        </Button>
+      </div>
+
+      <div className="space-y-4">
+        {integrationTypes.map((type) => {
+          const integrationsOfType = getIntegrationsOfType(type);
+          const isEnabled = isIntegrationEnabled(type);
+          const selectedId = selectedIntegrations.get(type);
+
+          return (
+            <div key={type} className="space-y-2 rounded-lg border bg-card p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Database className="size-4" />
+                  <IntegrationBadge type={type} showIcon={false} />
+                </div>
+                <Switch
+                  checked={isEnabled}
+                  onCheckedChange={(checked) =>
+                    handleToggleIntegration(type, checked)
+                  }
+                />
+              </div>
+
+              {integrationsOfType.length > 1 && (
+                <div className="space-y-1">
+                  <Label className="text-xs">Select integration</Label>
+                  <Select
+                    value={selectedId || integrationsOfType[0]?.id}
+                    onValueChange={(value) =>
+                      handleSelectIntegration(type, value)
+                    }
+                    disabled={!isEnabled}
+                  >
+                    <SelectTrigger className="h-8 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {integrationsOfType.map((integration) => (
+                        <SelectItem key={integration.id} value={integration.id}>
+                          {integration.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {integrationsOfType.length === 1 && isEnabled && (
+                <p className="text-xs text-muted-foreground">
+                  Using: {integrationsOfType[0]?.name}
+                </p>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      <Alert>
+        <Plug2 className="size-4" />
+        <AlertDescription className="text-xs">
+          Enabled integrations will be used to generate backend code for this
+          project. The AI will automatically include database operations, API
+          routes, and type definitions.
+        </AlertDescription>
+      </Alert>
+    </div>
+  );
+}

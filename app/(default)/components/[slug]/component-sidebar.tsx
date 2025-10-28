@@ -10,6 +10,7 @@ import {
   Loader,
   Settings,
   Github,
+  Plug2,
 } from "lucide-react";
 import { useEffect, useState, useRef, useCallback } from "react";
 
@@ -56,6 +57,7 @@ import { createClient } from "@/utils/supabase/client";
 
 import ComponentTheme from "./(settings)/component-theme";
 import GithubSync from "./(settings)/github-sync";
+import IntegrationsContent from "./(settings)/integrations-content";
 import SettingsContent from "./(settings)/settings-content";
 import { improvePromptByChatId } from "./actions";
 import { ChunkReader } from "./chunk-reader";
@@ -619,7 +621,7 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
         <TabsList
           className={cn(
             "grid w-full rounded-none",
-            authorized ? "grid-cols-4" : "grid-cols-2",
+            authorized ? "grid-cols-5" : "grid-cols-2",
           )}
         >
           <TabsTrigger value="chat" disabled={isLoading}>
@@ -631,6 +633,11 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
           {authorized && (
             <TabsTrigger value="github" disabled={isLoading}>
               <Github className="size-4" />
+            </TabsTrigger>
+          )}
+          {authorized && (
+            <TabsTrigger value="integrations" disabled={isLoading}>
+              <Plug2 className="size-4" />
             </TabsTrigger>
           )}
           {authorized && (
@@ -658,6 +665,12 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
           <div className="flex h-12 items-center gap-2 bg-background px-4 py-1.5">
             <Github className="size-4" />
             <h3 className="text-base font-medium">GitHub Sync</h3>
+          </div>
+        )}
+        {authorized && activeTab === "integrations" && (
+          <div className="flex h-12 items-center gap-2 bg-background px-4 py-1.5">
+            <Plug2 className="size-4" />
+            <h3 className="text-base font-medium">Integrations</h3>
           </div>
         )}
         {authorized && activeTab === "settings" && (
@@ -765,6 +778,9 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
             <div className="p-4">
               <GithubSync closeSheet={() => {}} />
             </div>
+          )}
+          {!isLoading && authorized && activeTab === "integrations" && (
+            <IntegrationsContent />
           )}
           {!isLoading && authorized && activeTab === "settings" && (
             <SettingsContent />
@@ -1288,6 +1304,20 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
             disabled={isLoading}
           >
             <Github className="size-5" />
+          </Button>
+        )}
+        {authorized && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className={cn(
+              "h-10 w-full rounded-lg",
+              activeTab === "integrations" && "bg-secondary text-primary",
+            )}
+            onClick={() => !isLoading && handleTabChange("integrations")}
+            disabled={isLoading}
+          >
+            <Plug2 className="size-5" />
           </Button>
         )}
         {authorized && (
