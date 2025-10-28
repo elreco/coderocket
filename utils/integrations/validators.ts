@@ -41,7 +41,10 @@ export async function validateSupabaseCredentials(
     });
 
     const startTime = Date.now();
-    const { data, error } = await supabase.from("_migrations").select("id").limit(1);
+    const { data, error } = await supabase
+      .from("_migrations")
+      .select("id")
+      .limit(1);
     const latency = Date.now() - startTime;
 
     if (error && error.code !== "42P01") {
@@ -225,9 +228,7 @@ export async function validateIntegrationConfig(
 ): Promise<ValidationResult> {
   switch (type) {
     case IntegrationType.SUPABASE:
-      return validateSupabaseCredentials(
-        config as SupabaseIntegrationConfig,
-      );
+      return validateSupabaseCredentials(config as SupabaseIntegrationConfig);
     case IntegrationType.STRIPE:
       return validateStripeCredentials(config as StripeIntegrationConfig);
     case IntegrationType.BLOB:
@@ -241,4 +242,3 @@ export async function validateIntegrationConfig(
       };
   }
 }
-

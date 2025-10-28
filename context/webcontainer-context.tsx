@@ -242,7 +242,31 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
       }
 
       // 7) Mount/update all files
-      const fsTree = buildFileSystemTree(artifactFiles);
+      // Add Supabase mock if project uses Supabase
+      const usesSupabase = artifactFiles.some(
+        (file) =>
+          file.content.includes("@supabase/supabase-js") ||
+          (file.content.includes("createClient") &&
+            file.content.includes("supabase")),
+      );
+
+      const modifiedFiles = [...artifactFiles];
+      if (usesSupabase) {
+        const { SUPABASE_MOCK_CODE } = await import(
+          "@/utils/webcontainer-supabase-mock"
+        );
+
+        modifiedFiles.push({
+          name: "node_modules/@supabase/supabase-js/dist/module/index.js",
+          content: SUPABASE_MOCK_CODE,
+          isActive: false,
+          isDelete: false,
+        });
+
+        console.log("[WebContainer] Added Supabase mock for preview");
+      }
+
+      const fsTree = buildFileSystemTree(modifiedFiles);
       await webcontainer.mount(fsTree);
 
       setLoadingState("processing");

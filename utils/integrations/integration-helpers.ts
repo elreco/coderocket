@@ -2,7 +2,10 @@ import { Tables } from "@/types_db";
 
 import { createClient } from "../supabase/server";
 
-import { decryptIntegrationConfig, encryptIntegrationConfig } from "./encryption";
+import {
+  decryptIntegrationConfig,
+  encryptIntegrationConfig,
+} from "./encryption";
 import {
   ChatIntegrationWithDetails,
   IntegrationConfig,
@@ -71,7 +74,11 @@ export async function createUserIntegration(
   type: IntegrationType,
   name: string,
   config: IntegrationConfig,
-): Promise<{ success: boolean; integration?: UserIntegration; error?: string }> {
+): Promise<{
+  success: boolean;
+  integration?: UserIntegration;
+  error?: string;
+}> {
   try {
     const supabase = await createClient();
 
@@ -83,7 +90,8 @@ export async function createUserIntegration(
         user_id: userId,
         integration_type: type,
         name,
-        config: encryptedConfig as unknown as Tables<"user_integrations">["config"],
+        config:
+          encryptedConfig as unknown as Tables<"user_integrations">["config"],
         is_active: true,
       })
       .select()
@@ -281,4 +289,3 @@ export async function getActiveIntegration(
   const integrations = await getIntegrationsByType(userId, type);
   return integrations.find((i) => i.is_active) || null;
 }
-

@@ -1,5 +1,7 @@
 import { Loader, Paintbrush, Trash2 } from "lucide-react";
+import { useMemo } from "react";
 
+import { MigrationRunner } from "@/components/migration-runner";
 import { Badge } from "@/components/ui/badge";
 import {
   Tooltip,
@@ -8,7 +10,11 @@ import {
 } from "@/components/ui/tooltip";
 import { useComponentContext } from "@/context/component-context";
 import { cn } from "@/lib/utils";
-import { ChatFile, extractDataTheme } from "@/utils/completion-parser";
+import {
+  ChatFile,
+  extractDataTheme,
+  categorizeFiles,
+} from "@/utils/completion-parser";
 import { Framework } from "@/utils/config";
 import { getFileConfig } from "@/utils/file-extensions";
 import { formatFileSize } from "@/utils/helpers";
@@ -31,6 +37,11 @@ export function ChunkReader({
 }) {
   const { isCanvas, activeTab, selectedFramework, isLoading } =
     useComponentContext();
+
+  const migrationFiles = useMemo(() => {
+    const categorized = categorizeFiles(files);
+    return categorized.migrations;
+  }, [files]);
 
   return chunks.map((chunk, index) => {
     // Pour les chunks de type "artifact", utiliser directement les fichiers fournis
@@ -154,6 +165,19 @@ export function ChunkReader({
                 </div>
               </div>
             </div>
+          </div>
+        )}
+        {chunk.type === "artifact" && migrationFiles.length > 0 && (
+          <div className="mt-3 space-y-3">
+            {migrationFiles.map((migration, migIdx) => (
+              <MigrationRunner
+                key={migIdx}
+                migrationFile={{
+                  name: migration.name || `migration_${migIdx + 1}.sql`,
+                  content: migration.content,
+                }}
+              />
+            ))}
           </div>
         )}
       </div>

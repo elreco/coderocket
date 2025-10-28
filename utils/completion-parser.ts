@@ -22,6 +22,16 @@ export interface ChatFile {
   isIncomplete?: boolean;
   isContinue?: boolean;
   isLocked?: boolean;
+  category?: "frontend" | "api" | "migration" | "type" | "config" | "env";
+}
+
+export interface CategorizedFiles {
+  frontend: ChatFile[];
+  api: ChatFile[];
+  migrations: ChatFile[];
+  types: ChatFile[];
+  config: ChatFile[];
+  env: ChatFile[];
 }
 
 export interface ChatMessage {
@@ -1216,6 +1226,57 @@ export const extractContentBeforeFinishReason = (
 
   return `Continue exactly where you left off. Here's the exact end of the content: ${contextSnippet}`;
 };
+
+export function categorizeFiles(files: ChatFile[]): CategorizedFiles {
+  const categorized: CategorizedFiles = {
+    frontend: [],
+    api: [],
+    migrations: [],
+    types: [],
+    config: [],
+    env: [],
+  };
+
+  files.forEach((file) => {
+    if (!file.name) {
+      categorized.frontend.push(file);
+      return;
+    }
+
+    const fileName = file.name.toLowerCase();
+
+    if (fileName.includes("/migrations/") && fileName.endsWith(".sql")) {
+      file.category = "migration";
+      categorized.migrations.push(file);
+    } else if (fileName.includes("/api/") || fileName.includes("/services/")) {
+      file.category = "api";
+      categorized.api.push(file);
+    } else if (
+      fileName.includes("/types/") &&
+      (fileName.includes("database") || fileName.includes("supabase"))
+    ) {
+      file.category = "type";
+      categorized.types.push(file);
+    } else if (
+      fileName.includes("/lib/supabase") ||
+      fileName.includes("/lib/database")
+    ) {
+      file.category = "config";
+      categorized.config.push(file);
+    } else if (
+      fileName.endsWith(".env.example") ||
+      fileName.endsWith(".env.local.example")
+    ) {
+      file.category = "env";
+      categorized.env.push(file);
+    } else {
+      file.category = "frontend";
+      categorized.frontend.push(file);
+    }
+  });
+
+  return categorized;
+}
 
 export const createContinuePrompt = (
   messages: Tables<"messages">[],
