@@ -420,8 +420,22 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
   const fetchCloneData = useCallback(async (url: string) => {
     if (!url) return false;
 
+    let progressInterval: NodeJS.Timeout | null = null;
+    let currentProgress = 0;
+
     try {
+      setScrapingStatus((prev) => ({ ...prev, progress: 5 }));
+      currentProgress = 5;
+
+      progressInterval = setInterval(() => {
+        currentProgress += Math.random() * 8 + 2;
+        if (currentProgress > 85) currentProgress = 85;
+        setScrapingStatus((prev) => ({ ...prev, progress: currentProgress }));
+      }, 800);
+
       const result = await cloneWebsite(url);
+
+      if (progressInterval) clearInterval(progressInterval);
 
       if (result.success && result.data) {
         console.log("Clone data received:", {
@@ -431,6 +445,19 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
           hasMarkdown: !!result.data.markdown,
           hasHtml: !!result.data.html,
         });
+
+        const finalSteps = [90, 95, 100];
+        for (let i = 0; i < finalSteps.length; i++) {
+          await new Promise((resolve) => setTimeout(resolve, 200));
+          setScrapingStatus((prev) => ({
+            ...prev,
+            progress: finalSteps[i],
+            screenshot:
+              i === finalSteps.length - 1
+                ? result.data.screenshot || null
+                : prev.screenshot,
+          }));
+        }
 
         setScrapingStatus({
           progress: 100,
@@ -450,22 +477,21 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
 
         return true;
       } else if (!result.success) {
-        // Handle the case where the scraping was unsuccessful
         setScrapingStatus((prev) => ({
           ...prev,
           error: result.error || "Failed to analyze website",
-          progress: 95, // Set to almost complete but not quite
+          progress: 95,
         }));
         return false;
       }
     } catch (error) {
+      if (progressInterval) clearInterval(progressInterval);
       console.error("Error fetching clone data:", error);
-      // Set error information in the state
       setScrapingStatus((prev) => ({
         ...prev,
         error:
           error instanceof Error ? error.message : "Unknown error occurred",
-        progress: 95, // Set to almost complete but not quite
+        progress: 95,
       }));
     }
 
@@ -488,8 +514,8 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
         if (!hasRealData) {
           intervalId = setInterval(() => {
             setScrapingStatus((prev) => {
-              // Increment progress by random amount (1-10%)
-              const progressIncrement = Math.floor(Math.random() * 10) + 1;
+              // Smooth incremental progress (2-5% per tick)
+              const progressIncrement = Math.floor(Math.random() * 4) + 2;
               const newProgress = Math.min(
                 prev.progress + progressIncrement,
                 95,
@@ -562,7 +588,7 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
                 error: prev.error,
               };
             });
-          }, 1500);
+          }, 800);
         }
       };
 
@@ -828,20 +854,149 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
                   )}
 
                   {!scrapingStatus.error && (
-                    <div className="relative h-2 w-full overflow-hidden rounded-full bg-primary/10">
-                      <div
-                        className="h-full bg-primary transition-all duration-500"
-                        style={{ width: `${scrapingStatus.progress}%` }}
-                      ></div>
-                    </div>
+                    <>
+                      <div className="relative h-2 w-full overflow-hidden rounded-full bg-primary/10">
+                        <div
+                          className="h-full bg-gradient-to-r from-primary to-primary/80 transition-all duration-700 ease-out"
+                          style={{ width: `${scrapingStatus.progress}%` }}
+                        >
+                          <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+                        </div>
+                      </div>
+
+                      <div className="mt-3 flex flex-col gap-2">
+                        {[
+                          {
+                            progress: 0,
+                            label: "Initializing scraper",
+                            detail: "Connecting to website...",
+                            icon: "⚙️",
+                          },
+                          {
+                            progress: 20,
+                            label: "Loading page",
+                            detail: "Fetching HTML & assets...",
+                            icon: "🌐",
+                          },
+                          {
+                            progress: 40,
+                            label: "Extracting content",
+                            detail: "Analyzing structure & text...",
+                            icon: "📄",
+                          },
+                          {
+                            progress: 60,
+                            label: "Capturing design",
+                            detail: "Colors, fonts & layout...",
+                            icon: "🎨",
+                          },
+                          {
+                            progress: 80,
+                            label: "Taking screenshot",
+                            detail: "Visual reference...",
+                            icon: "📸",
+                          },
+                          {
+                            progress: 95,
+                            label: "Finalizing",
+                            detail: "Preparing for AI...",
+                            icon: "✨",
+                          },
+                        ].map((step, index) => {
+                          const isActive =
+                            scrapingStatus.progress >= step.progress &&
+                            scrapingStatus.progress <
+                              ([20, 40, 60, 80, 95, 100][index] || 100);
+                          const isCompleted =
+                            scrapingStatus.progress >
+                            ([20, 40, 60, 80, 95, 100][index] || 100);
+
+                          return (
+                            <div
+                              key={step.label}
+                              className={cn(
+                                "flex items-start gap-3 rounded-lg border p-2.5 transition-all duration-300",
+                                isActive &&
+                                  "border-primary/40 bg-primary/5 shadow-sm",
+                                isCompleted &&
+                                  "border-primary/20 bg-primary/5 opacity-60",
+                                !isActive &&
+                                  !isCompleted &&
+                                  "border-transparent bg-muted/30 opacity-40",
+                              )}
+                            >
+                              <div
+                                className={cn(
+                                  "flex size-7 shrink-0 items-center justify-center rounded-full text-sm transition-all",
+                                  isActive && "animate-pulse bg-primary/20",
+                                  isCompleted && "bg-primary/10",
+                                  !isActive && !isCompleted && "bg-muted/50",
+                                )}
+                              >
+                                {isCompleted ? (
+                                  <svg
+                                    className="size-4 text-primary"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M5 13l4 4L19 7"
+                                    />
+                                  </svg>
+                                ) : (
+                                  <span>{step.icon}</span>
+                                )}
+                              </div>
+                              <div className="flex-1 pt-0.5">
+                                <p
+                                  className={cn(
+                                    "text-xs font-medium transition-colors",
+                                    isActive && "text-foreground",
+                                    !isActive && "text-muted-foreground",
+                                  )}
+                                >
+                                  {step.label}
+                                </p>
+                                <p
+                                  className={cn(
+                                    "text-xs transition-colors",
+                                    isActive && "text-muted-foreground",
+                                    !isActive && "text-muted-foreground/60",
+                                  )}
+                                >
+                                  {step.detail}
+                                </p>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </>
                   )}
 
                   {scrapingStatus.screenshot && !scrapingStatus.error && (
-                    <div className="mt-3 overflow-hidden">
-                      <p className="mb-2 text-xs font-semibold text-foreground">
-                        Visual Reference:
+                    <div className="mt-4 overflow-hidden rounded-lg border border-primary/20 bg-primary/5 p-3">
+                      <p className="mb-2 flex items-center gap-2 text-xs font-semibold text-foreground">
+                        <svg
+                          className="size-4 text-primary"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                          />
+                        </svg>
+                        Visual Reference Captured
                       </p>
-                      <div className="max-h-[300px] overflow-y-auto rounded-lg border border-border">
+                      <div className="max-h-[250px] overflow-y-auto rounded-md border border-border">
                         <img
                           src={
                             scrapingStatus.screenshot.startsWith("http")
@@ -854,53 +1009,6 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
                             console.error("Screenshot load error");
                           }}
                         />
-                      </div>
-                    </div>
-                  )}
-
-                  {!scrapingStatus.error && (
-                    <div className="flex flex-col gap-3 pt-2">
-                      <div className="rounded-lg border border-primary/20 bg-primary/5 p-3">
-                        <div className="mb-2 flex items-center gap-2">
-                          <div className="flex size-6 items-center justify-center rounded-full bg-primary/10">
-                            <svg
-                              className="size-3.5 text-primary"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M5 13l4 4L19 7"
-                              />
-                            </svg>
-                          </div>
-                          <span className="text-sm font-medium text-foreground">
-                            Content Ready
-                          </span>
-                        </div>
-                        <div className="flex flex-col gap-1.5 pl-8">
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <div className="size-1 rounded-full bg-primary/60" />
-                            Full content captured
-                          </div>
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <div className="size-1 rounded-full bg-primary/60" />
-                            LLM-ready markdown
-                          </div>
-                          {scrapingStatus.screenshot && (
-                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                              <div className="size-1 rounded-full bg-primary/60" />
-                              Screenshot captured
-                            </div>
-                          )}
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <div className="size-1 rounded-full bg-primary/60" />
-                            Ready for generation
-                          </div>
-                        </div>
                       </div>
                     </div>
                   )}

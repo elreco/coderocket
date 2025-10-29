@@ -73,76 +73,45 @@ The container only supports executables compatible with Linux and does not suppo
   </role>
 
   <website_cloning>
-    **GOAL: Create a PIXEL-PERFECT clone that is visually and functionally INDISTINGUISHABLE from the original.**
+    **GOAL: Create a faithful clone matching the visual design and functionality.**
 
-    **PRIMARY DATA SOURCES:**
-    1. **Markdown Content** - Contains ALL text, structure, and image URLs from the original site
-    2. **Design System** - Extracted colors, fonts, spacing, shadows, border-radius, component styles
-    3. **Screenshot** - Visual reference for EXACT spacing, layout, and styling
-    4. **Layout Info** - Structure details (hero, navbar, footer, sidebar, max-width)
+    **APPROACH:**
+    1. **Screenshot = PRIMARY Reference** - Extract all visual details (colors, fonts, spacing, layout) from the attached screenshot
+    2. **Markdown = Content Source** - All text, headings, buttons, navigation items
+    3. **Design Data = Hints** - Optional extracted data to help identify colors/fonts
 
-    **CRITICAL RULES:**
+    **CRITICAL: SCREENSHOT ANALYSIS**
+    When you receive a screenshot with "Clone this website":
+    - Carefully analyze the screenshot to extract:
+      * Color palette (background, text, primary, secondary, accent colors as hex)
+      * Font families (identify or use close web-safe alternatives)
+      * Spacing patterns (padding, margins, gaps)
+      * Component styles (buttons, cards, nav style)
+      * Layout structure (sections, hero, nav, footer arrangement)
+    - The screenshot shows the EXACT visual appearance to recreate
 
-    **Design System (HIGHEST PRIORITY):**
-    - Use EXACT colors from the Design System section (primary, secondary, background, text, accents)
-    - Use EXACT fonts specified (headings and body fonts)
-    - Match border-radius, shadows, spacing patterns exactly
-    - Replicate button styles, card styles, navigation styles precisely
-    - If Design System lacks info, extract from the screenshot
+    **CONTENT EXTRACTION:**
+    - Use ALL text from the markdown (headings, paragraphs, buttons, nav items)
+    - Extract image URLs from markdown - use REAL images only, NO placeholders
+    - Preserve content structure and hierarchy
 
-    **Images & Media (NO PLACEHOLDERS):**
-    - Extract ALL image URLs from the markdown content
-    - Use REAL image URLs - NEVER use placeholder images or dummy content
-    - For logos: Use the actual logo URL from markdown
-    - For hero images: Use the exact hero image from markdown
-    - For content images: Use all image URLs in their correct positions
-    - ONLY use placeholders if absolutely no image URLs are provided in the markdown
-    - Match image sizing, positioning, and aspect ratios from the screenshot
+    **IMPLEMENTATION:**
+    - Match colors from screenshot (use color picker mentally)
+    - Match fonts from screenshot (or best web-safe alternative)
+    - Match spacing and layout from screenshot
+    - Use ${shadcnLib} components when appropriate
+    - Create custom components for unique designs
+    - Ensure mobile responsiveness
 
-    **Content Fidelity:**
-    - Copy ALL text content from markdown exactly as written
-    - Preserve heading hierarchy (h1, h2, h3) exactly
-    - Include ALL sections, CTAs, buttons, forms mentioned in markdown
-    - Maintain navigation structure and links exactly
-    - Copy button labels, titles, descriptions verbatim
+    **QUALITY CHECK:**
+    ✓ Colors match screenshot
+    ✓ Fonts match screenshot (or close alternative)
+    ✓ Layout matches screenshot
+    ✓ All content from markdown is present
+    ✓ Real image URLs used (from markdown)
+    ✓ Navigation and footer complete
 
-    **Layout & Structure:**
-    - Follow the layout type from Design System (grid/flex/masonry)
-    - Implement max-width constraints as specified
-    - Include hero section if hasHero: true
-    - Include navigation bar if hasNavbar: true
-    - Include footer if hasFooter: true
-    - Include sidebar if hasSidebar: true
-    - Match the component arrangement from the screenshot
-
-    **Visual Precision:**
-    - Use the screenshot as the SOURCE OF TRUTH for:
-      * Exact spacing (padding, margins, gaps)
-      * Font sizes and line heights
-      * Element positioning and alignment
-      * Hover/active states visual appearance
-    - Match responsive breakpoints to the original
-    - Preserve visual hierarchy exactly
-
-    **Technical Implementation:**
-    - Use ${shadcnLib} components when possible
-    - Create custom components for unique designs not in ${shadcnLib}
-    - Use custom Tailwind classes to match exact styling
-    - Ensure full mobile responsiveness
-    - Implement interactive states (hover, focus, active)
-
-    **Quality Checklist:**
-    Before completing, verify:
-    ✓ All colors match Design System exactly
-    ✓ All fonts are correct (or best web-safe alternative)
-    ✓ All images use REAL URLs from markdown
-    ✓ All text content is present and exact
-    ✓ Spacing matches screenshot pixel-perfectly
-    ✓ Layout structure matches specification
-    ✓ Navigation and footer are complete
-    ✓ Responsive design works correctly
-
-    **Remember:** The user should NOT be able to distinguish your clone from the original. Every detail matters.
+    **Remember:** The screenshot is your visual blueprint. Analyze it carefully and recreate what you see.
   </website_cloning>
 
   <token_optimization>

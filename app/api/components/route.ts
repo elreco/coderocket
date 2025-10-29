@@ -666,108 +666,63 @@ const validateRequest = async (
       if (cloneResult.success && cloneResult.data) {
         const data = cloneResult.data;
 
-        const designData = data.extractedData
-          ? `\n## DESIGN SYSTEM\n${JSON.stringify(data.extractedData, null, 2)}`
+        const truncatedMarkdown = data.markdown
+          ? data.markdown.length > 12000
+            ? data.markdown.substring(0, 12000) +
+              "\n\n[Content truncated - refer to screenshot for complete details]"
+            : data.markdown
+          : "";
+
+        const htmlClasses = data.html
+          ? data.html
+              .match(/class="([^"]*)"/g)
+              ?.slice(0, 30)
+              .join(" ")
+              .substring(0, 500) || ""
+          : "";
+
+        const designInfo = data.extractedData
+          ? JSON.stringify(data.extractedData, null, 2).substring(0, 1000)
           : "";
 
         enhancedPrompt = `Clone this website: ${chat.clone_url}
 
-## WEBSITE INFORMATION
-Title: ${data.title}
-${data.description ? `Description: ${data.description}` : ""}
+# VISUAL REFERENCE (PRIMARY SOURCE)
+**The attached screenshot is your PRIMARY reference for:**
+- Exact colors, fonts, and styling
+- Precise spacing, padding, and layout
+- Component positioning and sizing
+- Overall visual appearance
 
-## CONTENT & STRUCTURE (LLM-Ready Markdown from Firecrawl)
+# CONTENT & STRUCTURE
+${truncatedMarkdown}
 
-${data.markdown || ""}
-${designData}
+# EXTRACTED DESIGN DATA
+${designInfo || "Analyze colors and fonts from the screenshot"}
 
-## PIXEL-PERFECT CLONE REQUIREMENTS
+# HTML CLASSES (for reference)
+${htmlClasses}
 
-**1. Design System (CRITICAL - Match Exactly):**
-${
-  data.extractedData?.theme
-    ? `
-Colors:
-- Primary: ${data.extractedData.theme.primaryColor || "extract from screenshot"}
-- Secondary: ${data.extractedData.theme.secondaryColor || "extract from screenshot"}
-- Background: ${data.extractedData.theme.backgroundColor || "extract from screenshot"}
-- Text: ${data.extractedData.theme.textColor || "extract from screenshot"}
-${data.extractedData.theme.accentColors?.length ? `- Accents: ${data.extractedData.theme.accentColors.join(", ")}` : ""}
-`
-    : ""
-}
-${
-  data.extractedData?.typography
-    ? `
-Typography:
-- Headings: ${data.extractedData.typography.headingFonts?.join(", ") || "extract from screenshot"}
-- Body: ${data.extractedData.typography.bodyFonts?.join(", ") || "extract from screenshot"}
-${data.extractedData.typography.fontSize ? `- Base Size: ${data.extractedData.typography.fontSize}` : ""}
-`
-    : ""
-}
-${
-  data.extractedData?.designElements
-    ? `
-Design Elements:
-${data.extractedData.designElements.borderRadius ? `- Border Radius: ${data.extractedData.designElements.borderRadius}` : ""}
-${data.extractedData.designElements.shadows ? "- Shadows: Yes (match from screenshot)" : ""}
-${data.extractedData.designElements.spacing ? `- Spacing: ${data.extractedData.designElements.spacing}` : ""}
-`
-    : ""
-}
-${
-  data.extractedData?.components
-    ? `
-Components Style:
-${data.extractedData.components.buttonStyle ? `- Buttons: ${data.extractedData.components.buttonStyle}` : ""}
-${data.extractedData.components.cardStyle ? `- Cards: ${data.extractedData.components.cardStyle}` : ""}
-${data.extractedData.components.navigationStyle ? `- Navigation: ${data.extractedData.components.navigationStyle}` : ""}
-`
-    : ""
-}
+# CLONE INSTRUCTIONS
 
-**2. Layout & Structure:**
-${
-  data.extractedData?.layout
-    ? `
-- Type: ${data.extractedData.layout.type || "analyze screenshot"}
-- Max Width: ${data.extractedData.layout.maxWidth || "match screenshot"}
-- Hero Section: ${data.extractedData.layout.hasHero ? "Yes" : "No"}
-- Navigation: ${data.extractedData.layout.hasNavbar ? "Yes" : "No"}
-- Footer: ${data.extractedData.layout.hasFooter ? "Yes" : "No"}
-- Sidebar: ${data.extractedData.layout.hasSidebar ? "Yes" : "No"}
-`
-    : ""
-}
+**Visual Fidelity (CRITICAL):**
+1. Study the SCREENSHOT carefully - it's your source of truth for all visual details
+2. Extract exact colors (hex codes) by analyzing the screenshot
+3. Identify fonts used (or use close web-safe alternatives)
+4. Match spacing, padding, and margins precisely
 
-**3. Assets & Media:**
-- Extract ALL image URLs from the markdown/HTML above
-- Use REAL images - NO placeholders or dummy content
-- Maintain exact image positioning and sizing from screenshot
+**Content:**
+1. Use ALL text from the markdown above
+2. Extract ALL image URLs from markdown - use REAL images only
+3. Preserve navigation, buttons, CTAs, and sections structure
 
-**4. Content Fidelity:**
-- Copy ALL text content from the markdown exactly
-- Preserve heading hierarchy (h1, h2, h3...)
-- Maintain button labels, CTAs, and navigation items exactly
-- Include all sections visible in the markdown
+**Implementation:**
+1. Recreate the layout as shown in screenshot (hero, nav, footer, etc.)
+2. Match component styles (buttons, cards, forms) from screenshot
+3. Ensure mobile responsiveness
+4. Use actual image URLs - NO placeholders
 
-**5. Visual Accuracy:**
-- Reference the screenshot for EXACT spacing, padding, margins
-- Match font sizes, weights, and line heights from screenshot
-- Replicate hover states and interactive elements
-- Ensure mobile responsiveness matches the original
-
-**6. Final Check:**
-Before completing, verify:
-✓ All colors match the design system above
-✓ Fonts are correct (or close web-safe alternatives)
-✓ Spacing and layout match the screenshot
-✓ All images use real URLs from markdown
-✓ All content sections are present
-✓ Navigation and footer are complete
-
-Your goal: Create an INDISTINGUISHABLE clone. Every pixel, every color, every spacing should match the original.`;
+Your goal: Create a faithful visual clone that matches the screenshot.`;
 
         // Handle screenshot with proper dimension validation and resizing
         if (cloneResult.data.screenshot) {
