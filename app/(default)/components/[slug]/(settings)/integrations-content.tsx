@@ -1,6 +1,7 @@
 "use client";
 
-import { Plug2, Plus, Loader2, Database, ExternalLink } from "lucide-react";
+import { SiSupabase } from "@icons-pack/react-simple-icons";
+import { Plug2, Plus, Loader2, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -184,19 +185,41 @@ export default function IntegrationsContent() {
     new Set(userIntegrations.map((i) => i.integration_type)),
   );
 
+  const getIntegrationIcon = (type: IntegrationType) => {
+    switch (type) {
+      case IntegrationType.SUPABASE:
+        return <SiSupabase className="size-4 text-green-600" />;
+      default:
+        return <Plug2 className="size-4" />;
+    }
+  };
+
   return (
     <div className="space-y-4 p-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium">Active Integrations</h3>
-        <Button asChild size="sm" variant="outline">
-          <Link
-            href="/account/integrations"
-            className="flex items-center gap-2"
+      <div>
+        <div className="flex items-center justify-between">
+          <h3 className="text-base font-semibold">Active Integrations</h3>
+          <Button asChild size="sm" variant="outline">
+            <Link
+              href="/account/integrations"
+              className="flex items-center gap-2"
+            >
+              Manage
+              <ExternalLink className="size-3" />
+            </Link>
+          </Button>
+        </div>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Connect backend services to generate full-stack applications.{" "}
+          <a
+            href="https://docs.coderocket.app/integrations/migrations"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-foreground underline decoration-dotted underline-offset-4 hover:decoration-solid"
           >
-            Manage
-            <ExternalLink className="size-3" />
-          </Link>
-        </Button>
+            View documentation
+          </a>
+        </p>
       </div>
 
       <div className="space-y-4">
@@ -209,7 +232,7 @@ export default function IntegrationsContent() {
             <div key={type} className="space-y-2 rounded-lg border bg-card p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Database className="size-4" />
+                  {getIntegrationIcon(type)}
                   <IntegrationBadge type={type} showIcon={false} />
                 </div>
                 <Switch

@@ -1,5 +1,11 @@
+export const fetchCache = "force-no-store";
+export const revalidate = 0;
+export const maxDuration = 300;
+
+import { Container } from "@/components/container";
 import { PageTitle } from "@/components/page-title";
 
+import { getServerIntegrations } from "./actions";
 import IntegrationsClient from "./integrations-client";
 
 export const metadata = {
@@ -7,15 +13,16 @@ export const metadata = {
   description: "Manage your integrations and connect external services",
 };
 
-export default function IntegrationsPage() {
+export default async function IntegrationsPage() {
+  const initialIntegrations = await getServerIntegrations();
+
   return (
-    <div className="mx-auto w-full max-w-7xl space-y-6 p-4 md:p-8">
-      <PageTitle title="Integrations" />
-      <p className="text-muted-foreground">
-        Connect external services to add backend functionality to your generated
-        apps. Configure once, use across all your projects.
-      </p>
-      <IntegrationsClient />
-    </div>
+    <Container>
+      <PageTitle
+        title="Integrations"
+        subtitle="Connect external services to add backend functionality to your generated apps. Configure once, use across all your projects."
+      />
+      <IntegrationsClient initialIntegrations={initialIntegrations} />
+    </Container>
   );
 }

@@ -1,12 +1,10 @@
 import {
-  Database,
-  CreditCard,
-  Mail,
-  Plug2,
-  Edit,
-  Trash2,
-  CheckCircle,
-} from "lucide-react";
+  SiSupabase,
+  SiStripe,
+  SiVercel,
+  SiMailgun,
+} from "@icons-pack/react-simple-icons";
+import { Plug2, Edit, Trash2, CheckCircle } from "lucide-react";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -30,10 +28,10 @@ interface IntegrationCardProps {
 }
 
 const integrationIcons: Record<IntegrationType, React.ReactNode> = {
-  [IntegrationType.SUPABASE]: <Database className="size-8 text-green-600" />,
-  [IntegrationType.STRIPE]: <CreditCard className="size-8 text-purple-600" />,
-  [IntegrationType.BLOB]: <Database className="size-8 text-blue-600" />,
-  [IntegrationType.RESEND]: <Mail className="size-8 text-orange-600" />,
+  [IntegrationType.SUPABASE]: <SiSupabase className="size-8 text-green-600" />,
+  [IntegrationType.STRIPE]: <SiStripe className="size-8 text-purple-600" />,
+  [IntegrationType.BLOB]: <SiVercel className="size-8 text-blue-600" />,
+  [IntegrationType.RESEND]: <SiMailgun className="size-8 text-orange-600" />,
   [IntegrationType.AUTH]: <Plug2 className="size-8 text-indigo-600" />,
 };
 

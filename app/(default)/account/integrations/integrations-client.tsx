@@ -1,7 +1,13 @@
 "use client";
 
-import { Plus, Database, CreditCard, Mail, Plug2, Loader2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import {
+  SiSupabase,
+  SiStripe,
+  SiVercel,
+  SiMailgun,
+} from "@icons-pack/react-simple-icons";
+import { Plus, Plug2 } from "lucide-react";
+import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -22,28 +28,28 @@ const availableIntegrations = [
     type: IntegrationType.SUPABASE,
     name: "Supabase",
     description: "PostgreSQL database, authentication, and storage",
-    icon: <Database className="size-6 text-green-600" />,
+    icon: <SiSupabase className="size-6 text-green-600" />,
     available: true,
   },
   {
     type: IntegrationType.STRIPE,
     name: "Stripe",
     description: "Payment processing and subscriptions",
-    icon: <CreditCard className="size-6 text-purple-600" />,
+    icon: <SiStripe className="size-6 text-purple-600" />,
     available: false,
   },
   {
     type: IntegrationType.BLOB,
     name: "Vercel Blob",
     description: "File storage and CDN",
-    icon: <Database className="size-6 text-blue-600" />,
+    icon: <SiVercel className="size-6 text-blue-600" />,
     available: false,
   },
   {
     type: IntegrationType.RESEND,
     name: "Resend",
     description: "Transactional email delivery",
-    icon: <Mail className="size-6 text-orange-600" />,
+    icon: <SiMailgun className="size-6 text-orange-600" />,
     available: false,
   },
   {
@@ -55,23 +61,23 @@ const availableIntegrations = [
   },
 ];
 
-export default function IntegrationsClient() {
-  const [integrations, setIntegrations] = useState<UserIntegration[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+interface IntegrationsClientProps {
+  initialIntegrations: UserIntegration[];
+}
+
+export default function IntegrationsClient({
+  initialIntegrations,
+}: IntegrationsClientProps) {
+  const [integrations, setIntegrations] =
+    useState<UserIntegration[]>(initialIntegrations);
   const [supabaseDialogOpen, setSupabaseDialogOpen] = useState(false);
   const [editingIntegration, setEditingIntegration] =
     useState<UserIntegration | null>(null);
 
   const loadIntegrations = async () => {
-    setIsLoading(true);
     const data = await fetchUserIntegrations();
     setIntegrations(data);
-    setIsLoading(false);
   };
-
-  useEffect(() => {
-    loadIntegrations();
-  }, []);
 
   const handleAddIntegration = (type: IntegrationType) => {
     if (type === IntegrationType.SUPABASE) {
@@ -107,14 +113,6 @@ export default function IntegrationsClient() {
   const canAddMoreOfType = (type: IntegrationType) => {
     return type === IntegrationType.SUPABASE;
   };
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="size-8 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-8">

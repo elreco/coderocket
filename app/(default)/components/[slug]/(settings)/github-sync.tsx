@@ -343,11 +343,8 @@ export default function GitHubSync({ closeSheet }: { closeSheet: () => void }) {
 
   if (isLoading) {
     return (
-      <div className="space-y-4">
-        <PageHeader />
-        <div className="text-sm text-muted-foreground">
-          Loading GitHub connection...
-        </div>
+      <div className="flex items-center justify-center p-8">
+        <Loader2 className="size-6 animate-spin text-muted-foreground" />
       </div>
     );
   }

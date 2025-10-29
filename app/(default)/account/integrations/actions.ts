@@ -4,7 +4,28 @@ import {
   UserIntegration,
   IntegrationTestResult,
   ChatIntegrationWithDetails,
+  getUserIntegrations,
 } from "@/utils/integrations";
+import { createClient } from "@/utils/supabase/server";
+
+export async function getServerIntegrations(): Promise<UserIntegration[]> {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return [];
+    }
+
+    const integrations = await getUserIntegrations(user.id);
+    return integrations;
+  } catch (error) {
+    console.error("Error fetching integrations:", error);
+    return [];
+  }
+}
 
 export async function fetchUserIntegrations(): Promise<UserIntegration[]> {
   try {

@@ -5,6 +5,7 @@ import {
   SiVuedotjs,
   SiSvelte,
   SiAngular,
+  SiSupabase,
 } from "@icons-pack/react-simple-icons";
 import {
   Terminal,
@@ -18,7 +19,6 @@ import {
   Loader,
   Sparkles,
   ArrowRight,
-  Database,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -935,7 +935,7 @@ export default function Hero() {
                         <SelectItem value="none" className="cursor-pointer">
                           <div className="mr-2 flex w-full flex-row items-center justify-between">
                             <div className="flex items-center gap-2">
-                              <Database className="size-4 opacity-50" />
+                              <SiSupabase className="size-4 opacity-30" />
                               <span>No Database</span>
                             </div>
                           </div>
@@ -954,7 +954,7 @@ export default function Hero() {
                             >
                               <div className="mr-2 flex w-full flex-row items-center justify-between">
                                 <div className="flex items-center gap-2">
-                                  <Database className="size-4" />
+                                  <SiSupabase className="size-4 text-green-600" />
                                   <span>{integration.name}</span>
                                 </div>
                               </div>
@@ -971,7 +971,7 @@ export default function Hero() {
                         className="h-8 w-full gap-2 text-xs sm:w-auto"
                         disabled={loading}
                       >
-                        <Database className="size-3.5" />
+                        <SiSupabase className="size-3.5 text-green-600" />
                         Connect Supabase
                       </Button>
                     </Link>
