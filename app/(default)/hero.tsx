@@ -17,8 +17,6 @@ import {
   Lightbulb,
   Rocket,
   Loader,
-  Sparkles,
-  ArrowRight,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -1265,17 +1263,6 @@ export default function Hero() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      <Link
-        href="https://www.ekinox.app"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="group fixed right-4 top-4 z-20 flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs backdrop-blur-sm transition-all hover:border-primary/50 hover:bg-primary/15 hover:shadow-lg hover:shadow-primary/20"
-      >
-        <Sparkles className="size-3 text-primary" />
-        <span className="font-medium text-primary">Ekinox - AI Workflows</span>
-        <ArrowRight className="size-3 text-primary transition-transform group-hover:translate-x-1" />
-      </Link>
     </Container>
   );
 }

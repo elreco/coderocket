@@ -22,20 +22,7 @@ const nextConfig = {
   async headers() {
     return [
       {
-        source: '/ekinox',
-        headers: [
-          {
-            key: 'Cross-Origin-Embedder-Policy',
-            value: 'unsafe-none',
-          },
-          {
-            key: 'Cross-Origin-Opener-Policy',
-            value: 'same-origin',
-          },
-        ],
-      },
-      {
-        source: '/((?!ekinox).*)',
+        source: '/(.*)',
         headers: [
           {
             key: 'Cross-Origin-Embedder-Policy',
