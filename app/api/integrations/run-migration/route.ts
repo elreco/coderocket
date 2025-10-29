@@ -107,9 +107,28 @@ export async function POST(request: NextRequest) {
 
       const result = await response.json();
 
+      const { data: currentMessage } = await supabase
+        .from("messages")
+        .select("migrations_executed")
+        .eq("id", messageId)
+        .single();
+
+      const migrationsExecuted = Array.isArray(
+        currentMessage?.migrations_executed,
+      )
+        ? currentMessage.migrations_executed
+        : [];
+
+      const newMigration = {
+        name: migrationName,
+        executed_at: new Date().toISOString(),
+      };
+
+      migrationsExecuted.push(newMigration);
+
       await supabase
         .from("messages")
-        .update({ migration_executed_at: new Date().toISOString() })
+        .update({ migrations_executed: migrationsExecuted })
         .eq("id", messageId);
 
       return NextResponse.json({
@@ -117,7 +136,7 @@ export async function POST(request: NextRequest) {
         message: "Migration executed successfully",
         migrationName,
         result,
-        migrationExecutedAt: new Date().toISOString(),
+        migrationsExecuted,
       });
     } catch (executionError) {
       const errorMessage =

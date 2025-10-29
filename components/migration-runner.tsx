@@ -22,6 +22,11 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 
+interface ExecutedMigration {
+  name: string;
+  executed_at: string;
+}
+
 interface MigrationRunnerProps {
   migrationFile: {
     name: string;
@@ -29,24 +34,27 @@ interface MigrationRunnerProps {
   };
   chatId: string;
   messageId: number;
-  migrationExecutedAt?: string | null;
+  migrationsExecuted?: ExecutedMigration[] | null;
 }
 
 export function MigrationRunner({
   migrationFile,
   chatId,
   messageId,
-  migrationExecutedAt: initialMigrationExecutedAt,
+  migrationsExecuted: initialMigrationsExecuted,
 }: MigrationRunnerProps) {
   const [showSQL, setShowSQL] = useState(false);
   const [copied, setCopied] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
-  const [migrationExecutedAt, setMigrationExecutedAt] = useState<
-    string | null | undefined
-  >(initialMigrationExecutedAt);
+  const [migrationsExecuted, setMigrationsExecuted] = useState<
+    ExecutedMigration[] | null | undefined
+  >(initialMigrationsExecuted);
   const { toast } = useToast();
 
-  const isMigrationExecuted = !!migrationExecutedAt;
+  const executedMigration = (migrationsExecuted || []).find(
+    (m) => m.name === migrationFile.name,
+  );
+  const isMigrationExecuted = !!executedMigration;
 
   const tables = extractTables(migrationFile.content);
   const policies = extractPolicies(migrationFile.content);
@@ -110,9 +118,7 @@ export function MigrationRunner({
         throw new Error(result.error || "Failed to run migration");
       }
 
-      setMigrationExecutedAt(
-        result.migrationExecutedAt || new Date().toISOString(),
-      );
+      setMigrationsExecuted(result.migrationsExecuted || []);
       toast({
         title: "Migration Successful! 🎉",
         description: `Successfully created ${tables.length} table${tables.length !== 1 ? "s" : ""} in your Supabase database`,
@@ -175,7 +181,8 @@ export function MigrationRunner({
                 ✅ Migration already applied!
               </p>
               <p className="mt-1 text-xs text-green-800 dark:text-green-200">
-                Applied on {new Date(migrationExecutedAt!).toLocaleString()}
+                Applied on{" "}
+                {new Date(executedMigration!.executed_at).toLocaleString()}
               </p>
             </div>
           )}

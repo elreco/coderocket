@@ -536,7 +536,14 @@ ${extractedFiles
               version={message.version}
               chatId={message.chat_id}
               messageId={message.id}
-              migrationExecutedAt={message.migration_executed_at}
+              migrationsExecuted={
+                Array.isArray(message.migrations_executed)
+                  ? (message.migrations_executed as Array<{
+                      name: string;
+                      executed_at: string;
+                    }>)
+                  : null
+              }
             />
             {message.screenshot && (
               <img

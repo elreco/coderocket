@@ -30,7 +30,7 @@ export function ChunkReader({
   version,
   chatId,
   messageId,
-  migrationExecutedAt,
+  migrationsExecuted,
 }: {
   chunks: { type: string; content: string }[];
   files: ChatFile[];
@@ -39,7 +39,7 @@ export function ChunkReader({
   version?: number;
   chatId: string;
   messageId: number;
-  migrationExecutedAt?: string | null;
+  migrationsExecuted?: Array<{ name: string; executed_at: string }> | null;
 }) {
   const { isCanvas, activeTab, selectedFramework, isLoading } =
     useComponentContext();
@@ -184,7 +184,7 @@ export function ChunkReader({
                 }}
                 chatId={chatId}
                 messageId={messageId}
-                migrationExecutedAt={migrationExecutedAt}
+                migrationsExecuted={migrationsExecuted}
               />
             ))}
           </div>
