@@ -62,6 +62,25 @@ export function MigrationRunner({
   };
 
   const handleRunMigration = async () => {
+    if (!chatId) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description:
+          "Chat ID is missing. Please refresh the page and try again.",
+      });
+      return;
+    }
+
+    if (!migrationFile.content) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Migration content is empty.",
+      });
+      return;
+    }
+
     setIsRunning(true);
     try {
       const response = await fetch("/api/integrations/run-migration", {
@@ -132,7 +151,7 @@ export function MigrationRunner({
                 💡 Quick Options:
               </p>
               <ul className="mt-2 list-inside list-disc space-y-1 text-xs text-blue-800 dark:text-blue-200">
-                <li>Click "Run Migration" to apply automatically</li>
+                <li>Click &quot;Run Migration&quot; to apply automatically</li>
                 <li>
                   Or copy SQL and paste in Supabase Dashboard → SQL Editor
                 </li>
@@ -150,21 +169,11 @@ export function MigrationRunner({
             </div>
           )}
 
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setShowSQL(true)}
-              className="flex-1"
-            >
-              <Eye className="mr-2 size-4" />
-              View SQL
-            </Button>
+          <div className="flex flex-col gap-2">
             <Button
               size="sm"
               onClick={handleRunMigration}
               disabled={isRunning || migrationSuccess}
-              className="flex-1"
             >
               {isRunning ? (
                 <>
@@ -183,11 +192,26 @@ export function MigrationRunner({
                 </>
               )}
             </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setShowSQL(true)}
+            >
+              <Eye className="mr-2 size-4" />
+              View SQL
+            </Button>
+
             <Button size="sm" variant="outline" onClick={handleCopySQL}>
               {copied ? (
-                <CheckCircle2 className="size-4" />
+                <>
+                  <CheckCircle2 className="mr-2 size-4" />
+                  Copied!
+                </>
               ) : (
-                <Copy className="size-4" />
+                <>
+                  <Copy className="mr-2 size-4" />
+                  Copy SQL
+                </>
               )}
             </Button>
           </div>

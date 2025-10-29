@@ -13,20 +13,35 @@ When the AI generates a database migration:
 
 **No setup required** - Just make sure you have:
 - ✅ Supabase integration configured
-- ✅ Service Role Key added to your integration
+- ✅ Access Token and Project ID added to your integration
 
-## 📝 Configure Service Role Key
+## 📝 Configure Access Token & Project ID
 
-For automatic migrations to work, you need your **Service Role Key**:
+For automatic migrations to work, you need your **Supabase Access Token** and **Project ID**:
+
+### Getting Your Access Token
+
+1. Go to your **Supabase Dashboard**
+2. Click on your profile (top right) → **Account**
+3. Go to **Access Tokens** tab
+4. Click **"Generate new token"**
+5. Give it a name (e.g., "CodeRocket Migrations")
+6. Copy the token (starts with `sbp_...`)
+
+### Getting Your Project ID
+
+1. Look at your project URL: `https://XXXXX.supabase.co`
+2. The Project ID is the part before `.supabase.co` (e.g., `abcdefghijklmnop`)
+3. Or find it in Supabase Dashboard → Settings → General → Reference ID
+
+### Adding to CodeRocket
 
 1. Go to **Account** → **Integrations**
 2. Edit your Supabase integration (or create a new one)
-3. Add the **Service Role Key**:
-   - Find it in your Supabase Dashboard → Settings → API
-   - Look for "service_role" key (starts with `eyJ...`)
-   - This key has admin privileges to create tables
+3. Paste the **Access Token** and **Project ID**
+4. Save
 
-⚠️ **Security**: The service role key is encrypted and stored securely. It's only used server-side for migrations.
+⚠️ **Security**: The access token is encrypted and stored securely. It's only used server-side for migrations.
 
 ## ✨ Using Automatic Migrations
 
@@ -59,35 +74,41 @@ When the AI generates a migration:
 
 ## 🔒 Security & Safety
 
-- Migrations run in a **transaction** - if any statement fails, nothing is applied
-- **Service Role Key** required - bypasses RLS for table creation
-- Keys are **encrypted** at rest
+- Migrations run via **Supabase Management API** for maximum reliability
+- **Access Token** required - uses official Supabase API with proper authentication
+- Tokens are **encrypted** at rest using AES-256
 - Only **authenticated users** can run migrations on their own projects
 - **Authorization check**: You must own the chat to run its migrations
+- All connections use **HTTPS/TLS encryption**
 
 ## 💡 Migration Features
 
 The migration alerts show:
 - 📊 **Tables**: List of tables being created
 - 🔒 **RLS Policies**: Number of Row Level Security policies
-- 📝 **SQL Preview**: View the complete migration code
-- 📋 **Copy**: Copy SQL to clipboard
-- ▶️ **Run**: Execute migration automatically
+- ▶️ **Run Migration**: Execute migration automatically
+- 📝 **View SQL**: View the complete migration code
+- 📋 **Copy SQL**: Copy SQL to clipboard
 
 ## 🐛 Troubleshooting
 
-### "Service role key required for migrations"
+### "Supabase Access Token and Project ID required for migrations"
 
-**Solution**: Add your service role key in Account → Integrations → Edit Supabase Integration
+**Solution**:
+1. Generate an access token in Supabase Dashboard → Account → Access Tokens
+2. Get your Project ID from your project URL (the part before .supabase.co)
+3. Add both in Account → Integrations → Edit Supabase Integration
 
 ### "Migration failed: [error message]"
 
 **Common causes**:
 - Table already exists → Safe to ignore if intentional
-- Permission issues → Check your service role key is correct
+- Permission issues → Check your access token is valid and has correct permissions
+- Invalid Project ID → Verify the Project ID matches your project URL
+- Connection issues → Verify your Supabase project is online
 - SQL syntax error → Review the SQL code and report to AI
 
-**Fallback**: Copy the SQL and debug it in Supabase SQL Editor
+**Fallback**: Copy the SQL and run it manually in Supabase SQL Editor
 
 ### Connection timeout
 
@@ -99,7 +120,8 @@ If migration takes too long:
 ## 🎯 Best Practices
 
 ✅ **Review before running**: Check the tables and policies list
-✅ **Service role key**: Keep it secure, never share it
+✅ **Access Token**: Keep it secure, never share it, regenerate if compromised
 ✅ **Test in development**: Use a development Supabase project first
 ✅ **Backup important data**: Migrations can't be automatically rolled back
 ✅ **Manual option**: You can always copy and run SQL manually for safety
+✅ **Token management**: You can revoke and generate new tokens anytime in Supabase Dashboard

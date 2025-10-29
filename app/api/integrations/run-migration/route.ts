@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Pool } from "pg";
 
 import {
   getChatIntegrations,
@@ -57,66 +56,70 @@ export async function POST(request: NextRequest) {
     const config = supabaseIntegration.user_integrations
       .config as SupabaseIntegrationConfig;
 
-    if (!config.serviceRoleKey) {
+    if (!config.accessToken || !config.projectId) {
       return NextResponse.json(
         {
           error:
-            "Service role key required for migrations. Please add it in your integration settings.",
+            "Supabase Access Token and Project ID required for migrations. Please add them in your Supabase integration settings.",
         },
         { status: 400 },
       );
     }
 
-    const projectRef = config.projectUrl.match(
-      /https:\/\/([^.]+)\.supabase\.co/,
-    )?.[1];
-
-    if (!projectRef) {
-      return NextResponse.json(
-        { error: "Invalid Supabase project URL format" },
-        { status: 400 },
-      );
-    }
-
-    const connectionString = `postgresql://postgres.${projectRef}:${config.serviceRoleKey}@aws-0-eu-central-1.pooler.supabase.com:6543/postgres`;
-
-    const pool = new Pool({
-      connectionString,
-      ssl: { rejectUnauthorized: false },
-      max: 1,
-      idleTimeoutMillis: 5000,
-      connectionTimeoutMillis: 10000,
-    });
-
     try {
-      await pool.query(sql);
-      await pool.end();
+      const response = await fetch(
+        `https://api.supabase.com/v1/projects/${config.projectId}/database/query`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${config.accessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ query: sql }),
+        },
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        let errorData;
+
+        try {
+          errorData = JSON.parse(errorText);
+        } catch {
+          errorData = { message: errorText };
+        }
+
+        return NextResponse.json(
+          {
+            error: `Migration failed: ${errorData.message || errorData.error || errorText}`,
+            details: errorData,
+          },
+          { status: response.status },
+        );
+      }
+
+      const result = await response.json();
 
       return NextResponse.json({
         success: true,
         message: "Migration executed successfully",
         migrationName,
+        result,
       });
-    } catch (pgError) {
-      await pool.end();
-
+    } catch (executionError) {
       const errorMessage =
-        pgError instanceof Error ? pgError.message : "Unknown database error";
+        executionError instanceof Error
+          ? executionError.message
+          : "Unknown error";
 
       return NextResponse.json(
         {
           error: `Migration failed: ${errorMessage}`,
-          details: pgError,
+          details: executionError,
         },
         { status: 500 },
       );
     }
-
-    return NextResponse.json({
-      success: true,
-      message: "Migration executed successfully",
-      migrationName,
-    });
   } catch (error) {
     console.error("Error running migration:", error);
     return NextResponse.json(

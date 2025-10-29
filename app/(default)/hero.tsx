@@ -201,6 +201,7 @@ export default function Hero() {
   const [userIntegrations, setUserIntegrations] = useState<UserIntegration[]>(
     [],
   );
+  const [isLoadingIntegrations, setIsLoadingIntegrations] = useState(false);
   const [selectedIntegration, setSelectedIntegration] = useState<string | null>(
     null,
   );
@@ -270,7 +271,6 @@ export default function Hero() {
   }, [inputRef, toast]);
 
   useEffect(() => {
-    // Charger le statut de l'abonnement au chargement du composant
     const fetchSubscription = async () => {
       try {
         setIsLoadingSubscription(true);
@@ -280,8 +280,10 @@ export default function Hero() {
         setSubscription(sub);
 
         if (data?.user?.id) {
+          setIsLoadingIntegrations(true);
           const integrations = await fetchUserIntegrations();
           setUserIntegrations(integrations);
+          setIsLoadingIntegrations(false);
         }
       } catch (error) {
         console.error("Error fetching subscription:", error);
@@ -901,11 +903,22 @@ export default function Hero() {
               )}
               {isLoggedIn && selectedFramework !== Framework.HTML && (
                 <>
-                  {userIntegrations.filter(
-                    (i) =>
-                      i.integration_type === IntegrationType.SUPABASE &&
-                      i.is_active,
-                  ).length > 0 ? (
+                  {isLoadingIntegrations ? (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="h-8 w-full gap-2 text-xs sm:w-auto"
+                      disabled
+                    >
+                      <Loader className="size-3.5 animate-spin" />
+                      <span className="hidden sm:inline">Loading...</span>
+                    </Button>
+                  ) : userIntegrations.filter(
+                      (i) =>
+                        i.integration_type === IntegrationType.SUPABASE &&
+                        i.is_active,
+                    ).length > 0 ? (
                     <Select
                       disabled={loading}
                       value={selectedIntegration || "none"}

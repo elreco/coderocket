@@ -534,6 +534,7 @@ ${extractedFiles
               handleFileClick={handleFileClick}
               isSelectedVersion={isSelectedVersion}
               version={message.version}
+              chatId={message.chat_id}
             />
             {message.screenshot && (
               <img

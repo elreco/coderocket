@@ -44,6 +44,8 @@ export function SupabaseConfigDialog({
   const [projectUrl, setProjectUrl] = useState("");
   const [anonKey, setAnonKey] = useState("");
   const [serviceRoleKey, setServiceRoleKey] = useState("");
+  const [accessToken, setAccessToken] = useState("");
+  const [projectId, setProjectId] = useState("");
 
   const [isLoading, setIsLoading] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
@@ -59,6 +61,8 @@ export function SupabaseConfigDialog({
       setProjectUrl(config?.projectUrl || "");
       setAnonKey(config?.anonKey || "");
       setServiceRoleKey(config?.serviceRoleKey || "");
+      setAccessToken(config?.accessToken || "");
+      setProjectId(config?.projectId || "");
     }
   }, [open, existingIntegration]);
 
@@ -76,6 +80,8 @@ export function SupabaseConfigDialog({
       projectUrl,
       anonKey,
       serviceRoleKey: serviceRoleKey || undefined,
+      accessToken: accessToken || undefined,
+      projectId: projectId || undefined,
     };
 
     const result = await testConnection(IntegrationType.SUPABASE, config);
@@ -96,6 +102,8 @@ export function SupabaseConfigDialog({
       projectUrl,
       anonKey,
       serviceRoleKey: serviceRoleKey || undefined,
+      accessToken: accessToken || undefined,
+      projectId: projectId || undefined,
     };
 
     let result;
@@ -115,6 +123,8 @@ export function SupabaseConfigDialog({
       setProjectUrl("");
       setAnonKey("");
       setServiceRoleKey("");
+      setAccessToken("");
+      setProjectId("");
       setTestResult(null);
       setError(null);
       onOpenChange(false);
@@ -192,8 +202,39 @@ export function SupabaseConfigDialog({
               onChange={(e) => setServiceRoleKey(e.target.value)}
             />
             <p className="text-xs text-muted-foreground">
-              Required for automatic migration execution. Find it in Supabase
-              Dashboard → Settings → API
+              Required for server-side operations. Find it in Supabase Dashboard
+              → Settings → API
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="accessToken">
+              Supabase Access Token (Optional)
+            </Label>
+            <Input
+              id="accessToken"
+              type="password"
+              placeholder="sbp_..."
+              value={accessToken}
+              onChange={(e) => setAccessToken(e.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">
+              Required for automatic migrations. Generate it in Supabase
+              Dashboard → Account → Access Tokens
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="projectId">Project ID (Optional)</Label>
+            <Input
+              id="projectId"
+              placeholder="abcdefghijklmnop"
+              value={projectId}
+              onChange={(e) => setProjectId(e.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">
+              Required for migrations. Find it in your project URL (the part
+              before .supabase.co)
             </p>
           </div>
 

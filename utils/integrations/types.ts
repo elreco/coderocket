@@ -41,6 +41,8 @@ export interface SupabaseIntegrationConfig {
   projectUrl: string;
   anonKey: string;
   serviceRoleKey?: string;
+  accessToken?: string;
+  projectId?: string;
   databaseSchema?: {
     tables: SupabaseTable[];
   };
