@@ -431,7 +431,7 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
         currentProgress += Math.random() * 8 + 2;
         if (currentProgress > 85) currentProgress = 85;
         setScrapingStatus((prev) => ({ ...prev, progress: currentProgress }));
-      }, 800);
+      }, 1200);
 
       const result = await cloneWebsite(url);
 
