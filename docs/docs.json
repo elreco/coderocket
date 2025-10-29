@@ -1,13 +1,12 @@
 {
   "$schema": "https://mintlify.com/schema.json",
-  "name": "CodeRocket Documentation",
+  "name": "CodeRocket",
   "theme": "mint",
   "logo": {
-    "dark": "https://www.coderocket.app/logo-white.png",
-    "light": "https://www.coderocket.app/logo-alternate.png"
+    "dark": "https://www.coderocket.app/coderocket-full-inverse.png",
+    "light": "https://www.coderocket.app/coderocket-full.png",
+    "href": "https://coderocket.app"
   },
-  "logoLabel": "CodeRocket",
-  "logoHref": "https://coderocket.app",
   "favicon": "https://www.coderocket.app/favicon.ico",
   "icons": {
     "library": "lucide"

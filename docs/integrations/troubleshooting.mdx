@@ -1,53 +1,10 @@
 ---
-title: Integration Troubleshooting
+title: Troubleshooting
 description: 'Common issues and solutions for CodeRocket integrations'
-icon: "alert-circle"
+icon: "wrench"
 ---
 
 ## General Issues
-
-### "INTEGRATION_ENCRYPTION_KEY is not set"
-
-**Problem:** The integration system cannot encrypt/decrypt credentials.
-
-**Solution:**
-<Steps>
-  <Step title="Generate an encryption key">
-    ```bash
-    openssl rand -base64 32
-    ```
-  </Step>
-  <Step title="Add to environment variables">
-    ```bash .env.local
-    INTEGRATION_ENCRYPTION_KEY=your-generated-key-here
-    ```
-  </Step>
-  <Step title="Restart your development server">
-    ```bash
-    npm run dev
-    ```
-  </Step>
-</Steps>
-
-<Danger>
-  **Never commit this key to version control!** Add `.env.local` to your `.gitignore`.
-</Danger>
-
----
-
-### "Failed to decrypt integration configuration"
-
-**Possible Causes:**
-- The encryption key has changed
-- The integration was created with a different key
-- Database corruption
-
-**Solution:**
-1. Delete the problematic integration
-2. Re-create it with current encryption key
-3. Test the connection before saving
-
----
 
 ### "Integration not showing in sidebar"
 
