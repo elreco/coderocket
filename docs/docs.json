@@ -81,10 +81,33 @@
         "pages": [
           "integrations/overview",
           "integrations/setup",
-          "integrations/supabase",
-          "integrations/migrations",
-          "integrations/usage",
-          "integrations/troubleshooting"
+          {
+            "group": "Supabase",
+            "pages": [
+              "integrations/supabase",
+              "integrations/migrations",
+              "integrations/usage",
+              "integrations/troubleshooting"
+            ]
+          },
+          {
+            "group": "Stripe",
+            "pages": [
+              "integrations/stripe"
+            ]
+          },
+          {
+            "group": "Vercel Blob",
+            "pages": [
+              "integrations/vercel-blob"
+            ]
+          },
+          {
+            "group": "Resend",
+            "pages": [
+              "integrations/resend"
+            ]
+          }
         ]
       }
     ]
