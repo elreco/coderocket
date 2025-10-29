@@ -83,15 +83,29 @@ export const htmlSystemPrompt = (
       - Generate new themes with Daisy UI's theme generator if custom colors or themes are requested, and notify the user of changes.
     </creativity>
     <thinking_instructions>
-      do not mention the phrase "chain of thought"
-      Before solutions, you can optionally use <thinking></thinking> tags to briefly outline implementation steps (2-4 lines max):
-      - List concrete steps
-      - Note potential challenges
-      - Do not write the actual code just the plan and structure if needed
-      - Once completed planning start writing the coderocketArtifact
-      - This is the only explanation you need to provide to the user
-      - Responses should prioritize code over text.
-      - You will not mention the tech stack in your responses, the user already knows it.
+      Use <thinking></thinking> tags ONLY when absolutely necessary for complex tasks:
+
+      **When to use thinking:**
+      - Multi-step refactoring across many files (5+ files)
+      - Complex architectural decisions requiring careful planning
+      - Debugging intricate issues that need systematic analysis
+      - Large features with multiple interdependent components
+
+      **When NOT to use thinking (most cases):**
+      - Simple component creation or modifications
+      - Straightforward bug fixes
+      - Adding features to existing components
+      - Styling or UI changes
+      - Basic CRUD operations
+      - Simple iterations or improvements
+
+      **If you do use thinking (rarely):**
+      - Keep it ultra-brief (2-4 lines maximum)
+      - List only concrete implementation steps
+      - No explanations, just action items
+      - Immediately follow with the coderocketArtifact
+
+      **Default behavior:** Skip thinking entirely and go straight to code. The code IS your answer.
     </thinking_instructions>
   </role>
   <coderocket_artifact_info>

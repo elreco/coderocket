@@ -10,85 +10,38 @@ interface WebsiteContent {
   url: string;
   screenshot?: string;
   metaTags?: Record<string, string>;
-  images: Array<{
-    url: string;
-    alt: string;
-    isHero?: boolean;
-    isVisible?: boolean;
-    type?: string;
-    role?: string;
-    className?: string;
-  }>;
-  videos?: Array<{
-    url: string;
-    type: string;
-    provider?: string;
-  }>;
-  structure?: {
-    menu?: Array<{ text: string; url: string }>;
-    sections?: Array<{
-      title?: string;
-      content?: string;
-      type: string;
-    }>;
+  links?: string[];
+  extractedData?: {
+    theme?: {
+      primaryColor?: string;
+      secondaryColor?: string;
+      accentColors?: string[];
+      backgroundColor?: string;
+      textColor?: string;
+    };
+    typography?: {
+      headingFonts?: string[];
+      bodyFonts?: string[];
+      fontSize?: string;
+    };
     layout?: {
-      header?: boolean;
-      footer?: boolean;
-      sidebar?: boolean;
-      responsive?: boolean;
-    };
-    buttons?: Array<{
-      text: string;
       type?: string;
-    }>;
-    colors?: string[];
-    fonts?: string[];
-  };
-  htmlStructure?: {
-    headTags: {
-      title: string;
-      favicons: string[];
-      stylesheets: string[];
-      scripts: string[];
-      charset: string;
-      viewportMeta: string | null;
+      hasHero?: boolean;
+      hasNavbar?: boolean;
+      hasFooter?: boolean;
+      hasSidebar?: boolean;
+      maxWidth?: string;
     };
-    bodyStructure: {
-      classes: string;
-      id: string;
-      attributes: Array<{ name: string; value: string }>;
-      childrenCount: number;
+    designElements?: {
+      borderRadius?: string;
+      shadows?: boolean;
+      spacing?: string;
     };
-    semanticElements: Record<
-      string,
-      {
-        count: number;
-        details: Array<{
-          id: string;
-          classes: string;
-          childElementCount: number;
-          textContent: string;
-        }>;
-      }
-    >;
-    domStats: {
-      totalElements: number;
-      divCount: number;
-      spanCount: number;
-      paragraphCount: number;
-      imageCount: number;
-      linkCount: number;
-      buttonCount: number;
-      formCount: number;
-      tableCount: number;
-      listCount: number;
+    components?: {
+      buttonStyle?: string;
+      cardStyle?: string;
+      navigationStyle?: string;
     };
-    mainContentHtml: string;
-    significantElements: Array<{
-      selector: string;
-      count: number;
-      sample: string;
-    }>;
   };
 }
 
@@ -105,23 +58,54 @@ export async function scrapeWebsiteWithFirecrawl(
 
   const firecrawl = new Firecrawl({ apiKey });
 
+  console.log(`Starting Firecrawl scraping for: ${url}`);
+
   const result = await firecrawl.scrape(url, {
-    formats: ["html", "markdown", "screenshot"],
+    formats: [
+      "markdown",
+      "html",
+      "links",
+      "screenshot",
+      {
+        type: "json",
+        prompt: `Extract comprehensive design information from this webpage:
+
+**Theme & Colors:**
+- primaryColor: main brand color (hex)
+- secondaryColor: secondary brand color (hex)
+- accentColors: array of accent colors (hex)
+- backgroundColor: page background color (hex)
+- textColor: primary text color (hex)
+
+**Typography:**
+- headingFonts: array of font families used for headings
+- bodyFonts: array of font families used for body text
+- fontSize: typical body font size (e.g., "16px")
+
+**Layout:**
+- type: layout type (e.g., "grid", "flex", "masonry")
+- hasHero: boolean - has hero/banner section
+- hasNavbar: boolean - has navigation bar
+- hasFooter: boolean - has footer
+- hasSidebar: boolean - has sidebar
+- maxWidth: content max-width if applicable (e.g., "1200px")
+
+**Design Elements:**
+- borderRadius: typical border radius (e.g., "8px", "rounded")
+- shadows: uses box shadows (boolean)
+- spacing: typical spacing pattern (e.g., "tight", "normal", "spacious")
+
+**Components:**
+- buttonStyle: button design (e.g., "rounded", "square", "pill")
+- cardStyle: card/container style if present
+- navigationStyle: navigation type (e.g., "horizontal", "sidebar", "hamburger")`,
+      },
+    ],
     onlyMainContent: false,
-    includeTags: [
-      "img",
-      "video",
-      "style",
-      "link",
-      "script",
-      "meta",
-      "header",
-      "nav",
-      "main",
-      "section",
-      "footer",
-      "aside",
-      "article",
+    actions: [
+      { type: "wait", milliseconds: 2000 },
+      { type: "scroll", direction: "down" },
+      { type: "wait", milliseconds: 500 },
     ],
     waitFor: 3000,
     timeout: 60000,
@@ -131,32 +115,28 @@ export async function scrapeWebsiteWithFirecrawl(
     throw new Error(`Firecrawl scraping failed for ${url}. No data returned.`);
   }
 
-  console.log("Firecrawl result:", {
+  console.log("Firecrawl result received:", {
     hasHtml: !!result.html,
+    htmlLength: result.html?.length || 0,
     hasMarkdown: !!result.markdown,
+    markdownLength: result.markdown?.length || 0,
     hasScreenshot: !!result.screenshot,
     screenshotType: typeof result.screenshot,
-    screenshotPreview: result.screenshot
-      ? `${result.screenshot.substring(0, 50)}...`
-      : null,
+    hasLinks: !!result.links,
+    linksCount: result.links?.length || 0,
+    hasJson: !!result.json,
     metadataKeys: Object.keys(result.metadata || {}),
   });
 
-  const html = result.html || "";
-  const markdown = result.markdown || "";
-  const metadata = result.metadata || {};
-  const screenshot = result.screenshot || undefined;
-
   return {
-    html,
-    markdown,
-    title: metadata.title || url,
-    description: metadata.description || null,
+    html: result.html || "",
+    markdown: result.markdown || "",
+    title: result.metadata?.title || url,
+    description: result.metadata?.description || null,
     url,
-    screenshot,
-    metaTags: metadata as Record<string, string>,
-    images: [],
-    videos: [],
-    structure: undefined,
+    screenshot: result.screenshot || undefined,
+    metaTags: result.metadata as Record<string, string>,
+    links: result.links || [],
+    extractedData: result.json || {},
   };
 }

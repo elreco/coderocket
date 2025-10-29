@@ -3,12 +3,14 @@
 import { Brain, ChevronDown, ChevronRight } from "lucide-react";
 import { useState } from "react";
 
+import { Markdown } from "./markdown";
+
 interface ThinkingBlockProps {
   content: string;
 }
 
 export function ThinkingBlock({ content }: ThinkingBlockProps) {
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   return (
     <div className="my-4 rounded-lg border border-muted-foreground/20 bg-muted/30 transition-all">
@@ -32,10 +34,8 @@ export function ThinkingBlock({ content }: ThinkingBlockProps) {
 
       {isExpanded && (
         <div className="border-t border-muted-foreground/20 px-4 py-3">
-          <div className="prose prose-sm max-w-none dark:prose-invert">
-            <p className="whitespace-pre-wrap text-sm italic text-muted-foreground">
-              {content}
-            </p>
+          <div className="prose prose-sm max-w-none text-muted-foreground dark:prose-invert [&>*]:text-muted-foreground">
+            <Markdown>{content}</Markdown>
           </div>
         </div>
       )}
