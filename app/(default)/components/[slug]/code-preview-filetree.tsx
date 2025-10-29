@@ -6,16 +6,10 @@ import {
   Loader2,
   Lock,
   Unlock,
-  Database,
-  Server,
-  FileType,
-  Settings,
-  KeyRound,
 } from "lucide-react";
 import * as React from "react";
 
 import { updateArtifactCode } from "@/app/(default)/components/[slug]/actions";
-import { Badge } from "@/components/ui/badge";
 import {
   Tooltip,
   TooltipContent,
@@ -26,61 +20,6 @@ import { useComponentContext } from "@/context/component-context";
 import { cn } from "@/lib/utils";
 import { toggleFileLock } from "@/utils/completion-parser";
 import { getFileConfig } from "@/utils/file-extensions";
-
-function getFileCategoryInfo(
-  fileName: string | null,
-): { icon: React.ReactNode; label: string; color: string } | null {
-  if (!fileName) return null;
-
-  const lowerName = fileName.toLowerCase();
-
-  if (lowerName.includes("/migrations/") && lowerName.endsWith(".sql")) {
-    return {
-      icon: <Database className="size-3" />,
-      label: "Migration",
-      color: "text-blue-600 bg-blue-50 border-blue-200",
-    };
-  }
-  if (lowerName.includes("/services/")) {
-    return {
-      icon: <Server className="size-3" />,
-      label: "Service",
-      color: "text-purple-600 bg-purple-50 border-purple-200",
-    };
-  }
-  if (
-    lowerName.includes("/types/") &&
-    (lowerName.includes("database") || lowerName.includes("supabase"))
-  ) {
-    return {
-      icon: <FileType className="size-3" />,
-      label: "Types",
-      color: "text-green-600 bg-green-50 border-green-200",
-    };
-  }
-  if (
-    lowerName.includes("/lib/supabase") ||
-    lowerName.includes("/lib/database")
-  ) {
-    return {
-      icon: <Settings className="size-3" />,
-      label: "Config",
-      color: "text-orange-600 bg-orange-50 border-orange-200",
-    };
-  }
-  if (
-    lowerName.endsWith(".env.example") ||
-    lowerName.endsWith(".env.local.example")
-  ) {
-    return {
-      icon: <KeyRound className="size-3" />,
-      label: "Env",
-      color: "text-amber-600 bg-amber-50 border-amber-200",
-    };
-  }
-
-  return null;
-}
 
 interface File {
   name: string | null;
@@ -289,22 +228,7 @@ const FolderContent = ({
               style={{ paddingLeft: `${depth * 12 + 22}px` }}
             >
               <FileIcon className={cn("size-4 shrink-0", fileConfig.color)} />
-              <span className="flex-1 truncate">{file.name}</span>
-              {(() => {
-                const categoryInfo = getFileCategoryInfo(fullPath || null);
-                return categoryInfo ? (
-                  <Badge
-                    variant="outline"
-                    className={cn(
-                      "shrink-0 px-1.5 py-0 text-[10px] h-5 gap-1",
-                      categoryInfo.color,
-                    )}
-                  >
-                    {categoryInfo.icon}
-                    {categoryInfo.label}
-                  </Badge>
-                ) : null;
-              })()}
+              <span className="flex-1 truncate text-left">{file.name}</span>
             </button>
             <TooltipProvider>
               <Tooltip>

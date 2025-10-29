@@ -93,7 +93,6 @@ export default function ComponentChatFiles({
       if (cutIndex < Number.MAX_SAFE_INTEGER) {
         introText = message.content.substring(0, cutIndex).trim();
 
-        // Supprimer la ligne avec "FINISH_REASON" si elle existe
         if (introText.includes("<!-- FINISH_REASON:")) {
           introText = introText.split("<!-- FINISH_REASON:")[0].trim();
         }
@@ -460,7 +459,7 @@ ${extractedFiles
             />
           </div>
         ) : (
-          <div className="flex w-full flex-col gap-2 overflow-x-auto text-sm">
+          <div className="flex w-full flex-col gap-2 overflow-x-auto break-words text-sm">
             <div className="flex items-center justify-between">
               <div className="mr-2 flex items-center">
                 {message.is_github_pull ? (

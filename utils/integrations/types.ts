@@ -147,6 +147,8 @@ export interface ValidationResult {
     projectName?: string;
     region?: string;
     tables?: string[];
+    latency?: number;
+    mode?: string;
   };
 }
 

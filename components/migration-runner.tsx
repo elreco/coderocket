@@ -38,7 +38,7 @@ export function MigrationRunner({ migrationFile }: MigrationRunnerProps) {
         description: "Migration SQL has been copied to your clipboard",
       });
       setTimeout(() => setCopied(false), 2000);
-    } catch (error) {
+    } catch {
       toast({
         variant: "destructive",
         title: "Copy Failed",
@@ -54,9 +54,9 @@ export function MigrationRunner({ migrationFile }: MigrationRunnerProps) {
         Database Migration Detected
       </AlertTitle>
       <AlertDescription>
-        <div className="mt-2 space-y-3">
+        <div className="mt-2 space-y-3 break-words ">
           <div className="text-sm text-blue-800 dark:text-blue-200">
-            <p className="font-medium">{migrationFile.name}</p>
+            <p className="break-words font-medium">{migrationFile.name}</p>
             <div className="mt-1 flex gap-4 text-blue-600 dark:text-blue-300">
               {tables.length > 0 && (
                 <span className="flex items-center gap-1">

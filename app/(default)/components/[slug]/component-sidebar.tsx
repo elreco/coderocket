@@ -621,7 +621,11 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
         <TabsList
           className={cn(
             "grid w-full rounded-none",
-            authorized ? "grid-cols-5" : "grid-cols-2",
+            authorized
+              ? selectedFramework === Framework.HTML
+                ? "grid-cols-4"
+                : "grid-cols-5"
+              : "grid-cols-2",
           )}
         >
           <TabsTrigger value="chat" disabled={isLoading}>
@@ -635,7 +639,7 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
               <Github className="size-4" />
             </TabsTrigger>
           )}
-          {authorized && (
+          {authorized && selectedFramework !== Framework.HTML && (
             <TabsTrigger value="integrations" disabled={isLoading}>
               <Plug2 className="size-4" />
             </TabsTrigger>
@@ -667,12 +671,14 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
             <h3 className="text-base font-medium">GitHub Sync</h3>
           </div>
         )}
-        {authorized && activeTab === "integrations" && (
-          <div className="flex h-12 items-center gap-2 bg-background px-4 py-1.5">
-            <Plug2 className="size-4" />
-            <h3 className="text-base font-medium">Integrations</h3>
-          </div>
-        )}
+        {authorized &&
+          selectedFramework !== Framework.HTML &&
+          activeTab === "integrations" && (
+            <div className="flex h-12 items-center gap-2 bg-background px-4 py-1.5">
+              <Plug2 className="size-4" />
+              <h3 className="text-base font-medium">Integrations</h3>
+            </div>
+          )}
         {authorized && activeTab === "settings" && (
           <div className="flex h-12 items-center gap-2 bg-background px-4 py-1.5">
             <Settings className="size-4" />
@@ -779,9 +785,10 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
               <GithubSync closeSheet={() => {}} />
             </div>
           )}
-          {!isLoading && authorized && activeTab === "integrations" && (
-            <IntegrationsContent />
-          )}
+          {!isLoading &&
+            authorized &&
+            selectedFramework !== Framework.HTML &&
+            activeTab === "integrations" && <IntegrationsContent />}
           {!isLoading && authorized && activeTab === "settings" && (
             <SettingsContent />
           )}
@@ -810,7 +817,7 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
               isLoading ? "block" : "hidden",
             )}
           >
-            <div className="flex w-full flex-col gap-2 overflow-x-auto text-sm">
+            <div className="flex w-full flex-col gap-2 overflow-x-auto break-words text-sm">
               {input && (
                 <div className="flex items-center">
                   <Avatar className="mr-2 size-10 rounded-none">
@@ -1306,7 +1313,7 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
             <Github className="size-5" />
           </Button>
         )}
-        {authorized && (
+        {authorized && selectedFramework !== Framework.HTML && (
           <Button
             variant="ghost"
             size="icon"

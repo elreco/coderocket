@@ -410,4 +410,3 @@ if (typeof window !== 'undefined') {
 
 console.log('[Supabase Mock] Module loaded - Database operations will be simulated in-memory for preview purposes');
 `;
-

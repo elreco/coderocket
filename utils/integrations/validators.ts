@@ -41,10 +41,7 @@ export async function validateSupabaseCredentials(
     });
 
     const startTime = Date.now();
-    const { data, error } = await supabase
-      .from("_migrations")
-      .select("id")
-      .limit(1);
+    const { error } = await supabase.from("_migrations").select("id").limit(1);
     const latency = Date.now() - startTime;
 
     if (error && error.code !== "42P01") {

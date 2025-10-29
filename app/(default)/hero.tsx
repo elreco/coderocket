@@ -18,6 +18,8 @@ import {
   Loader,
   Sparkles,
   ArrowRight,
+  Database,
+  Check,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -69,9 +71,11 @@ import { Tables } from "@/types_db";
 import { Framework } from "@/utils/config";
 import { defaultTheme, maxImagesUpload, themes } from "@/utils/config";
 import { validateFile } from "@/utils/file-helper";
+import { IntegrationType, UserIntegration } from "@/utils/integrations";
 import { promptEnhancer } from "@/utils/prompt-enhancer";
 import { createClient } from "@/utils/supabase/client";
 
+import { fetchUserIntegrations } from "./account/integrations/actions";
 import { createChat } from "./components/actions";
 
 // Types pour les thèmes
@@ -194,6 +198,12 @@ export default function Hero() {
   const [showCloneModal, setShowCloneModal] = useState(false);
   const [agreeToTerms, setAgreeToTerms] = useState(false);
   const [showPromptIdeasModal, setShowPromptIdeasModal] = useState(false);
+  const [userIntegrations, setUserIntegrations] = useState<UserIntegration[]>(
+    [],
+  );
+  const [selectedIntegration, setSelectedIntegration] = useState<string | null>(
+    null,
+  );
 
   useEffect(() => {
     if (inputRef.current) {
@@ -268,6 +278,11 @@ export default function Hero() {
         setIsLoggedIn(!!data?.user?.id);
         const sub = await getSubscription();
         setSubscription(sub);
+
+        if (data?.user?.id) {
+          const integrations = await fetchUserIntegrations();
+          setUserIntegrations(integrations);
+        }
       } catch (error) {
         console.error("Error fetching subscription:", error);
       } finally {
@@ -452,6 +467,10 @@ export default function Hero() {
     formData.append("isVisible", isVisible.toString());
     formData.append("theme", selectedTheme);
     formData.append("framework", selectedFramework);
+
+    if (selectedIntegration) {
+      formData.append("integrationId", selectedIntegration);
+    }
 
     // Stocker le prompt simple pour l'affichage et le prompt détaillé pour l'IA
     formData.append("prompt", finalPrompt);
@@ -880,6 +899,70 @@ export default function Hero() {
                   </SheetContent>
                 </Sheet>
               )}
+              {isLoggedIn && selectedFramework !== Framework.HTML && (
+                <>
+                  {userIntegrations.filter(
+                    (i) =>
+                      i.integration_type === IntegrationType.SUPABASE &&
+                      i.is_active,
+                  ).length > 0 ? (
+                    <Select
+                      disabled={loading}
+                      value={selectedIntegration || "none"}
+                      onValueChange={(value) =>
+                        setSelectedIntegration(value === "none" ? null : value)
+                      }
+                    >
+                      <SelectTrigger className="h-8 w-full rounded-md border-background sm:w-auto">
+                        <SelectValue placeholder="No Database" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none" className="cursor-pointer">
+                          <div className="mr-2 flex w-full flex-row items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <Database className="size-4 opacity-50" />
+                              <span>No Database</span>
+                            </div>
+                          </div>
+                        </SelectItem>
+                        {userIntegrations
+                          .filter(
+                            (i) =>
+                              i.integration_type === IntegrationType.SUPABASE &&
+                              i.is_active,
+                          )
+                          .map((integration) => (
+                            <SelectItem
+                              key={integration.id}
+                              value={integration.id}
+                              className="cursor-pointer"
+                            >
+                              <div className="mr-2 flex w-full flex-row items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  <Database className="size-4" />
+                                  <span>{integration.name}</span>
+                                </div>
+                              </div>
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Link href="/account/integrations">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="h-8 w-full gap-2 text-xs sm:w-auto"
+                        disabled={loading}
+                      >
+                        <Database className="size-3.5" />
+                        Connect Supabase
+                      </Button>
+                    </Link>
+                  )}
+                </>
+              )}
               <Select
                 disabled={loading}
                 defaultValue="react"
@@ -887,6 +970,7 @@ export default function Hero() {
                   setSelectedFramework(value as Framework);
                   if (value === Framework.HTML) {
                     setGenerationMode("scratch");
+                    setSelectedIntegration(null);
                   }
                 }}
               >
