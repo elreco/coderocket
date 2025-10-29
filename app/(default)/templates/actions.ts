@@ -280,7 +280,20 @@ export async function createMarketplaceListing(params: {
     return { success: false, error: "Component version not found" };
   }
 
-  // Create the listing
+  const { data: chatIntegrations } = await supabase
+    .from("chat_integrations")
+    .select("id")
+    .eq("chat_id", params.chatId)
+    .limit(1);
+
+  if (chatIntegrations && chatIntegrations.length > 0) {
+    return {
+      success: false,
+      error:
+        "Components with backend integrations cannot be listed as templates. Integrations use personal credentials that cannot be shared. Please create a version without integrations to list it.",
+    };
+  }
+
   const { data, error } = await supabase
     .from("marketplace_listings")
     .insert({
