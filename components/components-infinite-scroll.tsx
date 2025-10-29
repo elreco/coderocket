@@ -5,6 +5,7 @@ import {
   SiReact,
   SiVuedotjs,
   SiSvelte,
+  SiAngular,
 } from "@icons-pack/react-simple-icons";
 import {
   ArrowDown,
@@ -283,6 +284,8 @@ export function ComponentsInfiniteScroll({
         return <SiVuedotjs className="size-4" />;
       case "svelte":
         return <SiSvelte className="size-4" />;
+      case "angular":
+        return <SiAngular className="size-4" />;
       default:
         return null;
     }
