@@ -97,6 +97,10 @@ export default function ComponentChatFiles({
         if (introText.includes("<!-- FINISH_REASON:")) {
           introText = introText.split("<!-- FINISH_REASON:")[0].trim();
         }
+
+        introText = introText
+          .replace(/<thinking>[\s\S]*?<\/thinking>/g, "")
+          .trim();
       }
     }
 
