@@ -1042,6 +1042,7 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
                 files={chatFiles}
                 handleFileClick={handleFileClick}
                 chatId={chatId}
+                messageId={0}
               />
               <div className="mt-2 flex gap-1">
                 <span className="size-2 animate-[typing_1s_ease-in-out_infinite] rounded-full bg-foreground/50"></span>

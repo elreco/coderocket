@@ -4,6 +4,7 @@ import {
   deleteUserIntegration,
   updateUserIntegration,
   validateIntegrationConfig,
+  IntegrationType,
 } from "@/utils/integrations";
 import { createClient } from "@/utils/supabase/server";
 
@@ -40,7 +41,7 @@ export async function PATCH(
 
     if (body.config) {
       const validation = await validateIntegrationConfig(
-        integration.integration_type,
+        integration.integration_type as IntegrationType,
         body.config,
       );
       if (!validation.valid) {
