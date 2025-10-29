@@ -1,7 +1,7 @@
 "use client";
 
 import { SiSupabase } from "@icons-pack/react-simple-icons";
-import { Plug2, Plus, Loader2, ExternalLink } from "lucide-react";
+import { Plug2, Plus, Loader2, ExternalLink, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -11,6 +11,7 @@ import {
   enableChatIntegration,
   disableChatIntegration,
 } from "@/app/(default)/account/integrations/actions";
+import { getSubscription } from "@/app/supabase-server";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { IntegrationBadge } from "@/components/ui/integration-badge";
@@ -25,11 +26,18 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { useComponentContext } from "@/context/component-context";
 import { toast } from "@/hooks/use-toast";
+import { Database } from "@/types_db";
 import {
   IntegrationType,
   UserIntegration,
   ChatIntegrationWithDetails,
 } from "@/utils/integrations";
+
+type Subscription = Database["public"]["Tables"]["subscriptions"]["Row"] & {
+  prices: Database["public"]["Tables"]["prices"]["Row"] & {
+    products: Database["public"]["Tables"]["products"]["Row"];
+  };
+};
 
 export default function IntegrationsContent() {
   const { chatId, user } = useComponentContext();
@@ -40,21 +48,27 @@ export default function IntegrationsContent() {
     ChatIntegrationWithDetails[]
   >([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [selectedIntegrations, setSelectedIntegrations] = useState<
     Map<IntegrationType, string>
   >(new Map());
+
+  const isPremium = !!subscription;
 
   const loadData = async () => {
     if (!user) return;
 
     setIsLoading(true);
-    const [allIntegrations, enabledIntegrations] = await Promise.all([
-      fetchUserIntegrations(),
-      getChatIntegrations(chatId),
-    ]);
+    const [allIntegrations, enabledIntegrations, subscriptionData] =
+      await Promise.all([
+        fetchUserIntegrations(),
+        getChatIntegrations(chatId),
+        getSubscription(),
+      ]);
 
     setUserIntegrations(allIntegrations);
     setChatIntegrations(enabledIntegrations);
+    setSubscription(subscriptionData as Subscription | null);
 
     const selected = new Map<IntegrationType, string>();
     enabledIntegrations.forEach((ci) => {
@@ -152,6 +166,44 @@ export default function IntegrationsContent() {
     return (
       <div className="flex items-center justify-center p-8">
         <Loader2 className="size-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (!isPremium) {
+    return (
+      <div className="space-y-4 p-4">
+        <div>
+          <h3 className="text-base font-semibold">Active Integrations</h3>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Connect backend services to generate full-stack applications.{" "}
+            <a
+              href="https://docs.coderocket.app/integrations/migrations"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-foreground underline decoration-dotted underline-offset-4 hover:decoration-solid"
+            >
+              View documentation
+            </a>
+          </p>
+        </div>
+        <Alert className="border-l-4 border-l-amber-500 bg-amber-50 dark:bg-amber-950">
+          <AlertCircle className="size-4 text-amber-600" />
+          <AlertDescription>
+            <p className="font-medium text-amber-900 dark:text-amber-100">
+              Premium feature required
+            </p>
+            <p className="mt-1 text-sm text-amber-800 dark:text-amber-200">
+              Backend integrations are available for premium users only. Upgrade
+              your plan to connect Supabase, Stripe, and other services.
+            </p>
+          </AlertDescription>
+        </Alert>
+        <Button variant="outline" asChild>
+          <Link href="/pricing" className="flex items-center gap-2">
+            <span>Upgrade to Premium</span>
+          </Link>
+        </Button>
       </div>
     );
   }

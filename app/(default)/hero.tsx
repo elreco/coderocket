@@ -204,6 +204,7 @@ export default function Hero() {
   const [selectedIntegration, setSelectedIntegration] = useState<string | null>(
     null,
   );
+  const isPremium = !!subscription;
 
   useEffect(() => {
     if (inputRef.current) {
@@ -905,11 +906,27 @@ export default function Hero() {
               )}
               {isLoggedIn && selectedFramework !== Framework.HTML && (
                 <>
-                  {isLoadingIntegrations ? (
+                  {!isPremium ? (
+                    <Link href="/pricing">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="background"
+                        className="h-8 w-full gap-2 text-xs sm:w-auto"
+                        disabled={loading}
+                      >
+                        <Lock className="size-3.5" />
+                        <span className="hidden sm:inline">
+                          Unlock Integrations
+                        </span>
+                        <span className="sm:hidden">Premium</span>
+                      </Button>
+                    </Link>
+                  ) : isLoadingIntegrations ? (
                     <Button
                       type="button"
                       size="sm"
-                      variant="outline"
+                      variant="background"
                       className="h-8 w-full gap-2 text-xs sm:w-auto"
                       disabled
                     >
