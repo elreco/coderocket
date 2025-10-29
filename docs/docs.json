@@ -82,6 +82,7 @@
           "integrations/overview",
           "integrations/setup",
           "integrations/supabase",
+          "integrations/migrations",
           "integrations/usage",
           "integrations/troubleshooting"
         ]
