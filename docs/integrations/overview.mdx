@@ -1,0 +1,114 @@
+---
+title: Integrations Overview
+description: 'Connect external services to add backend functionality to your generated applications'
+---
+
+## What are Integrations?
+
+CodeRocket Integrations allow you to connect external services like databases, payment processors, and email providers to your generated applications. This enables the AI to automatically generate full-stack applications with backend functionality, not just frontend code.
+
+<Card title="Available Integrations" icon="plug">
+  - **Supabase** - PostgreSQL database, authentication, and storage (Available Now)
+  - **Stripe** - Payment processing and subscriptions (Coming Soon)
+  - **Vercel Blob** - File storage and CDN (Coming Soon)
+  - **Resend** - Transactional email delivery (Coming Soon)
+  - **OAuth Providers** - Google, GitHub authentication (Coming Soon)
+</Card>
+
+## How It Works
+
+### 1. Global Configuration
+Configure your integrations once in your account settings. Your credentials are encrypted and stored securely.
+
+### 2. Per-Project Activation
+Enable specific integrations for each project. This gives you fine-grained control over which services are used where.
+
+### 3. Automatic Code Generation
+When you generate code with an integration enabled, the AI automatically includes:
+- Backend configuration files
+- TypeScript type definitions
+- API routes and endpoints
+- Client-side hooks for data fetching
+- Environment variables setup
+
+## Key Features
+
+### 🔒 Secure by Default
+- All API keys and secrets are encrypted using AES-256-GCM
+- Row Level Security (RLS) ensures you only access your own integrations
+- Credentials are never exposed in generated code
+
+### 🎯 Per-Project Control
+- Enable/disable integrations for each project independently
+- Multiple integrations of the same type supported
+- Easy switching between development and production credentials
+
+### 🤖 AI-Powered Generation
+- The AI understands your integration context
+- Automatically generates best-practice code
+- Includes error handling and loading states
+- Type-safe implementations
+
+### 📊 Centralized Management
+- Manage all integrations from one place
+- Test connections before saving
+- Edit credentials without affecting existing projects
+- See which projects use each integration
+
+## Benefits
+
+<AccordionGroup>
+  <Accordion title="Faster Development">
+    Skip hours of boilerplate code. The AI generates database connections, API routes, and client-side code automatically.
+  </Accordion>
+
+  <Accordion title="Best Practices Built-In">
+    Generated code follows industry best practices for security, error handling, and performance.
+  </Accordion>
+
+  <Accordion title="Type Safety">
+    Full TypeScript support with auto-generated types from your database schemas.
+  </Accordion>
+
+  <Accordion title="Consistency">
+    Use the same integration across multiple projects with consistent patterns.
+  </Accordion>
+</AccordionGroup>
+
+## Getting Started
+
+<Steps>
+  <Step title="Configure an Integration">
+    Go to **Account → Integrations** and add your first integration (e.g., Supabase).
+  </Step>
+
+  <Step title="Test the Connection">
+    Use the built-in connection tester to verify your credentials before saving.
+  </Step>
+
+  <Step title="Enable for a Project">
+    Open any project, go to the **Integrations** tab, and toggle on your integration.
+  </Step>
+
+  <Step title="Generate Code">
+    Create a new iteration with a prompt like "Create a blog with posts stored in Supabase". The AI will handle the rest!
+  </Step>
+</Steps>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Setup Guide" icon="gear" href="/integrations/setup">
+    Learn how to configure your first integration
+  </Card>
+  <Card title="Supabase Guide" icon="database" href="/integrations/supabase">
+    Complete guide to using Supabase with CodeRocket
+  </Card>
+  <Card title="Usage Examples" icon="code" href="/integrations/usage">
+    See practical examples and use cases
+  </Card>
+  <Card title="Troubleshooting" icon="wrench" href="/integrations/troubleshooting">
+    Common issues and solutions
+  </Card>
+</CardGroup>
+

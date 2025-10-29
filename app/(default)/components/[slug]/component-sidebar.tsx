@@ -10,6 +10,7 @@ import {
   Loader,
   Settings,
   Github,
+  Plug2,
 } from "lucide-react";
 import { useEffect, useState, useRef, useCallback } from "react";
 
@@ -56,6 +57,7 @@ import { createClient } from "@/utils/supabase/client";
 
 import ComponentTheme from "./(settings)/component-theme";
 import GithubSync from "./(settings)/github-sync";
+import IntegrationsContent from "./(settings)/integrations-content";
 import SettingsContent from "./(settings)/settings-content";
 import { improvePromptByChatId } from "./actions";
 import { ChunkReader } from "./chunk-reader";
@@ -619,7 +621,11 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
         <TabsList
           className={cn(
             "grid w-full rounded-none",
-            authorized ? "grid-cols-4" : "grid-cols-2",
+            authorized
+              ? selectedFramework === Framework.HTML
+                ? "grid-cols-4"
+                : "grid-cols-5"
+              : "grid-cols-2",
           )}
         >
           <TabsTrigger value="chat" disabled={isLoading}>
@@ -631,6 +637,11 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
           {authorized && (
             <TabsTrigger value="github" disabled={isLoading}>
               <Github className="size-4" />
+            </TabsTrigger>
+          )}
+          {authorized && selectedFramework !== Framework.HTML && (
+            <TabsTrigger value="integrations" disabled={isLoading}>
+              <Plug2 className="size-4" />
             </TabsTrigger>
           )}
           {authorized && (
@@ -660,6 +671,14 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
             <h3 className="text-base font-medium">GitHub Sync</h3>
           </div>
         )}
+        {authorized &&
+          selectedFramework !== Framework.HTML &&
+          activeTab === "integrations" && (
+            <div className="flex h-12 items-center gap-2 bg-background px-4 py-1.5">
+              <Plug2 className="size-4" />
+              <h3 className="text-base font-medium">Integrations</h3>
+            </div>
+          )}
         {authorized && activeTab === "settings" && (
           <div className="flex h-12 items-center gap-2 bg-background px-4 py-1.5">
             <Settings className="size-4" />
@@ -766,6 +785,10 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
               <GithubSync closeSheet={() => {}} />
             </div>
           )}
+          {!isLoading &&
+            authorized &&
+            selectedFramework !== Framework.HTML &&
+            activeTab === "integrations" && <IntegrationsContent />}
           {!isLoading && authorized && activeTab === "settings" && (
             <SettingsContent />
           )}
@@ -794,7 +817,7 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
               isLoading ? "block" : "hidden",
             )}
           >
-            <div className="flex w-full flex-col gap-2 overflow-x-auto text-sm">
+            <div className="flex w-full flex-col gap-2 overflow-x-auto break-words text-sm">
               {input && (
                 <div className="flex items-center">
                   <Avatar className="mr-2 size-10 rounded-none">
@@ -1018,6 +1041,8 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
                 chunks={streamingChunks}
                 files={chatFiles}
                 handleFileClick={handleFileClick}
+                chatId={chatId}
+                messageId={0}
               />
               <div className="mt-2 flex gap-1">
                 <span className="size-2 animate-[typing_1s_ease-in-out_infinite] rounded-full bg-foreground/50"></span>
@@ -1288,6 +1313,20 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
             disabled={isLoading}
           >
             <Github className="size-5" />
+          </Button>
+        )}
+        {authorized && selectedFramework !== Framework.HTML && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className={cn(
+              "h-10 w-full rounded-lg",
+              activeTab === "integrations" && "bg-secondary text-primary",
+            )}
+            onClick={() => !isLoading && handleTabChange("integrations")}
+            disabled={isLoading}
+          >
+            <Plug2 className="size-5" />
           </Button>
         )}
         {authorized && (

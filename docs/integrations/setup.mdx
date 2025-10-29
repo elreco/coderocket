@@ -1,0 +1,232 @@
+---
+title: Setup Your First Integration
+description: 'Step-by-step guide to configuring integrations in CodeRocket'
+---
+
+## Prerequisites
+
+Before setting up integrations, make sure you have:
+
+<Check>
+  - An active CodeRocket account
+  - A subscription plan (integrations require a paid plan)
+  - Access to the external service you want to integrate (e.g., Supabase account)
+</Check>
+
+## Step 1: Access Integration Settings
+
+Navigate to your integration management page:
+
+1. Go to **Account** from the sidebar
+2. Find the **Integrations** section
+3. Click **Manage Integrations**
+
+<img src="/images/account-integrations-card.png" alt="Integrations card in account page" />
+
+## Step 2: Add a New Integration
+
+On the integrations page, you'll see:
+- **Your Integrations** - Already configured integrations
+- **Available Integrations** - Services you can connect
+
+<Steps>
+  <Step title="Choose an Integration">
+    Click **Add Integration** on the service you want to connect (e.g., Supabase).
+  </Step>
+
+  <Step title="Fill in the Configuration">
+    Provide the required information:
+    - **Integration Name**: A friendly name (e.g., "My Blog Database")
+    - **Service-specific credentials**: URL, API keys, etc.
+  </Step>
+
+  <Step title="Test the Connection (Recommended)">
+    Click **Test Connection** to verify your credentials before saving.
+
+    <Note>
+      The connection test will:
+      - Verify the URL format
+      - Test authentication
+      - Measure latency
+      - Check permissions
+    </Note>
+  </Step>
+
+  <Step title="Save the Integration">
+    Click **Create Integration** to save your configuration.
+
+    <Info>
+      Your credentials are encrypted with AES-256-GCM before being stored.
+    </Info>
+  </Step>
+</Steps>
+
+## Step 3: Enable for a Project
+
+Now that you have an integration configured, enable it for a specific project:
+
+1. Open one of your generated components/projects
+2. Open the sidebar (if closed)
+3. Click on the **Integrations** tab (🔌 icon)
+4. Toggle **ON** the integration you want to use
+5. If you have multiple integrations of the same type, select which one to use
+
+<img src="/images/sidebar-integrations-tab.png" alt="Integrations tab in component sidebar" />
+
+## Step 4: Generate Code with Integration
+
+With the integration enabled, generate or iterate on your project:
+
+```
+Prompt: "Create a blog with posts table including title, content, and author"
+```
+
+The AI will automatically:
+- Generate a Supabase client configuration
+- Create TypeScript types for the `posts` table
+- Generate API routes for CRUD operations
+- Create React hooks for data fetching
+- Include proper error handling
+
+## Configuration Details
+
+### Encryption Key Setup
+
+<Warning>
+  The integration system requires an encryption key to be set up. Make sure your deployment has the `INTEGRATION_ENCRYPTION_KEY` environment variable configured.
+</Warning>
+
+To generate a secure encryption key:
+
+```bash
+# Using OpenSSL
+openssl rand -base64 32
+
+# Or using Node.js
+node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+```
+
+Add this to your `.env.local`:
+
+```bash
+INTEGRATION_ENCRYPTION_KEY=your-generated-key-here
+```
+
+<Danger>
+  **Never commit this key to version control!**
+
+  If you lose this key, all integration configurations will become unrecoverable.
+</Danger>
+
+### Security Best Practices
+
+<AccordionGroup>
+  <Accordion title="Use Different Keys for Dev/Prod">
+    Generate separate encryption keys for development and production environments.
+  </Accordion>
+
+  <Accordion title="Rotate Credentials Regularly">
+    Update your service credentials (API keys, passwords) periodically and update them in CodeRocket.
+  </Accordion>
+
+  <Accordion title="Use Service Role Keys Sparingly">
+    Only provide service role keys or admin credentials if absolutely necessary. Prefer read-only or limited-scope credentials.
+  </Accordion>
+
+  <Accordion title="Monitor Integration Usage">
+    Regularly check which projects are using which integrations to maintain security hygiene.
+  </Accordion>
+</AccordionGroup>
+
+## Managing Integrations
+
+### Edit an Integration
+
+1. Go to **Account → Integrations**
+2. Find the integration you want to edit
+3. Click the **⋯** menu → **Edit**
+4. Update the configuration
+5. Test the connection again
+6. Click **Update Integration**
+
+<Note>
+  Updating an integration will affect all projects using it. Make sure to test thoroughly.
+</Note>
+
+### Disable an Integration
+
+To temporarily disable an integration without deleting it:
+
+1. Go to **Account → Integrations**
+2. Click the **⋯** menu → **Disable**
+
+Disabled integrations won't be available for new projects but existing projects remain unaffected.
+
+### Delete an Integration
+
+<Danger>
+  Deleting an integration will remove it from ALL projects using it. This action cannot be undone.
+</Danger>
+
+To delete an integration:
+
+1. Go to **Account → Integrations**
+2. Click the **⋯** menu → **Delete**
+3. Confirm the deletion
+
+## Multiple Integrations
+
+You can have multiple integrations of the same type. This is useful for:
+
+- **Separating Environments**: Different databases for dev/staging/prod
+- **Multi-Tenant Apps**: Different databases for different clients
+- **Testing**: Try different configurations without affecting live projects
+
+When you have multiple integrations of the same type:
+1. Enable the integration for your project
+2. Use the dropdown to select which specific integration to use
+3. The selected integration will be used for code generation
+
+## Troubleshooting
+
+### "Failed to create integration"
+
+<Steps>
+  <Step title="Check Credentials">
+    Verify that all required fields are filled correctly.
+  </Step>
+  <Step title="Test Connection">
+    Use the "Test Connection" button to diagnose the issue.
+  </Step>
+  <Step title="Check Service Status">
+    Ensure the external service (e.g., Supabase) is online and accessible.
+  </Step>
+</Steps>
+
+### "Integration not showing in project"
+
+- Refresh the page
+- Make sure you're logged in
+- Verify the integration is active (not disabled)
+- Check that you have permission to access the integration
+
+### "Connection test failed"
+
+Common causes:
+- Incorrect credentials
+- Invalid URL format
+- Network connectivity issues
+- Service is down or rate-limited
+- Insufficient permissions on the API key
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Supabase Setup" icon="database" href="/integrations/supabase">
+    Detailed guide for setting up Supabase integration
+  </Card>
+  <Card title="Usage Examples" icon="code" href="/integrations/usage">
+    See how to use integrations in your projects
+  </Card>
+</CardGroup>
+

@@ -48,6 +48,7 @@ interface FolderContentProps {
   onBatchToggleLock: (filePaths: string[]) => void;
   allFiles: File[];
   savingFiles: Set<string>;
+  authorized: boolean;
 }
 
 const FolderContent = ({
@@ -66,6 +67,7 @@ const FolderContent = ({
   onBatchToggleLock,
   allFiles,
   savingFiles,
+  authorized,
 }: FolderContentProps) => {
   const sortFiles = React.useCallback((a: File, b: File) => {
     return (a.name || "").localeCompare(b.name || "");
@@ -152,33 +154,35 @@ const FolderContent = ({
                 <Folder className="size-4 shrink-0 text-muted-foreground" />
                 <span className="truncate">{subFolderName}</span>
               </button>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleFolderLock(fullPath, subFolder, !allLocked);
-                      }}
-                      disabled={isLoading}
-                      className="absolute right-1 opacity-0 transition-opacity disabled:cursor-not-allowed group-hover:opacity-100"
-                    >
-                      {allLocked ? (
-                        <Lock className="size-3.5 text-primary" />
-                      ) : (
-                        <Unlock className="size-3.5 text-muted-foreground hover:text-foreground" />
-                      )}
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>
-                      {allLocked
-                        ? "Unlock all files in this folder"
-                        : "Lock all files in this folder to prevent AI modifications"}
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              {authorized && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleFolderLock(fullPath, subFolder, !allLocked);
+                        }}
+                        disabled={isLoading}
+                        className="absolute right-1 opacity-0 transition-opacity disabled:cursor-not-allowed group-hover:opacity-100"
+                      >
+                        {allLocked ? (
+                          <Lock className="size-3.5 text-primary" />
+                        ) : (
+                          <Unlock className="size-3.5 text-muted-foreground hover:text-foreground" />
+                        )}
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>
+                        {allLocked
+                          ? "Unlock all files in this folder"
+                          : "Lock all files in this folder to prevent AI modifications"}
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
             </div>
             {isOpen && (
               <FolderContent
@@ -197,6 +201,7 @@ const FolderContent = ({
                 onBatchToggleLock={onBatchToggleLock}
                 allFiles={allFiles}
                 savingFiles={savingFiles}
+                authorized={authorized}
               />
             )}
           </div>
@@ -228,43 +233,45 @@ const FolderContent = ({
               style={{ paddingLeft: `${depth * 12 + 22}px` }}
             >
               <FileIcon className={cn("size-4 shrink-0", fileConfig.color)} />
-              <span className="truncate">{file.name}</span>
+              <span className="flex-1 truncate text-left">{file.name}</span>
             </button>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (fullPath) {
-                        onToggleLock(fullPath);
+            {authorized && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (fullPath) {
+                          onToggleLock(fullPath);
+                        }
+                      }}
+                      disabled={
+                        isLoading || (!!fullPath && savingFiles.has(fullPath))
                       }
-                    }}
-                    disabled={
-                      isLoading || (!!fullPath && savingFiles.has(fullPath))
-                    }
-                    className="absolute right-1 opacity-0 transition-opacity disabled:cursor-not-allowed group-hover:opacity-100"
-                  >
-                    {fullPath && savingFiles.has(fullPath) ? (
-                      <Loader2 className="size-3.5 animate-spin text-primary" />
-                    ) : file.isLocked ? (
-                      <Lock className="size-3.5 text-primary" />
-                    ) : (
-                      <Unlock className="size-3.5 text-muted-foreground hover:text-foreground" />
-                    )}
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>
-                    {fullPath && savingFiles.has(fullPath)
-                      ? "Saving..."
-                      : file.isLocked
-                        ? "Unlock file to allow AI modifications"
-                        : "Lock file to prevent AI modifications"}
-                  </p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+                      className="absolute right-1 opacity-0 transition-opacity disabled:cursor-not-allowed group-hover:opacity-100"
+                    >
+                      {fullPath && savingFiles.has(fullPath) ? (
+                        <Loader2 className="size-3.5 animate-spin text-primary" />
+                      ) : file.isLocked ? (
+                        <Lock className="size-3.5 text-primary" />
+                      ) : (
+                        <Unlock className="size-3.5 text-muted-foreground hover:text-foreground" />
+                      )}
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>
+                      {fullPath && savingFiles.has(fullPath)
+                        ? "Saving..."
+                        : file.isLocked
+                          ? "Unlock file to allow AI modifications"
+                          : "Lock file to prevent AI modifications"}
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
           </div>
         );
       })}
@@ -325,6 +332,7 @@ export function CodePreviewFileTree({
     artifactCode,
     setArtifactCode,
     chatId,
+    authorized,
   } = useComponentContext();
 
   const [localFiles, setLocalFiles] = React.useState(artifactFiles);
@@ -347,6 +355,10 @@ export function CodePreviewFileTree({
 
   const handleToggleLock = React.useCallback(
     async (filePath: string) => {
+      if (!authorized) {
+        return;
+      }
+
       setSavingFiles((prev) => new Set(prev).add(filePath));
 
       setLocalFiles((prevFiles) => {
@@ -362,6 +374,14 @@ export function CodePreviewFileTree({
         await updateArtifactCode(chatId, updatedCode, selectedVersion);
       } catch (error) {
         console.error("Failed to save lock state:", error);
+        setLocalFiles((prevFiles) => {
+          return prevFiles.map((file) =>
+            file.name === filePath
+              ? { ...file, isLocked: !file.isLocked }
+              : file,
+          );
+        });
+        setArtifactCode(artifactCode);
       } finally {
         setSavingFiles((prev) => {
           const newSet = new Set(prev);
@@ -370,11 +390,15 @@ export function CodePreviewFileTree({
         });
       }
     },
-    [artifactCode, setArtifactCode, chatId, selectedVersion],
+    [artifactCode, setArtifactCode, chatId, selectedVersion, authorized],
   );
 
   const handleBatchToggleLock = React.useCallback(
     async (filePaths: string[]) => {
+      if (!authorized) {
+        return;
+      }
+
       filePaths.forEach((filePath) => {
         setSavingFiles((prev) => new Set(prev).add(filePath));
       });
@@ -397,6 +421,14 @@ export function CodePreviewFileTree({
         await updateArtifactCode(chatId, updatedCode, selectedVersion);
       } catch (error) {
         console.error("Failed to save lock state:", error);
+        setLocalFiles((prevFiles) => {
+          return prevFiles.map((file) =>
+            filePaths.includes(file.name || "")
+              ? { ...file, isLocked: !file.isLocked }
+              : file,
+          );
+        });
+        setArtifactCode(artifactCode);
       } finally {
         filePaths.forEach((filePath) => {
           setSavingFiles((prev) => {
@@ -407,7 +439,7 @@ export function CodePreviewFileTree({
         });
       }
     },
-    [artifactCode, setArtifactCode, chatId, selectedVersion],
+    [artifactCode, setArtifactCode, chatId, selectedVersion, authorized],
   );
 
   const organizedFiles = React.useMemo(() => {
@@ -440,6 +472,7 @@ export function CodePreviewFileTree({
         onBatchToggleLock={handleBatchToggleLock}
         allFiles={localFiles}
         savingFiles={savingFiles}
+        authorized={authorized}
       />
     </div>
   );

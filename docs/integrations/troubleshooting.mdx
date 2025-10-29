@@ -1,0 +1,506 @@
+---
+title: Integration Troubleshooting
+description: 'Common issues and solutions for CodeRocket integrations'
+---
+
+## General Issues
+
+### "INTEGRATION_ENCRYPTION_KEY is not set"
+
+**Problem:** The integration system cannot encrypt/decrypt credentials.
+
+**Solution:**
+<Steps>
+  <Step title="Generate an encryption key">
+    ```bash
+    openssl rand -base64 32
+    ```
+  </Step>
+  <Step title="Add to environment variables">
+    ```bash .env.local
+    INTEGRATION_ENCRYPTION_KEY=your-generated-key-here
+    ```
+  </Step>
+  <Step title="Restart your development server">
+    ```bash
+    npm run dev
+    ```
+  </Step>
+</Steps>
+
+<Danger>
+  **Never commit this key to version control!** Add `.env.local` to your `.gitignore`.
+</Danger>
+
+---
+
+### "Failed to decrypt integration configuration"
+
+**Possible Causes:**
+- The encryption key has changed
+- The integration was created with a different key
+- Database corruption
+
+**Solution:**
+1. Delete the problematic integration
+2. Re-create it with current encryption key
+3. Test the connection before saving
+
+---
+
+### "Integration not showing in sidebar"
+
+**Troubleshooting Steps:**
+
+<AccordionGroup>
+  <Accordion title="Check if integration exists">
+    Go to **Account → Integrations** and verify the integration is listed and active.
+  </Accordion>
+
+  <Accordion title="Verify you're logged in">
+    Integrations require authentication. Make sure you're signed in.
+  </Accordion>
+
+  <Accordion title="Refresh the page">
+    Sometimes a simple refresh resolves state issues.
+  </Accordion>
+
+  <Accordion title="Check browser console">
+    Open DevTools (F12) and look for errors in the Console tab.
+  </Accordion>
+
+  <Accordion title="Clear cache">
+    Clear your browser cache and reload: `Ctrl+Shift+R` (Windows) or `Cmd+Shift+R` (Mac)
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Supabase-Specific Issues
+
+### "Failed to connect to Supabase"
+
+**Common Causes and Solutions:**
+
+<Tabs>
+  <Tab title="Invalid URL">
+    **Error:** URL format is incorrect
+
+    **Solution:** Ensure the URL follows this pattern:
+    ```
+    https://[project-id].supabase.co
+    ```
+
+    ❌ Wrong: `supabase.co/my-project`
+
+    ✅ Correct: `https://abcdefgh.supabase.co`
+  </Tab>
+
+  <Tab title="Invalid Anon Key">
+    **Error:** Authentication failed
+
+    **Solution:**
+    1. Go to Supabase Dashboard
+    2. Settings → API
+    3. Copy the **anon/public** key (not the service role key)
+    4. Paste it exactly as shown (starts with `eyJ...`)
+  </Tab>
+
+  <Tab title="Project Paused">
+    **Error:** Connection timeout or 404
+
+    **Solution:** Supabase pauses inactive projects on free plan.
+    1. Go to your Supabase dashboard
+    2. Click "Restore Project" if paused
+    3. Wait for project to be active
+    4. Test connection again
+  </Tab>
+
+  <Tab title="Network Issues">
+    **Error:** Cannot reach server
+
+    **Solution:**
+    - Check your internet connection
+    - Disable VPN temporarily
+    - Check if supabase.co is accessible
+    - Try from a different network
+  </Tab>
+</Tabs>
+
+---
+
+### "RLS policy error" in generated code
+
+**Error Message:**
+```
+new row violates row-level security policy for table "posts"
+```
+
+**What It Means:**
+Row Level Security (RLS) is enabled but the query doesn't have permission.
+
+**Solutions:**
+
+<Steps>
+  <Step title="Check if user is authenticated">
+    ```typescript
+    const { data: { user } } = await supabase.auth.getUser()
+    console.log('Current user:', user)
+    ```
+    If `user` is null, authentication is required.
+  </Step>
+
+  <Step title="Review RLS policies">
+    Go to Supabase → Authentication → Policies
+
+    Make sure you have policies like:
+    ```sql
+    CREATE POLICY "Enable read for authenticated users"
+      ON posts FOR SELECT
+      USING (auth.role() = 'authenticated');
+    ```
+  </Step>
+
+  <Step title="Temporary: Disable RLS for testing">
+    ```sql
+    ALTER TABLE posts DISABLE ROW LEVEL SECURITY;
+    ```
+
+    <Warning>
+      **Only for testing!** Re-enable RLS before going to production.
+    </Warning>
+  </Step>
+</Steps>
+
+---
+
+### "Missing environment variables"
+
+**Error:**
+```
+TypeError: Cannot read property 'VITE_SUPABASE_URL' of undefined
+```
+
+**Solution:**
+
+1. Create `.env.local` file in project root:
+```bash .env.local
+VITE_SUPABASE_URL=https://xxxxx.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-key
+```
+
+2. Restart your dev server:
+```bash
+npm run dev
+```
+
+<Info>
+  Variable names might differ based on framework:
+  - **Vite**: `VITE_`
+  - **Next.js**: `NEXT_PUBLIC_`
+  - **Create React App**: `REACT_APP_`
+</Info>
+
+---
+
+### TypeScript errors with Supabase types
+
+**Error:**
+```typescript
+Property 'posts' does not exist on type 'Database["public"]["Tables"]'
+```
+
+**Solutions:**
+
+<AccordionGroup>
+  <Accordion title="Install Supabase client">
+    ```bash
+    npm install @supabase/supabase-js
+    ```
+  </Accordion>
+
+  <Accordion title="Generate types from your schema">
+    ```bash
+    npx supabase gen types typescript --project-id YOUR_PROJECT_ID > src/types/database.types.ts
+    ```
+  </Accordion>
+
+  <Accordion title="Check table names match">
+    Ensure the table name in your code matches the actual table name in Supabase (case-sensitive).
+  </Accordion>
+
+  <Accordion title="Update the generated types">
+    If you changed your schema, regenerate the types file.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Connection Test Failures
+
+### "Latency too high" warning
+
+**What It Means:**
+Connection takes longer than expected (>1000ms).
+
+**Impact:**
+- Slower application performance
+- Poor user experience
+- Possible timeout errors
+
+**Solutions:**
+1. **Choose a closer region:** Create a new Supabase project in a region closer to your users
+2. **Check your network:** Test from a different network/device
+3. **Upgrade Supabase plan:** Free tier has lower performance
+4. **Use caching:** Implement client-side caching for frequently accessed data
+
+---
+
+### "Permission denied"
+
+**Error:** Test connection succeeds but operations fail.
+
+**Causes:**
+- Anon key has limited permissions
+- RLS policies are too restrictive
+- Service role key needed but not provided
+
+**Solution:**
+1. If building admin features, add the **Service Role Key**
+2. Review your RLS policies
+3. Ensure the user has necessary permissions
+
+---
+
+## Generated Code Issues
+
+### "Cannot find module '@/lib/supabase'"
+
+**Error:**
+```
+Module not found: Can't resolve '@/lib/supabase'
+```
+
+**Solution:**
+
+<Steps>
+  <Step title="Check if file exists">
+    Verify `src/lib/supabase.ts` was generated.
+  </Step>
+
+  <Step title="Check path alias configuration">
+    In `tsconfig.json`:
+    ```json
+    {
+      "compilerOptions": {
+        "paths": {
+          "@/*": ["./src/*"]
+        }
+      }
+    }
+    ```
+
+    In `vite.config.ts`:
+    ```typescript
+    resolve: {
+      alias: {
+        '@': path.resolve(__dirname, './src')
+      }
+    }
+    ```
+  </Step>
+
+  <Step title="Restart dev server">
+    ```bash
+    npm run dev
+    ```
+  </Step>
+</Steps>
+
+---
+
+### "Too many connections" error
+
+**Error:**
+```
+remaining connection slots are reserved for non-replication superuser connections
+```
+
+**What It Means:**
+Your app is creating too many database connections.
+
+**Solutions:**
+
+<AccordionGroup>
+  <Accordion title="Use connection pooling">
+    ```typescript
+    import { createClient } from '@supabase/supabase-js'
+
+    export const supabase = createClient(url, key, {
+      db: {
+        schema: 'public',
+      },
+      auth: {
+        autoRefreshToken: true,
+        persistSession: true
+      },
+      global: {
+        headers: { 'x-my-custom-header': 'my-app-name' },
+      },
+    })
+    ```
+  </Accordion>
+
+  <Accordion title="Reuse client instances">
+    Don't create a new client on every request. Import the singleton:
+    ```typescript
+    // ❌ Bad
+    function MyComponent() {
+      const supabase = createClient(...)
+    }
+
+    // ✅ Good
+    import { supabase } from '@/lib/supabase'
+    function MyComponent() {
+      // Use imported supabase
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="Upgrade your plan">
+    Free Supabase tier has connection limits. Consider upgrading.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Performance Issues
+
+### Slow query responses
+
+**Symptoms:**
+- Long loading times
+- Timeout errors
+- Poor user experience
+
+**Diagnostics:**
+
+1. **Check query complexity:**
+```typescript
+// ❌ Inefficient
+const { data } = await supabase
+  .from('posts')
+  .select('*, author(*), comments(*), likes(*)')
+
+// ✅ Better
+const { data } = await supabase
+  .from('posts')
+  .select('*, author(name, avatar)')
+  .range(0, 9)
+```
+
+2. **Add indexes:**
+```sql
+CREATE INDEX idx_posts_created_at ON posts(created_at DESC);
+CREATE INDEX idx_posts_user_id ON posts(user_id);
+```
+
+3. **Use pagination:**
+```typescript
+const { data } = await supabase
+  .from('posts')
+  .select('*')
+  .range(0, 19) // First 20 items
+```
+
+---
+
+## Integration Management Issues
+
+### Can't delete integration
+
+**Error:** "Integration is being used by active projects"
+
+**Solution:**
+1. Go to each project using the integration
+2. Disable the integration in the Integrations tab
+3. Return to Account → Integrations
+4. Try deleting again
+
+---
+
+### Can't edit integration
+
+**Error:** Changes not saving or reverting
+
+**Solutions:**
+- Ensure all required fields are filled
+- Test connection before saving
+- Check browser console for errors
+- Try clearing browser cache
+
+---
+
+## Getting Help
+
+If you're still experiencing issues:
+
+<CardGroup cols={2}>
+  <Card title="Check Console" icon="bug">
+    Open browser DevTools (F12) and check the Console for error messages.
+  </Card>
+
+  <Card title="Discord Community" icon="discord" href="https://discord.gg/t7dQgcYJ5t">
+    Ask for help in our Discord server.
+  </Card>
+
+  <Card title="Supabase Docs" icon="book" href="https://supabase.com/docs">
+    Check Supabase documentation for service-specific issues.
+  </Card>
+
+  <Card title="GitHub Issues" icon="github" href="https://github.com/supabase/supabase/issues">
+    Search Supabase GitHub issues for known problems.
+  </Card>
+</CardGroup>
+
+---
+
+## Reporting Bugs
+
+When reporting integration issues, please include:
+
+<Checklist>
+  - [ ] Steps to reproduce the issue
+  - [ ] Browser console errors (screenshot or copy)
+  - [ ] Integration type (Supabase, Stripe, etc.)
+  - [ ] Framework being used (React, Vue, etc.)
+  - [ ] Whether the issue is in development or production
+  - [ ] Environment variables (redact sensitive values!)
+</Checklist>
+
+---
+
+## Prevention Tips
+
+<AccordionGroup>
+  <Accordion title="Test connections regularly">
+    Periodically test your integration connections to catch issues early.
+  </Accordion>
+
+  <Accordion title="Keep credentials updated">
+    Rotate API keys regularly and update them in CodeRocket.
+  </Accordion>
+
+  <Accordion title="Monitor usage">
+    Check your service dashboards (Supabase, etc.) for usage limits and errors.
+  </Accordion>
+
+  <Accordion title="Use staging environment">
+    Test integration changes in a staging project before applying to production.
+  </Accordion>
+
+  <Accordion title="Document custom setup">
+    If you customize generated code, document your changes for future reference.
+  </Accordion>
+</AccordionGroup>
+

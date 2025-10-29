@@ -394,7 +394,7 @@ export default async function UserPage({
         <Card className="col-span-1 xl:col-span-2">
           <CardContent>
             <h5 className="my-4 text-base font-semibold lg:text-lg">
-              Latest marketplace listings
+              Latest templates listings
             </h5>
             {latestMarketplaceListings.length > 0 ? (
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-6">

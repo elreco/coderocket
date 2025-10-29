@@ -1,0 +1,457 @@
+---
+title: Integration Usage Examples
+description: 'Practical examples of using integrations in your projects'
+---
+
+## Overview
+
+This guide provides real-world examples of using integrations in CodeRocket projects. Each example includes the prompt, expected output, and tips for customization.
+
+## Supabase Examples
+
+### Example 1: Task Management App
+
+**Setup:**
+- Create a Supabase integration
+- Enable it for your project
+
+**Prompt:**
+```
+Create a task management app with:
+- Tasks with title, description, due date, and status
+- Ability to mark tasks as complete
+- Filter tasks by status (all, active, completed)
+- Sort tasks by due date
+```
+
+**What Gets Generated:**
+
+<CodeGroup>
+```typescript src/types/database.types.ts
+export interface Task {
+  id: string
+  title: string
+  description: string
+  due_date: string
+  status: 'active' | 'completed'
+  user_id: string
+  created_at: string
+  updated_at: string
+}
+```
+
+```typescript src/hooks/useTasks.ts
+export function useTasks(filter: 'all' | 'active' | 'completed' = 'all') {
+  const [tasks, setTasks] = useState<Task[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchTasks = async () => {
+      let query = supabase
+        .from('tasks')
+        .select('*')
+        .order('due_date', { ascending: true })
+
+      if (filter !== 'all') {
+        query = query.eq('status', filter)
+      }
+
+      const { data, error } = await query
+
+      if (error) {
+        console.error('Error fetching tasks:', error)
+        return
+      }
+
+      setTasks(data)
+      setLoading(false)
+    }
+
+    fetchTasks()
+  }, [filter])
+
+  return { tasks, loading }
+}
+```
+</CodeGroup>
+
+**Customization Ideas:**
+- Add priority levels (high, medium, low)
+- Implement task categories or tags
+- Add recurring tasks
+- Enable task sharing with other users
+
+---
+
+### Example 2: E-commerce Product Catalog
+
+**Prompt:**
+```
+Build a product catalog with:
+- Products with name, price, description, and images
+- Categories for organizing products
+- Search and filter functionality
+- Shopping cart
+```
+
+**Generated Structure:**
+
+<Tabs>
+  <Tab title="Database Schema">
+    Tables created:
+    - `products` (id, name, price, description, image_url, category_id)
+    - `categories` (id, name, slug)
+    - `cart_items` (id, user_id, product_id, quantity)
+  </Tab>
+
+  <Tab title="Components">
+    - ProductGrid: Display products in a grid
+    - ProductCard: Individual product display
+    - CategoryFilter: Filter by category
+    - SearchBar: Search products
+    - Cart: Shopping cart with totals
+  </Tab>
+
+  <Tab title="Hooks">
+    - useProducts(): Fetch and filter products
+    - useCategories(): Get all categories
+    - useCart(): Manage cart state
+  </Tab>
+</Tabs>
+
+**Pro Tips:**
+<Tip>
+  Add **Row Level Security** to ensure users only see their own cart items:
+  ```sql
+  CREATE POLICY "Users can view own cart"
+    ON cart_items FOR SELECT
+    USING (auth.uid() = user_id);
+  ```
+</Tip>
+
+---
+
+### Example 3: Social Media Feed
+
+**Prompt:**
+```
+Create a social feed where users can:
+- Post updates with text and images
+- Like and comment on posts
+- Follow other users
+- See a personalized feed
+```
+
+**Key Features Generated:**
+
+<Steps>
+  <Step title="Database Schema">
+    - `posts` table with user_id, content, image_url
+    - `likes` table for post likes
+    - `comments` table for post comments
+    - `follows` table for user relationships
+  </Step>
+
+  <Step title="Real-time Updates">
+    Real-time subscriptions for:
+    - New posts in feed
+    - New likes on your posts
+    - New comments
+  </Step>
+
+  <Step title="Complex Queries">
+    Generated queries handle:
+    - Fetching feed from followed users
+    - Counting likes and comments
+    - Pagination
+    - Nested data (post with user info)
+  </Step>
+</Steps>
+
+**Sample Generated Query:**
+```typescript
+const { data: feed } = await supabase
+  .from('posts')
+  .select(`
+    *,
+    users:user_id (id, name, avatar_url),
+    likes (count),
+    comments (count)
+  `)
+  .in('user_id', followedUserIds)
+  .order('created_at', { ascending: false })
+  .range(0, 19)
+```
+
+---
+
+### Example 4: Authentication System
+
+**Prompt:**
+```
+Implement user authentication with:
+- Email/password signup
+- Login form
+- Password reset
+- Protected routes
+- User profile
+```
+
+**Generated Files:**
+
+```
+src/
+├── contexts/
+│   └── AuthContext.tsx          # Auth state management
+├── components/
+│   ├── LoginForm.tsx            # Login component
+│   ├── SignupForm.tsx           # Signup component
+│   ├── PasswordReset.tsx        # Password reset form
+│   └── ProtectedRoute.tsx       # Route wrapper
+├── hooks/
+│   └── useAuth.ts               # Auth hooks
+└── lib/
+    └── supabase.ts              # Configured client
+```
+
+**Usage:**
+```tsx
+import { useAuth } from '@/hooks/useAuth'
+
+function MyComponent() {
+  const { user, signIn, signOut } = useAuth()
+
+  if (!user) {
+    return <LoginForm onSubmit={signIn} />
+  }
+
+  return (
+    <div>
+      <h1>Welcome {user.email}</h1>
+      <button onClick={signOut}>Logout</button>
+    </div>
+  )
+}
+```
+
+---
+
+## Multi-Integration Examples
+
+### Example 5: SaaS App (Supabase + Stripe)
+
+<Note>
+  Stripe integration is coming soon. This example shows the intended workflow.
+</Note>
+
+**Setup:**
+- Enable Supabase for database
+- Enable Stripe for payments (when available)
+
+**Prompt:**
+```
+Build a SaaS application with:
+- User accounts (Supabase)
+- Subscription plans (Stripe)
+- Protected features based on plan
+- Usage tracking
+```
+
+**Expected Generation:**
+- User authentication via Supabase
+- Stripe checkout integration
+- Webhook handlers for subscription events
+- Plan-based feature gating
+- Usage metrics in database
+
+---
+
+## Advanced Patterns
+
+### Pattern 1: Optimistic Updates
+
+**Prompt:**
+```
+"Make the todo list update immediately when adding a new task,
+even before the database confirms"
+```
+
+**Generated Code:**
+```typescript
+const addTask = async (task: NewTask) => {
+  // Optimistically add to UI
+  const tempId = `temp-${Date.now()}`
+  setTasks(prev => [{ ...task, id: tempId }, ...prev])
+
+  // Save to database
+  const { data, error } = await supabase
+    .from('tasks')
+    .insert(task)
+    .select()
+    .single()
+
+  if (error) {
+    // Revert on error
+    setTasks(prev => prev.filter(t => t.id !== tempId))
+    showError(error.message)
+  } else {
+    // Replace temp with real data
+    setTasks(prev =>
+      prev.map(t => t.id === tempId ? data : t)
+    )
+  }
+}
+```
+
+---
+
+### Pattern 2: Infinite Scroll
+
+**Prompt:**
+```
+"Add infinite scroll to load more posts as the user scrolls"
+```
+
+**Generated with:**
+- Pagination logic
+- Intersection Observer
+- Loading states
+- End-of-data detection
+
+```typescript
+const loadMore = async () => {
+  if (loading || !hasMore) return
+
+  setLoading(true)
+  const { data } = await supabase
+    .from('posts')
+    .select('*')
+    .range(posts.length, posts.length + 19)
+
+  if (data.length < 20) setHasMore(false)
+  setPosts(prev => [...prev, ...data])
+  setLoading(false)
+}
+```
+
+---
+
+### Pattern 3: File Upload with Progress
+
+**Prompt:**
+```
+"Add image upload with progress bar for profile pictures"
+```
+
+**Generated Features:**
+- File validation (type, size)
+- Upload progress tracking
+- Preview before upload
+- Error handling
+- Storage bucket configuration
+
+```typescript
+const uploadAvatar = async (file: File) => {
+  const { data, error } = await supabase.storage
+    .from('avatars')
+    .upload(`${user.id}/${Date.now()}.${ext}`, file, {
+      cacheControl: '3600',
+      upsert: false,
+      onUploadProgress: (progress) => {
+        setUploadProgress((progress.loaded / progress.total) * 100)
+      }
+    })
+
+  if (error) throw error
+
+  const { data: { publicUrl } } = supabase.storage
+    .from('avatars')
+    .getPublicUrl(data.path)
+
+  return publicUrl
+}
+```
+
+---
+
+## Best Practices in Generated Code
+
+The AI follows these best practices:
+
+<AccordionGroup>
+  <Accordion title="Error Handling">
+    All database operations wrapped in try-catch with user-friendly error messages.
+  </Accordion>
+
+  <Accordion title="Loading States">
+    Components show loading indicators during async operations.
+  </Accordion>
+
+  <Accordion title="Type Safety">
+    Full TypeScript support with generated types from your schema.
+  </Accordion>
+
+  <Accordion title="Security">
+    RLS-aware queries, never bypassing security unless explicitly needed.
+  </Accordion>
+
+  <Accordion title="Performance">
+    Optimized queries with proper indexing suggestions and pagination.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Iteration and Refinement
+
+Start simple and iterate:
+
+**First Prompt:**
+```
+"Create a basic blog with posts"
+```
+
+**Then Iterate:**
+```
+"Add comments to posts"
+"Add user profiles"
+"Add image uploads"
+"Make it real-time"
+"Add search functionality"
+```
+
+Each iteration builds on the previous code, maintaining consistency.
+
+---
+
+## Tips for Better Results
+
+<Card title="Be Specific" icon="bullseye">
+  Instead of "Add a database", say "Add a Supabase posts table with title, content, and author"
+</Card>
+
+<Card title="Mention Relationships" icon="link">
+  Specify how data relates: "Each post belongs to a user" or "Categories have many products"
+</Card>
+
+<Card title="Request Features Explicitly" icon="list">
+  List specific features: "Add CRUD operations, search, and pagination"
+</Card>
+
+<Card title="Reference Your Schema" icon="database">
+  If you have existing tables: "Use my existing posts table from Supabase"
+</Card>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Supabase Guide" icon="database" href="/integrations/supabase">
+    Deep dive into Supabase integration
+  </Card>
+  <Card title="Troubleshooting" icon="wrench" href="/integrations/troubleshooting">
+    Common issues and solutions
+  </Card>
+</CardGroup>
+

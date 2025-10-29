@@ -9,6 +9,7 @@ import {
   SquareUserRoundIcon,
   User,
   UserCircle,
+  Plug,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -133,6 +134,15 @@ export function NavUser({
                 <Link href="/account" onClick={() => setOpenMobile(false)}>
                   <User />
                   My Account
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild className="cursor-pointer">
+                <Link
+                  href="/account/integrations"
+                  onClick={() => setOpenMobile(false)}
+                >
+                  <Plug />
+                  Integrations
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild className="cursor-pointer">

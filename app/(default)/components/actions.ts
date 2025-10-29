@@ -452,6 +452,15 @@ export const createChat = async (prompt: string, formData: FormData) => {
   // Track version usage for accurate pricing
   await trackVersionUsage(user.id, data.id, messageData.version);
 
+  const integrationId = formData.get("integrationId")?.toString();
+  if (integrationId) {
+    await supabase.from("chat_integrations").insert({
+      chat_id: data.id,
+      integration_id: integrationId,
+      is_enabled: true,
+    });
+  }
+
   return { slug: data.slug };
 };
 
@@ -809,7 +818,24 @@ export const remixChat = async (
     throw new Error("Failed to copy messages");
   }
 
-  // Don't track remix usage - it's just a copy, not a real AI request
+  const isOwner = originalChat.user_id === user.id;
+
+  if (isOwner) {
+    const { data: originalIntegrations } = await supabase
+      .from("chat_integrations")
+      .select("integration_id, is_enabled")
+      .eq("chat_id", chatId);
+
+    if (originalIntegrations && originalIntegrations.length > 0) {
+      await supabase.from("chat_integrations").insert(
+        originalIntegrations.map((integration) => ({
+          chat_id: newChat.id,
+          integration_id: integration.integration_id,
+          is_enabled: integration.is_enabled,
+        })),
+      );
+    }
+  }
 
   after(async () => {
     // Get the latest assistant message from the newly created chat

@@ -76,6 +76,16 @@
           "templates/sharing",
           "templates/customization"
         ]
+      },
+      {
+        "group": "Integrations",
+        "pages": [
+          "integrations/overview",
+          "integrations/setup",
+          "integrations/supabase",
+          "integrations/usage",
+          "integrations/troubleshooting"
+        ]
       }
     ]
   },

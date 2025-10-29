@@ -12,6 +12,7 @@ import React, {
 } from "react";
 import stripAnsi from "strip-ansi";
 
+import { getIntegrationsForWebcontainer } from "@/app/(default)/components/[slug]/actions";
 import { webcontainer as webcontainerPromise } from "@/lib/webcontainer";
 import { Framework } from "@/utils/config";
 import {
@@ -59,7 +60,6 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
     forceBuild,
   } = useComponentContext();
 
-  // References to hold the active processes and terminal
   const shellProcessRef = useRef<WebContainerProcess | null>(null);
   const devProcessRef = useRef<WebContainerProcess | null>(null);
   const shellStreamAbortControllerRef = useRef<AbortController | null>(null);
@@ -110,13 +110,11 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
     };
   }, [cleanupWebcontainer]);
 
-  // Clear errors when framework changes to prevent showing old framework errors
   useEffect(() => {
     setBuildError(null);
     setLoadingState(null);
   }, [selectedFramework, setLoadingState]);
 
-  // Clear errors when selected version changes (new component)
   useEffect(() => {
     setBuildError(null);
     setLoadingState(null);
@@ -129,49 +127,11 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [isWebcontainerReady, loadingState, setLoadingState]);
 
-  const addToBuildError = useCallback(
-    (data: string) => {
-      const possibleError = formatBuildError(data);
-      if (possibleError) {
-        // Only set error if we haven't recently cleared it (avoid race conditions)
-        setBuildError((prevError) => {
-          if (!prevError) return possibleError;
-
-          // Avoid duplicating similar error messages
-          if (prevError.content.includes(possibleError.content)) {
-            return prevError;
-          }
-
-          // Limit the total content length to prevent overwhelming the UI
-          const combinedContent =
-            prevError.content + "\n" + possibleError.content;
-          const maxLength = 2000;
-          const trimmedContent =
-            combinedContent.length > maxLength
-              ? combinedContent.substring(combinedContent.length - maxLength)
-              : combinedContent;
-
-          return {
-            ...prevError,
-            description: prevError.description,
-            content: trimmedContent,
-          };
-        });
-        setLoadingState("error");
-      }
-    },
-    [setLoadingState],
-  );
-
-  /**
-   * The main effect that re-initializes everything whenever `artifactFiles` changes.
-   */
   useEffect(() => {
     const setupProject = async () => {
-      // Basic checks
       if (
         selectedVersion === undefined ||
-        selectedFramework === Framework.HTML || // If HTML or no bundler
+        selectedFramework === Framework.HTML ||
         isLoading ||
         !selectedFramework ||
         artifactFiles.length === 0
@@ -212,26 +172,39 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
       setLoadingState("initializing");
 
       await cleanupWebcontainer();
+      const currentSetupId = setupIdRef.current;
 
       const webcontainer = await webcontainerPromise;
-      if (!webcontainer) return;
+      if (!webcontainer || currentSetupId !== setupIdRef.current) return;
 
       shellProcessRef.current = await webcontainer.spawn("jsh");
+      if (currentSetupId !== setupIdRef.current) {
+        shellProcessRef.current?.kill();
+        return;
+      }
+
       shellStreamAbortControllerRef.current = new AbortController();
       shellProcessRef.current.output
         .pipeTo(
           new WritableStream({
             write(data) {
-              addToBuildError(data);
+              if (currentSetupId === setupIdRef.current) {
+                const possibleError = formatBuildError(data);
+                if (possibleError) {
+                  setBuildError(possibleError);
+                  setLoadingState("error");
+                }
+              }
             },
           }),
           { signal: shellStreamAbortControllerRef.current.signal },
         )
         .catch(() => {});
 
-      // 6) Clean up old files before mounting new ones
       try {
         const files = await webcontainer.fs.readdir("/");
+        if (currentSetupId !== setupIdRef.current) return;
+
         for (const file of files) {
           if (file !== "tmp" && file !== ".webcontainer") {
             await webcontainer.fs.rm(file, { recursive: true, force: true });
@@ -241,21 +214,52 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
         console.log("Cleanup error (non-critical):", error);
       }
 
-      // 7) Mount/update all files
-      const fsTree = buildFileSystemTree(artifactFiles);
+      if (currentSetupId !== setupIdRef.current) return;
+
+      const modifiedFiles = [...artifactFiles];
+
+      const envVars = await getIntegrationsForWebcontainer(chatId);
+      if (currentSetupId !== setupIdRef.current) return;
+
+      if (Object.keys(envVars).length > 0) {
+        const envContent = Object.entries(envVars)
+          .map(([key, value]) => `${key}=${value}`)
+          .join("\n");
+
+        modifiedFiles.push({
+          name: ".env.local",
+          content: envContent,
+          isActive: false,
+          isDelete: false,
+        });
+
+        console.log(
+          "[WebContainer] Injected environment variables for integrations",
+        );
+      }
+
+      const fsTree = buildFileSystemTree(modifiedFiles);
       await webcontainer.mount(fsTree);
+      if (currentSetupId !== setupIdRef.current) return;
 
       setLoadingState("processing");
       let installOutput = "";
-      const installProcess = await webcontainer.spawn("npm", ["install"]);
+
       installStreamAbortControllerRef.current = new AbortController();
+      const installProcess = await webcontainer.spawn("npm", ["install"]);
+      if (currentSetupId !== setupIdRef.current) {
+        installProcess.kill();
+        return;
+      }
+
       installProcess.output
         .pipeTo(
           new WritableStream({
             write(data) {
-              const text = stripAnsi(data);
-              installOutput += text;
-              addToBuildError(data);
+              if (currentSetupId === setupIdRef.current) {
+                const text = stripAnsi(data);
+                installOutput += text;
+              }
             },
           }),
           { signal: installStreamAbortControllerRef.current.signal },
@@ -263,8 +267,10 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
         .catch(() => {});
 
       const exitCode = await installProcess.exit;
+      if (currentSetupId !== setupIdRef.current) return;
 
       if (exitCode !== 0) {
+        if (currentSetupId !== setupIdRef.current) return;
         const cleanedOutput = cleanOutput(installOutput);
         const friendlyError = getUserFriendlyNpmError(cleanedOutput);
         setBuildError({
@@ -276,21 +282,36 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
+      if (currentSetupId !== setupIdRef.current) return;
       setLoadingState("starting");
-      devProcessRef.current = await webcontainer.spawn("npm", ["run", "dev"]);
+
       devStreamAbortControllerRef.current = new AbortController();
+      devProcessRef.current = await webcontainer.spawn("npm", ["run", "dev"]);
+      if (currentSetupId !== setupIdRef.current) {
+        devProcessRef.current?.kill();
+        return;
+      }
+
+      let devOutput = "";
       devProcessRef.current.output
         .pipeTo(
           new WritableStream({
             write(data) {
-              addToBuildError(data);
+              if (currentSetupId === setupIdRef.current) {
+                const text = stripAnsi(data);
+                devOutput += text;
+
+                const possibleError = formatBuildError(devOutput);
+                if (possibleError) {
+                  setBuildError(possibleError);
+                  setLoadingState("error");
+                }
+              }
             },
           }),
           { signal: devStreamAbortControllerRef.current.signal },
         )
         .catch(() => {});
-
-      const currentSetupId = setupIdRef.current;
 
       webcontainer.on("preview-message", (message) => {
         if (currentSetupId !== setupIdRef.current) return;
@@ -298,14 +319,7 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
           message.type === "PREVIEW_UNCAUGHT_EXCEPTION" ||
           message.type === "PREVIEW_UNHANDLED_REJECTION"
         ) {
-          /* const isPromise = message.type === "PREVIEW_UNHANDLED_REJECTION";
-          setBuildError({
-            title: isPromise
-              ? "Unhandled Promise Rejection"
-              : "Uncaught Exception",
-            description: message.message,
-            content: `Error occurred at ${message.pathname}${message.search}${message.hash}`,
-          }); */
+          // Optionally handle preview errors
         }
       });
 
@@ -332,7 +346,6 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
     isWebcontainerReady,
     isLengthError,
     setLoadingState,
-    addToBuildError,
     forceBuild,
     cleanupWebcontainer,
   ]);
@@ -430,6 +443,7 @@ function formatBuildError(data: string): BuildError | null {
     "Failed to load url",
     "does the file exist",
     "Missing script",
+    "Found \\d+ error",
   ];
 
   let hasError = false;
@@ -446,11 +460,38 @@ function formatBuildError(data: string): BuildError | null {
   }
 
   const friendlyError = getUserFriendlyBuildError(cleanedData);
-  const truncatedContent = cleanedData.split("\n").slice(0, 20).join("\n");
+
+  let errorContent = cleanedData;
+  const lines = cleanedData.split("\n");
+
+  if (lines.length > 100) {
+    const summaryIndex = lines.findIndex((line) =>
+      line.match(/Found \d+ error/i),
+    );
+
+    if (summaryIndex !== -1) {
+      const start = Math.max(0, summaryIndex - 80);
+      errorContent = lines.slice(start).join("\n");
+    } else {
+      const firstErrorIndex = lines.findIndex(
+        (line) =>
+          line.includes("error TS") ||
+          line.includes("Error:") ||
+          line.match(/:\d+:\d+\s*-\s*error/),
+      );
+
+      if (firstErrorIndex !== -1) {
+        const start = Math.max(0, firstErrorIndex - 5);
+        errorContent = lines.slice(start).join("\n");
+      } else {
+        errorContent = lines.slice(-100).join("\n");
+      }
+    }
+  }
 
   return {
     title: friendlyError.title,
     description: friendlyError.message,
-    content: truncatedContent,
+    content: errorContent,
   };
 }

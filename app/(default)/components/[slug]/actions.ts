@@ -9,6 +9,11 @@ import {
   hasArtifacts,
 } from "@/utils/completion-parser";
 import { builderApiUrl, Framework } from "@/utils/config";
+import {
+  getChatIntegrations,
+  IntegrationType,
+  SupabaseIntegrationConfig,
+} from "@/utils/integrations";
 import { promptEnhancer } from "@/utils/prompt-enhancer";
 import { getLatestArtifactCode } from "@/utils/supabase/artifact-helpers";
 import { createClient } from "@/utils/supabase/server";
@@ -368,6 +373,20 @@ export const buildComponent = async (
       return;
     }
 
+    const chatIntegrations = await getChatIntegrations(chatId);
+    const envVars: Record<string, string> = {};
+
+    const supabaseIntegration = chatIntegrations.find(
+      (ci) =>
+        ci.user_integrations.integration_type === IntegrationType.SUPABASE,
+    );
+    if (supabaseIntegration) {
+      const config = supabaseIntegration.user_integrations
+        .config as SupabaseIntegrationConfig;
+      envVars.VITE_SUPABASE_URL = config.projectUrl;
+      envVars.VITE_SUPABASE_ANON_KEY = config.anonKey;
+    }
+
     const builderResponse = await fetch(`${builderApiUrl}/build`, {
       method: "POST",
       headers: {
@@ -378,6 +397,7 @@ export const buildComponent = async (
         version,
         files: newArtifactFiles,
         forceBuild,
+        envVars,
       }),
     });
 
@@ -402,6 +422,29 @@ export const buildComponent = async (
     );
   } catch (error) {
     console.error("API error:", error);
+  }
+};
+
+export const getIntegrationsForWebcontainer = async (chatId: string) => {
+  try {
+    const chatIntegrations = await getChatIntegrations(chatId);
+    const envVars: Record<string, string> = {};
+
+    const supabaseIntegration = chatIntegrations.find(
+      (ci) =>
+        ci.user_integrations.integration_type === IntegrationType.SUPABASE,
+    );
+    if (supabaseIntegration) {
+      const config = supabaseIntegration.user_integrations
+        .config as SupabaseIntegrationConfig;
+      envVars.VITE_SUPABASE_URL = config.projectUrl;
+      envVars.VITE_SUPABASE_ANON_KEY = config.anonKey;
+    }
+
+    return envVars;
+  } catch (error) {
+    console.error("Error fetching integrations for webcontainer:", error);
+    return {};
   }
 };
 

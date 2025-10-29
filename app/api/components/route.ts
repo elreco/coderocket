@@ -278,8 +278,20 @@ export async function POST(req: Request) {
     );
 
     console.log("=== Starting AI Stream ===");
+
+    // Fetch active integrations for this chat
+    const { getActiveChatIntegrations, buildIntegrationContext } = await import(
+      "@/utils/integrations/chat-integrations-helpers"
+    );
+    const chatIntegrations = await getActiveChatIntegrations(id);
+    const integrationContext = await buildIntegrationContext(chatIntegrations);
+
+    console.log("=== Integration Context ===");
+    console.log("Active integrations:", chatIntegrations.length);
+    console.log("Integration context length:", integrationContext.length);
+
     // Calculate input tokens to prevent context overflow
-    const systemPromptContent =
+    const baseSystemPrompt =
       framework === Framework.HTML
         ? htmlSystemPrompt(
             messagesFromDatabase.length === 1
@@ -287,6 +299,11 @@ export async function POST(req: Request) {
               : null,
           )
         : systemPrompt(framework as Framework);
+
+    // Inject integration context into system prompt
+    const systemPromptContent = integrationContext
+      ? `${baseSystemPrompt}\n\n${integrationContext}`
+      : baseSystemPrompt;
 
     // Rough token estimation (4 chars ≈ 1 token)
     const systemTokens = Math.ceil(systemPromptContent.length / 4);

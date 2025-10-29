@@ -5,6 +5,7 @@ import {
   SiVuedotjs,
   SiSvelte,
   SiAngular,
+  SiSupabase,
 } from "@icons-pack/react-simple-icons";
 import {
   Terminal,
@@ -69,9 +70,11 @@ import { Tables } from "@/types_db";
 import { Framework } from "@/utils/config";
 import { defaultTheme, maxImagesUpload, themes } from "@/utils/config";
 import { validateFile } from "@/utils/file-helper";
+import { IntegrationType, UserIntegration } from "@/utils/integrations";
 import { promptEnhancer } from "@/utils/prompt-enhancer";
 import { createClient } from "@/utils/supabase/client";
 
+import { fetchUserIntegrations } from "./account/integrations/actions";
 import { createChat } from "./components/actions";
 
 // Types pour les thèmes
@@ -194,6 +197,14 @@ export default function Hero() {
   const [showCloneModal, setShowCloneModal] = useState(false);
   const [agreeToTerms, setAgreeToTerms] = useState(false);
   const [showPromptIdeasModal, setShowPromptIdeasModal] = useState(false);
+  const [userIntegrations, setUserIntegrations] = useState<UserIntegration[]>(
+    [],
+  );
+  const [isLoadingIntegrations, setIsLoadingIntegrations] = useState(false);
+  const [selectedIntegration, setSelectedIntegration] = useState<string | null>(
+    null,
+  );
+  const isPremium = !!subscription;
 
   useEffect(() => {
     if (inputRef.current) {
@@ -260,7 +271,6 @@ export default function Hero() {
   }, [inputRef, toast]);
 
   useEffect(() => {
-    // Charger le statut de l'abonnement au chargement du composant
     const fetchSubscription = async () => {
       try {
         setIsLoadingSubscription(true);
@@ -268,6 +278,13 @@ export default function Hero() {
         setIsLoggedIn(!!data?.user?.id);
         const sub = await getSubscription();
         setSubscription(sub);
+
+        if (data?.user?.id) {
+          setIsLoadingIntegrations(true);
+          const integrations = await fetchUserIntegrations();
+          setUserIntegrations(integrations);
+          setIsLoadingIntegrations(false);
+        }
       } catch (error) {
         console.error("Error fetching subscription:", error);
       } finally {
@@ -452,6 +469,10 @@ export default function Hero() {
     formData.append("isVisible", isVisible.toString());
     formData.append("theme", selectedTheme);
     formData.append("framework", selectedFramework);
+
+    if (selectedIntegration) {
+      formData.append("integrationId", selectedIntegration);
+    }
 
     // Stocker le prompt simple pour l'affichage et le prompt détaillé pour l'IA
     formData.append("prompt", finalPrompt);
@@ -726,6 +747,7 @@ export default function Hero() {
                       placeholder="Enter website URL to clone (e.g., https://example.com)"
                       value={websiteUrl}
                       onChange={(e) => setWebsiteUrl(e.target.value)}
+                      disabled={loading}
                       className="border-none bg-secondary pl-1 focus-visible:ring-0 focus-visible:ring-offset-0"
                     />
                   </div>
@@ -861,8 +883,10 @@ export default function Hero() {
                                   "border-primary opacity-100":
                                     selectedTheme === theme,
                                 },
+                                loading && "pointer-events-none opacity-50",
                               )}
                               onClick={() => {
+                                if (loading) return;
                                 setSelectedTheme(theme);
                                 setSheetOpen(false);
                               }}
@@ -880,6 +904,97 @@ export default function Hero() {
                   </SheetContent>
                 </Sheet>
               )}
+              {isLoggedIn && selectedFramework !== Framework.HTML && (
+                <>
+                  {!isPremium ? (
+                    <Link href="/pricing">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="background"
+                        className="h-8 w-full gap-2 text-xs sm:w-auto"
+                        disabled={loading}
+                      >
+                        <Lock className="size-3.5" />
+                        <span className="hidden sm:inline">
+                          Unlock Integrations
+                        </span>
+                        <span className="sm:hidden">Premium</span>
+                      </Button>
+                    </Link>
+                  ) : isLoadingIntegrations ? (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="background"
+                      className="h-8 w-full gap-2 text-xs sm:w-auto"
+                      disabled
+                    >
+                      <Loader className="size-3.5 animate-spin" />
+                      <span className="hidden sm:inline">Loading...</span>
+                    </Button>
+                  ) : userIntegrations.filter(
+                      (i) =>
+                        i.integration_type === IntegrationType.SUPABASE &&
+                        i.is_active,
+                    ).length > 0 ? (
+                    <Select
+                      disabled={loading}
+                      value={selectedIntegration || "none"}
+                      onValueChange={(value) =>
+                        setSelectedIntegration(value === "none" ? null : value)
+                      }
+                    >
+                      <SelectTrigger className="h-8 w-full rounded-md border-background sm:w-auto">
+                        <SelectValue placeholder="No Database" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none" className="cursor-pointer">
+                          <div className="mr-2 flex w-full flex-row items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <SiSupabase className="size-4 opacity-30" />
+                              <span>No Database</span>
+                            </div>
+                          </div>
+                        </SelectItem>
+                        {userIntegrations
+                          .filter(
+                            (i) =>
+                              i.integration_type === IntegrationType.SUPABASE &&
+                              i.is_active,
+                          )
+                          .map((integration) => (
+                            <SelectItem
+                              key={integration.id}
+                              value={integration.id}
+                              className="cursor-pointer"
+                            >
+                              <div className="mr-2 flex w-full flex-row items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  <SiSupabase className="size-4 text-green-600" />
+                                  <span>{integration.name}</span>
+                                </div>
+                              </div>
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Link href="/account/integrations">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="h-8 w-full gap-2 text-xs sm:w-auto"
+                        disabled={loading}
+                      >
+                        <SiSupabase className="size-3.5 text-green-600" />
+                        Connect Supabase
+                      </Button>
+                    </Link>
+                  )}
+                </>
+              )}
               <Select
                 disabled={loading}
                 defaultValue="react"
@@ -887,6 +1002,7 @@ export default function Hero() {
                   setSelectedFramework(value as Framework);
                   if (value === Framework.HTML) {
                     setGenerationMode("scratch");
+                    setSelectedIntegration(null);
                   }
                 }}
               >
@@ -1052,7 +1168,12 @@ export default function Hero() {
           </div>
         </div>
       </form>
-      <Dialog open={showCloneModal} onOpenChange={handleCloneModalClose}>
+      <Dialog
+        open={showCloneModal}
+        onOpenChange={(open) => {
+          if (!loading && !open) handleCloneModalClose();
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Ethical Use Agreement</DialogTitle>
@@ -1066,6 +1187,7 @@ export default function Hero() {
             <Checkbox
               id="terms"
               checked={agreeToTerms}
+              disabled={loading}
               onCheckedChange={(checked) => {
                 setAgreeToTerms(checked as boolean);
               }}
@@ -1081,10 +1203,17 @@ export default function Hero() {
           </div>
 
           <DialogFooter className="mt-4">
-            <Button variant="outline" onClick={handleCloneModalClose}>
+            <Button
+              variant="outline"
+              onClick={handleCloneModalClose}
+              disabled={loading}
+            >
               Cancel
             </Button>
-            <Button onClick={handleAgreeAndContinue} disabled={!agreeToTerms}>
+            <Button
+              onClick={handleAgreeAndContinue}
+              disabled={!agreeToTerms || loading}
+            >
               Agree & Continue
             </Button>
           </DialogFooter>
@@ -1092,7 +1221,9 @@ export default function Hero() {
       </Dialog>
       <Dialog
         open={showPromptIdeasModal}
-        onOpenChange={setShowPromptIdeasModal}
+        onOpenChange={(open) => {
+          if (!loading) setShowPromptIdeasModal(open);
+        }}
       >
         <DialogContent>
           <DialogHeader>
@@ -1110,10 +1241,14 @@ export default function Hero() {
                   key={index}
                   variant="outline"
                   onClick={() => {
+                    if (loading) return;
                     handleBadgeClick(button.input);
                     setShowPromptIdeasModal(false);
                   }}
-                  className="cursor-pointer px-3 py-2 text-sm hover:bg-secondary"
+                  className={cn(
+                    "cursor-pointer px-3 py-2 text-sm hover:bg-secondary",
+                    loading && "pointer-events-none opacity-50",
+                  )}
                 >
                   {button.text}
                 </Badge>
@@ -1121,7 +1256,10 @@ export default function Hero() {
           </div>
 
           <DialogFooter>
-            <Button onClick={() => setShowPromptIdeasModal(false)}>
+            <Button
+              onClick={() => setShowPromptIdeasModal(false)}
+              disabled={loading}
+            >
               Close
             </Button>
           </DialogFooter>
