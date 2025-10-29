@@ -8,7 +8,7 @@ interface ThinkingBlockProps {
 }
 
 export function ThinkingBlock({ content }: ThinkingBlockProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true);
 
   return (
     <div className="my-4 rounded-lg border border-muted-foreground/20 bg-muted/30 transition-all">

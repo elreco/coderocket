@@ -895,49 +895,50 @@ export const hasFiles = (completion: string): boolean => {
 export function splitCompletedContentIntoChunks(
   content: string,
 ): ContentChunk[] {
-  // Si le contenu est vide, renvoyer un tableau vide
   if (!content || !content.trim()) {
     return [];
   }
 
-  // 1. Si le contenu contient des artifacts déjà formatés, les extraire
-  if (
-    content.includes("<coderocketArtifact") &&
-    content.includes("</coderocketArtifact>")
-  ) {
-    const chunks: ContentChunk[] = [];
-    const artifactRegex = /<coderocketArtifact[\s\S]*?<\/coderocketArtifact>/g;
-    let artifactMatch;
-    let lastIndex = 0;
+  const chunks: ContentChunk[] = [];
+  const combinedRegex =
+    /(<thinking>[\s\S]*?<\/thinking>|<coderocketArtifact[\s\S]*?<\/coderocketArtifact>)/g;
+  let lastIndex = 0;
+  let match;
 
-    while ((artifactMatch = artifactRegex.exec(content)) !== null) {
-      // Ajouter le texte avant l'artifact s'il y en a
-      const textBefore = content.slice(lastIndex, artifactMatch.index).trim();
-      if (textBefore) {
-        chunks.push({
-          type: "text",
-          content: textBefore,
-        });
-      }
-
-      // Ajouter l'artifact
-      chunks.push({
-        type: "artifact",
-        content: artifactMatch[0],
-      });
-
-      lastIndex = artifactMatch.index + artifactMatch[0].length;
-    }
-
-    // Ajouter le texte après le dernier artifact s'il y en a
-    const textAfter = content.slice(lastIndex).trim();
-    if (textAfter) {
+  while ((match = combinedRegex.exec(content)) !== null) {
+    const textBefore = content.slice(lastIndex, match.index).trim();
+    if (textBefore) {
       chunks.push({
         type: "text",
-        content: textAfter,
+        content: textBefore,
       });
     }
 
+    if (match[0].startsWith("<thinking>")) {
+      const thinkingContent = match[0].replace(/<\/?thinking>/g, "").trim();
+      chunks.push({
+        type: "thinking",
+        content: thinkingContent,
+      });
+    } else {
+      chunks.push({
+        type: "artifact",
+        content: match[0],
+      });
+    }
+
+    lastIndex = match.index + match[0].length;
+  }
+
+  const textAfter = content.slice(lastIndex).trim();
+  if (textAfter) {
+    chunks.push({
+      type: "text",
+      content: textAfter,
+    });
+  }
+
+  if (chunks.length > 0) {
     return chunks;
   }
 
@@ -1007,9 +1008,8 @@ export const splitContentIntoChunks = (completion: string): ContentChunk[] => {
 
   const chunks: ContentChunk[] = [];
 
-  // Expression régulière pour détecter les balises thinking, coderocketFile et coderocketArtifact
   const combinedPattern =
-    /(<thinking>[\s\S]*?<\/thinking>|<coderocketArtifact[^>]*>[\s\S]*?<\/coderocketArtifact>|<coderocketArtifact[^>]*>[\s\S]*?$|<coderocketFile[^>]*>[\s\S]*?<\/coderocketFile>|<coderocketFile[^>]*>[\s\S]*?$)/g;
+    /(<thinking>[\s\S]*?<\/thinking>|<thinking>[\s\S]*?$|<coderocketArtifact[^>]*>[\s\S]*?<\/coderocketArtifact>|<coderocketArtifact[^>]*>[\s\S]*?$|<coderocketFile[^>]*>[\s\S]*?<\/coderocketFile>|<coderocketFile[^>]*>[\s\S]*?$)/g;
 
   // Diviser le texte en segments basés sur les balises trouvées
   const segments = completion.split(combinedPattern);

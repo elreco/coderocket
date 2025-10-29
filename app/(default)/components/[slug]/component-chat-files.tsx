@@ -205,37 +205,50 @@ export default function ComponentChatFiles({
       return false;
     };
 
-    // Filtrer les chunks pour enlever ceux qui contiennent "FINISH_REASON"
-    // ou des balises incomplètes pendant le chargement
-    contentChunks = contentChunks.filter((chunk) => {
-      if (chunk.type !== "text") {
-        // Pour les artifacts, vérifier s'ils sont vides ou inutiles
-        if (
-          chunk.type === "artifact" &&
-          containsEmptyOrUselessTags(chunk.content)
-        ) {
+    contentChunks = contentChunks
+      .filter((chunk) => {
+        if (chunk.type !== "text") {
+          if (
+            chunk.type === "artifact" &&
+            containsEmptyOrUselessTags(chunk.content)
+          ) {
+            return false;
+          }
+          return true;
+        }
+
+        if (chunk.content.includes("<!-- FINISH_REASON:")) {
+          return false;
+        }
+
+        if (isLoading && containsIncompleteTag(chunk.content)) {
+          return false;
+        }
+
+        if (containsEmptyOrUselessTags(chunk.content)) {
+          return false;
+        }
+
+        return true;
+      })
+      .map((chunk) => {
+        if (chunk.type === "text") {
+          const cleanedContent = chunk.content
+            .replace(/<thinking>[\s\S]*?<\/thinking>/g, "")
+            .trim();
+          return {
+            ...chunk,
+            content: cleanedContent,
+          };
+        }
+        return chunk;
+      })
+      .filter((chunk) => {
+        if (chunk.type === "text" && !chunk.content) {
           return false;
         }
         return true;
-      }
-
-      // Filtrer les marqueurs FINISH_REASON
-      if (chunk.content.includes("<!-- FINISH_REASON:")) {
-        return false;
-      }
-
-      // Pendant le chargement, filtrer les balises incomplètes
-      if (isLoading && containsIncompleteTag(chunk.content)) {
-        return false;
-      }
-
-      // Filtrer les textes contenant des balises vides ou inutiles
-      if (containsEmptyOrUselessTags(chunk.content)) {
-        return false;
-      }
-
-      return true;
-    });
+      });
 
     // Dédupliquer les chunks de texte identiques
     contentChunks = contentChunks.filter((chunk, index, array) => {
