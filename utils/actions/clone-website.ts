@@ -12,8 +12,8 @@ export async function cloneWebsite(url: string) {
 
     const timeout = new Promise<never>((_, reject) => {
       setTimeout(
-        () => reject(new Error("Clone timeout after 90 seconds")),
-        90000,
+        () => reject(new Error("Clone timeout after 60 seconds")),
+        60000,
       );
     });
 

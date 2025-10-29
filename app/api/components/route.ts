@@ -666,63 +666,45 @@ const validateRequest = async (
       if (cloneResult.success && cloneResult.data) {
         const data = cloneResult.data;
 
-        const truncatedMarkdown = data.markdown
-          ? data.markdown.length > 12000
-            ? data.markdown.substring(0, 12000) +
-              "\n\n[Content truncated - refer to screenshot for complete details]"
-            : data.markdown
-          : "";
+        enhancedPrompt = `Clone: ${chat.clone_url}
 
-        const htmlClasses = data.html
-          ? data.html
-              .match(/class="([^"]*)"/g)
-              ?.slice(0, 30)
-              .join(" ")
-              .substring(0, 500) || ""
-          : "";
+# WEBSITE CONTENT
+${data.markdown ? data.markdown.substring(0, 15000) : ""}
 
-        const designInfo = data.extractedData
-          ? JSON.stringify(data.extractedData, null, 2).substring(0, 1000)
-          : "";
+# INSTRUCTIONS
 
-        enhancedPrompt = `Clone this website: ${chat.clone_url}
+A screenshot is attached showing the exact visual design.
 
-# VISUAL REFERENCE (PRIMARY SOURCE)
-**The attached screenshot is your PRIMARY reference for:**
-- Exact colors, fonts, and styling
-- Precise spacing, padding, and layout
-- Component positioning and sizing
-- Overall visual appearance
+**Analyze the screenshot to determine:**
+- Background color (dark theme? light theme?)
+- Primary brand color (what color are the main buttons/links?)
+- Text colors
+- Fonts (modern sans-serif? traditional serif?)
+- Layout (hero? navbar? footer? sidebar?)
+- Component styles (button shape, card style, spacing)
 
-# CONTENT & STRUCTURE
-${truncatedMarkdown}
+**Build the clone:**
+1. Use ONLY standard Tailwind CSS classes:
+   - Colors: bg-white, bg-black, bg-gray-900, bg-blue-600, text-white, text-gray-900, etc.
+   - Spacing: p-4, px-8, py-12, space-y-6, gap-4
+   - Layout: flex, grid, max-w-7xl, container
+   - DO NOT use: bg-background, text-foreground, bg-primary (not standard Tailwind)
 
-# EXTRACTED DESIGN DATA
-${designInfo || "Analyze colors and fonts from the screenshot"}
+2. Use shadcn/ui components: Button, Card, Badge, etc.
 
-# HTML CLASSES (for reference)
-${htmlClasses}
+3. Include ALL sections from the website:
+   - Header with navigation
+   - Hero section
+   - Main content sections
+   - Footer
 
-# CLONE INSTRUCTIONS
+4. Use ALL text from the markdown above
 
-**Visual Fidelity (CRITICAL):**
-1. Study the SCREENSHOT carefully - it's your source of truth for all visual details
-2. Extract exact colors (hex codes) by analyzing the screenshot
-3. Identify fonts used (or use close web-safe alternatives)
-4. Match spacing, padding, and margins precisely
+5. Extract and use REAL image URLs from markdown (no placeholders)
 
-**Content:**
-1. Use ALL text from the markdown above
-2. Extract ALL image URLs from markdown - use REAL images only
-3. Preserve navigation, buttons, CTAs, and sections structure
+6. Ensure mobile responsive (sm:, md:, lg: breakpoints)
 
-**Implementation:**
-1. Recreate the layout as shown in screenshot (hero, nav, footer, etc.)
-2. Match component styles (buttons, cards, forms) from screenshot
-3. Ensure mobile responsiveness
-4. Use actual image URLs - NO placeholders
-
-Your goal: Create a faithful visual clone that matches the screenshot.`;
+**Critical**: Match the screenshot's visual appearance using standard Tailwind classes only.`;
 
         // Handle screenshot with proper dimension validation and resizing
         if (cloneResult.data.screenshot) {

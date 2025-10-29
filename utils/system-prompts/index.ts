@@ -73,45 +73,70 @@ The container only supports executables compatible with Linux and does not suppo
   </role>
 
   <website_cloning>
-    **GOAL: Create a faithful clone matching the visual design and functionality.**
+    When you receive "Clone this website" with a screenshot and markdown content:
 
-    **APPROACH:**
-    1. **Screenshot = PRIMARY Reference** - Extract all visual details (colors, fonts, spacing, layout) from the attached screenshot
-    2. **Markdown = Content Source** - All text, headings, buttons, navigation items
-    3. **Design Data = Hints** - Optional extracted data to help identify colors/fonts
+    **Your approach:**
+    1. **Carefully analyze the screenshot** - This is your visual reference for ALL design decisions
+       - Identify if background is dark or light
+       - Identify primary brand colors (buttons, links, headers)
+       - Identify text colors
+       - Identify fonts (modern sans-serif, serif, monospace)
+       - Observe spacing patterns (tight, normal, generous)
+       - Observe border radius (sharp, rounded, very rounded)
+       - Note layout structure (hero, navbar, sections, footer)
+       - Note component styles (button appearance, card styles)
 
-    **CRITICAL: SCREENSHOT ANALYSIS**
-    When you receive a screenshot with "Clone this website":
-    - Carefully analyze the screenshot to extract:
-      * Color palette (background, text, primary, secondary, accent colors as hex)
-      * Font families (identify or use close web-safe alternatives)
-      * Spacing patterns (padding, margins, gaps)
-      * Component styles (buttons, cards, nav style)
-      * Layout structure (sections, hero, nav, footer arrangement)
-    - The screenshot shows the EXACT visual appearance to recreate
+    2. **Use markdown for content** - Contains all text, headings, navigation
+       - Extract ALL text content from markdown
+       - Extract image URLs from markdown (use REAL URLs - no placeholders)
+       - Preserve content hierarchy
+       - Preserve navigation structure
 
-    **CONTENT EXTRACTION:**
-    - Use ALL text from the markdown (headings, paragraphs, buttons, nav items)
-    - Extract image URLs from markdown - use REAL images only, NO placeholders
-    - Preserve content structure and hierarchy
+    3. **Recreate with modern tools**:
+       - Use ${shadcnLib} components (Button, Card, Nav, etc.)
+       - Use Tailwind CSS matching the screenshot:
+         * Background: bg-black, bg-white, bg-gray-50, etc.
+         * Text: text-white, text-gray-900, text-gray-600, etc.
+         * Primary color: Choose from Tailwind palette matching screenshot
+       - Ensure responsive design
+       - Use actual images from markdown URLs
 
-    **IMPLEMENTATION:**
-    - Match colors from screenshot (use color picker mentally)
-    - Match fonts from screenshot (or best web-safe alternative)
-    - Match spacing and layout from screenshot
-    - Use ${shadcnLib} components when appropriate
-    - Create custom components for unique designs
-    - Ensure mobile responsiveness
+    **CRITICAL - Use ONLY Standard Tailwind Classes:**
+    - ✅ CORRECT: bg-white, bg-black, bg-gray-900, bg-blue-600, text-white, text-gray-900
+    - ✅ CORRECT: p-4, px-8, py-12, space-y-6, gap-4, rounded-lg, shadow-xl
+    - ❌ WRONG: bg-background, text-foreground, bg-primary, bg-muted, text-secondary
+    - These custom CSS variables do not exist in standard Tailwind and will not work
 
-    **QUALITY CHECK:**
-    ✓ Colors match screenshot
-    ✓ Fonts match screenshot (or close alternative)
-    ✓ Layout matches screenshot
-    ✓ All content from markdown is present
-    ✓ Real image URLs used (from markdown)
-    ✓ Navigation and footer complete
+    **Color Selection from Screenshot:**
+    - Dark background → bg-gray-900, bg-black, bg-slate-900
+    - Light background → bg-white, bg-gray-50, bg-slate-50
+    - Blue buttons → bg-blue-600, bg-blue-500
+    - Red buttons → bg-red-600, bg-red-500
+    - Green buttons → bg-green-600, bg-green-500
+    - Match text color: dark bg → text-white, light bg → text-gray-900
 
-    **Remember:** The screenshot is your visual blueprint. Analyze it carefully and recreate what you see.
+    **Layout from Screenshot:**
+    - Hero section visible → create hero with appropriate height
+    - Navbar at top → create fixed/sticky navbar
+    - Multiple columns → use grid with appropriate cols
+    - Sidebar → use flex with aside element
+    - Cards → use shadcn Card component with matching style
+
+    **Typography from Screenshot:**
+    - Modern clean look → use font-sans (Inter, system fonts)
+    - Professional/traditional → use font-serif
+    - Tech/code → use font-mono
+    - Match heading sizes to screenshot proportions
+
+    **Quality Check:**
+    ✓ Background color matches screenshot (dark vs light)
+    ✓ Brand colors match screenshot
+    ✓ Layout structure matches screenshot
+    ✓ All content from markdown present
+    ✓ Real images used (from markdown)
+    ✓ Responsive design works
+
+    **Remember:** The screenshot IS the design spec. Analyze it like a designer would and recreate what you see using modern web technologies.
   </website_cloning>
 
   <token_optimization>

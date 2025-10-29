@@ -61,71 +61,28 @@ export async function scrapeWebsiteWithFirecrawl(
   console.log(`Starting Firecrawl scraping for: ${url}`);
 
   const result = await firecrawl.scrape(url, {
-    formats: [
-      "markdown",
-      "html",
-      "links",
-      "screenshot",
-      {
-        type: "json",
-        prompt: `Extract comprehensive design information from this webpage:
-
-**Theme & Colors:**
-- primaryColor: main brand color (hex)
-- secondaryColor: secondary brand color (hex)
-- accentColors: array of accent colors (hex)
-- backgroundColor: page background color (hex)
-- textColor: primary text color (hex)
-
-**Typography:**
-- headingFonts: array of font families used for headings
-- bodyFonts: array of font families used for body text
-- fontSize: typical body font size (e.g., "16px")
-
-**Layout:**
-- type: layout type (e.g., "grid", "flex", "masonry")
-- hasHero: boolean - has hero/banner section
-- hasNavbar: boolean - has navigation bar
-- hasFooter: boolean - has footer
-- hasSidebar: boolean - has sidebar
-- maxWidth: content max-width if applicable (e.g., "1200px")
-
-**Design Elements:**
-- borderRadius: typical border radius (e.g., "8px", "rounded")
-- shadows: uses box shadows (boolean)
-- spacing: typical spacing pattern (e.g., "tight", "normal", "spacious")
-
-**Components:**
-- buttonStyle: button design (e.g., "rounded", "square", "pill")
-- cardStyle: card/container style if present
-- navigationStyle: navigation type (e.g., "horizontal", "sidebar", "hamburger")`,
-      },
-    ],
+    formats: ["markdown", "screenshot"],
     onlyMainContent: false,
+    blockAds: true,
+    maxAge: 3600000,
     actions: [
       { type: "wait", milliseconds: 2000 },
-      { type: "scroll", direction: "down" },
-      { type: "wait", milliseconds: 500 },
+      { type: "screenshot", fullPage: false },
     ],
     waitFor: 3000,
-    timeout: 60000,
+    timeout: 30000,
   });
 
   if (!result) {
     throw new Error(`Firecrawl scraping failed for ${url}. No data returned.`);
   }
 
-  console.log("Firecrawl result received:", {
+  console.log("Firecrawl results received:", {
     hasHtml: !!result.html,
     htmlLength: result.html?.length || 0,
     hasMarkdown: !!result.markdown,
     markdownLength: result.markdown?.length || 0,
     hasScreenshot: !!result.screenshot,
-    screenshotType: typeof result.screenshot,
-    hasLinks: !!result.links,
-    linksCount: result.links?.length || 0,
-    hasJson: !!result.json,
-    metadataKeys: Object.keys(result.metadata || {}),
   });
 
   return {
@@ -137,6 +94,6 @@ export async function scrapeWebsiteWithFirecrawl(
     screenshot: result.screenshot || undefined,
     metaTags: result.metadata as Record<string, string>,
     links: result.links || [],
-    extractedData: result.json || {},
+    extractedData: {},
   };
 }
