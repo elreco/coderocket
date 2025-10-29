@@ -66,11 +66,11 @@ export async function scrapeWebsiteWithFirecrawl(
     blockAds: true,
     maxAge: 3600000,
     actions: [
-      { type: "wait", milliseconds: 2000 },
-      { type: "screenshot", fullPage: false },
+      { type: "wait", milliseconds: 1500 },
+      { type: "screenshot", fullPage: true },
     ],
-    waitFor: 3000,
-    timeout: 30000,
+    waitFor: 2000,
+    timeout: 45000,
   });
 
   if (!result) {
