@@ -84,7 +84,6 @@ export function maskSensitiveData(
   const sensitiveKeys = [
     "apiKey",
     "secretKey",
-    "serviceRoleKey",
     "anonKey",
     "token",
     "webhookSecret",

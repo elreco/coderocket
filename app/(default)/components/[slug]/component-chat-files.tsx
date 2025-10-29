@@ -535,6 +535,8 @@ ${extractedFiles
               isSelectedVersion={isSelectedVersion}
               version={message.version}
               chatId={message.chat_id}
+              messageId={message.id}
+              migrationExecutedAt={message.migration_executed_at}
             />
             {message.screenshot && (
               <img

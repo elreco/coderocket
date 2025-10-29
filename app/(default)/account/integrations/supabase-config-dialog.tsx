@@ -43,7 +43,6 @@ export function SupabaseConfigDialog({
   const [name, setName] = useState("");
   const [projectUrl, setProjectUrl] = useState("");
   const [anonKey, setAnonKey] = useState("");
-  const [serviceRoleKey, setServiceRoleKey] = useState("");
   const [accessToken, setAccessToken] = useState("");
   const [projectId, setProjectId] = useState("");
 
@@ -60,7 +59,6 @@ export function SupabaseConfigDialog({
       const config = existingIntegration.config as SupabaseIntegrationConfig;
       setProjectUrl(config?.projectUrl || "");
       setAnonKey(config?.anonKey || "");
-      setServiceRoleKey(config?.serviceRoleKey || "");
       setAccessToken(config?.accessToken || "");
       setProjectId(config?.projectId || "");
     }
@@ -79,7 +77,6 @@ export function SupabaseConfigDialog({
     const config: SupabaseIntegrationConfig = {
       projectUrl,
       anonKey,
-      serviceRoleKey: serviceRoleKey || undefined,
       accessToken: accessToken || undefined,
       projectId: projectId || undefined,
     };
@@ -101,7 +98,6 @@ export function SupabaseConfigDialog({
     const config: SupabaseIntegrationConfig = {
       projectUrl,
       anonKey,
-      serviceRoleKey: serviceRoleKey || undefined,
       accessToken: accessToken || undefined,
       projectId: projectId || undefined,
     };
@@ -122,7 +118,6 @@ export function SupabaseConfigDialog({
       setName("");
       setProjectUrl("");
       setAnonKey("");
-      setServiceRoleKey("");
       setAccessToken("");
       setProjectId("");
       setTestResult(null);
@@ -189,21 +184,6 @@ export function SupabaseConfigDialog({
             />
             <p className="text-xs text-muted-foreground">
               Public key for client-side operations
-            </p>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="serviceRoleKey">Service Role Key (Optional)</Label>
-            <Input
-              id="serviceRoleKey"
-              type="password"
-              placeholder="eyJhbG..."
-              value={serviceRoleKey}
-              onChange={(e) => setServiceRoleKey(e.target.value)}
-            />
-            <p className="text-xs text-muted-foreground">
-              Required for server-side operations. Find it in Supabase Dashboard
-              → Settings → API
             </p>
           </div>
 

@@ -28,17 +28,25 @@ interface MigrationRunnerProps {
     content: string;
   };
   chatId: string;
+  messageId: number;
+  migrationExecutedAt?: string | null;
 }
 
 export function MigrationRunner({
   migrationFile,
   chatId,
+  messageId,
+  migrationExecutedAt: initialMigrationExecutedAt,
 }: MigrationRunnerProps) {
   const [showSQL, setShowSQL] = useState(false);
   const [copied, setCopied] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
-  const [migrationSuccess, setMigrationSuccess] = useState(false);
+  const [migrationExecutedAt, setMigrationExecutedAt] = useState<
+    string | null | undefined
+  >(initialMigrationExecutedAt);
   const { toast } = useToast();
+
+  const isMigrationExecuted = !!migrationExecutedAt;
 
   const tables = extractTables(migrationFile.content);
   const policies = extractPolicies(migrationFile.content);
@@ -92,6 +100,7 @@ export function MigrationRunner({
           chatId,
           sql: migrationFile.content,
           migrationName: migrationFile.name,
+          messageId,
         }),
       });
 
@@ -101,7 +110,9 @@ export function MigrationRunner({
         throw new Error(result.error || "Failed to run migration");
       }
 
-      setMigrationSuccess(true);
+      setMigrationExecutedAt(
+        result.migrationExecutedAt || new Date().toISOString(),
+      );
       toast({
         title: "Migration Successful! 🎉",
         description: `Successfully created ${tables.length} table${tables.length !== 1 ? "s" : ""} in your Supabase database`,
@@ -145,7 +156,7 @@ export function MigrationRunner({
             </div>
           </div>
 
-          {!migrationSuccess && (
+          {!isMigrationExecuted && (
             <div className="rounded-md bg-blue-100 p-3 dark:bg-blue-900">
               <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
                 💡 Quick Options:
@@ -158,13 +169,13 @@ export function MigrationRunner({
               </ul>
             </div>
           )}
-          {migrationSuccess && (
+          {isMigrationExecuted && (
             <div className="rounded-md bg-green-100 p-3 dark:bg-green-900">
               <p className="text-sm font-medium text-green-900 dark:text-green-100">
-                ✅ Migration applied successfully!
+                ✅ Migration already applied!
               </p>
               <p className="mt-1 text-xs text-green-800 dark:text-green-200">
-                Your database tables are ready to use.
+                Applied on {new Date(migrationExecutedAt!).toLocaleString()}
               </p>
             </div>
           )}
@@ -173,17 +184,17 @@ export function MigrationRunner({
             <Button
               size="sm"
               onClick={handleRunMigration}
-              disabled={isRunning || migrationSuccess}
+              disabled={isRunning || isMigrationExecuted}
             >
               {isRunning ? (
                 <>
                   <Loader2 className="mr-2 size-4 animate-spin" />
                   Running...
                 </>
-              ) : migrationSuccess ? (
+              ) : isMigrationExecuted ? (
                 <>
                   <CheckCircle2 className="mr-2 size-4" />
-                  Applied
+                  Already Applied
                 </>
               ) : (
                 <>

@@ -596,6 +596,7 @@ export type Database = {
           input_tokens: number | null;
           is_built: boolean | null;
           is_github_pull: boolean | null;
+          migration_executed_at: string | null;
           output_tokens: number | null;
           prompt_image: string | null;
           role: string;
@@ -616,6 +617,7 @@ export type Database = {
           input_tokens?: number | null;
           is_built?: boolean | null;
           is_github_pull?: boolean | null;
+          migration_executed_at?: string | null;
           output_tokens?: number | null;
           prompt_image?: string | null;
           role: string;
@@ -636,6 +638,7 @@ export type Database = {
           input_tokens?: number | null;
           is_built?: boolean | null;
           is_github_pull?: boolean | null;
+          migration_executed_at?: string | null;
           output_tokens?: number | null;
           prompt_image?: string | null;
           role?: string;

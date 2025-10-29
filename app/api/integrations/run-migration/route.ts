@@ -20,11 +20,18 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { chatId, sql, migrationName } = body;
+    const { chatId, sql, migrationName, messageId } = body;
 
     if (!chatId || !sql) {
       return NextResponse.json(
         { error: "Chat ID and SQL are required" },
+        { status: 400 },
+      );
+    }
+
+    if (!messageId) {
+      return NextResponse.json(
+        { error: "Message ID is required" },
         { status: 400 },
       );
     }
@@ -100,11 +107,17 @@ export async function POST(request: NextRequest) {
 
       const result = await response.json();
 
+      await supabase
+        .from("messages")
+        .update({ migration_executed_at: new Date().toISOString() })
+        .eq("id", messageId);
+
       return NextResponse.json({
         success: true,
         message: "Migration executed successfully",
         migrationName,
         result,
+        migrationExecutedAt: new Date().toISOString(),
       });
     } catch (executionError) {
       const errorMessage =

@@ -747,6 +747,7 @@ export default function Hero() {
                       placeholder="Enter website URL to clone (e.g., https://example.com)"
                       value={websiteUrl}
                       onChange={(e) => setWebsiteUrl(e.target.value)}
+                      disabled={loading}
                       className="border-none bg-secondary pl-1 focus-visible:ring-0 focus-visible:ring-offset-0"
                     />
                   </div>
@@ -882,8 +883,10 @@ export default function Hero() {
                                   "border-primary opacity-100":
                                     selectedTheme === theme,
                                 },
+                                loading && "pointer-events-none opacity-50",
                               )}
                               onClick={() => {
+                                if (loading) return;
                                 setSelectedTheme(theme);
                                 setSheetOpen(false);
                               }}
@@ -1149,7 +1152,12 @@ export default function Hero() {
           </div>
         </div>
       </form>
-      <Dialog open={showCloneModal} onOpenChange={handleCloneModalClose}>
+      <Dialog
+        open={showCloneModal}
+        onOpenChange={(open) => {
+          if (!loading && !open) handleCloneModalClose();
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Ethical Use Agreement</DialogTitle>
@@ -1163,6 +1171,7 @@ export default function Hero() {
             <Checkbox
               id="terms"
               checked={agreeToTerms}
+              disabled={loading}
               onCheckedChange={(checked) => {
                 setAgreeToTerms(checked as boolean);
               }}
@@ -1178,10 +1187,17 @@ export default function Hero() {
           </div>
 
           <DialogFooter className="mt-4">
-            <Button variant="outline" onClick={handleCloneModalClose}>
+            <Button
+              variant="outline"
+              onClick={handleCloneModalClose}
+              disabled={loading}
+            >
               Cancel
             </Button>
-            <Button onClick={handleAgreeAndContinue} disabled={!agreeToTerms}>
+            <Button
+              onClick={handleAgreeAndContinue}
+              disabled={!agreeToTerms || loading}
+            >
               Agree & Continue
             </Button>
           </DialogFooter>
@@ -1189,7 +1205,9 @@ export default function Hero() {
       </Dialog>
       <Dialog
         open={showPromptIdeasModal}
-        onOpenChange={setShowPromptIdeasModal}
+        onOpenChange={(open) => {
+          if (!loading) setShowPromptIdeasModal(open);
+        }}
       >
         <DialogContent>
           <DialogHeader>
@@ -1207,10 +1225,14 @@ export default function Hero() {
                   key={index}
                   variant="outline"
                   onClick={() => {
+                    if (loading) return;
                     handleBadgeClick(button.input);
                     setShowPromptIdeasModal(false);
                   }}
-                  className="cursor-pointer px-3 py-2 text-sm hover:bg-secondary"
+                  className={cn(
+                    "cursor-pointer px-3 py-2 text-sm hover:bg-secondary",
+                    loading && "pointer-events-none opacity-50",
+                  )}
                 >
                   {button.text}
                 </Badge>
@@ -1218,7 +1240,10 @@ export default function Hero() {
           </div>
 
           <DialogFooter>
-            <Button onClick={() => setShowPromptIdeasModal(false)}>
+            <Button
+              onClick={() => setShowPromptIdeasModal(false)}
+              disabled={loading}
+            >
               Close
             </Button>
           </DialogFooter>
