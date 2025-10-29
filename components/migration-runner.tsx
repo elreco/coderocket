@@ -1,6 +1,14 @@
 "use client";
 
-import { Database, Eye, Copy, CheckCircle2, FileCode } from "lucide-react";
+import {
+  Database,
+  Eye,
+  Copy,
+  CheckCircle2,
+  FileCode,
+  Play,
+  Loader2,
+} from "lucide-react";
 import { useState } from "react";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -19,11 +27,17 @@ interface MigrationRunnerProps {
     name: string;
     content: string;
   };
+  chatId: string;
 }
 
-export function MigrationRunner({ migrationFile }: MigrationRunnerProps) {
+export function MigrationRunner({
+  migrationFile,
+  chatId,
+}: MigrationRunnerProps) {
   const [showSQL, setShowSQL] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [isRunning, setIsRunning] = useState(false);
+  const [migrationSuccess, setMigrationSuccess] = useState(false);
   const { toast } = useToast();
 
   const tables = extractTables(migrationFile.content);
@@ -44,6 +58,44 @@ export function MigrationRunner({ migrationFile }: MigrationRunnerProps) {
         title: "Copy Failed",
         description: "Failed to copy SQL to clipboard",
       });
+    }
+  };
+
+  const handleRunMigration = async () => {
+    setIsRunning(true);
+    try {
+      const response = await fetch("/api/integrations/run-migration", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          chatId,
+          sql: migrationFile.content,
+          migrationName: migrationFile.name,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to run migration");
+      }
+
+      setMigrationSuccess(true);
+      toast({
+        title: "Migration Successful! 🎉",
+        description: `Successfully created ${tables.length} table${tables.length !== 1 ? "s" : ""} in your Supabase database`,
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Migration Failed",
+        description:
+          error instanceof Error ? error.message : "Failed to run migration",
+      });
+    } finally {
+      setIsRunning(false);
     }
   };
 
@@ -74,17 +126,29 @@ export function MigrationRunner({ migrationFile }: MigrationRunnerProps) {
             </div>
           </div>
 
-          <div className="rounded-md bg-blue-100 p-3 dark:bg-blue-900">
-            <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
-              📋 How to apply this migration:
-            </p>
-            <ol className="mt-2 list-inside list-decimal space-y-1 text-xs text-blue-800 dark:text-blue-200">
-              <li>Copy the SQL code below</li>
-              <li>Open your Supabase Dashboard → SQL Editor</li>
-              <li>Paste and run the migration</li>
-              <li>Your database is ready! 🎉</li>
-            </ol>
-          </div>
+          {!migrationSuccess && (
+            <div className="rounded-md bg-blue-100 p-3 dark:bg-blue-900">
+              <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                💡 Quick Options:
+              </p>
+              <ul className="mt-2 list-inside list-disc space-y-1 text-xs text-blue-800 dark:text-blue-200">
+                <li>Click "Run Migration" to apply automatically</li>
+                <li>
+                  Or copy SQL and paste in Supabase Dashboard → SQL Editor
+                </li>
+              </ul>
+            </div>
+          )}
+          {migrationSuccess && (
+            <div className="rounded-md bg-green-100 p-3 dark:bg-green-900">
+              <p className="text-sm font-medium text-green-900 dark:text-green-100">
+                ✅ Migration applied successfully!
+              </p>
+              <p className="mt-1 text-xs text-green-800 dark:text-green-200">
+                Your database tables are ready to use.
+              </p>
+            </div>
+          )}
 
           <div className="flex gap-2">
             <Button
@@ -96,17 +160,34 @@ export function MigrationRunner({ migrationFile }: MigrationRunnerProps) {
               <Eye className="mr-2 size-4" />
               View SQL
             </Button>
-            <Button size="sm" onClick={handleCopySQL} className="flex-1">
-              {copied ? (
+            <Button
+              size="sm"
+              onClick={handleRunMigration}
+              disabled={isRunning || migrationSuccess}
+              className="flex-1"
+            >
+              {isRunning ? (
+                <>
+                  <Loader2 className="mr-2 size-4 animate-spin" />
+                  Running...
+                </>
+              ) : migrationSuccess ? (
                 <>
                   <CheckCircle2 className="mr-2 size-4" />
-                  Copied!
+                  Applied
                 </>
               ) : (
                 <>
-                  <Copy className="mr-2 size-4" />
-                  Copy SQL
+                  <Play className="mr-2 size-4" />
+                  Run Migration
                 </>
+              )}
+            </Button>
+            <Button size="sm" variant="outline" onClick={handleCopySQL}>
+              {copied ? (
+                <CheckCircle2 className="size-4" />
+              ) : (
+                <Copy className="size-4" />
               )}
             </Button>
           </div>

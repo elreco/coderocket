@@ -1041,6 +1041,7 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
                 chunks={streamingChunks}
                 files={chatFiles}
                 handleFileClick={handleFileClick}
+                chatId={chatId}
               />
               <div className="mt-2 flex gap-1">
                 <span className="size-2 animate-[typing_1s_ease-in-out_infinite] rounded-full bg-foreground/50"></span>

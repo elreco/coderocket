@@ -1,0 +1,105 @@
+# Automatic Migrations
+
+CodeRocket can automatically execute SQL migrations directly from the interface using your Supabase integration.
+
+## 🚀 How It Works
+
+When the AI generates a database migration:
+
+1. A blue alert appears with migration details (tables, RLS policies)
+2. Click **"Run Migration"** button
+3. The SQL is executed directly on your Supabase database ✅
+4. Your tables are ready to use immediately!
+
+**No setup required** - Just make sure you have:
+- ✅ Supabase integration configured
+- ✅ Service Role Key added to your integration
+
+## 📝 Configure Service Role Key
+
+For automatic migrations to work, you need your **Service Role Key**:
+
+1. Go to **Account** → **Integrations**
+2. Edit your Supabase integration (or create a new one)
+3. Add the **Service Role Key**:
+   - Find it in your Supabase Dashboard → Settings → API
+   - Look for "service_role" key (starts with `eyJ...`)
+   - This key has admin privileges to create tables
+
+⚠️ **Security**: The service role key is encrypted and stored securely. It's only used server-side for migrations.
+
+## ✨ Using Automatic Migrations
+
+### Step 1: Enable Supabase Integration
+
+When creating a project, select your Supabase integration from the database dropdown.
+
+Or enable it later:
+- Open the sidebar → Integrations tab
+- Toggle ON your Supabase integration
+
+### Step 2: Generate with Database Features
+
+Ask the AI to create something with a database:
+```
+"Create a todo list app with Supabase"
+"Create a blog with posts and comments"
+"Create a product catalog with categories"
+```
+
+### Step 3: Run the Migration
+
+When the AI generates a migration:
+1. A blue alert appears: "Database Migration Detected"
+2. Review the tables and policies listed
+3. Click **"Run Migration"**
+4. ✅ Done! Tables are created instantly
+
+**Alternative**: Click "Copy SQL" if you prefer to run it manually in Supabase SQL Editor.
+
+## 🔒 Security & Safety
+
+- Migrations run in a **transaction** - if any statement fails, nothing is applied
+- **Service Role Key** required - bypasses RLS for table creation
+- Keys are **encrypted** at rest
+- Only **authenticated users** can run migrations on their own projects
+- **Authorization check**: You must own the chat to run its migrations
+
+## 💡 Migration Features
+
+The migration alerts show:
+- 📊 **Tables**: List of tables being created
+- 🔒 **RLS Policies**: Number of Row Level Security policies
+- 📝 **SQL Preview**: View the complete migration code
+- 📋 **Copy**: Copy SQL to clipboard
+- ▶️ **Run**: Execute migration automatically
+
+## 🐛 Troubleshooting
+
+### "Service role key required for migrations"
+
+**Solution**: Add your service role key in Account → Integrations → Edit Supabase Integration
+
+### "Migration failed: [error message]"
+
+**Common causes**:
+- Table already exists → Safe to ignore if intentional
+- Permission issues → Check your service role key is correct
+- SQL syntax error → Review the SQL code and report to AI
+
+**Fallback**: Copy the SQL and debug it in Supabase SQL Editor
+
+### Connection timeout
+
+If migration takes too long:
+- The database might be slow to respond
+- Try running the SQL manually in Supabase Dashboard
+- Check your Supabase project status
+
+## 🎯 Best Practices
+
+✅ **Review before running**: Check the tables and policies list
+✅ **Service role key**: Keep it secure, never share it
+✅ **Test in development**: Use a development Supabase project first
+✅ **Backup important data**: Migrations can't be automatically rolled back
+✅ **Manual option**: You can always copy and run SQL manually for safety

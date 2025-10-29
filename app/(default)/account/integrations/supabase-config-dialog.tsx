@@ -192,7 +192,8 @@ export function SupabaseConfigDialog({
               onChange={(e) => setServiceRoleKey(e.target.value)}
             />
             <p className="text-xs text-muted-foreground">
-              For admin operations (bypass RLS)
+              Required for automatic migration execution. Find it in Supabase
+              Dashboard → Settings → API
             </p>
           </div>
 

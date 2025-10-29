@@ -28,12 +28,14 @@ export function ChunkReader({
   handleFileClick,
   isSelectedVersion,
   version,
+  chatId,
 }: {
   chunks: { type: string; content: string }[];
   files: ChatFile[];
   handleFileClick: (version: number, file: ChatFile) => void;
   isSelectedVersion?: boolean;
   version?: number;
+  chatId: string;
 }) {
   const { isCanvas, activeTab, selectedFramework, isLoading } =
     useComponentContext();
@@ -176,6 +178,7 @@ export function ChunkReader({
                   name: migration.name || `migration_${migIdx + 1}.sql`,
                   content: migration.content,
                 }}
+                chatId={chatId}
               />
             ))}
           </div>
