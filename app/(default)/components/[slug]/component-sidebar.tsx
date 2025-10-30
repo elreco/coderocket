@@ -149,9 +149,9 @@ export default function ComponentSidebar({
       if (containerRef.current && messages.length > 0) {
         containerRef.current.scrollTop = containerRef.current.scrollHeight;
       }
-    }, 500);
+    }, 100);
     return () => clearTimeout(timer);
-  }, [messages]);
+  }, [messages, completion]);
 
   useEffect(() => {
     // Charger le statut de l'abonnement au chargement du composant
@@ -266,6 +266,39 @@ export default function ComponentSidebar({
     }
   };
 
+  const containsIncompleteTag = (text: string): boolean => {
+    const openingTags = ["<coderocketArtifact", "<coderocketFile"];
+    const closingTags = ["</coderocketArtifact>", "</coderocketFile>"];
+
+    for (let i = 0; i < openingTags.length; i++) {
+      const openTag = openingTags[i];
+      const closeTag = closingTags[i];
+
+      if (text.includes(openTag) && !text.includes(closeTag)) {
+        return true;
+      }
+
+      if (
+        text.includes("<") &&
+        text.includes("/") &&
+        closeTag.startsWith(text.substring(text.lastIndexOf("<")))
+      ) {
+        return true;
+      }
+    }
+
+    for (const tag of [...openingTags, ...closingTags]) {
+      for (let i = 3; i < tag.length; i++) {
+        const fragment = tag.substring(0, i);
+        if (text.endsWith(fragment)) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  };
+
   useEffect(() => {
     if (isLoading && completion) {
       // Extraction unique des fichiers
@@ -309,8 +342,10 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
       // Filtrer les chunks pour ne garder que ceux qui ne sont pas des fichiers
       newChunks = newChunks.filter((chunk) => {
         if (chunk.type === "artifact") return true;
-        // Pour les chunks de type "text", vérifier s'ils ne contiennent pas de balises coderocketFile
-        return !chunk.content.includes("<coderocketFile");
+        if (chunk.type !== "text") return true;
+        if (chunk.content.includes("<coderocketFile")) return false;
+        if (containsIncompleteTag(chunk.content)) return false;
+        return true;
       });
 
       // Mettre à jour les états ensemble pour éviter les sauts

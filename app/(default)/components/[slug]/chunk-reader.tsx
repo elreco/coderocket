@@ -109,7 +109,7 @@ export function ChunkReader({
                         key={fileIndex}
                         className={cn(
                           "group flex items-center justify-between rounded p-1 bg-foreground w-full",
-                          "hover:bg-gradient-to-l from-primary via-primary/90 to-primary/80 hover:text-foreground",
+                          !file.isDelete && "hover:bg-gradient-to-l from-primary via-primary/90 to-primary/80 hover:text-foreground",
                           isLoading || file.isDelete
                             ? "cursor-not-allowed opacity-50"
                             : "cursor-pointer",
@@ -131,14 +131,16 @@ export function ChunkReader({
                           />
                           <div
                             className={cn(
-                              "flex items-center font-medium text-background whitespace-pre-wrap text-sm mr-2 group-hover:text-foreground",
+                              "flex items-center font-medium whitespace-pre-wrap text-sm mr-2",
+                              !file.isDelete && "text-background group-hover:text-foreground",
                               file.isDelete &&
-                                "text-red-500 group-hover:text-foreground",
+                                "!text-red-500",
                               file.isIncomplete &&
                                 "text-primary group-hover:text-foreground",
                               activeTab === file.name &&
                                 isSelectedVersion &&
                                 !isCanvas &&
+                                !file.isDelete &&
                                 "text-foreground",
                             )}
                           >
@@ -154,17 +156,20 @@ export function ChunkReader({
                             </span>
                           </div>
                         </div>
-                        <div
-                          className={cn(
-                            "whitespace-nowrap text-xs text-background font-semibold opacity-75 group-hover:text-foreground",
-                            activeTab === file.name &&
-                              isSelectedVersion &&
-                              !isCanvas &&
-                              "text-foreground opacity-100",
-                          )}
-                        >
-                          {formatFileSize(new Blob([file.content]).size)}
-                        </div>
+                        {!file.isDelete && (
+                          <div
+                            className={cn(
+                              "whitespace-nowrap text-xs text-background font-semibold opacity-75",
+                              "group-hover:text-foreground",
+                              activeTab === file.name &&
+                                isSelectedVersion &&
+                                !isCanvas &&
+                                "text-foreground opacity-100",
+                            )}
+                          >
+                            {formatFileSize(new Blob([file.content]).size)}
+                          </div>
+                        )}
                       </div>
                     );
                   })}
