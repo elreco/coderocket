@@ -18,6 +18,15 @@ import {
   Rocket,
   Loader,
   Loader2,
+  Layout,
+  BarChart3,
+  FormInput,
+  Database,
+  ShoppingCart,
+  CreditCard,
+  UserCircle,
+  Image,
+  Zap,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -82,69 +91,185 @@ export type ThemeType = "light" | "dark" | "system";
 // Types pour les frameworks
 export type FrameworkType = "next" | "react" | "vue" | "angular" | "svelte";
 
-const previewButtons = [
+const promptCategories = [
   {
-    text: "Product categories",
-    input: "A list of product categories with image, name and description.",
+    title: "UI Components",
+    icon: Layout,
+    color: "text-blue-500",
+    bgColor: "bg-blue-500/10",
+    prompts: [
+      {
+        text: "Hero section",
+        input:
+          "A landing page hero section with a heading, leading text and an opt-in form.",
+      },
+      {
+        text: "Navigation bar",
+        input:
+          "A sticky header with animated dropdown menus, search bar, and responsive behavior that transforms into a drawer on mobile.",
+      },
+      {
+        text: "Pricing table",
+        input:
+          "A modern pricing comparison table with Free, Premium and Enterprise plans highlighting key features and annual/monthly toggle.",
+      },
+      {
+        text: "Testimonials",
+        input:
+          "A carousel of client testimonials with profile pictures, company logos, star ratings and detailed feedback.",
+      },
+      {
+        text: "Features grid",
+        input:
+          "An interactive features showcase with animated icons, benefit descriptions and hover effects arranged in a responsive grid.",
+      },
+      {
+        text: "FAQ accordion",
+        input:
+          "An expandable FAQ section with smooth animations, search functionality and categorized questions.",
+      },
+    ],
   },
   {
-    text: "Hero section",
-    input:
-      "A landing page hero section with a heading, leading text and an opt-in form.",
+    title: "Dashboard & Analytics",
+    icon: BarChart3,
+    color: "text-purple-500",
+    bgColor: "bg-purple-500/10",
+    prompts: [
+      {
+        text: "Ecommerce dashboard",
+        input:
+          "An ecommerce dashboard with a sidebar navigation and a table of recent orders.",
+      },
+      {
+        text: "Stats dashboard",
+        input:
+          "An analytics dashboard with interactive charts, data tables and customizable date range selectors.",
+      },
+      {
+        text: "Admin panel",
+        input:
+          "A full admin panel with user management, settings, analytics overview and navigation sidebar.",
+      },
+    ],
   },
   {
-    text: "Contact form",
-    input:
-      "A contact form with first name, last name, email, and message fields. Put the form in a card with a submit button.",
+    title: "Forms & Input",
+    icon: FormInput,
+    color: "text-green-500",
+    bgColor: "bg-green-500/10",
+    prompts: [
+      {
+        text: "Contact form",
+        input:
+          "A contact form with first name, last name, email, and message fields. Put the form in a card with a submit button.",
+      },
+      {
+        text: "Multi-step form",
+        input:
+          "A multi-step registration form with progress indicator, validation and smooth transitions between steps.",
+      },
+      {
+        text: "Search with filters",
+        input:
+          "An advanced search interface with filters, sorting options and real-time results display.",
+      },
+    ],
   },
   {
-    text: "Ecommerce dashboard",
-    input:
-      "An ecommerce dashboard with a sidebar navigation and a table of recent orders.",
-  },
-];
-
-// Add this array of additional prompt ideas
-const additionalPromptIdeas = [
-  {
-    text: "Pricing table",
-    input:
-      "A modern pricing comparison table with Free, Premium and Enterprise plans highlighting key features and annual/monthly toggle.",
-  },
-  {
-    text: "Testimonials",
-    input:
-      "A carousel of client testimonials with profile pictures, company logos, star ratings and detailed feedback.",
-  },
-  {
-    text: "Features grid",
-    input:
-      "An interactive features showcase with animated icons, benefit descriptions and hover effects arranged in a responsive grid.",
-  },
-  {
-    text: "Navigation bar",
-    input:
-      "A sticky header with animated dropdown menus, search bar, and responsive behavior that transforms into a drawer on mobile.",
+    title: "E-commerce",
+    icon: ShoppingCart,
+    color: "text-orange-500",
+    bgColor: "bg-orange-500/10",
+    prompts: [
+      {
+        text: "Product catalog",
+        input:
+          "A product listing page with grid layout, filters, sorting, and quick view functionality.",
+      },
+      {
+        text: "Shopping cart",
+        input:
+          "A shopping cart interface with item list, quantity controls, price calculation and checkout button.",
+      },
+      {
+        text: "Checkout page",
+        input:
+          "A complete checkout page with billing form, payment method selection and order summary.",
+      },
+    ],
   },
   {
-    text: "FAQ accordion",
-    input:
-      "An expandable FAQ section with smooth animations, search functionality and categorized questions.",
+    title: "Media & Gallery",
+    icon: Image,
+    color: "text-pink-500",
+    bgColor: "bg-pink-500/10",
+    prompts: [
+      {
+        text: "Image gallery",
+        input:
+          "A responsive masonry image gallery with lightbox preview, filtering capabilities and lazy loading.",
+      },
+      {
+        text: "Video player",
+        input:
+          "A custom video player with controls, playlist, quality selector and fullscreen mode.",
+      },
+      {
+        text: "Portfolio grid",
+        input:
+          "A creative portfolio grid showcasing projects with hover effects, categories and detailed project pages.",
+      },
+    ],
   },
   {
-    text: "Image gallery",
-    input:
-      "A responsive masonry image gallery with lightbox preview, filtering capabilities and lazy loading.",
+    title: "User Interface",
+    icon: UserCircle,
+    color: "text-cyan-500",
+    bgColor: "bg-cyan-500/10",
+    prompts: [
+      {
+        text: "User profile",
+        input:
+          "A user profile page with avatar upload, editable personal information and activity timeline.",
+      },
+      {
+        text: "Settings page",
+        input:
+          "A settings interface with tabs for account, preferences, notifications and privacy controls.",
+      },
+      {
+        text: "Notification center",
+        input:
+          "A notification center with grouped notifications, mark as read functionality and filters.",
+      },
+    ],
   },
   {
-    text: "Stats dashboard",
-    input:
-      "An analytics dashboard with interactive charts, data tables and customizable date range selectors.",
-  },
-  {
-    text: "User profile",
-    input:
-      "A user profile page with avatar upload, editable personal information and activity timeline.",
+    title: "Integrations",
+    icon: Zap,
+    color: "text-yellow-500",
+    bgColor: "bg-yellow-500/10",
+    prompts: [
+      {
+        text: "Supabase Auth",
+        input:
+          "A complete authentication system with Supabase including login, signup, password reset and protected routes.",
+        integration: "supabase",
+      },
+      {
+        text: "Supabase CRUD",
+        input:
+          "A full CRUD application with Supabase for managing a data table with create, read, update and delete operations.",
+        integration: "supabase",
+      },
+      {
+        text: "Database dashboard",
+        input:
+          "An admin dashboard connected to a database showing real-time data, CRUD operations and data visualization.",
+        integration: "supabase",
+      },
+    ],
   },
 ];
 
@@ -195,7 +320,6 @@ export default function Hero() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showCloneModal, setShowCloneModal] = useState(false);
   const [agreeToTerms, setAgreeToTerms] = useState(false);
-  const [showPromptIdeasModal, setShowPromptIdeasModal] = useState(false);
   const [userIntegrations, setUserIntegrations] = useState<UserIntegration[]>(
     [],
   );
@@ -204,6 +328,7 @@ export default function Hero() {
     null,
   );
   const isPremium = !!subscription;
+  const promptIdeasRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (inputRef.current) {
@@ -639,7 +764,7 @@ export default function Hero() {
   };
 
   return (
-    <Container className="relative flex min-h-full w-auto flex-col items-center justify-center space-y-4 overflow-hidden pr-2 sm:pr-11">
+    <Container className="relative flex w-auto flex-col items-center pr-2 sm:pr-11">
       <AnimatedGridPattern
         numSquares={80}
         maxOpacity={0.1}
@@ -653,549 +778,570 @@ export default function Hero() {
         className="-top-40 left-0 md:-top-20 md:left-60"
         fill="hsl(var(--primary))"
       />
-      <div className="flex w-full flex-col items-center space-y-4">
-        <h2
-          className="text-4xl font-medium tracking-tighter sm:text-5xl"
-          data-testid="home-h2"
-        >
-          Create. <span className="text-primary">Refine.</span> Deliver.
-        </h2>
-        <p className="text-center font-normal">
-          {generationMode === "scratch" ? (
-            <>
-              Build{" "}
-              <span className="font-semibold">responsive Tailwind sites</span>{" "}
-              with
-              <span className="font-semibold"> AI-powered</span> prompts and
-              images. (formerly Tailwind AI)
-            </>
-          ) : (
-            <>
-              <span className="font-semibold">Clone any website</span> by URL
-              and get a <span className="font-semibold">Tailwind-ready</span>{" "}
-              version instantly.
-            </>
-          )}
-        </p>
-      </div>
-      <form
-        id="generate-form"
-        className="group relative z-10 flex w-full flex-col items-center justify-center gap-x-0 space-y-3 rounded-lg border border-primary/40 bg-secondary p-3 text-center transition-all duration-300 hover:shadow-lg hover:shadow-primary/20 xl:w-3/4"
-        onSubmit={handleSubmit}
-      >
-        <Tabs
-          defaultValue="scratch"
-          className="w-full"
-          onValueChange={(value) => {
-            if (loading) return; // Prevent tab change when loading
-            setGenerationMode(value as "scratch" | "clone");
-          }}
-        >
-          <TabsList className="mb-3 w-full bg-secondary">
-            <TabsTrigger
-              value="scratch"
-              className="w-1/2 bg-secondary p-2"
-              disabled={loading} // Disable tab when loading
-            >
-              Generate from scratch
-            </TabsTrigger>
-            <TabsTrigger
-              value="clone"
-              className="w-1/2 bg-secondary p-2"
-              disabled={selectedFramework === Framework.HTML || loading} // Also disable when loading
-            >
-              Generate using a URL
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="scratch" className="h-32 w-full">
-            <div className="flex size-full flex-col items-end">
-              <div className="flex w-full items-start">
-                <Terminal className="mx-2 my-3 size-4" />
-                <div className="relative w-full">
-                  <TextareaWithLimit
-                    ref={inputRef}
-                    placeholder="Start generating a beautiful Tailwind component"
-                    autoFocus={true}
-                    required
-                    value={prompt}
-                    showCounter={true}
-                    isLoggedIn={isLoggedIn}
-                    isLoading={loading}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter") {
-                        if (event.shiftKey) {
-                          return;
-                        }
-
-                        event.preventDefault();
-
-                        handleSubmit(event);
-                      }
-                    }}
-                    translate="no"
-                    onChange={(value, isValid) => {
-                      setPrompt(value);
-                      setPromptIsValid(isValid);
-                      localStorage.setItem("lastPrompt", value);
-                    }}
-                    subscription={subscription}
-                    isLoadingSubscription={isLoadingSubscription}
-                    className="max-h-[400px] min-h-[76px] border-none bg-secondary pl-1 focus-visible:ring-0 focus-visible:ring-offset-0"
-                  />
-                </div>
-              </div>
-              <div
-                className={cn(
-                  "my-0.5 text-xs text-foreground transition-opacity",
-                  prompt.length <= 3 && "opacity-0",
-                )}
-              >
-                Use <kbd className="rounded-sm bg-background p-1">Shift</kbd> +{" "}
-                <kbd className="rounded-sm bg-background p-1">Return</kbd> for a
-                new line
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent
-            value="clone"
-            className="max-h-[350px] min-h-32 w-full overflow-y-auto"
+      <div className="flex w-full flex-col items-center">
+        <div className="flex min-h-screen w-full flex-col items-center justify-center space-y-4">
+          <h2
+            className="text-4xl font-medium tracking-tighter sm:text-5xl"
+            data-testid="home-h2"
           >
-            <div className="flex w-full flex-col items-end">
-              <div className="flex w-full items-start">
-                <Link2 className="mx-2 my-3 size-4" />
-                <div className="relative w-full">
-                  <div className="flex gap-2">
-                    <Input
-                      type="url"
-                      placeholder="Enter website URL to clone (e.g., https://example.com)"
-                      value={websiteUrl}
-                      onChange={(e) => setWebsiteUrl(e.target.value)}
-                      disabled={loading}
-                      className="border-none bg-secondary pl-1 focus-visible:ring-0 focus-visible:ring-offset-0"
-                    />
+            Create. <span className="text-primary">Refine.</span> Deliver.
+          </h2>
+          <p className="text-center font-normal">
+            {generationMode === "scratch" ? (
+              <>
+                Build{" "}
+                <span className="font-semibold">responsive Tailwind sites</span>{" "}
+                with
+                <span className="font-semibold"> AI-powered</span> prompts and
+                images. (formerly Tailwind AI)
+              </>
+            ) : (
+              <>
+                <span className="font-semibold">Clone any website</span> by URL
+                and get a <span className="font-semibold">Tailwind-ready</span>{" "}
+                version instantly.
+              </>
+            )}
+          </p>
+          <form
+            id="generate-form"
+            className="group relative z-10 flex w-full flex-col items-center justify-center gap-x-0 space-y-3 rounded-lg border border-primary/40 bg-secondary p-3 text-center transition-all duration-300 hover:shadow-lg hover:shadow-primary/20 xl:w-3/4"
+            onSubmit={handleSubmit}
+          >
+            <Tabs
+              defaultValue="scratch"
+              className="w-full"
+              onValueChange={(value) => {
+                if (loading) return; // Prevent tab change when loading
+                setGenerationMode(value as "scratch" | "clone");
+              }}
+            >
+              <TabsList className="mb-3 w-full bg-secondary">
+                <TabsTrigger
+                  value="scratch"
+                  className="w-1/2 bg-secondary p-2"
+                  disabled={loading} // Disable tab when loading
+                >
+                  Generate from scratch
+                </TabsTrigger>
+                <TabsTrigger
+                  value="clone"
+                  className="w-1/2 bg-secondary p-2"
+                  disabled={selectedFramework === Framework.HTML || loading} // Also disable when loading
+                >
+                  Generate using a URL
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="scratch" className="h-32 w-full">
+                <div className="flex size-full flex-col items-end">
+                  <div className="flex w-full items-start">
+                    <Terminal className="mx-2 my-3 size-4" />
+                    <div className="relative w-full">
+                      <TextareaWithLimit
+                        ref={inputRef}
+                        placeholder="Start generating a beautiful Tailwind component"
+                        autoFocus={true}
+                        required
+                        value={prompt}
+                        showCounter={true}
+                        isLoggedIn={isLoggedIn}
+                        isLoading={loading}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter") {
+                            if (event.shiftKey) {
+                              return;
+                            }
+
+                            event.preventDefault();
+
+                            handleSubmit(event);
+                          }
+                        }}
+                        translate="no"
+                        onChange={(value, isValid) => {
+                          setPrompt(value);
+                          setPromptIsValid(isValid);
+                          localStorage.setItem("lastPrompt", value);
+                        }}
+                        subscription={subscription}
+                        isLoadingSubscription={isLoadingSubscription}
+                        className="max-h-[400px] min-h-[76px] border-none bg-secondary pl-1 focus-visible:ring-0 focus-visible:ring-offset-0"
+                      />
+                    </div>
+                  </div>
+                  <div
+                    className={cn(
+                      "my-0.5 text-xs text-foreground transition-opacity",
+                      prompt.length <= 3 && "opacity-0",
+                    )}
+                  >
+                    Use{" "}
+                    <kbd className="rounded-sm bg-background p-1">Shift</kbd> +{" "}
+                    <kbd className="rounded-sm bg-background p-1">Return</kbd>{" "}
+                    for a new line
                   </div>
                 </div>
-              </div>
-            </div>
-          </TabsContent>
-        </Tabs>
+              </TabsContent>
 
-        <div className="flex w-full flex-1 flex-col gap-3">
-          {generationMode === "scratch" && images.length > 0 && (
-            <div className="flex gap-2 overflow-x-auto pb-2">
-              {images.map((file, index) => (
-                <FileBadge
-                  key={`${file.name}-${index}`}
-                  file={file}
-                  onRemove={() => handleImageRemove(index)}
-                  disabled={loading}
-                />
-              ))}
-            </div>
-          )}
-
-          <div className="flex w-full flex-col items-center justify-between space-y-2 lg:flex-row lg:space-y-0">
-            <div className="flex w-full items-center space-x-2">
-              <Tabs
-                defaultValue="public"
-                value={isVisible ? "public" : "private"}
-                onValueChange={(value) => {
-                  if (value === "public" && !isVisible) handleVisibility();
-                  if (value === "private" && isVisible) handleVisibility();
-                }}
-                className="w-full lg:w-auto"
+              <TabsContent
+                value="clone"
+                className="max-h-[350px] min-h-32 w-full overflow-y-auto"
               >
-                <TabsList isReverse={true} className="grid w-full grid-cols-2">
-                  <TabsTrigger
-                    isReverse={true}
-                    value="public"
-                    disabled={loading}
-                  >
-                    <Globe className="block size-4 xl:hidden" />
-                    <span className="hidden xl:block">Public</span>
-                  </TabsTrigger>
-                  <TabsTrigger
-                    isReverse={true}
-                    value="private"
-                    disabled={loading}
-                  >
-                    <Lock className="block size-4 xl:hidden" />
-                    <span className="hidden xl:block">Private</span>
-                  </TabsTrigger>
-                </TabsList>
-              </Tabs>
-              {generationMode === "scratch" && (
-                <ImageUploadArea
-                  fileInputRef={fileInputRef}
-                  disabled={loading || images.length >= maxImagesUpload}
-                  handleButtonClick={handleButtonClick}
-                  handleImageChange={handleImageChange}
-                  onDrop={(droppedFiles) => {
-                    const validFiles: File[] = [];
-
-                    for (const file of droppedFiles) {
-                      if (
-                        images.length + validFiles.length >=
-                        maxImagesUpload
-                      ) {
-                        toast({
-                          variant: "destructive",
-                          title: "Too many files",
-                          description: `Maximum ${maxImagesUpload} files allowed`,
-                          duration: 4000,
-                        });
-                        break;
-                      }
-
-                      const validation = validateFile(file);
-                      if (!validation.valid) {
-                        toast({
-                          variant: "destructive",
-                          title: "Invalid file",
-                          description: validation.error,
-                          duration: 4000,
-                        });
-                        continue;
-                      }
-
-                      validFiles.push(file);
-                    }
-
-                    if (validFiles.length > 0) {
-                      setImages((prev) => [...prev, ...validFiles]);
-                    }
-                  }}
-                  isReverse={true}
-                  isUploading={loading && images.length > 0}
-                  label="Files"
-                />
-              )}
-              {selectedFramework === Framework.HTML && (
-                <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-                  <SheetTrigger asChild>
-                    <Button
-                      disabled={loading}
-                      variant="background"
-                      size="sm"
-                      className="w-full sm:w-auto"
-                    >
-                      <Paintbrush className="size-4" />
-                      <span className="first-letter:uppercase">
-                        {selectedTheme}
-                      </span>
-                    </Button>
-                  </SheetTrigger>
-                  <SheetContent className="overflow-auto">
-                    <SheetTitle className="mb-4">Component Theme</SheetTitle>
-                    <div>
-                      <h3 className="mb-1 text-base font-semibold">
-                        Set theme for the component
-                      </h3>
-                      <h4 className="mb-4 text-sm">
-                        Selected theme:{" "}
-                        <span className="text-primary">{selectedTheme}</span>
-                      </h4>
-                      <div className="space-y-4">
-                        <div className="grid grid-cols-3 gap-4">
-                          {themes.map((theme) => (
-                            <div
-                              key={theme}
-                              className={cn(
-                                "relative aspect-video cursor-pointer rounded-md items-center justify-center border-2 border-primary/20 opacity-75 transition-all duration-300 hover:border-primary hover:opacity-100 overflow-hidden p-1",
-                                {
-                                  "border-primary opacity-100":
-                                    selectedTheme === theme,
-                                },
-                                loading && "pointer-events-none opacity-50",
-                              )}
-                              onClick={() => {
-                                if (loading) return;
-                                setSelectedTheme(theme);
-                                setSheetOpen(false);
-                              }}
-                            >
-                              <img
-                                src={`/daisy-themes/${theme}.png`}
-                                alt="Theme"
-                                className="size-full scale-110 object-cover"
-                              />
-                            </div>
-                          ))}
-                        </div>
+                <div className="flex w-full flex-col items-end">
+                  <div className="flex w-full items-start">
+                    <Link2 className="mx-2 my-3 size-4" />
+                    <div className="relative w-full">
+                      <div className="flex gap-2">
+                        <Input
+                          type="url"
+                          placeholder="Enter website URL to clone (e.g., https://example.com)"
+                          value={websiteUrl}
+                          onChange={(e) => setWebsiteUrl(e.target.value)}
+                          disabled={loading}
+                          className="border-none bg-secondary pl-1 focus-visible:ring-0 focus-visible:ring-offset-0"
+                        />
                       </div>
                     </div>
-                  </SheetContent>
-                </Sheet>
+                  </div>
+                </div>
+              </TabsContent>
+            </Tabs>
+
+            <div className="flex w-full flex-1 flex-col gap-3">
+              {generationMode === "scratch" && images.length > 0 && (
+                <div className="flex gap-2 overflow-x-auto pb-2">
+                  {images.map((file, index) => (
+                    <FileBadge
+                      key={`${file.name}-${index}`}
+                      file={file}
+                      onRemove={() => handleImageRemove(index)}
+                      disabled={loading}
+                    />
+                  ))}
+                </div>
               )}
-              {isLoggedIn && selectedFramework !== Framework.HTML && (
-                <>
-                  {!isPremium ? (
-                    <Link href="/pricing">
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="background"
-                        className="h-8 w-full gap-2 text-xs sm:w-auto"
+
+              <div className="flex w-full flex-col items-center justify-between space-y-2 lg:flex-row lg:space-y-0">
+                <div className="flex w-full items-center space-x-2">
+                  <Tabs
+                    defaultValue="public"
+                    value={isVisible ? "public" : "private"}
+                    onValueChange={(value) => {
+                      if (value === "public" && !isVisible) handleVisibility();
+                      if (value === "private" && isVisible) handleVisibility();
+                    }}
+                    className="w-full lg:w-auto"
+                  >
+                    <TabsList
+                      isReverse={true}
+                      className="grid w-full grid-cols-2"
+                    >
+                      <TabsTrigger
+                        isReverse={true}
+                        value="public"
                         disabled={loading}
                       >
-                        <Lock className="size-3.5" />
-                        <span className="hidden sm:inline">
-                          Unlock Integrations
-                        </span>
-                        <span className="sm:hidden">Premium</span>
-                      </Button>
-                    </Link>
-                  ) : isLoadingIntegrations ? (
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="background"
-                      className="h-8 w-full gap-2 text-xs sm:w-auto"
-                      disabled
-                    >
-                      <Loader className="size-3.5 animate-spin" />
-                      <span className="hidden sm:inline">Loading...</span>
-                    </Button>
-                  ) : userIntegrations.filter(
-                      (i) =>
-                        i.integration_type === IntegrationType.SUPABASE &&
-                        i.is_active,
-                    ).length > 0 ? (
-                    <Select
-                      disabled={loading}
-                      value={selectedIntegration || "none"}
-                      onValueChange={(value) =>
-                        setSelectedIntegration(value === "none" ? null : value)
-                      }
-                    >
-                      <SelectTrigger className="h-8 w-full rounded-md border-background sm:w-auto">
-                        <SelectValue placeholder="No Database" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none" className="cursor-pointer">
-                          <div className="mr-2 flex w-full flex-row items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <SiSupabase className="size-4 opacity-30" />
-                              <span>No Database</span>
+                        <Globe className="block size-4 xl:hidden" />
+                        <span className="hidden xl:block">Public</span>
+                      </TabsTrigger>
+                      <TabsTrigger
+                        isReverse={true}
+                        value="private"
+                        disabled={loading}
+                      >
+                        <Lock className="block size-4 xl:hidden" />
+                        <span className="hidden xl:block">Private</span>
+                      </TabsTrigger>
+                    </TabsList>
+                  </Tabs>
+                  {generationMode === "scratch" && (
+                    <ImageUploadArea
+                      fileInputRef={fileInputRef}
+                      disabled={loading || images.length >= maxImagesUpload}
+                      handleButtonClick={handleButtonClick}
+                      handleImageChange={handleImageChange}
+                      onDrop={(droppedFiles) => {
+                        const validFiles: File[] = [];
+
+                        for (const file of droppedFiles) {
+                          if (
+                            images.length + validFiles.length >=
+                            maxImagesUpload
+                          ) {
+                            toast({
+                              variant: "destructive",
+                              title: "Too many files",
+                              description: `Maximum ${maxImagesUpload} files allowed`,
+                              duration: 4000,
+                            });
+                            break;
+                          }
+
+                          const validation = validateFile(file);
+                          if (!validation.valid) {
+                            toast({
+                              variant: "destructive",
+                              title: "Invalid file",
+                              description: validation.error,
+                              duration: 4000,
+                            });
+                            continue;
+                          }
+
+                          validFiles.push(file);
+                        }
+
+                        if (validFiles.length > 0) {
+                          setImages((prev) => [...prev, ...validFiles]);
+                        }
+                      }}
+                      isReverse={true}
+                      isUploading={loading && images.length > 0}
+                      label="Files"
+                    />
+                  )}
+                  {selectedFramework === Framework.HTML && (
+                    <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+                      <SheetTrigger asChild>
+                        <Button
+                          disabled={loading}
+                          variant="background"
+                          size="sm"
+                          className="w-full sm:w-auto"
+                        >
+                          <Paintbrush className="size-4" />
+                          <span className="first-letter:uppercase">
+                            {selectedTheme}
+                          </span>
+                        </Button>
+                      </SheetTrigger>
+                      <SheetContent className="overflow-auto">
+                        <SheetTitle className="mb-4">
+                          Component Theme
+                        </SheetTitle>
+                        <div>
+                          <h3 className="mb-1 text-base font-semibold">
+                            Set theme for the component
+                          </h3>
+                          <h4 className="mb-4 text-sm">
+                            Selected theme:{" "}
+                            <span className="text-primary">
+                              {selectedTheme}
+                            </span>
+                          </h4>
+                          <div className="space-y-4">
+                            <div className="grid grid-cols-3 gap-4">
+                              {themes.map((theme) => (
+                                <div
+                                  key={theme}
+                                  className={cn(
+                                    "relative aspect-video cursor-pointer rounded-md items-center justify-center border-2 border-primary/20 opacity-75 transition-all duration-300 hover:border-primary hover:opacity-100 overflow-hidden p-1",
+                                    {
+                                      "border-primary opacity-100":
+                                        selectedTheme === theme,
+                                    },
+                                    loading && "pointer-events-none opacity-50",
+                                  )}
+                                  onClick={() => {
+                                    if (loading) return;
+                                    setSelectedTheme(theme);
+                                    setSheetOpen(false);
+                                  }}
+                                >
+                                  <img
+                                    src={`/daisy-themes/${theme}.png`}
+                                    alt="Theme"
+                                    className="size-full scale-110 object-cover"
+                                  />
+                                </div>
+                              ))}
                             </div>
                           </div>
-                        </SelectItem>
-                        {userIntegrations
-                          .filter(
-                            (i) =>
-                              i.integration_type === IntegrationType.SUPABASE &&
-                              i.is_active,
-                          )
-                          .map((integration) => (
-                            <SelectItem
-                              key={integration.id}
-                              value={integration.id}
-                              className="cursor-pointer"
-                            >
+                        </div>
+                      </SheetContent>
+                    </Sheet>
+                  )}
+                  {isLoggedIn && selectedFramework !== Framework.HTML && (
+                    <>
+                      {!isPremium ? (
+                        <Link href="/pricing">
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="background"
+                            className="h-8 w-full gap-2 text-xs sm:w-auto"
+                            disabled={loading}
+                          >
+                            <Lock className="size-3.5" />
+                            <span className="hidden sm:inline">
+                              Unlock Integrations
+                            </span>
+                            <span className="sm:hidden">Premium</span>
+                          </Button>
+                        </Link>
+                      ) : isLoadingIntegrations ? (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="background"
+                          className="h-8 w-full gap-2 text-xs sm:w-auto"
+                          disabled
+                        >
+                          <Loader className="size-3.5 animate-spin" />
+                          <span className="hidden sm:inline">Loading...</span>
+                        </Button>
+                      ) : userIntegrations.filter(
+                          (i) =>
+                            i.integration_type === IntegrationType.SUPABASE &&
+                            i.is_active,
+                        ).length > 0 ? (
+                        <Select
+                          disabled={loading}
+                          value={selectedIntegration || "none"}
+                          onValueChange={(value) =>
+                            setSelectedIntegration(
+                              value === "none" ? null : value,
+                            )
+                          }
+                        >
+                          <SelectTrigger className="h-8 w-full rounded-md border-background sm:w-auto">
+                            <SelectValue placeholder="No Database" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none" className="cursor-pointer">
                               <div className="mr-2 flex w-full flex-row items-center justify-between">
                                 <div className="flex items-center gap-2">
-                                  <SiSupabase className="size-4 text-green-600" />
-                                  <span>{integration.name}</span>
+                                  <SiSupabase className="size-4 opacity-30" />
+                                  <span>No Database</span>
                                 </div>
                               </div>
                             </SelectItem>
-                          ))}
-                      </SelectContent>
-                    </Select>
-                  ) : (
-                    <Link href="/account/integrations">
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        className="h-8 w-full gap-2 text-xs sm:w-auto"
-                        disabled={loading}
-                      >
-                        <SiSupabase className="size-3.5 text-green-600" />
-                        Connect Supabase
-                      </Button>
-                    </Link>
-                  )}
-                </>
-              )}
-              <Select
-                disabled={loading}
-                defaultValue="react"
-                onValueChange={(value) => {
-                  setSelectedFramework(value as Framework);
-                  if (value === Framework.HTML) {
-                    setGenerationMode("scratch");
-                    setSelectedIntegration(null);
-                  }
-                }}
-              >
-                <SelectTrigger className="h-8 w-full rounded-md border-background sm:w-auto">
-                  <SelectValue
-                    className="mr-2"
-                    placeholder="Select a framework"
-                  />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.values(Framework)
-                    .filter(
-                      (framework) =>
-                        !(
-                          generationMode === "clone" &&
-                          framework === Framework.HTML
-                        ),
-                    )
-                    .map((framework) => {
-                      const config = frameworkConfig[framework];
-                      const Icon = config.icon;
-
-                      return (
-                        <SelectItem
-                          key={framework}
-                          value={framework}
-                          className={cn(
-                            "cursor-pointer",
-                            config.disabled && "cursor-not-allowed opacity-50",
-                          )}
-                          disabled={config.disabled}
-                          onSelect={
-                            config.disabled
-                              ? (e) => e.preventDefault()
-                              : undefined
-                          }
-                        >
-                          <div
-                            className={cn(
-                              "mr-2 flex w-full flex-row items-center justify-between",
-                              config.disabled && "pointer-events-none",
-                            )}
+                            {userIntegrations
+                              .filter(
+                                (i) =>
+                                  i.integration_type ===
+                                    IntegrationType.SUPABASE && i.is_active,
+                              )
+                              .map((integration) => (
+                                <SelectItem
+                                  key={integration.id}
+                                  value={integration.id}
+                                  className="cursor-pointer"
+                                >
+                                  <div className="mr-2 flex w-full flex-row items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                      <SiSupabase className="size-4 text-green-600" />
+                                      <span>{integration.name}</span>
+                                    </div>
+                                  </div>
+                                </SelectItem>
+                              ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <Link href="/account/integrations">
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            className="h-8 w-full gap-2 text-xs sm:w-auto"
+                            disabled={loading}
                           >
-                            <div className="flex items-center">
-                              <Icon className="mr-2 size-3" />
-                              <span className="text-sm">
-                                {framework.charAt(0).toUpperCase() +
-                                  framework.slice(1)}
-                              </span>
-                            </div>
-                            {config.badge && (
-                              <Badge
-                                variant={
-                                  config.badge === "Soon"
-                                    ? "outline"
-                                    : "secondary"
-                                }
+                            <SiSupabase className="size-3.5 text-green-600" />
+                            Connect Supabase
+                          </Button>
+                        </Link>
+                      )}
+                    </>
+                  )}
+                  <Select
+                    disabled={loading}
+                    defaultValue="react"
+                    onValueChange={(value) => {
+                      setSelectedFramework(value as Framework);
+                      if (value === Framework.HTML) {
+                        setGenerationMode("scratch");
+                        setSelectedIntegration(null);
+                      }
+                    }}
+                  >
+                    <SelectTrigger className="h-8 w-full rounded-md border-background sm:w-auto">
+                      <SelectValue
+                        className="mr-2"
+                        placeholder="Select a framework"
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.values(Framework)
+                        .filter(
+                          (framework) =>
+                            !(
+                              generationMode === "clone" &&
+                              framework === Framework.HTML
+                            ),
+                        )
+                        .map((framework) => {
+                          const config = frameworkConfig[framework];
+                          const Icon = config.icon;
+
+                          return (
+                            <SelectItem
+                              key={framework}
+                              value={framework}
+                              className={cn(
+                                "cursor-pointer",
+                                config.disabled &&
+                                  "cursor-not-allowed opacity-50",
+                              )}
+                              disabled={config.disabled}
+                              onSelect={
+                                config.disabled
+                                  ? (e) => e.preventDefault()
+                                  : undefined
+                              }
+                            >
+                              <div
                                 className={cn(
-                                  "text-xs",
-                                  config.badge === "Soon" ? "ml-2" : "mr-1",
+                                  "mr-2 flex w-full flex-row items-center justify-between",
+                                  config.disabled && "pointer-events-none",
                                 )}
                               >
-                                {config.badge}
-                              </Badge>
-                            )}
-                          </div>
-                        </SelectItem>
-                      );
-                    })}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex w-full items-center justify-end space-x-0 lg:space-x-2">
-              {generationMode === "scratch" && (
-                <>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="ghost"
-                          className="hover:bg-background"
-                          disabled={loading}
-                          onClick={() => setShowPromptIdeasModal(true)}
-                        >
-                          <Lightbulb className="size-4" />
-                          <span className="sr-only">Prompt ideas</span>
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>Prompt ideas</TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="ghost"
-                          className="hover:bg-background"
-                          disabled={loading || hasImproved}
-                          onClick={handleImprovePrompt}
-                        >
-                          {loadingAction === "improve" ? (
-                            <Loader2 className="size-4 animate-spin" />
-                          ) : (
-                            <WandSparkles
-                              className={cn(
-                                "size-4",
-                                hasImproved && "text-primary",
+                                <div className="flex items-center">
+                                  <Icon className="mr-2 size-3" />
+                                  <span className="text-sm">
+                                    {framework.charAt(0).toUpperCase() +
+                                      framework.slice(1)}
+                                  </span>
+                                </div>
+                                {config.badge && (
+                                  <Badge
+                                    variant={
+                                      config.badge === "Soon"
+                                        ? "outline"
+                                        : "secondary"
+                                    }
+                                    className={cn(
+                                      "text-xs",
+                                      config.badge === "Soon" ? "ml-2" : "mr-1",
+                                    )}
+                                  >
+                                    {config.badge}
+                                  </Badge>
+                                )}
+                              </div>
+                            </SelectItem>
+                          );
+                        })}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex w-full items-center justify-end space-x-0 lg:space-x-2">
+                  {generationMode === "scratch" && (
+                    <>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="ghost"
+                              className="hover:bg-background"
+                              disabled={loading}
+                              onClick={() => {
+                                promptIdeasRef.current?.scrollIntoView({
+                                  behavior: "smooth",
+                                  block: "start",
+                                });
+                              }}
+                            >
+                              <Lightbulb className="size-4" />
+                              <span className="sr-only">Prompt ideas</span>
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Browse prompt ideas</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="ghost"
+                              className="hover:bg-background"
+                              disabled={loading || hasImproved}
+                              onClick={handleImprovePrompt}
+                            >
+                              {loadingAction === "improve" ? (
+                                <Loader2 className="size-4 animate-spin" />
+                              ) : (
+                                <WandSparkles
+                                  className={cn(
+                                    "size-4",
+                                    hasImproved && "text-primary",
+                                  )}
+                                />
                               )}
-                            />
-                          )}
-                          <span className="sr-only">
+                              <span className="sr-only">
+                                {loadingAction === "improve"
+                                  ? "Improving prompt..."
+                                  : hasImproved
+                                    ? "Prompt improved"
+                                    : "Improve prompt"}
+                              </span>
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
                             {loadingAction === "improve"
                               ? "Improving prompt..."
                               : hasImproved
                                 ? "Prompt improved"
                                 : "Improve prompt"}
-                          </span>
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        {loadingAction === "improve"
-                          ? "Improving prompt..."
-                          : hasImproved
-                            ? "Prompt improved"
-                            : "Improve prompt"}
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </>
-              )}
-              <div className="flex flex-col space-y-2">
-                <div className="flex items-center gap-2">
-                  <Button
-                    type="submit"
-                    size="sm"
-                    variant="default"
-                    className="flex w-full items-center justify-center lg:w-auto"
-                    disabled={loading}
-                  >
-                    {loading ? (
-                      <>
-                        <Loader className="size-4 animate-spin" />
-                        {loadingAction === "generate" && (
-                          <span>Generating</span>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </>
+                  )}
+                  <div className="flex flex-col space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Button
+                        type="submit"
+                        size="sm"
+                        variant="default"
+                        className="flex w-full items-center justify-center lg:w-auto"
+                        disabled={loading}
+                      >
+                        {loading ? (
+                          <>
+                            <Loader className="size-4 animate-spin" />
+                            {loadingAction === "generate" && (
+                              <span>Generating</span>
+                            )}
+                            {loadingAction === "improve" && (
+                              <span>Improving</span>
+                            )}
+                          </>
+                        ) : (
+                          <>
+                            <span className="flex items-center justify-center">
+                              <Rocket className="mr-1 size-4" />
+                              {generationMode === "scratch"
+                                ? "Generate"
+                                : "Clone website"}
+                            </span>
+                          </>
                         )}
-                        {loadingAction === "improve" && <span>Improving</span>}
-                      </>
-                    ) : (
-                      <>
-                        <span className="flex items-center justify-center">
-                          <Rocket className="mr-1 size-4" />
-                          {generationMode === "scratch"
-                            ? "Generate"
-                            : "Clone website"}
-                        </span>
-                      </>
-                    )}
-                  </Button>
+                      </Button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          </form>
         </div>
-      </form>
+      </div>
+
       <Dialog
         open={showCloneModal}
         onOpenChange={(open) => {
@@ -1247,52 +1393,80 @@ export default function Hero() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <Dialog
-        open={showPromptIdeasModal}
-        onOpenChange={(open) => {
-          if (!loading) setShowPromptIdeasModal(open);
-        }}
+      <div
+        ref={promptIdeasRef}
+        className="mt-16 w-full scroll-mt-24 px-4 pb-16"
       >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Prompt Ideas</DialogTitle>
-            <DialogDescription>
-              Select one of these ideas to get inspired for your next component
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="flex flex-wrap items-center justify-center gap-3 py-4">
-            {previewButtons
-              .concat(additionalPromptIdeas)
-              .map((button, index) => (
-                <Badge
-                  key={index}
-                  variant="outline"
-                  onClick={() => {
-                    if (loading) return;
-                    handleBadgeClick(button.input);
-                    setShowPromptIdeasModal(false);
-                  }}
-                  className={cn(
-                    "cursor-pointer px-3 py-2 text-sm hover:bg-secondary",
-                    loading && "pointer-events-none opacity-50",
-                  )}
-                >
-                  {button.text}
-                </Badge>
-              ))}
+        <div className="mx-auto max-w-7xl">
+          <div className="mb-8 text-center">
+            <h2 className="mb-3 text-3xl font-bold tracking-tight">
+              Prompt Ideas
+            </h2>
+            <p className="text-lg text-muted-foreground">
+              Get inspired with these ready-to-use prompts
+            </p>
           </div>
 
-          <DialogFooter>
-            <Button
-              onClick={() => setShowPromptIdeasModal(false)}
-              disabled={loading}
-            >
-              Close
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {promptCategories.map((category, categoryIndex) => {
+              const IconComponent = category.icon;
+              return (
+                <div
+                  key={categoryIndex}
+                  className="group rounded-lg border border-border bg-background p-6 shadow-sm transition-all hover:shadow-md"
+                >
+                  <div className="mb-4 flex items-center gap-3">
+                    <div
+                      className={cn(
+                        "flex size-10 items-center justify-center rounded-lg",
+                        category.bgColor,
+                      )}
+                    >
+                      <IconComponent className={cn("size-5", category.color)} />
+                    </div>
+                    <h3 className="text-lg font-semibold">{category.title}</h3>
+                  </div>
+
+                  <div className="space-y-2">
+                    {category.prompts.map((prompt, promptIndex) => (
+                      <button
+                        key={promptIndex}
+                        type="button"
+                        onClick={() => {
+                          if (loading) return;
+                          handleBadgeClick(prompt.input);
+                          window.scrollTo({ top: 0, behavior: "smooth" });
+                        }}
+                        disabled={loading}
+                        className={cn(
+                          "group/item relative w-full rounded-md border border-border bg-card px-3 py-2 text-left text-sm transition-all hover:border-primary hover:bg-accent",
+                          loading && "pointer-events-none opacity-50",
+                        )}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium">{prompt.text}</span>
+                          {"integration" in prompt &&
+                            prompt.integration === "supabase" && (
+                              <SiSupabase className="size-3 text-muted-foreground" />
+                            )}
+                          {"integration" in prompt &&
+                            prompt.integration === "database" && (
+                              <Database className="size-3 text-muted-foreground" />
+                            )}
+                          {"integration" in prompt &&
+                            prompt.integration === "stripe" && (
+                              <CreditCard className="size-3 text-muted-foreground" />
+                            )}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
     </Container>
   );
 }

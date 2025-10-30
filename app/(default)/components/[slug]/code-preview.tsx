@@ -1,3 +1,5 @@
+import { StateField } from "@codemirror/state";
+import { EditorView } from "@codemirror/view";
 import {
   SiHtml5,
   SiReact,
@@ -6,7 +8,10 @@ import {
   SiAngular,
 } from "@icons-pack/react-simple-icons";
 import { draculaInit } from "@uiw/codemirror-theme-dracula";
-import CodeMirror, { ReactCodeMirrorRef } from "@uiw/react-codemirror";
+import CodeMirror, {
+  ReactCodeMirrorRef,
+  StateEffect,
+} from "@uiw/react-codemirror";
 import saveAs from "file-saver";
 import JSZip from "jszip";
 import {
@@ -16,7 +21,7 @@ import {
   PanelLeftClose,
   PanelLeft,
 } from "lucide-react";
-import { useRef, useState } from "react";
+import { useRef, useEffect, useState } from "react";
 import React from "react";
 import { useCopyToClipboard } from "usehooks-ts";
 
@@ -150,6 +155,58 @@ export default function CodePreview() {
       duration: 4000,
     });
   };
+
+  // Créer un StateField pour gérer le scroll
+  const scrollField = StateField.define<number>({
+    create: () => 0,
+    update: (value, tr) => {
+      if (!tr.docChanged) return value;
+      return tr.startState.doc.length
+        ? (tr.startState.doc.length / tr.state.doc.length) * value
+        : value;
+    },
+  });
+
+  useEffect(() => {
+    if (!isLoading) {
+      return;
+    }
+
+    const view = codeMirrorRef.current?.view as EditorView;
+    if (!view) return;
+
+    const scrollToBottom = () => {
+      if (isLoading && view && view.scrollDOM) {
+        try {
+          const cmScroller = view.scrollDOM.querySelector(
+            ".cm-scroller",
+          ) as HTMLElement;
+          if (cmScroller) {
+            cmScroller.scrollTop = cmScroller.scrollHeight;
+          } else if (view.scrollDOM) {
+            view.scrollDOM.scrollTop = view.scrollDOM.scrollHeight;
+          }
+        } catch (error) {
+          console.error("Scroll error:", error);
+        }
+      }
+    };
+
+    const scrollInterval = setInterval(scrollToBottom, 250);
+
+    return () => {
+      clearInterval(scrollInterval);
+    };
+  }, [chatFiles, isLoading]);
+
+  useEffect(() => {
+    if (codeMirrorRef.current?.view) {
+      const view = codeMirrorRef.current.view as EditorView;
+      view.dispatch({
+        effects: StateEffect.appendConfig.of([scrollField]),
+      });
+    }
+  }, []);
 
   const FrameworkIcon =
     selectedFramework === Framework.HTML
