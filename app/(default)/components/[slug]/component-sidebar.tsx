@@ -8,6 +8,7 @@ import {
   RefreshCw,
   CheckCircle,
   Loader,
+  Loader2,
   Settings,
   Github,
   Plug2,
@@ -1273,13 +1274,16 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
                             }
                             onClick={handleImprovePrompt}
                           >
-                            <WandSparkles
-                              className={cn(
-                                "size-4",
-                                isImprovingLoading && "animate-spin",
-                                hasImproved && "text-primary",
-                              )}
-                            />
+                            {isImprovingLoading ? (
+                              <Loader2 className="size-4 animate-spin" />
+                            ) : (
+                              <WandSparkles
+                                className={cn(
+                                  "size-4",
+                                  hasImproved && "text-primary",
+                                )}
+                              />
+                            )}
                             <span className="sr-only">
                               {isImprovingLoading
                                 ? "Improving prompt..."

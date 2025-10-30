@@ -17,6 +17,7 @@ import {
   Lightbulb,
   Rocket,
   Loader,
+  Loader2,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -1131,13 +1132,16 @@ export default function Hero() {
                           disabled={loading || hasImproved}
                           onClick={handleImprovePrompt}
                         >
-                          <WandSparkles
-                            className={cn(
-                              "size-4",
-                              loadingAction === "improve" && "animate-spin",
-                              hasImproved && "text-primary",
-                            )}
-                          />
+                          {loadingAction === "improve" ? (
+                            <Loader2 className="size-4 animate-spin" />
+                          ) : (
+                            <WandSparkles
+                              className={cn(
+                                "size-4",
+                                hasImproved && "text-primary",
+                              )}
+                            />
+                          )}
                           <span className="sr-only">
                             {loadingAction === "improve"
                               ? "Improving prompt..."
