@@ -109,7 +109,8 @@ export function ChunkReader({
                         key={fileIndex}
                         className={cn(
                           "group flex items-center justify-between rounded p-1 bg-foreground w-full",
-                          !file.isDelete && "hover:bg-gradient-to-l from-primary via-primary/90 to-primary/80 hover:text-foreground",
+                          !file.isDelete &&
+                            "hover:bg-gradient-to-l from-primary via-primary/90 to-primary/80 hover:text-foreground",
                           isLoading || file.isDelete
                             ? "cursor-not-allowed opacity-50"
                             : "cursor-pointer",
@@ -132,9 +133,9 @@ export function ChunkReader({
                           <div
                             className={cn(
                               "flex items-center font-medium whitespace-pre-wrap text-sm mr-2",
-                              !file.isDelete && "text-background group-hover:text-foreground",
-                              file.isDelete &&
-                                "!text-red-500",
+                              !file.isDelete &&
+                                "text-background group-hover:text-foreground",
+                              file.isDelete && "!text-red-500",
                               file.isIncomplete &&
                                 "text-primary group-hover:text-foreground",
                               activeTab === file.name &&

@@ -57,16 +57,15 @@ function LoadingStateComponent({ state }: { state: WebcontainerLoadingState }) {
       <div className="space-y-2">
         <h3 className="font-semibold">
           {state === "initializing" && "Initializing WebContainer..."}
-          {state === "deploying" && "Deploying your application..."}
-          {state === "processing" && "Processing your application..."}
-          {state === "starting" && "Starting your application..."}
+          {state === "deploying" && "Deploying application..."}
+          {state === "processing" && "Processing application..."}
+          {state === "starting" && "Starting application..."}
         </h3>
         <p className="text-sm text-muted-foreground">
-          {state === "initializing" &&
-            "Setting up your development environment."}
+          {state === "initializing" && "Setting up development environment."}
           {state === "deploying" && "It may take a few minutes."}
-          {state === "processing" && "Analyzing and generating your component."}
-          {state === "starting" && "One moment, your application is starting."}
+          {state === "processing" && "Analyzing and generating component."}
+          {state === "starting" && "One moment, application is starting."}
         </p>
       </div>
     </div>

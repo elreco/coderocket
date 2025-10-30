@@ -194,7 +194,8 @@ export function MigrationRunner({
                 ⏳ Generation in progress...
               </p>
               <p className="mt-1 text-xs text-blue-800 dark:text-blue-200">
-                Please wait for the generation to complete before running the migration.
+                Please wait for the generation to complete before running the
+                migration.
               </p>
             </div>
           )}
