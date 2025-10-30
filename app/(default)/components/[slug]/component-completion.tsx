@@ -717,12 +717,9 @@ export default function ComponentCompletion({
   };
 
   const share = () => {
-    const link =
-      fetchedChat?.framework === Framework.HTML
-        ? `https://www.coderocket.app/content/${chatId}/${selectedVersion}`
-        : isWebcontainerReady
-          ? `https://${chatId}-${selectedVersion}.preview.coderocket.app`
-          : window.location.href;
+    const link = fetchedChat?.slug
+      ? `https://www.coderocket.app/components/${fetchedChat.slug}`
+      : window.location.href;
     setShareLink(link);
     setIsShareModalOpen(true);
     copy(link);
