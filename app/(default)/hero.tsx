@@ -282,6 +282,9 @@ export default function Hero() {
           const integrations = await fetchUserIntegrations();
           setUserIntegrations(integrations);
           setIsLoadingIntegrations(false);
+        } else {
+          setUserIntegrations([]);
+          setSelectedIntegration(null);
         }
       } catch (error) {
         console.error("Error fetching subscription:", error);
@@ -291,6 +294,29 @@ export default function Hero() {
     };
 
     fetchSubscription();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (event === "SIGNED_OUT") {
+          setIsLoggedIn(false);
+          setUserIntegrations([]);
+          setSelectedIntegration(null);
+          setSubscription(null);
+        } else if (event === "SIGNED_IN" && session?.user) {
+          setIsLoggedIn(true);
+          const sub = await getSubscription();
+          setSubscription(sub);
+          setIsLoadingIntegrations(true);
+          const integrations = await fetchUserIntegrations();
+          setUserIntegrations(integrations);
+          setIsLoadingIntegrations(false);
+        }
+      },
+    );
+
+    return () => {
+      authListener?.subscription.unsubscribe();
+    };
   }, []);
 
   const handleImageChange = useCallback(

@@ -185,6 +185,7 @@ export function ChunkReader({
                 chatId={chatId}
                 messageId={messageId}
                 migrationsExecuted={migrationsExecuted}
+                isGenerating={isLoading}
               />
             ))}
           </div>

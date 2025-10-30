@@ -35,6 +35,7 @@ interface MigrationRunnerProps {
   chatId: string;
   messageId: number;
   migrationsExecuted?: ExecutedMigration[] | null;
+  isGenerating?: boolean;
 }
 
 export function MigrationRunner({
@@ -42,6 +43,7 @@ export function MigrationRunner({
   chatId,
   messageId,
   migrationsExecuted: initialMigrationsExecuted,
+  isGenerating = false,
 }: MigrationRunnerProps) {
   const [showSQL, setShowSQL] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -191,9 +193,14 @@ export function MigrationRunner({
             <Button
               size="sm"
               onClick={handleRunMigration}
-              disabled={isRunning || isMigrationExecuted}
+              disabled={isRunning || isMigrationExecuted || isGenerating}
             >
-              {isRunning ? (
+              {isGenerating ? (
+                <>
+                  <Loader2 className="mr-2 size-4 animate-spin" />
+                  Generating...
+                </>
+              ) : isRunning ? (
                 <>
                   <Loader2 className="mr-2 size-4 animate-spin" />
                   Running...
