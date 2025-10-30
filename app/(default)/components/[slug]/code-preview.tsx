@@ -48,6 +48,7 @@ const RenderContent = React.memo(
     isLengthError,
     currentGeneratingFile,
     isWebcontainerReady,
+    iframeKey,
   }: {
     isLoading: boolean;
     artifactFiles: ChatFile[];
@@ -55,6 +56,7 @@ const RenderContent = React.memo(
     isLengthError: boolean;
     currentGeneratingFile: string | null;
     isWebcontainerReady: boolean;
+    iframeKey?: number;
   }) => {
     if (isLoading && !isWebcontainerReady) {
       return (
@@ -72,11 +74,11 @@ const RenderContent = React.memo(
           style={{ backgroundImage: "url(/placeholder.svg)" }}
         ></div>
       ) : (
-        <RenderHtmlComponent files={artifactFiles} />
+        <RenderHtmlComponent key={iframeKey} files={artifactFiles} />
       );
     }
 
-    return <RenderComponent />;
+    return <RenderComponent key={iframeKey} />;
   },
   (prevProps, nextProps) => {
     if (prevProps.selectedFramework !== nextProps.selectedFramework)
@@ -86,6 +88,7 @@ const RenderContent = React.memo(
       return false;
     if (prevProps.isWebcontainerReady !== nextProps.isWebcontainerReady)
       return false;
+    if (prevProps.iframeKey !== nextProps.iframeKey) return false;
 
     const areFilesEqual = (prev: ChatFile[], next: ChatFile[]) => {
       if (prev.length !== next.length) return false;
@@ -122,6 +125,7 @@ export default function CodePreview() {
     currentGeneratingFile,
     isWebcontainerReady,
     authorized,
+    iframeKey,
   } = useComponentContext();
   const { buildError } = useWebcontainer();
   const [, copy] = useCopyToClipboard();
@@ -232,6 +236,7 @@ export default function CodePreview() {
           isLengthError={isLengthError}
           currentGeneratingFile={currentGeneratingFile}
           isWebcontainerReady={isWebcontainerReady}
+          iframeKey={iframeKey}
         />
       </div>
       <div

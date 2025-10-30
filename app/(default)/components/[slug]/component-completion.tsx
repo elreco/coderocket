@@ -9,6 +9,7 @@ import {
   Layers,
   Loader,
   ExternalLink,
+  RefreshCw,
   Copy,
   GitFork,
   Eye,
@@ -116,6 +117,7 @@ export default function ComponentCompletion({
   const [isWebcontainerReady, setWebcontainerReady] = useState(false);
   const [loadingState, setLoadingState] =
     useState<WebcontainerLoadingState>(null);
+  const [iframeKey, setIframeKey] = useState(0);
 
   const [chatFiles, setChatFiles] = useState<ChatFile[]>([]);
   const [artifactFiles, setArtifactFiles] = useState<ChatFile[]>([]);
@@ -665,14 +667,7 @@ export default function ComponentCompletion({
           );
           setArtifactFiles(templateFiles);
         } else {
-          // Merge new files with existing files to keep all project files
-          setArtifactFiles((prevFiles) => {
-            const fileMap = new Map(prevFiles.map((f) => [f.name, f]));
-            newArtifactFiles.forEach((file) => {
-              fileMap.set(file.name, file);
-            });
-            return Array.from(fileMap.values());
-          });
+          setArtifactFiles(newArtifactFiles);
         }
 
         // Handle file selection
@@ -956,6 +951,7 @@ export default function ComponentCompletion({
     sidebarTab,
     setSidebarTab,
     currentGeneratingFile,
+    iframeKey,
   };
 
   useEffect(() => {
@@ -1049,6 +1045,22 @@ export default function ComponentCompletion({
                           <Button
                             variant="secondary"
                             size="sm"
+                            onClick={() => setIframeKey((prev) => prev + 1)}
+                            className="flex items-center"
+                            disabled={isLoading}
+                          >
+                            <RefreshCw className="w-5" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Reload preview</p>
+                        </TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="secondary"
+                            size="sm"
                             onClick={() => setIsModalOpen(true)}
                             className="flex items-center"
                             disabled={isLoading || isLengthError}
@@ -1106,6 +1118,7 @@ export default function ComponentCompletion({
                             {fetchedChat?.framework !== Framework.HTML &&
                             isWebcontainerReady ? (
                               <iframe
+                                key={iframeKey}
                                 className="size-full rounded-md border-none"
                                 src={`https://${chatId}-${selectedVersion}.webcontainer.coderocket.app`}
                                 sandbox="allow-scripts allow-forms allow-popups allow-modals allow-storage-access-by-user-activation allow-same-origin"
@@ -1113,7 +1126,10 @@ export default function ComponentCompletion({
                                 loading="eager"
                               />
                             ) : (
-                              <RenderHtmlComponent files={artifactFiles} />
+                              <RenderHtmlComponent
+                                key={iframeKey}
+                                files={artifactFiles}
+                              />
                             )}
                           </DialogDescription>
                         </DialogContent>

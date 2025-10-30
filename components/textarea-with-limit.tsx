@@ -133,6 +133,7 @@ const TextareaWithLimit = React.forwardRef<
           className={className}
           value={value}
           onChange={handleChange}
+          disabled={isLoading}
           {...props}
         />
         <div className="flex items-center justify-between">

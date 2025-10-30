@@ -188,6 +188,16 @@ export function MigrationRunner({
               </p>
             </div>
           )}
+          {isGenerating && (
+            <div className="rounded-md bg-blue-100 p-3 dark:bg-blue-900">
+              <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                ⏳ Generation in progress...
+              </p>
+              <p className="mt-1 text-xs text-blue-800 dark:text-blue-200">
+                Please wait for the generation to complete before running the migration.
+              </p>
+            </div>
+          )}
 
           <div className="flex flex-col gap-2">
             <Button

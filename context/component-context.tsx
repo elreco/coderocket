@@ -67,6 +67,7 @@ interface ComponentContextType {
   sidebarTab: string;
   setSidebarTab: (tab: string) => void;
   currentGeneratingFile: string | null;
+  iframeKey: number;
 }
 
 export const ComponentContext = createContext<ComponentContextType | undefined>(

@@ -14,11 +14,13 @@ import stripAnsi from "strip-ansi";
 
 import { getIntegrationsForWebcontainer } from "@/app/(default)/components/[slug]/actions";
 import { webcontainer as webcontainerPromise } from "@/lib/webcontainer";
+import { extractFilesFromArtifact } from "@/utils/completion-parser";
 import { Framework } from "@/utils/config";
 import {
   getUserFriendlyNpmError,
   getUserFriendlyBuildError,
 } from "@/utils/npm-error-handler";
+import { createClient } from "@/utils/supabase/client";
 import { buildFileSystemTree, getPreviewId } from "@/utils/webcontainer";
 
 import {
@@ -216,7 +218,28 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
 
       if (currentSetupId !== setupIdRef.current) return;
 
-      const modifiedFiles = [...artifactFiles];
+      const supabase = createClient();
+      const { data: message } = await supabase
+        .from("messages")
+        .select("artifact_code")
+        .eq("chat_id", chatId)
+        .eq("role", "assistant")
+        .eq("version", selectedVersion)
+        .single();
+
+      if (!message?.artifact_code) {
+        console.error("No artifact_code found for this version");
+        return;
+      }
+
+      const filesFromDatabase = extractFilesFromArtifact(message.artifact_code);
+
+      if (filesFromDatabase.length === 0) {
+        console.error("No files extracted from artifact_code");
+        return;
+      }
+
+      const modifiedFiles = [...filesFromDatabase];
 
       const envVars = await getIntegrationsForWebcontainer(chatId);
       if (currentSetupId !== setupIdRef.current) return;
