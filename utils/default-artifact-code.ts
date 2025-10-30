@@ -438,6 +438,7 @@ bootstrapApplication(App, appConfig).catch((err) => console.error(err));
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <base href="/" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Hello CodeRocket</title>
   </head>
@@ -742,7 +743,7 @@ import { defineConfig } from "vite";
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  base: "./",
+  base: "/",
   build: {
     minify: false,
     sourcemap: false,
@@ -784,6 +785,7 @@ export default defineConfig({
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <base href="/" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>svelte</title>
@@ -1132,6 +1134,7 @@ export default defineConfig({
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <base href="/" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Hello CodeRocket</title>
   </head>
@@ -1388,7 +1391,7 @@ import { defineConfig } from "vite";
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [vue(), tailwindcss()],
-  base: "./",
+  base: "/",
   build: {
     minify: false,
     sourcemap: false,

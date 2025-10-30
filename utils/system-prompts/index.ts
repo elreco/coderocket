@@ -322,11 +322,26 @@ The container only supports executables compatible with Linux and does not suppo
           : ""
       }
       - The project uses TypeScript in PERMISSIVE mode (strict: false, noImplicitAny: false)
-      - PRIORITY: Make the app WORK, not type-perfect!
-      - LIBERALLY use 'any' type when types are complex or unclear
-      - Use 'as any' casting to resolve type errors quickly
-      - Example: return data as any[] instead of complex type definitions
-      - If you encounter TypeScript 'never' type errors with Supabase, use 'as any' casting
+      - PRIORITY: Make the app WORK with proper typing when possible!
+
+      SUPABASE TYPING GUIDELINES:
+      - When using Supabase, prefer using the Database types from the generated types file when available
+      - Use specific table types: Database['public']['Tables']['users']['Row'] instead of 'any'
+      - If types are unclear or complex, use generic types like Record<string, unknown> or unknown instead of 'any'
+      - Always wrap Supabase queries in try-catch blocks to handle potential type mismatches gracefully
+      - Example of proper Supabase typing:
+        try {
+          const { data, error } = await supabase
+            .from('users')
+            .select('*')
+            .returns<User[]>();
+          if (error) throw error;
+          return data;
+        } catch (err) {
+          console.error('Error fetching users:', err);
+          return [];
+        }
+      - Only use 'any' as a last resort when types are truly impossible to determine
       - Configure alias imports (@ => src/) in tsconfig.json and vite.config.ts.
       ${
         framework === Framework.REACT
@@ -334,6 +349,24 @@ The container only supports executables compatible with Linux and does not suppo
           : ""
       }
     </typescript_and_aliases>
+    <routing_configuration>
+      - CRITICAL: When using client-side routing (React Router, Vue Router, etc.), ALWAYS ensure the index.html file includes <base href="/" /> in the <head> section.
+      - CRITICAL: In vite.config.ts, ALWAYS set base: "/" (not base: "./") to ensure assets are loaded with absolute paths.
+      - This prevents module loading errors when users refresh the page on nested routes (e.g., /article/123).
+      - Example index.html structure:
+        <!DOCTYPE html>
+        <html lang="en">
+          <head>
+            <meta charset="UTF-8" />
+            <base href="/" />
+            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+            <title>App Title</title>
+          </head>
+          <body>
+            ...
+          </body>
+        </html>
+    </routing_configuration>
     <dependencies>
       - ALWAYS Give the full content of the package.json file and don't delete any scripts commands or existing dependencies.
       - Modify package.json only if it's necessary, don't add any dependencies if it's not needed.
@@ -397,7 +430,7 @@ The container only supports executables compatible with Linux and does not suppo
     - Always prioritize ${shadcnLib} components. If the user refers to UI elements, generate them using ${shadcnLib}.
     - For missing components, generate the full file content to prevent runtime errors.
     - Ensure each generated component is reusable and follows ${shadcnLib}'s design principles.
-    - Avoid referencing or generating code with 'unknown' types; prefer explicit or 'any' if needed.
+    - Prefer explicit types over 'any'; use 'unknown' or Record<string, unknown> when types are unclear.
     - Always provide complete, explicit code implementations rather than using placeholders or references like "code remains the same" or "etc."
     - Generate the full code for every file and component, even if only minor changes are needed.
     - Include all necessary implementation details, avoiding any ambiguous or incomplete code snippets.

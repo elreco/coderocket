@@ -146,24 +146,25 @@ export async function GET(
   // 4. Recherche du fichier exact
   let matchedBlob = blobs.find((b) => b.pathname === filePath);
 
-  // 5. Forcer le fallback si le slug n'a pas d'extension (routing SPA)
+  // 5. Déterminer si c'est une route SPA (pas d'extension)
   const lastSegment = slug[slug.length - 1];
   const hasExtension = lastSegment?.includes(".");
 
-  if (!matchedBlob && slug.length > 0 && !hasExtension) {
-    console.log(
-      "API Route: Slug sans extension et fichier non trouvé, fallback forcé vers index.html",
-    );
-    matchedBlob = undefined;
-  }
-
-  // 6. Fallback SPA : si le fichier n’existe pas OU slug sans extension
+  // 6. Fallback SPA : uniquement pour les routes sans extension
   if (!matchedBlob) {
-    const fallbackPath = `${prefix}/index.html`;
-    matchedBlob = blobs.find((b) => b.pathname === fallbackPath);
+    if (!hasExtension && slug.length > 0) {
+      console.log(
+        "API Route: Slug sans extension et fichier non trouvé, fallback vers index.html",
+      );
+      const fallbackPath = `${prefix}/index.html`;
+      matchedBlob = blobs.find((b) => b.pathname === fallbackPath);
 
-    if (!matchedBlob) {
-      console.log("API Route: index.html non trouvé, retour 404");
+      if (!matchedBlob) {
+        console.log("API Route: index.html non trouvé, retour 404");
+        return new NextResponse("Not found", { status: 404 });
+      }
+    } else {
+      console.log("API Route: Fichier avec extension non trouvé, retour 404");
       return new NextResponse("Not found", { status: 404 });
     }
   }

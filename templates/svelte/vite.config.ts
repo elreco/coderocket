@@ -7,6 +7,7 @@ import { defineConfig } from "vite";
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [svelte(), tailwindcss()],
+  base: "/",
   build: {
     minify: false,
     sourcemap: false,
