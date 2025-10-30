@@ -20,6 +20,7 @@ import {
   Info,
   Share,
   MoreHorizontal,
+  Rocket,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
@@ -732,6 +733,12 @@ export default function ComponentCompletion({
     });
   };
 
+  const refreshChat = async () => {
+    const refreshedChat = await fetchChatById(chatId);
+    if (!refreshedChat) return;
+    setFetchedChat(refreshedChat);
+  };
+
   const refreshChatData = async () => {
     const refreshedChatMessages = await fetchMessagesByChatId(chatId, false);
     if (!refreshedChatMessages) return;
@@ -952,6 +959,7 @@ export default function ComponentCompletion({
     setSidebarTab,
     currentGeneratingFile,
     iframeKey,
+    refreshChat,
   };
 
   useEffect(() => {
@@ -999,13 +1007,40 @@ export default function ComponentCompletion({
           <div className="grid size-full max-h-full grid-cols-1 justify-center xl:grid-cols-4 xl:flex-row">
             <div className="col-span-1 flex size-full min-h-full flex-col xl:col-span-3 xl:mb-0">
               <div className="relative flex h-auto flex-col items-center justify-start py-1.5 pr-2 xl:h-12 xl:flex-row xl:justify-between xl:pl-14">
-                <h1 className="mb-2 flex min-w-0 max-w-full flex-1 items-center font-medium lg:mb-0">
+                <h1 className="mb-2 flex min-w-0 max-w-full flex-1 items-center gap-2 font-medium lg:mb-0">
                   {title ? (
-                    <p className="mx-10 min-w-0 max-w-full xl:mx-0">
-                      <span className="block truncate text-center first-letter:uppercase">
-                        {title}
-                      </span>
-                    </p>
+                    <>
+                      <p className="mx-10 min-w-0 max-w-full xl:mx-0">
+                        <span className="block truncate text-center first-letter:uppercase">
+                          {title}
+                        </span>
+                      </p>
+                      {fetchedChat?.is_deployed &&
+                        fetchedChat?.deploy_subdomain &&
+                        fetchedChat?.deployed_version !== undefined && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <a
+                                href={`https://${fetchedChat.deploy_subdomain}.coderocket.app`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-1.5 rounded-full border border-green-500/30 bg-green-500/10 px-2 py-1 text-xs font-medium text-green-700 transition-colors hover:bg-green-500/20 dark:text-green-400"
+                              >
+                                <Rocket className="size-3" />
+                                <span className="hidden sm:inline">
+                                  Deployed
+                                </span>
+                              </a>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>
+                                Live at {fetchedChat.deploy_subdomain}
+                                .coderocket.app
+                              </p>
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
+                    </>
                   ) : (
                     <span className="flex items-center">
                       <Loader className="mr-2 size-4 animate-spin" />
@@ -1083,14 +1118,19 @@ export default function ComponentCompletion({
                             <Button
                               variant="secondary"
                               size="sm"
-                              onClick={() =>
-                                window.open(
-                                  fetchedChat?.framework === Framework.HTML
+                              onClick={() => {
+                                const isDeployed =
+                                  fetchedChat?.is_deployed &&
+                                  fetchedChat?.deploy_subdomain;
+
+                                const url = isDeployed
+                                  ? `https://${fetchedChat.deploy_subdomain}.coderocket.app`
+                                  : fetchedChat?.framework === Framework.HTML
                                     ? `https://www.coderocket.app/content/${chatId}/${selectedVersion}`
-                                    : `https://${chatId}-${selectedVersion}.preview.coderocket.app`,
-                                  "_blank",
-                                )
-                              }
+                                    : `https://${chatId}-${selectedVersion}.preview.coderocket.app`;
+
+                                window.open(url, "_blank");
+                              }}
                               className="flex items-center"
                               disabled={isLoading || isLengthError}
                             >
@@ -1100,6 +1140,9 @@ export default function ComponentCompletion({
                           <TooltipContent>
                             {isLengthError ? (
                               <p>The component has an error</p>
+                            ) : fetchedChat?.is_deployed &&
+                              fetchedChat?.deploy_subdomain ? (
+                              <p>Open deployed app in a new tab</p>
                             ) : (
                               <p>Open in a new tab</p>
                             )}

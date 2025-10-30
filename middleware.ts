@@ -3,20 +3,16 @@ import { type NextRequest, NextResponse } from "next/server";
 import { updateSession } from "@/utils/supabase/middleware";
 
 export async function middleware(request: NextRequest) {
-  // Mise à jour de la session Supabase
   const response = await updateSession(request);
 
-  // Récupération du host pour gérer les redirections
   const hostname = request.headers.get("host");
 
-  // 🔁 Redirection 301 de tailwindai.dev vers coderocket.app
   if (hostname === "tailwindai.dev" || hostname?.endsWith(".tailwindai.dev")) {
     const url = request.nextUrl.clone();
     url.host = "coderocket.app";
     return NextResponse.redirect(url, 301);
   }
 
-  // 🔁 Réécriture pour les sous-domaines spécifiques
   const subdomainConfig = {
     "preview.coderocket.app": "preview",
     "webcontainer.coderocket.app": "webcontainer",
@@ -31,7 +27,22 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Pas de redirection ni de réécriture → continue normalement
+  if (
+    hostname?.endsWith(".coderocket.app") &&
+    hostname !== "www.coderocket.app" &&
+    hostname !== "coderocket.app" &&
+    !hostname.includes("preview.coderocket.app") &&
+    !hostname.includes("webcontainer.coderocket.app")
+  ) {
+    const subdomain = hostname.replace(".coderocket.app", "");
+    const pathname = request.nextUrl.pathname;
+    const newUrl = new URL(
+      `/api/deploy/${subdomain}${pathname}`,
+      request.nextUrl,
+    );
+    return NextResponse.rewrite(newUrl, response);
+  }
+
   return response;
 }
 

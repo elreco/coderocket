@@ -11,6 +11,7 @@ import {
   Settings,
   Github,
   Plug2,
+  Rocket,
 } from "lucide-react";
 import { useEffect, useState, useRef, useCallback } from "react";
 
@@ -56,6 +57,7 @@ import { validateFile } from "@/utils/file-helper";
 import { createClient } from "@/utils/supabase/client";
 
 import ComponentTheme from "./(settings)/component-theme";
+import DeploymentContent from "./(settings)/deployment-content";
 import GithubSync from "./(settings)/github-sync";
 import IntegrationsContent from "./(settings)/integrations-content";
 import SettingsContent from "./(settings)/settings-content";
@@ -658,8 +660,8 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
             "grid w-full rounded-none",
             authorized
               ? selectedFramework === Framework.HTML
-                ? "grid-cols-4"
-                : "grid-cols-5"
+                ? "grid-cols-5"
+                : "grid-cols-6"
               : "grid-cols-2",
           )}
         >
@@ -677,6 +679,11 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
           {authorized && selectedFramework !== Framework.HTML && (
             <TabsTrigger value="integrations" disabled={isLoading}>
               <Plug2 className="size-4" />
+            </TabsTrigger>
+          )}
+          {authorized && (
+            <TabsTrigger value="deployment" disabled={isLoading}>
+              <Rocket className="size-4" />
             </TabsTrigger>
           )}
           {authorized && (
@@ -714,6 +721,12 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
               <h3 className="text-base font-medium">Integrations</h3>
             </div>
           )}
+        {authorized && activeTab === "deployment" && (
+          <div className="flex h-12 items-center gap-2 bg-background px-4 py-1.5">
+            <Rocket className="size-4" />
+            <h3 className="text-base font-medium">Deployment</h3>
+          </div>
+        )}
         {authorized && activeTab === "settings" && (
           <div className="flex h-12 items-center gap-2 bg-background px-4 py-1.5">
             <Settings className="size-4" />
@@ -824,6 +837,9 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
             authorized &&
             selectedFramework !== Framework.HTML &&
             activeTab === "integrations" && <IntegrationsContent />}
+          {!isLoading && authorized && activeTab === "deployment" && (
+            <DeploymentContent />
+          )}
           {!isLoading && authorized && activeTab === "settings" && (
             <SettingsContent />
           )}
@@ -1362,6 +1378,20 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
             disabled={isLoading}
           >
             <Plug2 className="size-5" />
+          </Button>
+        )}
+        {authorized && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className={cn(
+              "h-10 w-full rounded-lg",
+              activeTab === "deployment" && "bg-secondary text-primary",
+            )}
+            onClick={() => !isLoading && handleTabChange("deployment")}
+            disabled={isLoading}
+          >
+            <Rocket className="size-5" />
           </Button>
         )}
         {authorized && (

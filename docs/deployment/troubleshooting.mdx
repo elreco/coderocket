@@ -1,0 +1,274 @@
+---
+title: Troubleshooting
+description: 'Common deployment issues and solutions'
+icon: "circle-help"
+---
+
+## Common Issues
+
+### "Premium Required" Error
+
+<AccordionGroup>
+  <Accordion title="Symptom">
+    When trying to deploy, you see a message: "Deployment is a premium feature. Upgrade to deploy your applications."
+  </Accordion>
+
+  <Accordion title="Solution">
+    1. Verify you have an active premium subscription
+    2. Go to [Account Settings → Billing](https://www.coderocket.app/account)
+    3. If expired, [upgrade your account](https://www.coderocket.app/pricing)
+    4. Refresh the page and try again
+  </Accordion>
+</AccordionGroup>
+
+### Subdomain Already Taken
+
+<AccordionGroup>
+  <Accordion title="Symptom">
+    You see: "This subdomain is already taken. Please try another one."
+  </Accordion>
+
+  <Accordion title="Solution">
+    The subdomain is in use by another user or project. Try:
+
+    - Add numbers or hyphens: `myapp-2024`, `my-awesome-app`
+    - Use a more specific name: `portfolio-john`, `store-demo-v2`
+    - Check for typos in your desired subdomain
+    - Use the **Check** button to test availability before deploying
+  </Accordion>
+</AccordionGroup>
+
+### Invalid Subdomain Format
+
+<AccordionGroup>
+  <Accordion title="Symptom">
+    Error: "Subdomain must be 3-63 characters, contain only lowercase letters, numbers, and hyphens..."
+  </Accordion>
+
+  <Accordion title="Solution">
+    Ensure your subdomain:
+
+    ```text
+    ✓ Is 3-63 characters long
+    ✓ Contains only: a-z, 0-9, and hyphens (-)
+    ✓ Starts with a letter or number
+    ✓ Ends with a letter or number
+    ✗ No spaces, underscores, or special characters
+    ✗ No uppercase letters
+    ```
+
+    **Examples:**
+    - ✓ `my-app`
+    - ✓ `app123`
+    - ✓ `my-app-2024`
+    - ✗ `My-App` (uppercase)
+    - ✗ `my_app` (underscore)
+    - ✗ `-myapp` (starts with hyphen)
+  </Accordion>
+</AccordionGroup>
+
+### Reserved Subdomain
+
+<AccordionGroup>
+  <Accordion title="Symptom">
+    Error: "This subdomain is reserved and cannot be used"
+  </Accordion>
+
+  <Accordion title="Solution">
+    You're trying to use a protected keyword. Choose a different name. Reserved words include:
+
+    - System: `api`, `www`, `app`, `admin`
+    - Development: `preview`, `webcontainer`, `staging`, `dev`, `test`
+    - Infrastructure: `cdn`, `static`, `assets`
+
+    Add a suffix or prefix to your desired name: `my-app`, `app-name`, `name-store`
+  </Accordion>
+</AccordionGroup>
+
+### Unauthorized Error
+
+<AccordionGroup>
+  <Accordion title="Symptom">
+    "Only the owner can deploy this application" or "Unauthorized"
+  </Accordion>
+
+  <Accordion title="Solution">
+    Deployment management is restricted to project owners only. If you need to deploy:
+
+    1. Ask the project owner to deploy
+    2. Fork the project to create your own copy
+    3. Deploy your forked version with your own subdomain
+  </Accordion>
+</AccordionGroup>
+
+## Application Issues
+
+### Application Not Loading
+
+<AccordionGroup>
+  <Accordion title="Symptom">
+    The deployment succeeded but visiting the URL shows a loading screen or error
+  </Accordion>
+
+  <Accordion title="Solution">
+    1. Wait 30 seconds and refresh - initial deployment may take a moment
+    2. Check if the application works in preview mode
+    3. Try a different browser or incognito mode
+    4. Clear your browser cache
+    5. If the issue persists, try redeploying the same version
+  </Accordion>
+</AccordionGroup>
+
+### Features Not Working in Production
+
+<AccordionGroup>
+  <Accordion title="Symptom">
+    Application loads but certain features don't work (API calls, integrations, etc.)
+  </Accordion>
+
+  <Accordion title="Solution">
+    This usually happens with integrations:
+
+    1. Go to the **Integrations** tab
+    2. Verify integrations are enabled for this project
+    3. Check that integration credentials are correct
+    4. Generate a new version with `"fix integration issues"`
+    5. Deploy the new version
+  </Accordion>
+</AccordionGroup>
+
+### Wrong Version Deployed
+
+<AccordionGroup>
+  <Accordion title="Symptom">
+    The deployed application doesn't match your latest changes
+  </Accordion>
+
+  <Accordion title="Solution">
+    Check which version is deployed:
+
+    1. Go to Deployment tab
+    2. Look at **Version to Deploy** dropdown
+    3. The "(Currently Deployed)" label shows the active version
+    4. Select your desired version and click **Update Deployment**
+  </Accordion>
+</AccordionGroup>
+
+## Deployment Process Issues
+
+### Deployment Stuck
+
+<AccordionGroup>
+  <Accordion title="Symptom">
+    The "Deploying..." message appears indefinitely
+  </Accordion>
+
+  <Accordion title="Solution">
+    1. Wait 2 minutes - sometimes it takes longer
+    2. Refresh the page
+    3. Check your internet connection
+    4. Try deploying again
+    5. If it continues, contact support with your project ID
+  </Accordion>
+</AccordionGroup>
+
+### Cannot Update Deployment
+
+<AccordionGroup>
+  <Accordion title="Symptom">
+    Update Deployment button is disabled or doesn't appear
+  </Accordion>
+
+  <Accordion title="Solution">
+    The button only appears when you make changes. Ensure:
+
+    - You've selected a different version than currently deployed, OR
+    - You've entered a different subdomain than current
+    - Your premium subscription is active
+    - You are the project owner
+  </Accordion>
+</AccordionGroup>
+
+### Undeploy Failed
+
+<AccordionGroup>
+  <Accordion title="Symptom">
+    Error when trying to undeploy application
+  </Accordion>
+
+  <Accordion title="Solution">
+    1. Refresh the page and try again
+    2. Check your internet connection
+    3. Verify you're the project owner
+    4. If error persists, the deployment may already be inactive
+  </Accordion>
+</AccordionGroup>
+
+## Browser-Specific Issues
+
+### SSL Certificate Error
+
+<AccordionGroup>
+  <Accordion title="Symptom">
+    Browser shows "Your connection is not private" or SSL certificate warning
+  </Accordion>
+
+  <Accordion title="Solution">
+    This is rare but can happen:
+
+    1. Wait a few minutes for SSL certificate provisioning
+    2. Clear your browser's SSL cache
+    3. Try accessing via incognito/private mode
+    4. If persists after 10 minutes, contact support
+  </Accordion>
+</AccordionGroup>
+
+### Mixed Content Warnings
+
+<AccordionGroup>
+  <Accordion title="Symptom">
+    Browser console shows "Mixed Content" errors
+  </Accordion>
+
+  <Accordion title="Solution">
+    Your application is trying to load HTTP resources on an HTTPS page:
+
+    1. Check for hardcoded `http://` URLs in your code
+    2. Use relative URLs or `https://` for all external resources
+    3. Generate a new version fixing these issues
+    4. Redeploy the corrected version
+  </Accordion>
+</AccordionGroup>
+
+## Getting Additional Help
+
+If you've tried these solutions and still have issues:
+
+<CardGroup cols={2}>
+  <Card title="Discord Community" icon="discord" href="https://discord.gg/t7dQgcYJ5t">
+    Ask the community for help with deployment issues
+  </Card>
+  <Card title="Contact Support" icon="envelope" href="https://www.coderocket.app/account">
+    Submit a support ticket from your account settings
+  </Card>
+</CardGroup>
+
+<Warning>
+  When reporting issues, include:
+  - Your project ID or URL
+  - The subdomain you're trying to use
+  - Screenshots of error messages
+  - Steps to reproduce the issue
+</Warning>
+
+## Prevention Tips
+
+Avoid common issues by following these practices:
+
+<Check>Test your application in preview mode before deploying</Check>
+<Check>Use the Check button to verify subdomain availability</Check>
+<Check>Keep your subscription active</Check>
+<Check>Choose descriptive, unique subdomains</Check>
+<Check>Test integrations before deploying</Check>
+<Check>Deploy stable versions, not experimental changes</Check>
+

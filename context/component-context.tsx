@@ -43,6 +43,7 @@ interface ComponentContextType {
     tabName?: string,
   ) => void;
   refreshChatData?: () => Promise<ChatMessage[] | undefined>;
+  refreshChat?: () => Promise<void>;
   isVisible: boolean;
   setVisible: (value: boolean) => void;
   input: string;

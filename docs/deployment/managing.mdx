@@ -1,0 +1,187 @@
+---
+title: Managing Deployments
+description: 'Update, redeploy, and undeploy your applications'
+icon: "wrench"
+---
+
+## Deployment Management Overview
+
+Once your application is deployed, you have full control to update, redeploy different versions, or remove it from production entirely.
+
+## Updating Your Deployment
+
+### Change the Deployed Version
+
+<Steps>
+  <Step title="Open Deployment Tab">
+    Navigate to your project and click the Deployment tab (🚀)
+  </Step>
+
+  <Step title="Select New Version">
+    Use the **Version to Deploy** dropdown to choose a different version
+  </Step>
+
+  <Step title="Update Deployment">
+    The **Update Deployment** button appears when you select a different version. Click it to apply the change.
+  </Step>
+
+  <Step title="Confirm Changes">
+    Your application will now display the newly selected version at the same URL
+  </Step>
+</Steps>
+
+<Info>
+  Updating the version does not change your subdomain. Your URL remains the same.
+</Info>
+
+### Change Your Subdomain
+
+<Steps>
+  <Step title="Enter New Subdomain">
+    Type a new subdomain in the **Subdomain** field
+  </Step>
+
+  <Step title="Check Availability">
+    (Optional) Click **Check** to verify the new subdomain is available
+  </Step>
+
+  <Step title="Update Deployment">
+    Click **Update Deployment** to apply the new subdomain
+  </Step>
+
+  <Step title="Access New URL">
+    Your application is now accessible at the new subdomain. The old subdomain becomes available for others.
+  </Step>
+</Steps>
+
+<Warning>
+  Changing your subdomain means the old URL will no longer work. Update any bookmarks or shared links.
+</Warning>
+
+### Update Both Version and Subdomain
+
+You can change both the version and subdomain simultaneously:
+
+1. Select a new version from the dropdown
+2. Enter a new subdomain
+3. Click **Update Deployment**
+
+Both changes will be applied together.
+
+## Deployment Status Indicator
+
+When your application is deployed, you'll see:
+
+- **Green badge** next to the project title displaying "Deployed"
+- **Link icon** to quickly access your live application
+- **Deployment info** in the Deployment tab showing current version and subdomain
+
+## Undeploying Your Application
+
+If you need to take your application offline:
+
+<Steps>
+  <Step title="Open Deployment Tab">
+    Go to the Deployment tab in your project
+  </Step>
+
+  <Step title="Click Undeploy Application">
+    Scroll down and click the red **Undeploy Application** button
+  </Step>
+
+  <Step title="Confirm Action">
+    Confirm that you want to undeploy. This action is reversible - you can redeploy anytime.
+  </Step>
+
+  <Step title="Verify Removal">
+    Your subdomain is released and becomes available for others to use.
+  </Step>
+</Steps>
+
+<Note>
+  Undeploying does not delete your project or versions. It only removes the public URL. You can redeploy anytime using the same or a different subdomain.
+</Note>
+
+## Common Management Scenarios
+
+### Rollback to Previous Version
+
+If you deployed a version with issues:
+
+```text
+1. Go to Deployment tab
+2. Select the previous working version
+3. Click Update Deployment
+4. Your application reverts to the stable version
+```
+
+### Gradual Updates
+
+Test changes before full deployment:
+
+```text
+1. Generate new version with changes
+2. Test locally using the preview
+3. When ready, update deployment to new version
+4. Monitor for any issues
+5. Rollback if needed
+```
+
+### Change During Development
+
+Update your live site as you work:
+
+```text
+1. Create new iterations with improvements
+2. Deploy each stable version
+3. Gather feedback from users
+4. Continue iterating based on feedback
+```
+
+## Deployment History
+
+CodeRocket tracks your deployment history including:
+
+- **Current deployment** - Active version and subdomain
+- **Deployed at** - When the current deployment was created
+- **Last updated** - Most recent change to deployment configuration
+
+<Tip>
+  Keep notes about what each version contains so you can make informed decisions about which version to deploy.
+</Tip>
+
+## Limitations
+
+Be aware of these deployment limitations:
+
+<Warning>
+  - Only one deployment per project
+  - One subdomain per deployment (no multiple domains)
+  - Subdomains cannot be transferred between projects
+  - Premium subscription required to maintain deployment
+</Warning>
+
+## What Happens If Subscription Expires?
+
+If your premium subscription expires:
+
+- Existing deployments remain active for 7 days
+- You cannot create new deployments or update existing ones
+- After 7 days, deployments are automatically undeployed
+- Your subdomain becomes available for others
+
+<Info>
+  Renew your subscription anytime to maintain deployments and prevent automatic undeployment.
+</Info>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Best Practices" icon="lightbulb" href="/deployment/best-practices">
+    Tips for managing deployments effectively
+  </Card>
+  <Card title="Troubleshooting" icon="circle-help" href="/deployment/troubleshooting">
+    Solve common deployment issues
+  </Card>
+</CardGroup>
+

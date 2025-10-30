@@ -1,0 +1,165 @@
+---
+title: Deployment Guide
+description: 'Step-by-step guide to deploying your application'
+icon: "book"
+---
+
+## Prerequisites
+
+Before deploying your application, make sure you have:
+
+<Check>A CodeRocket premium account</Check>
+<Check>A project with at least one version</Check>
+<Check>Owner access to the project</Check>
+
+<Warning>
+  Deployment is only available for project owners. If you're viewing someone else's project, you won't be able to manage deployments.
+</Warning>
+
+## Step 1: Access the Deployment Tab
+
+1. Open your project in CodeRocket
+2. Look for the sidebar on the right side
+3. Click on the **Deployment** tab (rocket icon 🚀)
+
+The deployment tab is located after the Integrations tab and before Settings.
+
+## Step 2: Select Your Version
+
+<Steps>
+  <Step title="Choose a Version">
+    Use the **Version to Deploy** dropdown to select which version of your application to deploy.
+
+    - **Latest** - The most recent version (selected by default)
+    - **Currently Deployed** - The version currently in production (if applicable)
+    - Any previous version number
+  </Step>
+
+  <Step title="Version Considerations">
+    Consider these factors when selecting a version:
+
+    - Is this version fully tested?
+    - Does it have all the features you want to share?
+    - Are there any known bugs in this version?
+  </Step>
+</Steps>
+
+<Info>
+  You can always change the deployed version later without losing your subdomain.
+</Info>
+
+## Step 3: Choose Your Subdomain
+
+### Subdomain Requirements
+
+Your subdomain must follow these rules:
+
+```text
+✓ 3-63 characters long
+✓ Lowercase letters only (a-z)
+✓ Numbers allowed (0-9)
+✓ Hyphens allowed (-)
+✓ Must start with a letter or number
+✓ Must end with a letter or number
+✗ Cannot be a reserved keyword
+```
+
+### Reserved Keywords
+
+The following subdomains are reserved and cannot be used:
+
+- System: `api`, `app`, `admin`, `www`
+- Development: `preview`, `webcontainer`, `staging`, `dev`, `test`
+- Infrastructure: `cdn`, `static`, `assets`, `media`
+- Services: `mail`, `smtp`, `ftp`, `webhook`
+
+<Tip>
+  Use descriptive names that represent your project, like `portfolio`, `my-store`, `blog-demo`, etc.
+</Tip>
+
+### Check Availability
+
+Before deploying, click the **Check** button to verify your subdomain is available:
+
+```text
+myapp.coderocket.app ✓ Available
+popular-name.coderocket.app ✗ Already taken
+```
+
+## Step 4: Deploy Your Application
+
+<Steps>
+  <Step title="Review Your Configuration">
+    Double-check:
+    - Selected version is correct
+    - Subdomain is available and follows the rules
+    - You have a premium subscription active
+  </Step>
+
+  <Step title="Click Deploy Application">
+    Press the **Deploy Application** button. The deployment process takes a few seconds.
+  </Step>
+
+  <Step title="Wait for Confirmation">
+    You'll see a success message: "Your app is now live at `[subdomain].coderocket.app`"
+  </Step>
+
+  <Step title="Access Your Application">
+    Click the link in the success message or the deployed badge next to your project title to open your live application in a new tab.
+  </Step>
+</Steps>
+
+## What Happens During Deployment
+
+When you deploy your application:
+
+1. **Validation** - CodeRocket checks your subdomain availability and format
+2. **Version Locking** - The selected version is marked as deployed
+3. **URL Configuration** - Your custom subdomain is configured
+4. **Instant Live** - Your application becomes accessible immediately
+
+<Note>
+  No build process is required! Your application is ready instantly because it's already built when you generate each version.
+</Note>
+
+## Verify Your Deployment
+
+After deploying, verify everything works:
+
+<Steps>
+  <Step title="Test the URL">
+    Open `https://[your-subdomain].coderocket.app` in a new browser tab
+  </Step>
+
+  <Step title="Check All Features">
+    Navigate through your application to ensure all features work as expected
+  </Step>
+
+  <Step title="Test on Different Devices">
+    If possible, check on mobile devices and different browsers
+  </Step>
+
+  <Step title="Share with Others">
+    Send the URL to colleagues or friends to get feedback
+  </Step>
+</Steps>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Managing Deployments" icon="wrench" href="/deployment/managing">
+    Learn how to update or undeploy your application
+  </Card>
+  <Card title="Best Practices" icon="lightbulb" href="/deployment/best-practices">
+    Tips for successful deployments
+  </Card>
+</CardGroup>
+
+## Need Help?
+
+If you encounter issues during deployment:
+
+- Check the [Troubleshooting guide](/deployment/troubleshooting)
+- Join our [Discord community](https://discord.gg/t7dQgcYJ5t)
+- Contact support from your account settings
+

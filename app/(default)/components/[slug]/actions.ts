@@ -470,3 +470,175 @@ export const checkExistingComponent = async (
 
   return responseData.exists;
 };
+
+export const checkSubdomainAvailability = async (subdomain: string) => {
+  const supabase = await createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  const user = userData?.user;
+
+  if (!user) throw new Error("User not authenticated");
+
+  const normalizedSubdomain = subdomain.toLowerCase().trim();
+
+  const { data: existingChat, error } = await supabase
+    .from("chats")
+    .select("id")
+    .eq("deploy_subdomain", normalizedSubdomain)
+    .maybeSingle();
+
+  if (error) {
+    console.error("Error checking subdomain:", error);
+    throw new Error("Failed to check subdomain availability");
+  }
+
+  return !existingChat;
+};
+
+export const deployComponent = async (
+  chatId: string,
+  subdomain: string,
+  version: number,
+) => {
+  const supabase = await createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  const user = userData?.user;
+
+  if (!user) throw new Error("User not authenticated");
+
+  const subscription = await getSubscription();
+  if (!subscription) {
+    throw new Error("payment-required");
+  }
+
+  const { data: chat } = await supabase
+    .from("chats")
+    .select("user_id")
+    .eq("id", chatId)
+    .single();
+
+  if (!chat || chat.user_id !== user.id) {
+    throw new Error("Unauthorized");
+  }
+
+  const normalizedSubdomain = subdomain.toLowerCase().trim();
+
+  const isAvailable = await checkSubdomainAvailability(normalizedSubdomain);
+  if (!isAvailable) {
+    throw new Error("Subdomain is already taken");
+  }
+
+  const { error } = await supabase
+    .from("chats")
+    .update({
+      deploy_subdomain: normalizedSubdomain,
+      deployed_at: new Date().toISOString(),
+      deployed_version: version,
+      is_deployed: true,
+    })
+    .eq("id", chatId);
+
+  if (error) {
+    console.error("Error deploying component:", error);
+    throw new Error(error.message || "Failed to deploy component");
+  }
+
+  return { success: true, subdomain: normalizedSubdomain, version };
+};
+
+export const undeployComponent = async (chatId: string) => {
+  const supabase = await createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  const user = userData?.user;
+
+  if (!user) throw new Error("User not authenticated");
+
+  const subscription = await getSubscription();
+  if (!subscription) {
+    throw new Error("payment-required");
+  }
+
+  const { data: chat } = await supabase
+    .from("chats")
+    .select("user_id")
+    .eq("id", chatId)
+    .single();
+
+  if (!chat || chat.user_id !== user.id) {
+    throw new Error("Unauthorized");
+  }
+
+  const { error } = await supabase
+    .from("chats")
+    .update({
+      is_deployed: false,
+    })
+    .eq("id", chatId);
+
+  if (error) {
+    console.error("Error undeploying component:", error);
+    throw new Error("Failed to undeploy component");
+  }
+
+  return { success: true };
+};
+
+export const updateDeploymentSubdomain = async (
+  chatId: string,
+  newSubdomain: string,
+  version?: number,
+) => {
+  const supabase = await createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  const user = userData?.user;
+
+  if (!user) throw new Error("User not authenticated");
+
+  const subscription = await getSubscription();
+  if (!subscription) {
+    throw new Error("payment-required");
+  }
+
+  const { data: chat } = await supabase
+    .from("chats")
+    .select("user_id, deploy_subdomain")
+    .eq("id", chatId)
+    .single();
+
+  if (!chat || chat.user_id !== user.id) {
+    throw new Error("Unauthorized");
+  }
+
+  const normalizedSubdomain = newSubdomain.toLowerCase().trim();
+
+  if (chat.deploy_subdomain !== normalizedSubdomain) {
+    const isAvailable = await checkSubdomainAvailability(normalizedSubdomain);
+    if (!isAvailable) {
+      throw new Error("Subdomain is already taken");
+    }
+  }
+
+  const updateData: {
+    deploy_subdomain: string;
+    deployed_version?: number;
+    deployed_at?: string;
+  } = {
+    deploy_subdomain: normalizedSubdomain,
+  };
+
+  if (version !== undefined) {
+    updateData.deployed_version = version;
+    updateData.deployed_at = new Date().toISOString();
+  }
+
+  const { error } = await supabase
+    .from("chats")
+    .update(updateData)
+    .eq("id", chatId);
+
+  if (error) {
+    console.error("Error updating subdomain:", error);
+    throw new Error(error.message || "Failed to update subdomain");
+  }
+
+  return { success: true, subdomain: normalizedSubdomain };
+};

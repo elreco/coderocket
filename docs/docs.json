@@ -109,6 +109,16 @@
             ]
           }
         ]
+      },
+      {
+        "group": "Deployment",
+        "pages": [
+          "deployment/overview",
+          "deployment/guide",
+          "deployment/managing",
+          "deployment/best-practices",
+          "deployment/troubleshooting"
+        ]
       }
     ]
   },
