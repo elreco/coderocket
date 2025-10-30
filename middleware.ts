@@ -37,7 +37,7 @@ export async function middleware(request: NextRequest) {
     const subdomain = hostname.replace(".coderocket.app", "");
     const pathname = request.nextUrl.pathname;
     const newUrl = new URL(
-      `/api/deploy/${subdomain}${pathname}`,
+      `/api/proxy/${subdomain}${pathname}${request.nextUrl.search}`,
       request.nextUrl,
     );
     return NextResponse.rewrite(newUrl, response);
