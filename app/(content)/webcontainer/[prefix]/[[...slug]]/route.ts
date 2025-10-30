@@ -1,6 +1,9 @@
 import { list } from "@vercel/blob";
 import mime from "mime-types";
 import { NextRequest, NextResponse } from "next/server";
+
+import { createClient } from "@/utils/supabase/server";
+
 export const revalidate = 0;
 /**
  * Cette route sert les fichiers d’un dossier (prefix) stocké dans Vercel Blob.
@@ -23,13 +26,95 @@ export async function GET(
   let slug: string[] = [];
 
   if (hostname?.includes("coderocket.app")) {
-    // Format : prefix.coderocket.app/slug...
-    prefix = hostname.split(".")[0]; // Ex: e7ff9bcc-7d89-401a-97a8-67cd5e13bf97-0
+    prefix = hostname.split(".")[0];
     if (pathname !== "/") {
       slug = pathname.slice(1).split("/");
     }
+
+    const isUuidPattern =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}-\d+$/i.test(
+        prefix,
+      );
+
+    if (!isUuidPattern) {
+      const supabase = await createClient();
+      const { data: chat, error } = await supabase
+        .from("chats")
+        .select("id, deployed_version")
+        .eq("deploy_subdomain", prefix)
+        .eq("is_deployed", true)
+        .single();
+
+      if (error || !chat || chat.deployed_version === null) {
+        return new NextResponse(
+          `
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <title>Not Found - CodeRocket</title>
+              <meta name="viewport" content="width=device-width, initial-scale=1">
+              <style>
+                * { margin: 0; padding: 0; box-sizing: border-box; }
+                body {
+                  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  min-height: 100vh;
+                  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                  color: white;
+                  padding: 1rem;
+                }
+                .container {
+                  text-align: center;
+                  max-width: 600px;
+                }
+                h1 {
+                  font-size: clamp(2rem, 5vw, 3rem);
+                  margin-bottom: 1rem;
+                }
+                p {
+                  font-size: clamp(1rem, 2.5vw, 1.2rem);
+                  opacity: 0.9;
+                  margin-bottom: 2rem;
+                }
+                a {
+                  display: inline-block;
+                  padding: 0.75rem 1.5rem;
+                  background: white;
+                  color: #667eea;
+                  text-decoration: none;
+                  border-radius: 0.5rem;
+                  font-weight: 600;
+                  transition: transform 0.2s;
+                }
+                a:hover {
+                  transform: translateY(-2px);
+                }
+              </style>
+            </head>
+            <body>
+              <div class="container">
+                <h1>🚀 Not Found</h1>
+                <p>This application is not deployed or doesn't exist.</p>
+                <a href="https://www.coderocket.app">Go to CodeRocket</a>
+              </div>
+            </body>
+          </html>
+        `,
+          {
+            status: 404,
+            headers: {
+              "Content-Type": "text/html",
+            },
+          },
+        );
+      }
+
+      prefix = `${chat.id}-${chat.deployed_version}`;
+      console.log("API Route: Custom domain resolved to prefix =", prefix);
+    }
   } else {
-    // Cas normal /blob/:prefix/:slug...
     const params = await context.params;
     prefix = params.prefix;
     slug = params.slug || [];
