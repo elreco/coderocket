@@ -146,14 +146,13 @@ export async function GET(
   // 4. Recherche du fichier exact
   let matchedBlob = blobs.find((b) => b.pathname === filePath);
 
-  // 5. Forcer le fallback si le slug n’a pas d’extension
+  // 5. Forcer le fallback si le slug n'a pas d'extension (routing SPA)
   const lastSegment = slug[slug.length - 1];
   const hasExtension = lastSegment?.includes(".");
 
-  // Avoid fallback for JavaScript module requests
-  if (slug.length > 0 && !hasExtension && !lastSegment?.endsWith(".js")) {
+  if (!matchedBlob && slug.length > 0 && !hasExtension) {
     console.log(
-      "API Route: Slug sans extension, fallback forcé vers index.html",
+      "API Route: Slug sans extension et fichier non trouvé, fallback forcé vers index.html",
     );
     matchedBlob = undefined;
   }
