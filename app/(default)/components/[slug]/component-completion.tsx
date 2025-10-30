@@ -80,10 +80,9 @@ import { createClient } from "@/utils/supabase/client";
 
 import {
   fetchChatById,
+  fetchChatDataOptimized,
   fetchLastAssistantMessageByChatId,
-  fetchLastUserMessageByChatId,
   fetchMessagesByChatId,
-  hasUserLikedChat,
   toggleChatLike,
   remixChat,
 } from "../actions";
@@ -173,20 +172,40 @@ export default function ComponentCompletion({
 
   useEffect(() => {
     const loadInitialData = async () => {
-      const [chat, assistantMsg, userMsg, msgs, hasLiked] = await Promise.all([
-        fetchChatById(chatId),
-        fetchLastAssistantMessageByChatId(chatId),
-        fetchLastUserMessageByChatId(chatId),
-        fetchMessagesByChatId(chatId, false),
-        hasUserLikedChat(chatId),
+      const [chatData, sub] = await Promise.all([
+        fetchChatDataOptimized(chatId),
+        user ? getSubscription() : Promise.resolve(null),
       ]);
+
+      const {
+        chat,
+        messages: msgs,
+        lastAssistantMessage: assistantMsg,
+        lastUserMessage: userMsg,
+        isLiked: hasLiked,
+      } = chatData;
+
       if (!chat) {
         return;
       }
+
+      if (sub) {
+        setSubscription(sub);
+      }
+
+      let originalChat = null;
+      if (chat.remix_chat_id) {
+        originalChat = await fetchChatById(chat.remix_chat_id);
+        if (originalChat) {
+          setRemixOriginalChat(originalChat);
+        }
+        setHasAlreadyRemixed(true);
+      }
+
       setIsLiked(hasLiked);
       setFetchedChat(chat);
-      setLastAssistantMessage(assistantMsg);
-      setMessages(msgs || []);
+      setLastAssistantMessage(assistantMsg || null);
+      setMessages(msgs as ChatMessage[]);
       setSelectedVersion(userMsg?.version || 0);
       setTitle(
         chat.title ||
@@ -248,28 +267,10 @@ export default function ComponentCompletion({
         handleChatFiles(assistantMsg.content, true);
       }
 
-      // Fetch original chat if this is a remix
-      if (chat.remix_chat_id) {
-        const originalChat = await fetchChatById(chat.remix_chat_id);
-        if (originalChat) {
-          setRemixOriginalChat(originalChat);
-        }
-        setHasAlreadyRemixed(true);
-      }
-
-      await new Promise((resolve) => setTimeout(resolve, 500));
       setIsLoading(false);
     };
     loadInitialData();
-    checkSubscriptionStatus();
   }, [chatId]);
-
-  const checkSubscriptionStatus = async () => {
-    if (!user) return;
-
-    const sub = await getSubscription();
-    setSubscription(sub);
-  };
 
   const { completion, stop, complete, setCompletion, input, setInput } =
     useCompletion({

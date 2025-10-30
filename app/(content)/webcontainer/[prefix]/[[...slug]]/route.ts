@@ -18,16 +18,26 @@ export async function GET(
 ) {
   console.log("API Route: Reçu requête pour", request.url);
 
-  // 1. Déterminer le prefix et le slug depuis l’URL
   const hostname = request.headers.get("host");
-  const { pathname } = new URL(request.url);
+  const pathname = request.nextUrl.pathname;
 
   let prefix: string;
   let slug: string[] = [];
 
   if (hostname?.includes("coderocket.app")) {
     prefix = hostname.split(".")[0];
-    if (pathname !== "/") {
+
+    if (pathname.startsWith("/webcontainer/")) {
+      const parts = pathname.split("/").filter(Boolean);
+      if (parts.length > 1) {
+        parts.shift();
+        const nextPart = parts[0];
+        if (nextPart === "_custom" || nextPart === prefix) {
+          parts.shift();
+        }
+        slug = parts;
+      }
+    } else if (pathname !== "/") {
       slug = pathname.slice(1).split("/");
     }
 

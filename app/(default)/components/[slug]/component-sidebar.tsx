@@ -147,15 +147,6 @@ export default function ComponentSidebar({
   }, []);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      if (containerRef.current && messages.length > 0) {
-        containerRef.current.scrollTop = containerRef.current.scrollHeight;
-      }
-    }, 100);
-    return () => clearTimeout(timer);
-  }, [messages, completion]);
-
-  useEffect(() => {
     // Charger le statut de l'abonnement au chargement du composant
     const fetchSubscription = async () => {
       const supabase = await createClient();
@@ -178,9 +169,6 @@ export default function ComponentSidebar({
   const submitPrompt = (promptText: string) => {
     handleSubmitToAI(promptText);
     setActiveTab("chat");
-    if (containerRef.current) {
-      containerRef.current.scrollTop = containerRef.current.scrollHeight;
-    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

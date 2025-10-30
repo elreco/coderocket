@@ -673,7 +673,6 @@ export const hasUserLikedChat = async (chatId: string) => {
     return false;
   }
 
-  // Vérifier si le like existe pour l'utilisateur et le chat spécifiés
   const { data: existingLike } = await supabase
     .from("chat_likes")
     .select("id")
@@ -681,7 +680,56 @@ export const hasUserLikedChat = async (chatId: string) => {
     .eq("user_id", user.id)
     .single();
 
-  return !!existingLike; // Retourne true si le like existe, sinon false
+  return !!existingLike;
+};
+
+export const fetchChatDataOptimized = async (chatId: string) => {
+  const supabase = await createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  const user = userData.user;
+
+  const [chatResult, messagesResult, likeResult] = await Promise.all([
+    supabase
+      .from("chats")
+      .select("*, user:users!user_id (*)")
+      .eq("id", chatId)
+      .single(),
+    supabase
+      .from("messages")
+      .select(
+        `
+      *,
+      chats (
+        user:users (*),
+        prompt_image,
+        remix_chat_id
+      )
+    `,
+      )
+      .eq("chat_id", chatId)
+      .order("version", { ascending: false })
+      .order("role", { ascending: false }),
+    user
+      ? supabase
+          .from("chat_likes")
+          .select("id")
+          .eq("chat_id", chatId)
+          .eq("user_id", user.id)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+  ]);
+
+  const messages = messagesResult.data || [];
+  const lastAssistantMessage = messages.find((m) => m.role === "assistant");
+  const lastUserMessage = messages.find((m) => m.role === "user");
+
+  return {
+    chat: chatResult.data,
+    messages: messages,
+    lastAssistantMessage,
+    lastUserMessage,
+    isLiked: !!likeResult.data,
+  };
 };
 
 export const remixChat = async (
