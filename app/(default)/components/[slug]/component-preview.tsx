@@ -82,13 +82,9 @@ export default function ComponentPreview() {
     setInput,
     isWebcontainerReady,
     handleSubmitToAI,
-    fetchedChat,
   } = useComponentContext();
   const { previewId } = useWebcontainer();
   const [iframeLoading, setIframeLoading] = React.useState(false);
-
-  const isDeployed = fetchedChat?.is_deployed;
-  const deploySubdomain = fetchedChat?.deploy_subdomain;
 
   React.useEffect(() => {
     if (isWebcontainerReady) {
@@ -161,11 +157,7 @@ export default function ComponentPreview() {
                   </div>
                 )}
                 <iframe
-                  src={
-                    isDeployed && deploySubdomain
-                      ? `https://${deploySubdomain}.coderocket.app`
-                      : `https://${chatId}-${selectedVersion}.webcontainer.coderocket.app`
-                  }
+                  src={`https://${chatId}-${selectedVersion}.webcontainer.coderocket.app`}
                   className="size-full border-none"
                   sandbox="allow-scripts allow-forms allow-popups allow-modals allow-storage-access-by-user-activation allow-same-origin"
                   allow="credentialless"

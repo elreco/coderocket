@@ -1120,13 +1120,8 @@ export default function ComponentCompletion({
                               variant="secondary"
                               size="sm"
                               onClick={() => {
-                                const isDeployed =
-                                  fetchedChat?.is_deployed &&
-                                  fetchedChat?.deploy_subdomain;
-
-                                const url = isDeployed
-                                  ? `https://${fetchedChat.deploy_subdomain}.coderocket.app`
-                                  : fetchedChat?.framework === Framework.HTML
+                                const url =
+                                  fetchedChat?.framework === Framework.HTML
                                     ? `https://www.coderocket.app/content/${chatId}/${selectedVersion}`
                                     : `https://${chatId}-${selectedVersion}.preview.coderocket.app`;
 
@@ -1139,14 +1134,11 @@ export default function ComponentCompletion({
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>
-                            {isLengthError ? (
-                              <p>The component has an error</p>
-                            ) : fetchedChat?.is_deployed &&
-                              fetchedChat?.deploy_subdomain ? (
-                              <p>Open deployed app in a new tab</p>
-                            ) : (
-                              <p>Open in a new tab</p>
-                            )}
+                            <p>
+                              {isLengthError
+                                ? "The component has an error"
+                                : "Open in a new tab"}
+                            </p>
                           </TooltipContent>
                         </Tooltip>
                       )}
