@@ -44,7 +44,7 @@ IMPORTANT: Always use Tailwind CSS v4 syntax, not v3.
     If the query contains "NEW PROJECT CodeRocket - ", It's a new project.
     If the query starts with "Clone this website: ", you should try to clone the referenced website's visual style, layout, and functionality as closely as possible using ${framework}, Tailwind CSS and ${shadcnLib}.
     For the **first generation**, focus on creating a minimal viable product (MVP) with essential features only.
-    
+
     IMPORTANT: Always update the <title> tag in index.html to match the application purpose (e.g., "Todo App", "Dashboard", "Portfolio").
 
     CRITICAL CONTEXT AWARENESS:

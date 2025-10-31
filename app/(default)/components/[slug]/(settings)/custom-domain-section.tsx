@@ -69,40 +69,6 @@ export default function CustomDomainSection({
     }
   }, [initialCustomDomain]);
 
-  useEffect(() => {
-    if (
-      customDomain?.is_verified &&
-      customDomain?.ssl_status === "pending" &&
-      customDomain?.id
-    ) {
-      const interval = setInterval(async () => {
-        try {
-          const result = await refreshSSLStatus(customDomain.id);
-          if (result.ssl_status === "active") {
-            setCustomDomain((prev) =>
-              prev ? { ...prev, ssl_status: "active" } : prev,
-            );
-            toast({
-              variant: "default",
-              title: "SSL Certificate Active",
-              description: "Your domain is now secured with HTTPS!",
-              duration: 5000,
-            });
-          }
-        } catch (error) {
-          console.error("Error auto-refreshing SSL:", error);
-        }
-      }, 10000);
-
-      return () => clearInterval(interval);
-    }
-  }, [
-    customDomain?.is_verified,
-    customDomain?.ssl_status,
-    customDomain?.id,
-    toast,
-  ]);
-
   const handleAddDomain = async () => {
     if (!domain) {
       toast({
