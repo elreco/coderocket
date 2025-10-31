@@ -858,6 +858,18 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
               />
               <Markdown>{input}</Markdown>
               <PromptFiles fileUrls={defaultFiles} storageUrl={storageUrl} />
+              {files.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {files.map((file, index) => (
+                    <FileBadge
+                      key={`loading-${file.name}-${index}`}
+                      file={file}
+                      onRemove={() => {}}
+                      disabled={true}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           </div>
           <div
