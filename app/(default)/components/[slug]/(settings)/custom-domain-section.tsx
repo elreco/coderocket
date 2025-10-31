@@ -9,7 +9,7 @@ import {
   Copy,
   Trash2,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -53,7 +53,7 @@ export default function CustomDomainSection({
   const { toast } = useToast();
   const [domain, setDomain] = useState("");
   const [customDomain, setCustomDomain] = useState<CustomDomain | null>(
-    initialCustomDomain || null,
+    initialCustomDomain as CustomDomain | null,
   );
   const [isAdding, setIsAdding] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
@@ -62,6 +62,15 @@ export default function CustomDomainSection({
   const [showInstructions, setShowInstructions] = useState(
     initialCustomDomain ? !initialCustomDomain.is_verified : false,
   );
+
+  useEffect(() => {
+    if (initialCustomDomain) {
+      setCustomDomain(initialCustomDomain as CustomDomain);
+      if (!initialCustomDomain.is_verified) {
+        setShowInstructions(true);
+      }
+    }
+  }, [initialCustomDomain]);
 
   const handleAddDomain = async () => {
     if (!domain) {

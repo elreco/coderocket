@@ -72,7 +72,7 @@ export default function DeploymentContent() {
   const currentDeployedVersion = fetchedChat?.deployed_version;
 
   const deployedUrl =
-    customDomain?.is_verified && customDomain?.domain
+    customDomain?.is_verified === true && customDomain?.domain
       ? customDomain.domain
       : currentSubdomain
         ? `${currentSubdomain}.coderocket.app`

@@ -103,8 +103,13 @@ export default function ComponentCompletion({
 }: Props) {
   const supabase = createClient();
   const [customDomain, setCustomDomain] = useState<{
+    id?: string;
     domain: string;
     is_verified: boolean;
+    verification_token?: string;
+    ssl_status?: string | null;
+    verified_at?: string | null;
+    created_at?: string;
   } | null>(null);
   const [githubConnection, setGithubConnection] =
     useState<Tables<"github_connections"> | null>(null);
@@ -219,20 +224,38 @@ export default function ComponentCompletion({
           const domainPromise = chat.is_deployed
             ? supabase
                 .from("custom_domains")
-                .select("domain, is_verified")
+                .select("*")
                 .eq("chat_id", chatId)
-                .eq("is_verified", true)
                 .maybeSingle()
                 .then((r) => r.data)
             : Promise.resolve(null);
 
-          const subPromise = import("@/app/supabase-server")
-            .then((m) => m.getSubscription())
-            .catch(() => null);
+          const subPromise = (async () => {
+            try {
+              const { data } = await supabase
+                .from("subscriptions")
+                .select("*, prices(*, products(*))")
+                .in("status", ["trialing", "active"])
+                .eq("user_id", chat.user_id)
+                .maybeSingle();
+              return data;
+            } catch {
+              return null;
+            }
+          })();
 
-          const githubPromise = import("./github-sync-actions")
-            .then((m) => m.getGithubConnectionForUser())
-            .catch(() => null);
+          const githubPromise = (async () => {
+            try {
+              const { data } = await supabase
+                .from("github_connections")
+                .select("*")
+                .eq("user_id", chat.user_id)
+                .maybeSingle();
+              return data;
+            } catch {
+              return null;
+            }
+          })();
 
           const [domainData, subData, githubData] = await Promise.all([
             domainPromise,
@@ -801,19 +824,43 @@ export default function ComponentCompletion({
       try {
         const domainPromise = supabase
           .from("custom_domains")
-          .select("domain, is_verified")
+          .select("*")
           .eq("chat_id", chatId)
-          .eq("is_verified", true)
           .maybeSingle()
           .then((r) => r.data);
 
-        const subPromise = import("@/app/supabase-server")
-          .then((m) => m.getSubscription())
-          .catch(() => null);
+        const subPromise = (async () => {
+          try {
+            const { data: userData } = await supabase.auth.getUser();
+            if (!userData?.user) return null;
 
-        const githubPromise = import("./github-sync-actions")
-          .then((m) => m.getGithubConnectionForUser())
-          .catch(() => null);
+            const { data } = await supabase
+              .from("subscriptions")
+              .select("*, prices(*, products(*))")
+              .in("status", ["trialing", "active"])
+              .eq("user_id", userData.user.id)
+              .maybeSingle();
+            return data;
+          } catch {
+            return null;
+          }
+        })();
+
+        const githubPromise = (async () => {
+          try {
+            const { data: userData } = await supabase.auth.getUser();
+            if (!userData?.user) return null;
+
+            const { data } = await supabase
+              .from("github_connections")
+              .select("*")
+              .eq("user_id", userData.user.id)
+              .maybeSingle();
+            return data;
+          } catch {
+            return null;
+          }
+        })();
 
         const [domainData, subData, githubData] = await Promise.all([
           domainPromise,

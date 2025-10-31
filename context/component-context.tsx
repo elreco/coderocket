@@ -70,8 +70,13 @@ interface ComponentContextType {
   currentGeneratingFile: string | null;
   iframeKey: number;
   customDomain: {
+    id?: string;
     domain: string;
     is_verified: boolean;
+    verification_token?: string;
+    ssl_status?: string | null;
+    verified_at?: string | null;
+    created_at?: string;
   } | null;
   subscription: Tables<"subscriptions"> | null;
   githubConnection: Tables<"github_connections"> | null;
