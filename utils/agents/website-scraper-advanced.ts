@@ -59,15 +59,44 @@ interface WebsiteContent {
 const isDev = process.env.NODE_ENV === "development";
 
 async function getBrowser(): Promise<Browser> {
+  const commonArgs = [
+    "--no-sandbox",
+    "--disable-setuid-sandbox",
+    "--disable-blink-features=AutomationControlled",
+    "--disable-features=IsolateOrigins,site-per-process",
+    "--disable-web-security",
+    "--disable-features=VizDisplayCompositor",
+    "--disable-dev-shm-usage",
+    "--disable-accelerated-2d-canvas",
+    "--no-first-run",
+    "--no-zygote",
+    "--disable-gpu",
+  ];
+
   if (isDev) {
-    const puppeteerModule = await import("puppeteer");
-    return await puppeteerModule.default.launch({
-      headless: true,
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
-    });
+    try {
+      const puppeteerExtra = await import("puppeteer-extra");
+      const StealthPlugin = await import("puppeteer-extra-plugin-stealth");
+      const puppeteerModule = await import("puppeteer");
+
+      puppeteerExtra.default.use(StealthPlugin.default());
+
+      return (await puppeteerExtra.default.launch({
+        executablePath: puppeteerModule.default.executablePath(),
+        headless: true,
+        args: commonArgs,
+      })) as unknown as Browser;
+    } catch {
+      console.log("Stealth plugin not available, using standard puppeteer");
+      const puppeteerModule = await import("puppeteer");
+      return await puppeteerModule.default.launch({
+        headless: true,
+        args: commonArgs,
+      });
+    }
   } else {
     return await puppeteer.launch({
-      args: chromium.args,
+      args: [...chromium.args, ...commonArgs],
       defaultViewport: chromium.defaultViewport,
       executablePath: await chromium.executablePath(),
       headless: true,
@@ -624,6 +653,58 @@ async function waitForLoadersToDisappear(page: Page): Promise<void> {
   }
 }
 
+async function waitForCloudflareChallenge(page: Page): Promise<boolean> {
+  try {
+    const isCloudflareChallenge = await page.evaluate(() => {
+      const bodyText = document.body.innerText.toLowerCase();
+      const title = document.title.toLowerCase();
+
+      return (
+        bodyText.includes("checking your browser") ||
+        bodyText.includes("cloudflare") ||
+        bodyText.includes("just a moment") ||
+        bodyText.includes("ddos protection") ||
+        title.includes("just a moment") ||
+        title.includes("cloudflare") ||
+        document.querySelector("#challenge-running") !== null ||
+        document.querySelector(".cf-browser-verification") !== null
+      );
+    });
+
+    if (isCloudflareChallenge) {
+      console.log("Cloudflare challenge detected, waiting for resolution...");
+
+      await page
+        .waitForFunction(
+          () => {
+            const bodyText = document.body.innerText.toLowerCase();
+            const title = document.title.toLowerCase();
+
+            return !(
+              bodyText.includes("checking your browser") ||
+              bodyText.includes("just a moment") ||
+              title.includes("just a moment") ||
+              document.querySelector("#challenge-running") !== null
+            );
+          },
+          { timeout: 15000 },
+        )
+        .catch(() => {
+          console.log("Cloudflare challenge timeout");
+        });
+
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      console.log("Cloudflare challenge resolved or timed out");
+      return true;
+    }
+
+    return false;
+  } catch {
+    console.log("Error checking for Cloudflare challenge");
+    return false;
+  }
+}
+
 export async function scrapeWebsiteAdvanced(
   url: string,
 ): Promise<WebsiteContent> {
@@ -635,16 +716,62 @@ export async function scrapeWebsiteAdvanced(
     browser = await getBrowser();
     const page = await browser.newPage();
 
-    await page.setViewport({ width: 1920, height: 1080 });
+    await page.setViewport({
+      width: 1920,
+      height: 1080,
+      deviceScaleFactor: 1,
+      hasTouch: false,
+      isLandscape: true,
+      isMobile: false,
+    });
 
     await page.setUserAgent(
       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
     );
 
     await page.setExtraHTTPHeaders({
-      "Accept-Language": "en-US,en;q=0.9",
+      "Accept-Language": "en-US,en;q=0.9,fr;q=0.8",
       Accept:
-        "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+        "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+      "Accept-Encoding": "gzip, deflate, br",
+      "Cache-Control": "max-age=0",
+      "sec-ch-ua":
+        '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
+      "sec-ch-ua-mobile": "?0",
+      "sec-ch-ua-platform": '"Windows"',
+      "Sec-Fetch-Dest": "document",
+      "Sec-Fetch-Mode": "navigate",
+      "Sec-Fetch-Site": "none",
+      "Sec-Fetch-User": "?1",
+      "Upgrade-Insecure-Requests": "1",
+    });
+
+    await page.evaluateOnNewDocument(() => {
+      Object.defineProperty(navigator, "webdriver", {
+        get: () => false,
+      });
+
+      (window.navigator as unknown as { chrome: unknown }).chrome = {
+        runtime: {},
+      };
+
+      Object.defineProperty(navigator, "plugins", {
+        get: () => [1, 2, 3, 4, 5],
+      });
+
+      Object.defineProperty(navigator, "languages", {
+        get: () => ["en-US", "en", "fr"],
+      });
+
+      const originalQuery = window.navigator.permissions.query;
+      window.navigator.permissions.query = (
+        parameters: PermissionDescriptor,
+      ) =>
+        parameters.name === "notifications"
+          ? Promise.resolve({
+              state: Notification.permission,
+            } as PermissionStatus)
+          : originalQuery(parameters);
     });
 
     try {
@@ -661,6 +788,12 @@ export async function scrapeWebsiteAdvanced(
     }
 
     await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    const hadCloudflare = await waitForCloudflareChallenge(page);
+
+    if (hadCloudflare) {
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+    }
 
     await handleCookiePopups(page);
 

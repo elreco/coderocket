@@ -36,7 +36,13 @@ const nextConfig = {
       },
     ];
   },
-  serverExternalPackages: ["puppeteer-core", "@sparticuz/chromium"],
+  serverExternalPackages: [
+    "puppeteer-core",
+    "@sparticuz/chromium",
+    "puppeteer-extra",
+    "puppeteer-extra-plugin-stealth",
+    "clone-deep",
+  ],
   reactStrictMode: false,
   images: {
     remotePatterns: [
