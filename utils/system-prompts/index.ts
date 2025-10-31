@@ -346,6 +346,13 @@ IMPORTANT: Always use Tailwind CSS v4 syntax, not v3.
           return [];
         }
       - Only use 'any' as a last resort when types are truly impossible to determine
+
+      SUPABASE RELATIONSHIPS:
+      - When selecting related data, if there are multiple possible relationships between tables, you MUST specify the foreign key name
+      - Use the syntax: tableName!foreignKeyName instead of just tableName
+      - Example: .select('*, categories!posts_category_id_fkey(*)') instead of .select('*, categories(*)')
+      - For many-to-many relationships through a junction table, use: .select('*, junction_table!fkey(*, other_table(*))')
+      - This prevents PGRST201 "more than one relationship was found" errors
       - Configure alias imports (@ => src/) in tsconfig.json and vite.config.ts.
       ${
         framework === Framework.REACT

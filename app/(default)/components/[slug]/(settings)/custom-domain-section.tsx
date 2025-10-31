@@ -388,116 +388,118 @@ export default function CustomDomainSection({
                   </p>
 
                   <div className="space-y-3">
-                    <div className="rounded-md border border-border bg-background p-3">
-                      <p className="mb-2 text-xs font-semibold uppercase text-muted-foreground">
+                    <div className="rounded-md border border-border bg-muted p-3">
+                      <p className="mb-3 text-xs font-semibold uppercase text-muted-foreground">
                         Record 1: Verification (TXT)
                       </p>
-                      <div className="space-y-2 font-mono text-sm">
-                        <div className="flex items-center justify-between">
-                          <span className="text-muted-foreground">Type:</span>
-                          <div className="flex items-center gap-2">
-                            <span>TXT</span>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="size-6"
-                              onClick={() => copyToClipboard("TXT")}
-                            >
-                              <Copy className="size-3" />
-                            </Button>
-                          </div>
+                      <div className="space-y-3">
+                        <div>
+                          <p className="mb-1 text-xs text-muted-foreground">
+                            Type
+                          </p>
+                          <code className="block rounded bg-background px-2 py-1.5 text-xs">
+                            TXT
+                          </code>
                         </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-muted-foreground">Host:</span>
-                          <div className="flex items-center gap-2">
-                            <span className="break-all text-xs">
-                              _coderocket-verify.{customDomain.domain}
-                            </span>
+                        <div>
+                          <div className="mb-1 flex items-center justify-between">
+                            <p className="text-xs text-muted-foreground">
+                              Host
+                            </p>
                             <Button
                               variant="ghost"
-                              size="icon"
-                              className="size-6"
+                              size="sm"
+                              className="h-6 px-2"
                               onClick={() =>
                                 copyToClipboard(
                                   `_coderocket-verify.${customDomain.domain}`,
                                 )
                               }
                             >
-                              <Copy className="size-3" />
+                              <Copy className="mr-1 size-3" />
+                              Copy
                             </Button>
                           </div>
+                          <code className="block break-all rounded bg-background px-2 py-1.5 text-xs">
+                            _coderocket-verify.{customDomain.domain}
+                          </code>
                         </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-muted-foreground">Value:</span>
-                          <div className="flex items-center gap-2">
-                            <span className="break-all text-xs">
-                              {customDomain.verification_token}
-                            </span>
+                        <div>
+                          <div className="mb-1 flex items-center justify-between">
+                            <p className="text-xs text-muted-foreground">
+                              Value
+                            </p>
                             <Button
                               variant="ghost"
-                              size="icon"
-                              className="size-6"
+                              size="sm"
+                              className="h-6 px-2"
                               onClick={() =>
                                 copyToClipboard(customDomain.verification_token)
                               }
                             >
-                              <Copy className="size-3" />
+                              <Copy className="mr-1 size-3" />
+                              Copy
                             </Button>
                           </div>
+                          <code className="block break-all rounded bg-background px-2 py-1.5 text-xs">
+                            {customDomain.verification_token}
+                          </code>
                         </div>
                       </div>
                     </div>
 
-                    <div className="rounded-md border border-border bg-background p-3">
-                      <p className="mb-2 text-xs font-semibold uppercase text-muted-foreground">
+                    <div className="rounded-md border border-border bg-muted p-3">
+                      <p className="mb-3 text-xs font-semibold uppercase text-muted-foreground">
                         Record 2: Routing (CNAME)
                       </p>
-                      <div className="space-y-2 font-mono text-sm">
-                        <div className="flex items-center justify-between">
-                          <span className="text-muted-foreground">Type:</span>
-                          <div className="flex items-center gap-2">
-                            <span>CNAME</span>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="size-6"
-                              onClick={() => copyToClipboard("CNAME")}
-                            >
-                              <Copy className="size-3" />
-                            </Button>
-                          </div>
+                      <div className="space-y-3">
+                        <div>
+                          <p className="mb-1 text-xs text-muted-foreground">
+                            Type
+                          </p>
+                          <code className="block rounded bg-background px-2 py-1.5 text-xs">
+                            CNAME
+                          </code>
                         </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-muted-foreground">Host:</span>
-                          <div className="flex items-center gap-2">
-                            <span className="break-all">
-                              {customDomain.domain}
-                            </span>
+                        <div>
+                          <div className="mb-1 flex items-center justify-between">
+                            <p className="text-xs text-muted-foreground">
+                              Host
+                            </p>
                             <Button
                               variant="ghost"
-                              size="icon"
-                              className="size-6"
+                              size="sm"
+                              className="h-6 px-2"
                               onClick={() =>
                                 copyToClipboard(customDomain.domain)
                               }
                             >
-                              <Copy className="size-3" />
+                              <Copy className="mr-1 size-3" />
+                              Copy
                             </Button>
                           </div>
+                          <code className="block break-all rounded bg-background px-2 py-1.5 text-xs">
+                            {customDomain.domain}
+                          </code>
                         </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-muted-foreground">Value:</span>
-                          <div className="flex items-center gap-2">
-                            <span>coderocket.app</span>
+                        <div>
+                          <div className="mb-1 flex items-center justify-between">
+                            <p className="text-xs text-muted-foreground">
+                              Value
+                            </p>
                             <Button
                               variant="ghost"
-                              size="icon"
-                              className="size-6"
+                              size="sm"
+                              className="h-6 px-2"
                               onClick={() => copyToClipboard("coderocket.app")}
                             >
-                              <Copy className="size-3" />
+                              <Copy className="mr-1 size-3" />
+                              Copy
                             </Button>
                           </div>
+                          <code className="block break-all rounded bg-background px-2 py-1.5 text-xs">
+                            coderocket.app
+                          </code>
                         </div>
                       </div>
                     </div>

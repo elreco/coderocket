@@ -13,6 +13,7 @@ import {
   Github,
   Plug2,
   Rocket,
+  Database,
 } from "lucide-react";
 import { useEffect, useState, useRef, useCallback } from "react";
 
@@ -45,6 +46,7 @@ import {
   hasArtifacts,
   splitContentIntoChunks,
   createContinuePrompt,
+  categorizeFiles,
 } from "@/utils/completion-parser";
 import {
   avatarApi,
@@ -1160,6 +1162,52 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
                         Fix errors
                       </Button>
                     )}
+                    {!isLoading &&
+                      chatFiles.length > 0 &&
+                      (() => {
+                        const categorized = categorizeFiles(chatFiles);
+                        const hasUnexecutedMigration =
+                          categorized.migrations.some((migration: ChatFile) => {
+                            const currentMessage = messages.find(
+                              (m) =>
+                                m.version === selectedVersion &&
+                                m.role === "assistant",
+                            );
+                            const migrationsExecuted =
+                              currentMessage?.migrations_executed as Array<{
+                                name: string;
+                                executed_at: string;
+                              }> | null;
+                            const isExecuted = (migrationsExecuted || []).some(
+                              (m) => m.name === migration.name,
+                            );
+                            return !isExecuted;
+                          });
+                        return (
+                          hasUnexecutedMigration && (
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="secondary"
+                              className="mr-2"
+                              onClick={() => {
+                                const migrationSection = document.querySelector(
+                                  "[data-migration-runner]",
+                                );
+                                if (migrationSection) {
+                                  migrationSection.scrollIntoView({
+                                    behavior: "smooth",
+                                    block: "center",
+                                  });
+                                }
+                              }}
+                            >
+                              <Database className="size-4" />
+                              Run Migration
+                            </Button>
+                          )
+                        );
+                      })()}
                   </div>
                   <div className="flex items-center space-x-2">
                     {selectedFramework === Framework.HTML && !isLengthError && (

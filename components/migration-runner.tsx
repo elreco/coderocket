@@ -138,7 +138,10 @@ export function MigrationRunner({
   };
 
   return (
-    <Alert className="border-l-4 border-l-blue-500 bg-blue-50 dark:bg-blue-950">
+    <Alert
+      data-migration-runner
+      className="border-l-4 border-l-blue-500 bg-blue-50 dark:bg-blue-950"
+    >
       <Database className="size-4 text-blue-600" />
       <AlertTitle className="flex items-center gap-2 text-blue-900 dark:text-blue-100">
         Database Migration Detected
@@ -147,16 +150,16 @@ export function MigrationRunner({
         <div className="mt-2 space-y-3 break-words ">
           <div className="text-sm text-blue-800 dark:text-blue-200">
             <p className="break-words font-medium">{migrationFile.name}</p>
-            <div className="mt-1 flex gap-4 text-blue-600 dark:text-blue-300">
+            <div className="mt-1 flex flex-col gap-4 text-blue-600 dark:text-blue-300">
               {tables.length > 0 && (
                 <span className="flex items-center gap-1">
-                  <FileCode className="size-3" />
+                  <FileCode className="size-4" />
                   Tables: {tables.join(", ")}
                 </span>
               )}
               {policies.length > 0 && (
                 <span className="flex items-center gap-1">
-                  <CheckCircle2 className="size-3" />
+                  <CheckCircle2 className="size-4" />
                   {policies.length} RLS{" "}
                   {policies.length === 1 ? "Policy" : "Policies"}
                 </span>
