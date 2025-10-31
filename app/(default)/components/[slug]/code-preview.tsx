@@ -156,57 +156,65 @@ export default function CodePreview() {
     });
   };
 
-  // Créer un StateField pour gérer le scroll
-  const scrollField = StateField.define<number>({
-    create: () => 0,
-    update: (value, tr) => {
-      if (!tr.docChanged) return value;
-      return tr.startState.doc.length
-        ? (tr.startState.doc.length / tr.state.doc.length) * value
-        : value;
-    },
-  });
+  const scrollIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const lastContentLengthRef = useRef<number>(0);
 
   useEffect(() => {
+    if (scrollIntervalRef.current) {
+      clearInterval(scrollIntervalRef.current);
+      scrollIntervalRef.current = null;
+    }
+
     if (!isLoading) {
+      lastContentLengthRef.current = 0;
       return;
     }
 
-    const view = codeMirrorRef.current?.view as EditorView;
-    if (!view) return;
-
     const scrollToBottom = () => {
-      if (isLoading && view && view.scrollDOM) {
+      const view = codeMirrorRef.current?.view as EditorView;
+      if (!view) return;
+
+      const currentLength = view.state.doc.length;
+
+      if (currentLength === lastContentLengthRef.current) {
+        return;
+      }
+
+      lastContentLengthRef.current = currentLength;
+
+      requestAnimationFrame(() => {
         try {
+          if (!view.scrollDOM) return;
+
           const cmScroller = view.scrollDOM.querySelector(
             ".cm-scroller",
           ) as HTMLElement;
-          if (cmScroller) {
-            cmScroller.scrollTop = cmScroller.scrollHeight;
-          } else if (view.scrollDOM) {
-            view.scrollDOM.scrollTop = view.scrollDOM.scrollHeight;
+
+          const scrollTarget = cmScroller || view.scrollDOM;
+
+          if (scrollTarget) {
+            scrollTarget.scrollTo({
+              top: scrollTarget.scrollHeight,
+              behavior: "auto",
+            });
           }
         } catch (error) {
           console.error("Scroll error:", error);
         }
-      }
+      });
     };
 
-    const scrollInterval = setInterval(scrollToBottom, 250);
+    scrollToBottom();
+
+    scrollIntervalRef.current = setInterval(scrollToBottom, 200);
 
     return () => {
-      clearInterval(scrollInterval);
+      if (scrollIntervalRef.current) {
+        clearInterval(scrollIntervalRef.current);
+        scrollIntervalRef.current = null;
+      }
     };
-  }, [chatFiles, isLoading]);
-
-  useEffect(() => {
-    if (codeMirrorRef.current?.view) {
-      const view = codeMirrorRef.current.view as EditorView;
-      view.dispatch({
-        effects: StateEffect.appendConfig.of([scrollField]),
-      });
-    }
-  }, []);
+  }, [isLoading, editorValue]);
 
   const FrameworkIcon =
     selectedFramework === Framework.HTML
