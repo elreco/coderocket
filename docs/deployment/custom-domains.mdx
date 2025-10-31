@@ -1,0 +1,361 @@
+---
+title: Custom Domains
+description: 'Use your own domain name with HTTPS for deployed applications'
+icon: "globe"
+---
+
+## What are Custom Domains?
+
+When deploying your applications on CodeRocket, you have two options:
+
+1. **CodeRocket Subdomain** (Free): Use a subdomain like `yourapp.coderocket.app` - perfect for prototypes and testing
+2. **Custom Domain** (Premium): Use your own domain like `app.yourdomain.com` - ideal for production and professional branding
+
+Both options include automatic HTTPS/SSL certificates for secure connections.
+
+<Card title="Premium Feature" icon="zap" color="#9333ea">
+  Custom domains are available exclusively for premium users with deployed applications. [Upgrade your account](https://www.coderocket.app/pricing) to access this feature.
+</Card>
+
+## Prerequisites
+
+Before adding a custom domain, make sure you have:
+
+<Check>A CodeRocket premium subscription</Check>
+<Check>A deployed application</Check>
+<Check>Access to your domain's DNS settings</Check>
+<Check>Owner permissions for the project</Check>
+
+## Choosing Your Domain Type
+
+### During Initial Deployment
+
+When you first deploy your application, you'll be asked to choose between:
+
+- **CodeRocket Subdomain**: Free, instant setup, no configuration needed
+- **Custom Domain**: Your own branding, requires DNS configuration (can be added after deployment)
+
+<Tip>
+  We recommend starting with a CodeRocket subdomain for quick testing, then adding a custom domain later for production.
+</Tip>
+
+## How to Add a Custom Domain
+
+### Step 1: Deploy with CodeRocket Subdomain
+
+First, deploy your application using a CodeRocket subdomain:
+
+1. Navigate to your project
+2. Open the **Deployment** tab
+3. Select **CodeRocket Subdomain** as your domain type
+4. Enter your desired subdomain (e.g., `myapp`)
+5. Click **Deploy Application**
+
+<Info>
+  You must deploy your application with a CodeRocket subdomain before adding a custom domain.
+</Info>
+
+### Step 2: Add Your Domain
+
+Once your application is deployed:
+
+1. Scroll down to the **Custom Domain** section
+2. Enter your domain name (e.g., `app.example.com` or `example.com`)
+3. Click **Add Custom Domain**
+
+<Tip>
+  You can use either a root domain (`example.com`) or a subdomain (`app.example.com`). Subdomains are recommended for better flexibility.
+</Tip>
+
+### Step 3: Configure DNS Records
+
+After adding your domain, you'll need to configure two DNS records:
+
+#### TXT Record (for verification)
+
+Add this record to verify domain ownership:
+
+```text
+Type: TXT
+Host: _coderocket-verify.yourdomain.com (or _coderocket-verify.app.yourdomain.com)
+Value: coderocket-verify-[your-unique-token]
+TTL: 3600
+```
+
+<Note>
+  The TXT record uses a subdomain prefix `_coderocket-verify` to avoid conflicts with the CNAME record. This is required by DNS standards and prevents errors on providers like OVH.
+</Note>
+
+#### CNAME Record (for routing)
+
+Add this record to route traffic to CodeRocket:
+
+```text
+Type: CNAME
+Host: yourdomain.com (or app.yourdomain.com)
+Value: coderocket.app
+TTL: 3600
+```
+
+<Note>
+  DNS changes can take up to 48 hours to propagate, but usually complete within a few minutes.
+</Note>
+
+### Step 4: Verify Your Domain
+
+After configuring the DNS records:
+
+1. Wait a few minutes for DNS propagation
+2. Click **Verify Domain** in the Custom Domain section
+3. CodeRocket will check your DNS records automatically
+
+<Success>
+  Once verified, your domain will be marked as **Verified** and SSL certificate provisioning will begin automatically.
+</Success>
+
+## SSL Certificates
+
+### Automatic HTTPS via Vercel
+
+All custom domains automatically receive free SSL/TLS certificates powered by Vercel:
+
+- ✅ **Automatic issuance** after domain verification
+- ✅ **Powered by Let's Encrypt** (via Vercel)
+- ✅ **Auto-renewal** before expiration
+- ✅ **No configuration needed** - completely automatic
+- ✅ **90-day validity** with automatic renewal
+
+### How It Works
+
+1. You verify your domain ownership (DNS TXT record)
+2. CodeRocket automatically adds your domain to Vercel
+3. Vercel provisions an SSL certificate
+4. Your domain is accessible via HTTPS within minutes
+5. Vercel automatically renews the certificate every 60 days
+
+**No action required from you or your users!** 🎉
+
+### Certificate Status
+
+You can monitor your SSL certificate status in the Custom Domain section:
+
+- **Pending**: Certificate is being issued by Vercel (usually takes 2-5 minutes)
+- **Active**: Certificate is active and your domain is secure
+- **Failed**: Certificate issuance failed (check DNS configuration)
+
+<Note>
+  Vercel handles all certificate renewals automatically. You will never need to manually renew certificates.
+</Note>
+
+<Warning>
+  If certificate issuance fails, verify that your CNAME record correctly points to `coderocket.app` and try again.
+</Warning>
+
+## DNS Configuration Examples
+
+### For a Subdomain (Recommended)
+
+If you're using a subdomain like `app.example.com`:
+
+```text
+TXT Record:
+  Name: _coderocket-verify.app.example.com
+  Value: coderocket-verify-abc123...
+
+CNAME Record:
+  Name: app.example.com
+  Value: coderocket.app
+```
+
+### For a Root Domain
+
+If you're using a root domain like `example.com`:
+
+```text
+TXT Record:
+  Name: _coderocket-verify.example.com (or _coderocket-verify if your provider uses relative names)
+  Value: coderocket-verify-abc123...
+
+CNAME Record:
+  Name: example.com (or @)
+  Value: coderocket.app
+```
+
+<Warning>
+  **Important**: The TXT record must use the `_coderocket-verify` prefix. This prevents DNS conflicts because you cannot have both a TXT record and a CNAME record on the same exact subdomain.
+</Warning>
+
+<Info>
+  Some DNS providers use `@` to represent the root domain, while others use the full domain name.
+</Info>
+
+## Common DNS Providers
+
+Here's how to add DNS records with popular providers:
+
+<AccordionGroup>
+  <Accordion title="Cloudflare">
+    1. Log in to your Cloudflare dashboard
+    2. Select your domain
+    3. Go to **DNS** > **Records**
+    4. Click **Add record**
+    5. Add the TXT and CNAME records
+    6. Make sure the proxy status (orange cloud) is disabled for the CNAME record
+  </Accordion>
+
+  <Accordion title="Namecheap">
+    1. Log in to your Namecheap account
+    2. Go to **Domain List** and select your domain
+    3. Click **Advanced DNS**
+    4. Add the TXT and CNAME records under **Host Records**
+  </Accordion>
+
+  <Accordion title="GoDaddy">
+    1. Log in to your GoDaddy account
+    2. Go to **My Products** > **DNS**
+    3. Click **Add** to add new records
+    4. Add the TXT and CNAME records
+  </Accordion>
+
+  <Accordion title="Google Domains">
+    1. Log in to Google Domains
+    2. Select your domain
+    3. Go to **DNS**
+    4. Scroll to **Custom resource records**
+    5. Add the TXT and CNAME records
+  </Accordion>
+</AccordionGroup>
+
+## Managing Your Custom Domain
+
+### Viewing Domain Status
+
+In the Deployment tab, the Custom Domain section shows:
+
+- Domain name
+- Verification status
+- SSL certificate status
+- Last update time
+
+### Updating Your Domain
+
+To change your custom domain:
+
+1. Remove the existing custom domain
+2. Add a new domain
+3. Configure DNS records for the new domain
+4. Verify the new domain
+
+<Warning>
+  Removing a custom domain will make your application inaccessible at that domain. The old subdomain (`yourapp.coderocket.app`) will continue to work.
+</Warning>
+
+### Removing a Custom Domain
+
+To remove a custom domain:
+
+1. Go to the Deployment tab
+2. Scroll to the Custom Domain section
+3. Click the trash icon
+4. Confirm the removal
+
+## Troubleshooting
+
+### Domain Verification Failed
+
+If domain verification fails:
+
+1. **Check DNS records**: Verify that both TXT and CNAME records are correctly configured
+2. **Wait for propagation**: DNS changes can take time. Wait 15-30 minutes and try again
+3. **Check DNS with a tool**: Use [DNS Checker](https://dnschecker.org/) to verify your records globally
+4. **Remove cache**: Clear your browser cache and DNS cache
+
+### SSL Certificate Pending
+
+If your SSL certificate stays in "Pending" status:
+
+1. Verify your domain is correctly verified
+2. Check that the CNAME record points to `coderocket.app`
+3. Wait up to 15 minutes for certificate issuance
+4. If it persists, remove and re-add the domain
+
+### Application Not Loading
+
+If your application doesn't load on your custom domain:
+
+1. Check that your application is deployed
+2. Verify DNS records are correct
+3. Check SSL certificate status
+4. Try accessing via the original subdomain to verify the deployment works
+
+<Tip>
+  You can always access your application using the original CodeRocket subdomain even if custom domain configuration is pending.
+</Tip>
+
+## Best Practices
+
+### Use Subdomains
+
+Use a subdomain (like `app.example.com`) rather than your root domain:
+
+- Easier to manage
+- Better for multiple applications
+- More flexible DNS configuration
+- Recommended by DNS standards
+
+### Monitor Certificate Expiration
+
+While certificates auto-renew, monitor your certificate status:
+
+- Check the Custom Domain section regularly
+- Set up monitoring for your domain
+- Renew failed certificates promptly
+
+### Keep DNS Records Updated
+
+- Don't delete DNS records while using custom domains
+- Keep TTL values reasonable (3600 seconds recommended)
+- Document your DNS configuration
+
+## Limitations
+
+- **One domain per project**: Each project can have only one custom domain
+- **Verification required**: Domains must be verified before use
+- **Premium only**: Custom domains require an active premium subscription
+- **No wildcard domains**: Wildcard domains (`*.example.com`) are not supported
+
+## FAQ
+
+<AccordionGroup>
+  <Accordion title="Can I use multiple custom domains?">
+    No, each project supports one custom domain. However, you can use both your custom domain and the CodeRocket subdomain simultaneously.
+  </Accordion>
+
+  <Accordion title="What happens if I cancel my subscription?">
+    If you cancel your premium subscription, your custom domain will stop working, but your application will remain accessible via the CodeRocket subdomain.
+  </Accordion>
+
+  <Accordion title="Can I transfer a domain to another project?">
+    Yes, remove the domain from one project and add it to another. You'll need to re-verify the domain.
+  </Accordion>
+
+  <Accordion title="Do I need to renew SSL certificates?">
+    No, SSL certificates are automatically renewed before expiration. You don't need to do anything.
+  </Accordion>
+
+  <Accordion title="Can I use a domain from any registrar?">
+    Yes, as long as you can configure TXT and CNAME records for the domain, you can use it with CodeRocket.
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Deployment Guide" icon="rocket" href="/deployment/guide">
+    Learn how to deploy your application
+  </Card>
+  <Card title="Managing Deployments" icon="wrench" href="/deployment/managing">
+    Update and manage your deployments
+  </Card>
+</CardGroup>
+

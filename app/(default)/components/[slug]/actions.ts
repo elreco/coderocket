@@ -571,12 +571,24 @@ export const undeployComponent = async (chatId: string) => {
     .from("chats")
     .update({
       is_deployed: false,
+      deploy_subdomain: null,
+      deployed_at: null,
+      deployed_version: null,
     })
     .eq("id", chatId);
 
   if (error) {
     console.error("Error undeploying component:", error);
     throw new Error("Failed to undeploy component");
+  }
+
+  const { error: domainError } = await supabase
+    .from("custom_domains")
+    .delete()
+    .eq("chat_id", chatId);
+
+  if (domainError) {
+    console.error("Error deleting custom domain:", domainError);
   }
 
   return { success: true };
@@ -641,4 +653,246 @@ export const updateDeploymentSubdomain = async (
   }
 
   return { success: true, subdomain: normalizedSubdomain };
+};
+
+export const addCustomDomain = async (chatId: string, domain: string) => {
+  const supabase = await createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  const user = userData?.user;
+
+  if (!user) throw new Error("User not authenticated");
+
+  const subscription = await getSubscription();
+  if (!subscription) {
+    throw new Error("payment-required");
+  }
+
+  const { data: chat } = await supabase
+    .from("chats")
+    .select("user_id, is_deployed")
+    .eq("id", chatId)
+    .single();
+
+  if (!chat || chat.user_id !== user.id) {
+    throw new Error("Unauthorized");
+  }
+
+  if (!chat.is_deployed) {
+    throw new Error(
+      "Application must be deployed before adding a custom domain",
+    );
+  }
+
+  const normalizedDomain = domain.toLowerCase().trim();
+
+  const { data: existingDomain } = await supabase
+    .from("custom_domains")
+    .select("id")
+    .eq("domain", normalizedDomain)
+    .maybeSingle();
+
+  if (existingDomain) {
+    throw new Error("This domain is already in use");
+  }
+
+  const { data: existingChatDomain } = await supabase
+    .from("custom_domains")
+    .select("id")
+    .eq("chat_id", chatId)
+    .maybeSingle();
+
+  if (existingChatDomain) {
+    throw new Error(
+      "This project already has a custom domain. Please remove it first.",
+    );
+  }
+
+  const verificationToken = `coderocket-verify-${Math.random().toString(36).substring(2, 15)}${Math.random().toString(36).substring(2, 15)}`;
+
+  const { data: newDomain, error } = await supabase
+    .from("custom_domains")
+    .insert({
+      chat_id: chatId,
+      user_id: user.id,
+      domain: normalizedDomain,
+      verification_token: verificationToken,
+      verification_method: "dns",
+      is_verified: false,
+      ssl_status: "pending",
+    })
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Error adding custom domain:", error);
+    throw new Error(error.message || "Failed to add custom domain");
+  }
+
+  return {
+    success: true,
+    domain: normalizedDomain,
+    verificationToken,
+    id: newDomain.id,
+  };
+};
+
+export const verifyCustomDomain = async (domainId: string) => {
+  const supabase = await createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  const user = userData?.user;
+
+  if (!user) throw new Error("User not authenticated");
+
+  const { data: domain } = await supabase
+    .from("custom_domains")
+    .select("*")
+    .eq("id", domainId)
+    .eq("user_id", user.id)
+    .single();
+
+  if (!domain) {
+    throw new Error("Domain not found or unauthorized");
+  }
+
+  const { verifyDomainOwnership } = await import("@/utils/domain-verification");
+
+  const verificationResult = await verifyDomainOwnership(
+    domain.domain,
+    domain.verification_token,
+  );
+
+  if (!verificationResult.verified) {
+    throw new Error(
+      verificationResult.error ||
+        "Domain verification failed. Please check your DNS records.",
+    );
+  }
+
+  let sslStatus = "pending";
+  let sslError = null;
+
+  try {
+    const { addDomainToVercel } = await import("@/utils/vercel-domains");
+    await addDomainToVercel(domain.domain);
+    sslStatus = "active";
+  } catch (error) {
+    console.error("Error adding domain to Vercel:", error);
+    sslStatus = "failed";
+    sslError =
+      error instanceof Error ? error.message : "Failed to configure SSL";
+  }
+
+  const { error } = await supabase
+    .from("custom_domains")
+    .update({
+      is_verified: true,
+      verified_at: new Date().toISOString(),
+      ssl_status: sslStatus,
+      ssl_issued_at: sslStatus === "active" ? new Date().toISOString() : null,
+    })
+    .eq("id", domainId);
+
+  if (error) {
+    console.error("Error updating domain verification:", error);
+    throw new Error("Failed to update domain verification status");
+  }
+
+  if (sslError) {
+    throw new Error(`Domain verified but SSL setup failed: ${sslError}`);
+  }
+
+  return { success: true, verified: true };
+};
+
+export const deleteCustomDomain = async (domainId: string) => {
+  const supabase = await createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  const user = userData?.user;
+
+  if (!user) throw new Error("User not authenticated");
+
+  const { data: domain } = await supabase
+    .from("custom_domains")
+    .select("user_id, domain, is_verified")
+    .eq("id", domainId)
+    .single();
+
+  if (!domain || domain.user_id !== user.id) {
+    throw new Error("Unauthorized");
+  }
+
+  if (domain.is_verified) {
+    try {
+      const { removeDomainFromVercel } = await import("@/utils/vercel-domains");
+      await removeDomainFromVercel(domain.domain);
+    } catch (error) {
+      console.error("Error removing domain from Vercel:", error);
+    }
+  }
+
+  const { error } = await supabase
+    .from("custom_domains")
+    .delete()
+    .eq("id", domainId);
+
+  if (error) {
+    console.error("Error deleting custom domain:", error);
+    throw new Error("Failed to delete custom domain");
+  }
+
+  return { success: true };
+};
+
+export const getCustomDomain = async (chatId: string) => {
+  const supabase = await createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  const user = userData?.user;
+
+  if (!user) throw new Error("User not authenticated");
+
+  const { data: domain, error } = await supabase
+    .from("custom_domains")
+    .select("*")
+    .eq("chat_id", chatId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (error) {
+    console.error("Error fetching custom domain:", error);
+    return null;
+  }
+
+  return domain;
+};
+
+export const checkCustomDomainAvailability = async (domain: string) => {
+  const supabase = await createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  const user = userData?.user;
+
+  if (!user) throw new Error("User not authenticated");
+
+  const normalizedDomain = domain.toLowerCase().trim();
+
+  const { checkDomainAvailability } = await import(
+    "@/utils/domain-verification"
+  );
+
+  const availabilityCheck = await checkDomainAvailability(normalizedDomain);
+
+  if (!availabilityCheck.available) {
+    return { available: false, reason: availabilityCheck.reason };
+  }
+
+  const { data: existingDomain } = await supabase
+    .from("custom_domains")
+    .select("id")
+    .eq("domain", normalizedDomain)
+    .maybeSingle();
+
+  if (existingDomain) {
+    return { available: false, reason: "Domain is already in use" };
+  }
+
+  return { available: true };
 };

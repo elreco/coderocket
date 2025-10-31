@@ -15,43 +15,13 @@ import { createClient } from "@/utils/supabase/client";
 import { changeVisibilityByChatId } from "../actions";
 
 export default function SettingsContent() {
-  const { isVisible, setVisible, chatId } = useComponentContext();
-  const [isPremium, setIsPremium] = useState(false);
-  const [isCheckingPremium, setIsCheckingPremium] = useState(true);
+  const { isVisible, setVisible, chatId, subscription } = useComponentContext();
   const [isVisibilityLoading, setIsVisibilityLoading] = useState(false);
   const [isListedOnMarketplace, setIsListedOnMarketplace] = useState(false);
   const [isCheckingMarketplace, setIsCheckingMarketplace] = useState(true);
 
-  useEffect(() => {
-    const checkPremiumStatus = async () => {
-      try {
-        const supabase = createClient();
-        const { data: userData } = await supabase.auth.getUser();
-
-        if (!userData.user) {
-          setIsPremium(false);
-          setIsCheckingPremium(false);
-          return;
-        }
-
-        const { data: subscription } = await supabase
-          .from("subscriptions")
-          .select("*, prices(*, products(*))")
-          .in("status", ["trialing", "active"])
-          .eq("user_id", userData.user.id)
-          .maybeSingle();
-
-        setIsPremium(!!subscription);
-        setIsCheckingPremium(false);
-      } catch (error) {
-        console.error("Error checking premium status:", error);
-        setIsPremium(false);
-        setIsCheckingPremium(false);
-      }
-    };
-
-    checkPremiumStatus();
-  }, []);
+  const isPremium = !!subscription;
+  const isCheckingPremium = false;
 
   useEffect(() => {
     const checkMarketplaceListing = async () => {

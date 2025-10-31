@@ -226,6 +226,72 @@ export type Database = {
           },
         ];
       };
+      custom_domains: {
+        Row: {
+          chat_id: string;
+          created_at: string;
+          domain: string;
+          id: string;
+          is_verified: boolean | null;
+          ssl_certificate_id: string | null;
+          ssl_expires_at: string | null;
+          ssl_issued_at: string | null;
+          ssl_status: string | null;
+          updated_at: string;
+          user_id: string;
+          verification_method: string;
+          verification_token: string;
+          verified_at: string | null;
+        };
+        Insert: {
+          chat_id: string;
+          created_at?: string;
+          domain: string;
+          id?: string;
+          is_verified?: boolean | null;
+          ssl_certificate_id?: string | null;
+          ssl_expires_at?: string | null;
+          ssl_issued_at?: string | null;
+          ssl_status?: string | null;
+          updated_at?: string;
+          user_id: string;
+          verification_method?: string;
+          verification_token: string;
+          verified_at?: string | null;
+        };
+        Update: {
+          chat_id?: string;
+          created_at?: string;
+          domain?: string;
+          id?: string;
+          is_verified?: boolean | null;
+          ssl_certificate_id?: string | null;
+          ssl_expires_at?: string | null;
+          ssl_issued_at?: string | null;
+          ssl_status?: string | null;
+          updated_at?: string;
+          user_id?: string;
+          verification_method?: string;
+          verification_token?: string;
+          verified_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "custom_domains_chat_id_fkey";
+            columns: ["chat_id"];
+            isOneToOne: true;
+            referencedRelation: "chats";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "custom_domains_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       customers: {
         Row: {
           id: string;

@@ -11,7 +11,6 @@ import {
   enableChatIntegration,
   disableChatIntegration,
 } from "@/app/(default)/account/integrations/actions";
-import { getSubscription } from "@/app/supabase-server";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { IntegrationBadge } from "@/components/ui/integration-badge";
@@ -26,21 +25,18 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { useComponentContext } from "@/context/component-context";
 import { toast } from "@/hooks/use-toast";
-import { Database } from "@/types_db";
 import {
   IntegrationType,
   UserIntegration,
   ChatIntegrationWithDetails,
 } from "@/utils/integrations";
 
-type Subscription = Database["public"]["Tables"]["subscriptions"]["Row"] & {
-  prices: Database["public"]["Tables"]["prices"]["Row"] & {
-    products: Database["public"]["Tables"]["products"]["Row"];
-  };
-};
-
 export default function IntegrationsContent() {
-  const { chatId, user } = useComponentContext();
+  const {
+    chatId,
+    user,
+    subscription: contextSubscription,
+  } = useComponentContext();
   const [userIntegrations, setUserIntegrations] = useState<UserIntegration[]>(
     [],
   );
@@ -48,27 +44,24 @@ export default function IntegrationsContent() {
     ChatIntegrationWithDetails[]
   >([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [selectedIntegrations, setSelectedIntegrations] = useState<
     Map<IntegrationType, string>
   >(new Map());
 
+  const subscription = contextSubscription;
   const isPremium = !!subscription;
 
   const loadData = async () => {
     if (!user) return;
 
     setIsLoading(true);
-    const [allIntegrations, enabledIntegrations, subscriptionData] =
-      await Promise.all([
-        fetchUserIntegrations(),
-        getChatIntegrations(chatId),
-        getSubscription(),
-      ]);
+    const [allIntegrations, enabledIntegrations] = await Promise.all([
+      fetchUserIntegrations(),
+      getChatIntegrations(chatId),
+    ]);
 
     setUserIntegrations(allIntegrations);
     setChatIntegrations(enabledIntegrations);
-    setSubscription(subscriptionData as Subscription | null);
 
     const selected = new Map<IntegrationType, string>();
     enabledIntegrations.forEach((ci) => {

@@ -1,4 +1,3 @@
-import { StateField } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 import {
   SiHtml5,
@@ -8,10 +7,7 @@ import {
   SiAngular,
 } from "@icons-pack/react-simple-icons";
 import { draculaInit } from "@uiw/codemirror-theme-dracula";
-import CodeMirror, {
-  ReactCodeMirrorRef,
-  StateEffect,
-} from "@uiw/react-codemirror";
+import CodeMirror, { ReactCodeMirrorRef } from "@uiw/react-codemirror";
 import saveAs from "file-saver";
 import JSZip from "jszip";
 import {
@@ -115,7 +111,6 @@ export default function CodePreview() {
   const {
     isCanvas,
     isLoading,
-    chatFiles,
     activeTab,
     editorValue,
     artifactFiles,

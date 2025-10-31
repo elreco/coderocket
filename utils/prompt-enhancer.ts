@@ -31,9 +31,10 @@ export const promptEnhancer = async (
       .slice(-4)
       .map((msg) => {
         const role = msg.role === "user" ? "User" : "Assistant";
-        const content = msg.content.length > 500
-          ? msg.content.substring(0, 500) + "..."
-          : msg.content;
+        const content =
+          msg.content.length > 500
+            ? msg.content.substring(0, 500) + "..."
+            : msg.content;
         return `${role}: ${content}`;
       })
       .join("\n\n");

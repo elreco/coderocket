@@ -102,6 +102,12 @@ export default function ComponentCompletion({
   user,
 }: Props) {
   const supabase = createClient();
+  const [customDomain, setCustomDomain] = useState<{
+    domain: string;
+    is_verified: boolean;
+  } | null>(null);
+  const [githubConnection, setGithubConnection] =
+    useState<Tables<"github_connections"> | null>(null);
   const [, copy] = useCopyToClipboard();
   const { toast } = useToast();
   const router = useRouter();
@@ -207,6 +213,43 @@ export default function ComponentCompletion({
       setLastAssistantMessage(assistantMsg || null);
       setMessages(msgs as ChatMessage[]);
       setSelectedVersion(userMsg?.version || 0);
+
+      const loadInitialData = async () => {
+        try {
+          const domainPromise = chat.is_deployed
+            ? supabase
+                .from("custom_domains")
+                .select("domain, is_verified")
+                .eq("chat_id", chatId)
+                .eq("is_verified", true)
+                .maybeSingle()
+                .then((r) => r.data)
+            : Promise.resolve(null);
+
+          const subPromise = import("@/app/supabase-server")
+            .then((m) => m.getSubscription())
+            .catch(() => null);
+
+          const githubPromise = import("./github-sync-actions")
+            .then((m) => m.getGithubConnectionForUser())
+            .catch(() => null);
+
+          const [domainData, subData, githubData] = await Promise.all([
+            domainPromise,
+            subPromise,
+            githubPromise,
+          ]);
+
+          setCustomDomain(domainData);
+          setSubscription(subData);
+          setGithubConnection(githubData);
+        } catch (error) {
+          console.error("Error loading initial data:", error);
+        }
+      };
+
+      loadInitialData();
+
       setTitle(
         chat.title ||
           `Version #${userMsg?.version && userMsg.version > -1 ? userMsg.version : 0}`,
@@ -753,6 +796,39 @@ export default function ComponentCompletion({
     const title = refreshedChat.title || `Version #${selectedVersion}`;
     setTitle(title);
     document.title = `${title} - CodeRocket`;
+
+    if (refreshedChat.is_deployed) {
+      try {
+        const domainPromise = supabase
+          .from("custom_domains")
+          .select("domain, is_verified")
+          .eq("chat_id", chatId)
+          .eq("is_verified", true)
+          .maybeSingle()
+          .then((r) => r.data);
+
+        const subPromise = import("@/app/supabase-server")
+          .then((m) => m.getSubscription())
+          .catch(() => null);
+
+        const githubPromise = import("./github-sync-actions")
+          .then((m) => m.getGithubConnectionForUser())
+          .catch(() => null);
+
+        const [domainData, subData, githubData] = await Promise.all([
+          domainPromise,
+          subPromise,
+          githubPromise,
+        ]);
+
+        setCustomDomain(domainData);
+        setSubscription(subData);
+        setGithubConnection(githubData);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    }
+
     return refreshedChatMessages;
   };
 
@@ -958,6 +1034,9 @@ export default function ComponentCompletion({
     currentGeneratingFile,
     iframeKey,
     refreshChat,
+    customDomain,
+    subscription,
+    githubConnection,
   };
 
   useEffect(() => {
@@ -1019,7 +1098,12 @@ export default function ComponentCompletion({
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <a
-                                href={`https://${fetchedChat.deploy_subdomain}.coderocket.app`}
+                                href={`https://${
+                                  customDomain?.is_verified &&
+                                  customDomain?.domain
+                                    ? customDomain.domain
+                                    : `${fetchedChat.deploy_subdomain}.coderocket.app`
+                                }`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="flex items-center gap-1.5 rounded-full border border-green-500/30 bg-green-500/10 px-2 py-1 text-xs font-medium text-green-700 transition-colors hover:bg-green-500/20 dark:text-green-400"
@@ -1032,8 +1116,11 @@ export default function ComponentCompletion({
                             </TooltipTrigger>
                             <TooltipContent>
                               <p>
-                                Live at {fetchedChat.deploy_subdomain}
-                                .coderocket.app
+                                Live at{" "}
+                                {customDomain?.is_verified &&
+                                customDomain?.domain
+                                  ? customDomain.domain
+                                  : `${fetchedChat.deploy_subdomain}.coderocket.app`}
                               </p>
                             </TooltipContent>
                           </Tooltip>

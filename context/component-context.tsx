@@ -69,6 +69,12 @@ interface ComponentContextType {
   setSidebarTab: (tab: string) => void;
   currentGeneratingFile: string | null;
   iframeKey: number;
+  customDomain: {
+    domain: string;
+    is_verified: boolean;
+  } | null;
+  subscription: Tables<"subscriptions"> | null;
+  githubConnection: Tables<"github_connections"> | null;
 }
 
 export const ComponentContext = createContext<ComponentContextType | undefined>(

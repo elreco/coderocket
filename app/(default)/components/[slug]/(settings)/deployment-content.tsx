@@ -13,7 +13,6 @@ import {
 import Link from "next/link";
 import { useState, useEffect } from "react";
 
-import { getSubscription } from "@/app/supabase-server";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,19 +25,28 @@ import {
 } from "@/components/ui/select";
 import { useComponentContext } from "@/context/component-context";
 import { toast } from "@/hooks/use-toast";
-import { Tables } from "@/types_db";
-import { createClient } from "@/utils/supabase/client";
 
 import {
   deployComponent,
   undeployComponent,
   updateDeploymentSubdomain,
   checkSubdomainAvailability,
+  getCustomDomain,
 } from "../actions";
 
+import CustomDomainSection from "./custom-domain-section";
+
 export default function DeploymentContent() {
-  const { chatId, fetchedChat, user, messages, refreshChat } =
-    useComponentContext();
+  const {
+    chatId,
+    fetchedChat,
+    user,
+    messages,
+    refreshChat,
+    isWebcontainerReady,
+    customDomain: contextCustomDomain,
+    subscription: contextSubscription,
+  } = useComponentContext();
   const [subdomain, setSubdomain] = useState("");
   const [selectedVersion, setSelectedVersion] = useState<number | null>(null);
   const [isDeploying, setIsDeploying] = useState(false);
@@ -46,18 +54,29 @@ export default function DeploymentContent() {
   const [isCheckingAvailability, setIsCheckingAvailability] = useState(false);
   const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
   const [isUpdatingSubdomain, setIsUpdatingSubdomain] = useState(false);
-  const [subscription, setSubscription] = useState<
-    | (Tables<"subscriptions"> & {
-        prices: Partial<Tables<"prices">> | null;
-      })
-    | null
-  >(null);
-  const [isLoadingSubscription, setIsLoadingSubscription] = useState(true);
+  const [customDomain, setCustomDomain] = useState<{
+    id: string;
+    domain: string;
+    verification_token: string;
+    is_verified: boolean | null;
+    verified_at?: string | null;
+    ssl_status: "pending" | "active" | "expired" | "failed" | null;
+    created_at: string;
+  } | null>(null);
+
+  const subscription = contextSubscription;
 
   const isOwner = user?.id === fetchedChat?.user_id;
   const isDeployed = fetchedChat?.is_deployed;
   const currentSubdomain = fetchedChat?.deploy_subdomain;
   const currentDeployedVersion = fetchedChat?.deployed_version;
+
+  const deployedUrl =
+    customDomain?.is_verified && customDomain?.domain
+      ? customDomain.domain
+      : currentSubdomain
+        ? `${currentSubdomain}.coderocket.app`
+        : null;
 
   const availableVersions = messages
     .filter((m) => m.role === "user")
@@ -68,24 +87,38 @@ export default function DeploymentContent() {
     availableVersions.length > 0 ? availableVersions[0] : null;
 
   useEffect(() => {
-    const fetchSubscriptionStatus = async () => {
-      try {
-        setIsLoadingSubscription(true);
-        const supabase = createClient();
-        const { data } = await supabase.auth.getUser();
-        if (data?.user?.id) {
-          const sub = await getSubscription();
-          setSubscription(sub);
+    const fetchCustomDomainDetails = async () => {
+      if (isDeployed && contextCustomDomain) {
+        try {
+          const fullDomain = await getCustomDomain(chatId);
+          setCustomDomain(fullDomain as typeof customDomain);
+        } catch (error) {
+          console.error("Error fetching custom domain details:", error);
         }
-      } catch (error) {
-        console.error("Error fetching subscription:", error);
-      } finally {
-        setIsLoadingSubscription(false);
       }
     };
 
-    fetchSubscriptionStatus();
-  }, []);
+    fetchCustomDomainDetails();
+  }, [chatId, isDeployed, contextCustomDomain]);
+
+  useEffect(() => {
+    if (contextCustomDomain && !customDomain) {
+      setCustomDomain((prev) => {
+        if (!prev || prev.domain !== contextCustomDomain.domain) {
+          return {
+            id: prev?.id || "",
+            domain: contextCustomDomain.domain,
+            verification_token: prev?.verification_token || "",
+            is_verified: contextCustomDomain.is_verified,
+            verified_at: prev?.verified_at,
+            ssl_status: prev?.ssl_status || null,
+            created_at: prev?.created_at || new Date().toISOString(),
+          };
+        }
+        return prev;
+      });
+    }
+  }, [contextCustomDomain, customDomain]);
 
   useEffect(() => {
     if (currentSubdomain) {
@@ -353,7 +386,7 @@ export default function DeploymentContent() {
         <h2 className="text-base font-semibold">Deploy Application</h2>
       </div>
 
-      {isDeployed && currentDeployedVersion !== undefined && (
+      {isDeployed && currentDeployedVersion !== undefined && deployedUrl && (
         <div className="flex items-start gap-3 rounded-lg border border-green-500/30 bg-green-500/10 p-4">
           <CheckCircle2 className="size-5 text-green-500" />
           <div className="flex-1">
@@ -363,21 +396,41 @@ export default function DeploymentContent() {
             <p className="mt-1 text-sm text-muted-foreground">
               Your app is live and accessible at:
             </p>
-            <a
-              href={`https://${currentSubdomain}.coderocket.app`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-2 flex items-center gap-2 text-sm font-medium text-primary hover:underline"
-            >
-              {currentSubdomain}.coderocket.app (Version #
-              {currentDeployedVersion})
-              <ExternalLink className="size-4" />
-            </a>
+            <div className="mt-2 space-y-2">
+              <a
+                href={`https://${deployedUrl}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-sm font-medium text-primary hover:underline"
+              >
+                {deployedUrl}
+                {customDomain?.is_verified && (
+                  <span className="rounded-full bg-green-500/20 px-2 py-0.5 text-xs font-medium text-green-700 dark:text-green-400">
+                    Custom Domain
+                  </span>
+                )}
+                <ExternalLink className="size-4" />
+              </a>
+              {customDomain?.is_verified && currentSubdomain && (
+                <a
+                  href={`https://${currentSubdomain}.coderocket.app`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-xs text-muted-foreground hover:text-primary hover:underline"
+                >
+                  Also available at: {currentSubdomain}.coderocket.app
+                  <ExternalLink className="size-3" />
+                </a>
+              )}
+              <p className="text-xs text-muted-foreground">
+                Version #{currentDeployedVersion}
+              </p>
+            </div>
           </div>
         </div>
       )}
 
-      {!subscription && !isLoadingSubscription && (
+      {!subscription && (
         <div className="flex items-start gap-3 rounded-lg border border-purple-500/30 bg-purple-500/10 p-4">
           <Zap className="size-5 text-purple-500" />
           <div className="flex-1">
@@ -450,46 +503,60 @@ export default function DeploymentContent() {
             <Globe className="size-4" />
             Subdomain
           </Label>
-          <div className="flex gap-2">
-            <div className="relative flex-1">
-              <Input
-                id="subdomain"
-                type="text"
-                placeholder="myapp"
-                value={subdomain}
-                onChange={(e) => {
-                  const value = e.target.value
-                    .toLowerCase()
-                    .replace(/[^a-z0-9-]/g, "");
-                  setSubdomain(value);
-                  setIsAvailable(null);
-                }}
-                disabled={!isOwner}
-                className="pr-32"
-              />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
-                .coderocket.app
-              </span>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (!isDeployed && validateSubdomain(subdomain)) {
+                handleCheckAvailability();
+              } else if (isDeployed) {
+                handleUpdateSubdomain();
+              } else if (!isDeployed) {
+                handleDeploy();
+              }
+            }}
+          >
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <Input
+                  id="subdomain"
+                  type="text"
+                  placeholder="myapp"
+                  value={subdomain}
+                  onChange={(e) => {
+                    const value = e.target.value
+                      .toLowerCase()
+                      .replace(/[^a-z0-9-]/g, "");
+                    setSubdomain(value);
+                    setIsAvailable(null);
+                  }}
+                  disabled={!isOwner}
+                  className="pr-32"
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+                  .coderocket.app
+                </span>
+              </div>
+              {!isDeployed && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleCheckAvailability}
+                  disabled={
+                    !isOwner ||
+                    isCheckingAvailability ||
+                    !subdomain ||
+                    !validateSubdomain(subdomain)
+                  }
+                >
+                  {isCheckingAvailability ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    "Check"
+                  )}
+                </Button>
+              )}
             </div>
-            {!isDeployed && (
-              <Button
-                variant="outline"
-                onClick={handleCheckAvailability}
-                disabled={
-                  !isOwner ||
-                  isCheckingAvailability ||
-                  !subdomain ||
-                  !validateSubdomain(subdomain)
-                }
-              >
-                {isCheckingAvailability ? (
-                  <Loader2 className="size-4 animate-spin" />
-                ) : (
-                  "Check"
-                )}
-              </Button>
-            )}
-          </div>
+          </form>
           {isAvailable !== null && !isDeployed && (
             <p
               className={`flex items-center gap-2 text-sm ${
@@ -517,84 +584,119 @@ export default function DeploymentContent() {
           </p>
         </div>
 
-        {!isDeployed ? (
-          <Button
-            onClick={handleDeploy}
-            disabled={
-              !isOwner ||
-              !subscription ||
-              isDeploying ||
-              !subdomain ||
-              !validateSubdomain(subdomain) ||
-              selectedVersion === null
+        {!isDeployed && (
+          <div className="rounded-lg border border-blue-500/30 bg-blue-500/10 p-4">
+            <div className="flex items-start gap-3">
+              <Globe className="size-5 shrink-0 text-blue-500" />
+              <div className="flex-1">
+                <p className="font-medium text-blue-700 dark:text-blue-400">
+                  Want to use your own domain?
+                </p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  After deploying with a CodeRocket subdomain, you&apos;ll be
+                  able to add your custom domain (like{" "}
+                  <span className="font-mono">app.yourdomain.com</span>) in the{" "}
+                  <strong>Custom Domain</strong> section below. We&apos;ll
+                  automatically provision HTTPS/SSL certificates for you.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (!isDeployed) {
+              handleDeploy();
             }
-            className="w-full"
-          >
-            {isDeploying ? (
-              <>
-                <Loader2 className="mr-2 size-4 animate-spin" />
-                Deploying...
-              </>
-            ) : !subscription ? (
-              <>
-                <Zap className="mr-2 size-4" />
-                Premium Required
-              </>
-            ) : (
-              <>
-                <Rocket className="mr-2 size-4" />
-                Deploy Application
-              </>
-            )}
-          </Button>
-        ) : (
-          <div className="space-y-2">
-            {(subdomain !== currentSubdomain ||
-              selectedVersion !== currentDeployedVersion) && (
-              <Button
-                onClick={handleUpdateSubdomain}
-                disabled={
-                  !isOwner ||
-                  !subscription ||
-                  isUpdatingSubdomain ||
-                  !subdomain ||
-                  !validateSubdomain(subdomain)
-                }
-                className="w-full"
-              >
-                {isUpdatingSubdomain ? (
-                  <>
-                    <Loader2 className="mr-2 size-4 animate-spin" />
-                    Updating...
-                  </>
-                ) : (
-                  <>
-                    <Globe className="mr-2 size-4" />
-                    Update Deployment
-                  </>
-                )}
-              </Button>
-            )}
+          }}
+        >
+          {!isDeployed ? (
             <Button
-              variant="destructive"
-              onClick={handleUndeploy}
-              disabled={!isOwner || isUndeploying}
+              type="submit"
+              disabled={
+                !isOwner ||
+                !subscription ||
+                isDeploying ||
+                !subdomain ||
+                !validateSubdomain(subdomain) ||
+                selectedVersion === null ||
+                !isWebcontainerReady
+              }
               className="w-full"
             >
-              {isUndeploying ? (
+              {isDeploying ? (
                 <>
                   <Loader2 className="mr-2 size-4 animate-spin" />
-                  Undeploying...
+                  Deploying...
+                </>
+              ) : !subscription ? (
+                <>
+                  <Zap className="mr-2 size-4" />
+                  Premium Required
+                </>
+              ) : !isWebcontainerReady ? (
+                <>
+                  <Loader2 className="mr-2 size-4 animate-spin" />
+                  Building Application...
                 </>
               ) : (
                 <>
-                  <XCircle className="mr-2 size-4" />
-                  Undeploy Application
+                  <Rocket className="mr-2 size-4" />
+                  Deploy Application
                 </>
               )}
             </Button>
-          </div>
-        )}
+          ) : (
+            <div className="space-y-2">
+              {(subdomain !== currentSubdomain ||
+                selectedVersion !== currentDeployedVersion) && (
+                <Button
+                  onClick={handleUpdateSubdomain}
+                  disabled={
+                    !isOwner ||
+                    !subscription ||
+                    isUpdatingSubdomain ||
+                    !subdomain ||
+                    !validateSubdomain(subdomain)
+                  }
+                  className="w-full"
+                >
+                  {isUpdatingSubdomain ? (
+                    <>
+                      <Loader2 className="mr-2 size-4 animate-spin" />
+                      Updating...
+                    </>
+                  ) : (
+                    <>
+                      <Globe className="mr-2 size-4" />
+                      Update Deployment
+                    </>
+                  )}
+                </Button>
+              )}
+              <Button
+                variant="destructive"
+                onClick={handleUndeploy}
+                disabled={!isOwner || isUndeploying}
+                className="w-full"
+              >
+                {isUndeploying ? (
+                  <>
+                    <Loader2 className="mr-2 size-4 animate-spin" />
+                    Undeploying...
+                  </>
+                ) : (
+                  <>
+                    <XCircle className="mr-2 size-4" />
+                    Undeploy Application
+                  </>
+                )}
+              </Button>
+            </div>
+          )}
+        </form>
       </div>
 
       <div className="rounded-lg border border-border bg-muted/50 p-4">
@@ -603,25 +705,36 @@ export default function DeploymentContent() {
           <li className="flex gap-2">
             <span className="text-primary">•</span>
             <span>
-              Your application will be accessible at your custom subdomain
+              Your application will be accessible at your CodeRocket subdomain
             </span>
-          </li>
-          <li className="flex gap-2">
-            <span className="text-primary">•</span>
-            <span>The deployment uses the latest version of your code</span>
-          </li>
-          <li className="flex gap-2">
-            <span className="text-primary">•</span>
-            <span>You can update the subdomain or undeploy at any time</span>
           </li>
           <li className="flex gap-2">
             <span className="text-primary">•</span>
             <span>
-              Deployment is available for all frameworks including HTML
+              All deployments include HTTPS/SSL certificates automatically
+            </span>
+          </li>
+          <li className="flex gap-2">
+            <span className="text-primary">•</span>
+            <span>The deployment uses the selected version of your code</span>
+          </li>
+          <li className="flex gap-2">
+            <span className="text-primary">•</span>
+            <span>
+              You can add a custom domain after deployment (see section below)
             </span>
           </li>
         </ul>
       </div>
+
+      {isDeployed && subscription && (
+        <CustomDomainSection
+          chatId={chatId}
+          isOwner={isOwner}
+          isDeployed={isDeployed}
+          initialCustomDomain={customDomain}
+        />
+      )}
     </div>
   );
 }

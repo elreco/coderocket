@@ -11,26 +11,17 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 
-import { getSubscription } from "@/app/supabase-server";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useComponentContext } from "@/context/component-context";
 import { useToast } from "@/hooks/use-toast";
-import { Database, Tables } from "@/types_db";
 
 import {
   createGithubRepo,
   syncComponentToGithub,
-  getGithubConnectionForUser,
   pullFromGithub,
 } from "../github-sync-actions";
-
-type Subscription = Database["public"]["Tables"]["subscriptions"]["Row"] & {
-  prices: Database["public"]["Tables"]["prices"]["Row"] & {
-    products: Database["public"]["Tables"]["products"]["Row"];
-  };
-};
 
 interface AlertBoxProps {
   icon: LucideIcon;
@@ -157,43 +148,26 @@ export default function GitHubSync({ closeSheet }: { closeSheet: () => void }) {
     selectedVersion,
     refreshChatData,
     handleVersionSelect,
+    subscription: contextSubscription,
+    githubConnection: contextGithubConnection,
   } = useComponentContext();
   const { toast } = useToast();
 
-  const [githubConnection, setGithubConnection] =
-    useState<Tables<"github_connections"> | null>(null);
-  const [subscription, setSubscription] = useState<Subscription | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSyncing, setIsSyncing] = useState(false);
   const [repoName, setRepoName] = useState("");
+  const [isSyncing, setIsSyncing] = useState(false);
   const [isCreatingRepo, setIsCreatingRepo] = useState(false);
   const [isForceSyncing, setIsForceSyncing] = useState(false);
   const [isPulling, setIsPulling] = useState(false);
 
+  const githubConnection = contextGithubConnection;
+  const subscription = contextSubscription;
+  const isLoading = !githubConnection && !subscription;
   const isGithubConnected = !!githubConnection;
   const hasGithubRepo = !!fetchedChat?.github_repo_url;
   const isPremium = !!subscription;
   const isAnyActionLoading = isSyncing || isForceSyncing || isPulling;
 
   useEffect(() => {
-    const loadData = async () => {
-      setIsLoading(true);
-      try {
-        const [connectionData, subscriptionData] = await Promise.all([
-          getGithubConnectionForUser(),
-          getSubscription(),
-        ]);
-        setGithubConnection(connectionData);
-        setSubscription(subscriptionData as Subscription | null);
-      } catch (error) {
-        console.error("Error loading data:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadData();
-
     if (fetchedChat?.slug) {
       setRepoName(`coderocket-${fetchedChat.slug}`);
     } else if (fetchedChat?.title) {
@@ -401,7 +375,15 @@ export default function GitHubSync({ closeSheet }: { closeSheet: () => void }) {
             variant="blue"
           />
 
-          <div className="space-y-3">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (repoName.trim()) {
+                handleCreateRepo();
+              }
+            }}
+            className="space-y-3"
+          >
             <div>
               <Label htmlFor="repoName" className="text-sm font-medium">
                 Repository Name
@@ -429,7 +411,7 @@ export default function GitHubSync({ closeSheet }: { closeSheet: () => void }) {
               onClick={handleCreateRepo}
               disabled={!repoName.trim()}
             />
-          </div>
+          </form>
         </div>
       ) : (
         <div className="space-y-4">
