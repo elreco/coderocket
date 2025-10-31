@@ -387,38 +387,42 @@ export default function DeploymentContent() {
 
       {isDeployed && currentDeployedVersion !== undefined && deployedUrl && (
         <div className="flex items-start gap-3 rounded-lg border border-green-500/30 bg-green-500/10 p-4">
-          <CheckCircle2 className="size-5 text-green-500" />
-          <div className="flex-1">
+          <CheckCircle2 className="size-5 shrink-0 text-green-500" />
+          <div className="min-w-0 flex-1">
             <p className="font-medium text-green-700 dark:text-green-400">
               Application Deployed
             </p>
             <p className="mt-1 text-sm text-muted-foreground">
               Your app is live and accessible at:
             </p>
-            <div className="mt-2 space-y-2">
-              <a
-                href={`https://${deployedUrl}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 text-sm font-medium text-primary hover:underline"
-              >
-                {deployedUrl}
+            <div className="mt-3 space-y-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <a
+                  href={`https://${deployedUrl}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 break-all text-sm font-medium text-primary hover:underline"
+                >
+                  <span className="break-all">{deployedUrl}</span>
+                  <ExternalLink className="size-3.5 shrink-0" />
+                </a>
                 {customDomain?.is_verified && (
-                  <span className="rounded-full bg-green-500/20 px-2 py-0.5 text-xs font-medium text-green-700 dark:text-green-400">
+                  <span className="inline-flex shrink-0 items-center rounded-full bg-green-500/20 px-2 py-0.5 text-xs font-medium text-green-700 dark:text-green-400">
                     Custom Domain
                   </span>
                 )}
-                <ExternalLink className="size-4" />
-              </a>
+              </div>
               {customDomain?.is_verified && currentSubdomain && (
                 <a
                   href={`https://${currentSubdomain}.coderocket.app`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-xs text-muted-foreground hover:text-primary hover:underline"
+                  className="inline-flex items-center gap-1.5 break-all text-xs text-muted-foreground hover:text-primary hover:underline"
                 >
-                  Also available at: {currentSubdomain}.coderocket.app
-                  <ExternalLink className="size-3" />
+                  <span className="break-all">
+                    Also available at: {currentSubdomain}.coderocket.app
+                  </span>
+                  <ExternalLink className="size-3 shrink-0" />
                 </a>
               )}
               <p className="text-xs text-muted-foreground">

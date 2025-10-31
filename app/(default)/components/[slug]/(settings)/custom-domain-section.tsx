@@ -9,6 +9,7 @@ import {
   Copy,
   Trash2,
   RefreshCw,
+  ExternalLink,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 
@@ -330,47 +331,31 @@ export default function CustomDomainSection({
         <div className="space-y-4">
           <div className="rounded-lg border border-border bg-muted/50 p-4">
             <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">{customDomain.domain}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {customDomain.is_verified ? (
-                      <span className="flex items-center gap-1 text-green-600 dark:text-green-400">
-                        <CheckCircle2 className="size-4" />
-                        Verified
-                      </span>
-                    ) : (
-                      <span className="flex items-center gap-1 text-yellow-600 dark:text-yellow-400">
-                        <AlertCircle className="size-4" />
-                        Awaiting verification
-                      </span>
-                    )}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  {customDomain.is_verified && (
-                    <div className="flex items-center gap-2">
-                      <Shield className="size-4 text-green-600 dark:text-green-400" />
-                      {getSSLStatusBadge(customDomain.ssl_status)}
-                      {customDomain.ssl_status === "pending" && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={handleRefreshSSL}
-                          disabled={isRefreshingSSL}
-                          title="Check SSL status"
-                        >
-                          <RefreshCw
-                            className={`size-4 ${isRefreshingSSL ? "animate-spin" : ""}`}
-                          />
-                        </Button>
+              <div className="space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="break-all font-medium leading-tight">
+                      {customDomain.domain}
+                    </p>
+                    <p className="mt-1.5 text-sm text-muted-foreground">
+                      {customDomain.is_verified ? (
+                        <span className="inline-flex items-center gap-1 text-green-600 dark:text-green-400">
+                          <CheckCircle2 className="size-4" />
+                          Verified
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-yellow-600 dark:text-yellow-400">
+                          <AlertCircle className="size-4" />
+                          Awaiting verification
+                        </span>
                       )}
-                    </div>
-                  )}
+                    </p>
+                  </div>
                   {isOwner && (
                     <Button
                       variant="ghost"
                       size="icon"
+                      className="shrink-0"
                       onClick={() => setShowDeleteDialog(true)}
                       disabled={isDeleting}
                     >
@@ -378,6 +363,27 @@ export default function CustomDomainSection({
                     </Button>
                   )}
                 </div>
+
+                {customDomain.is_verified && (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Shield className="size-4 shrink-0 text-green-600 dark:text-green-400" />
+                    {getSSLStatusBadge(customDomain.ssl_status)}
+                    {customDomain.ssl_status === "pending" && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7"
+                        onClick={handleRefreshSSL}
+                        disabled={isRefreshingSSL}
+                      >
+                        <RefreshCw
+                          className={`mr-1.5 size-3.5 ${isRefreshingSSL ? "animate-spin" : ""}`}
+                        />
+                        <span className="text-xs">Check Status</span>
+                      </Button>
+                    )}
+                  </div>
+                )}
               </div>
 
               {customDomain.is_verified && (
@@ -385,14 +391,19 @@ export default function CustomDomainSection({
                   <CheckCircle2 className="size-4" />
                   <AlertTitle>Domain Active</AlertTitle>
                   <AlertDescription>
-                    Your application is now accessible at{" "}
+                    <p className="mb-2">
+                      Your application is now accessible at:
+                    </p>
                     <a
                       href={`https://${customDomain.domain}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="font-medium underline"
+                      className="inline-flex items-center gap-1.5 break-all font-medium underline"
                     >
-                      https://{customDomain.domain}
+                      <span className="break-all">
+                        https://{customDomain.domain}
+                      </span>
+                      <ExternalLink className="size-3 shrink-0" />
                     </a>
                   </AlertDescription>
                 </Alert>

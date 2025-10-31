@@ -105,6 +105,16 @@ export default function ComponentSidebar({
   const [isImprovingLoading, setIsImprovingLoading] = useState(false);
   const [chatFiles, setChatFiles] = useState<ChatFile[]>([]);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    setHasImproved(false);
+  }, [selectedVersion]);
+
+  useEffect(() => {
+    if (isLoading) {
+      setHasImproved(false);
+    }
+  }, [isLoading]);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [inputIsValid, setInputIsValid] = useState(true);
