@@ -2,54 +2,72 @@
 
 ## Current Implementation
 
-This directory contains the website scraping implementation using **Firecrawl**.
+This directory contains two website scraping implementations:
 
 ### Files
 
-- `website-scraper-firecrawl.ts` - Main scraper using Firecrawl API
+- `website-scraper-advanced.ts` - **Primary scraper** using Puppeteer (FREE)
+- `website-scraper-firecrawl.ts` - **Fallback scraper** using Firecrawl API
 
-## Why Firecrawl?
+## Why Advanced Scraper?
 
-We use Firecrawl exclusively for website scraping because it provides:
+The advanced scraper is now the default method because it provides:
 
-1. **Better anti-bot protection bypass** - Handles Cloudflare, reCAPTCHA, etc.
-2. **High-fidelity cloning** - Captures complete page structure and assets
-3. **Built-in screenshots** - Full-page screenshots included
-4. **LLM-ready output** - Markdown format optimized for AI processing
-5. **No infrastructure management** - No need to manage Puppeteer/Chromium
+1. **100% FREE** - No API costs, runs on your own infrastructure
+2. **Higher fidelity** - Direct access to HTML, CSS, and computed styles
+3. **Better analysis** - Extracts real colors, fonts, layout structure from source
+4. **Full control** - Customizable scraping behavior and timeout
+5. **Vercel compatible** - Uses `@sparticuz/chromium` for serverless deployment
 
-## Configuration
+### What it extracts:
 
-The scraper is optimized for faithful website cloning:
+- Full-page high-quality screenshot
+- Complete HTML source
+- Markdown conversion of content
+- **Real colors** from styles and classes
+- **Real fonts** from CSS and Google Fonts links
+- **Layout structure** (hero, navbar, footer, sidebar detection)
+- Meta tags and descriptions
+- All links from the page
 
-```typescript
-{
-  formats: ["html", "markdown", "screenshot"],
-  onlyMainContent: false,  // Capture entire page
-  includeTags: [           // All important elements
-    "img", "video", "style", "link", "script", "meta",
-    "header", "nav", "main", "section", "footer", "aside", "article"
-  ],
-  waitFor: 3000,          // Wait for dynamic content
-  timeout: 60000          // Generous timeout
-}
-```
+## Fallback Strategy
+
+If the advanced scraper fails (network issues, bot protection, etc.), the system automatically falls back to Firecrawl if the API key is configured.
 
 ## Usage
 
 ```typescript
-import { scrapeWebsiteWithFirecrawl } from "@/utils/agents/website-scraper-firecrawl";
+import { cloneWebsite } from "@/utils/actions/clone-website";
 
-const websiteData = await scrapeWebsiteWithFirecrawl("https://example.com");
+const result = await cloneWebsite("https://example.com");
+
+if (result.success) {
+  console.log(`Scraped using: ${result.method}`);
+  console.log(result.data);
+}
 ```
 
-## Setup
+## Configuration
 
-Set your Firecrawl API key in `.env.local`:
+### For Advanced Scraper (Primary)
+
+No configuration needed! It works out of the box.
+
+### For Firecrawl Fallback (Optional)
+
+Set your Firecrawl API key in `.env.local` for fallback support:
 
 ```bash
 FIRECRAWL_API_KEY=fc-your-api-key
 ```
 
 Get your API key at [firecrawl.dev](https://www.firecrawl.dev/)
+
+## Vercel Deployment
+
+The advanced scraper is optimized for Vercel:
+
+- Uses `@sparticuz/chromium` for serverless Chromium
+- Automatically detects environment (dev vs production)
+- Falls back to Firecrawl if Puppeteer fails in production
 
