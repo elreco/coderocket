@@ -8,6 +8,8 @@ import {
   AlertCircle,
   Copy,
   Trash2,
+  ExternalLink,
+  RefreshCw,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 
@@ -23,6 +25,7 @@ import {
   verifyCustomDomain,
   deleteCustomDomain,
   checkCustomDomainAvailability,
+  refreshSSLStatus,
 } from "../actions";
 
 import { DeleteDomainDialog } from "./delete-domain-dialog";
@@ -58,6 +61,7 @@ export default function CustomDomainSection({
   const [isAdding, setIsAdding] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isRefreshingSSL, setIsRefreshingSSL] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showInstructions, setShowInstructions] = useState(
     initialCustomDomain ? !initialCustomDomain.is_verified : false,
@@ -71,6 +75,40 @@ export default function CustomDomainSection({
       }
     }
   }, [initialCustomDomain]);
+
+  useEffect(() => {
+    if (
+      customDomain?.is_verified &&
+      customDomain?.ssl_status === "pending" &&
+      customDomain?.id
+    ) {
+      const interval = setInterval(async () => {
+        try {
+          const result = await refreshSSLStatus(customDomain.id);
+          if (result.ssl_status === "active") {
+            setCustomDomain((prev) =>
+              prev ? { ...prev, ssl_status: "active" } : prev,
+            );
+            toast({
+              variant: "default",
+              title: "SSL Certificate Active",
+              description: "Your domain is now secured with HTTPS!",
+              duration: 5000,
+            });
+          }
+        } catch (error) {
+          console.error("Error auto-refreshing SSL:", error);
+        }
+      }, 10000);
+
+      return () => clearInterval(interval);
+    }
+  }, [
+    customDomain?.is_verified,
+    customDomain?.ssl_status,
+    customDomain?.id,
+    toast,
+  ]);
 
   const handleAddDomain = async () => {
     if (!domain) {
@@ -137,7 +175,17 @@ export default function CustomDomainSection({
     setIsVerifying(true);
 
     try {
-      await verifyCustomDomain(customDomain.id);
+      const result = await verifyCustomDomain(customDomain.id);
+
+      if (!result.success) {
+        toast({
+          variant: "destructive",
+          title: "Verification failed",
+          description: result.error || "Failed to verify domain",
+          duration: 4000,
+        });
+        return;
+      }
 
       setCustomDomain({
         ...customDomain,
@@ -151,6 +199,7 @@ export default function CustomDomainSection({
         variant: "default",
         title: "Domain verified",
         description:
+          result.warning ||
           "Your custom domain has been verified successfully. SSL certificate will be issued automatically.",
         duration: 5000,
       });
@@ -204,6 +253,46 @@ export default function CustomDomainSection({
       description: "Copied to clipboard",
       duration: 2000,
     });
+  };
+
+  const handleRefreshSSL = async () => {
+    if (!customDomain?.id) return;
+
+    setIsRefreshingSSL(true);
+
+    try {
+      const result = await refreshSSLStatus(customDomain.id);
+
+      if (result.ssl_status === "active") {
+        setCustomDomain((prev) =>
+          prev ? { ...prev, ssl_status: "active" } : prev,
+        );
+        toast({
+          variant: "default",
+          title: "SSL Certificate Active",
+          description: "Your domain is now secured with HTTPS!",
+          duration: 5000,
+        });
+      } else {
+        toast({
+          variant: "default",
+          title: "Still Pending",
+          description:
+            "SSL certificate is still being provisioned. This usually takes 2-5 minutes.",
+          duration: 4000,
+        });
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Failed to check SSL status",
+        description:
+          error instanceof Error ? error.message : "An error occurred",
+        duration: 4000,
+      });
+    } finally {
+      setIsRefreshingSSL(false);
+    }
   };
 
   const getSSLStatusBadge = (status: CustomDomain["ssl_status"]) => {
@@ -267,6 +356,19 @@ export default function CustomDomainSection({
                     <div className="flex items-center gap-2">
                       <Shield className="size-4 text-green-600 dark:text-green-400" />
                       {getSSLStatusBadge(customDomain.ssl_status)}
+                      {customDomain.ssl_status === "pending" && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={handleRefreshSSL}
+                          disabled={isRefreshingSSL}
+                          title="Check SSL status"
+                        >
+                          <RefreshCw
+                            className={`size-4 ${isRefreshingSSL ? "animate-spin" : ""}`}
+                          />
+                        </Button>
+                      )}
                     </div>
                   )}
                   {isOwner && (

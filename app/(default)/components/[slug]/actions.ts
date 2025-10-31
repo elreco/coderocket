@@ -10,6 +10,10 @@ import {
 } from "@/utils/completion-parser";
 import { builderApiUrl, Framework } from "@/utils/config";
 import {
+  verifyDomainOwnership,
+  checkDomainAvailability,
+} from "@/utils/domain-verification";
+import {
   getChatIntegrations,
   IntegrationType,
   SupabaseIntegrationConfig,
@@ -17,6 +21,11 @@ import {
 import { promptEnhancer } from "@/utils/prompt-enhancer";
 import { getLatestArtifactCode } from "@/utils/supabase/artifact-helpers";
 import { createClient } from "@/utils/supabase/server";
+import {
+  addDomainToVercel,
+  removeDomainFromVercel,
+  checkVercelDomainStatus,
+} from "@/utils/vercel-domains";
 
 import {
   fetchAssistantMessageByChatIdAndVersion,
@@ -737,71 +746,88 @@ export const addCustomDomain = async (chatId: string, domain: string) => {
 };
 
 export const verifyCustomDomain = async (domainId: string) => {
-  const supabase = await createClient();
-  const { data: userData } = await supabase.auth.getUser();
-  const user = userData?.user;
-
-  if (!user) throw new Error("User not authenticated");
-
-  const { data: domain } = await supabase
-    .from("custom_domains")
-    .select("*")
-    .eq("id", domainId)
-    .eq("user_id", user.id)
-    .single();
-
-  if (!domain) {
-    throw new Error("Domain not found or unauthorized");
-  }
-
-  const { verifyDomainOwnership } = await import("@/utils/domain-verification");
-
-  const verificationResult = await verifyDomainOwnership(
-    domain.domain,
-    domain.verification_token,
-  );
-
-  if (!verificationResult.verified) {
-    throw new Error(
-      verificationResult.error ||
-        "Domain verification failed. Please check your DNS records.",
-    );
-  }
-
-  let sslStatus = "pending";
-  let sslError = null;
-
   try {
-    const { addDomainToVercel } = await import("@/utils/vercel-domains");
-    await addDomainToVercel(domain.domain);
-    sslStatus = "active";
+    const supabase = await createClient();
+    const { data: userData } = await supabase.auth.getUser();
+    const user = userData?.user;
+
+    if (!user) {
+      return { success: false, error: "User not authenticated" };
+    }
+
+    const { data: domain } = await supabase
+      .from("custom_domains")
+      .select("*")
+      .eq("id", domainId)
+      .eq("user_id", user.id)
+      .single();
+
+    if (!domain) {
+      return { success: false, error: "Domain not found or unauthorized" };
+    }
+
+    const verificationResult = await verifyDomainOwnership(
+      domain.domain,
+      domain.verification_token,
+    );
+
+    if (!verificationResult.verified) {
+      return {
+        success: false,
+        error:
+          verificationResult.error ||
+          "Domain verification failed. Please check your DNS records.",
+      };
+    }
+
+    let sslStatus = "pending";
+    let sslError = null;
+
+    try {
+      await addDomainToVercel(domain.domain);
+      sslStatus = "active";
+    } catch (error) {
+      console.error("Error adding domain to Vercel:", error);
+      sslStatus = "failed";
+      sslError =
+        error instanceof Error ? error.message : "Failed to configure SSL";
+    }
+
+    const { error } = await supabase
+      .from("custom_domains")
+      .update({
+        is_verified: true,
+        verified_at: new Date().toISOString(),
+        ssl_status: sslStatus,
+        ssl_issued_at: sslStatus === "active" ? new Date().toISOString() : null,
+      })
+      .eq("id", domainId);
+
+    if (error) {
+      console.error("Error updating domain verification:", error);
+      return {
+        success: false,
+        error: "Failed to update domain verification status",
+      };
+    }
+
+    if (sslError) {
+      return {
+        success: true,
+        verified: true,
+        warning: `Domain verified but SSL setup failed: ${sslError}`,
+      };
+    }
+
+    return { success: true, verified: true };
   } catch (error) {
-    console.error("Error adding domain to Vercel:", error);
-    sslStatus = "failed";
-    sslError =
-      error instanceof Error ? error.message : "Failed to configure SSL";
+    console.error("Unexpected error in verifyCustomDomain:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "An unexpected error occurred",
+    };
   }
-
-  const { error } = await supabase
-    .from("custom_domains")
-    .update({
-      is_verified: true,
-      verified_at: new Date().toISOString(),
-      ssl_status: sslStatus,
-      ssl_issued_at: sslStatus === "active" ? new Date().toISOString() : null,
-    })
-    .eq("id", domainId);
-
-  if (error) {
-    console.error("Error updating domain verification:", error);
-    throw new Error("Failed to update domain verification status");
-  }
-
-  if (sslError) {
-    throw new Error(`Domain verified but SSL setup failed: ${sslError}`);
-  }
-
-  return { success: true, verified: true };
 };
 
 export const deleteCustomDomain = async (domainId: string) => {
@@ -823,7 +849,6 @@ export const deleteCustomDomain = async (domainId: string) => {
 
   if (domain.is_verified) {
     try {
-      const { removeDomainFromVercel } = await import("@/utils/vercel-domains");
       await removeDomainFromVercel(domain.domain);
     } catch (error) {
       console.error("Error removing domain from Vercel:", error);
@@ -874,10 +899,6 @@ export const checkCustomDomainAvailability = async (domain: string) => {
 
   const normalizedDomain = domain.toLowerCase().trim();
 
-  const { checkDomainAvailability } = await import(
-    "@/utils/domain-verification"
-  );
-
   const availabilityCheck = await checkDomainAvailability(normalizedDomain);
 
   if (!availabilityCheck.available) {
@@ -895,4 +916,54 @@ export const checkCustomDomainAvailability = async (domain: string) => {
   }
 
   return { available: true };
+};
+
+export const refreshSSLStatus = async (domainId: string) => {
+  const supabase = await createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  const user = userData?.user;
+
+  if (!user) throw new Error("User not authenticated");
+
+  const { data: domain } = await supabase
+    .from("custom_domains")
+    .select("*")
+    .eq("id", domainId)
+    .eq("user_id", user.id)
+    .single();
+
+  if (!domain) {
+    throw new Error("Domain not found or unauthorized");
+  }
+
+  if (!domain.is_verified) {
+    return { ssl_status: "pending", message: "Domain must be verified first" };
+  }
+
+  try {
+    const vercelStatus = await checkVercelDomainStatus(domain.domain);
+
+    const sslStatus = vercelStatus.verified ? "active" : "pending";
+
+    if (sslStatus === "active" && domain.ssl_status !== "active") {
+      const { error } = await supabase
+        .from("custom_domains")
+        .update({
+          ssl_status: "active",
+          ssl_issued_at: new Date().toISOString(),
+        })
+        .eq("id", domainId);
+
+      if (error) {
+        throw new Error("Failed to update SSL status");
+      }
+    }
+
+    return { ssl_status: sslStatus, verified: vercelStatus.verified };
+  } catch (error) {
+    console.error("Error checking SSL status:", error);
+    throw new Error(
+      error instanceof Error ? error.message : "Failed to check SSL status",
+    );
+  }
 };
