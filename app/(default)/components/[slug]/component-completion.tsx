@@ -1152,7 +1152,10 @@ export default function ComponentCompletion({
                               >
                                 <Rocket className="size-3" />
                                 <span className="hidden sm:inline">
-                                  Deployed
+                                  Deployed v{fetchedChat.deployed_version}
+                                </span>
+                                <span className="sm:hidden">
+                                  v{fetchedChat.deployed_version}
                                 </span>
                               </a>
                             </TooltipTrigger>
@@ -1163,6 +1166,9 @@ export default function ComponentCompletion({
                                 customDomain?.domain
                                   ? customDomain.domain
                                   : `${fetchedChat.deploy_subdomain}.coderocket.app`}
+                              </p>
+                              <p className="text-xs">
+                                Version #{fetchedChat.deployed_version}
                               </p>
                             </TooltipContent>
                           </Tooltip>
