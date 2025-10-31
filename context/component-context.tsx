@@ -1,6 +1,7 @@
 import { createContext, useContext } from "react";
 
-import { Tables } from "@/types_db";
+import type { CustomDomainData } from "@/types/custom-domain";
+import type { Tables } from "@/types_db";
 import { ChatFile } from "@/utils/completion-parser";
 import { Framework } from "@/utils/config";
 
@@ -69,15 +70,7 @@ interface ComponentContextType {
   setSidebarTab: (tab: string) => void;
   currentGeneratingFile: string | null;
   iframeKey: number;
-  customDomain: {
-    id?: string;
-    domain: string;
-    is_verified: boolean;
-    verification_token?: string;
-    ssl_status?: string | null;
-    verified_at?: string | null;
-    created_at?: string;
-  } | null;
+  customDomain: CustomDomainData | null;
   subscription: Tables<"subscriptions"> | null;
   githubConnection: Tables<"github_connections"> | null;
 }

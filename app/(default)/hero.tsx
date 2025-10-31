@@ -328,6 +328,8 @@ export default function Hero() {
     null,
   );
   const isPremium = !!subscription;
+  const showIntegrationsButton =
+    isLoggedIn && selectedFramework !== Framework.HTML;
   const promptIdeasRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -1062,7 +1064,7 @@ export default function Hero() {
                       </SheetContent>
                     </Sheet>
                   )}
-                  {isLoggedIn && selectedFramework !== Framework.HTML && (
+                  {showIntegrationsButton && !isLoadingSubscription && (
                     <>
                       {!isPremium ? (
                         <Link href="/pricing">

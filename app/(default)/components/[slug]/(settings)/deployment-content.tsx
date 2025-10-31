@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/select";
 import { useComponentContext } from "@/context/component-context";
 import { toast } from "@/hooks/use-toast";
+import { CustomDomainData } from "@/types/custom-domain";
 
 import {
   deployComponent,
@@ -54,15 +55,9 @@ export default function DeploymentContent() {
   const [isCheckingAvailability, setIsCheckingAvailability] = useState(false);
   const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
   const [isUpdatingSubdomain, setIsUpdatingSubdomain] = useState(false);
-  const [customDomain, setCustomDomain] = useState<{
-    id: string;
-    domain: string;
-    verification_token: string;
-    is_verified: boolean | null;
-    verified_at?: string | null;
-    ssl_status: "pending" | "active" | "expired" | "failed" | null;
-    created_at: string;
-  } | null>(null);
+  const [customDomain, setCustomDomain] = useState<CustomDomainData | null>(
+    null,
+  );
 
   const subscription = contextSubscription;
 
@@ -236,6 +231,8 @@ export default function DeploymentContent() {
     try {
       await deployComponent(chatId, subdomain, selectedVersion);
 
+      setCustomDomain(null);
+
       if (refreshChat) {
         await refreshChat();
       }
@@ -286,6 +283,8 @@ export default function DeploymentContent() {
 
     try {
       await undeployComponent(chatId);
+
+      setCustomDomain(null);
 
       if (refreshChat) {
         await refreshChat();
@@ -733,6 +732,12 @@ export default function DeploymentContent() {
           isOwner={isOwner}
           isDeployed={isDeployed}
           initialCustomDomain={customDomain}
+          onDomainChange={(domain) => {
+            setCustomDomain(domain);
+            if (refreshChat) {
+              refreshChat();
+            }
+          }}
         />
       )}
     </div>

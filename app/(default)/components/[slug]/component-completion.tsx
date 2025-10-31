@@ -60,6 +60,7 @@ import {
 } from "@/context/component-context";
 import { WebcontainerProvider } from "@/context/webcontainer-context";
 import { useToast } from "@/hooks/use-toast";
+import type { CustomDomainData } from "@/types/custom-domain";
 import { Tables } from "@/types_db";
 import {
   ChatFile,
@@ -102,15 +103,9 @@ export default function ComponentCompletion({
   user,
 }: Props) {
   const supabase = createClient();
-  const [customDomain, setCustomDomain] = useState<{
-    id?: string;
-    domain: string;
-    is_verified: boolean;
-    verification_token?: string;
-    ssl_status?: string | null;
-    verified_at?: string | null;
-    created_at?: string;
-  } | null>(null);
+  const [customDomain, setCustomDomain] = useState<CustomDomainData | null>(
+    null,
+  );
   const [githubConnection, setGithubConnection] =
     useState<Tables<"github_connections"> | null>(null);
   const [, copy] = useCopyToClipboard();

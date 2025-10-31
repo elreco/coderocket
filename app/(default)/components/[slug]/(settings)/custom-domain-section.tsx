@@ -8,7 +8,6 @@ import {
   AlertCircle,
   Copy,
   Trash2,
-  ExternalLink,
   RefreshCw,
 } from "lucide-react";
 import { useState, useEffect } from "react";
@@ -19,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { CustomDomainData } from "@/types/custom-domain";
 
 import {
   addCustomDomain,
@@ -34,17 +34,8 @@ interface CustomDomainSectionProps {
   chatId: string;
   isOwner: boolean;
   isDeployed: boolean;
-  initialCustomDomain?: CustomDomain | null;
-}
-
-interface CustomDomain {
-  id: string;
-  domain: string;
-  verification_token: string;
-  is_verified: boolean | null;
-  verified_at?: string | null;
-  ssl_status: "pending" | "active" | "expired" | "failed" | null;
-  created_at: string;
+  initialCustomDomain?: CustomDomainData | null;
+  onDomainChange?: (domain: CustomDomainData | null) => void;
 }
 
 export default function CustomDomainSection({
@@ -52,11 +43,12 @@ export default function CustomDomainSection({
   isOwner,
   isDeployed,
   initialCustomDomain,
+  onDomainChange,
 }: CustomDomainSectionProps) {
   const { toast } = useToast();
   const [domain, setDomain] = useState("");
-  const [customDomain, setCustomDomain] = useState<CustomDomain | null>(
-    initialCustomDomain as CustomDomain | null,
+  const [customDomain, setCustomDomain] = useState<CustomDomainData | null>(
+    initialCustomDomain || null,
   );
   const [isAdding, setIsAdding] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
@@ -69,7 +61,7 @@ export default function CustomDomainSection({
 
   useEffect(() => {
     if (initialCustomDomain) {
-      setCustomDomain(initialCustomDomain as CustomDomain);
+      setCustomDomain(initialCustomDomain);
       if (!initialCustomDomain.is_verified) {
         setShowInstructions(true);
       }
@@ -226,6 +218,10 @@ export default function CustomDomainSection({
       setCustomDomain(null);
       setShowInstructions(false);
 
+      if (onDomainChange) {
+        onDomainChange(null);
+      }
+
       toast({
         variant: "default",
         title: "Domain removed",
@@ -295,7 +291,7 @@ export default function CustomDomainSection({
     }
   };
 
-  const getSSLStatusBadge = (status: CustomDomain["ssl_status"]) => {
+  const getSSLStatusBadge = (status: CustomDomainData["ssl_status"]) => {
     const statusConfig = {
       pending: { label: "Pending", variant: "secondary" as const },
       active: { label: "Active", variant: "default" as const },
