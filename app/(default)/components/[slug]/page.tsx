@@ -1,6 +1,6 @@
 "use server";
 
-import type { Metadata, ResolvingMetadata } from "next";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { createClient } from "@/utils/supabase/server";
@@ -19,34 +19,120 @@ type Props = {
   params: Promise<{ slug: string }>;
 };
 
-export async function generateMetadata(
-  { params }: Props,
-  parent: ResolvingMetadata,
-): Promise<Metadata> {
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const chat = await fetchChatById(slug);
+
   if (!chat) {
     return {
       title: "Component not found",
+      robots: {
+        index: false,
+        follow: false,
+      },
     };
   }
 
+  const lastUserMessage = await fetchLastUserMessageByChatId(chat.id);
   const lastAssistantMessage = await fetchLastAssistantMessageByChatId(chat.id);
+
   if (!lastAssistantMessage) {
     return {
       title: "CodeRocket",
+      robots: {
+        index: false,
+        follow: false,
+      },
     };
   }
 
-  // optionally access and extend (rather than replace) parent metadata
-  const previousImages = (await parent).openGraph?.images || [];
+  const componentTitle = chat.title || "Tailwind Component";
+  const fullTitle = `${componentTitle} - CodeRocket`;
+  const componentUrl = `https://www.coderocket.app/components/${chat.slug}`;
+
+  const description = lastUserMessage?.content
+    ? `${lastUserMessage.content.slice(0, 155)}...`
+    : `AI-generated ${chat.framework} component using Tailwind CSS v4. Create, customize, and deploy stunning web components instantly with CodeRocket.`;
+
+  const keywords = [
+    componentTitle.toLowerCase(),
+    `${chat.framework} component`,
+    `tailwind ${chat.framework}`,
+    "tailwind css component",
+    "ai generated component",
+    "responsive design",
+    chat.framework,
+  ];
+
+  if (chat.clone_url) {
+    keywords.push("website clone", "cloned component");
+  }
+
+  const ogImage = lastAssistantMessage?.screenshot
+    ? lastAssistantMessage.screenshot
+    : "https://www.coderocket.app/og.png";
 
   return {
-    title: chat.title ? `${chat.title} - CodeRocket` : `CodeRocket`,
+    title: fullTitle,
+    description,
+    keywords: keywords.filter((k): k is string => k != null),
+    authors: [
+      {
+        name: chat.user?.full_name || "CodeRocket User",
+        url: `https://www.coderocket.app/users/${chat.user_id}`,
+      },
+    ],
+    creator: chat.user?.full_name || "CodeRocket",
+    publisher: "CodeRocket",
+    robots: chat.is_private
+      ? {
+          index: false,
+          follow: false,
+          nocache: true,
+        }
+      : {
+          index: true,
+          follow: true,
+          googleBot: {
+            index: true,
+            follow: true,
+            "max-video-preview": -1,
+            "max-image-preview": "large",
+            "max-snippet": -1,
+          },
+        },
+    alternates: {
+      canonical: componentUrl,
+    },
     openGraph: {
-      images: lastAssistantMessage?.screenshot
-        ? [lastAssistantMessage.screenshot]
-        : [...previousImages],
+      type: "article",
+      locale: "en_US",
+      url: componentUrl,
+      title: fullTitle,
+      description,
+      siteName: "CodeRocket",
+      images: [
+        {
+          url: ogImage,
+          width: 1200,
+          height: 630,
+          alt: `${componentTitle} - ${chat.framework} component built with Tailwind CSS`,
+        },
+      ],
+      ...(chat.created_at && {
+        publishedTime: new Date(chat.created_at).toISOString(),
+      }),
+      ...(chat.user?.full_name && {
+        authors: [chat.user.full_name],
+      }),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: fullTitle,
+      description,
+      images: [ogImage],
+      creator: "@coderocketapp",
+      site: "@coderocketapp",
     },
   };
 }
@@ -59,7 +145,6 @@ export default async function Components({ params }: Props) {
   const connectedUser = userData.data.user;
   const chat = await fetchChatById(slug);
 
-  // Use user_id directly for more reliable access control
   const isNotFound = chat?.is_private && chat?.user_id !== connectedUser?.id;
 
   if (!chat || isNotFound) {
@@ -68,6 +153,7 @@ export default async function Components({ params }: Props) {
 
   const lastUserMessage = await fetchLastUserMessageByChatId(chat.id);
   const messages = await fetchMessagesByChatId(chat.id);
+  const lastAssistantMessage = await fetchLastAssistantMessageByChatId(chat.id);
 
   if (!lastUserMessage || !messages) {
     return notFound();
@@ -76,7 +162,44 @@ export default async function Components({ params }: Props) {
   const authorized = connectedUser?.id === chat?.user_id;
   const user = chat?.user || { id: chat?.user_id };
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareSourceCode",
+    name: chat.title || "Tailwind Component",
+    description:
+      lastUserMessage.content?.slice(0, 200) || "AI-generated component",
+    url: `https://www.coderocket.app/components/${chat.slug}`,
+    programmingLanguage: chat.framework,
+    runtimePlatform: "Web Browser",
+    ...(chat.clone_url && { codeRepository: chat.clone_url }),
+    author: {
+      "@type": "Person",
+      name: chat.user?.full_name || "Anonymous",
+    },
+    dateCreated: chat.created_at,
+    interactionStatistic: {
+      "@type": "InteractionCounter",
+      interactionType: "https://schema.org/LikeAction",
+      userInteractionCount: chat.likes || 0,
+    },
+    image:
+      lastAssistantMessage?.screenshot || "https://www.coderocket.app/og.png",
+    license: "https://creativecommons.org/licenses/by/4.0/",
+  };
+
   return (
-    <ComponentCompletion chatId={chat.id} authorized={authorized} user={user} />
+    <>
+      {!chat.is_private && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      )}
+      <ComponentCompletion
+        chatId={chat.id}
+        authorized={authorized}
+        user={user}
+      />
+    </>
   );
 }

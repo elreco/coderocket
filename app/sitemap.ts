@@ -1,6 +1,8 @@
 import { MetadataRoute } from "next";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+import { createClient } from "@/utils/supabase/server";
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = "https://www.coderocket.app";
   const currentDate = new Date().toISOString();
 
@@ -73,5 +75,27 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   ];
 
-  return staticRoutes;
+  try {
+    const supabase = await createClient();
+    const { data: publicComponents } = await supabase
+      .from("chats")
+      .select("slug, created_at")
+      .eq("is_private", false)
+      .not("slug", "is", null)
+      .order("created_at", { ascending: false })
+      .limit(1000);
+
+    const componentRoutes: MetadataRoute.Sitemap =
+      publicComponents?.map((component) => ({
+        url: `${baseUrl}/components/${component.slug}`,
+        lastModified: component.created_at || currentDate,
+        changeFrequency: "weekly" as const,
+        priority: 0.7,
+      })) || [];
+
+    return [...staticRoutes, ...componentRoutes];
+  } catch (error) {
+    console.error("Error generating sitemap:", error);
+    return staticRoutes;
+  }
 }
