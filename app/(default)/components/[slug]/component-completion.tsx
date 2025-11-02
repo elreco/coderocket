@@ -16,7 +16,6 @@ import {
   Code as CodeIcon,
   X,
   Heart,
-  Globe,
   Info,
   Share,
   MoreHorizontal,
@@ -27,6 +26,7 @@ import { useEffect, useState, useRef } from "react";
 import { useCopyToClipboard } from "usehooks-ts";
 
 import { getSubscription } from "@/app/supabase-server";
+import { ClonedUrlBadge } from "@/components/cloned-url-badge";
 import { Container } from "@/components/container";
 import RenderHtmlComponent from "@/components/renders/render-html-component";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -60,7 +60,6 @@ import {
 } from "@/context/component-context";
 import { WebcontainerProvider } from "@/context/webcontainer-context";
 import { useToast } from "@/hooks/use-toast";
-import { truncateMiddle } from "@/lib/utils";
 import type { CustomDomainData } from "@/types/custom-domain";
 import { Tables } from "@/types_db";
 import {
@@ -1372,29 +1371,10 @@ export default function ComponentCompletion({
                 {!isLoading && isCanvas && (
                   <div className="absolute bottom-0 right-0 z-[9000] flex w-full items-center justify-end gap-2 p-2">
                     {fetchedChat?.clone_url && (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button variant="outline" size="sm" asChild>
-                            <a
-                              href={fetchedChat.clone_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="block text-xs text-blue-500 hover:text-blue-600 hover:underline"
-                            >
-                              <Globe className="size-4" />
-                              {truncateMiddle(
-                                fetchedChat.clone_url
-                                  .replace(/^https?:\/\/(www\.)?/i, "")
-                                  .replace(/\/$/, ""),
-                                30,
-                              )}
-                            </a>
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Component generated from this URL</p>
-                        </TooltipContent>
-                      </Tooltip>
+                      <ClonedUrlBadge
+                        url={fetchedChat.clone_url}
+                        showTooltip={true}
+                      />
                     )}
                     {remixOriginalChat && (
                       <Tooltip>

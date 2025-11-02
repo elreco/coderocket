@@ -12,8 +12,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ReactNode } from "react";
 
+import { ClonedUrlBadge } from "@/components/cloned-url-badge";
 import { Badge } from "@/components/ui/badge";
-import { cn, truncateMiddle } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { Framework } from "@/utils/config";
 import { getRelativeDate } from "@/utils/date";
 
@@ -193,21 +194,7 @@ export function UnifiedCard({
             <span>{getRelativeDate(data.createdAt)}</span>
           </div>
           {data.cloneUrl && (
-            <a
-              href={data.cloneUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-1 block text-xs text-blue-500 hover:text-blue-600 hover:underline"
-              title={data.cloneUrl}
-              onClick={(e) => e.stopPropagation()}
-            >
-              {truncateMiddle(
-                data.cloneUrl
-                  .replace(/^https?:\/\/(www\.)?/i, "")
-                  .replace(/\/$/, ""),
-                30,
-              )}
-            </a>
+            <ClonedUrlBadge url={data.cloneUrl} showTooltip={false} />
           )}
         </div>
 
