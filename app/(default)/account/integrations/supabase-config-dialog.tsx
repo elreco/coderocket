@@ -54,13 +54,23 @@ export function SupabaseConfigDialog({
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (open && existingIntegration) {
-      setName(existingIntegration.name || "");
-      const config = existingIntegration.config as SupabaseIntegrationConfig;
-      setProjectUrl(config?.projectUrl || "");
-      setAnonKey(config?.anonKey || "");
-      setAccessToken(config?.accessToken || "");
-      setProjectId(config?.projectId || "");
+    if (open) {
+      if (existingIntegration) {
+        setName(existingIntegration.name || "");
+        const config = existingIntegration.config as SupabaseIntegrationConfig;
+        setProjectUrl(config?.projectUrl || "");
+        setAnonKey(config?.anonKey || "");
+        setAccessToken(config?.accessToken || "");
+        setProjectId(config?.projectId || "");
+      } else {
+        setName("");
+        setProjectUrl("");
+        setAnonKey("");
+        setAccessToken("");
+        setProjectId("");
+      }
+      setTestResult(null);
+      setError(null);
     }
   }, [open, existingIntegration]);
 
