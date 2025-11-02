@@ -944,16 +944,28 @@ export default function Hero() {
                         value="public"
                         disabled={loading}
                       >
-                        <Globe className="block size-4 xl:hidden" />
-                        <span className="hidden xl:block">Public</span>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Globe className="block size-4" />
+                            </TooltipTrigger>
+                            <TooltipContent>Public</TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       </TabsTrigger>
                       <TabsTrigger
                         isReverse={true}
                         value="private"
                         disabled={loading}
                       >
-                        <Lock className="block size-4 xl:hidden" />
-                        <span className="hidden xl:block">Private</span>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Lock className="block size-4" />
+                            </TooltipTrigger>
+                            <TooltipContent>Private</TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       </TabsTrigger>
                     </TabsList>
                   </Tabs>
@@ -1146,7 +1158,7 @@ export default function Hero() {
                           <Button
                             type="button"
                             size="sm"
-                            variant="outline"
+                            variant="background"
                             className="h-8 w-full gap-2 text-xs sm:w-auto"
                             disabled={loading}
                           >
