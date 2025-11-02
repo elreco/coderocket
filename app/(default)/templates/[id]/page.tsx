@@ -109,7 +109,7 @@ export async function generateMetadata({
           ]
         : [
             {
-              url: "/og-marketplace.png",
+              url: "/og.png",
               width: 1200,
               height: 630,
               alt: "CodeRocket Marketplace",
@@ -121,9 +121,7 @@ export async function generateMetadata({
       title,
       description,
       creator: "@coderocket_app",
-      images: listing.screenshot
-        ? [listing.screenshot]
-        : ["/og-marketplace.png"],
+      images: listing.screenshot ? [listing.screenshot] : ["/og.png"],
     },
     alternates: {
       canonical: `https://www.coderocket.app/templates/${id}`,

@@ -63,7 +63,7 @@ export async function generateMetadata({
       siteName: "CodeRocket",
       images: [
         {
-          url: "/og-marketplace.png",
+          url: "/og.png",
           width: 1200,
           height: 630,
           alt: "CodeRocket Templates - Premium AI Components",
@@ -75,7 +75,7 @@ export async function generateMetadata({
       title,
       description,
       creator: "@coderocket_app",
-      images: ["/og-templates.png"],
+      images: ["/og.png"],
     },
     alternates: {
       canonical: "https://www.coderocket.app/templates",

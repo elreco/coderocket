@@ -649,6 +649,7 @@ export default function Hero() {
 
   const handleBadgeClick = (input: string) => {
     setPrompt(input);
+    setGenerationMode("scratch");
   };
 
   const handleButtonClick = useCallback(() => {
@@ -781,27 +782,26 @@ export default function Hero() {
         fill="hsl(var(--primary))"
       />
       <div className="flex w-full flex-col items-center">
-        <div className="flex min-h-screen w-full flex-col items-center justify-center space-y-4">
-          <h2
-            className="text-4xl font-medium tracking-tighter sm:text-5xl"
-            data-testid="home-h2"
+        <div className="flex min-h-screen w-full flex-col items-center justify-center space-y-6">
+          <Badge variant="secondary" className="mb-2 text-xs">
+            formerly Tailwind AI
+          </Badge>
+          <h1
+            className="text-center text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl"
+            data-testid="home-h1"
           >
-            Create. <span className="text-primary">Refine.</span> Deliver.
-          </h2>
-          <p className="text-center font-normal">
+            Build Stunning Web Apps
+            <span className="text-primary"> with AI</span>
+          </h1>
+          <p className="text-center text-lg text-muted-foreground">
             {generationMode === "scratch" ? (
               <>
-                Build{" "}
-                <span className="font-semibold">responsive Tailwind sites</span>{" "}
-                with
-                <span className="font-semibold"> AI-powered</span> prompts and
-                images. (formerly Tailwind AI)
+                Generate production-ready Tailwind v4 components from text or
+                images. Deploy in seconds.
               </>
             ) : (
               <>
-                <span className="font-semibold">Clone any website</span> by URL
-                and get a <span className="font-semibold">Tailwind-ready</span>{" "}
-                version instantly.
+                Clone any website by URL and get Tailwind-ready code instantly.
               </>
             )}
           </p>
@@ -842,7 +842,7 @@ export default function Hero() {
                     <div className="relative w-full">
                       <TextareaWithLimit
                         ref={inputRef}
-                        placeholder="Start generating a beautiful Tailwind component"
+                        placeholder="Start generating a beautiful Tailwind web app or component"
                         autoFocus={true}
                         required
                         value={prompt}
@@ -1402,10 +1402,12 @@ export default function Hero() {
         <div className="mx-auto max-w-7xl">
           <div className="mb-8 text-center">
             <h2 className="mb-3 text-3xl font-bold tracking-tight">
-              Prompt Ideas
+              Tailwind Component Prompt Ideas
             </h2>
             <p className="text-lg text-muted-foreground">
-              Get inspired with these ready-to-use prompts
+              Get inspired with these ready-to-use AI prompts for generating
+              Tailwind components, dashboards, forms, and complete web
+              applications
             </p>
           </div>
 

@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Accordion,
   AccordionContent,
@@ -6,12 +8,10 @@ import {
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 
-// Function to format the date
 const formatDate = (dateString: string) => {
-  const [day, month, year] = dateString.split("/"); // Split the date into day, month, and year
-  const date = new Date(`${month}/${day}/${year}`); // Create a Date object
+  const [day, month, year] = dateString.split("/");
+  const date = new Date(`${month}/${day}/${year}`);
   return date.toLocaleDateString("en-US", {
-    // Format the date to "Month Day, Year"
     year: "numeric",
     month: "long",
     day: "numeric",
@@ -26,63 +26,63 @@ export default function Changelog({
   changelog: { date: string; title: string; content: string }[];
 }) {
   return (
-    <div className="mx-auto max-w-screen-md p-8">
-      {/* What We're Working On */}
-      <div className="mb-16">
-        <h1 className="mb-1 text-3xl font-bold">What We&apos;re Working On</h1>
-        <div className="space-y-6">
-          <p className="mb-6">
-            We&apos;d love to hear your feedback! Share your thoughts and{" "}
-            <b>get free time</b> added to your subscription as a thank you!{" "}
-            <b>🎉</b>
-          </p>
-          <div className="rounded-lg border bg-card">
-            <div className="space-y-4 p-4">
-              {futureWork.map((item, index) => (
-                <p key={index}>
-                  <b>{item.title}:</b> {item.content}
-                </p>
-              ))}
-            </div>
-          </div>
-          <Button id="openChat">Share your thoughts</Button>
-        </div>
-      </div>
-
-      {/* Changelog */}
-      <div className="mb-12">
-        <h1 className="mb-1 text-3xl font-bold">Changelog</h1>
-        <p className="mb-6">
-          Keep track of the latest changes and improvements in our application.
+    <div className="space-y-2">
+      <section className="rounded-lg border bg-card p-4">
+        <h2 className="mb-3 mt-0 text-xl font-semibold">
+          What We&apos;re Working On
+        </h2>
+        <p className="mb-4 text-sm text-muted-foreground">
+          We&apos;d love to hear your feedback! Share your thoughts and{" "}
+          <span className="font-semibold text-foreground">get free time</span>{" "}
+          added to your subscription as a thank you! 🎉
         </p>
 
-        <Accordion
-          type="single"
-          defaultValue="latest"
-          className="mt-8 space-y-4"
+        <div className="mb-4 space-y-3 rounded-md bg-muted/50 p-4">
+          {futureWork.map((item, index) => (
+            <div key={index} className="text-sm">
+              <span className="font-semibold">{item.title}:</span>{" "}
+              <span className="text-muted-foreground">{item.content}</span>
+            </div>
+          ))}
+        </div>
+
+        <Button
+          id="openChat"
+          onClick={() => {
+            if (typeof window !== "undefined" && window.openCrispChat) {
+              window.openCrispChat();
+            }
+          }}
         >
+          Share your thoughts
+        </Button>
+      </section>
+
+      <section>
+        <h2 className="mb-4 text-xl font-semibold">Latest Updates</h2>
+
+        <Accordion type="single" collapsible className="space-y-3">
           {changelog.map((item, index) => (
             <AccordionItem
               key={index}
               value={`changelog-${index}`}
-              className="rounded-lg border bg-card"
+              className="mt-0 rounded-lg border bg-card"
             >
-              <AccordionTrigger className="flex w-full items-center justify-between p-4 hover:no-underline">
-                <div className="flex w-full justify-between">
-                  <span className="ml-4 font-bold">{item.title}</span>
-                  <span className="pr-2 font-semibold">
+              <AccordionTrigger className="mt-0 px-4 py-3 hover:no-underline [&[data-state=open]]:border-b">
+                <div className="flex w-full items-center justify-between gap-4 pr-4 text-left">
+                  <span className="font-medium">{item.title}</span>
+                  <span className="whitespace-nowrap text-xs text-muted-foreground">
                     {formatDate(item.date)}
-                  </span>{" "}
-                  {/* Format the date */}
+                  </span>
                 </div>
               </AccordionTrigger>
-              <AccordionContent className="border-t p-4">
+              <AccordionContent className="px-4 pb-4 pt-3 text-sm text-muted-foreground">
                 {item.content}
               </AccordionContent>
             </AccordionItem>
           ))}
         </Accordion>
-      </div>
+      </section>
     </div>
   );
 }

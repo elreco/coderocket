@@ -944,7 +944,7 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
                     <>
                       <div className="relative h-2 w-full overflow-hidden rounded-full bg-primary/10">
                         <div
-                          className="h-full bg-gradient-to-r from-primary to-primary/80 transition-all duration-700 ease-out"
+                          className="h-full bg-gradient-to-r from-primary to-primary/80 transition-all duration-1000 ease-in-out"
                           style={{ width: `${scrapingStatus.progress}%` }}
                         >
                           <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-transparent via-white/20 to-transparent" />
@@ -990,26 +990,26 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
                             icon: "✨",
                           },
                         ].map((step, index) => {
+                          const nextStepProgress =
+                            [20, 40, 60, 80, 95, 100][index] || 100;
                           const isActive =
                             scrapingStatus.progress >= step.progress &&
-                            scrapingStatus.progress <
-                              ([20, 40, 60, 80, 95, 100][index] || 100);
+                            scrapingStatus.progress < nextStepProgress;
                           const isCompleted =
-                            scrapingStatus.progress >
-                            ([20, 40, 60, 80, 95, 100][index] || 100);
+                            scrapingStatus.progress >= nextStepProgress;
 
                           return (
                             <div
                               key={step.label}
                               className={cn(
-                                "flex items-start gap-3 rounded-lg border p-2.5 transition-all duration-300",
+                                "flex items-start gap-3 rounded-lg border p-2.5 transition-all duration-700 ease-in-out",
                                 isActive &&
-                                  "border-primary/40 bg-primary/5 shadow-sm",
+                                  "border-primary/40 bg-primary/5 shadow-sm scale-[1.01]",
                                 isCompleted &&
-                                  "border-primary/20 bg-primary/5 opacity-60",
+                                  "border-green-500/30 bg-green-500/5 opacity-70",
                                 !isActive &&
                                   !isCompleted &&
-                                  "border-transparent bg-muted/30 opacity-40",
+                                  "border-border/50 opacity-50",
                               )}
                             >
                               <div

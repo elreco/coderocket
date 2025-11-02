@@ -7,52 +7,83 @@ import {
   AccordionContent,
 } from "@/components/ui/accordion";
 
+const faqData = [
+  {
+    question: "What is coderocket.app?",
+    answer:
+      "coderocket.app is a generative user interface system powered by AI. It generates copy-and-paste friendly HTML code based on Tailwind v4 that people can use in their projects.",
+  },
+  {
+    question: "How does coderocket.app work?",
+    answer:
+      "It uses AI models to generate code based on simple text prompts. After you submit your prompt, we give an AI-generated user interface. You can copy paste its code, or refine it further. To refine, you can fine tune your creation. When you are ready, you can copy, paste, and ship.",
+  },
+  {
+    question: "What are the limitations of a free account?",
+    answer:
+      "With a free account, you are limited to generating one component with four versions, and image use is not permitted. Upgrade to our premium plan for unlimited access to all features.",
+  },
+];
+
 export default function Faq() {
   return (
-    <Accordion type="single" collapsible>
-      <AccordionItem value="item-1">
-        <AccordionTrigger>What is coderocket.app?</AccordionTrigger>
-        <AccordionContent>
-          coderocket.app is a generative user interface system powered by AI. It
-          generates copy-and-paste friendly HTML code based on{" "}
-          <a
-            className="text-indigo-500 underline hover:text-indigo-900"
-            href="https://tailwindcss.com"
-            target="_blank"
-          >
-            Tailwind v4
-          </a>{" "}
-          that people can use in their projects.
-        </AccordionContent>
-      </AccordionItem>
-      <AccordionItem value="item-2">
-        <AccordionTrigger>How does coderocket.app work?</AccordionTrigger>
-        <AccordionContent>
-          <p>
-            {" "}
-            It uses AI models to generate code based on simple text prompts.
-            After you submit your prompt, we give an AI-generated user
-            interface.
-          </p>{" "}
-          <p>
-            You can copy paste its code, or refine it further. To refine, you
-            can fine tune your creation. When you are ready, you can copy,
-            paste, and ship.
-          </p>
-        </AccordionContent>
-      </AccordionItem>
-      <AccordionItem value="item-3">
-        <AccordionTrigger>
-          What are the limitations of a free account?
-        </AccordionTrigger>
-        <AccordionContent>
-          <p>
-            With a free account, you are limited to generating one component
-            with four versions, and image use is not permitted. Upgrade to our
-            premium plan for unlimited access to all features.
-          </p>
-        </AccordionContent>
-      </AccordionItem>
-    </Accordion>
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            mainEntity: faqData.map((faq) => ({
+              "@type": "Question",
+              name: faq.question,
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: faq.answer,
+              },
+            })),
+          }),
+        }}
+      />
+      <Accordion type="single" collapsible>
+        {faqData.map((faq, index) => (
+          <AccordionItem key={`item-${index + 1}`} value={`item-${index + 1}`}>
+            <AccordionTrigger>{faq.question}</AccordionTrigger>
+            <AccordionContent>
+              {index === 0 ? (
+                <>
+                  coderocket.app is a generative user interface system powered
+                  by AI. It generates copy-and-paste friendly HTML code based on{" "}
+                  <a
+                    className="text-indigo-500 underline hover:text-indigo-900"
+                    href="https://tailwindcss.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Tailwind v4
+                  </a>{" "}
+                  that people can use in their projects.
+                </>
+              ) : index === 1 ? (
+                <>
+                  <p>
+                    It uses AI models to generate code based on simple text
+                    prompts. After you submit your prompt, we give an
+                    AI-generated user interface.
+                  </p>
+                  <p>
+                    You can copy paste its code, or refine it further. To
+                    refine, you can fine tune your creation. When you are ready,
+                    you can copy, paste, and ship.
+                  </p>
+                </>
+              ) : (
+                <p>{faq.answer}</p>
+              )}
+            </AccordionContent>
+          </AccordionItem>
+        ))}
+      </Accordion>
+    </>
   );
 }

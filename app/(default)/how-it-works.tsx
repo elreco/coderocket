@@ -22,7 +22,7 @@ export default function Video() {
           }}
           className="text-left text-2xl font-bold md:text-4xl lg:text-5xl"
         >
-          How it works?
+          How CodeRocket AI Website Builder Works
         </motion.h1>
         <motion.p
           initial={{
@@ -39,10 +39,12 @@ export default function Video() {
           }}
           className="mt-8 max-w-2xl text-left text-base md:text-xl"
         >
-          Generate components effortlessly with simple prompts, iterate
-          seamlessly, and use vision technology to create components from
-          images. Clone existing websites by simply providing a URL or build
-          from scratch, ensuring flexibility and innovation in your projects.
+          Generate production-ready Tailwind v4 components effortlessly with
+          simple AI prompts. Iterate seamlessly with real-time previews, use
+          vision technology to create components from images, or clone existing
+          websites by simply providing a URL. Build complete web applications
+          from scratch with support for React, Vue, Svelte, Angular, and HTML,
+          ensuring flexibility and innovation in your projects.
         </motion.p>
         <div className="mt-10 w-full text-left">
           <Faq />
@@ -66,11 +68,11 @@ export default function Video() {
       >
         <div className="rounded-lg bg-background">
           <video
-            className="aspect-video rounded-lg border"
+            className="aspect-video w-full rounded-lg border"
             controls
-            preload="none"
-            muted={false}
-            loop
+            preload="metadata"
+            playsInline
+            aria-label="CodeRocket AI Website Builder demonstration video"
           >
             <source src="/demo.mp4" type="video/mp4" />
             Your browser does not support the video tag.

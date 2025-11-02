@@ -9,6 +9,7 @@ import {
   Rocket,
   SquareTerminal,
   Box,
+  HelpCircle,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -68,6 +69,11 @@ const data = {
           window.openCrispChat();
         }
       },
+    },
+    {
+      title: "FAQ",
+      url: "/faq",
+      icon: HelpCircle,
     },
     {
       title: "Changelog",

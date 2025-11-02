@@ -1,5 +1,25 @@
 User-agent: *
 Allow: /
+Disallow: /api/
+Disallow: /auth/
+Disallow: /account/api/
 
-# Sitemap location
 Sitemap: https://www.coderocket.app/sitemap.xml
+
+User-agent: GPTBot
+Disallow: /
+
+User-agent: ChatGPT-User
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: anthropic-ai
+Disallow: /
+
+User-agent: Claude-Web
+Disallow: /
+
+User-agent: Google-Extended
+Disallow: /

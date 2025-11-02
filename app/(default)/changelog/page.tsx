@@ -1,8 +1,26 @@
 import React from "react";
 
 import { Container } from "@/components/container";
+import { PageTitle } from "@/components/page-title";
 
 import Changelog from "./changelog";
+
+export const metadata = {
+  title: "Changelog - CodeRocket AI Website Builder",
+  description:
+    "Latest updates, improvements, and new features for CodeRocket. Track new AI capabilities, framework support, integrations, and bug fixes for our Tailwind website builder.",
+  keywords:
+    "CodeRocket updates, AI builder changelog, new features, product updates, release notes",
+  openGraph: {
+    title: "CodeRocket Changelog - Latest Updates & Features",
+    description:
+      "Stay updated with the latest features, improvements, and fixes to CodeRocket AI website builder.",
+    url: "https://www.coderocket.app/changelog",
+  },
+  alternates: {
+    canonical: "https://www.coderocket.app/changelog",
+  },
+};
 
 export default async function ChangelogPage() {
   const SHEET_CSV_URL =
@@ -44,7 +62,12 @@ export default async function ChangelogPage() {
   });
 
   return (
-    <Container>
+    <Container className="my-2 size-auto pr-2 sm:pr-11">
+      <PageTitle
+        title="Changelog"
+        subtitle="Track the latest updates and improvements"
+      />
+
       <Changelog futureWork={futureWorkData} changelog={changelogData} />
     </Container>
   );

@@ -1,1 +1,36 @@
-{"name":"","short_name":"","icons":[{"src":"/android-chrome-192x192.png","sizes":"192x192","type":"image/png"},{"src":"/android-chrome-512x512.png","sizes":"512x512","type":"image/png"}],"theme_color":"#ffffff","background_color":"#ffffff","display":"standalone"}
+{
+  "name": "CodeRocket - AI Website Builder",
+  "short_name": "CodeRocket",
+  "description": "AI-powered Tailwind website builder. Create production-ready web apps in seconds.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#6366f1",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": [
+    "development",
+    "productivity",
+    "utilities"
+  ],
+  "screenshots": [
+    {
+      "src": "/og.png",
+      "sizes": "1200x630",
+      "type": "image/png"
+    }
+  ]
+}

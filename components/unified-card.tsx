@@ -141,7 +141,7 @@ export function UnifiedCard({
           {data.likes !== undefined && data.likes > 0 && (
             <Badge className="bg-pink-500 text-white shadow-sm hover:bg-pink-600">
               <Heart className="mr-1 size-3" />
-              {data.likes} like{data.likes !== 1 ? "s" : ""}
+              {data.likes}
             </Badge>
           )}
           {data.badges?.map((badge, index) => (
