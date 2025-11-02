@@ -63,7 +63,6 @@ utils/integrations/
 - **Config Required:**
   - Project URL
   - Anon Key
-  - Service Role Key (optional)
   - Database Schema (optional)
 
 ### 2. Stripe

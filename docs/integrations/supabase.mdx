@@ -38,13 +38,6 @@ Once your project is created:
 3. You'll find:
    - **Project URL**: `https://xxxxx.supabase.co`
    - **Anon Key**: Public API key (safe to use in client-side code)
-   - **Service Role Key**: Admin API key (use server-side only)
-
-<Warning>
-  **Never expose your Service Role Key in client-side code!**
-
-  It bypasses Row Level Security and has full database access.
-</Warning>
 
 ## Configuring Supabase in CodeRocket
 
@@ -58,29 +51,10 @@ Once your project is created:
 Integration Name: My Blog Database
 Project URL: https://xxxxx.supabase.co
 Anon Key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-Service Role Key: (optional) eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
 
 4. Click **Test Connection** to verify
 5. Click **Create Integration**
-
-### When to Include Service Role Key
-
-<AccordionGroup>
-  <Accordion title="✅ Include it when...">
-    - You need admin operations (bypassing RLS)
-    - You want to manage users programmatically
-    - You need to perform database migrations
-    - You're building admin panels
-  </Accordion>
-
-  <Accordion title="❌ Skip it when...">
-    - Building standard CRUD applications
-    - User-facing applications with RLS
-    - You don't need admin privileges
-    - Security is your top concern
-  </Accordion>
-</AccordionGroup>
 
 ## What Gets Generated
 

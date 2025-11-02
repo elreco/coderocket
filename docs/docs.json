@@ -83,6 +83,7 @@
           "integrations/setup",
           {
             "group": "Supabase",
+            "expanded": true,
             "pages": [
               "integrations/supabase",
               "integrations/migrations",

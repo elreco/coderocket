@@ -60,7 +60,7 @@ icon: "wrench"
     **Solution:**
     1. Go to Supabase Dashboard
     2. Settings → API
-    3. Copy the **anon/public** key (not the service role key)
+    3. Copy the **anon/public** key
     4. Paste it exactly as shown (starts with `eyJ...`)
   </Tab>
 
@@ -221,12 +221,11 @@ Connection takes longer than expected (>1000ms).
 **Causes:**
 - Anon key has limited permissions
 - RLS policies are too restrictive
-- Service role key needed but not provided
 
 **Solution:**
-1. If building admin features, add the **Service Role Key**
-2. Review your RLS policies
-3. Ensure the user has necessary permissions
+1. Review your RLS policies in Supabase
+2. Ensure the user has necessary permissions for the operation
+3. Check that RLS is properly configured for your use case
 
 ---
 
