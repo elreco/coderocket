@@ -24,9 +24,12 @@ export const supportedImageTypes = [
 
 export const supportedDocumentTypes = ["application/pdf"];
 
+export const supportedTextTypes = ["text/plain"];
+
 export const supportedFileTypes = [
   ...supportedImageTypes,
   ...supportedDocumentTypes,
+  ...supportedTextTypes,
 ];
 
 export const fileTypeConfig = {
@@ -39,6 +42,11 @@ export const fileTypeConfig = {
     maxSize: maxPdfSize,
     accept: ".pdf",
     types: supportedDocumentTypes,
+  },
+  text: {
+    maxSize: maxPdfSize,
+    accept: ".txt",
+    types: supportedTextTypes,
   },
 };
 

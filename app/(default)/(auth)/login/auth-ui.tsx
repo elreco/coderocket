@@ -101,7 +101,13 @@ export default function AuthUI() {
             {isLoading ? "Logging in..." : "Login"}
           </Button>
           <Link href="/magic-link">
-            <Button className="w-full" variant="outline" type="button">
+            <Button
+              className="w-full"
+              disabled={isLoading}
+              loading={isLoading}
+              variant="outline"
+              type="button"
+            >
               Send magic link
             </Button>
           </Link>

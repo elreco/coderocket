@@ -1,11 +1,12 @@
 import {
   supportedImageTypes,
   supportedDocumentTypes,
+  supportedTextTypes,
   maxImageSize,
   maxPdfSize,
 } from "./config";
 
-export type FileType = "image" | "pdf" | "unknown";
+export type FileType = "image" | "pdf" | "text" | "unknown";
 
 export const getFileType = (file: File): FileType => {
   if (supportedImageTypes.includes(file.type)) {
@@ -13,6 +14,9 @@ export const getFileType = (file: File): FileType => {
   }
   if (supportedDocumentTypes.includes(file.type)) {
     return "pdf";
+  }
+  if (supportedTextTypes.includes(file.type)) {
+    return "text";
   }
   return "unknown";
 };
@@ -48,15 +52,17 @@ export const validateFile = (
     return {
       valid: false,
       error:
-        "File type not supported. Please upload images (PNG, JPEG, GIF, WebP) or PDF documents.",
+        "File type not supported. Please upload images (PNG, JPEG, GIF, WebP), PDF documents, or text files.",
     };
   }
 
   const maxSize = getMaxFileSize(fileType);
   if (file.size > maxSize) {
+    const fileTypeLabel =
+      fileType === "pdf" ? "PDF" : fileType === "text" ? "text file" : "image";
     return {
       valid: false,
-      error: `${file.name} is too large. Maximum size for ${fileType === "pdf" ? "PDF" : "image"} is ${formatFileSize(maxSize)}.`,
+      error: `${file.name} is too large. Maximum size for ${fileTypeLabel} is ${formatFileSize(maxSize)}.`,
     };
   }
 

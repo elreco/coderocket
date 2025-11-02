@@ -22,3 +22,4 @@ CREATE INDEX IF NOT EXISTS idx_chat_likes_user_id ON public.chat_likes(user_id);
 
 CREATE INDEX IF NOT EXISTS idx_subscriptions_user_id ON public.subscriptions(user_id);
 
+

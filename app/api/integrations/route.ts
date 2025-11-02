@@ -67,13 +67,36 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const { data: existingIntegrations } = await supabase
+      .from("user_integrations")
+      .select("id, name")
+      .eq("user_id", user.id)
+      .eq("integration_type", type);
+
+    if (existingIntegrations) {
+      const duplicate = existingIntegrations.find(
+        (integration) => integration.name === name,
+      );
+
+      if (duplicate) {
+        return NextResponse.json(
+          {
+            error:
+              "An integration with this name already exists. Please choose a different name or edit the existing integration.",
+          },
+          { status: 400 },
+        );
+      }
+    }
+
     const result = await createUserIntegration(user.id, type, name, config);
 
     if (!result.success) {
-      return NextResponse.json(
-        { error: result.error || "Failed to create integration" },
-        { status: 500 },
-      );
+      const errorMessage = result.error?.includes("unique constraint")
+        ? "An integration with this name already exists"
+        : result.error || "Failed to create integration";
+
+      return NextResponse.json({ error: errorMessage }, { status: 500 });
     }
 
     return NextResponse.json({ integration: result.integration });

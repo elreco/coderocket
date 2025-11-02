@@ -5,9 +5,11 @@ import {
   SiStripe,
   SiVercel,
   SiMailgun,
+  SiFigma,
 } from "@icons-pack/react-simple-icons";
 import { Plus, Plug2 } from "lucide-react";
-import { useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { useState, useEffect, useCallback } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -17,9 +19,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { toast } from "@/hooks/use-toast";
 import { IntegrationType, UserIntegration } from "@/utils/integrations";
 
 import { fetchUserIntegrations } from "./actions";
+import { FigmaConfigDialog } from "./figma-config-dialog";
 import { IntegrationCard } from "./integration-card";
 import { SupabaseConfigDialog } from "./supabase-config-dialog";
 
@@ -29,6 +33,13 @@ const availableIntegrations = [
     name: "Supabase",
     description: "PostgreSQL database, authentication, and storage",
     icon: <SiSupabase className="size-6 text-green-600" />,
+    available: true,
+  },
+  {
+    type: IntegrationType.FIGMA,
+    name: "Figma",
+    description: "Import designs and convert to code automatically",
+    icon: <SiFigma className="size-6 text-purple-600" />,
     available: true,
   },
   {
@@ -71,36 +82,99 @@ export default function IntegrationsClient({
   const [integrations, setIntegrations] =
     useState<UserIntegration[]>(initialIntegrations);
   const [supabaseDialogOpen, setSupabaseDialogOpen] = useState(false);
+  const [figmaDialogOpen, setFigmaDialogOpen] = useState(false);
   const [editingIntegration, setEditingIntegration] =
     useState<UserIntegration | null>(null);
 
-  const loadIntegrations = async () => {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  const loadIntegrations = useCallback(async () => {
     const data = await fetchUserIntegrations();
     setIntegrations(data);
-  };
+  }, []);
+
+  useEffect(() => {
+    const error = searchParams.get("error");
+    const success = searchParams.get("success");
+    const message = searchParams.get("message");
+
+    if (error) {
+      const errorMessages: Record<string, string> = {
+        no_code: "No authorization code received",
+        not_configured: "Integration not properly configured",
+        unauthorized: "You must be logged in",
+        invalid_state: "Invalid state parameter - security check failed",
+        token_exchange_failed:
+          "Failed to exchange authorization code for token",
+        no_projects: "No projects found in your account",
+        no_project_ref: "Project reference not found",
+        keys_fetch_failed: "Failed to fetch API keys",
+        no_anon_key: "No anonymous key found in project",
+        save_failed: message || "Failed to save integration",
+        callback_failed: "OAuth callback failed",
+        invalid_data: "Invalid data received",
+        expired: "Session expired, please try again",
+        all_projects_connected:
+          "All your Supabase projects are already connected",
+        already_connected:
+          "This account is already connected. Please edit the existing integration instead.",
+      };
+
+      toast({
+        variant: "destructive",
+        title: "Integration Error",
+        description: errorMessages[error] || `Error: ${error}`,
+      });
+
+      router.replace("/account/integrations");
+    } else if (success) {
+      const successMessages: Record<string, string> = {
+        supabase_connected: "Supabase integration connected successfully!",
+        figma_connected: "Figma integration connected successfully!",
+      };
+
+      toast({
+        title: "Success",
+        description: successMessages[success] || "Integration connected!",
+      });
+
+      loadIntegrations();
+      router.replace("/account/integrations");
+    }
+  }, [searchParams, router, loadIntegrations]);
 
   const handleAddIntegration = (type: IntegrationType) => {
+    setEditingIntegration(null);
     if (type === IntegrationType.SUPABASE) {
-      setEditingIntegration(null);
       setSupabaseDialogOpen(true);
+    } else if (type === IntegrationType.FIGMA) {
+      setFigmaDialogOpen(true);
     }
   };
 
   const handleEditIntegration = (integration: UserIntegration) => {
+    setEditingIntegration(integration);
     if (integration.integration_type === IntegrationType.SUPABASE) {
-      setEditingIntegration(integration);
       setSupabaseDialogOpen(true);
+    } else if (integration.integration_type === IntegrationType.FIGMA) {
+      setFigmaDialogOpen(true);
     }
   };
 
   const handleDialogSuccess = () => {
     setSupabaseDialogOpen(false);
+    setFigmaDialogOpen(false);
     setEditingIntegration(null);
     loadIntegrations();
   };
 
-  const handleDialogClose = (open: boolean) => {
-    setSupabaseDialogOpen(open);
+  const handleDialogClose = (open: boolean, type: "supabase" | "figma") => {
+    if (type === "supabase") {
+      setSupabaseDialogOpen(open);
+    } else if (type === "figma") {
+      setFigmaDialogOpen(open);
+    }
     if (!open) {
       setEditingIntegration(null);
     }
@@ -111,7 +185,7 @@ export default function IntegrationsClient({
   };
 
   const canAddMoreOfType = (type: IntegrationType) => {
-    return type === IntegrationType.SUPABASE;
+    return type === IntegrationType.SUPABASE || type === IntegrationType.FIGMA;
   };
 
   return (
@@ -125,13 +199,6 @@ export default function IntegrationsClient({
               : `${integrations.length} integration${integrations.length > 1 ? "s" : ""} configured`}
           </p>
         </div>
-        <Button
-          onClick={() => handleAddIntegration(IntegrationType.SUPABASE)}
-          className="gap-2"
-        >
-          <Plus className="size-4" />
-          Add Integration
-        </Button>
       </div>
 
       {integrations.length > 0 && (
@@ -195,7 +262,14 @@ export default function IntegrationsClient({
 
       <SupabaseConfigDialog
         open={supabaseDialogOpen}
-        onOpenChange={handleDialogClose}
+        onOpenChange={(open) => handleDialogClose(open, "supabase")}
+        onSuccess={handleDialogSuccess}
+        existingIntegration={editingIntegration || undefined}
+      />
+
+      <FigmaConfigDialog
+        open={figmaDialogOpen}
+        onOpenChange={(open) => handleDialogClose(open, "figma")}
         onSuccess={handleDialogSuccess}
         existingIntegration={editingIntegration || undefined}
       />

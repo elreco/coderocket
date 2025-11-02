@@ -1,5 +1,6 @@
 "use client";
 
+import { SiFigma } from "@icons-pack/react-simple-icons";
 import { FileText, X } from "lucide-react";
 import { useMemo, useEffect } from "react";
 
@@ -16,7 +17,14 @@ interface FileBadgeProps {
 }
 
 export function FileBadge({ file, onRemove, disabled }: FileBadgeProps) {
-  const fileType = file.type.startsWith("image/") ? "image" : "pdf";
+  const fileType = file.type.startsWith("image/")
+    ? "image"
+    : file.type === "text/plain" || file.name.endsWith(".txt")
+      ? "text"
+      : "pdf";
+
+  const isFigmaFile =
+    fileType === "text" && file.name.toLowerCase().includes("figma-design");
 
   const previewUrl = useMemo(() => URL.createObjectURL(file), [file]);
 
@@ -30,6 +38,8 @@ export function FileBadge({ file, onRemove, disabled }: FileBadgeProps) {
     <div className="group relative flex shrink-0 cursor-pointer items-center gap-2 rounded-lg border border-border bg-background px-3 py-1.5 transition-all hover:border-primary hover:shadow-sm">
       {fileType === "image" ? (
         <img src={previewUrl} alt="" className="size-5 rounded object-cover" />
+      ) : isFigmaFile ? (
+        <SiFigma className="size-4 text-[#F24E1E]" />
       ) : (
         <FileText className="size-4 text-muted-foreground" />
       )}

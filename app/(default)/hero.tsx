@@ -27,6 +27,7 @@ import {
   UserCircle,
   Image,
   Zap,
+  Crown,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -34,6 +35,7 @@ import { useRef, useState, useEffect, useCallback } from "react";
 
 import { getSubscription } from "@/app/supabase-server";
 import { Container } from "@/components/container";
+import { FigmaImportButton } from "@/components/figma-import-button";
 import { FileBadge } from "@/components/file-badge";
 import { ImageUploadArea } from "@/components/image-upload-area";
 import { TextareaWithLimit } from "@/components/textarea-with-limit";
@@ -328,8 +330,6 @@ export default function Hero() {
     null,
   );
   const isPremium = !!subscription;
-  const showIntegrationsButton =
-    isLoggedIn && selectedFramework !== Framework.HTML;
   const promptIdeasRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -338,6 +338,27 @@ export default function Hero() {
       const length = inputRef.current.value.length;
       inputRef.current.setSelectionRange(length, length);
     }
+  }, []);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      setIsLoggedIn(!!user);
+
+      if (user) {
+        try {
+          const sub = await getSubscription();
+          setSubscription(sub);
+        } catch (error) {
+          console.error("Error fetching subscription:", error);
+        }
+      }
+    };
+
+    checkAuth();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -519,11 +540,18 @@ export default function Hero() {
     const { data } = await supabase.auth.getSession();
     if (!data?.session?.user?.id) {
       toast({
-        variant: "destructive",
-        title: "Premium account required",
+        title: "Login required",
         description:
-          "You are not logged in. Please login and upgrade to premium and try again.",
-        duration: 4000,
+          "Sign in to start generating amazing UI components with AI!",
+        action: (
+          <a
+            href="/login"
+            className="inline-flex h-8 items-center justify-center rounded-md bg-primary px-3 text-xs font-medium text-primary-foreground"
+          >
+            Login
+          </a>
+        ),
+        duration: 5000,
       });
       return;
     }
@@ -613,11 +641,9 @@ export default function Hero() {
     setLoading(true);
     setLoadingAction("generate");
     const formData = new FormData();
-    if (generationMode === "scratch") {
-      images.forEach((image) => {
-        formData.append("files", image);
-      });
-    }
+    images.forEach((image) => {
+      formData.append("files", image);
+    });
     formData.append("isVisible", isVisible.toString());
     formData.append("theme", selectedTheme);
     formData.append("framework", selectedFramework);
@@ -669,11 +695,18 @@ export default function Hero() {
     const { data } = await supabase.auth.getSession();
     if (!data?.session?.user?.id) {
       toast({
-        variant: "destructive",
-        title: "Premium account required",
+        title: "Login required",
         description:
-          "You are not logged in, the visibility cannot be changed. Please login and upgrade to premium and try again.",
-        duration: 4000,
+          "Sign in to manage your component visibility and share your creations!",
+        action: (
+          <a
+            href="/login"
+            className="inline-flex h-8 items-center justify-center rounded-md bg-primary px-3 text-xs font-medium text-primary-foreground"
+          >
+            Login
+          </a>
+        ),
+        duration: 5000,
       });
       return;
     }
@@ -688,11 +721,18 @@ export default function Hero() {
       setVisible(!isVisible);
     } else {
       toast({
-        variant: "destructive",
-        title: "Premium account required",
+        title: "Premium feature",
         description:
-          "You are not premium, the visibility cannot be changed. Please upgrade to premium and try again.",
-        duration: 4000,
+          "Upgrade to Premium to control component visibility and manage privacy settings!",
+        action: (
+          <a
+            href="/pricing"
+            className="inline-flex h-8 items-center justify-center rounded-md bg-primary px-3 text-xs font-medium text-primary-foreground"
+          >
+            Upgrade
+          </a>
+        ),
+        duration: 5000,
       });
     }
   };
@@ -710,11 +750,18 @@ export default function Hero() {
     const { data } = await supabase.auth.getSession();
     if (!data?.session?.user?.id) {
       toast({
-        variant: "destructive",
-        title: "Premium account required",
+        title: "Login required",
         description:
-          "You are not logged in, the prompt cannot be improved. Please login and upgrade to premium and try again.",
-        duration: 4000,
+          "Sign in to use AI-powered prompt improvement and enhance your ideas!",
+        action: (
+          <a
+            href="/login"
+            className="inline-flex h-8 items-center justify-center rounded-md bg-primary px-3 text-xs font-medium text-primary-foreground"
+          >
+            Login
+          </a>
+        ),
+        duration: 5000,
       });
       return;
     }
@@ -742,11 +789,18 @@ export default function Hero() {
       }
     } else {
       toast({
-        variant: "destructive",
-        title: "Premium account required",
+        title: "Premium feature",
         description:
-          "You are not premium, the prompt cannot be improved. Please upgrade to premium and try again.",
-        duration: 4000,
+          "Upgrade to Premium to unlock AI-powered prompt improvement and create better components!",
+        action: (
+          <a
+            href="/pricing"
+            className="inline-flex h-8 items-center justify-center rounded-md bg-primary px-3 text-xs font-medium text-primary-foreground"
+          >
+            Upgrade
+          </a>
+        ),
+        duration: 5000,
       });
     }
     setLoading(false);
@@ -925,7 +979,7 @@ export default function Hero() {
               )}
 
               <div className="flex w-full flex-col items-center justify-between space-y-2 lg:flex-row lg:space-y-0">
-                <div className="flex w-full items-center space-x-2">
+                <div className="flex items-center space-x-2">
                   <Tabs
                     defaultValue="public"
                     value={isVisible ? "public" : "private"}
@@ -970,50 +1024,63 @@ export default function Hero() {
                     </TabsList>
                   </Tabs>
                   {generationMode === "scratch" && (
-                    <ImageUploadArea
-                      fileInputRef={fileInputRef}
-                      disabled={loading || images.length >= maxImagesUpload}
-                      handleButtonClick={handleButtonClick}
-                      handleImageChange={handleImageChange}
-                      onDrop={(droppedFiles) => {
-                        const validFiles: File[] = [];
+                    <>
+                      <ImageUploadArea
+                        fileInputRef={fileInputRef}
+                        disabled={loading || images.length >= maxImagesUpload}
+                        handleButtonClick={handleButtonClick}
+                        handleImageChange={handleImageChange}
+                        onDrop={(droppedFiles) => {
+                          const validFiles: File[] = [];
 
-                        for (const file of droppedFiles) {
-                          if (
-                            images.length + validFiles.length >=
-                            maxImagesUpload
-                          ) {
-                            toast({
-                              variant: "destructive",
-                              title: "Too many files",
-                              description: `Maximum ${maxImagesUpload} files allowed`,
-                              duration: 4000,
-                            });
-                            break;
+                          for (const file of droppedFiles) {
+                            if (
+                              images.length + validFiles.length >=
+                              maxImagesUpload
+                            ) {
+                              toast({
+                                variant: "destructive",
+                                title: "Too many files",
+                                description: `Maximum ${maxImagesUpload} files allowed`,
+                                duration: 4000,
+                              });
+                              break;
+                            }
+
+                            const validation = validateFile(file);
+                            if (!validation.valid) {
+                              toast({
+                                variant: "destructive",
+                                title: "Invalid file",
+                                description: validation.error,
+                                duration: 4000,
+                              });
+                              continue;
+                            }
+
+                            validFiles.push(file);
                           }
 
-                          const validation = validateFile(file);
-                          if (!validation.valid) {
-                            toast({
-                              variant: "destructive",
-                              title: "Invalid file",
-                              description: validation.error,
-                              duration: 4000,
-                            });
-                            continue;
+                          if (validFiles.length > 0) {
+                            setImages((prev) => [...prev, ...validFiles]);
                           }
-
-                          validFiles.push(file);
-                        }
-
-                        if (validFiles.length > 0) {
-                          setImages((prev) => [...prev, ...validFiles]);
-                        }
-                      }}
-                      isReverse={true}
-                      isUploading={loading && images.length > 0}
-                      label="Files"
-                    />
+                        }}
+                        isReverse={true}
+                        isUploading={loading && images.length > 0}
+                        label="Files"
+                      />
+                      <FigmaImportButton
+                        disabled={loading}
+                        framework={selectedFramework}
+                        subscription={subscription}
+                        isLoggedIn={isLoggedIn}
+                        isReverse={true}
+                        isUploading={loading && images.length > 0}
+                        onFileImport={(file) => {
+                          setImages((prev) => [...prev, file]);
+                        }}
+                      />
+                    </>
                   )}
                   {selectedFramework === Framework.HTML && (
                     <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
@@ -1076,99 +1143,147 @@ export default function Hero() {
                       </SheetContent>
                     </Sheet>
                   )}
-                  {showIntegrationsButton && !isLoadingSubscription && (
-                    <>
-                      {!isPremium ? (
-                        <Link href="/pricing">
+                  {selectedFramework !== Framework.HTML &&
+                    !isLoadingSubscription && (
+                      <>
+                        {!isLoggedIn ? (
                           <Button
                             type="button"
                             size="sm"
                             variant="background"
                             className="h-8 w-full gap-2 text-xs sm:w-auto"
                             disabled={loading}
+                            onClick={() => {
+                              toast({
+                                title: "Login required",
+                                description:
+                                  "Sign in to connect your database and unlock powerful features!",
+                                action: (
+                                  <a
+                                    href="/login"
+                                    className="inline-flex h-8 items-center justify-center rounded-md bg-primary px-3 text-xs font-medium text-primary-foreground"
+                                  >
+                                    Login
+                                  </a>
+                                ),
+                                duration: 5000,
+                              });
+                            }}
+                            title="Login to use database integrations"
                           >
-                            <Lock className="size-3.5" />
-                            <span className="hidden sm:inline">
-                              Unlock Integrations
-                            </span>
-                            <span className="sm:hidden">Premium</span>
+                            <Database className="size-3.5" />
+                            <span className="hidden sm:inline">Database</span>
+                            <span className="sm:hidden">DB</span>
+                            <Crown className="size-3 text-amber-500" />
                           </Button>
-                        </Link>
-                      ) : isLoadingIntegrations ? (
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="background"
-                          className="h-8 w-full gap-2 text-xs sm:w-auto"
-                          disabled
-                        >
-                          <Loader className="size-3.5 animate-spin" />
-                          <span className="hidden sm:inline">Loading...</span>
-                        </Button>
-                      ) : userIntegrations.filter(
-                          (i) =>
-                            i.integration_type === IntegrationType.SUPABASE &&
-                            i.is_active,
-                        ).length > 0 ? (
-                        <Select
-                          disabled={loading}
-                          value={selectedIntegration || "none"}
-                          onValueChange={(value) =>
-                            setSelectedIntegration(
-                              value === "none" ? null : value,
-                            )
-                          }
-                        >
-                          <SelectTrigger className="h-8 w-full rounded-md border-background sm:w-auto">
-                            <SelectValue placeholder="No Database" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="none" className="cursor-pointer">
-                              <div className="mr-2 flex w-full flex-row items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                  <SiSupabase className="size-4 opacity-30" />
-                                  <span>No Database</span>
-                                </div>
-                              </div>
-                            </SelectItem>
-                            {userIntegrations
-                              .filter(
-                                (i) =>
-                                  i.integration_type ===
-                                    IntegrationType.SUPABASE && i.is_active,
+                        ) : !isPremium ? (
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="background"
+                            className="h-8 w-full gap-2 text-xs sm:w-auto"
+                            disabled={loading}
+                            onClick={() => {
+                              toast({
+                                title: "Premium feature",
+                                description:
+                                  "Upgrade to Premium to connect Supabase and build full-stack applications with AI!",
+                                action: (
+                                  <a
+                                    href="/pricing"
+                                    className="inline-flex h-8 items-center justify-center rounded-md bg-primary px-3 text-xs font-medium text-primary-foreground"
+                                  >
+                                    Upgrade
+                                  </a>
+                                ),
+                                duration: 5000,
+                              });
+                            }}
+                            title="Upgrade to Premium to unlock database integrations"
+                          >
+                            <Database className="size-3.5" />
+                            <span className="hidden sm:inline">Database</span>
+                            <span className="sm:hidden">DB</span>
+                            <Crown className="size-3 text-amber-500" />
+                          </Button>
+                        ) : isLoadingIntegrations ? (
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="background"
+                            className="h-8 w-full gap-2 text-xs sm:w-auto"
+                            disabled
+                          >
+                            <Loader className="size-3.5 animate-spin" />
+                            <span className="hidden sm:inline">Loading...</span>
+                          </Button>
+                        ) : userIntegrations.filter(
+                            (i) =>
+                              i.integration_type === IntegrationType.SUPABASE &&
+                              i.is_active,
+                          ).length > 0 ? (
+                          <Select
+                            disabled={loading}
+                            value={selectedIntegration || "none"}
+                            onValueChange={(value) =>
+                              setSelectedIntegration(
+                                value === "none" ? null : value,
                               )
-                              .map((integration) => (
-                                <SelectItem
-                                  key={integration.id}
-                                  value={integration.id}
-                                  className="cursor-pointer"
-                                >
-                                  <div className="mr-2 flex w-full flex-row items-center justify-between">
-                                    <div className="flex items-center gap-2">
-                                      <SiSupabase className="size-4 text-green-600" />
-                                      <span>{integration.name}</span>
-                                    </div>
-                                  </div>
-                                </SelectItem>
-                              ))}
-                          </SelectContent>
-                        </Select>
-                      ) : (
-                        <Link href="/account/integrations">
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="background"
-                            className="h-8 w-full gap-2 text-xs sm:w-auto"
-                            disabled={loading}
+                            }
                           >
-                            <SiSupabase className="size-3.5 text-green-600" />
-                            Connect Supabase
-                          </Button>
-                        </Link>
-                      )}
-                    </>
-                  )}
+                            <SelectTrigger className="h-8 w-full rounded-md border-background sm:w-auto">
+                              <SelectValue placeholder="No Database" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem
+                                value="none"
+                                className="cursor-pointer"
+                              >
+                                <div className="mr-2 flex w-full flex-row items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    <SiSupabase className="size-4 opacity-30" />
+                                    <span>No Database</span>
+                                  </div>
+                                </div>
+                              </SelectItem>
+                              {userIntegrations
+                                .filter(
+                                  (i) =>
+                                    i.integration_type ===
+                                      IntegrationType.SUPABASE && i.is_active,
+                                )
+                                .map((integration) => (
+                                  <SelectItem
+                                    key={integration.id}
+                                    value={integration.id}
+                                    className="cursor-pointer"
+                                  >
+                                    <div className="mr-2 flex w-full flex-row items-center justify-between">
+                                      <div className="flex items-center gap-2">
+                                        <SiSupabase className="size-4 text-green-600" />
+                                        <span>{integration.name}</span>
+                                      </div>
+                                    </div>
+                                  </SelectItem>
+                                ))}
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <Link href="/account/integrations">
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="background"
+                              className="h-8 w-full gap-2 text-xs sm:w-auto"
+                              disabled={loading}
+                            >
+                              <SiSupabase className="size-3.5 text-green-600" />
+                              Connect Supabase
+                            </Button>
+                          </Link>
+                        )}
+                      </>
+                    )}
                   <Select
                     disabled={loading}
                     defaultValue="react"
@@ -1250,7 +1365,7 @@ export default function Hero() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="flex w-full items-center justify-end space-x-0 lg:space-x-2">
+                <div className="flex items-center justify-end space-x-0 lg:space-x-2">
                   {generationMode === "scratch" && (
                     <>
                       <TooltipProvider>
