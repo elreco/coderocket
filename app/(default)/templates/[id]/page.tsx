@@ -120,7 +120,7 @@ export async function generateMetadata({
       card: "summary_large_image",
       title,
       description,
-      creator: "@coderocket_app",
+      creator: "@coderocketapp",
       images: listing.screenshot ? [listing.screenshot] : ["/og.png"],
     },
     alternates: {

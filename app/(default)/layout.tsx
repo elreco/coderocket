@@ -55,8 +55,8 @@ const meta = {
     description:
       "Build production-ready Tailwind v4 websites and components with AI. Clone existing sites or create from scratch. Support for React, Vue, Svelte, Angular. Deploy instantly.",
     images: ["https://www.coderocket.app/og.png"],
-    creator: "@coderocket_app",
-    site: "@coderocket_app",
+    creator: "@coderocketapp",
+    site: "@coderocketapp",
   },
 };
 
