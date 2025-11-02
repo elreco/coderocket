@@ -98,7 +98,7 @@ export function IntegrationCard({
 
           <div className="flex gap-2">
             <Button
-              variant="outline"
+              variant="background"
               size="sm"
               onClick={() => onEdit(integration)}
               className="flex-1"
@@ -109,9 +109,11 @@ export function IntegrationCard({
             <Button
               variant="destructive"
               size="sm"
+              className="flex-1"
               onClick={() => setShowDeleteDialog(true)}
             >
               <Trash2 className="size-4" />
+              Remove integration
             </Button>
           </div>
         </div>

@@ -319,13 +319,14 @@ export default function CustomDomainSection({
                   </div>
                   {isOwner && (
                     <Button
-                      variant="ghost"
-                      size="icon"
+                      variant="destructive"
+                      size="sm"
                       className="shrink-0"
                       onClick={() => setShowDeleteDialog(true)}
                       disabled={isDeleting}
                     >
                       <Trash2 className="size-4" />
+                      Remove domain
                     </Button>
                   )}
                 </div>

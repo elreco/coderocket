@@ -61,7 +61,7 @@ export function DeleteDomainDialog({
               handleConfirm();
             }}
             disabled={isDeleting}
-            className="bg-destructive hover:bg-destructive/90"
+            variant="destructive"
           >
             {isDeleting ? (
               <>

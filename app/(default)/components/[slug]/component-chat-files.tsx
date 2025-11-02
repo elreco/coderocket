@@ -1,7 +1,7 @@
 "use client";
 
 import { SiGithub } from "@icons-pack/react-simple-icons";
-import { Trash2 } from "lucide-react";
+import { Loader2, Trash2 } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 
 import {
@@ -496,10 +496,11 @@ ${extractedFiles
                   <AlertDialogTrigger asChild>
                     <Button
                       variant="destructive"
-                      size="icon"
+                      size="sm"
                       disabled={isLoading}
                     >
                       <Trash2 className="size-4" />
+                      Delete version
                     </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
@@ -520,7 +521,17 @@ ${extractedFiles
                           loading={isDeleting}
                           variant="destructive"
                         >
-                          Delete
+                          {isDeleting ? (
+                            <>
+                              <Loader2 className="mr-2 size-4 animate-spin" />
+                              Deleting...
+                            </>
+                          ) : (
+                            <>
+                              <Trash2 className="size-4" />
+                              Delete version
+                            </>
+                          )}
                         </Button>
                       </AlertDialogAction>
                     </AlertDialogFooter>

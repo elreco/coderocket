@@ -206,6 +206,21 @@ export function AppSidebar({
         <NavMain items={communityItems} label="Community" />
       </SidebarContent>
       <SidebarFooter>
+        <div className={`flex justify-center p-1 ${open ? "block" : "hidden"}`}>
+          <a
+            href="https://www.producthunt.com/products/tailwind-ai?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-coderocket"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <img
+              src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1033622&theme=light&t=1762107724575"
+              alt="CodeRocket - Transform your ideas into production-ready web applications | Product Hunt"
+              width="180"
+              height="39"
+              className="h-auto w-[180px]"
+            />
+          </a>
+        </div>
         {notification?.is_active && (
           <div className={`flex p-1 ${open ? "block" : "hidden"}`}>
             <SidebarNotification

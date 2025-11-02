@@ -43,7 +43,7 @@ export function DeleteConfirmationDialog({
         <AlertDialogHeader>
           <div className="flex items-center gap-2">
             <AlertTriangle className="size-5 text-destructive" />
-            <AlertDialogTitle>Delete Integration</AlertDialogTitle>
+            <AlertDialogTitle>Remove Integration</AlertDialogTitle>
           </div>
           <AlertDialogDescription className="space-y-2 pt-2">
             <p>
@@ -67,12 +67,12 @@ export function DeleteConfirmationDialog({
               handleConfirm();
             }}
             disabled={isDeleting}
-            className="bg-destructive hover:bg-destructive/90"
+            variant="destructive"
           >
             {isDeleting ? (
               <>
                 <Loader2 className="mr-2 size-4 animate-spin" />
-                Deleting...
+                Removing...
               </>
             ) : (
               <>
