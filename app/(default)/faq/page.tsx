@@ -1,8 +1,9 @@
 "use client";
 
 import { Container } from "@/components/container";
-import Faq from "@/components/faq";
 import { PageTitle } from "@/components/page-title";
+
+import Faq from "./faq";
 
 const metadata = {
   title: "FAQ - CodeRocket AI Website Builder",
@@ -58,8 +59,8 @@ export default function FaqPage() {
         Watch this quick video to see how CodeRocket helps you build stunning
         Tailwind websites with AI in seconds.
       </p>
-      <div className="mt-12 flex w-full items-start justify-between space-x-4">
-        <div className="w-1/2">
+      <div className="mt-12 flex w-full flex-col items-start justify-between space-y-4 lg:flex-row lg:space-x-4 lg:space-y-0">
+        <div className="w-full lg:w-1/2">
           <div className="aspect-video overflow-hidden rounded-lg border bg-card">
             <video
               className="size-full"
@@ -73,7 +74,7 @@ export default function FaqPage() {
           </div>
         </div>
 
-        <div className="flex w-1/2 flex-col gap-4 space-y-4">
+        <div className="flex w-full flex-col gap-4 space-y-4 lg:w-1/2">
           <div className="rounded-lg border bg-card p-4">
             <div className="mb-2 flex size-10 items-center justify-center rounded-full bg-primary/10">
               <span className="text-lg font-bold text-primary">1</span>

@@ -6,15 +6,17 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { truncateMiddle } from "@/lib/utils";
+import { cn, truncateMiddle } from "@/lib/utils";
 
 interface ClonedUrlBadgeProps {
+  className?: string;
   url: string;
   maxLength?: number;
   showTooltip?: boolean;
 }
 
 export function ClonedUrlBadge({
+  className,
   url,
   maxLength = 30,
   showTooltip = true,
@@ -26,7 +28,12 @@ export function ClonedUrlBadge({
   };
 
   const buttonContent = (
-    <Button variant="outline" size="sm" asChild className="w-fit">
+    <Button
+      variant="outline"
+      size="sm"
+      asChild
+      className={cn("w-fit", className)}
+    >
       <a
         href={url}
         target="_blank"

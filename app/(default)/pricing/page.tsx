@@ -1,9 +1,9 @@
+import Faq from "@/app/(default)/faq/faq";
 import {
   getSubscription,
   getActiveProductsWithPrices,
 } from "@/app/supabase-server";
 import { Container } from "@/components/container";
-import Faq from "@/components/faq";
 import { PageTitle } from "@/components/page-title";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { createClient } from "@/utils/supabase/server";

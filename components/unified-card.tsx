@@ -100,9 +100,9 @@ export function UnifiedCard({
   const cardContent = (
     <div
       className={cn(
-        "w-full bg-center overflow-hidden relative card rounded-md mx-auto cursor-pointer border-2 border-primary/20 transition-all duration-300 hover:border-primary hover:shadow-lg",
-        isReverse ? "bg-background" : "bg-secondary",
-        data.isLiked && "border-2 border-pink-500",
+        "w-full bg-center overflow-hidden relative card rounded-md mx-auto cursor-pointer border border-primary/20 transition-all duration-800 hover:border-primary hover:shadow-lg",
+        isReverse ? "bg-background" : "bg-primary/5",
+        data.isLiked && "border border-pink-500",
         className,
       )}
     >
@@ -120,7 +120,7 @@ export function UnifiedCard({
         </div>
 
         {/* Top Right Badges */}
-        <div className="absolute right-3 top-3 flex flex-col gap-2">
+        <div className="absolute right-3 top-3 flex flex-row items-center gap-2">
           {priceFormatted && (
             <Badge
               className={cn(
@@ -139,6 +139,10 @@ export function UnifiedCard({
               {data.totalSales} use{data.totalSales !== 1 ? "s" : ""}
             </Badge>
           )}
+          <Badge className="hover:bg-primary">
+            <FrameworkIcon className="mr-1 size-3" />
+            <span className="first-letter:uppercase">{data.framework}</span>
+          </Badge>
           {data.likes !== undefined && data.likes > 0 && (
             <Badge className="bg-pink-500 text-white shadow-sm hover:bg-pink-600">
               <Heart className="mr-1 size-3" />
@@ -165,13 +169,18 @@ export function UnifiedCard({
             </Badge>
           )}
         </div>
+        <div className="absolute bottom-3 left-3">
+          {data.cloneUrl && (
+            <ClonedUrlBadge url={data.cloneUrl} showTooltip={true} />
+          )}
+        </div>
       </div>
 
       {/* Content */}
       <div
         className={cn(
           "flex flex-col justify-between p-4",
-          showActions ? "min-h-36" : "h-36",
+          showActions ? "min-h-32" : "h-32",
         )}
       >
         {/* Title and Author */}
@@ -193,18 +202,10 @@ export function UnifiedCard({
             )}
             <span>{getRelativeDate(data.createdAt)}</span>
           </div>
-          {data.cloneUrl && (
-            <ClonedUrlBadge url={data.cloneUrl} showTooltip={false} />
-          )}
         </div>
 
         {/* Framework Badge and Stats */}
         <div className="mt-5 flex items-center justify-between">
-          <Badge className="hover:bg-primary">
-            <FrameworkIcon className="mr-1 size-3" />
-            <span className="first-letter:uppercase">{data.framework}</span>
-          </Badge>
-
           <div className="flex items-center gap-3 text-xs text-muted-foreground">
             {data.isRemixed && (
               <div className="flex items-center gap-1">
