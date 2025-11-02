@@ -60,6 +60,7 @@ import {
 } from "@/context/component-context";
 import { WebcontainerProvider } from "@/context/webcontainer-context";
 import { useToast } from "@/hooks/use-toast";
+import { truncateMiddle } from "@/lib/utils";
 import type { CustomDomainData } from "@/types/custom-domain";
 import { Tables } from "@/types_db";
 import {
@@ -1378,12 +1379,15 @@ export default function ComponentCompletion({
                               href={fetchedChat.clone_url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="block truncate text-xs text-blue-500 hover:text-blue-600 hover:underline"
+                              className="block text-xs text-blue-500 hover:text-blue-600 hover:underline"
                             >
                               <Globe className="size-4" />
-                              {fetchedChat.clone_url
-                                .replace(/^https?:\/\/(www\.)?/i, "")
-                                .replace(/\/$/, "")}
+                              {truncateMiddle(
+                                fetchedChat.clone_url
+                                  .replace(/^https?:\/\/(www\.)?/i, "")
+                                  .replace(/\/$/, ""),
+                                30,
+                              )}
                             </a>
                           </Button>
                         </TooltipTrigger>

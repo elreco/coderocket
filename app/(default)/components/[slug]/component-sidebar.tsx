@@ -35,7 +35,7 @@ import { UserWidget } from "@/components/user-widget";
 import { useComponentContext } from "@/context/component-context";
 import { useWebcontainer } from "@/context/webcontainer-context";
 import { toast } from "@/hooks/use-toast";
-import { cn } from "@/lib/utils";
+import { cn, truncateMiddle } from "@/lib/utils";
 import { Tables } from "@/types_db";
 import { cloneWebsite } from "@/utils/actions/clone-website";
 import {
@@ -912,11 +912,24 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
                     )}
                     {completion ? (
                       <p className="font-medium text-green-600">
-                        Website {fetchedChat.clone_url} analyzed
+                        Website{" "}
+                        {truncateMiddle(
+                          fetchedChat.clone_url
+                            .replace(/^https?:\/\/(www\.)?/i, "")
+                            .replace(/\/$/, ""),
+                          35,
+                        )}{" "}
+                        analyzed
                       </p>
                     ) : (
                       <p className="font-medium text-primary">
-                        Scraping {fetchedChat.clone_url}
+                        Scraping{" "}
+                        {truncateMiddle(
+                          fetchedChat.clone_url
+                            .replace(/^https?:\/\/(www\.)?/i, "")
+                            .replace(/\/$/, ""),
+                          35,
+                        )}
                       </p>
                     )}
                   </div>

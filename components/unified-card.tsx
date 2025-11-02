@@ -13,7 +13,7 @@ import { useRouter } from "next/navigation";
 import { ReactNode } from "react";
 
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+import { cn, truncateMiddle } from "@/lib/utils";
 import { Framework } from "@/utils/config";
 import { getRelativeDate } from "@/utils/date";
 
@@ -197,13 +197,16 @@ export function UnifiedCard({
               href={data.cloneUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-1 block truncate text-xs text-blue-500 hover:text-blue-600 hover:underline"
+              className="mt-1 block text-xs text-blue-500 hover:text-blue-600 hover:underline"
               title={data.cloneUrl}
               onClick={(e) => e.stopPropagation()}
             >
-              {data.cloneUrl
-                .replace(/^https?:\/\/(www\.)?/i, "")
-                .replace(/\/$/, "")}
+              {truncateMiddle(
+                data.cloneUrl
+                  .replace(/^https?:\/\/(www\.)?/i, "")
+                  .replace(/\/$/, ""),
+                30,
+              )}
             </a>
           )}
         </div>
