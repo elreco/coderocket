@@ -104,7 +104,12 @@ export async function POST(req: Request) {
   let event: Stripe.Event;
 
   try {
-    if (!sig || !webhookSecret) return;
+    if (!sig || !webhookSecret) {
+      console.error("Webhook error: Missing signature or webhook secret");
+      return new Response("Webhook signature or secret missing", {
+        status: 400,
+      });
+    }
     event = stripe.webhooks.constructEvent(body, sig, webhookSecret);
   } catch (err: unknown) {
     const errorMessage = err instanceof Error ? err.message : "Unknown error";

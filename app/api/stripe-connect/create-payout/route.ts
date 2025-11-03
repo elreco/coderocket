@@ -70,17 +70,27 @@ export async function POST(req: Request) {
       );
     }
 
+    // Get all payout earnings_ids for this seller to exclude them
+    const { data: existingPayouts } = await supabase
+      .from("marketplace_payouts")
+      .select("earnings_ids")
+      .eq("seller_id", user.id)
+      .in("status", ["pending", "in_transit", "paid"]);
+
+    const excludedEarningsIds = new Set(
+      existingPayouts?.flatMap((p) => p.earnings_ids) || [],
+    );
+
     // Get earnings records to include in payout
-    const { data: earningsToPayOut } = await supabase
+    const { data: allEarnings } = await supabase
       .from("marketplace_earnings")
       .select("id")
       .eq("seller_id", user.id)
-      .eq("status", "available")
-      .not(
-        "id",
-        "in",
-        `(SELECT UNNEST(earnings_ids) FROM marketplace_payouts WHERE seller_id = '${user.id}' AND status IN ('pending', 'in_transit', 'paid'))`,
-      );
+      .eq("status", "available");
+
+    // Filter out earnings that are already in a payout
+    const earningsToPayOut =
+      allEarnings?.filter((e) => !excludedEarningsIds.has(e.id)) || [];
 
     if (!earningsToPayOut || earningsToPayOut.length === 0) {
       return new Response(

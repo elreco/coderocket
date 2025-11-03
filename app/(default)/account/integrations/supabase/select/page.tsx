@@ -2,14 +2,6 @@ import { redirect } from "next/navigation";
 
 import SupabaseProjectSelector from "./supabase-project-selector";
 
-interface Project {
-  id: string;
-  name: string;
-  region: string;
-  organization_id: string;
-  status: string;
-}
-
 export default async function SupabaseSelectPage({
   searchParams,
 }: {
