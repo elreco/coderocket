@@ -92,7 +92,6 @@ export default function ComponentSidebar({
     selectedFramework,
     files,
     setFiles,
-    defaultFiles,
     isLengthError,
     fetchedChat,
   } = useComponentContext();
@@ -167,9 +166,15 @@ export default function ComponentSidebar({
       try {
         setIsLoadingSubscription(true);
         const { data } = await supabase.auth.getUser();
-        setIsLoggedIn(!!data?.user?.id);
-        const sub = await getSubscription();
-        setSubscription(sub);
+        const userId = data?.user?.id;
+        setIsLoggedIn(!!userId);
+
+        if (userId) {
+          const sub = await getSubscription(userId);
+          setSubscription(sub);
+        } else {
+          setSubscription(null);
+        }
       } catch (error) {
         console.error("Error fetching subscription:", error);
       } finally {
@@ -860,37 +865,10 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
                 userFullName={user?.full_name}
               />
               <Markdown>{input}</Markdown>
-              {(() => {
-                const lastUserMessage = [...messages]
-                  .reverse()
-                  .find((m) => m.role === "user");
-
-                const messageFiles =
-                  lastUserMessage?.files && Array.isArray(lastUserMessage.files)
-                    ? (lastUserMessage.files as Array<{
-                        url: string;
-                        order: number;
-                        type?: string;
-                        mimeType?: string;
-                        source?: string;
-                      }>)
-                    : [];
-
-                return (
-                  <PromptFiles
-                    files={files.length > 0 ? files : undefined}
-                    fileItems={
-                      messageFiles.length > 0 ? messageFiles : undefined
-                    }
-                    fileUrls={
-                      messageFiles.length === 0 && files.length === 0
-                        ? defaultFiles
-                        : undefined
-                    }
-                    storageUrl={storageUrl}
-                  />
-                );
-              })()}
+              <PromptFiles
+                files={files.length > 0 ? files : undefined}
+                storageUrl={storageUrl}
+              />
             </div>
           </div>
           <div
@@ -1252,68 +1230,74 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
                             className="flex items-center"
                             disabled={isLoading}
                           >
-                            <Paintbrush className="size-4" />
-                            <span className="ml-0.5">Theme</span>
+                            <Paintbrush className="size-4 shrink-0" />
+                            <span className="ml-0.5 hidden sm:inline">
+                              Theme
+                            </span>
                           </Button>
                         </ComponentTheme>
                       </div>
                     )}
-                    <ImageUploadArea
-                      fileInputRef={fileInputRef}
-                      disabled={
-                        isLoading ||
-                        isLengthError ||
-                        !!buildError ||
-                        files.length >= maxImagesUpload
-                      }
-                      handleButtonClick={handleButtonClick}
-                      handleImageChange={handleFileChange}
-                      onDrop={(droppedFiles) => {
-                        const validFiles: File[] = [];
-
-                        for (const file of droppedFiles) {
-                          if (
-                            files.length + validFiles.length >=
-                            maxImagesUpload
-                          ) {
-                            toast({
-                              variant: "destructive",
-                              title: "Too many files",
-                              description: `Maximum ${maxImagesUpload} files allowed`,
-                              duration: 4000,
-                            });
-                            break;
+                    {!isLoadingSubscription && (
+                      <>
+                        <ImageUploadArea
+                          fileInputRef={fileInputRef}
+                          disabled={
+                            isLoading ||
+                            isLengthError ||
+                            !!buildError ||
+                            files.length >= maxImagesUpload
                           }
+                          handleButtonClick={handleButtonClick}
+                          handleImageChange={handleFileChange}
+                          onDrop={(droppedFiles) => {
+                            const validFiles: File[] = [];
 
-                          const validation = validateFile(file);
-                          if (!validation.valid) {
-                            toast({
-                              variant: "destructive",
-                              title: "Invalid file",
-                              description: validation.error,
-                              duration: 4000,
-                            });
-                            continue;
-                          }
+                            for (const file of droppedFiles) {
+                              if (
+                                files.length + validFiles.length >=
+                                maxImagesUpload
+                              ) {
+                                toast({
+                                  variant: "destructive",
+                                  title: "Too many files",
+                                  description: `Maximum ${maxImagesUpload} files allowed`,
+                                  duration: 4000,
+                                });
+                                break;
+                              }
 
-                          validFiles.push(file);
-                        }
+                              const validation = validateFile(file);
+                              if (!validation.valid) {
+                                toast({
+                                  variant: "destructive",
+                                  title: "Invalid file",
+                                  description: validation.error,
+                                  duration: 4000,
+                                });
+                                continue;
+                              }
 
-                        if (validFiles.length > 0) {
-                          setFiles((prev) => [...prev, ...validFiles]);
-                        }
-                      }}
-                      label="Files"
-                    />
-                    <FigmaImportButton
-                      disabled={isLoading || isLengthError || !!buildError}
-                      framework={selectedFramework}
-                      subscription={subscription}
-                      isLoggedIn={isLoggedIn}
-                      onFileImport={(file) => {
-                        setFiles((prev) => [...prev, file]);
-                      }}
-                    />
+                              validFiles.push(file);
+                            }
+
+                            if (validFiles.length > 0) {
+                              setFiles((prev) => [...prev, ...validFiles]);
+                            }
+                          }}
+                          label="Files"
+                        />
+                        <FigmaImportButton
+                          disabled={isLoading || isLengthError || !!buildError}
+                          framework={selectedFramework}
+                          subscription={subscription}
+                          isLoggedIn={isLoggedIn}
+                          onFileImport={(file) => {
+                            setFiles((prev) => [...prev, file]);
+                          }}
+                        />
+                      </>
+                    )}
                   </div>
                 </div>
                 {!isLoading && files.length > 0 && (

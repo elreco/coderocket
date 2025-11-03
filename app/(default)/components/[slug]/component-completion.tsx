@@ -175,6 +175,15 @@ export default function ComponentCompletion({
   const [currentGeneratingFile, setCurrentGeneratingFile] = useState<
     string | null
   >(null);
+  const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const checkUserAuth = async () => {
+      const { data } = await supabase.auth.getUser();
+      setIsUserLoggedIn(!!data?.user);
+    };
+    checkUserAuth();
+  }, [supabase]);
 
   useEffect(() => {
     const loadInitialData = async () => {
@@ -1334,21 +1343,23 @@ export default function ComponentCompletion({
                         <Share className="mr-2 size-4" />
                         <span>Share</span>
                       </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onSelect={(e) => {
-                          if (isRemixing || isLoading) {
-                            e.preventDefault();
-                            return;
-                          }
-                          setIsDropdownOpen(false);
-                          setIsRemixModalOpen(true);
-                        }}
-                        disabled={isRemixing || isLoading}
-                        className="cursor-pointer"
-                      >
-                        <GitFork className="mr-2 size-4" />
-                        <span>Remix</span>
-                      </DropdownMenuItem>
+                      {isUserLoggedIn && (
+                        <DropdownMenuItem
+                          onSelect={(e) => {
+                            if (isRemixing || isLoading) {
+                              e.preventDefault();
+                              return;
+                            }
+                            setIsDropdownOpen(false);
+                            setIsRemixModalOpen(true);
+                          }}
+                          disabled={isRemixing || isLoading}
+                          className="cursor-pointer"
+                        >
+                          <GitFork className="mr-2 size-4" />
+                          <span>Remix</span>
+                        </DropdownMenuItem>
+                      )}
                     </DropdownMenuContent>
                   </DropdownMenu>
                   <Sheet>

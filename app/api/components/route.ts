@@ -1142,7 +1142,13 @@ const updateDataAfterCompletion = async (
       return { url, order: index };
     });
   } else {
-    filesData = lastUserMessage.files || [];
+    filesData = [] as {
+      url: string;
+      order: number;
+      type: string;
+      mimeType: string;
+      source?: string;
+    }[];
   }
 
   if (version > 0) {
