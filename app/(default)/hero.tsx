@@ -58,7 +58,6 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from "@/components/ui/select";
 import {
   Sheet,
@@ -325,7 +324,6 @@ export default function Hero() {
   const [userIntegrations, setUserIntegrations] = useState<UserIntegration[]>(
     [],
   );
-  const [isLoadingIntegrations, setIsLoadingIntegrations] = useState(false);
   const [selectedIntegration, setSelectedIntegration] = useState<string | null>(
     null,
   );
@@ -422,16 +420,18 @@ export default function Hero() {
       try {
         setIsLoadingSubscription(true);
         const { data } = await supabase.auth.getUser();
-        setIsLoggedIn(!!data?.user?.id);
-        const sub = await getSubscription();
-        setSubscription(sub);
+        const userId = data?.user?.id;
+        setIsLoggedIn(!!userId);
 
-        if (data?.user?.id) {
-          setIsLoadingIntegrations(true);
-          const integrations = await fetchUserIntegrations();
+        if (userId) {
+          const [sub, integrations] = await Promise.all([
+            getSubscription(userId),
+            fetchUserIntegrations(),
+          ]);
+          setSubscription(sub);
           setUserIntegrations(integrations);
-          setIsLoadingIntegrations(false);
         } else {
+          setSubscription(null);
           setUserIntegrations([]);
           setSelectedIntegration(null);
         }
@@ -453,12 +453,12 @@ export default function Hero() {
           setSubscription(null);
         } else if (event === "SIGNED_IN" && session?.user) {
           setIsLoggedIn(true);
-          const sub = await getSubscription();
+          const [sub, integrations] = await Promise.all([
+            getSubscription(session.user.id),
+            fetchUserIntegrations(),
+          ]);
           setSubscription(sub);
-          setIsLoadingIntegrations(true);
-          const integrations = await fetchUserIntegrations();
           setUserIntegrations(integrations);
-          setIsLoadingIntegrations(false);
         }
       },
     );
@@ -979,7 +979,7 @@ export default function Hero() {
               )}
 
               <div className="flex w-full flex-col items-center justify-between space-y-2 lg:flex-row lg:space-y-0">
-                <div className="flex items-center space-x-2">
+                <div className="flex w-full items-center space-x-2">
                   <Tabs
                     defaultValue="public"
                     value={isVisible ? "public" : "private"}
@@ -991,7 +991,7 @@ export default function Hero() {
                   >
                     <TabsList
                       isReverse={true}
-                      className="grid w-full grid-cols-2"
+                      className="grid w-full min-w-32 grid-cols-2"
                     >
                       <TabsTrigger
                         isReverse={true}
@@ -1023,7 +1023,7 @@ export default function Hero() {
                       </TabsTrigger>
                     </TabsList>
                   </Tabs>
-                  {generationMode === "scratch" && (
+                  {generationMode === "scratch" && !isLoadingSubscription && (
                     <>
                       <ImageUploadArea
                         fileInputRef={fileInputRef}
@@ -1091,8 +1091,8 @@ export default function Hero() {
                           size="sm"
                           className="w-full sm:w-auto"
                         >
-                          <Paintbrush className="size-4" />
-                          <span className="first-letter:uppercase">
+                          <Paintbrush className="size-4 shrink-0" />
+                          <span className="hidden first-letter:uppercase sm:inline">
                             {selectedTheme}
                           </span>
                         </Button>
@@ -1171,10 +1171,9 @@ export default function Hero() {
                             }}
                             title="Login to use database integrations"
                           >
-                            <Database className="size-3.5" />
+                            <Database className="size-3.5 shrink-0" />
                             <span className="hidden sm:inline">Database</span>
-                            <span className="sm:hidden">DB</span>
-                            <Crown className="size-3 text-amber-500" />
+                            <Crown className="hidden size-3 shrink-0 text-amber-500 sm:inline" />
                           </Button>
                         ) : !isPremium ? (
                           <Button
@@ -1201,21 +1200,9 @@ export default function Hero() {
                             }}
                             title="Upgrade to Premium to unlock database integrations"
                           >
-                            <Database className="size-3.5" />
+                            <Database className="size-3.5 shrink-0" />
                             <span className="hidden sm:inline">Database</span>
-                            <span className="sm:hidden">DB</span>
-                            <Crown className="size-3 text-amber-500" />
-                          </Button>
-                        ) : isLoadingIntegrations ? (
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="background"
-                            className="h-8 w-full gap-2 text-xs sm:w-auto"
-                            disabled
-                          >
-                            <Loader className="size-3.5 animate-spin" />
-                            <span className="hidden sm:inline">Loading...</span>
+                            <Crown className="hidden size-3 shrink-0 text-amber-500 sm:inline" />
                           </Button>
                         ) : userIntegrations.filter(
                             (i) =>
@@ -1232,7 +1219,16 @@ export default function Hero() {
                             }
                           >
                             <SelectTrigger className="h-8 w-full rounded-md border-background sm:w-auto">
-                              <SelectValue placeholder="No Database" />
+                              <div className="flex items-center gap-2">
+                                <SiSupabase className="size-3.5 shrink-0 text-green-600" />
+                                <span className="hidden sm:inline">
+                                  {selectedIntegration
+                                    ? userIntegrations.find(
+                                        (i) => i.id === selectedIntegration,
+                                      )?.name || "Database"
+                                    : "No Database"}
+                                </span>
+                              </div>
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem
@@ -1277,8 +1273,10 @@ export default function Hero() {
                               className="h-8 w-full gap-2 text-xs sm:w-auto"
                               disabled={loading}
                             >
-                              <SiSupabase className="size-3.5 text-green-600" />
-                              Connect Supabase
+                              <SiSupabase className="size-3.5 shrink-0 text-green-600" />
+                              <span className="hidden sm:inline">
+                                Connect Supabase
+                              </span>
                             </Button>
                           </Link>
                         )}
@@ -1287,6 +1285,7 @@ export default function Hero() {
                   <Select
                     disabled={loading}
                     defaultValue="react"
+                    value={selectedFramework}
                     onValueChange={(value) => {
                       setSelectedFramework(value as Framework);
                       if (value === Framework.HTML) {
@@ -1296,10 +1295,21 @@ export default function Hero() {
                     }}
                   >
                     <SelectTrigger className="h-8 w-full rounded-md border-background sm:w-auto">
-                      <SelectValue
-                        className="mr-2"
-                        placeholder="Select a framework"
-                      />
+                      <div className="flex items-center gap-2">
+                        {(() => {
+                          const config = frameworkConfig[selectedFramework];
+                          const Icon = config.icon;
+                          return (
+                            <>
+                              <Icon className="size-3 shrink-0" />
+                              <span className="hidden sm:inline">
+                                {selectedFramework.charAt(0).toUpperCase() +
+                                  selectedFramework.slice(1)}
+                              </span>
+                            </>
+                          );
+                        })()}
+                      </div>
                     </SelectTrigger>
                     <SelectContent>
                       {Object.values(Framework)

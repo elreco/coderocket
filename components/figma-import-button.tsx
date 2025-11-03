@@ -229,14 +229,14 @@ export function FigmaImportButton({
         {isUploading || isLoading ? (
           <>
             <Loader2 className="size-3 animate-spin" />
-            <span>Loading...</span>
+            <span className="hidden sm:inline">Loading...</span>
           </>
         ) : (
           <>
-            <SiFigma className="size-3 text-[#F24E1E]" />
-            <span>Figma</span>
+            <SiFigma className="size-3 shrink-0 text-[#F24E1E]" />
+            <span className="hidden sm:inline">Figma</span>
             {(!isLoggedIn || !isPremium) && (
-              <Crown className="size-3 text-amber-500" />
+              <Crown className="size-3 shrink-0 text-amber-500" />
             )}
           </>
         )}

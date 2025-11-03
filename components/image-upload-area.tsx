@@ -120,18 +120,18 @@ export const ImageUploadArea = memo(
           >
             {isUploading ? (
               <>
-                <Loader2 className="size-3 animate-spin" />
-                <span>Loading...</span>
+                <Loader2 className="size-3 shrink-0 animate-spin" />
+                <span className="hidden sm:inline">Loading...</span>
               </>
             ) : isDragOver ? (
               <>
-                <Upload className="size-3" />
-                <span>Drop file</span>
+                <Upload className="size-3 shrink-0" />
+                <span className="hidden sm:inline">Drop file</span>
               </>
             ) : (
               <>
-                <FileUp className="size-3" />
-                <span>{label}</span>
+                <FileUp className="size-3 shrink-0" />
+                <span className="hidden sm:inline">{label}</span>
               </>
             )}
           </Button>
