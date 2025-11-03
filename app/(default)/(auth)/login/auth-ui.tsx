@@ -62,7 +62,7 @@ export default function AuthUI() {
       </h1>
       {redirectTo && (
         <div className="mb-4 rounded-md bg-blue-50 p-3 text-sm text-blue-800">
-          You need to sign in to continue to your purchase.
+          You need to sign in to continue.
         </div>
       )}
       <div className="grid gap-4">

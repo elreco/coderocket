@@ -461,9 +461,9 @@ export default async function MarketplaceListingPage({
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
               <div>
-                <p className="font-medium">How to use purchased components</p>
+                <p className="font-medium">How to use templates</p>
                 <p className="text-muted-foreground">
-                  Learn how to modify and customize your purchased components.
+                  Learn how to modify and customize your templates.
                 </p>
                 <Button
                   variant="ghost"
@@ -483,7 +483,7 @@ export default async function MarketplaceListingPage({
               <Separator />
 
               <div>
-                <p className="font-medium">Questions about this component?</p>
+                <p className="font-medium">Questions about this template?</p>
                 <p className="text-muted-foreground">
                   Contact our support team for assistance.
                 </p>
@@ -509,7 +509,7 @@ export default async function MarketplaceListingPage({
             <BookOpen className="mx-auto size-8 text-muted-foreground" />
             <h3 className="mt-2 font-semibold">Need help customizing?</h3>
             <p className="mt-1 text-sm text-muted-foreground">
-              Learn how to modify and customize your purchased components
+              Learn how to modify and customize your templates
             </p>
             <Button asChild variant="outline" className="mt-3">
               <Link

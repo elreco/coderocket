@@ -71,7 +71,7 @@ export function BuyExtraMessages() {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "An error occurred while processing your purchase.",
+        description: "An error occurred while processing your template.",
         duration: 4000,
       });
     } finally {
