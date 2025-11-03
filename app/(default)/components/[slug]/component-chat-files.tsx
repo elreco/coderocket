@@ -438,10 +438,18 @@ ${extractedFiles
             />
             <Markdown>{message.content}</Markdown>
             <PromptFiles
-              fileUrls={(() => {
+              fileItems={(() => {
                 if (message.files && Array.isArray(message.files)) {
                   const fileItems = message.files.filter(
-                    (item): item is { url: string; order: number } =>
+                    (
+                      item,
+                    ): item is {
+                      url: string;
+                      order: number;
+                      type?: string;
+                      mimeType?: string;
+                      source?: string;
+                    } =>
                       typeof item === "object" &&
                       item !== null &&
                       "url" in item &&
@@ -449,11 +457,11 @@ ${extractedFiles
                       "order" in item &&
                       typeof item.order === "number",
                   );
-                  return fileItems
-                    .sort((a, b) => a.order - b.order)
-                    .map((file) => file.url);
+                  return fileItems.sort((a, b) => a.order - b.order);
                 }
-                return message.prompt_image ? [message.prompt_image] : [];
+                return message.prompt_image
+                  ? [{ url: message.prompt_image, order: 0 }]
+                  : [];
               })()}
               storageUrl={storageUrl}
             />

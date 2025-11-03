@@ -18,6 +18,7 @@ import {
 import { useEffect, useState, useRef, useCallback } from "react";
 
 import { getSubscription } from "@/app/supabase-server";
+import { FigmaImportButton } from "@/components/figma-import-button";
 import { FileBadge } from "@/components/file-badge";
 import { ImageUploadArea } from "@/components/image-upload-area";
 import { TextareaWithLimit } from "@/components/textarea-with-limit";
@@ -414,7 +415,7 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
         textarea.removeEventListener("paste", handlePaste);
       }
     };
-  }, [inputRef, toast, files.length, setFiles]);
+  }, [inputRef, files.length, setFiles]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
@@ -859,19 +860,37 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
                 userFullName={user?.full_name}
               />
               <Markdown>{input}</Markdown>
-              <PromptFiles fileUrls={defaultFiles} storageUrl={storageUrl} />
-              {files.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {files.map((file, index) => (
-                    <FileBadge
-                      key={`loading-${file.name}-${index}`}
-                      file={file}
-                      onRemove={() => {}}
-                      disabled={true}
-                    />
-                  ))}
-                </div>
-              )}
+              {(() => {
+                const lastUserMessage = [...messages]
+                  .reverse()
+                  .find((m) => m.role === "user");
+
+                const messageFiles =
+                  lastUserMessage?.files && Array.isArray(lastUserMessage.files)
+                    ? (lastUserMessage.files as Array<{
+                        url: string;
+                        order: number;
+                        type?: string;
+                        mimeType?: string;
+                        source?: string;
+                      }>)
+                    : [];
+
+                return (
+                  <PromptFiles
+                    files={files.length > 0 ? files : undefined}
+                    fileItems={
+                      messageFiles.length > 0 ? messageFiles : undefined
+                    }
+                    fileUrls={
+                      messageFiles.length === 0 && files.length === 0
+                        ? defaultFiles
+                        : undefined
+                    }
+                    storageUrl={storageUrl}
+                  />
+                );
+              })()}
             </div>
           </div>
           <div
@@ -1284,12 +1303,20 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
                           setFiles((prev) => [...prev, ...validFiles]);
                         }
                       }}
-                      isUploading={isLoading && files.length > 0}
                       label="Files"
+                    />
+                    <FigmaImportButton
+                      disabled={isLoading || isLengthError || !!buildError}
+                      framework={selectedFramework}
+                      subscription={subscription}
+                      isLoggedIn={isLoggedIn}
+                      onFileImport={(file) => {
+                        setFiles((prev) => [...prev, file]);
+                      }}
                     />
                   </div>
                 </div>
-                {files.length > 0 && (
+                {!isLoading && files.length > 0 && (
                   <div className="flex gap-2 overflow-x-auto p-2">
                     {files.map((file, index) => (
                       <FileBadge

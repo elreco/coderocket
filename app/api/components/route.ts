@@ -403,6 +403,7 @@ export async function POST(req: Request) {
           usage,
           updatedImages,
           finalFinishReason,
+          uploadedFilesInfo,
         );
       },
       onError: (error) => {
@@ -433,6 +434,9 @@ export async function POST(req: Request) {
 interface PromptFileItem {
   url: string;
   order: number;
+  type?: string;
+  mimeType?: string;
+  source?: string;
 }
 
 function isValidFileItem(item: unknown): item is PromptFileItem {
@@ -458,22 +462,27 @@ const buildMessagesToOpenAi = async (
   selectedVersion?: number,
   uploadedFilesInfo?: {
     path: string;
-    type: "image" | "pdf";
+    type: "image" | "pdf" | "text";
     mimeType: string;
   }[],
   currentFilesContext?: string,
 ) => {
   // Helper function to extract file URLs from message
-  const getMessageImages = (message: Tables<"messages">): string[] => {
+  const getMessageFiles = (
+    message: Tables<"messages">,
+  ): Array<{
+    url: string;
+    type?: string;
+    mimeType?: string;
+    source?: string;
+  }> => {
     // Priority: files (JSONB array) > prompt_image (legacy single image)
     if (message.files) {
       const fileItems = parseFileItems(message.files);
-      return fileItems
-        .sort((a, b) => a.order - b.order)
-        .map((file) => file.url);
+      return fileItems.sort((a, b) => a.order - b.order);
     }
     if (message.prompt_image) {
-      return [message.prompt_image];
+      return [{ url: message.prompt_image }];
     }
     return [];
   };
@@ -489,17 +498,68 @@ const buildMessagesToOpenAi = async (
     await buildIntelligentContext(filteredMessages);
 
   // Map messages to OpenAI format
-  const messagesToOpenAI = limitedMessages.map((m, index) => {
-    // Add context summary after the first few critical messages if available
-    const hasSummary = Boolean(contextSummary);
-    const isOptimalPosition = index === Math.min(5, limitedMessages.length - 1);
-    const isUserMessage = m.role === "user";
-    const shouldAddSummary = hasSummary && isOptimalPosition && isUserMessage;
+  const messagesToOpenAI = (await Promise.all(
+    limitedMessages.map(async (m, index) => {
+      // Add context summary after the first few critical messages if available
+      const hasSummary = Boolean(contextSummary);
+      const isOptimalPosition =
+        index === Math.min(5, limitedMessages.length - 1);
+      const isUserMessage = m.role === "user";
+      const shouldAddSummary = hasSummary && isOptimalPosition && isUserMessage;
 
-    const messageImages = getMessageImages(m);
+      const messageFiles = getMessageFiles(m);
 
-    if (m.role === "user" && messageImages.length > 0) {
-      const isNewProject = limitedMessages.length === 1;
+      if (m.role === "user" && messageFiles.length > 0) {
+        const isNewProject = limitedMessages.length === 1;
+        const baseContent = m.content || "";
+
+        let textContent = baseContent;
+        if (isNewProject) {
+          textContent = `NEW PROJECT CodeRocket - ${baseContent}`;
+        } else if (shouldAddSummary) {
+          textContent = `${contextSummary}\n\n${baseContent}`;
+        }
+
+        const contentParts: Array<TextPart | ImagePart> = [
+          {
+            type: "text",
+            text: textContent,
+          },
+        ];
+
+        // Add files from the message, handling text files separately
+        for (const file of messageFiles) {
+          if (file.type === "text") {
+            const response = await fetch(`${storageUrl}/${file.url}`);
+            const textContent = await response.text();
+            contentParts.push({
+              type: "text",
+              text: `\n\n<attached_file filename="${file.url.split("/").pop()}">\n${textContent}\n</attached_file>\n\n`,
+            });
+          } else if (file.type === "pdf") {
+            const response = await fetch(`${storageUrl}/${file.url}`);
+            const arrayBuffer = await response.arrayBuffer();
+            const uint8Array = new Uint8Array(arrayBuffer);
+            contentParts.push({
+              type: "file",
+              data: uint8Array,
+              mimeType: file.mimeType || "application/pdf",
+            } as unknown as ImagePart);
+          } else {
+            contentParts.push({
+              type: "image",
+              image: new URL(`${storageUrl}/${file.url}`),
+            });
+          }
+        }
+
+        return {
+          role: m.role as "user" | "assistant" | "tool" | "system",
+          content: contentParts,
+        };
+      }
+
+      const isNewProject = limitedMessages.length === 1 && m.role === "user";
       const baseContent = m.content || "";
 
       let textContent = baseContent;
@@ -509,42 +569,12 @@ const buildMessagesToOpenAi = async (
         textContent = `${contextSummary}\n\n${baseContent}`;
       }
 
-      const contentParts: Array<TextPart | ImagePart> = [
-        {
-          type: "text",
-          text: textContent,
-        },
-      ];
-
-      // Add all images from the message
-      messageImages.forEach((imageUrl) => {
-        contentParts.push({
-          type: "image",
-          image: new URL(`${storageUrl}/${imageUrl}`),
-        });
-      });
-
       return {
         role: m.role as "user" | "assistant" | "tool" | "system",
-        content: contentParts,
+        content: textContent,
       };
-    }
-
-    const isNewProject = limitedMessages.length === 1 && m.role === "user";
-    const baseContent = m.content || "";
-
-    let textContent = baseContent;
-    if (isNewProject) {
-      textContent = `NEW PROJECT CodeRocket - ${baseContent}`;
-    } else if (shouldAddSummary) {
-      textContent = `${contextSummary}\n\n${baseContent}`;
-    }
-
-    return {
-      role: m.role as "user" | "assistant" | "tool" | "system",
-      content: textContent,
-    };
-  }) as ModelMessage[];
+    }),
+  )) as ModelMessage[];
 
   // Préparer le contenu du message final de l'utilisateur
   const finalMessageContent: Array<TextPart | ImagePart> = [];
@@ -579,6 +609,14 @@ const buildMessagesToOpenAi = async (
           data: uint8Array,
           mimeType: fileInfo.mimeType,
         } as unknown as ImagePart);
+      } else if (fileInfo?.type === "text") {
+        const response = await fetch(`${storageUrl}/${filePath}`);
+        const textContent = await response.text();
+
+        finalMessageContent.push({
+          type: "text",
+          text: `\n\n<attached_file filename="${filePath.split("/").pop()}">\n${textContent}\n</attached_file>\n\n`,
+        });
       } else {
         finalMessageContent.push({
           type: "image",
@@ -620,7 +658,7 @@ const validateRequest = async (
   updatedImages: string[];
   uploadedFilesInfo: {
     path: string;
-    type: "image" | "pdf";
+    type: "image" | "pdf" | "text";
     mimeType: string;
   }[];
   currentFilesContext: string;
@@ -912,7 +950,7 @@ Recreate the visual layout and core functionality of this website using modern w
   const updatedImages: string[] = [];
   const uploadedFilesInfo: {
     path: string;
-    type: "image" | "pdf";
+    type: "image" | "pdf" | "text";
     mimeType: string;
   }[] = [];
 
@@ -928,19 +966,23 @@ Recreate the visual layout and core functionality of this website using modern w
 
   // Support for multiple files (images + PDFs)
   if (files.length > 0) {
-    const uploaded = await uploadFiles(files, user?.id);
-    uploadedFilesInfo.push(...uploaded);
-    uploaded.forEach((file) => {
-      updatedImages.push(file.path);
-    });
+    const uploadResult = await uploadFiles(files, user?.id);
+    if (uploadResult.success) {
+      uploadedFilesInfo.push(...uploadResult.uploadedFiles);
+      uploadResult.uploadedFiles.forEach((file) => {
+        updatedImages.push(file.path);
+      });
+    }
   }
   // Support for single file (legacy/backward compatibility)
   else if (image) {
-    const uploaded = await uploadFiles([image], user?.id);
-    uploadedFilesInfo.push(...uploaded);
-    uploaded.forEach((file) => {
-      updatedImages.push(file.path);
-    });
+    const uploadResult = await uploadFiles([image], user?.id);
+    if (uploadResult.success) {
+      uploadedFilesInfo.push(...uploadResult.uploadedFiles);
+      uploadResult.uploadedFiles.forEach((file) => {
+        updatedImages.push(file.path);
+      });
+    }
   }
 
   // Legacy support: use existing files if version -1
@@ -949,6 +991,13 @@ Recreate the visual layout and core functionality of this website using modern w
       const parsedFiles = parseFileItems(lastUserMessage.files);
       parsedFiles.forEach((file) => {
         updatedImages.push(file.url);
+        if (file.type && file.mimeType) {
+          uploadedFilesInfo.push({
+            path: file.url,
+            type: file.type as "image" | "pdf" | "text",
+            mimeType: file.mimeType,
+          });
+        }
       });
     } else if (lastUserMessage.prompt_image) {
       updatedImages.push(lastUserMessage.prompt_image);
@@ -973,6 +1022,11 @@ const updateDataAfterCompletion = async (
   usage: LanguageModelUsage,
   updatedImages: string[],
   finishReason: string | null,
+  uploadedFilesInfo: {
+    path: string;
+    type: "image" | "pdf" | "text";
+    mimeType: string;
+  }[],
 ) => {
   const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
@@ -1050,7 +1104,46 @@ const updateDataAfterCompletion = async (
   }
   const cacheCreationInputTokens = 0;
   const cacheReadInputTokens = usage.cachedInputTokens ?? 0;
-  const filesData = updatedImages.map((url, index) => ({ url, order: index }));
+
+  let filesData;
+  if (uploadedFilesInfo.length > 0) {
+    filesData = updatedImages.map((url, index) => {
+      const fileInfo = uploadedFilesInfo.find((f) => f.path === url);
+      const existingFile = Array.isArray(lastUserMessage.files)
+        ? (
+            lastUserMessage.files as Array<{
+              url: string;
+              order: number;
+              source?: string;
+            }>
+          ).find((f) => f.url === url)
+        : null;
+
+      if (fileInfo) {
+        const result: {
+          url: string;
+          order: number;
+          type: string;
+          mimeType: string;
+          source?: string;
+        } = {
+          url,
+          order: index,
+          type: fileInfo.type,
+          mimeType: fileInfo.mimeType,
+        };
+
+        if (existingFile?.source) {
+          result.source = existingFile.source;
+        }
+
+        return result;
+      }
+      return { url, order: index };
+    });
+  } else {
+    filesData = lastUserMessage.files || [];
+  }
 
   if (version > 0) {
     newMessages.push({

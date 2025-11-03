@@ -3,7 +3,9 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   IntegrationType,
   testSupabaseConnection,
+  testFigmaConnection,
   SupabaseIntegrationConfig,
+  FigmaIntegrationConfig,
 } from "@/utils/integrations";
 import { createClient } from "@/utils/supabase/server";
 
@@ -35,6 +37,9 @@ export async function POST(request: NextRequest) {
         result = await testSupabaseConnection(
           config as SupabaseIntegrationConfig,
         );
+        break;
+      case IntegrationType.FIGMA:
+        result = await testFigmaConnection(config as FigmaIntegrationConfig);
         break;
       default:
         return NextResponse.json(

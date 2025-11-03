@@ -1,3 +1,4 @@
+import { SiFigma } from "@icons-pack/react-simple-icons";
 import { Database, Plug2, Mail, CreditCard } from "lucide-react";
 import { ReactNode } from "react";
 
@@ -19,6 +20,11 @@ const integrationConfig: Record<
     label: "Supabase",
     icon: <Database className="size-3" />,
     color: "text-green-600",
+  },
+  [IntegrationType.FIGMA]: {
+    label: "Figma",
+    icon: <SiFigma className="size-3" />,
+    color: "text-purple-600",
   },
   [IntegrationType.STRIPE]: {
     label: "Stripe",

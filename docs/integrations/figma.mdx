@@ -1,0 +1,195 @@
+---
+title: Figma Integration
+description: 'Import Figma designs and convert them to code automatically'
+icon: "figma"
+---
+
+## What is the Figma Integration?
+
+The Figma integration allows you to connect your Figma account to CodeRocket and automatically import your designs, converting them to production-ready code. This feature works similarly to v0.dev and Lovable.ai, enabling you to go from design to code in seconds.
+
+## Features
+
+- **Direct Import**: Import designs directly from Figma files
+- **Automatic Conversion**: Convert Figma designs to HTML, React, Vue, Svelte, or Angular code
+- **OAuth Support**: Securely connect your Figma account with OAuth
+- **Manual Token Option**: Use personal access tokens for API access
+- **Multi-Framework**: Supports all CodeRocket frameworks
+
+## Setup
+
+### Option 1: OAuth Connection (Recommended)
+
+1. Navigate to **Account → Integrations**
+2. Click **Add Integration** and select **Figma**
+3. Click **Connect with Figma**
+4. Authorize CodeRocket to access your Figma files
+5. Done! Your Figma account is now connected
+
+### Option 2: Personal Access Token
+
+1. Go to [Figma Account Settings](https://www.figma.com/developers/api#access-tokens)
+2. Generate a new personal access token
+3. Navigate to **Account → Integrations** in CodeRocket
+4. Click **Add Integration** and select **Figma**
+5. Enter a name and paste your access token
+6. Click **Test Connection** to verify
+7. Click **Create Integration**
+
+## Environment Variables (for OAuth)
+
+To enable OAuth authentication, add these variables to your `.env.local`:
+
+```bash
+# Get these from https://www.figma.com/developers/api
+FIGMA_CLIENT_ID=your_client_id
+FIGMA_CLIENT_SECRET=your_client_secret
+
+# Your app URL (for OAuth callback)
+NEXT_PUBLIC_APP_URL=https://yourapp.com
+```
+
+## Usage
+
+### Importing a Design
+
+1. Open any component in CodeRocket
+2. Click the **Figma** button next to the file upload button
+3. Select your Figma integration
+4. Paste the Figma file URL (e.g., `https://www.figma.com/file/ABC123...`)
+5. Click **Import Design**
+
+The design will be automatically converted to code based on your selected framework.
+
+### What Gets Converted
+
+The Figma converter extracts:
+- **Layout & Structure**: Frames, groups, and component hierarchy
+- **Styling**: Colors, backgrounds, borders, and shadows
+- **Typography**: Fonts, sizes, weights, and text content
+- **Dimensions**: Width, height, and positioning
+- **Images**: Exported as references (coming soon)
+
+## API Reference
+
+### Convert Figma to Code
+
+```typescript
+POST /api/integrations/figma/convert
+
+Body:
+{
+  integrationId: string,
+  fileKey: string,
+  nodeIds?: string[],
+  framework?: 'html' | 'react' | 'vue' | 'svelte' | 'angular'
+}
+
+Response:
+{
+  success: boolean,
+  code: string,
+  html: string,
+  css: string
+}
+```
+
+## Best Practices
+
+### Design Preparation
+
+1. **Name Your Layers**: Use meaningful names for frames and components
+2. **Group Elements**: Keep related elements grouped
+3. **Use Auto Layout**: Figma's Auto Layout converts better to Flexbox/Grid
+4. **Consistent Spacing**: Use consistent padding and margins
+5. **Text Styles**: Define text styles for consistent typography
+
+### Code Generation
+
+1. **Review & Edit**: Always review the generated code
+2. **Component Extraction**: Extract reusable components manually
+3. **Responsive Design**: Add media queries as needed
+4. **Accessibility**: Add ARIA labels and semantic HTML
+5. **Optimization**: Optimize images and assets
+
+## Limitations
+
+The Figma converter has some limitations:
+
+- **Complex Interactions**: Animations and interactions are not converted
+- **Plugins**: Figma plugins and effects may not be supported
+- **Custom Fonts**: Font imports need to be added manually
+- **Images**: Image exports are work in progress
+- **Nested Components**: Deep nesting may require manual adjustment
+
+## Troubleshooting
+
+### "Invalid Access Token"
+- Regenerate your personal access token
+- Ensure the token has the correct permissions
+- Check if the token has expired
+
+### "Failed to Fetch Figma File"
+- Verify the Figma file URL is correct
+- Ensure the file is accessible with your account
+- Check if the file is shared/public
+
+### "Conversion Failed"
+- Try with a simpler design first
+- Check if the Figma file uses supported features
+- Review the browser console for detailed errors
+
+## Examples
+
+### Import a Landing Page
+
+```typescript
+// After importing a Figma landing page design
+// The generated code structure:
+
+// HTML/React/Vue/etc based on framework
+<div className="landing-page">
+  <header className="hero">
+    <h1>Welcome</h1>
+    <p>Your tagline here</p>
+  </header>
+  <section className="features">
+    // ... features content
+  </section>
+</div>
+```
+
+### Import a Component
+
+```typescript
+// Import a button component from Figma
+// Result: Button component with proper styling
+
+<button className="primary-button">
+  Click Me
+</button>
+
+// CSS:
+.primary-button {
+  background-color: #6366f1;
+  color: white;
+  padding: 12px 24px;
+  border-radius: 8px;
+}
+```
+
+## Support
+
+For issues or questions:
+- Check the [FAQ](/faq)
+- Report bugs on [GitHub](https://github.com/yourusername/coderocket)
+- Contact support at support@coderocket.app
+
+## What's Next?
+
+- **Image Export**: Automatic image extraction and optimization
+- **Design Tokens**: Import design tokens (colors, spacing, typography)
+- **Component Library**: Sync Figma component libraries
+- **Real-time Sync**: Auto-update code when designs change
+- **Advanced Layouts**: Better support for complex layouts
+

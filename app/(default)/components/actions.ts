@@ -15,6 +15,7 @@ import {
   PREMIUM_CHAR_LIMIT,
 } from "@/utils/config";
 import { defaultArtifactCode } from "@/utils/default-artifact-code";
+import { uploadFiles } from "@/utils/file-uploader";
 import { createClient } from "@/utils/supabase/server";
 import {
   trackVersionUsage,
@@ -355,7 +356,13 @@ export const createChat = async (prompt: string, formData: FormData) => {
   }
 
   let imageUrl = null;
-  const filesArray: { url: string; order: number }[] = [];
+  const filesArray: {
+    url: string;
+    order: number;
+    type: string;
+    mimeType: string;
+    source?: string;
+  }[] = [];
   const files = formData.getAll("files") as File[];
 
   if (!subscription && files.length > 0) {
@@ -368,27 +375,36 @@ export const createChat = async (prompt: string, formData: FormData) => {
   }
 
   if (files.length > 0) {
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
+    const uploadResult = await uploadFiles(files, user.id);
 
-      const { data: fileData, error: fileError } = await supabase.storage
-        .from("images")
-        .upload(`${Date.now()}-${i}-${user?.id}`, file);
-
-      if (fileError) {
-        return {
-          error: {
-            title: "Failed to upload file",
-            description: "Please try again later.",
-          },
-        };
-      }
-
-      filesArray.push({ url: fileData.path, order: i });
-      if (i === 0) {
-        imageUrl = fileData.path;
-      }
+    if (!uploadResult.success) {
+      return {
+        error: {
+          title: "Failed to upload files",
+          description: uploadResult.error || "Please try again later.",
+        },
+      };
     }
+
+    uploadResult.uploadedFiles.forEach((fileInfo, i) => {
+      const originalFile = files[i];
+      const isFigmaFile = originalFile.name
+        .toLowerCase()
+        .includes("figma-design");
+
+      const fileData = {
+        url: fileInfo.path,
+        order: i,
+        type: fileInfo.type,
+        mimeType: fileInfo.mimeType,
+        ...(isFigmaFile && { source: "figma" }),
+      };
+
+      filesArray.push(fileData);
+      if (i === 0) {
+        imageUrl = fileInfo.path;
+      }
+    });
   }
 
   const uniqueSlug = await generateUniqueNanoid();
@@ -432,7 +448,13 @@ export const createChat = async (prompt: string, formData: FormData) => {
     role: string;
     theme: string;
     prompt_image?: string;
-    files?: { url: string; order: number }[];
+    files?: {
+      url: string;
+      order: number;
+      type?: string;
+      mimeType?: string;
+      source?: string;
+    }[];
     content: string;
     version: number;
     subscription_type: string;
@@ -440,12 +462,18 @@ export const createChat = async (prompt: string, formData: FormData) => {
     chat_id: data.id,
     role: "user",
     theme,
-    ...(imageUrl && { prompt_image: imageUrl }),
-    ...(filesArray.length > 0 && { files: filesArray }),
     content: prompt,
     version: -1,
     subscription_type: subscriptionType,
   };
+
+  if (imageUrl) {
+    messageData.prompt_image = imageUrl;
+  }
+
+  if (filesArray.length > 0) {
+    messageData.files = filesArray;
+  }
 
   await supabase.from("messages").insert(messageData);
 
@@ -720,12 +748,20 @@ export const fetchChatDataOptimized = async (chatId: string) => {
   ]);
 
   const messages = messagesResult.data || [];
-  const lastAssistantMessage = messages.find((m) => m.role === "assistant");
-  const lastUserMessage = messages.find((m) => m.role === "user");
+
+  const serializedMessages = messages.map((msg) => ({
+    ...msg,
+    files: msg.files ? JSON.parse(JSON.stringify(msg.files)) : null,
+  }));
+
+  const lastAssistantMessage = serializedMessages.find(
+    (m) => m.role === "assistant",
+  );
+  const lastUserMessage = serializedMessages.find((m) => m.role === "user");
 
   return {
     chat: chatResult.data,
-    messages: messages,
+    messages: serializedMessages,
     lastAssistantMessage,
     lastUserMessage,
     isLiked: !!likeResult.data,

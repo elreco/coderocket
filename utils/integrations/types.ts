@@ -4,6 +4,7 @@ export enum IntegrationType {
   BLOB = "blob",
   RESEND = "resend",
   AUTH = "auth",
+  FIGMA = "figma",
 }
 
 export interface SupabaseTableColumn {
@@ -88,12 +89,25 @@ export interface AuthIntegrationConfig {
   };
 }
 
+export interface FigmaIntegrationConfig {
+  accessToken: string;
+  refreshToken?: string;
+  expiresAt?: number;
+  userId?: string;
+  features?: {
+    importDesigns?: boolean;
+    exportCode?: boolean;
+    syncUpdates?: boolean;
+  };
+}
+
 export type IntegrationConfig =
   | SupabaseIntegrationConfig
   | StripeIntegrationConfig
   | BlobIntegrationConfig
   | ResendIntegrationConfig
-  | AuthIntegrationConfig;
+  | AuthIntegrationConfig
+  | FigmaIntegrationConfig;
 
 export interface UserIntegration {
   id: string;

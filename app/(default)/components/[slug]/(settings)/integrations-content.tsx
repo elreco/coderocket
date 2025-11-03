@@ -1,7 +1,7 @@
 "use client";
 
 import { SiSupabase } from "@icons-pack/react-simple-icons";
-import { Plug2, Plus, Loader2, ExternalLink, AlertCircle } from "lucide-react";
+import { Plug2, Loader2, ExternalLink, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -214,7 +214,6 @@ export default function IntegrationsContent() {
                   href="/account/integrations"
                   className="flex items-center gap-2"
                 >
-                  <Plus className="size-4" />
                   Configure Integrations
                   <ExternalLink className="size-3" />
                 </Link>
@@ -227,7 +226,11 @@ export default function IntegrationsContent() {
   }
 
   const integrationTypes = Array.from(
-    new Set(userIntegrations.map((i) => i.integration_type)),
+    new Set(
+      userIntegrations
+        .filter((i) => i.integration_type !== IntegrationType.FIGMA)
+        .map((i) => i.integration_type),
+    ),
   );
 
   const getIntegrationIcon = (type: IntegrationType) => {

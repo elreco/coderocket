@@ -7,6 +7,7 @@ import {
   StripeIntegrationConfig,
   BlobIntegrationConfig,
   ResendIntegrationConfig,
+  FigmaIntegrationConfig,
   ValidationResult,
 } from "./types";
 
@@ -219,6 +220,90 @@ export async function validateResendCredentials(
   }
 }
 
+export async function validateFigmaCredentials(
+  config: FigmaIntegrationConfig,
+): Promise<ValidationResult> {
+  try {
+    const { accessToken } = config;
+
+    if (!accessToken) {
+      return {
+        valid: false,
+        error: "Access token is required",
+      };
+    }
+
+    if (accessToken.length < 10) {
+      return {
+        valid: false,
+        error: "Access token appears to be too short",
+      };
+    }
+
+    const isOAuthToken = accessToken.startsWith("figu_");
+    const headers: Record<string, string> = isOAuthToken
+      ? { Authorization: `Bearer ${accessToken}` }
+      : { "X-Figma-Token": accessToken };
+
+    const response = await fetch("https://api.figma.com/v1/me", {
+      headers,
+    });
+
+    if (!response.ok) {
+      if (response.status === 403) {
+        return {
+          valid: false,
+          error:
+            "Invalid or expired access token. Make sure your token has the 'current_user:read' scope.",
+        };
+      }
+      return {
+        valid: false,
+        error: `Failed to connect to Figma (${response.status}): ${response.statusText}`,
+      };
+    }
+
+    const userData = await response.json();
+
+    return {
+      valid: true,
+      details: {
+        projectName: userData.handle || userData.email,
+      },
+    };
+  } catch (error) {
+    return {
+      valid: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Unknown error during validation",
+    };
+  }
+}
+
+export async function testFigmaConnection(
+  config: FigmaIntegrationConfig,
+): Promise<IntegrationTestResult> {
+  const validation = await validateFigmaCredentials(config);
+
+  if (!validation.valid) {
+    return {
+      success: false,
+      message: validation.error || "Connection test failed",
+    };
+  }
+
+  return {
+    success: true,
+    message: "Successfully connected to Figma",
+    details: {
+      version: "v1",
+      features: ["import-designs", "export-code"],
+    },
+  };
+}
+
 export async function validateIntegrationConfig(
   type: IntegrationType,
   config: unknown,
@@ -232,6 +317,8 @@ export async function validateIntegrationConfig(
       return validateBlobCredentials(config as BlobIntegrationConfig);
     case IntegrationType.RESEND:
       return validateResendCredentials(config as ResendIntegrationConfig);
+    case IntegrationType.FIGMA:
+      return validateFigmaCredentials(config as FigmaIntegrationConfig);
     default:
       return {
         valid: false,

@@ -1,4 +1,4 @@
-import { SiSupabase } from "@icons-pack/react-simple-icons";
+import { SiFigma } from "@icons-pack/react-simple-icons";
 import { Loader2, CheckCircle2, XCircle, ExternalLink } from "lucide-react";
 import { useState, useEffect } from "react";
 
@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   IntegrationType,
-  SupabaseIntegrationConfig,
+  FigmaIntegrationConfig,
   UserIntegration,
   IntegrationTestResult,
 } from "@/utils/integrations";
@@ -26,26 +26,23 @@ import {
   updateIntegration,
 } from "./actions";
 
-interface SupabaseConfigDialogProps {
+interface FigmaConfigDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
   existingIntegration?: UserIntegration;
 }
 
-export function SupabaseConfigDialog({
+export function FigmaConfigDialog({
   open,
   onOpenChange,
   onSuccess,
   existingIntegration,
-}: SupabaseConfigDialogProps) {
+}: FigmaConfigDialogProps) {
   const isEditing = !!existingIntegration;
 
   const [name, setName] = useState("");
-  const [projectUrl, setProjectUrl] = useState("");
-  const [anonKey, setAnonKey] = useState("");
   const [accessToken, setAccessToken] = useState("");
-  const [projectId, setProjectId] = useState("");
 
   const [isLoading, setIsLoading] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
@@ -59,17 +56,11 @@ export function SupabaseConfigDialog({
     if (open) {
       if (existingIntegration) {
         setName(existingIntegration.name || "");
-        const config = existingIntegration.config as SupabaseIntegrationConfig;
-        setProjectUrl(config?.projectUrl || "");
-        setAnonKey(config?.anonKey || "");
+        const config = existingIntegration.config as FigmaIntegrationConfig;
         setAccessToken(config?.accessToken || "");
-        setProjectId(config?.projectId || "");
       } else {
         setName("");
-        setProjectUrl("");
-        setAnonKey("");
         setAccessToken("");
-        setProjectId("");
       }
       setTestResult(null);
       setError(null);
@@ -81,13 +72,13 @@ export function SupabaseConfigDialog({
     setError(null);
 
     try {
-      const response = await fetch("/api/integrations/supabase/oauth");
+      const response = await fetch("/api/integrations/figma/oauth");
       const data = await response.json();
 
       if (data.error) {
-        if (data.error === "Supabase OAuth not configured") {
+        if (data.error === "Figma OAuth not configured") {
           setError(
-            "Supabase OAuth is not configured. Please use manual token configuration below.",
+            "Figma OAuth is not configured. Please use manual token configuration below.",
           );
         } else {
           setError(data.error);
@@ -98,14 +89,14 @@ export function SupabaseConfigDialog({
 
       window.location.href = data.authUrl;
     } catch {
-      setError("Failed to initiate Supabase OAuth");
+      setError("Failed to initiate Figma OAuth");
       setIsConnectingOAuth(false);
     }
   };
 
   const handleTestConnection = async () => {
-    if (!projectUrl || !anonKey) {
-      setError("Project URL and Anon Key are required");
+    if (!accessToken) {
+      setError("Access token is required");
       return;
     }
 
@@ -113,32 +104,36 @@ export function SupabaseConfigDialog({
     setTestResult(null);
     setError(null);
 
-    const config: SupabaseIntegrationConfig = {
-      projectUrl,
-      anonKey,
-      accessToken: accessToken || undefined,
-      projectId: projectId || undefined,
+    const config: FigmaIntegrationConfig = {
+      accessToken,
+      features: {
+        importDesigns: true,
+        exportCode: true,
+        syncUpdates: true,
+      },
     };
 
-    const result = await testConnection(IntegrationType.SUPABASE, config);
+    const result = await testConnection(IntegrationType.FIGMA, config);
     setTestResult(result);
     setIsTesting(false);
   };
 
   const handleSubmit = async () => {
-    if (!name || !projectUrl || !anonKey) {
-      setError("Name, Project URL, and Anon Key are required");
+    if (!name || !accessToken) {
+      setError("Name and Access Token are required");
       return;
     }
 
     setIsLoading(true);
     setError(null);
 
-    const config: SupabaseIntegrationConfig = {
-      projectUrl,
-      anonKey,
-      accessToken: accessToken || undefined,
-      projectId: projectId || undefined,
+    const config: FigmaIntegrationConfig = {
+      accessToken,
+      features: {
+        importDesigns: true,
+        exportCode: true,
+        syncUpdates: true,
+      },
     };
 
     let result;
@@ -148,17 +143,14 @@ export function SupabaseConfigDialog({
         config,
       });
     } else {
-      result = await createIntegration(IntegrationType.SUPABASE, name, config);
+      result = await createIntegration(IntegrationType.FIGMA, name, config);
     }
 
     setIsLoading(false);
 
     if (result.success) {
       setName("");
-      setProjectUrl("");
-      setAnonKey("");
       setAccessToken("");
-      setProjectId("");
       setTestResult(null);
       setError(null);
       onOpenChange(false);
@@ -173,44 +165,44 @@ export function SupabaseConfigDialog({
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <SiSupabase className="size-5 text-green-600" />
+            <SiFigma className="size-5 text-purple-600" />
             {isEditing
               ? "Edit"
-              : "Add"} Supabase Integration
+              : "Add"} Figma Integration
           </DialogTitle>
           <DialogDescription>
-            Connect your Supabase project to enable backend functionality in
-            your generated apps.
+            Connect your Figma account to import designs and convert them to
+            code automatically.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
           {!isEditing && (
             <>
-              <div className="rounded-lg border border-green-200 bg-green-50 p-4">
+              <div className="rounded-lg border border-purple-200 bg-purple-50 p-4">
                 <div className="mb-2 flex items-center gap-2">
-                  <SiSupabase className="size-4 text-green-600" />
-                  <h3 className="text-sm font-medium text-green-900">
+                  <SiFigma className="size-4 text-purple-600" />
+                  <h3 className="text-sm font-medium text-purple-900">
                     Option 1: Connect with OAuth (Recommended)
                   </h3>
                 </div>
-                <p className="mb-3 text-xs text-green-700">
-                  Securely connect your Supabase account with one click. This
-                  will automatically retrieve your project credentials.
+                <p className="mb-3 text-xs text-purple-700">
+                  Securely connect your Figma account with one click. This will
+                  automatically retrieve your access token.
                 </p>
                 <Button
                   type="button"
                   variant="outline"
                   onClick={handleOAuthConnect}
                   disabled={isConnectingOAuth}
-                  className="w-full border-green-300 text-green-700 hover:bg-green-700"
+                  className="w-full border-purple-300 text-purple-700 hover:bg-purple-600"
                 >
                   {isConnectingOAuth ? (
                     <Loader2 className="mr-2 size-4 animate-spin" />
                   ) : (
-                    <SiSupabase className="mr-2 size-4" />
+                    <SiFigma className="mr-2 size-4" />
                   )}
-                  Connect with Supabase
+                  Connect with Figma
                 </Button>
               </div>
 
@@ -231,7 +223,7 @@ export function SupabaseConfigDialog({
             <Label htmlFor="name">Integration Name *</Label>
             <Input
               id="name"
-              placeholder="e.g., My Blog Database"
+              placeholder="e.g., My Figma Workspace"
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
@@ -241,71 +233,34 @@ export function SupabaseConfigDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="projectUrl">Project URL *</Label>
-            <Input
-              id="projectUrl"
-              type="url"
-              placeholder="https://xxxxx.supabase.co"
-              value={projectUrl}
-              onChange={(e) => setProjectUrl(e.target.value)}
-            />
-            <div className="flex items-start gap-2 text-xs text-muted-foreground">
-              <p className="flex-1">Found in your Supabase project settings</p>
-              <a
-                href="https://supabase.com/dashboard"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1 text-green-600 hover:underline"
-              >
-                Open Dashboard
-                <ExternalLink className="size-3" />
-              </a>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="anonKey">Anon Key *</Label>
-            <Input
-              id="anonKey"
-              type="password"
-              placeholder="eyJhbG..."
-              value={anonKey}
-              onChange={(e) => setAnonKey(e.target.value)}
-            />
-            <p className="text-xs text-muted-foreground">
-              Public key for client-side operations
-            </p>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="accessToken">
-              Supabase Access Token (Optional)
-            </Label>
+            <Label htmlFor="accessToken">Personal Access Token *</Label>
             <Input
               id="accessToken"
               type="password"
-              placeholder="sbp_..."
+              placeholder="figd_..."
               value={accessToken}
               onChange={(e) => setAccessToken(e.target.value)}
             />
-            <p className="text-xs text-muted-foreground">
-              Required for automatic migrations. Generate it in Supabase
-              Dashboard → Account → Access Tokens
-            </p>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="projectId">Project ID (Optional)</Label>
-            <Input
-              id="projectId"
-              placeholder="abcdefghijklmnop"
-              value={projectId}
-              onChange={(e) => setProjectId(e.target.value)}
-            />
-            <p className="text-xs text-muted-foreground">
-              Required for migrations. Find it in your project URL (the part
-              before .supabase.co)
-            </p>
+            <div className="space-y-1">
+              <div className="flex items-start gap-2 text-xs text-muted-foreground">
+                <p className="flex-1">
+                  Generate a token in your Figma account settings
+                </p>
+                <a
+                  href="https://www.figma.com/settings"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 text-purple-600 hover:underline"
+                >
+                  Open Settings
+                  <ExternalLink className="size-3" />
+                </a>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Required scopes: <strong>current_user:read</strong> and{" "}
+                <strong>file_content:read</strong>
+              </p>
+            </div>
           </div>
 
           {testResult && (
@@ -323,11 +278,6 @@ export function SupabaseConfigDialog({
               )}
               <div className="flex-1">
                 <p className="text-sm font-medium">{testResult.message}</p>
-                {testResult.success && testResult.details && (
-                  <p className="mt-1 text-xs opacity-80">
-                    Latency: {testResult.details.latency}ms
-                  </p>
-                )}
               </div>
             </div>
           )}
@@ -345,7 +295,7 @@ export function SupabaseConfigDialog({
             type="button"
             variant="outline"
             onClick={handleTestConnection}
-            disabled={isTesting || !projectUrl || !anonKey}
+            disabled={isTesting || !accessToken}
           >
             {isTesting && <Loader2 className="mr-2 size-4 animate-spin" />}
             Test Connection
@@ -353,7 +303,7 @@ export function SupabaseConfigDialog({
           <Button
             type="button"
             onClick={handleSubmit}
-            disabled={isLoading || !name || !projectUrl || !anonKey}
+            disabled={isLoading || !name || !accessToken}
           >
             {isLoading && <Loader2 className="mr-2 size-4 animate-spin" />}
             {isEditing ? "Update" : "Create"} Integration
