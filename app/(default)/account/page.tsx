@@ -169,7 +169,7 @@ export default async function Account() {
                   </li>
                   <li className="flex items-center text-sm">
                     <Check className="mr-2 size-4 text-emerald-500" />
-                    Generate with Image
+                    Generate with files
                   </li>
                   <li className="flex items-center text-sm">
                     <Check className="mr-2 size-4 text-emerald-500" />
@@ -202,7 +202,7 @@ export default async function Account() {
                   </li>
                   <li className="flex items-center text-sm">
                     <XIcon className="mr-2 size-4 text-border" />
-                    Generate with Image
+                    Generate with files
                   </li>
                   <li className="flex items-center text-sm">
                     <XIcon className="mr-2 size-4 text-border" />

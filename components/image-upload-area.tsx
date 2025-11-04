@@ -1,9 +1,11 @@
 "use client";
 
-import { Upload, FileUp, Loader2 } from "lucide-react";
+import { Upload, FileUp, Loader2, Crown } from "lucide-react";
 import { memo, useCallback, useState } from "react";
 
+import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { Tables } from "@/types_db";
 
 import { Button } from "./ui/button";
 
@@ -17,6 +19,12 @@ interface ImageUploadAreaProps {
   isUploading?: boolean;
   acceptedTypes?: string;
   label?: string;
+  subscription?:
+    | (Tables<"subscriptions"> & {
+        prices: Partial<Tables<"prices">> | null;
+      })
+    | null;
+  isLoggedIn?: boolean;
 }
 
 export const ImageUploadArea = memo(
@@ -30,18 +38,43 @@ export const ImageUploadArea = memo(
     isUploading = false,
     acceptedTypes = ".png, .jpeg, .jpg, .gif, .webp, .pdf",
     label = "File",
+    subscription = null,
+    isLoggedIn = true,
   }: ImageUploadAreaProps) => {
     const [isDragOver, setIsDragOver] = useState(false);
+    const isPremium = !!subscription;
+
+    const handleClick = () => {
+      if (!isLoggedIn) {
+        toast({
+          title: "Login Required",
+          description: "Please login to upload files.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (!isPremium) {
+        toast({
+          title: "Premium Feature",
+          description: "Upgrade to Premium to upload files.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      handleButtonClick();
+    };
 
     const handleDragEnter = useCallback(
       (e: React.DragEvent) => {
         e.preventDefault();
         e.stopPropagation();
-        if (!disabled) {
+        if (!disabled && isLoggedIn && isPremium) {
           setIsDragOver(true);
         }
       },
-      [disabled],
+      [disabled, isLoggedIn, isPremium],
     );
 
     const handleDragLeave = useCallback((e: React.DragEvent) => {
@@ -69,6 +102,24 @@ export const ImageUploadArea = memo(
 
         if (disabled) return;
 
+        if (!isLoggedIn) {
+          toast({
+            title: "Login Required",
+            description: "Please login to upload files.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        if (!isPremium) {
+          toast({
+            title: "Premium Feature",
+            description: "Upgrade to Premium to upload files.",
+            variant: "destructive",
+          });
+          return;
+        }
+
         const files = Array.from(e.dataTransfer.files);
         const validFiles = files.filter(
           (file) =>
@@ -85,7 +136,7 @@ export const ImageUploadArea = memo(
           fileInputRef.current.dispatchEvent(event);
         }
       },
-      [disabled, onDrop, fileInputRef],
+      [disabled, onDrop, fileInputRef, isLoggedIn, isPremium],
     );
 
     return (
@@ -110,13 +161,21 @@ export const ImageUploadArea = memo(
               "w-full transition-all duration-200 lg:w-auto",
               isDragOver &&
                 !disabled &&
+                isLoggedIn &&
+                isPremium &&
                 "scale-105 border-2 border-dashed border-primary shadow-lg",
             )}
             size="sm"
             type="button"
             disabled={disabled || isUploading}
-            onClick={handleButtonClick}
-            title="Upload, paste, or drag & drop files (images or PDF)"
+            onClick={handleClick}
+            title={
+              !isLoggedIn
+                ? "Login to upload files"
+                : !isPremium
+                  ? "Upgrade to Premium to upload files"
+                  : "Upload, paste, or drag & drop files (images or PDF)"
+            }
           >
             {isUploading ? (
               <>
@@ -132,6 +191,9 @@ export const ImageUploadArea = memo(
               <>
                 <FileUp className="size-3 shrink-0" />
                 <span className="hidden sm:inline">{label}</span>
+                {(!isLoggedIn || !isPremium) && (
+                  <Crown className="size-3 shrink-0 text-amber-500" />
+                )}
               </>
             )}
           </Button>

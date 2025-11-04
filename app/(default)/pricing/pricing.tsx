@@ -46,7 +46,7 @@ export default function Pricing({ user, products, subscription }: Props) {
         duration: 4000,
       });
     }
-  }, [error]);
+  }, [error, toast]);
 
   const [priceIdLoading, setPriceIdLoading] = useState<string>();
 
@@ -147,7 +147,7 @@ export default function Pricing({ user, products, subscription }: Props) {
 
               <p className="mt-4 flex items-center text-sm font-medium ">
                 <XIcon className="mr-2 size-4 text-border" /> Generate with
-                Image
+                files
               </p>
               <p className="mt-4 flex items-center text-sm font-medium ">
                 <XIcon className="mr-2 size-4 text-border" /> AI Full Power
@@ -193,7 +193,7 @@ export default function Pricing({ user, products, subscription }: Props) {
                 product.name === "Starter" ? (
                   <p className="mt-4 ">
                     <span className="font-bold">Perfect for starters!</span>{" "}
-                    Generate with Image included.
+                    Generate with files included.
                   </p>
                 ) : product.name === "Pro" ? (
                   <p className="mt-4 ">
@@ -232,7 +232,7 @@ export default function Pricing({ user, products, subscription }: Props) {
                     {planDescription}
                     <p className="mt-4 flex items-center text-sm font-medium ">
                       <Check className="mr-2 size-4 text-emerald-500" />{" "}
-                      Generate with Image
+                      Generate with files
                     </p>
                     <p className="mt-4 flex items-center text-sm font-medium ">
                       <Check className="mr-2 size-4 text-emerald-500" /> Improve
@@ -321,7 +321,13 @@ export default function Pricing({ user, products, subscription }: Props) {
               your chat.
             </p>
             <Button
-              onClick={() => router.push("/account?buy_rockets=true")}
+              onClick={() => {
+                if (!user) {
+                  router.push("/login");
+                } else {
+                  router.push("/account?buy_rockets=true");
+                }
+              }}
               variant="default"
               className="w-full"
             >

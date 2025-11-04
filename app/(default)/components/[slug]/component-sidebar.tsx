@@ -1292,6 +1292,8 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
                             }
                           }}
                           label="Files"
+                          subscription={subscription}
+                          isLoggedIn={isLoggedIn}
                         />
                         <FigmaImportButton
                           disabled={isLoading || isLengthError || !!buildError}

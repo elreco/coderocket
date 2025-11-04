@@ -1068,6 +1068,8 @@ export default function Hero() {
                         isReverse={true}
                         isUploading={loading && images.length > 0}
                         label="Files"
+                        subscription={subscription}
+                        isLoggedIn={isLoggedIn}
                       />
                       <FigmaImportButton
                         disabled={loading}

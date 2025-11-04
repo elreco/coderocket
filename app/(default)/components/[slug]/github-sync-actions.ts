@@ -271,7 +271,7 @@ export async function syncComponentToGithub(
     for (const file of githubFiles) {
       // Check if we should sync this file (Last Write Wins strategy)
       const syncDecision = await shouldSyncFile(
-        githubConnection.access_token,
+        githubConnection.access_token || "",
         chat.github_repo_name,
         file.path,
         webLastModified,
@@ -292,7 +292,7 @@ export async function syncComponentToGithub(
     if (filesToSync.length > 0) {
       // Check if files actually have changes compared to GitHub
       const filesWithChanges = await getFilesWithActualChanges(
-        githubConnection.access_token,
+        githubConnection.access_token || "",
         chat.github_repo_name,
         filesToSync,
       );
@@ -310,7 +310,7 @@ export async function syncComponentToGithub(
 
       // Create a single commit with only files that have changes
       const commitResult = await createSingleCommitWithMultipleFiles(
-        githubConnection.access_token,
+        githubConnection.access_token || "",
         chat.github_repo_name,
         filesWithChanges,
         `Update files - Version ${version || message.version}`,
@@ -1007,7 +1007,7 @@ export async function pullFromGithub(
 
   // Vérifier d'abord le dernier commit SHA pour éviter les pulls inutiles
   const latestCommitResult = await getGithubLatestCommitSha(
-    githubConnection.access_token,
+    githubConnection.access_token || "",
     chat.github_repo_name,
   );
 
@@ -1026,7 +1026,7 @@ export async function pullFromGithub(
 
     // Récupérer les fichiers depuis GitHub
     const githubFilesResult = await getGithubRepositoryFiles(
-      githubConnection.access_token,
+      githubConnection.access_token || "",
       chat.github_repo_name,
     );
     if (!githubFilesResult.success || !githubFilesResult.files) {
