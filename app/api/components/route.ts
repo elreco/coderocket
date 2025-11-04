@@ -29,16 +29,17 @@ import {
 } from "@/utils/completion-parser";
 import {
   Framework,
-  TRIAL_PLAN_MESSAGES_PER_MONTH,
   anthropicModel,
-  getMaxMessagesPerPeriod,
   storageUrl,
   MAX_TOKENS_PER_REQUEST,
   PREMIUM_CHAR_LIMIT,
   MAX_VERSIONS_PER_COMPONENT,
 } from "@/utils/config";
-// import { promptEnhancer } from "@/utils/prompt-enhancer";
 import { uploadFiles } from "@/utils/file-uploader";
+import {
+  tokensToRockets,
+  getPlanRocketLimits,
+} from "@/utils/rocket-conversion";
 import {
   getPreviousArtifactCode,
   getArtifactCodeByVersion,
@@ -46,10 +47,7 @@ import {
 import { createClient } from "@/utils/supabase/server";
 import { systemPrompt } from "@/utils/system-prompts";
 import { htmlSystemPrompt } from "@/utils/system-prompts/html";
-import {
-  trackVersionUsage,
-  getUserUsageCount,
-} from "@/utils/version-usage-tracking";
+import { getUserTokenUsage, calculateTokenCost } from "@/utils/token-pricing";
 
 interface ContextResult {
   limitedMessages: Tables<"messages">[];
@@ -996,21 +994,23 @@ Recreate the visual layout and core functionality of this website using modern w
   const extraMessages = await getExtraMessagesCount(user.id);
 
   if (subscription) {
-    // Calculate the start of the current billing month based on current_period_start
     const currentPeriodStart = new Date(subscription.current_period_start);
     const currentPeriodEnd = new Date(subscription.current_period_end);
 
-    // Use new tracking system for accurate counting
-    const usageResult = await getUserUsageCount(
+    const tokenUsage = await getUserTokenUsage(
       user.id,
       currentPeriodStart,
       currentPeriodEnd,
     );
-    const count = usageResult.success ? usageResult.count : 0;
 
-    const maxMessagesPerPeriod = getMaxMessagesPerPeriod(subscription);
-    if (count >= maxMessagesPerPeriod) {
-      // Si l'utilisateur a des messages supplémentaires, utiliser un message supplémentaire
+    const planName = subscription.prices?.products?.name || "free";
+    const limits = getPlanRocketLimits(planName);
+
+    const rocketsUsed = tokensToRockets(
+      tokenUsage.input_tokens + tokenUsage.output_tokens,
+    );
+
+    if (rocketsUsed >= limits.monthly_rockets) {
       if (extraMessages > 0) {
         const decremented = await decrementExtraMessagesCount(user.id);
         if (!decremented) {
@@ -1021,7 +1021,6 @@ Recreate the visual layout and core functionality of this website using modern w
       }
     }
   } else {
-    // Utiliser le premier jour du mois en cours comme période de départ
     const today = new Date();
     const currentPeriodStart = new Date(
       today.getFullYear(),
@@ -1034,16 +1033,19 @@ Recreate the visual layout and core functionality of this website using modern w
       1,
     );
 
-    // Use new tracking system for accurate counting
-    const usageResult = await getUserUsageCount(
+    const tokenUsage = await getUserTokenUsage(
       user.id,
       currentPeriodStart,
       currentPeriodEnd,
     );
-    const count = usageResult.success ? usageResult.count : 0;
 
-    if (count >= TRIAL_PLAN_MESSAGES_PER_MONTH) {
-      // Si l'utilisateur a des messages supplémentaires, utiliser un message supplémentaire
+    const limits = getPlanRocketLimits("free");
+
+    const rocketsUsed = tokensToRockets(
+      tokenUsage.input_tokens + tokenUsage.output_tokens,
+    );
+
+    if (rocketsUsed >= limits.monthly_rockets) {
       if (extraMessages > 0) {
         const decremented = await decrementExtraMessagesCount(user.id);
         if (!decremented) {
@@ -1233,6 +1235,17 @@ const updateDataAfterCompletion = async (
   const cacheCreationInputTokens = 0;
   const cacheReadInputTokens = usage.cachedInputTokens ?? 0;
 
+  const modelUsed = "claude-sonnet-4-5";
+  const cost = calculateTokenCost(
+    {
+      input_tokens: usage.inputTokens ?? 0,
+      output_tokens: usage.outputTokens ?? 0,
+      cache_creation_input_tokens: cacheCreationInputTokens,
+      cache_read_input_tokens: cacheReadInputTokens,
+    },
+    modelUsed,
+  );
+
   const { error: updateUserError } = await supabase
     .from("messages")
     .update({
@@ -1264,7 +1277,7 @@ const updateDataAfterCompletion = async (
       subscription.prices?.products?.name?.toLowerCase() || "trial";
   }
 
-  const { error: insertAssistantError } = await supabase
+  const { error: insertAssistantError, data: insertedMessage } = await supabase
     .from("messages")
     .insert({
       chat_id: chatId,
@@ -1273,19 +1286,38 @@ const updateDataAfterCompletion = async (
       content: content,
       theme,
       role: "assistant",
+      input_tokens: usage.inputTokens ?? 0,
       output_tokens: usage.outputTokens ?? 0,
       subscription_type: subscriptionType,
       artifact_code: artifactCode,
       cache_creation_input_tokens: cacheCreationInputTokens,
       cache_read_input_tokens: cacheReadInputTokens,
-    });
+      cost_usd: cost,
+      model_used: modelUsed,
+    })
+    .select()
+    .single();
 
   if (insertAssistantError) {
     console.error("Error inserting assistant message:", insertAssistantError);
   }
 
-  // Track version usage for accurate pricing
-  await trackVersionUsage(user.id, chatId, version);
+  // Token tracking is done below in token_usage_tracking table
+
+  if (insertedMessage) {
+    await supabase.from("token_usage_tracking").insert({
+      user_id: user.id,
+      chat_id: chatId,
+      message_id: insertedMessage.id,
+      usage_type: "generation",
+      model_used: modelUsed,
+      input_tokens: usage.inputTokens ?? 0,
+      output_tokens: usage.outputTokens ?? 0,
+      cache_creation_input_tokens: cacheCreationInputTokens,
+      cache_read_input_tokens: cacheReadInputTokens,
+      cost_usd: cost,
+    });
+  }
 
   after(async () => {
     if (hasError) {

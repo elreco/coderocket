@@ -8,14 +8,9 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Database } from "@/types_db";
-import {
-  FREE_CHAR_LIMIT,
-  PREMIUM_CHAR_LIMIT,
-  PRO_PLAN_MESSAGES_PER_PERIOD,
-  STARTER_PLAN_MESSAGES_PER_PERIOD,
-  TRIAL_PLAN_MESSAGES_PER_MONTH,
-} from "@/utils/config";
+import { FREE_CHAR_LIMIT, PREMIUM_CHAR_LIMIT } from "@/utils/config";
 import { postData } from "@/utils/helpers";
+import { ROCKET_LIMITS_PER_PLAN } from "@/utils/rocket-conversion";
 
 type Subscription = Database["public"]["Tables"]["subscriptions"]["Row"];
 type Product = Database["public"]["Tables"]["products"]["Row"];
@@ -80,32 +75,30 @@ export default function Pricing({ user, products, subscription }: Props) {
     }
   };
 
-  // Fonction pour rediriger vers la page d'achat de messages supplémentaires
-  const handleBuyExtraMessages = () => {
-    if (!user) {
-      return router.push("/login");
-    }
-    router.push("/account?buy_extra=true");
-  };
-
   // Calculer l'économie par rapport au coût par message
-  const calculateSavings = (messagesPerPeriod: number, price: number) => {
-    // Coût par message pour ce plan
-    const costPerMessage = price / messagesPerPeriod;
-
-    // Coût par message du plan Starter (référence)
+  const calculateSavings = (product: ProductWithPrices) => {
     const starterPrice =
-      products
-        .flatMap((product) => product.prices)
-        .find((p) => p.description === "Starter")?.unit_amount || 0;
+      products.flatMap((p) => p.prices).find((p) => p.description === "Starter")
+        ?.unit_amount || 0;
 
-    const starterMessages = STARTER_PLAN_MESSAGES_PER_PERIOD;
-    const starterCostPerMessage = starterPrice / starterMessages;
+    const starterRockets = ROCKET_LIMITS_PER_PLAN.starter.monthly_rockets;
+    const starterCostPerRocket = starterPrice / starterRockets / 100;
 
-    // Calculer le pourcentage d'économie
-    if (starterCostPerMessage > 0 && costPerMessage < starterCostPerMessage) {
+    const productRockets =
+      ROCKET_LIMITS_PER_PLAN[
+        (product.name?.toLowerCase() ||
+          "free") as keyof typeof ROCKET_LIMITS_PER_PLAN
+      ]?.monthly_rockets || 0;
+
+    const productPrice = product.prices[0]?.unit_amount || 0;
+    const productCostPerRocket = productPrice / productRockets / 100;
+
+    if (
+      starterCostPerRocket > 0 &&
+      productCostPerRocket < starterCostPerRocket
+    ) {
       return Math.round(
-        ((starterCostPerMessage - costPerMessage) / starterCostPerMessage) *
+        ((starterCostPerRocket - productCostPerRocket) / starterCostPerRocket) *
           100,
       );
     }
@@ -125,7 +118,7 @@ export default function Pricing({ user, products, subscription }: Props) {
   if (products.length >= 1) {
     return (
       <div className="flex flex-col items-center">
-        <div className="my-4 size-full items-center space-y-4 sm:my-4 sm:grid sm:grid-cols-2 sm:gap-6 sm:space-y-0 lg:mx-auto lg:max-w-4xl xl:mx-0 xl:max-w-none xl:grid-cols-3 xl:space-y-0">
+        <div className="my-4 size-full items-center space-y-4 sm:my-4 sm:grid sm:grid-cols-2 sm:gap-6 sm:space-y-0 lg:mx-auto lg:max-w-4xl xl:mx-0 xl:max-w-none xl:grid-cols-4 xl:space-y-0">
           {/* Plan Trial */}
           <div className="flex h-full flex-col divide-y divide-border rounded-lg border bg-card p-3">
             <h3 className="mb-4 pl-3 text-lg font-bold text-white">Trial</h3>
@@ -141,7 +134,8 @@ export default function Pricing({ user, products, subscription }: Props) {
               </p>
               <p className="mt-4 flex items-center text-sm font-medium ">
                 <Check className="mr-2 size-4 text-emerald-500" />{" "}
-                {TRIAL_PLAN_MESSAGES_PER_MONTH / 2} versions per month
+                {ROCKET_LIMITS_PER_PLAN.free.monthly_rockets} 🚀 Rockets per
+                month ({ROCKET_LIMITS_PER_PLAN.free.description})
               </p>
               <p className="mt-4 flex items-center text-sm font-medium ">
                 <Check className="mr-2 size-4 text-emerald-500" />{" "}
@@ -192,16 +186,7 @@ export default function Pricing({ user, products, subscription }: Props) {
                 price.currency!,
               );
 
-              // Calculer l'économie par rapport au coût par message
-              const messagesPerPeriod =
-                product.name === "Starter"
-                  ? STARTER_PLAN_MESSAGES_PER_PERIOD
-                  : PRO_PLAN_MESSAGES_PER_PERIOD;
-
-              const savings = calculateSavings(
-                messagesPerPeriod,
-                price.unit_amount || 0,
-              );
+              const savings = calculateSavings(product);
 
               // Description personnalisée basée sur le nom du produit
               const planDescription =
@@ -233,24 +218,7 @@ export default function Pricing({ user, products, subscription }: Props) {
                   <div className="relative grow p-3">
                     {savings > 0 && (
                       <div className="absolute right-2 top-2 rounded-md bg-emerald-500 px-2 py-1 text-xs font-bold text-white">
-                        Save $
-                        {(() => {
-                          // Calculer l'économie en dollars
-                          const costPerMessage =
-                            (price.unit_amount || 0) / messagesPerPeriod;
-                          const starterPrice =
-                            products
-                              .flatMap((p) => p.prices)
-                              .find((p) => p.description === "Starter")
-                              ?.unit_amount || 0;
-                          const starterCostPerMessage =
-                            starterPrice / STARTER_PLAN_MESSAGES_PER_PERIOD;
-                          return (
-                            ((starterCostPerMessage - costPerMessage) *
-                              messagesPerPeriod) /
-                            100
-                          ).toFixed(0);
-                        })()}
+                        Save {savings}%
                       </div>
                     )}
                     <p>
@@ -276,10 +244,15 @@ export default function Pricing({ user, products, subscription }: Props) {
                     </p>
                     <p className="mt-4 flex items-center text-sm font-medium ">
                       <Check className="mr-2 size-4 text-emerald-500" />
-                      {(product.name === "Starter"
-                        ? STARTER_PLAN_MESSAGES_PER_PERIOD
-                        : PRO_PLAN_MESSAGES_PER_PERIOD) / 2}{" "}
-                      versions per month
+                      {product.name === "Starter"
+                        ? `${ROCKET_LIMITS_PER_PLAN.starter.monthly_rockets.toLocaleString()} 🚀 Rockets per month (${ROCKET_LIMITS_PER_PLAN.starter.description})`
+                        : product.name === "Pro"
+                          ? `${ROCKET_LIMITS_PER_PLAN.pro.monthly_rockets.toLocaleString()} 🚀 Rockets per month (${ROCKET_LIMITS_PER_PLAN.pro.description})`
+                          : `${ROCKET_LIMITS_PER_PLAN.enterprise.monthly_rockets.toLocaleString()} 🚀 Rockets per month (${ROCKET_LIMITS_PER_PLAN.enterprise.description})`}
+                    </p>
+                    <p className="mt-4 flex items-center text-sm font-medium ">
+                      <Check className="mr-2 size-4 text-emerald-500" /> All
+                      premium features
                     </p>
                     <p className="mt-4 flex items-center text-sm font-medium ">
                       <Check className="mr-2 size-4 text-emerald-500" /> GitHub
@@ -331,21 +304,28 @@ export default function Pricing({ user, products, subscription }: Props) {
             })}
         </div>
 
-        {/* Section pour l'achat de messages supplémentaires */}
+        {/* Section pour l'achat de Rockets */}
         <div className="mt-12 w-full max-w-2xl">
           <div className="rounded-lg border bg-card p-6">
-            <h3 className="mb-2 text-xl font-bold">Need More Versions?</h3>
+            <h3 className="mb-2 flex items-center gap-2 text-xl font-bold">
+              🚀 Need More? Buy Rockets!
+            </h3>
             <p className="mb-4">
-              If you&apos;ve reached your plan&apos;s limit, you can purchase
-              extra versions for $1 each. These versions never expire and can be
-              used anytime you need them.
+              Reached your monthly limit? Purchase Rockets for just $1 each.
+              Each Rocket = 10,000 AI tokens. They never expire and can be used
+              anytime you need them.
+            </p>
+            <p className="mb-4 text-sm text-muted-foreground">
+              💡 Your usage is based on actual AI costs with transparent
+              pricing. See the exact cost of each generation in real-time in
+              your chat.
             </p>
             <Button
-              onClick={handleBuyExtraMessages}
-              variant="background"
+              onClick={() => router.push("/account?buy_rockets=true")}
+              variant="default"
               className="w-full"
             >
-              Buy Extra Versions
+              Buy Rockets 🚀
             </Button>
           </div>
         </div>

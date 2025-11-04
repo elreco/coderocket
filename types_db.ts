@@ -88,6 +88,51 @@ export type Database = {
           },
         ];
       };
+      chat_integrations: {
+        Row: {
+          chat_id: string;
+          config_override: Json | null;
+          created_at: string;
+          id: string;
+          integration_id: string;
+          is_enabled: boolean;
+          updated_at: string;
+        };
+        Insert: {
+          chat_id: string;
+          config_override?: Json | null;
+          created_at?: string;
+          id?: string;
+          integration_id: string;
+          is_enabled?: boolean;
+          updated_at?: string;
+        };
+        Update: {
+          chat_id?: string;
+          config_override?: Json | null;
+          created_at?: string;
+          id?: string;
+          integration_id?: string;
+          is_enabled?: boolean;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "chat_integrations_chat_id_fkey";
+            columns: ["chat_id"];
+            isOneToOne: false;
+            referencedRelation: "chats";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "chat_integrations_integration_id_fkey";
+            columns: ["integration_id"];
+            isOneToOne: false;
+            referencedRelation: "user_integrations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       chat_likes: {
         Row: {
           chat_id: string;
@@ -283,13 +328,6 @@ export type Database = {
             referencedRelation: "chats";
             referencedColumns: ["id"];
           },
-          {
-            foreignKeyName: "custom_domains_user_id_fkey";
-            columns: ["user_id"];
-            isOneToOne: false;
-            referencedRelation: "users";
-            referencedColumns: ["id"];
-          },
         ];
       };
       customers: {
@@ -304,30 +342,6 @@ export type Database = {
         Update: {
           id?: string;
           stripe_customer_id?: string | null;
-        };
-        Relationships: [];
-      };
-      ekinox_waitlist: {
-        Row: {
-          created_at: string;
-          email: string;
-          id: string;
-          ip_address: string | null;
-          user_agent: string | null;
-        };
-        Insert: {
-          created_at?: string;
-          email: string;
-          id?: string;
-          ip_address?: string | null;
-          user_agent?: string | null;
-        };
-        Update: {
-          created_at?: string;
-          email?: string;
-          id?: string;
-          ip_address?: string | null;
-          user_agent?: string | null;
         };
         Relationships: [];
       };
@@ -357,7 +371,7 @@ export type Database = {
       };
       github_connections: {
         Row: {
-          access_token: string;
+          access_token: string | null;
           connected_at: string;
           github_username: string;
           id: number;
@@ -366,7 +380,7 @@ export type Database = {
           user_id: string;
         };
         Insert: {
-          access_token: string;
+          access_token?: string | null;
           connected_at?: string;
           github_username: string;
           id?: number;
@@ -375,7 +389,7 @@ export type Database = {
           user_id: string;
         };
         Update: {
-          access_token?: string;
+          access_token?: string | null;
           connected_at?: string;
           github_username?: string;
           id?: number;
@@ -384,6 +398,51 @@ export type Database = {
           user_id?: string;
         };
         Relationships: [];
+      };
+      integration_schemas: {
+        Row: {
+          chat_id: string;
+          created_at: string;
+          generated_files: Json;
+          id: string;
+          integration_id: string;
+          schema_definition: Json;
+          updated_at: string;
+        };
+        Insert: {
+          chat_id: string;
+          created_at?: string;
+          generated_files: Json;
+          id?: string;
+          integration_id: string;
+          schema_definition: Json;
+          updated_at?: string;
+        };
+        Update: {
+          chat_id?: string;
+          created_at?: string;
+          generated_files?: Json;
+          id?: string;
+          integration_id?: string;
+          schema_definition?: Json;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "integration_schemas_chat_id_fkey";
+            columns: ["chat_id"];
+            isOneToOne: false;
+            referencedRelation: "chats";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "integration_schemas_integration_id_fkey";
+            columns: ["integration_id"];
+            isOneToOne: false;
+            referencedRelation: "user_integrations";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       marketplace_categories: {
         Row: {
@@ -668,13 +727,16 @@ export type Database = {
           cache_read_input_tokens: number | null;
           chat_id: string;
           content: string;
+          cost_usd: number | null;
           created_at: string;
           files: Json | null;
           id: number;
           input_tokens: number | null;
           is_built: boolean | null;
           is_github_pull: boolean | null;
+          migration_executed_at: string | null;
           migrations_executed: Json | null;
+          model_used: string | null;
           output_tokens: number | null;
           prompt_image: string | null;
           role: string;
@@ -689,13 +751,16 @@ export type Database = {
           cache_read_input_tokens?: number | null;
           chat_id: string;
           content: string;
+          cost_usd?: number | null;
           created_at?: string;
           files?: Json | null;
           id?: number;
           input_tokens?: number | null;
           is_built?: boolean | null;
           is_github_pull?: boolean | null;
+          migration_executed_at?: string | null;
           migrations_executed?: Json | null;
+          model_used?: string | null;
           output_tokens?: number | null;
           prompt_image?: string | null;
           role: string;
@@ -710,13 +775,16 @@ export type Database = {
           cache_read_input_tokens?: number | null;
           chat_id?: string;
           content?: string;
+          cost_usd?: number | null;
           created_at?: string;
           files?: Json | null;
           id?: number;
           input_tokens?: number | null;
           is_built?: boolean | null;
           is_github_pull?: boolean | null;
+          migration_executed_at?: string | null;
           migrations_executed?: Json | null;
+          model_used?: string | null;
           output_tokens?: number | null;
           prompt_image?: string | null;
           role?: string;
@@ -944,6 +1012,73 @@ export type Database = {
           },
         ];
       };
+      token_usage_tracking: {
+        Row: {
+          cache_creation_input_tokens: number;
+          cache_read_input_tokens: number;
+          chat_id: string;
+          cost_usd: number;
+          created_at: string | null;
+          id: string;
+          input_tokens: number;
+          message_id: number | null;
+          model_used: string;
+          output_tokens: number;
+          usage_type: string;
+          user_id: string;
+        };
+        Insert: {
+          cache_creation_input_tokens?: number;
+          cache_read_input_tokens?: number;
+          chat_id: string;
+          cost_usd?: number;
+          created_at?: string | null;
+          id?: string;
+          input_tokens?: number;
+          message_id?: number | null;
+          model_used: string;
+          output_tokens?: number;
+          usage_type: string;
+          user_id: string;
+        };
+        Update: {
+          cache_creation_input_tokens?: number;
+          cache_read_input_tokens?: number;
+          chat_id?: string;
+          cost_usd?: number;
+          created_at?: string | null;
+          id?: string;
+          input_tokens?: number;
+          message_id?: number | null;
+          model_used?: string;
+          output_tokens?: number;
+          usage_type?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "token_usage_tracking_chat_id_fkey";
+            columns: ["chat_id"];
+            isOneToOne: false;
+            referencedRelation: "chats";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "token_usage_tracking_message_id_fkey";
+            columns: ["message_id"];
+            isOneToOne: false;
+            referencedRelation: "messages";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "token_usage_tracking_message_id_fkey";
+            columns: ["message_id"];
+            isOneToOne: false;
+            referencedRelation: "messages_view";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       unsubscribe_surveys: {
         Row: {
           email: string | null;
@@ -968,6 +1103,39 @@ export type Database = {
           mainreason?: string | null;
           otherreason?: string | null;
           submission_date?: string | null;
+        };
+        Relationships: [];
+      };
+      user_integrations: {
+        Row: {
+          config: Json;
+          created_at: string;
+          id: string;
+          integration_type: string;
+          is_active: boolean;
+          name: string;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          config: Json;
+          created_at?: string;
+          id?: string;
+          integration_type: string;
+          is_active?: boolean;
+          name: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          config?: Json;
+          created_at?: string;
+          id?: string;
+          integration_type?: string;
+          is_active?: boolean;
+          name?: string;
+          updated_at?: string;
+          user_id?: string;
         };
         Relationships: [];
       };
@@ -1015,129 +1183,6 @@ export type Database = {
           stripe_payouts_enabled?: boolean | null;
         };
         Relationships: [];
-      };
-      user_integrations: {
-        Row: {
-          config: Json;
-          created_at: string;
-          id: string;
-          integration_type: string;
-          is_active: boolean;
-          name: string;
-          updated_at: string;
-          user_id: string;
-        };
-        Insert: {
-          config: Json;
-          created_at?: string;
-          id?: string;
-          integration_type: string;
-          is_active?: boolean;
-          name: string;
-          updated_at?: string;
-          user_id: string;
-        };
-        Update: {
-          config?: Json;
-          created_at?: string;
-          id?: string;
-          integration_type?: string;
-          is_active?: boolean;
-          name?: string;
-          updated_at?: string;
-          user_id?: string;
-        };
-        Relationships: [];
-      };
-      chat_integrations: {
-        Row: {
-          chat_id: string;
-          config_override: Json | null;
-          created_at: string;
-          id: string;
-          integration_id: string;
-          is_enabled: boolean;
-          updated_at: string;
-        };
-        Insert: {
-          chat_id: string;
-          config_override?: Json | null;
-          created_at?: string;
-          id?: string;
-          integration_id: string;
-          is_enabled?: boolean;
-          updated_at?: string;
-        };
-        Update: {
-          chat_id?: string;
-          config_override?: Json | null;
-          created_at?: string;
-          id?: string;
-          integration_id?: string;
-          is_enabled?: boolean;
-          updated_at?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "chat_integrations_chat_id_fkey";
-            columns: ["chat_id"];
-            isOneToOne: false;
-            referencedRelation: "chats";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "chat_integrations_integration_id_fkey";
-            columns: ["integration_id"];
-            isOneToOne: false;
-            referencedRelation: "user_integrations";
-            referencedColumns: ["id"];
-          },
-        ];
-      };
-      integration_schemas: {
-        Row: {
-          chat_id: string;
-          created_at: string;
-          generated_files: Json;
-          id: string;
-          integration_id: string;
-          schema_definition: Json;
-          updated_at: string;
-        };
-        Insert: {
-          chat_id: string;
-          created_at?: string;
-          generated_files: Json;
-          id?: string;
-          integration_id: string;
-          schema_definition: Json;
-          updated_at?: string;
-        };
-        Update: {
-          chat_id?: string;
-          created_at?: string;
-          generated_files?: Json;
-          id?: string;
-          integration_id?: string;
-          schema_definition?: Json;
-          updated_at?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "integration_schemas_chat_id_fkey";
-            columns: ["chat_id"];
-            isOneToOne: false;
-            referencedRelation: "chats";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "integration_schemas_integration_id_fkey";
-            columns: ["integration_id"];
-            isOneToOne: false;
-            referencedRelation: "user_integrations";
-            referencedColumns: ["id"];
-          },
-        ];
       };
       version_usage_tracking: {
         Row: {
@@ -1348,6 +1393,13 @@ export type Database = {
       };
       migrate_prompt_image_to_files: { Args: never; Returns: undefined };
       update_pending_earnings_to_available: { Args: never; Returns: number };
+      verify_rls_enabled: {
+        Args: never;
+        Returns: {
+          rls_enabled: boolean;
+          table_name: string;
+        }[];
+      };
     };
     Enums: {
       pricing_plan_interval: "day" | "week" | "month" | "year";

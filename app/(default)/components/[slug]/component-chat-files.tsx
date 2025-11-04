@@ -32,6 +32,7 @@ import {
 } from "@/utils/completion-parser";
 import { storageUrl } from "@/utils/config";
 import { getRelativeDate } from "@/utils/date";
+import { tokensToRockets } from "@/utils/rocket-conversion";
 
 import { deleteVersionByMessageId } from "./actions";
 import { ChunkReader } from "./chunk-reader";
@@ -566,6 +567,16 @@ ${extractedFiles
                   : null
               }
             />
+            {message.input_tokens !== null &&
+              message.output_tokens !== null && (
+                <div className="mt-1 text-xs text-muted-foreground">
+                  Cost:{" "}
+                  {tokensToRockets(
+                    (message.input_tokens || 0) + (message.output_tokens || 0),
+                  ).toFixed(2)}{" "}
+                  🚀 Rockets
+                </div>
+              )}
             {message.screenshot && (
               <img
                 src={message.screenshot || undefined}

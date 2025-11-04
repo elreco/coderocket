@@ -11,12 +11,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import {
-  getMaxMessagesPerPeriod,
-  TRIAL_PLAN_MESSAGES_PER_MONTH,
-  PRO_PLAN_MESSAGES_PER_PERIOD,
-  STARTER_PLAN_MESSAGES_PER_PERIOD,
-} from "@/utils/config";
-import { getUserUsageCount } from "@/utils/version-usage-tracking";
+  tokensToRockets,
+  getPlanRocketLimits,
+  ROCKET_LIMITS_PER_PLAN,
+} from "@/utils/rocket-conversion";
+import { getUserTokenUsage } from "@/utils/token-pricing";
 
 import { getUser, updateEmail, updateName } from "./actions";
 import { BuyExtraMessages } from "./components/buy-extra-messages";
@@ -53,32 +52,32 @@ export default async function Account() {
 
   const user = userData.data.user;
 
-  // Calculer l'utilisation et la date de réinitialisation
-  let usage = 0;
   let resetDate = null;
-  let maxMessages = 0;
-  let extraMessages = 0;
+  let extraRockets = 0;
+  let tokenUsage = { input_tokens: 0, output_tokens: 0, total_cost: 0 };
+  let rocketsUsed = 0;
+  let rocketLimit = 0;
+  let planDescription = "";
 
   if (user) {
-    // Récupérer le nombre de messages supplémentaires
-    extraMessages = await getExtraMessagesCount(user.id);
+    extraRockets = await getExtraMessagesCount(user.id);
 
     if (subscription) {
       const currentPeriodStart = new Date(subscription.current_period_start);
       const currentPeriodEnd = new Date(subscription.current_period_end);
 
-      // Use new tracking system for accurate counting
-      const usageResult = await getUserUsageCount(
+      tokenUsage = await getUserTokenUsage(
         user.id,
         currentPeriodStart,
         currentPeriodEnd,
       );
-      usage = usageResult.success ? usageResult.count : 0;
 
-      maxMessages = getMaxMessagesPerPeriod(subscription);
+      const planName = subscription.prices?.products?.name || "free";
+      const limits = getPlanRocketLimits(planName);
+      rocketLimit = limits.monthly_rockets;
+      planDescription = limits.description;
       resetDate = currentPeriodEnd;
     } else {
-      // Utiliser le premier jour du mois en cours comme période de départ
       const today = new Date();
       const currentPeriodStart = new Date(
         today.getFullYear(),
@@ -91,17 +90,21 @@ export default async function Account() {
         1,
       );
 
-      // Use new tracking system for accurate counting
-      const usageResult = await getUserUsageCount(
+      tokenUsage = await getUserTokenUsage(
         user.id,
         currentPeriodStart,
         currentPeriodEnd,
       );
-      usage = usageResult.success ? usageResult.count : 0;
 
-      maxMessages = TRIAL_PLAN_MESSAGES_PER_MONTH;
+      const limits = getPlanRocketLimits("free");
+      rocketLimit = limits.monthly_rockets;
+      planDescription = limits.description;
       resetDate = currentPeriodEnd;
     }
+
+    rocketsUsed = tokensToRockets(
+      tokenUsage.input_tokens + tokenUsage.output_tokens,
+    );
   }
 
   const subscriptionPrice =
@@ -157,10 +160,12 @@ export default async function Account() {
                 <>
                   <li className="flex items-center text-sm">
                     <Check className="mr-2 size-4 text-emerald-500" />
-                    {(subscription?.prices?.products?.name === "Starter"
-                      ? STARTER_PLAN_MESSAGES_PER_PERIOD
-                      : PRO_PLAN_MESSAGES_PER_PERIOD) / 2}{" "}
-                    versions per month
+                    {subscription?.prices?.products?.name === "Starter"
+                      ? ROCKET_LIMITS_PER_PLAN.starter.monthly_rockets.toLocaleString()
+                      : subscription?.prices?.products?.name === "Pro"
+                        ? ROCKET_LIMITS_PER_PLAN.pro.monthly_rockets.toLocaleString()
+                        : ROCKET_LIMITS_PER_PLAN.enterprise.monthly_rockets.toLocaleString()}{" "}
+                    🚀 Rockets per month
                   </li>
                   <li className="flex items-center text-sm">
                     <Check className="mr-2 size-4 text-emerald-500" />
@@ -187,8 +192,9 @@ export default async function Account() {
                 <>
                   <li className="flex items-center text-sm">
                     <Check className="mr-2 size-4 text-emerald-500" />
-                    {TRIAL_PLAN_MESSAGES_PER_MONTH /
-                      2} versions per month
+                    {
+                      ROCKET_LIMITS_PER_PLAN.free.monthly_rockets
+                    } 🚀 Rockets per month
                   </li>
                   <li className="flex items-center text-sm">
                     <XIcon className="mr-2 size-4 text-border" />
@@ -302,38 +308,48 @@ export default async function Account() {
         {/* Composant pour acheter des messages supplémentaires */}
         <Card
           title="Usage"
-          description={"Tracking your usage for the current month"}
+          description={"Track your Rockets usage for the current month"}
         >
           <div className="mb-4 mt-8 space-y-4">
             <div className="grid gap-4">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">
-                  Messages used
+                  🚀 Rockets used for the current period
                 </span>
                 <span className="font-medium">
-                  {usage} / {maxMessages}
+                  {rocketsUsed.toFixed(0)} / {rocketLimit}
                 </span>
               </div>
 
-              <Progress value={(usage / maxMessages) * 100} />
+              <Progress value={(rocketsUsed / rocketLimit) * 100} />
+
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span>{planDescription}</span>
+                <span>
+                  {((rocketsUsed / rocketLimit) * 100).toFixed(0)}% used
+                </span>
+              </div>
 
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">
-                  Reset date
-                </span>
+                <span className="text-sm text-muted-foreground">Resets on</span>
                 <span className="font-medium">
                   {resetDate ? format(resetDate, "d MMMM yyyy") : "N/A"}
                 </span>
               </div>
 
-              {extraMessages > 0 && (
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">
-                    Extra versions available
-                  </span>
-                  <span className="font-medium text-emerald-500">
-                    {Math.ceil(extraMessages / 2)}
-                  </span>
+              {extraRockets > 0 && (
+                <div className="mt-4 rounded-lg border border-emerald-500/20 bg-emerald-500/10 p-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-emerald-600 dark:text-emerald-400">
+                      🚀 Extra Rockets
+                    </span>
+                    <span className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
+                      {extraRockets}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Use these when you reach your monthly limit
+                  </p>
                 </div>
               )}
             </div>
