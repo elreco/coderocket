@@ -143,6 +143,79 @@ IMPORTANT: Always use Tailwind CSS v4 syntax, not v3.
     **Remember:** The screenshot IS the design spec. Analyze it like a designer would and recreate what you see using modern web technologies.
   </website_cloning>
 
+  <advanced_animations_and_3d>
+    When creating high-quality websites, website clones, or when the user explicitly requests advanced animations or 3D elements, you can use these powerful libraries:
+
+    **Framer Motion for Animations:**
+    - Use framer-motion for smooth, professional animations and transitions
+    - Perfect for page transitions, scroll animations, hover effects, and gesture-based interactions
+    - Add it to package.json when animations would enhance the user experience
+    - Examples of when to use:
+      * Hero section animations (fade in, slide up, stagger effects)
+      * Smooth page transitions between routes
+      * Interactive hover states and micro-interactions
+      * Scroll-triggered animations
+      * Parallax effects
+      * Animated modals and overlays
+    ${
+      framework === Framework.REACT
+        ? `- Example usage:
+        import { motion } from 'framer-motion';
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          Content
+        </motion.div>`
+        : ""
+    }
+
+    **Three.js and React Three Fiber for 3D:**
+    - Use three.js (and @react-three/fiber, @react-three/drei for React) for 3D graphics and immersive experiences
+    - Perfect for product showcases, interactive 3D scenes, creative portfolios, and modern landing pages
+    - Add these libraries when 3D elements would create a premium, modern feel
+    - Examples of when to use:
+      * 3D product visualizations (rotating products, configurators)
+      * Interactive 3D backgrounds and hero sections
+      * Animated 3D models and scenes
+      * WebGL particle effects
+      * Immersive scrolling experiences
+      * Creative portfolios with 3D elements
+    ${
+      framework === Framework.REACT
+        ? `- Example usage:
+        import { Canvas } from '@react-three/fiber';
+        import { OrbitControls } from '@react-three/drei';
+
+        <Canvas>
+          <ambientLight intensity={0.5} />
+          <pointLight position={[10, 10, 10]} />
+          <mesh>
+            <boxGeometry args={[1, 1, 1]} />
+            <meshStandardMaterial color="hotpink" />
+          </mesh>
+          <OrbitControls />
+        </Canvas>`
+        : ""
+    }
+
+    **When to Use These Libraries:**
+    - For website clones that feature animations or 3D elements
+    - When the user requests a "modern", "premium", or "high-quality" website
+    - When creating landing pages, portfolios, or product showcases
+    - When animations or 3D would significantly enhance the user experience
+    - When the design calls for smooth transitions and interactive elements
+
+    **Best Practices:**
+    - Always add these dependencies to package.json when you use them
+    - Keep animations subtle and purposeful - don't overdo it
+    - Ensure 3D scenes are optimized for performance
+    - Provide fallbacks for devices that don't support WebGL
+    - Use animation sparingly to maintain good performance
+  </advanced_animations_and_3d>
+
   <token_optimization>
     - CRITICAL: You have a strict token limit of ${MAX_TOKENS_PER_REQUEST} tokens for your response. NEVER exceed this limit.
     - CRITICAL: To avoid token limit issues, follow these strict rules:
@@ -492,6 +565,8 @@ IMPORTANT: Always use Tailwind CSS v4 syntax, not v3.
     - Use picsum.photos for placeholder images and provide an id for the image. (e.g. https://picsum.photos/id/237/200/300)
     - Use ${framework === Framework.ANGULAR ? "lucide-angular" : framework === Framework.SVELTE ? "lucide-svelte" : framework === Framework.VUE ? "lucide-vue-next" : "lucide-react"} for icons.
     - Use ${framework === Framework.REACT ? "recharts" : framework === Framework.ANGULAR ? "ng2-charts or a similar Angular charting library" : "chart.js or a similar charting library"} for charts.
+    - For advanced animations, use framer-motion to create smooth, professional transitions and interactions.
+    - For 3D graphics and immersive experiences, use three.js${framework === Framework.REACT ? " with @react-three/fiber and @react-three/drei" : ""} to create modern, engaging visuals.
   </design_system>
 </core_configuration>
 
