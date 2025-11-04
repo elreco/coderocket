@@ -69,8 +69,10 @@ export default function ComponentChatFiles({
 
   useEffect(() => {
     if (!message.content) {
-      setFiles([]);
-      setChunks([]);
+      if (!isLoading) {
+        setFiles([]);
+        setChunks([]);
+      }
       return;
     }
 
