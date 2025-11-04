@@ -47,18 +47,35 @@ export const ImageUploadArea = memo(
     const handleClick = () => {
       if (!isLoggedIn) {
         toast({
-          title: "Login Required",
-          description: "Please login to upload files.",
-          variant: "destructive",
+          title: "Login required",
+          description: "Sign in to upload files and streamline your workflow!",
+          action: (
+            <a
+              href="/login"
+              className="inline-flex h-8 items-center justify-center rounded-md bg-primary px-3 text-xs font-medium text-primary-foreground"
+            >
+              Login
+            </a>
+          ),
+          duration: 5000,
         });
         return;
       }
 
       if (!isPremium) {
         toast({
-          title: "Premium Feature",
-          description: "Upgrade to Premium to upload files.",
-          variant: "destructive",
+          title: "Premium feature",
+          description:
+            "Unlock file uploads and accelerate your development with AI-powered design imports!",
+          action: (
+            <a
+              href="/pricing"
+              className="inline-flex h-8 items-center justify-center rounded-md bg-primary px-3 text-xs font-medium text-primary-foreground"
+            >
+              Upgrade
+            </a>
+          ),
+          duration: 5000,
         });
         return;
       }
@@ -104,18 +121,36 @@ export const ImageUploadArea = memo(
 
         if (!isLoggedIn) {
           toast({
-            title: "Login Required",
-            description: "Please login to upload files.",
-            variant: "destructive",
+            title: "Login required",
+            description:
+              "Sign in to upload files and streamline your workflow!",
+            action: (
+              <a
+                href="/login"
+                className="inline-flex h-8 items-center justify-center rounded-md bg-primary px-3 text-xs font-medium text-primary-foreground"
+              >
+                Login
+              </a>
+            ),
+            duration: 5000,
           });
           return;
         }
 
         if (!isPremium) {
           toast({
-            title: "Premium Feature",
-            description: "Upgrade to Premium to upload files.",
-            variant: "destructive",
+            title: "Premium feature",
+            description:
+              "Unlock file uploads and accelerate your development with AI-powered design imports!",
+            action: (
+              <a
+                href="/pricing"
+                className="inline-flex h-8 items-center justify-center rounded-md bg-primary px-3 text-xs font-medium text-primary-foreground"
+              >
+                Upgrade
+              </a>
+            ),
+            duration: 5000,
           });
           return;
         }
