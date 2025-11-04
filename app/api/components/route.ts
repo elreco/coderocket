@@ -229,6 +229,7 @@ export async function POST(req: Request) {
       updatedImages,
       uploadedFilesInfo,
       currentFilesContext,
+      lastUserMessage,
     } = await validateRequest(
       id,
       image,
@@ -238,10 +239,165 @@ export async function POST(req: Request) {
       selectedVersion,
     );
 
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      return new Response(JSON.stringify({ error: "User not authenticated" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    const version = lastUserMessage.version + 1;
+
+    let filesData;
+    if (uploadedFilesInfo.length > 0) {
+      filesData = updatedImages.map((url, index) => {
+        const fileInfo = uploadedFilesInfo.find((f) => f.path === url);
+        const existingFile = Array.isArray(lastUserMessage.files)
+          ? (
+              lastUserMessage.files as Array<{
+                url: string;
+                order: number;
+                type?: string;
+                mimeType?: string;
+                source?: string;
+              }>
+            ).find((f) => f.url === url)
+          : null;
+
+        if (fileInfo) {
+          const result: {
+            url: string;
+            order: number;
+            type: string;
+            mimeType: string;
+            source?: string;
+          } = {
+            url,
+            order: index,
+            type: fileInfo.type,
+            mimeType: fileInfo.mimeType,
+          };
+
+          if (fileInfo.source) {
+            result.source = fileInfo.source;
+          } else if (existingFile?.source) {
+            result.source = existingFile.source;
+          }
+
+          return result;
+        }
+
+        if (existingFile) {
+          return {
+            url,
+            order: index,
+            type: existingFile.type || "image",
+            mimeType: existingFile.mimeType || "application/octet-stream",
+            ...(existingFile.source && { source: existingFile.source }),
+          };
+        }
+
+        return { url, order: index };
+      });
+    } else {
+      filesData = [] as {
+        url: string;
+        order: number;
+        type: string;
+        mimeType: string;
+        source?: string;
+      }[];
+    }
+
+    const subscription = await getSubscription();
+    let subscriptionType = "trial";
+    if (subscription) {
+      subscriptionType =
+        subscription.prices?.products?.name?.toLowerCase() || "trial";
+    }
+
+    if (version > 0) {
+      const { error: insertError } = await supabase.from("messages").insert({
+        chat_id: id,
+        screenshot: null,
+        version,
+        content: updatedPrompt,
+        role: "user",
+        prompt_image: updatedImages.length > 0 ? updatedImages[0] : null,
+        files: filesData,
+        input_tokens: 0,
+        subscription_type: subscriptionType,
+        cache_creation_input_tokens: 0,
+        cache_read_input_tokens: 0,
+      });
+
+      if (insertError) {
+        console.error("Error inserting user message:", insertError);
+        return new Response(
+          JSON.stringify({ error: "Failed to create user message" }),
+          {
+            status: 500,
+            headers: { "Content-Type": "application/json" },
+          },
+        );
+      }
+    } else {
+      const updateData: {
+        version: number;
+        prompt_image?: string | null;
+        files?: {
+          url: string;
+          order: number;
+          type?: string;
+          mimeType?: string;
+          source?: string;
+        }[];
+        subscription_type: string;
+      } = {
+        version,
+        prompt_image:
+          updatedImages.length > 0
+            ? updatedImages[0]
+            : lastUserMessage.prompt_image,
+        files:
+          filesData.length > 0
+            ? filesData
+            : (lastUserMessage.files as {
+                url: string;
+                order: number;
+                type?: string;
+                mimeType?: string;
+                source?: string;
+              }[]) || [],
+        subscription_type: subscriptionType,
+      };
+
+      const { error: updateError } = await supabase
+        .from("messages")
+        .update(updateData)
+        .eq("chat_id", id)
+        .eq("version", -1);
+
+      if (updateError) {
+        console.error("Error updating message:", updateError);
+        return new Response(
+          JSON.stringify({ error: "Failed to update user message" }),
+          {
+            status: 500,
+            headers: { "Content-Type": "application/json" },
+          },
+        );
+      }
+    }
+
     const { messagesToOpenAI: messages } = await buildMessagesToOpenAi(
       messagesFromDatabase,
       updatedPrompt,
-      updatedImages, // Le chemin vers le screenshot capturé si disponible ou tableau d'images
+      updatedImages,
       selectedVersion,
       uploadedFilesInfo,
       currentFilesContext,
@@ -249,35 +405,6 @@ export async function POST(req: Request) {
 
     // Add detailed logging for debugging
     // Add detailed logging for debugging cloning issues
-    console.log("=== AI Generation Debug Info ===");
-    console.log("Chat ID:", id);
-    console.log("Framework:", framework);
-    console.log("Messages count:", messages.length);
-    console.log("Prompt length:", updatedPrompt.length);
-    console.log("Images count:", updatedImages.length);
-    console.log(
-      "Is clone request:",
-      updatedPrompt.includes("Clone this website:"),
-    );
-
-    if (updatedPrompt.includes("Clone this website:")) {
-      console.log(
-        "Clone URL:",
-        updatedPrompt.split("Clone this website: ")[1]?.split("\n")[0],
-      );
-      console.log(
-        "First 200 chars of clone prompt:",
-        updatedPrompt.substring(0, 200),
-      );
-    }
-
-    // Log the actual prompt being sent to AI (truncated for readability)
-    console.log(
-      "Final prompt preview:",
-      updatedPrompt.substring(0, 500) + "...",
-    );
-
-    console.log("=== Starting AI Stream ===");
 
     // Fetch active integrations for this chat
     const { getActiveChatIntegrations, buildIntegrationContext } = await import(
@@ -285,10 +412,6 @@ export async function POST(req: Request) {
     );
     const chatIntegrations = await getActiveChatIntegrations(id);
     const integrationContext = await buildIntegrationContext(chatIntegrations);
-
-    console.log("=== Integration Context ===");
-    console.log("Active integrations:", chatIntegrations.length);
-    console.log("Integration context length:", integrationContext.length);
 
     // Calculate input tokens to prevent context overflow
     const baseSystemPrompt =
@@ -404,6 +527,7 @@ export async function POST(req: Request) {
           updatedImages,
           finalFinishReason,
           uploadedFilesInfo,
+          version,
         );
       },
       onError: (error) => {
@@ -464,6 +588,7 @@ const buildMessagesToOpenAi = async (
     path: string;
     type: "image" | "pdf" | "text";
     mimeType: string;
+    source?: string;
   }[],
   currentFilesContext?: string,
 ) => {
@@ -613,9 +738,14 @@ const buildMessagesToOpenAi = async (
         const response = await fetch(`${storageUrl}/${filePath}`);
         const textContent = await response.text();
 
+        const isFigmaFile = fileInfo.source === "figma";
+        const filePrefix = isFigmaFile
+          ? `\n\n<attached_file filename="${filePath.split("/").pop()}" type="figma-design">\n⚠️ IMPORTANT: This is a Figma design specification. You MUST preserve all existing code and components in the project. Only ADD new pages/components based on this design. DO NOT replace or remove existing functionality.\n\n`
+          : `\n\n<attached_file filename="${filePath.split("/").pop()}">\n`;
+
         finalMessageContent.push({
           type: "text",
-          text: `\n\n<attached_file filename="${filePath.split("/").pop()}">\n${textContent}\n</attached_file>\n\n`,
+          text: `${filePrefix}${textContent}\n</attached_file>\n\n`,
         });
       } else {
         finalMessageContent.push({
@@ -660,8 +790,10 @@ const validateRequest = async (
     path: string;
     type: "image" | "pdf" | "text";
     mimeType: string;
+    source?: string;
   }[];
   currentFilesContext: string;
+  lastUserMessage: Tables<"messages">;
 }> => {
   const supabase = await createClient();
   const {
@@ -952,6 +1084,7 @@ Recreate the visual layout and core functionality of this website using modern w
     path: string;
     type: "image" | "pdf" | "text";
     mimeType: string;
+    source?: string;
   }[] = [];
 
   // Add clone screenshot if available
@@ -960,7 +1093,8 @@ Recreate the visual layout and core functionality of this website using modern w
     uploadedFilesInfo.push({
       path: cloneScreenshot,
       type: "image",
-      mimeType: "image/png",
+      mimeType: "image/jpeg",
+      source: "clone",
     });
   }
 
@@ -968,8 +1102,14 @@ Recreate the visual layout and core functionality of this website using modern w
   if (files.length > 0) {
     const uploadResult = await uploadFiles(files, user?.id);
     if (uploadResult.success) {
-      uploadedFilesInfo.push(...uploadResult.uploadedFiles);
-      uploadResult.uploadedFiles.forEach((file) => {
+      uploadResult.uploadedFiles.forEach((file, index) => {
+        const originalFile = files[index];
+        const isFigmaFile = originalFile?.name.toLowerCase().includes("figma");
+
+        uploadedFilesInfo.push({
+          ...file,
+          source: isFigmaFile ? "figma" : undefined,
+        });
         updatedImages.push(file.path);
       });
     }
@@ -978,8 +1118,12 @@ Recreate the visual layout and core functionality of this website using modern w
   else if (image) {
     const uploadResult = await uploadFiles([image], user?.id);
     if (uploadResult.success) {
-      uploadedFilesInfo.push(...uploadResult.uploadedFiles);
       uploadResult.uploadedFiles.forEach((file) => {
+        const isFigmaFile = image.name.toLowerCase().includes("figma");
+        uploadedFilesInfo.push({
+          ...file,
+          source: isFigmaFile ? "figma" : undefined,
+        });
         updatedImages.push(file.path);
       });
     }
@@ -991,13 +1135,12 @@ Recreate the visual layout and core functionality of this website using modern w
       const parsedFiles = parseFileItems(lastUserMessage.files);
       parsedFiles.forEach((file) => {
         updatedImages.push(file.url);
-        if (file.type && file.mimeType) {
-          uploadedFilesInfo.push({
-            path: file.url,
-            type: file.type as "image" | "pdf" | "text",
-            mimeType: file.mimeType,
-          });
-        }
+        uploadedFilesInfo.push({
+          path: file.url,
+          type: (file.type as "image" | "pdf" | "text") || "image",
+          mimeType: file.mimeType || "application/octet-stream",
+          source: file.source,
+        });
       });
     } else if (lastUserMessage.prompt_image) {
       updatedImages.push(lastUserMessage.prompt_image);
@@ -1008,10 +1151,11 @@ Recreate the visual layout and core functionality of this website using modern w
     messagesFromDatabase,
     subscription,
     framework: (chat.framework || "react") as Framework,
-    updatedPrompt, // Contient maintenant le prompt détaillé avec tous les détails du site
+    updatedPrompt,
     updatedImages,
     uploadedFilesInfo,
     currentFilesContext,
+    lastUserMessage,
   };
 };
 
@@ -1026,7 +1170,9 @@ const updateDataAfterCompletion = async (
     path: string;
     type: "image" | "pdf" | "text";
     mimeType: string;
+    source?: string;
   }[],
+  version: number,
 ) => {
   const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
@@ -1036,31 +1182,13 @@ const updateDataAfterCompletion = async (
     throw new Error("User not authenticated");
   }
 
-  const subscription = await getSubscription();
-  let subscriptionType = "trial";
-  if (subscription) {
-    subscriptionType =
-      subscription.prices?.products?.name?.toLowerCase() || "trial";
-  }
-
   const chat = await fetchChatById(chatId);
   if (!chat) return console.error("Could not get chat data");
-
-  const lastUserMessage = await fetchLastUserMessageByChatId(chatId);
-  if (!lastUserMessage) return console.error("Could not get chat messages");
-  const newMessages = [];
 
   if (!text) {
     console.error("❌ updateDataAfterCompletion: No completion text provided");
     return;
   }
-
-  console.log("=== updateDataAfterCompletion Debug ===");
-  console.log("Text length:", text.length);
-  console.log("Chat ID:", chatId);
-  console.log("Finish reason:", finishReason);
-
-  const version = lastUserMessage.version + 1;
 
   // FIXED: Use previous artifact code from messages instead of chats table
   const previousArtifactCode =
@@ -1105,116 +1233,55 @@ const updateDataAfterCompletion = async (
   const cacheCreationInputTokens = 0;
   const cacheReadInputTokens = usage.cachedInputTokens ?? 0;
 
-  let filesData;
-  if (uploadedFilesInfo.length > 0) {
-    filesData = updatedImages.map((url, index) => {
-      const fileInfo = uploadedFilesInfo.find((f) => f.path === url);
-      const existingFile = Array.isArray(lastUserMessage.files)
-        ? (
-            lastUserMessage.files as Array<{
-              url: string;
-              order: number;
-              source?: string;
-            }>
-          ).find((f) => f.url === url)
-        : null;
-
-      if (fileInfo) {
-        const result: {
-          url: string;
-          order: number;
-          type: string;
-          mimeType: string;
-          source?: string;
-        } = {
-          url,
-          order: index,
-          type: fileInfo.type,
-          mimeType: fileInfo.mimeType,
-        };
-
-        if (existingFile?.source) {
-          result.source = existingFile.source;
-        }
-
-        return result;
-      }
-      return { url, order: index };
-    });
-  } else {
-    filesData = [] as {
-      url: string;
-      order: number;
-      type: string;
-      mimeType: string;
-      source?: string;
-    }[];
-  }
-
-  if (version > 0) {
-    newMessages.push({
-      chat_id: chatId,
-      screenshot: null,
-      version,
-      content: updatedPrompt,
-      role: "user",
-      prompt_image: updatedImages.length > 0 ? updatedImages[0] : null,
-      files: filesData,
+  const { error: updateUserError } = await supabase
+    .from("messages")
+    .update({
       input_tokens: usage.inputTokens ?? 0,
-      subscription_type: subscriptionType,
       cache_creation_input_tokens: cacheCreationInputTokens,
       cache_read_input_tokens: cacheReadInputTokens,
-    });
-  } else {
-    const { error: updateError } = await supabase
-      .from("messages")
-      .update({
-        version,
-        prompt_image: updatedImages.length > 0 ? updatedImages[0] : null,
-        files: filesData,
-        input_tokens: usage.inputTokens ?? 0,
-        cache_creation_input_tokens: cacheCreationInputTokens,
-        cache_read_input_tokens: cacheReadInputTokens,
-        subscription_type: subscriptionType,
-      })
-      .eq("chat_id", chatId)
-      .eq("version", -1);
+    })
+    .eq("chat_id", chatId)
+    .eq("version", version)
+    .eq("role", "user");
 
-    if (updateError) {
-      console.error("Error updating message:", updateError);
-    }
+  if (updateUserError) {
+    console.error("Error updating user message:", updateUserError);
   }
 
   const theme = extractDataTheme(text);
 
-  // If we have a finishReason, add a special marker at the end of the content
-  // that the client can detect and remove
   let content = text;
   let hasError = false;
   if (finishReason === "length" || finishReason === "error") {
     content = `${text}\n\n<!-- FINISH_REASON: ${finishReason} -->`;
     hasError = true;
   }
-  newMessages.push({
-    chat_id: chatId,
-    screenshot: null,
-    version,
-    content: content,
-    theme,
-    role: "assistant",
-    output_tokens: usage.outputTokens ?? 0,
-    subscription_type: subscriptionType,
-    artifact_code: artifactCode,
-    cache_creation_input_tokens: cacheCreationInputTokens,
-    cache_read_input_tokens: cacheReadInputTokens,
-  });
 
-  const { error: newMessagesError } = await supabase
+  const subscription = await getSubscription();
+  let subscriptionType = "trial";
+  if (subscription) {
+    subscriptionType =
+      subscription.prices?.products?.name?.toLowerCase() || "trial";
+  }
+
+  const { error: insertAssistantError } = await supabase
     .from("messages")
-    .insert(newMessages)
-    .eq("chat_id", chatId);
-  if (newMessagesError) {
-    console.error("Error inserting new messages:", newMessagesError);
+    .insert({
+      chat_id: chatId,
+      screenshot: null,
+      version,
+      content: content,
+      theme,
+      role: "assistant",
+      output_tokens: usage.outputTokens ?? 0,
+      subscription_type: subscriptionType,
+      artifact_code: artifactCode,
+      cache_creation_input_tokens: cacheCreationInputTokens,
+      cache_read_input_tokens: cacheReadInputTokens,
+    });
+
+  if (insertAssistantError) {
+    console.error("Error inserting assistant message:", insertAssistantError);
   }
 
   // Track version usage for accurate pricing
@@ -1224,13 +1291,13 @@ const updateDataAfterCompletion = async (
     if (hasError) {
       return;
     }
+
     if (chat.framework === Framework.HTML) {
       await takeScreenshot(chatId, version, theme, Framework.HTML);
     } else {
       await buildComponent(chatId, version);
     }
 
-    // Auto-sync to GitHub après génération d'une nouvelle version
     await autoSyncToGithubAfterGeneration(chatId, version);
   });
 };

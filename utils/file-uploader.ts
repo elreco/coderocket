@@ -5,6 +5,7 @@ export interface UploadedFileInfo {
   path: string;
   type: "image" | "pdf" | "text";
   mimeType: string;
+  source?: string;
 }
 
 export async function uploadFiles(

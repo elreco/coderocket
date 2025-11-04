@@ -755,7 +755,6 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
             </div>
           )}
           {activeTab === "chat" &&
-            !isLoading &&
             messages
               .filter((m) => m.version === selectedVersion)
               .map((m) => <ComponentChatFiles message={m} key={m.id} />)}
@@ -854,7 +853,14 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
             className={cn(
               "flex flex-col px-2 py-6 sm:px-4",
               "transition-all duration-200",
-              isLoading && input ? "block" : "hidden",
+              isLoading &&
+                input &&
+                (selectedVersion ?? 0) > 0 &&
+                !messages.some(
+                  (m) => m.version === selectedVersion && m.role === "user",
+                )
+                ? "block"
+                : "hidden",
             )}
           >
             <div className="flex flex-col gap-3 rounded-lg border border-primary/20 bg-primary/5 p-2 transition-all">
@@ -873,7 +879,7 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
           </div>
           <div
             className={cn(
-              "flex flex-col px-2 py-6 sm:px-4",
+              "flex flex-col p-3",
               "transition-all duration-200",
               isLoading ? "block" : "hidden",
             )}

@@ -153,6 +153,7 @@ export default function ComponentCompletion({
   const [defaultImage, setDefaultImage] = useState<string | null>(null);
   const [defaultFiles, setDefaultFiles] = useState<string[]>([]);
   const [sidebarTab, setSidebarTab] = useState("chat");
+  const hasInitiatedRef = useRef<Record<string, boolean>>({});
 
   useEffect(() => {
     uploadFilesRef.current = uploadFiles;
@@ -293,9 +294,8 @@ export default function ComponentCompletion({
         setIsLengthError(false);
       }
 
-      if (msgs?.length === 1) {
+      if (msgs?.length === 1 && userMsg && !assistantMsg) {
         setCanvas(true);
-        complete(userMsg?.content || "");
         setInput(userMsg?.content || "");
         setDefaultImage(userMsg?.prompt_image || null);
 
@@ -309,7 +309,12 @@ export default function ComponentCompletion({
             : [];
         setDefaultFiles(filesFromMsg);
 
-        setIsLoading(true);
+        if (!hasInitiatedRef.current[chatId]) {
+          hasInitiatedRef.current[chatId] = true;
+          setIsLoading(true);
+          setIsSubmitting(true);
+          complete(userMsg.content || "");
+        }
         return;
       }
       if (chat?.framework !== Framework.HTML && chat.framework) {
@@ -662,7 +667,7 @@ export default function ComponentCompletion({
     }
   }, [completion, isLoading, currentGeneratingFile]);
 
-  const handleSubmitToAI = (inputData: string) => {
+  const handleSubmitToAI = async (inputData: string) => {
     if (isSubmitting) return;
     setIsSubmitting(true);
     setForceBuild(true);
@@ -670,9 +675,13 @@ export default function ComponentCompletion({
     setWebcontainerReady(false);
     setChatFiles([]);
     setCanvas(true);
-    setIsLoading(true);
     setCurrentGeneratingFile(null);
+
+    const newVersion = (selectedVersion ?? 0) + 1;
+    setSelectedVersion(newVersion);
+
     complete(inputData);
+    setIsLoading(true);
   };
 
   const handleVersionSelect = (version: number, tabName?: string) => {
@@ -1102,22 +1111,29 @@ export default function ComponentCompletion({
           filter: `chat_id=eq.${chatId}`,
         },
         async (payload) => {
-          setMessages((prevMessages) =>
-            prevMessages.map((message) =>
+          setMessages((prevMessages) => {
+            const updatedMessages = prevMessages.map((message) =>
               message.id === payload.new.id
                 ? { ...message, ...payload.new }
                 : message,
-            ),
-          );
+            );
+            return updatedMessages;
+          });
 
-          // Check if this message is for the selected version and if is_built is true
+          if (
+            (payload.old.version === -1 || payload.old.version === undefined) &&
+            payload.new.version === 0
+          ) {
+            setSelectedVersion(0);
+          }
+
           if (
             payload.new.version === selectedVersion &&
             payload.new.is_built === true &&
             !isLoading
           ) {
             setWebcontainerReady(true);
-            setForceBuild(false); // Reset force build flag when build is complete
+            setForceBuild(false);
           }
         },
       )
@@ -1126,7 +1142,7 @@ export default function ComponentCompletion({
     return () => {
       channel.unsubscribe();
     };
-  }, [selectedVersion, isLoading]);
+  }, [chatId, selectedVersion, isLoading]);
 
   return (
     <ComponentContext.Provider value={contextValue}>
