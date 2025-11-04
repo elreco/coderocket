@@ -16,6 +16,7 @@ export function BuyExtraMessages() {
   const { toast } = useToast();
   const [pairs, setPairs] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
+  const buyRockets = searchParams.get("buy_rockets");
 
   // Vérifier si l'utilisateur vient d'acheter des messages supplémentaires
   const extraMessages = searchParams.get("extra_messages");
@@ -25,16 +26,27 @@ export function BuyExtraMessages() {
   if (extraMessages) {
     toast({
       title: "Purchase successful!",
-      description: `You have successfully purchased ${versions || Math.ceil(parseInt(extraMessages) / 2)} extra version${
+      description: `You have successfully purchased ${versions || Math.ceil(parseInt(extraMessages) / 2)} Rocket${
         (versions && parseInt(versions) > 1) ||
         (!versions && Math.ceil(parseInt(extraMessages) / 2) > 1)
           ? "s"
           : ""
-      }.`,
+      }! 🚀`,
       duration: 5000,
     });
     // Rediriger pour supprimer le paramètre de l'URL
     router.replace("/account");
+  }
+
+  // Scroll to this section if coming from pricing page
+  if (buyRockets && typeof window !== "undefined") {
+    setTimeout(() => {
+      const element = document.getElementById("buy-rockets-section");
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+      router.replace("/account");
+    }, 100);
   }
 
   const handleIncrement = () => {
@@ -83,9 +95,17 @@ export function BuyExtraMessages() {
   const totalPrice = pairs;
 
   return (
-    <Card className="w-full rounded-md border bg-card p-5">
-      <h3 className="mb-1 text-2xl font-medium">Buy Extra Versions</h3>
-      <p className="mb-4">Need more versions? Purchase versions for $1 each.</p>
+    <Card
+      id="buy-rockets-section"
+      className="w-full rounded-md border bg-card p-5"
+    >
+      <h3 className="mb-1 flex items-center gap-2 text-2xl font-medium">
+        🚀 Buy Rockets
+      </h3>
+      <p className="mb-4">
+        Need more generations? Purchase Rockets for $1 each. Use them anytime
+        you reach your monthly limit to keep creating without interruption.
+      </p>
 
       <div className="mb-6 flex flex-col space-y-4">
         <div className="flex items-center space-x-4">
@@ -111,20 +131,22 @@ export function BuyExtraMessages() {
           </Button>
 
           <div className="ml-4 text-lg font-medium">
-            ${totalPrice.toFixed(2)} for {pairs} versions
+            ${totalPrice.toFixed(2)} for {pairs} 🚀 Rocket{pairs > 1 ? "s" : ""}
           </div>
         </div>
 
         <Button onClick={handlePurchase} className="w-1/2" loading={isLoading}>
           <ShoppingCart className="mr-2 size-4" />
-          Purchase {pairs} Versions
+          Purchase {pairs} Rocket{pairs > 1 ? "s" : ""}
         </Button>
       </div>
 
-      <div className="text-sm text-muted-foreground">
-        <p>
-          Extra versions never expire and can be used anytime you reach your
-          plan&apos;s limit.
+      <div className="rounded-lg bg-muted p-3 text-sm">
+        <p className="font-medium">What&apos;s a Rocket? 🚀</p>
+        <p className="mt-1 text-muted-foreground">
+          Each Rocket = 10,000 AI tokens. Use Rockets when you reach your
+          monthly limit to keep creating. Rockets never expire and stack with
+          your plan.
         </p>
       </div>
     </Card>

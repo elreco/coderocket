@@ -17,6 +17,8 @@ export const promptEnhancer = async (
   prompt: string,
   framework: Framework,
   conversationContext?: ConversationContext[],
+  userId?: string,
+  chatId?: string,
 ): Promise<string> => {
   if (prompt.startsWith("Clone this website:")) {
     return prompt;
@@ -49,7 +51,7 @@ export const promptEnhancer = async (
     `;
   }
 
-  const { text } = await generateText({
+  const { text, usage } = await generateText({
     messages: [
       {
         role: "user",
@@ -74,6 +76,34 @@ export const promptEnhancer = async (
     toolChoice: "none",
     maxOutputTokens: 800,
   });
+
+  if (userId && chatId && usage) {
+    const { calculateTokenCost } = await import("./token-pricing");
+    const cost = calculateTokenCost(
+      {
+        input_tokens: usage.inputTokens ?? 0,
+        output_tokens: usage.outputTokens ?? 0,
+        cache_creation_input_tokens: 0,
+        cache_read_input_tokens: usage.cachedInputTokens ?? 0,
+      },
+      "claude-haiku-4-5",
+    );
+
+    const { createClient } = await import("./supabase/server");
+    const supabase = await createClient();
+
+    await supabase.from("token_usage_tracking").insert({
+      user_id: userId,
+      chat_id: chatId,
+      usage_type: "improve_prompt",
+      model_used: "claude-haiku-4-5",
+      input_tokens: usage.inputTokens ?? 0,
+      output_tokens: usage.outputTokens ?? 0,
+      cache_creation_input_tokens: 0,
+      cache_read_input_tokens: usage.cachedInputTokens ?? 0,
+      cost_usd: cost,
+    });
+  }
 
   return text;
 };

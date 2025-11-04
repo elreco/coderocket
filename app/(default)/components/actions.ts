@@ -8,19 +8,18 @@ import { getSubscription } from "@/app/supabase-server";
 import {
   Framework,
   MAX_SEARCH_LENGTH,
-  TRIAL_PLAN_MESSAGES_PER_MONTH,
   defaultTheme,
-  getMaxMessagesPerPeriod,
   MAX_TOKENS_PER_REQUEST,
   PREMIUM_CHAR_LIMIT,
 } from "@/utils/config";
 import { defaultArtifactCode } from "@/utils/default-artifact-code";
 import { uploadFiles } from "@/utils/file-uploader";
-import { createClient } from "@/utils/supabase/server";
 import {
-  trackVersionUsage,
-  getUserUsageCount,
-} from "@/utils/version-usage-tracking";
+  ROCKET_LIMITS_PER_PLAN,
+  tokensToRockets,
+} from "@/utils/rocket-conversion";
+import { createClient } from "@/utils/supabase/server";
+import { getUserTokenUsage } from "@/utils/token-pricing";
 
 import { buildComponent } from "./[slug]/actions";
 
@@ -252,20 +251,22 @@ export const createChat = async (prompt: string, formData: FormData) => {
       1,
     );
 
-    // Use new tracking system for accurate counting
-    const usageResult = await getUserUsageCount(
+    // Use token-based tracking system
+    const tokenUsage = await getUserTokenUsage(
       user.id,
       currentPeriodStart,
       currentPeriodEnd,
     );
-    const count = usageResult.success ? usageResult.count : 0;
 
-    if (count >= TRIAL_PLAN_MESSAGES_PER_MONTH) {
-      // Si l'utilisateur a des messages supplémentaires, utiliser un message supplémentaire
+    const limits = ROCKET_LIMITS_PER_PLAN.free;
+    const rocketsUsed = tokensToRockets(
+      tokenUsage.input_tokens + tokenUsage.output_tokens,
+    );
+
+    if (rocketsUsed >= limits.monthly_rockets) {
       if (extraMessages > 0) {
         const decremented = await decrementExtraMessagesCount(user.id);
         if (!decremented) {
-          // Définir la date de réinitialisation au premier jour du mois prochain
           const resetDate = new Date(
             today.getFullYear(),
             today.getMonth() + 1,
@@ -273,16 +274,15 @@ export const createChat = async (prompt: string, formData: FormData) => {
           );
           return {
             error: {
-              title: "Daily message limit reached",
-              description: `You have reached your limit of ${TRIAL_PLAN_MESSAGES_PER_MONTH / 2} versions for this month. Your limit will reset next month (${format(
+              title: "Rocket limit reached",
+              description: `You have reached your limit of ${limits.monthly_rockets} 🚀 Rockets for this month. Your limit will reset next month (${format(
                 resetDate,
                 "d MMMM yyyy",
-              )}). Upgrade to a paid plan or purchase extra messages to continue.`,
+              )}). Upgrade to a paid plan or purchase Rockets to continue.`,
             },
           };
         }
       } else {
-        // Définir la date de réinitialisation au premier jour du mois prochain
         const resetDate = new Date(
           today.getFullYear(),
           today.getMonth() + 1,
@@ -290,11 +290,11 @@ export const createChat = async (prompt: string, formData: FormData) => {
         );
         return {
           error: {
-            title: "Daily message limit reached",
-            description: `You have reached your limit of ${TRIAL_PLAN_MESSAGES_PER_MONTH / 2} versions for this month. Your limit will reset next month (${format(
+            title: "Rocket limit reached",
+            description: `You have reached your limit of ${limits.monthly_rockets} 🚀 Rockets for this month. Your limit will reset next month (${format(
               resetDate,
               "d MMMM yyyy",
-            )}). Upgrade to a paid plan or purchase extra messages to continue.`,
+            )}). Upgrade to a paid plan or purchase Rockets to continue.`,
           },
         };
       }
@@ -304,18 +304,24 @@ export const createChat = async (prompt: string, formData: FormData) => {
     const currentPeriodStart = new Date(subscription.current_period_start);
     const currentPeriodEnd = new Date(subscription.current_period_end);
 
-    // Use new tracking system for accurate counting
-    const usageResult = await getUserUsageCount(
+    // Use token-based tracking system
+    const tokenUsage = await getUserTokenUsage(
       user.id,
       currentPeriodStart,
       currentPeriodEnd,
     );
-    const count = usageResult.success ? usageResult.count : 0;
 
-    const maxMessagesPerPeriod = getMaxMessagesPerPeriod(subscription);
+    const planName =
+      subscription.prices?.products?.name?.toLowerCase() || "free";
+    const limits =
+      ROCKET_LIMITS_PER_PLAN[planName as keyof typeof ROCKET_LIMITS_PER_PLAN] ||
+      ROCKET_LIMITS_PER_PLAN.free;
 
-    if (count >= maxMessagesPerPeriod) {
-      // Si l'utilisateur a des messages supplémentaires, utiliser un message supplémentaire
+    const rocketsUsed = tokensToRockets(
+      tokenUsage.input_tokens + tokenUsage.output_tokens,
+    );
+
+    if (rocketsUsed >= limits.monthly_rockets) {
       if (extraMessages > 0) {
         const decremented = await decrementExtraMessagesCount(user.id);
         if (!decremented) {
@@ -331,7 +337,7 @@ export const createChat = async (prompt: string, formData: FormData) => {
           return {
             error: {
               title: "You have reached the limit of your plan",
-              description: `You have reached your limit of ${maxMessagesPerPeriod / 2} versions for this ${subscription.prices?.interval}. This limit will reset on ${resetDate}. Go to My Account to see your usage or purchase extra messages.`,
+              description: `You have reached your limit of ${limits.monthly_rockets} 🚀 Rockets for this ${subscription.prices?.interval}. This limit will reset on ${resetDate}. Go to My Account to see your usage or purchase Rockets.`,
             },
           };
         }
@@ -348,7 +354,7 @@ export const createChat = async (prompt: string, formData: FormData) => {
         return {
           error: {
             title: "You have reached the limit of your plan",
-            description: `You have reached your limit of ${maxMessagesPerPeriod / 2} versions for this ${subscription.prices?.interval}. This limit will reset on ${resetDate}. Go to My Account to see your usage or purchase extra messages.`,
+            description: `You have reached your limit of ${limits.monthly_rockets} 🚀 Rockets for this ${subscription.prices?.interval}. This limit will reset on ${resetDate}. Go to My Account to see your usage or purchase Rockets.`,
           },
         };
       }
@@ -477,8 +483,7 @@ export const createChat = async (prompt: string, formData: FormData) => {
 
   await supabase.from("messages").insert(messageData);
 
-  // Track version usage for accurate pricing
-  await trackVersionUsage(user.id, data.id, messageData.version);
+  // Note: Token tracking is now done automatically in the API route
 
   const integrationId = formData.get("integrationId")?.toString();
   if (integrationId) {

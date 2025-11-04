@@ -186,7 +186,13 @@ export const improvePromptByChatId = async (chatId: string, prompt: string) => {
   if (chatError) {
     throw new Error(`Failed to fetch chat: ${chatError.message}`);
   }
-  return await promptEnhancer(prompt, chat?.framework as Framework);
+  return await promptEnhancer(
+    prompt,
+    chat?.framework as Framework,
+    undefined,
+    user.id,
+    chatId,
+  );
 };
 
 export const deleteVersionByMessageId = async (messageId: number) => {

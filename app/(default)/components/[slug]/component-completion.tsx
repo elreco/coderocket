@@ -71,11 +71,10 @@ import {
 import {
   Framework,
   MAX_VERSIONS_PER_COMPONENT,
-  TRIAL_PLAN_MESSAGES_PER_MONTH,
   crispWebsiteId,
-  getMaxMessagesPerPeriod,
 } from "@/utils/config";
 import { defaultArtifactCode } from "@/utils/default-artifact-code";
+import { ROCKET_LIMITS_PER_PLAN } from "@/utils/rocket-conversion";
 import { getArtifactCodeByVersion } from "@/utils/supabase/artifact-helpers";
 import { createClient } from "@/utils/supabase/client";
 
@@ -436,15 +435,13 @@ export default function ComponentCompletion({
               today.getMonth(),
               1,
             );
-            const maxMessagesPerPeriod = TRIAL_PLAN_MESSAGES_PER_MONTH;
-            // Définir la date de réinitialisation au premier jour du mois prochain
+            const maxRockets = ROCKET_LIMITS_PER_PLAN.free.monthly_rockets;
             const resetDate = new Date(
               today.getFullYear(),
               today.getMonth() + 1,
               1,
             );
 
-            // Utiliser currentPeriodStart dans le message pour indiquer la période en cours
             const currentPeriodFormatted = format(
               currentPeriodStart,
               "d MMMM yyyy",
@@ -454,14 +451,13 @@ export default function ComponentCompletion({
             setCanvas(true);
             toast({
               variant: "destructive",
-              title: "Monthly message limit reached",
+              title: "Monthly Rocket limit reached",
               description: (
                 <div>
                   <p>
-                    You have reached your limit of {maxMessagesPerPeriod / 2}{" "}
-                    versions for this month (starting {currentPeriodFormatted}).
-                    This limit will reset next month (
-                    {format(resetDate, "d MMMM yyyy")}).
+                    You have reached your limit of {maxRockets} 🚀 Rockets for
+                    this month (starting {currentPeriodFormatted}). This limit
+                    will reset next month ({format(resetDate, "d MMMM yyyy")}).
                   </p>
                   <div className="mt-2 flex flex-col space-y-2">
                     <Button
@@ -471,11 +467,11 @@ export default function ComponentCompletion({
                       Upgrade to a paid plan
                     </Button>
                     <Button
-                      onClick={() => router.push("/account?buy_extra=true")}
+                      onClick={() => router.push("/account?buy_rockets=true")}
                       variant="outline"
                       className="w-full"
                     >
-                      Buy extra versions ($1 each)
+                      Buy Rockets ($1 each)
                     </Button>
                   </div>
                 </div>
@@ -484,7 +480,12 @@ export default function ComponentCompletion({
             });
             return;
           }
-          const maxMessagesPerPeriod = getMaxMessagesPerPeriod(subscription);
+          const planName =
+            subscription.prices?.products?.name?.toLowerCase() || "free";
+          const maxRockets =
+            ROCKET_LIMITS_PER_PLAN[
+              planName as keyof typeof ROCKET_LIMITS_PER_PLAN
+            ]?.monthly_rockets || ROCKET_LIMITS_PER_PLAN.free.monthly_rockets;
           const currentPeriodStart = new Date(
             subscription.current_period_start,
           );
@@ -504,9 +505,9 @@ export default function ComponentCompletion({
             description: (
               <div>
                 <p>
-                  You have reached your limit of {maxMessagesPerPeriod / 2}{" "}
-                  versions for {subscription.prices?.interval}. This limit will
-                  reset on {resetDate}.
+                  You have reached your limit of {maxRockets} 🚀 Rockets for{" "}
+                  {subscription.prices?.interval}. This limit will reset on{" "}
+                  {resetDate}.
                 </p>
                 <div className="mt-2 flex flex-col space-y-2">
                   <Button
@@ -516,11 +517,11 @@ export default function ComponentCompletion({
                     Go to My Account
                   </Button>
                   <Button
-                    onClick={() => router.push("/account?buy_extra=true")}
+                    onClick={() => router.push("/account?buy_rockets=true")}
                     variant="outline"
                     className="w-full"
                   >
-                    Buy extra versions ($1 each)
+                    Buy Rockets ($1 each)
                   </Button>
                 </div>
               </div>

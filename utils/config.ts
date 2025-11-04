@@ -103,32 +103,9 @@ export enum Framework {
   HTML = "html",
 }
 
-export const getMaxMessagesPerPeriod = (
-  subscription: Tables<"subscriptions"> & {
-    prices: Partial<Tables<"prices">> | null;
-  },
-) => {
-  if (subscription.custom_messages_per_period) {
-    return subscription.custom_messages_per_period;
-  }
-  switch (subscription.prices?.description) {
-    case "Starter":
-      return STARTER_PLAN_MESSAGES_PER_PERIOD;
-    case "Pro":
-      return PRO_PLAN_MESSAGES_PER_PERIOD;
-    default:
-      return DEFAULT_MESSAGES_PER_PERIOD;
-  }
-};
-
 export const builderApiUrl = "https://react-builder.fly.dev";
 
 export const avatarApi = "https://api.dicebear.com/9.x/initials/svg?seed=";
-
-export const STARTER_PLAN_MESSAGES_PER_PERIOD = 100;
-export const PRO_PLAN_MESSAGES_PER_PERIOD = 300;
-export const DEFAULT_MESSAGES_PER_PERIOD = 100;
-export const TRIAL_PLAN_MESSAGES_PER_MONTH = 6;
 
 export const MAX_SEARCH_LENGTH = 50;
 
