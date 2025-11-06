@@ -36,6 +36,7 @@ export function TemplateCard({ template, isReverse }: TemplateCardProps) {
       id: template.seller.id,
       name: template.seller.full_name || "Anonymous seller",
     },
+    user_avatar_url: template.seller.avatar_url || undefined,
     href: `/templates/${template.id}`,
     price: template.price_cents,
     currency: template.currency,

@@ -18,6 +18,7 @@ export function ComponentCard({ chat, isReverse }: ComponentCardProps) {
       id: chat.user_id,
       name: chat.user_full_name || "Anonymous user",
     },
+    user_avatar_url: chat.user_avatar_url,
     href: `/components/${chat.slug || chat.chat_id}`,
     likes: chat.likes || 0,
     isLiked: chat.user_has_liked,

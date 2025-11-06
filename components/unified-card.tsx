@@ -19,6 +19,7 @@ import { avatarApi, Framework } from "@/utils/config";
 import { getRelativeDate } from "@/utils/date";
 
 import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
+import { Button } from "./ui/button";
 
 export interface UnifiedCardData {
   id: string;
@@ -29,7 +30,6 @@ export interface UnifiedCardData {
   author?: {
     id: string;
     name: string;
-    avatar_url?: string;
   };
   href: string;
   price?: number;
@@ -42,6 +42,7 @@ export interface UnifiedCardData {
   isLiked?: boolean;
   isRemixed?: boolean;
   isOwnItem?: boolean;
+  user_avatar_url?: string;
   cloneUrl?: string;
   badges?: Array<{
     text: string;
@@ -70,7 +71,6 @@ export function UnifiedCard({
   className,
 }: UnifiedCardProps) {
   const router = useRouter();
-
   const FrameworkIcon =
     data.framework === Framework.REACT
       ? SiReact
@@ -120,7 +120,14 @@ export function UnifiedCard({
           }}
         >
           <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-all duration-300 ease-in-out group-hover:opacity-100">
-            <Eye className="size-8 translate-y-4 text-white transition-transform duration-300 ease-in-out group-hover:translate-y-0" />
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex translate-y-4 items-center gap-2 transition-transform duration-300 ease-in-out group-hover:translate-y-0"
+            >
+              <Eye className="size-8 text-white" />
+              <span>View Component</span>
+            </Button>
           </div>
 
           {/* Top Right Badges */}
@@ -185,8 +192,11 @@ export function UnifiedCard({
       <div className="flex h-24 flex-col">
         {/* Title and Author */}
         <div className="mt-2 flex items-center gap-2">
-          <Avatar className="size-8 border border-border">
-            <AvatarImage src={data.author?.avatar_url || undefined} />
+          <Avatar
+            className="size-8 border border-border"
+            onClick={handleAuthorClick}
+          >
+            <AvatarImage src={data.user_avatar_url || undefined} />
             <AvatarFallback>
               <img
                 src={`${avatarApi}${data.author?.name}`}
@@ -196,7 +206,7 @@ export function UnifiedCard({
             </AvatarFallback>
           </Avatar>
           <div className="flex flex-col gap-0.5">
-            <h1 className="line-clamp-1 max-w-full whitespace-pre-wrap text-xs font-medium text-foreground hover:text-foreground/80">
+            <h1 className="line-clamp-1 max-w-full break-all text-xs font-medium text-foreground hover:text-foreground/80">
               {data.title}
             </h1>
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">

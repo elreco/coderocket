@@ -497,8 +497,6 @@ function formatListingForUnifiedCard(
   listing: MarketplaceListingWithRelations,
   currentUserId?: string,
 ): UnifiedCardData {
-  console.log("Formatting listing:", listing); // Debug
-  console.log("Screenshot URL:", listing.screenshot); // Debug
   return {
     id: listing.id,
     title: listing.title,

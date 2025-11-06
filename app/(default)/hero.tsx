@@ -7,6 +7,7 @@ import {
   SiAngular,
   SiSupabase,
 } from "@icons-pack/react-simple-icons";
+import { motion } from "framer-motion";
 import {
   Terminal,
   Paintbrush,
@@ -73,6 +74,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { UnifiedCard, UnifiedCardData } from "@/components/unified-card";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { Tables } from "@/types_db";
@@ -282,7 +284,26 @@ const frameworkConfig = {
   [Framework.HTML]: { icon: SiHtml5, badge: null, disabled: false },
 };
 
-export default function Hero() {
+interface PopularComponent {
+  chat_id: string;
+  title: string;
+  screenshot?: string | null;
+  framework: string;
+  created_at: string;
+  user_id: string;
+  user_full_name?: string;
+  user_avatar_url?: string;
+  slug: string;
+  likes: number;
+  user_has_liked: boolean;
+  clone_url?: string;
+}
+
+interface HeroProps {
+  popularComponents?: PopularComponent[];
+}
+
+export default function Hero({ popularComponents = [] }: HeroProps) {
   const supabase = createClient();
   const { toast } = useToast();
   const [prompt, setPrompt] = useState(() => {
@@ -291,6 +312,7 @@ export default function Hero() {
     }
     return "";
   });
+
   const [isVisible, setVisible] = useState(true);
   const [selectedTheme, setSelectedTheme] = useState(defaultTheme);
   const [selectedFramework, setSelectedFramework] = useState<Framework>(
@@ -328,7 +350,7 @@ export default function Hero() {
     null,
   );
   const isPremium = !!subscription;
-  const promptIdeasRef = useRef<HTMLDivElement>(null);
+  const [showPromptIdeasDialog, setShowPromptIdeasDialog] = useState(false);
 
   useEffect(() => {
     if (inputRef.current) {
@@ -676,6 +698,7 @@ export default function Hero() {
   const handleBadgeClick = (input: string) => {
     setPrompt(input);
     setGenerationMode("scratch");
+    setShowPromptIdeasDialog(false);
   };
 
   const handleButtonClick = useCallback(() => {
@@ -835,8 +858,8 @@ export default function Hero() {
         className="-top-40 left-0 md:-top-20 md:left-60"
         fill="hsl(var(--primary))"
       />
-      <div className="flex w-full flex-col items-center">
-        <div className="flex min-h-screen w-full flex-col items-center justify-center space-y-6">
+      <div className="flex min-h-[calc(100vh-20%)] w-full flex-col items-center justify-center space-y-6">
+        <div className="flex w-full flex-col items-center justify-center space-y-6">
           <Badge variant="secondary" className="mb-2 text-xs">
             formerly Tailwind AI
           </Badge>
@@ -1390,10 +1413,7 @@ export default function Hero() {
                               className="hover:bg-background"
                               disabled={loading}
                               onClick={() => {
-                                promptIdeasRef.current?.scrollIntoView({
-                                  behavior: "smooth",
-                                  block: "start",
-                                });
+                                setShowPromptIdeasDialog(true);
                               }}
                             >
                               <Lightbulb className="size-4" />
@@ -1534,23 +1554,24 @@ export default function Hero() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <div
-        ref={promptIdeasRef}
-        className="mt-16 w-full scroll-mt-24 px-4 pb-16"
+
+      <Dialog
+        open={showPromptIdeasDialog}
+        onOpenChange={setShowPromptIdeasDialog}
       >
-        <div className="mx-auto max-w-7xl">
-          <div className="mb-8 text-center">
-            <h2 className="mb-3 text-3xl font-bold tracking-tight">
+        <DialogContent className="mx-4 max-h-[80vh] max-w-4xl overflow-y-auto sm:mx-6">
+          <DialogHeader>
+            <DialogTitle className="text-2xl">
               Tailwind Component Prompt Ideas
-            </h2>
-            <p className="text-lg text-muted-foreground">
+            </DialogTitle>
+            <DialogDescription>
               Get inspired with these ready-to-use AI prompts for generating
               Tailwind components, dashboards, forms, and complete web
               applications
-            </p>
-          </div>
+            </DialogDescription>
+          </DialogHeader>
 
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-4 grid gap-6 md:grid-cols-2">
             {promptCategories.map((category, categoryIndex) => {
               const IconComponent = category.icon;
               return (
@@ -1578,7 +1599,6 @@ export default function Hero() {
                         onClick={() => {
                           if (loading) return;
                           handleBadgeClick(prompt.input);
-                          window.scrollTo({ top: 0, behavior: "smooth" });
                         }}
                         disabled={loading}
                         className={cn(
@@ -1608,8 +1628,64 @@ export default function Hero() {
               );
             })}
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {popularComponents.length > 0 && (
+        <div className="relative mt-3 w-full px-4 pb-10">
+          <div className="relative">
+            <div className="mb-6 flex flex-col items-start justify-start gap-2 md:flex-row md:items-center md:justify-between">
+              <div>
+                <h2 className="mb-0.5 text-base font-semibold">
+                  Most Popular Components
+                </h2>
+
+                <motion.p className="text-sm text-muted-foreground">
+                  Discover the most loved components created by our community.
+                </motion.p>
+              </div>
+
+              <Link href="/components">
+                <Button size="lg" variant="outline">
+                  <Rocket className="mr-2 size-4" />
+                  <span>Explore All Components</span>
+                </Button>
+              </Link>
+            </div>
+
+            <div className="relative">
+              <div>
+                <div className="grid auto-rows-fr grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                  {popularComponents.map((component) => {
+                    const cardData: UnifiedCardData = {
+                      id: component.chat_id,
+                      title: component.title || "Untitled",
+                      imageUrl: component.screenshot || undefined,
+                      framework: component.framework,
+                      createdAt: component.created_at,
+                      author: component.user_full_name
+                        ? {
+                            id: component.user_id,
+                            name: component.user_full_name,
+                          }
+                        : undefined,
+                      href: `/components/${component.slug}`,
+                      likes: component.likes || 0,
+                      isLiked: component.user_has_liked,
+                      user_avatar_url: component.user_avatar_url,
+                      cloneUrl: component.clone_url,
+                    };
+
+                    return (
+                      <UnifiedCard key={component.chat_id} data={cardData} />
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
     </Container>
   );
 }

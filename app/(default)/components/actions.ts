@@ -41,6 +41,7 @@ export type GetComponentsReturnType = {
   remix_chat_id: string;
   clone_url?: string;
   user_has_liked?: boolean;
+  screenshot?: string;
 };
 
 export const fetchChatById = async (idOrSlug: string) => {
@@ -561,8 +562,30 @@ export const getAllPublicChats = async (
       return [];
     }
 
-    if (user && data && data.length > 0) {
-      const chatIds = data.map((chat) => chat.chat_id);
+    if (!data || data.length === 0) {
+      return [];
+    }
+
+    const chatIds = data.map((chat) => chat.chat_id);
+
+    const { data: screenshots } = await supabase
+      .from("messages")
+      .select("chat_id, screenshot, version")
+      .in("chat_id", chatIds)
+      .eq("role", "assistant")
+      .not("screenshot", "is", null)
+      .order("version", { ascending: false });
+
+    const screenshotMap = new Map<string, string>();
+    if (screenshots) {
+      screenshots.forEach((msg) => {
+        if (!screenshotMap.has(msg.chat_id) && msg.screenshot) {
+          screenshotMap.set(msg.chat_id, msg.screenshot);
+        }
+      });
+    }
+
+    if (user) {
       const { data: userLikes } = await supabase
         .from("chat_likes")
         .select("chat_id")
@@ -576,11 +599,14 @@ export const getAllPublicChats = async (
       return data.map((chat) => ({
         ...chat,
         user_has_liked: likedChatIds.has(chat.chat_id),
+        screenshot: screenshotMap.get(chat.chat_id) || undefined,
       }));
     }
-    return (data || []).map((chat) => ({
+
+    return data.map((chat) => ({
       ...chat,
       user_has_liked: false,
+      screenshot: screenshotMap.get(chat.chat_id) || undefined,
     }));
   } catch (err) {
     console.error("Unexpected error in getAllPublicChats:", err);
