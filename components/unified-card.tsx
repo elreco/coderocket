@@ -15,8 +15,10 @@ import { ReactNode } from "react";
 import { ClonedUrlBadge } from "@/components/cloned-url-badge";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { Framework } from "@/utils/config";
+import { avatarApi, Framework } from "@/utils/config";
 import { getRelativeDate } from "@/utils/date";
+
+import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
 
 export interface UnifiedCardData {
   id: string;
@@ -27,6 +29,7 @@ export interface UnifiedCardData {
   author?: {
     id: string;
     name: string;
+    avatar_url?: string;
   };
   href: string;
   price?: number;
@@ -98,114 +101,123 @@ export function UnifiedCard({
   };
 
   const cardContent = (
-    <div
-      className={cn(
-        "w-full bg-center overflow-hidden relative card rounded-md mx-auto cursor-pointer border border-primary/20 transition-all duration-800 hover:border-primary hover:shadow-lg",
-        isReverse ? "bg-background" : "bg-primary/5",
-        data.isLiked && "border border-pink-500",
-        className,
-      )}
-    >
-      {/* Image */}
-      <div
-        className="group relative aspect-video w-full bg-cover bg-center bg-no-repeat"
-        style={{
-          backgroundImage: `url(${
-            data.imageUrl || "https://www.coderocket.app/placeholder.svg"
-          })`,
-        }}
-      >
-        <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-all duration-300 ease-in-out group-hover:opacity-100">
-          <Eye className="size-8 translate-y-4 text-white transition-transform duration-300 ease-in-out group-hover:translate-y-0" />
-        </div>
-
-        {/* Top Right Badges */}
-        <div className="absolute right-3 top-3 flex flex-row items-center gap-2">
-          {priceFormatted && (
-            <Badge
-              className={cn(
-                "font-semibold shadow-sm",
-                data.price === 0
-                  ? "bg-emerald-500 text-white hover:bg-emerald-600"
-                  : "bg-green-600 text-white hover:bg-green-700",
-              )}
-            >
-              {priceFormatted}
-            </Badge>
-          )}
-          {data.totalSales !== undefined && (
-            <Badge className="bg-blue-600 text-white shadow-sm hover:bg-blue-700">
-              <Activity className="mr-1 size-3" />
-              {data.totalSales} use{data.totalSales !== 1 ? "s" : ""}
-            </Badge>
-          )}
-          <Badge className="hover:bg-primary">
-            <FrameworkIcon className="mr-1 size-3" />
-            <span className="first-letter:uppercase">{data.framework}</span>
-          </Badge>
-          {data.likes !== undefined && data.likes > 0 && (
-            <Badge className="bg-pink-500 text-white shadow-sm hover:bg-pink-600">
-              <Heart className="mr-1 size-3" />
-              {data.likes}
-            </Badge>
-          )}
-          {data.badges?.map((badge, index) => (
-            <Badge
-              key={index}
-              variant={badge.variant || "default"}
-              className={badge.className}
-            >
-              {badge.text}
-            </Badge>
-          ))}
-        </div>
-
-        {/* Top Left Badges */}
-        <div className="absolute left-3 top-3 flex flex-col gap-2">
-          {data.isOwnItem && (
-            <Badge className="bg-purple-600 text-white shadow-sm">
-              <User className="mr-1 size-3" />
-              Your Item
-            </Badge>
-          )}
-        </div>
-        <div className="absolute bottom-3 left-3">
-          {data.cloneUrl && (
-            <ClonedUrlBadge url={data.cloneUrl} showTooltip={true} />
-          )}
-        </div>
-      </div>
-
-      {/* Content */}
+    <div className="flex flex-col">
       <div
         className={cn(
-          "flex flex-col justify-between p-4",
-          showActions ? "min-h-32" : "h-32",
+          "w-full bg-center overflow-hidden relative card rounded-md mx-auto cursor-pointer border border-primary/20 transition-all duration-800 hover:border-primary hover:shadow-lg",
+          isReverse ? "bg-background" : "bg-primary/5",
+          data.isLiked && "border border-pink-500",
+          className,
         )}
       >
-        {/* Title and Author */}
-        <div className="flex flex-col gap-0.5">
-          <h1 className="line-clamp-2 max-w-full whitespace-pre-wrap text-sm font-medium text-foreground hover:text-foreground/80">
-            {data.title}
-          </h1>
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            {data.author && (
-              <>
-                <span
-                  className="cursor-pointer hover:text-muted-foreground/80 hover:underline"
-                  onClick={handleAuthorClick}
-                >
-                  {data.author.name}
-                </span>
-                <span className="text-muted-foreground/60">•</span>
-              </>
+        {/* Image */}
+        <div
+          className="group relative aspect-video w-full bg-cover bg-center bg-no-repeat"
+          style={{
+            backgroundImage: `url(${
+              data.imageUrl || "https://www.coderocket.app/placeholder.svg"
+            })`,
+          }}
+        >
+          <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-all duration-300 ease-in-out group-hover:opacity-100">
+            <Eye className="size-8 translate-y-4 text-white transition-transform duration-300 ease-in-out group-hover:translate-y-0" />
+          </div>
+
+          {/* Top Right Badges */}
+          <div className="absolute right-3 top-3 flex flex-row items-center gap-2">
+            {priceFormatted && (
+              <Badge
+                className={cn(
+                  "font-semibold shadow-sm",
+                  data.price === 0
+                    ? "bg-emerald-500 text-white hover:bg-emerald-600"
+                    : "bg-green-600 text-white hover:bg-green-700",
+                )}
+              >
+                {priceFormatted}
+              </Badge>
             )}
-            <span>{getRelativeDate(data.createdAt)}</span>
+            {data.totalSales !== undefined && (
+              <Badge className="bg-blue-600 text-white shadow-sm hover:bg-blue-700">
+                <Activity className="mr-1 size-3" />
+                {data.totalSales} use{data.totalSales !== 1 ? "s" : ""}
+              </Badge>
+            )}
+            <Badge className="hover:bg-primary">
+              <FrameworkIcon className="mr-1 size-3" />
+              <span className="first-letter:uppercase">{data.framework}</span>
+            </Badge>
+            {data.likes !== undefined && data.likes > 0 && (
+              <Badge className="bg-pink-500 text-white shadow-sm hover:bg-pink-600">
+                <Heart className="mr-1 size-3" />
+                {data.likes}
+              </Badge>
+            )}
+            {data.badges?.map((badge, index) => (
+              <Badge
+                key={index}
+                variant={badge.variant || "default"}
+                className={badge.className}
+              >
+                {badge.text}
+              </Badge>
+            ))}
+          </div>
+
+          {/* Top Left Badges */}
+          <div className="absolute left-3 top-3 flex flex-col gap-2">
+            {data.isOwnItem && (
+              <Badge className="bg-purple-600 text-white shadow-sm">
+                <User className="mr-1 size-3" />
+                Your Item
+              </Badge>
+            )}
+          </div>
+          <div className="absolute bottom-3 left-3">
+            {data.cloneUrl && (
+              <ClonedUrlBadge url={data.cloneUrl} showTooltip={true} />
+            )}
+          </div>
+        </div>
+
+        {/* Content */}
+      </div>
+      <div className="flex h-24 flex-col">
+        {/* Title and Author */}
+        <div className="mt-2 flex items-center gap-2">
+          <Avatar className="size-8 border border-border">
+            <AvatarImage src={data.author?.avatar_url || undefined} />
+            <AvatarFallback>
+              <img
+                src={`${avatarApi}${data.author?.name}`}
+                alt="logo"
+                className="size-full"
+              />
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex flex-col gap-0.5">
+            <h1 className="line-clamp-1 max-w-full whitespace-pre-wrap text-xs font-medium text-foreground hover:text-foreground/80">
+              {data.title}
+            </h1>
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              {data.author && (
+                <>
+                  <span
+                    className="cursor-pointer hover:text-muted-foreground/80 hover:underline"
+                    onClick={handleAuthorClick}
+                  >
+                    {data.author.name}
+                  </span>
+                  <span className="text-muted-foreground/60">•</span>
+                </>
+              )}
+              <span>{getRelativeDate(data.createdAt)}</span>
+            </div>
           </div>
         </div>
 
         {/* Framework Badge and Stats */}
-        <div className="mt-5 flex items-center justify-between">
+        <div className="mt-2 flex items-center justify-between">
           <div className="flex items-center gap-3 text-xs text-muted-foreground">
             {data.isRemixed && (
               <div className="flex items-center gap-1">
@@ -234,7 +246,7 @@ export function UnifiedCard({
 
         {/* Actions */}
         {showActions && data.actions && (
-          <div className="mt-4 flex items-center justify-between border-t pt-3">
+          <div className="mt-1 flex items-center justify-between border-t pt-3">
             <div className="flex items-center gap-2">{data.actions}</div>
             {data.href && (
               <Link
