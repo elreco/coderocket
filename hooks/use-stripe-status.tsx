@@ -89,8 +89,10 @@ export function useStripeStatus() {
     fetchStripeStatus();
   }, [fetchStripeStatus]);
 
-  const canCreateListing =
+  const canCreateFreeListing = true;
+  const canCreatePaidListing =
     status.isPremium && status.hasAccount && status.onboardingComplete;
+  const canCreateListing = canCreateFreeListing;
   const needsOnboarding = !status.hasAccount || !status.onboardingComplete;
   const needsPremium = !status.isPremium;
 
@@ -101,6 +103,8 @@ export function useStripeStatus() {
   return {
     ...status,
     canCreateListing,
+    canCreateFreeListing,
+    canCreatePaidListing,
     needsOnboarding,
     needsPremium,
     refresh,

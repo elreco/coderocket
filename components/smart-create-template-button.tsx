@@ -36,30 +36,17 @@ export function SmartCreateTemplateButton({
 }: SmartCreateTemplateButtonProps) {
   const router = useRouter();
   const [isNavigating, setIsNavigating] = useState(false);
-  const { canCreateListing, needsPremium, isLoading } = useStripeStatus();
+  const { canCreateListing, isLoading } = useStripeStatus();
 
   const handleClick = () => {
-    // Don't navigate if still loading
     if (isLoading) {
       return;
     }
 
     setIsNavigating(true);
-
-    // Navigate based on current status
-    let href: string;
-    if (canCreateListing) {
-      href = "/templates/create";
-    } else if (needsPremium) {
-      href = "/pricing?reason=templates-create";
-    } else {
-      href = "/account/templates/stripe-onboarding";
-    }
-
-    router.push(href);
+    router.push("/templates/create");
   };
 
-  // Always show "Add Template" by default, let the routing handle the specifics
   const text = children || customText?.create || "Add Template";
 
   return (

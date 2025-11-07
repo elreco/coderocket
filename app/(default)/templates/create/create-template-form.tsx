@@ -878,18 +878,16 @@ export function CreateTemplateForm({ categories }: CreateListingFormProps) {
 
                   {/* Pricing explanation */}
                   {!stripeStatus.onboardingComplete ? (
-                    <div className="rounded-lg border border-yellow-300 bg-yellow-50 p-3 text-xs dark:border-yellow-700 dark:bg-yellow-900/20">
-                      <div className="mb-2 font-medium text-yellow-900 dark:text-yellow-200">
-                        Free Templates Only
+                    <div className="rounded-lg border border-blue-300 bg-blue-50 p-3 text-xs dark:border-blue-700 dark:bg-blue-900/20">
+                      <div className="mb-2 font-medium text-blue-900 dark:text-blue-200">
+                        ✅ You Can Create Free Templates
                       </div>
-                      <div className="space-y-1 text-yellow-800 dark:text-yellow-300">
+                      <div className="space-y-1 text-blue-800 dark:text-blue-300">
                         <div>
-                          You can only create free templates without a validated
-                          Stripe Connect account.
+                          <strong>No subscription required!</strong> You can create and share free templates ($0.00) with the community right now.
                         </div>
-                        <div>
-                          To create premium templates and earn 70% per use, you
-                          need to:
+                        <div className="mt-2">
+                          💰 To create paid templates and earn 70% per use, you need to:
                         </div>
                         <ul className="ml-4 list-disc">
                           <li>Have a Premium subscription</li>
