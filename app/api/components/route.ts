@@ -840,6 +840,172 @@ const validateRequest = async (
     }
   }
 
+  // Fonction pour optimiser le markdown en gardant les infos essentielles
+  const optimizeMarkdownForTokens = (markdown: string): string => {
+    const sections: { [key: string]: string } = {};
+    let currentSection = "";
+    let currentContent = "";
+
+    markdown.split("\n").forEach((line) => {
+      if (line.startsWith("## ")) {
+        if (currentSection) {
+          sections[currentSection] = currentContent;
+        }
+        currentSection = line.replace("## ", "");
+        currentContent = "";
+      } else {
+        currentContent += line + "\n";
+      }
+    });
+    if (currentSection) {
+      sections[currentSection] = currentContent;
+    }
+
+    let optimized = "";
+
+    // Quick Summary - Garder en entier (petit)
+    if (sections["Quick Summary"]) {
+      optimized += "## Quick Summary\n" + sections["Quick Summary"] + "\n";
+    }
+
+    // Full Page Structure - Limiter à 30 éléments max
+    if (sections["Full Page Structure"]) {
+      const lines = sections["Full Page Structure"].split("\n");
+      const limited = lines.slice(0, 200).join("\n");
+      optimized += "## Full Page Structure (Key Elements)\n" + limited + "\n\n";
+    }
+
+    // Spacing System - Garder top 5 de chaque
+    if (sections["Spacing System"]) {
+      const lines = sections["Spacing System"].split("\n");
+      const limited = lines.slice(0, 40).join("\n");
+      optimized += "## Spacing System\n" + limited + "\n\n";
+    }
+
+    // Visual Design System - GARDER EN ENTIER (critique)
+    if (sections["Visual Design System"]) {
+      optimized +=
+        "## Visual Design System\n" + sections["Visual Design System"] + "\n";
+    }
+
+    // Typography System - GARDER EN ENTIER (critique)
+    if (sections["Typography System"]) {
+      optimized +=
+        "## Typography System\n" + sections["Typography System"] + "\n";
+    }
+
+    // Button Styles - GARDER EN ENTIER (important)
+    if (sections["Button Styles"]) {
+      optimized += "## Button Styles\n" + sections["Button Styles"] + "\n";
+    }
+
+    // Layout Components - GARDER
+    if (sections["Layout Components"]) {
+      optimized +=
+        "## Layout Components\n" + sections["Layout Components"] + "\n";
+    }
+
+    // Component Counts - GARDER
+    if (sections["Component Counts"]) {
+      optimized +=
+        "## Component Counts\n" + sections["Component Counts"] + "\n";
+    }
+
+    // LOGOS - GARDER TOUS (critique)
+    if (sections["LOGOS (MUST INCLUDE):"]) {
+      optimized +=
+        "## LOGOS (MUST INCLUDE)\n" + sections["LOGOS (MUST INCLUDE):"] + "\n";
+    }
+
+    // VIDEOS - GARDER TOUS
+    if (sections["VIDEOS:"]) {
+      optimized += "## VIDEOS\n" + sections["VIDEOS:"] + "\n";
+    }
+
+    // IMAGES - Limiter à 30 images max (compromis)
+    if (sections["IMAGES (ALL MUST BE INCLUDED):"]) {
+      const lines = sections["IMAGES (ALL MUST BE INCLUDED):"].split("\n");
+      const imageCount = lines.filter((l) => l.startsWith("### Image ")).length;
+      let imageLines = 0;
+      const limited = lines
+        .filter((line) => {
+          if (line.startsWith("### Image ")) imageLines++;
+          return imageLines <= 30 || !line.startsWith("### Image ");
+        })
+        .slice(0, 600);
+
+      optimized +=
+        `## IMAGES (Top 30 of ${imageCount} total)\n` +
+        limited.join("\n") +
+        "\n\n";
+      if (imageCount > 30) {
+        optimized += `NOTE: ${imageCount - 30} more images exist but omitted for token efficiency. Use the images above strategically.\n\n`;
+      }
+    }
+
+    // Content Hierarchy - Limiter
+    if (sections["Content Hierarchy"]) {
+      const lines = sections["Content Hierarchy"].split("\n");
+      const limited = lines.slice(0, 80).join("\n");
+      optimized += "## Content Hierarchy (Key Headings)\n" + limited + "\n\n";
+    }
+
+    // Key Content Paragraphs - Top 20
+    if (sections["Key Content Paragraphs"]) {
+      const lines = sections["Key Content Paragraphs"].split("\n");
+      const limited = lines.slice(0, 60).join("\n");
+      optimized += "## Key Content Paragraphs (Top 20)\n" + limited + "\n\n";
+    }
+
+    // Button & Link Texts - Top 30
+    if (sections["Button & Link Texts"]) {
+      const lines = sections["Button & Link Texts"].split("\n");
+      const limited = lines.slice(0, 35).join("\n");
+      optimized += "## Button & Link Texts (Top 30)\n" + limited + "\n\n";
+    }
+
+    // Lists - Top 5 listes
+    if (sections["Lists & Navigation Items"]) {
+      const lines = sections["Lists & Navigation Items"].split("\n");
+      const limited = lines.slice(0, 80).join("\n");
+      optimized += "## Lists & Navigation Items (Top 5)\n" + limited + "\n\n";
+    }
+
+    // CSS - Limiter fortement (15k chars max)
+    if (sections["CSS Styles (Extracted)"]) {
+      const cssContent = sections["CSS Styles (Extracted)"];
+      const limited = cssContent.substring(0, 15000);
+      optimized += "## CSS Styles (Key Rules - Reference)\n" + limited + "\n\n";
+      if (cssContent.length > 15000) {
+        optimized +=
+          "... (CSS truncated for tokens, use above for key styling patterns)\n\n";
+      }
+    }
+
+    // Implementation Requirements - Garder mais résumer
+    optimized += `## IMPLEMENTATION REQUIREMENTS
+
+**CRITICAL - Use Exact Values:**
+- Colors: Use EXACT hex/rgb from Visual Design System section
+- Fonts: Import and use EXACT fonts from Typography System
+- Spacing: Use EXACT padding/margin/gap values from Spacing System
+- Images: Include ALL logos + top 30 images with EXACT URLs (no placeholders)
+- Structure: Follow Full Page Structure hierarchy
+- Content: Copy EXACT text from Content Hierarchy and paragraphs
+- Buttons: Match Button Styles section exactly
+
+**Zero Tolerance For:**
+❌ Placeholder images (picsum, via.placeholder)
+❌ Lorem ipsum or generic text
+❌ Approximating colors (use arbitrary values: bg-[#1a1a1a])
+❌ Guessing spacing (use exact Tailwind or arbitrary values)
+❌ Skipping logos or key images
+
+**Goal:** Visually indistinguishable clone matching the screenshot.`;
+
+    return optimized;
+  };
+
   // Vérifier si c'est un site cloné et récupérer les détails si nécessaire
   let enhancedPrompt = finalPrompt;
   let cloneScreenshot: string | null = null;
@@ -851,45 +1017,30 @@ const validateRequest = async (
       if (cloneResult.success && cloneResult.data) {
         const data = cloneResult.data;
 
-        enhancedPrompt = `Clone: ${chat.clone_url}
+        // Optimiser le markdown pour réduire les tokens
+        const optimizedMarkdown = data.markdown
+          ? optimizeMarkdownForTokens(data.markdown)
+          : "";
 
-# WEBSITE CONTENT
-${data.markdown ? data.markdown.substring(0, 15000) : ""}
+        console.log("📊 Markdown optimization:");
+        console.log("Original length:", data.markdown?.length || 0);
+        console.log("Optimized length:", optimizedMarkdown.length);
+        console.log(
+          "Reduction:",
+          Math.round(
+            (1 - optimizedMarkdown.length / (data.markdown?.length || 1)) * 100,
+          ) + "%",
+        );
 
-# INSTRUCTIONS
+        enhancedPrompt = `Clone this website: ${chat.clone_url}
 
-A screenshot is attached showing the exact visual design.
+A screenshot is attached showing the exact visual design to match.
 
-**Analyze the screenshot to determine:**
-- Background color (dark theme? light theme?)
-- Primary brand color (what color are the main buttons/links?)
-- Text colors
-- Fonts (modern sans-serif? traditional serif?)
-- Layout (hero? navbar? footer? sidebar?)
-- Component styles (button shape, card style, spacing)
+# WEBSITE DATA & SPECIFICATIONS
 
-**Build the clone:**
-1. Use ONLY standard Tailwind CSS classes:
-   - Colors: bg-white, bg-black, bg-gray-900, bg-blue-600, text-white, text-gray-900, etc.
-   - Spacing: p-4, px-8, py-12, space-y-6, gap-4
-   - Layout: flex, grid, max-w-7xl, container
-   - DO NOT use: bg-background, text-foreground, bg-primary (not standard Tailwind)
+${optimizedMarkdown}
 
-2. Use shadcn/ui components: Button, Card, Badge, etc.
-
-3. Include ALL sections from the website:
-   - Header with navigation
-   - Hero section
-   - Main content sections
-   - Footer
-
-4. Use ALL text from the markdown above
-
-5. Extract and use REAL image URLs from markdown (no placeholders)
-
-6. Ensure mobile responsive (sm:, md:, lg: breakpoints)
-
-**Critical**: Match the screenshot's visual appearance using standard Tailwind classes only.`;
+**The data above is extracted from the original website. Use it as your SPECIFICATION (not suggestion).**`;
 
         // Handle screenshot with proper dimension validation and resizing
         if (cloneResult.data.screenshot) {
@@ -970,17 +1121,17 @@ A screenshot is attached showing the exact visual design.
         }
       } else {
         console.error("Failed to clone website:", cloneResult.error);
-        // Use fallback prompt without enhanced data
         enhancedPrompt = `Clone this website: ${chat.clone_url}
 
-Recreate the visual layout and core functionality of this website using modern web components and responsive design.`;
+Unable to extract complete website data. Please recreate the visual layout and functionality based on the URL provided.
+Use standard Tailwind CSS classes and shadcn/ui components.`;
       }
     } catch (error) {
       console.error("Error during website cloning:", error);
-      // Use fallback prompt without enhanced data
       enhancedPrompt = `Clone this website: ${chat.clone_url}
 
-Recreate the visual layout and core functionality of this website using modern web components and responsive design.`;
+Unable to extract complete website data. Please recreate the visual layout and functionality based on the URL provided.
+Use standard Tailwind CSS classes and shadcn/ui components.`;
     }
   }
 
