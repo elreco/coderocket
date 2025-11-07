@@ -1,8 +1,16 @@
 import Stripe from "stripe";
 
+import { handleMarketplacePurchase } from "@/app/(default)/templates/templates-purchase-handler";
 import { stripe } from "@/utils/stripe";
 // eslint-disable-next-line import/order
 import { createClient } from "@/utils/supabase/server";
+
+import {
+  upsertProductRecord,
+  upsertPriceRecord,
+  manageSubscriptionStatusChange,
+  updatePaymentRecord,
+} from "@/utils/supabase-admin";
 
 async function handleStripeAccountUpdate(account: Stripe.Account) {
   try {
@@ -75,12 +83,6 @@ async function handleTransferUpdate(
     console.error("Error handling transfer update:", error);
   }
 }
-import {
-  upsertProductRecord,
-  upsertPriceRecord,
-  manageSubscriptionStatusChange,
-  updatePaymentRecord,
-} from "@/utils/supabase-admin";
 
 const relevantEvents = new Set([
   "product.created",
@@ -170,9 +172,6 @@ export async function POST(req: Request) {
 
             // Handle marketplace purchases
             if (metadata && metadata.type === "marketplace_purchase") {
-              const { handleMarketplacePurchase } = await import(
-                "@/app/(default)/templates/templates-purchase-handler"
-              );
               const result = await handleMarketplacePurchase(metadata);
 
               if (!result.success) {

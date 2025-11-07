@@ -1,3 +1,5 @@
+import { createClient } from "./supabase/server";
+
 type ModelType = "claude-sonnet-4-5" | "claude-haiku-4-5";
 
 interface TokenUsage {
@@ -117,7 +119,6 @@ export async function getUserTokenUsage(
   startDate: Date,
   endDate?: Date,
 ): Promise<TokenUsageStats> {
-  const { createClient } = await import("@/utils/supabase/server");
   const supabase = await createClient();
 
   let query = supabase

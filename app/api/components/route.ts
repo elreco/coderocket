@@ -7,6 +7,7 @@ import {
   TextPart,
 } from "ai";
 import { after } from "next/server";
+import sharp from "sharp";
 
 import { buildComponent } from "@/app/(default)/components/[slug]/actions";
 import { autoSyncToGithubAfterGeneration } from "@/app/(default)/components/[slug]/github-sync-actions";
@@ -36,6 +37,10 @@ import {
   MAX_VERSIONS_PER_COMPONENT,
 } from "@/utils/config";
 import { uploadFiles } from "@/utils/file-uploader";
+import {
+  buildIntegrationContext,
+  getActiveChatIntegrations,
+} from "@/utils/integrations/chat-integrations-helpers";
 import {
   tokensToRockets,
   getPlanRocketLimits,
@@ -405,9 +410,6 @@ export async function POST(req: Request) {
     // Add detailed logging for debugging cloning issues
 
     // Fetch active integrations for this chat
-    const { getActiveChatIntegrations, buildIntegrationContext } = await import(
-      "@/utils/integrations/chat-integrations-helpers"
-    );
     const chatIntegrations = await getActiveChatIntegrations(id);
     const integrationContext = await buildIntegrationContext(chatIntegrations);
 
@@ -1048,8 +1050,6 @@ ${optimizedMarkdown}
             const buffer = Buffer.from(cloneResult.data.screenshot, "base64");
             console.log("Screenshot buffer size:", buffer.length, "bytes");
 
-            // Import sharp for proper image processing
-            const { default: sharp } = await import("sharp");
             const metadata = await sharp(buffer).metadata();
 
             console.log(

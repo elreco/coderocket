@@ -5,8 +5,10 @@ import { generateText } from "ai";
 import { anthropicModel } from "./config";
 import { Framework } from "./config";
 import { stripIndents } from "./strip-indents";
+import { createClient } from "./supabase/server";
 import { systemPrompt } from "./system-prompts";
 import { htmlSystemPrompt } from "./system-prompts/html";
+import { calculateTokenCost } from "./token-pricing";
 
 interface ConversationContext {
   role: "user" | "assistant";
@@ -78,7 +80,6 @@ export const promptEnhancer = async (
   });
 
   if (userId && chatId && usage) {
-    const { calculateTokenCost } = await import("./token-pricing");
     const cost = calculateTokenCost(
       {
         input_tokens: usage.inputTokens ?? 0,
@@ -88,8 +89,6 @@ export const promptEnhancer = async (
       },
       "claude-haiku-4-5",
     );
-
-    const { createClient } = await import("./supabase/server");
     const supabase = await createClient();
 
     await supabase.from("token_usage_tracking").insert({
