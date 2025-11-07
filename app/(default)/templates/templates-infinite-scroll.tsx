@@ -796,7 +796,7 @@ export function TemplatesInfiniteScroll({
           {showSkeleton
             ? // Loading skeleton
               [...Array(12)].map((_, i) => (
-                <Skeleton key={i} className="h-[320px] w-full rounded-lg" />
+                <Skeleton key={i} className="h-[220px] w-full rounded-lg" />
               ))
             : // Popular
               [

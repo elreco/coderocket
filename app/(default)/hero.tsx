@@ -1655,7 +1655,7 @@ export default function Hero({ popularComponents = [] }: HeroProps) {
 
             <div className="relative">
               <div>
-                <div className="grid auto-rows-fr grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="grid auto-rows-fr grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
                   {popularComponents.map((component) => {
                     const cardData: UnifiedCardData = {
                       id: component.chat_id,

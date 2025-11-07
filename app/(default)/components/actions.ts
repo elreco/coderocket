@@ -1015,3 +1015,153 @@ const createRemixTitle = (originalTitle: string) => {
   }
   return `Remix - ${baseTitle}`;
 };
+
+export const getComponentsByFramework = async (
+  framework: Framework,
+  limit: number = 10,
+) => {
+  try {
+    const supabase = await createClient();
+    const { data: userData } = await supabase.auth.getUser();
+    const user = userData.user;
+
+    const query = supabase
+      .rpc("get_components")
+      .eq("framework", framework)
+      .not("last_assistant_message", "is", null)
+      .is("is_private", false)
+      .order("created_at", { ascending: false })
+      .limit(limit);
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error("Error fetching components by framework:", error);
+      return [];
+    }
+
+    if (!data || data.length === 0) {
+      return [];
+    }
+
+    const chatIds = data.map((chat) => chat.chat_id);
+
+    const { data: screenshots } = await supabase
+      .from("messages")
+      .select("chat_id, screenshot, version")
+      .in("chat_id", chatIds)
+      .eq("role", "assistant")
+      .not("screenshot", "is", null)
+      .order("version", { ascending: false });
+
+    const screenshotMap = new Map<string, string>();
+    if (screenshots) {
+      screenshots.forEach((msg) => {
+        if (!screenshotMap.has(msg.chat_id) && msg.screenshot) {
+          screenshotMap.set(msg.chat_id, msg.screenshot);
+        }
+      });
+    }
+
+    if (user) {
+      const { data: userLikes } = await supabase
+        .from("chat_likes")
+        .select("chat_id")
+        .eq("user_id", user.id)
+        .in("chat_id", chatIds);
+
+      const likedChatIds = userLikes
+        ? new Set(userLikes.map((like) => like.chat_id))
+        : new Set();
+
+      return data.map((chat) => ({
+        ...chat,
+        user_has_liked: likedChatIds.has(chat.chat_id),
+        screenshot: screenshotMap.get(chat.chat_id) || undefined,
+      }));
+    }
+
+    return data.map((chat) => ({
+      ...chat,
+      user_has_liked: false,
+      screenshot: screenshotMap.get(chat.chat_id) || undefined,
+    }));
+  } catch (err) {
+    console.error("Unexpected error in getComponentsByFramework:", err);
+    return [];
+  }
+};
+
+export const getMostPopularComponents = async (limit: number = 10) => {
+  try {
+    const supabase = await createClient();
+    const { data: userData } = await supabase.auth.getUser();
+    const user = userData.user;
+
+    const query = supabase
+      .rpc("get_components")
+      .not("last_assistant_message", "is", null)
+      .is("is_private", false)
+      .gt("likes", 0)
+      .order("likes", { ascending: false })
+      .order("created_at", { ascending: false })
+      .limit(limit);
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error("Error fetching most popular components:", error);
+      return [];
+    }
+
+    if (!data || data.length === 0) {
+      return [];
+    }
+
+    const chatIds = data.map((chat) => chat.chat_id);
+
+    const { data: screenshots } = await supabase
+      .from("messages")
+      .select("chat_id, screenshot, version")
+      .in("chat_id", chatIds)
+      .eq("role", "assistant")
+      .not("screenshot", "is", null)
+      .order("version", { ascending: false });
+
+    const screenshotMap = new Map<string, string>();
+    if (screenshots) {
+      screenshots.forEach((msg) => {
+        if (!screenshotMap.has(msg.chat_id) && msg.screenshot) {
+          screenshotMap.set(msg.chat_id, msg.screenshot);
+        }
+      });
+    }
+
+    if (user) {
+      const { data: userLikes } = await supabase
+        .from("chat_likes")
+        .select("chat_id")
+        .eq("user_id", user.id)
+        .in("chat_id", chatIds);
+
+      const likedChatIds = userLikes
+        ? new Set(userLikes.map((like) => like.chat_id))
+        : new Set();
+
+      return data.map((chat) => ({
+        ...chat,
+        user_has_liked: likedChatIds.has(chat.chat_id),
+        screenshot: screenshotMap.get(chat.chat_id) || undefined,
+      }));
+    }
+
+    return data.map((chat) => ({
+      ...chat,
+      user_has_liked: false,
+      screenshot: screenshotMap.get(chat.chat_id) || undefined,
+    }));
+  } catch (err) {
+    console.error("Unexpected error in getMostPopularComponents:", err);
+    return [];
+  }
+};

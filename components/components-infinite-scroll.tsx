@@ -16,14 +16,16 @@ import {
   SearchX,
   X,
 } from "lucide-react";
-import { useRouter, usePathname, useSearchParams } from "next/navigation";
-import { useState, useEffect, useCallback } from "react";
+import { usePathname } from "next/navigation";
+import { useState } from "react";
 
 import {
   type GetComponentsReturnType,
   getAllPublicChats,
 } from "@/app/(default)/components/actions";
 import { ComponentCard } from "@/components/component-card";
+import { ComponentsSlider } from "@/components/components-slider";
+import { FrameworkCategoriesSlider } from "@/components/framework-categories-slider";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -44,8 +46,15 @@ interface ComponentsInfiniteScrollProps {
   initialPopularChats: GetComponentsReturnType[] | null;
   initialSearchQuery?: string;
   initialSelectedFrameworks?: Framework[];
+  initialSort?: "newest" | "top";
   isAccountPage?: boolean;
   isLikedPage?: boolean;
+  reactComponents?: GetComponentsReturnType[];
+  vueComponents?: GetComponentsReturnType[];
+  htmlComponents?: GetComponentsReturnType[];
+  svelteComponents?: GetComponentsReturnType[];
+  angularComponents?: GetComponentsReturnType[];
+  mostPopularComponents?: GetComponentsReturnType[];
 }
 
 export function ComponentsInfiniteScroll({
@@ -53,14 +62,17 @@ export function ComponentsInfiniteScroll({
   initialPopularChats,
   initialSearchQuery = "",
   initialSelectedFrameworks = [],
+  initialSort = "newest",
   isAccountPage = false,
   isLikedPage = false,
+  reactComponents = [],
+  vueComponents = [],
+  htmlComponents = [],
+  svelteComponents = [],
+  angularComponents = [],
+  mostPopularComponents = [],
 }: ComponentsInfiniteScrollProps) {
-  const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
-
-  // --- States ---
 
   const [searchQuery, setSearchQuery] = useState<string>(initialSearchQuery);
   const [selectedFrameworks, setSelectedFrameworks] = useState<Framework[]>(
@@ -79,7 +91,6 @@ export function ComponentsInfiniteScroll({
     (initialChats?.length ?? 0) === PAGE_SIZE,
   );
 
-  // Avoid multiple fetches in parallel
   const [isFetchingMore, setIsFetchingMore] = useState(false);
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -87,49 +98,44 @@ export function ComponentsInfiniteScroll({
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
-  // Store the final query in local state
-  const [searchParamsString, setSearchParamsString] = useState(
-    searchParams.toString(),
-  );
+  const [sortBy, setSortBy] = useState<"newest" | "top">(initialSort);
 
-  // Update URL whenever searchParamsString changes
-  useEffect(() => {
-    const currentQueryString = searchParams.toString();
-    if (searchParamsString !== currentQueryString) {
-      router.replace(`${pathname}?${searchParamsString}`, { scroll: false });
-    }
-  }, [searchParamsString, searchParams, router, pathname]);
-
-  // --- URL utility ---
-  function updateURLQuery(query: string, frameworks?: Framework[]) {
-    const params = new URLSearchParams(searchParams.toString());
+  function updateURLQuery(
+    query: string,
+    frameworks?: Framework[],
+    sort?: "newest" | "top",
+  ) {
+    const params = new URLSearchParams();
 
     if (query) {
       params.set("search", query);
-    } else {
-      params.delete("search");
     }
 
     if (frameworks && frameworks.length > 0) {
       params.set("frameworks", frameworks.join(","));
-    } else {
-      params.delete("frameworks");
     }
 
-    setSearchParamsString(params.toString());
+    if (sort && sort !== "newest") {
+      params.set("sort", sort);
+    }
+
+    const queryString = params.toString();
+    const newUrl = `${pathname}${queryString ? `?${queryString}` : ""}`;
+    window.history.replaceState(null, "", newUrl);
   }
 
-  // --- Fetch data ---
   async function doFetchPublicChats({
     pageToFetch,
     search = "",
     frameworks = [],
     reset = false,
+    sortByTop = false,
   }: {
     pageToFetch: number;
     search?: string;
     frameworks?: Framework[];
     reset?: boolean;
+    sortByTop?: boolean;
   }) {
     try {
       if (isAccountPage ? pageToFetch >= 500 : pageToFetch >= MAX_PAGE) {
@@ -140,7 +146,7 @@ export function ComponentsInfiniteScroll({
       const data = await getAllPublicChats(
         PAGE_SIZE,
         pageToFetch * PAGE_SIZE,
-        false,
+        sortByTop,
         search,
         frameworks,
         isAccountPage,
@@ -156,7 +162,6 @@ export function ComponentsInfiniteScroll({
         setPage(pageToFetch);
       }
 
-      // If fewer than PAGE_SIZE, no more data
       setHasMore(validData.length === PAGE_SIZE);
     } finally {
       setIsFetchingMore(false);
@@ -179,7 +184,6 @@ export function ComponentsInfiniteScroll({
     setPopularChats(data.filter(Boolean));
   }
 
-  // --- Handlers ---
   function handleSearchInput(e: React.ChangeEvent<HTMLInputElement>) {
     const value = e.target.value.slice(0, MAX_SEARCH_LENGTH);
     setSearchQuery(value);
@@ -193,20 +197,19 @@ export function ComponentsInfiniteScroll({
   }
 
   async function handleSubmitSearch() {
-    // Don't launch if search is empty
     if (!searchQuery.trim()) return;
 
     setIsLoading(true);
     setShowSkeleton(true);
 
-    updateURLQuery(searchQuery, selectedFrameworks);
+    updateURLQuery(searchQuery, selectedFrameworks, sortBy);
 
-    // Fetch public then popular
     await doFetchPublicChats({
       pageToFetch: 0,
       search: searchQuery,
       frameworks: selectedFrameworks,
       reset: true,
+      sortByTop: sortBy === "top",
     });
     await doFetchPopularChats(searchQuery, selectedFrameworks);
 
@@ -219,13 +222,14 @@ export function ComponentsInfiniteScroll({
     setIsLoading(false);
     setShowSkeleton(false);
 
-    updateURLQuery("");
+    updateURLQuery("", selectedFrameworks, sortBy);
 
     await doFetchPublicChats({
       pageToFetch: 0,
       search: "",
       frameworks: selectedFrameworks,
       reset: true,
+      sortByTop: sortBy === "top",
     });
     await doFetchPopularChats("", selectedFrameworks);
   }
@@ -237,10 +241,8 @@ export function ComponentsInfiniteScroll({
     let newFrameworks: Framework[] = [];
 
     if (!framework) {
-      // Reset
       newFrameworks = [];
     } else {
-      // Add / remove
       if (selectedFrameworks.includes(framework)) {
         newFrameworks = selectedFrameworks.filter((f) => f !== framework);
       } else {
@@ -249,13 +251,14 @@ export function ComponentsInfiniteScroll({
     }
 
     setSelectedFrameworks(newFrameworks);
-    updateURLQuery(searchQuery, newFrameworks);
+    updateURLQuery(searchQuery, newFrameworks, sortBy);
 
     await doFetchPublicChats({
       pageToFetch: 0,
       search: searchQuery,
       frameworks: newFrameworks,
       reset: true,
+      sortByTop: sortBy === "top",
     });
     await doFetchPopularChats(searchQuery, newFrameworks);
 
@@ -263,17 +266,35 @@ export function ComponentsInfiniteScroll({
     setTimeout(() => setShowSkeleton(false), 300);
   }
 
-  // --- Load More Handler ---
-  const loadMore = useCallback(async () => {
+  const loadMore = async () => {
     if (!hasMore || isFetchingMore) return;
     await doFetchPublicChats({
       pageToFetch: page + 1,
       search: searchQuery,
       frameworks: selectedFrameworks,
+      sortByTop: sortBy === "top",
     });
-  }, [hasMore, isFetchingMore, page, searchQuery, selectedFrameworks]);
+  };
 
-  // --- Icon per framework ---
+  const handleSortChange = async (newSort: "newest" | "top") => {
+    setSortBy(newSort);
+    setIsLoading(true);
+    setShowSkeleton(true);
+
+    updateURLQuery(searchQuery, selectedFrameworks, newSort);
+
+    await doFetchPublicChats({
+      pageToFetch: 0,
+      search: searchQuery,
+      frameworks: selectedFrameworks,
+      reset: true,
+      sortByTop: newSort === "top",
+    });
+
+    setIsLoading(false);
+    setTimeout(() => setShowSkeleton(false), 300);
+  };
+
   function FrameworkIcon(fw: Framework) {
     switch (fw) {
       case "react":
@@ -291,24 +312,42 @@ export function ComponentsInfiniteScroll({
     }
   }
 
-  // Filter out popular from the public list to avoid duplicates
-  const filteredPublicChats = publicChats.filter(
-    (chat) => !popularChats.some((pop) => pop.chat_id === chat.chat_id),
-  );
-
-  // Check if no results
   const hasNoResults =
     !showSkeleton && publicChats.length === 0 && popularChats.length === 0;
 
+  const showBrowseLayout =
+    !isAccountPage &&
+    !isLikedPage &&
+    !searchQuery &&
+    selectedFrameworks.length === 0;
+
+  const handleFrameworkCardClick = async (framework: Framework) => {
+    setIsLoading(true);
+    setShowSkeleton(true);
+    setSelectedFrameworks([framework]);
+    updateURLQuery(searchQuery, [framework], sortBy);
+
+    await doFetchPublicChats({
+      pageToFetch: 0,
+      search: searchQuery,
+      frameworks: [framework],
+      reset: true,
+      sortByTop: sortBy === "top",
+    });
+    await doFetchPopularChats(searchQuery, [framework]);
+
+    setIsLoading(false);
+    setTimeout(() => setShowSkeleton(false), 300);
+  };
+
   return (
-    <div>
-      {/* Search bar & frameworks filter */}
-      <div className="flex flex-col items-center justify-start gap-2 space-y-2 sm:flex-row sm:space-y-0">
-        <div className="relative flex w-full max-w-xl items-center rounded-md border border-border bg-secondary pl-3 focus-within:border-primary">
+    <div className="w-full overflow-hidden">
+      <div className="mb-14 flex w-full flex-col items-center justify-center gap-4">
+        <div className="relative flex w-full max-w-2xl items-center rounded-md border border-border bg-secondary pl-3 focus-within:border-primary">
           <Search className="mr-2 size-4 shrink-0 opacity-50" />
           <Input
             id="search"
-            placeholder="Search a component..."
+            placeholder="Search..."
             value={searchQuery}
             maxLength={MAX_SEARCH_LENGTH}
             onKeyDown={handleKeyDown}
@@ -338,157 +377,308 @@ export function ComponentsInfiniteScroll({
             </Button>
           </div>
         </div>
-
-        {/* Frameworks Filter */}
-        <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
-          <DropdownMenuTrigger asChild>
-            <Button
-              size="lg"
-              variant="secondary"
-              className="flex w-full items-center gap-2 border border-border p-[22px] sm:w-auto"
-            >
-              {selectedFrameworks.length > 0
-                ? selectedFrameworks.map((fw) => (
-                    <span key={fw} className="flex items-center gap-1">
-                      {FrameworkIcon(fw)}
-                      <span>{fw}</span>
-                    </span>
-                  ))
-                : "Filter by Frameworks"}
-              <ChevronDown className="size-4" />
-            </Button>
-          </DropdownMenuTrigger>
-
-          <DropdownMenuContent>
-            <DropdownMenuItem
-              key="all"
-              className="flex cursor-pointer items-center space-x-2 capitalize text-primary"
-              onClick={() => {
-                handleFrameworkSelection(null);
-                setDropdownOpen(false);
-              }}
-            >
-              Reset Frameworks Filters
-            </DropdownMenuItem>
-            {Object.values(Framework).map((fw) => (
-              <DropdownMenuCheckboxItem
-                key={fw}
-                checked={selectedFrameworks.includes(fw)}
-                className="flex cursor-pointer items-center space-x-2 capitalize"
-                onSelect={(e) => {
-                  e.preventDefault();
-                  handleFrameworkSelection(fw);
-                  setDropdownOpen(false);
-                }}
-              >
-                {FrameworkIcon(fw)}
-                <span>{fw}</span>
-              </DropdownMenuCheckboxItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        {/* Reset Filters Button */}
-        {(selectedFrameworks.length > 0 || searchQuery) && (
-          <Button
-            size="lg"
-            variant="secondary"
-            className="flex w-full items-center gap-2 border border-border p-[22px] sm:w-auto"
-            onClick={async () => {
-              setSearchQuery("");
-              setSelectedFrameworks([]);
-              updateURLQuery("", []);
-              setIsLoading(true);
-              setShowSkeleton(true);
-              await doFetchPublicChats({
-                pageToFetch: 0,
-                search: "",
-                frameworks: [],
-                reset: true,
-              });
-              await doFetchPopularChats("", []);
-              setIsLoading(false);
-              setTimeout(() => setShowSkeleton(false), 300);
-            }}
-          >
-            <RefreshCcw className="size-4" />
-            Reset Filters
-          </Button>
-        )}
       </div>
 
-      {/* Popular first, then Public */}
-      {hasNoResults ? (
-        <div className="mt-6 flex min-h-[400px] flex-col items-center justify-center rounded-lg border border-dashed border-border bg-secondary px-4 py-6 text-center">
-          <SearchX className="size-12 text-muted-foreground" />
-          {isLikedPage ? (
-            <h3 className="mt-4 text-lg font-semibold">
-              No liked components found
-            </h3>
-          ) : (
-            <h3 className="mt-4 text-lg font-semibold">No components found</h3>
-          )}
-          <p className="mt-2 max-w-sm text-sm text-muted-foreground">
-            {isLikedPage
-              ? `No liked components found. Try changing your filters or search for something else.`
-              : searchQuery
-                ? `No results found for "${searchQuery}". Try adjusting your search or filters.`
-                : "No components available. Try changing your filters or search for something else."}
-          </p>
-          <Button
-            onClick={async () => {
-              await handleClearSearch();
-              await handleFrameworkSelection(null);
-              setDropdownOpen(false);
-            }}
-            className="mt-4 flex items-center gap-2"
-          >
-            <RefreshCcw className="size-4" />
-            <span>Clear search</span>
-          </Button>
-        </div>
-      ) : (
-        <div className="mt-6 grid grid-cols-1 gap-4 pb-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {showSkeleton
-            ? // Loading skeleton
-              [...Array(12)].map((_, i) => (
-                <Skeleton key={i} className="h-[320px] w-full rounded-lg" />
-              ))
-            : // Popular
+      {showBrowseLayout ? (
+        <div className="w-full overflow-hidden">
+          <h2 className="mb-2 text-sm font-semibold">Frameworks</h2>
+          <FrameworkCategoriesSlider
+            categories={
               [
-                ...popularChats.map((chat) => (
-                  <ComponentCard key={`${chat.chat_id}-popular`} chat={chat} />
-                )),
-                // Public (excluding duplicates)
-                ...filteredPublicChats.map((chat) => (
-                  <ComponentCard key={chat.chat_id} chat={chat} />
-                )),
-              ]}
-        </div>
-      )}
+                reactComponents && reactComponents.length > 0
+                  ? { framework: Framework.REACT, components: reactComponents }
+                  : null,
+                vueComponents && vueComponents.length > 0
+                  ? { framework: Framework.VUE, components: vueComponents }
+                  : null,
+                htmlComponents && htmlComponents.length > 0
+                  ? { framework: Framework.HTML, components: htmlComponents }
+                  : null,
+                svelteComponents && svelteComponents.length > 0
+                  ? {
+                      framework: Framework.SVELTE,
+                      components: svelteComponents,
+                    }
+                  : null,
+                angularComponents && angularComponents.length > 0
+                  ? {
+                      framework: Framework.ANGULAR,
+                      components: angularComponents,
+                    }
+                  : null,
+              ].filter(Boolean) as {
+                framework: Framework;
+                components: GetComponentsReturnType[];
+              }[]
+            }
+            onCategoryClick={handleFrameworkCardClick}
+          />
 
-      {/* "Load More" Button */}
-      {hasMore && !hasNoResults && !showSkeleton && (
-        <div className="flex justify-center py-4">
-          <Button
-            variant="secondary"
-            onClick={loadMore}
-            disabled={isFetchingMore}
-            className="flex items-center gap-2"
-          >
-            {isFetchingMore ? (
+          {mostPopularComponents && mostPopularComponents.length > 0 && (
+            <div className="mb-3 w-full">
+              <h2 className="mb-2 text-sm font-semibold">
+                Most Popular Components
+              </h2>
+              <ComponentsSlider components={mostPopularComponents} />
+            </div>
+          )}
+
+          <div className="w-full">
+            <div className="mb-6 flex items-center justify-end border-t border-border py-4">
               <div className="flex items-center gap-2">
-                <span>Loading...</span>
-                <Loader className="size-4 animate-spin" />
+                <div className="flex rounded-lg border border-border bg-secondary p-1">
+                  <button
+                    onClick={() => handleSortChange("newest")}
+                    className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                      sortBy === "newest"
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    Newest
+                  </button>
+                  <button
+                    onClick={() => handleSortChange("top")}
+                    className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                      sortBy === "top"
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    Top
+                  </button>
+                </div>
+              </div>
+            </div>
+            {publicChats.length === 0 && !showSkeleton ? (
+              <div className="flex min-h-[400px] w-full flex-col items-center justify-center rounded-lg border border-dashed border-border bg-secondary px-4 py-6 text-center">
+                <SearchX className="size-12 text-muted-foreground" />
+                <h3 className="mt-4 text-lg font-semibold">
+                  No components found
+                </h3>
+                <p className="mt-2 max-w-sm text-sm text-muted-foreground">
+                  No components available at the moment.
+                </p>
               </div>
             ) : (
-              <div className="flex items-center gap-2">
-                <span>Load More</span>
-                <ArrowDown className="size-4" />
-              </div>
+              <>
+                <div className="grid w-full grid-cols-1 gap-4 pb-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {showSkeleton
+                    ? [...Array(12)].map((_, i) => (
+                        <Skeleton
+                          key={i}
+                          className="h-[220px] w-full rounded-lg"
+                        />
+                      ))
+                    : publicChats.map((chat) => (
+                        <ComponentCard key={chat.chat_id} chat={chat} />
+                      ))}
+                </div>
+                {hasMore && !showSkeleton && (
+                  <div className="flex w-full justify-center py-4">
+                    <Button
+                      variant="secondary"
+                      onClick={loadMore}
+                      disabled={isFetchingMore}
+                      className="flex items-center gap-2"
+                    >
+                      {isFetchingMore ? (
+                        <div className="flex items-center gap-2">
+                          <span>Loading...</span>
+                          <Loader className="size-4 animate-spin" />
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <span>Load More</span>
+                          <ArrowDown className="size-4" />
+                        </div>
+                      )}
+                    </Button>
+                  </div>
+                )}
+              </>
             )}
-          </Button>
+          </div>
         </div>
+      ) : (
+        <>
+          <div className="mb-6 flex flex-col items-center justify-start gap-2 space-y-2 sm:flex-row sm:space-y-0">
+            <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  size="lg"
+                  variant="secondary"
+                  className="flex w-full items-center gap-2 border border-border p-[22px] sm:w-auto"
+                >
+                  {selectedFrameworks.length > 0
+                    ? selectedFrameworks.map((fw) => (
+                        <span key={fw} className="flex items-center gap-1">
+                          {FrameworkIcon(fw)}
+                          <span>{fw}</span>
+                        </span>
+                      ))
+                    : "Filter by Frameworks"}
+                  <ChevronDown className="size-4" />
+                </Button>
+              </DropdownMenuTrigger>
+
+              <DropdownMenuContent>
+                <DropdownMenuItem
+                  key="all"
+                  className="flex cursor-pointer items-center space-x-2 capitalize text-primary"
+                  onClick={() => {
+                    handleFrameworkSelection(null);
+                    setDropdownOpen(false);
+                  }}
+                >
+                  Reset Frameworks Filters
+                </DropdownMenuItem>
+                {Object.values(Framework).map((fw) => (
+                  <DropdownMenuCheckboxItem
+                    key={fw}
+                    checked={selectedFrameworks.includes(fw)}
+                    className="flex cursor-pointer items-center space-x-2 capitalize"
+                    onSelect={(e) => {
+                      e.preventDefault();
+                      handleFrameworkSelection(fw);
+                      setDropdownOpen(false);
+                    }}
+                  >
+                    {FrameworkIcon(fw)}
+                    <span>{fw}</span>
+                  </DropdownMenuCheckboxItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {(selectedFrameworks.length > 0 || searchQuery) && (
+              <Button
+                size="lg"
+                variant="secondary"
+                className="flex w-full items-center gap-2 border border-border p-[22px] sm:w-auto"
+                onClick={async () => {
+                  setSearchQuery("");
+                  setSelectedFrameworks([]);
+                  setSortBy("newest");
+                  updateURLQuery("", [], "newest");
+                  setIsLoading(true);
+                  setShowSkeleton(true);
+                  await doFetchPublicChats({
+                    pageToFetch: 0,
+                    search: "",
+                    frameworks: [],
+                    reset: true,
+                    sortByTop: false,
+                  });
+                  await doFetchPopularChats("", []);
+                  setIsLoading(false);
+                  setTimeout(() => setShowSkeleton(false), 300);
+                }}
+              >
+                <RefreshCcw className="size-4" />
+                Reset Filters
+              </Button>
+            )}
+          </div>
+
+          {hasNoResults ? (
+            <div className="mt-6 flex min-h-[400px] flex-col items-center justify-center rounded-lg border border-dashed border-border bg-secondary px-4 py-6 text-center">
+              <SearchX className="size-12 text-muted-foreground" />
+              {isLikedPage ? (
+                <h3 className="mt-4 text-lg font-semibold">
+                  No liked components found
+                </h3>
+              ) : (
+                <h3 className="mt-4 text-lg font-semibold">
+                  No components found
+                </h3>
+              )}
+              <p className="mt-2 max-w-sm text-sm text-muted-foreground">
+                {isLikedPage
+                  ? `No liked components found. Try changing your filters or search for something else.`
+                  : searchQuery
+                    ? `No results found for "${searchQuery}". Try adjusting your search or filters.`
+                    : "No components available. Try changing your filters or search for something else."}
+              </p>
+              <Button
+                onClick={async () => {
+                  setSortBy("newest");
+                  await handleClearSearch();
+                  await handleFrameworkSelection(null);
+                  setDropdownOpen(false);
+                }}
+                className="mt-4 flex items-center gap-2"
+              >
+                <RefreshCcw className="size-4" />
+                <span>Clear search</span>
+              </Button>
+            </div>
+          ) : (
+            <>
+              <div className="my-6 flex items-center justify-end border-t border-border py-4">
+                <div className="flex items-center gap-2">
+                  <div className="flex rounded-lg border border-border bg-secondary p-1">
+                    <button
+                      onClick={() => handleSortChange("newest")}
+                      className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                        sortBy === "newest"
+                          ? "bg-primary text-primary-foreground"
+                          : "text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      Newest
+                    </button>
+                    <button
+                      onClick={() => handleSortChange("top")}
+                      className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                        sortBy === "top"
+                          ? "bg-primary text-primary-foreground"
+                          : "text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      Top
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 gap-4 pb-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {showSkeleton
+                  ? [...Array(12)].map((_, i) => (
+                      <Skeleton
+                        key={i}
+                        className="h-[220px] w-full rounded-lg"
+                      />
+                    ))
+                  : publicChats.map((chat) => (
+                      <ComponentCard key={chat.chat_id} chat={chat} />
+                    ))}
+              </div>
+            </>
+          )}
+
+          {hasMore && !hasNoResults && !showSkeleton && (
+            <div className="flex justify-center py-4">
+              <Button
+                variant="secondary"
+                onClick={loadMore}
+                disabled={isFetchingMore}
+                className="flex items-center gap-2"
+              >
+                {isFetchingMore ? (
+                  <div className="flex items-center gap-2">
+                    <span>Loading...</span>
+                    <Loader className="size-4 animate-spin" />
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <span>Load More</span>
+                    <ArrowDown className="size-4" />
+                  </div>
+                )}
+              </Button>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

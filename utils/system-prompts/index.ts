@@ -561,7 +561,6 @@ IMPORTANT: Always use Tailwind CSS v4 syntax, not v3.
     - Adhere strictly to the ${shadcnLib} design principles.
     - ALWAYS use ${shadcnLib} components for all UI elements unless explicitly instructed otherwise.
     - Be creative while ensuring that the output aligns with ${shadcnLib}'s component styling and behavior.
-    - Ensure all image sources are valid and accessible, avoiding 404 errors.
     - Use picsum.photos for placeholder images and provide an id for the image. (e.g. https://picsum.photos/id/237/200/300)
     - Use ${framework === Framework.ANGULAR ? "lucide-angular" : framework === Framework.SVELTE ? "lucide-svelte" : framework === Framework.VUE ? "lucide-vue-next" : "lucide-react"} for icons.
     - Use ${framework === Framework.REACT ? "recharts" : framework === Framework.ANGULAR ? "ng2-charts or a similar Angular charting library" : "chart.js or a similar charting library"} for charts.
