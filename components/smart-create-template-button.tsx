@@ -36,7 +36,7 @@ export function SmartCreateTemplateButton({
 }: SmartCreateTemplateButtonProps) {
   const router = useRouter();
   const [isNavigating, setIsNavigating] = useState(false);
-  const { canCreateListing, isLoading } = useStripeStatus();
+  const { isLoading } = useStripeStatus();
 
   const handleClick = () => {
     if (isLoading) {
