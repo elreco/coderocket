@@ -884,10 +884,13 @@ export function CreateTemplateForm({ categories }: CreateListingFormProps) {
                       </div>
                       <div className="space-y-1 text-blue-800 dark:text-blue-300">
                         <div>
-                          <strong>No subscription required!</strong> You can create and share free templates ($0.00) with the community right now.
+                          <strong>No subscription required!</strong> You can
+                          create and share free templates ($0.00) with the
+                          community right now.
                         </div>
                         <div className="mt-2">
-                          💰 To create paid templates and earn 70% per use, you need to:
+                          💰 To create paid templates and earn 70% per use, you
+                          need to:
                         </div>
                         <ul className="ml-4 list-disc">
                           <li>Have a Premium subscription</li>
