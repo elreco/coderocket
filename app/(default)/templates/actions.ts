@@ -182,16 +182,33 @@ export async function getMarketplaceListings(params: {
     .in("version", versions)
     .eq("role", "assistant");
 
-  // Map screenshots to listings
-  let listingsWithScreenshots = data.map((listing) => {
-    const screenshot = screenshots?.find(
-      (s) => s.chat_id === listing.chat_id && s.version === listing.version,
-    );
-    return {
-      ...listing,
-      screenshot: screenshot?.screenshot || null,
-    };
-  });
+  // Get current user's purchases to filter out already owned templates
+  const { data: userData } = await supabase.auth.getUser();
+  let ownedListingIds = new Set<string>();
+
+  if (userData.user) {
+    const { data: purchases } = await supabase
+      .from("marketplace_purchases")
+      .select("listing_id")
+      .eq("buyer_id", userData.user.id);
+
+    if (purchases) {
+      ownedListingIds = new Set(purchases.map((p) => p.listing_id));
+    }
+  }
+
+  // Map screenshots to listings and filter out owned templates
+  let listingsWithScreenshots = data
+    .filter((listing) => !ownedListingIds.has(listing.id)) // Filter out already owned
+    .map((listing) => {
+      const screenshot = screenshots?.find(
+        (s) => s.chat_id === listing.chat_id && s.version === listing.version,
+      );
+      return {
+        ...listing,
+        screenshot: screenshot?.screenshot || null,
+      };
+    });
 
   // Filter by framework if specified
   if (framework) {
