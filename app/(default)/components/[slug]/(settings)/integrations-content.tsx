@@ -1,7 +1,7 @@
 "use client";
 
 import { SiSupabase } from "@icons-pack/react-simple-icons";
-import { Plug2, Loader2, ExternalLink, AlertCircle } from "lucide-react";
+import { Plug2, Loader2, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -11,6 +11,7 @@ import {
   enableChatIntegration,
   disableChatIntegration,
 } from "@/app/(default)/account/integrations/actions";
+import { PremiumFeatureAlert } from "@/components/premium-feature-alert";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { IntegrationBadge } from "@/components/ui/integration-badge";
@@ -180,23 +181,7 @@ export default function IntegrationsContent() {
             </a>
           </p>
         </div>
-        <Alert className="border-l-4 border-l-amber-500 bg-amber-50 dark:bg-amber-950">
-          <AlertCircle className="size-4 text-amber-600" />
-          <AlertDescription>
-            <p className="font-medium text-amber-900 dark:text-amber-100">
-              Premium feature required
-            </p>
-            <p className="mt-1 text-sm text-amber-800 dark:text-amber-200">
-              Backend integrations are available for premium users only. Upgrade
-              your plan to connect Supabase, Stripe, and other services.
-            </p>
-          </AlertDescription>
-        </Alert>
-        <Button variant="outline" asChild>
-          <Link href="/pricing" className="flex items-center gap-2">
-            <span>Upgrade to Premium</span>
-          </Link>
-        </Button>
+        <PremiumFeatureAlert description="Backend integrations are available for premium users only. Upgrade your plan to connect Supabase, Stripe, and other services." />
       </div>
     );
   }

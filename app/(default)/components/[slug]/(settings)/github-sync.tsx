@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 
+import { PremiumFeatureAlert } from "@/components/premium-feature-alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -161,7 +162,8 @@ export default function GitHubSync({ closeSheet }: { closeSheet: () => void }) {
 
   const githubConnection = contextGithubConnection;
   const subscription = contextSubscription;
-  const isLoading = !githubConnection && !subscription;
+  const isLoading =
+    githubConnection === undefined || subscription === undefined;
   const isGithubConnected = !!githubConnection;
   const hasGithubRepo = !!fetchedChat?.github_repo_url;
   const isPremium = !!subscription;
@@ -327,17 +329,7 @@ export default function GitHubSync({ closeSheet }: { closeSheet: () => void }) {
     return (
       <div className="space-y-4">
         <PageHeader />
-        <AlertBox
-          icon={AlertCircle}
-          title="Premium feature required"
-          description="GitHub sync is available for premium users only. Upgrade your plan to sync your components with GitHub repositories."
-          variant="amber"
-        />
-        <Button variant="outline" asChild>
-          <a href="/pricing" className="flex items-center space-x-2">
-            <span>Upgrade to Premium</span>
-          </a>
-        </Button>
+        <PremiumFeatureAlert description="GitHub sync is available for premium users only. Upgrade your plan to sync your components with GitHub repositories." />
       </div>
     );
   }

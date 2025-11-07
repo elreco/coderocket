@@ -278,24 +278,16 @@ export async function handleMarketplacePurchase(
       console.log("Successfully updated total_sales");
     }
 
-    // Build the component in the background after successful purchase
-    // For templates, we only have version 0
-    const assistantMsg = messagesToInsert.find(
-      (m) => m.role === "assistant" && m.version === 0,
-    );
-
-    if (assistantMsg && purchasedChat.id) {
+    if (purchasedChat.id) {
       after(async () => {
         try {
-          // Don't force build for purchased templates to avoid consuming user credits
-          // The component will be built when the user actually uses it
-          await buildComponent(purchasedChat.id, 0, false);
-          console.log("Successfully built purchased component:", {
+          await buildComponent(purchasedChat.id, 0, true);
+          console.log("Successfully built purchased template:", {
             chatId: purchasedChat.id,
             version: 0,
           });
         } catch (buildError) {
-          console.error("Failed to build purchased component:", buildError);
+          console.error("Failed to build purchased template:", buildError);
         }
       });
     }

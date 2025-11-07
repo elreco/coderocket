@@ -10,9 +10,9 @@ import {
   Zap,
   Layers,
 } from "lucide-react";
-import Link from "next/link";
 import { useState, useEffect } from "react";
 
+import { PremiumFeatureAlert } from "@/components/premium-feature-alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -434,24 +434,7 @@ export default function DeploymentContent() {
       )}
 
       {!subscription && (
-        <div className="flex items-start gap-3 rounded-lg border border-purple-500/30 bg-purple-500/10 p-4">
-          <Zap className="size-5 text-purple-500" />
-          <div className="flex-1">
-            <p className="font-medium text-purple-700 dark:text-purple-400">
-              Premium Feature
-            </p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Deployment is available exclusively for premium users. Upgrade
-              your account to deploy your applications to custom subdomains.
-            </p>
-            <Link href="/pricing">
-              <Button size="sm" className="mt-3" variant="default">
-                <Zap className="mr-2 size-4" />
-                Upgrade to Premium
-              </Button>
-            </Link>
-          </div>
-        </div>
+        <PremiumFeatureAlert description="Deployment is available exclusively for premium users. Upgrade your account to deploy your applications to custom subdomains." />
       )}
 
       {!isOwner && subscription && (

@@ -2,14 +2,10 @@ export const fetchCache = "force-no-store";
 export const revalidate = 0;
 export const maxDuration = 300;
 
-import { AlertCircle } from "lucide-react";
-import Link from "next/link";
-
 import { getSubscription } from "@/app/supabase-server";
 import { Container } from "@/components/container";
 import { PageTitle } from "@/components/page-title";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
+import { PremiumFeatureAlert } from "@/components/premium-feature-alert";
 
 import { getServerIntegrations } from "./actions";
 import IntegrationsClient from "./integrations-client";
@@ -35,23 +31,7 @@ export default async function IntegrationsPage() {
           subtitle="Connect external services to add backend functionality to your generated apps. Configure once, use across all your projects."
         />
         <div className="space-y-6">
-          <Alert className="border-l-4 border-l-amber-500 bg-amber-50 dark:bg-amber-950">
-            <AlertCircle className="size-4 text-amber-600" />
-            <AlertDescription>
-              <p className="font-medium text-amber-900 dark:text-amber-100">
-                Premium feature required
-              </p>
-              <p className="mt-2 text-sm text-amber-800 dark:text-amber-200">
-                Backend integrations are available for premium users only.
-                Upgrade your plan to connect Supabase, Stripe, and other
-                services to automatically generate full-stack applications with
-                backend functionality.
-              </p>
-            </AlertDescription>
-          </Alert>
-          <Button asChild>
-            <Link href="/pricing">Upgrade to Premium</Link>
-          </Button>
+          <PremiumFeatureAlert description="Backend integrations are available for premium users only. Upgrade your plan to connect Supabase, Stripe, and other services to automatically generate full-stack applications with backend functionality." />
 
           <div className="rounded-lg border bg-muted/50 p-8">
             <h3 className="mb-4 text-lg font-semibold">
