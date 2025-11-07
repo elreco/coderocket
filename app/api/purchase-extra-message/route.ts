@@ -8,7 +8,7 @@ export async function POST(req: Request) {
     const { quantity = 1 } = await req.json();
 
     // Calculate the actual number of messages (1 version = 2 messages)
-    const messageQuantity = quantity * 2;
+    const rocketsQuantity = quantity;
 
     try {
       // Get the user from Supabase auth
@@ -32,7 +32,6 @@ export async function POST(req: Request) {
         email: user.email || "",
       });
 
-      // Fixed price for an additional version (1 dollar = 100 cents)
       const unit_amount = 100;
 
       // Create a payment session in Stripe
@@ -49,8 +48,8 @@ export async function POST(req: Request) {
             price_data: {
               currency: "usd",
               product_data: {
-                name: "Additional Version",
-                description: `Purchase of ${quantity} additional version${quantity > 1 ? "s" : ""}`,
+                name: "Additional Rockets",
+                description: `Purchase of ${quantity} Rocket${quantity > 1 ? "s" : ""}`,
               },
               unit_amount: unit_amount,
             },
@@ -59,12 +58,11 @@ export async function POST(req: Request) {
         ],
         mode: "payment",
         allow_promotion_codes: true,
-        success_url: `https://www.coderocket.app/account?extra_messages=${messageQuantity}&versions=${quantity}`,
+        success_url: `https://www.coderocket.app/account?rockets=${rocketsQuantity}`,
         cancel_url: `https://www.coderocket.app/`,
         metadata: {
           userId: user.id,
-          extraMessages: messageQuantity.toString(),
-          versions: quantity.toString(),
+          rockets: rocketsQuantity.toString(),
         },
       });
 

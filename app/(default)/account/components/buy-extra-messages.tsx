@@ -19,18 +19,14 @@ export function BuyExtraMessages() {
   const buyRockets = searchParams.get("buy_rockets");
 
   // Vérifier si l'utilisateur vient d'acheter des messages supplémentaires
-  const extraMessages = searchParams.get("extra_messages");
-  const versions = searchParams.get("versions");
+  const rockets = searchParams.get("rockets");
 
   // Afficher un toast si l'utilisateur vient d'acheter des messages supplémentaires
-  if (extraMessages) {
+  if (rockets) {
     toast({
       title: "Purchase successful!",
-      description: `You have successfully purchased ${versions || Math.ceil(parseInt(extraMessages) / 2)} Rocket${
-        (versions && parseInt(versions) > 1) ||
-        (!versions && Math.ceil(parseInt(extraMessages) / 2) > 1)
-          ? "s"
-          : ""
+      description: `You have successfully purchased ${parseInt(rockets || "0")} Rocket${
+        parseInt(rockets || "0") > 1 ? "s" : ""
       }! 🚀`,
       duration: 5000,
     });

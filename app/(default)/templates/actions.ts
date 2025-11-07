@@ -653,27 +653,27 @@ export async function getUserPrivateComponentsPaginated(params: {
     ) || {};
 
   // Get screenshots for the latest version of each component
-  const { data: screenshots } = await supabase
-    .from("messages")
-    .select("chat_id, screenshot")
-    .in(
-      "chat_id",
-      availableChats.map((chat) => chat.id),
-    )
-    .in(
-      "version",
-      availableChats.map((chat) => versionStats[chat.id]?.max || 0),
-    )
-    .eq("role", "assistant");
+  // We need to fetch them individually to ensure correct chat_id + version pairing
+  const screenshotMap: Record<string, string | null> = {};
 
-  const screenshotMap =
-    screenshots?.reduce(
-      (acc, msg) => {
-        acc[msg.chat_id] = msg.screenshot;
-        return acc;
-      },
-      {} as Record<string, string | null>,
-    ) || {};
+  const screenshotPromises = availableChats.map(async (chat) => {
+    const latestVersion = versionStats[chat.id]?.max || 0;
+    if (latestVersion === 0) return;
+
+    const { data: message } = await supabase
+      .from("messages")
+      .select("screenshot")
+      .eq("chat_id", chat.id)
+      .eq("version", latestVersion)
+      .eq("role", "assistant")
+      .maybeSingle();
+
+    if (message?.screenshot) {
+      screenshotMap[chat.id] = message.screenshot;
+    }
+  });
+
+  await Promise.all(screenshotPromises);
 
   // Format the response
   const components = availableChats.map((chat) => ({
