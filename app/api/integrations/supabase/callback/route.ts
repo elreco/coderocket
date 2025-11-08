@@ -11,7 +11,7 @@ const SUPABASE_OAUTH_CLIENT_ID = process.env.SUPABASE_OAUTH_CLIENT_ID;
 const SUPABASE_OAUTH_CLIENT_SECRET = process.env.SUPABASE_OAUTH_CLIENT_SECRET;
 const SUPABASE_REDIRECT_URI = process.env.NEXT_PUBLIC_APP_URL
   ? `${process.env.NEXT_PUBLIC_APP_URL}/api/integrations/supabase/callback`
-  : "http://localhost:4002/api/integrations/supabase/callback";
+  : "https://www.coderocket.app/api/integrations/supabase/callback";
 
 export async function GET(request: NextRequest) {
   try {
