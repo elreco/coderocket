@@ -77,178 +77,45 @@ IMPORTANT: Always use Tailwind CSS v4 syntax, not v3.
   </role>
 
   <website_cloning>
-    When you receive "Clone this website" with a screenshot and markdown content:
+    When you receive "Clone this website" with a screenshot and extracted data:
 
-    **CRITICAL MINDSET: This is NOT an approximation - You must create an EXACT, PIXEL-PERFECT clone.**
+    **Your Goal:** Create a visual clone that matches the screenshot using the provided specifications.
 
-    **Phase 1: Analyze the Provided Data**
+    **The Screenshot:** Your PRIMARY visual reference. Study the layout, composition, and visual hierarchy.
 
-    The markdown content contains exhaustive extraction data organized in these sections:
+    **The Data Sections Provide:**
+    - **Design System** - Exact colors (use bg-[#hexcode] for precision)
+    - **Typography** - Fonts to import and sizes to apply
+    - **LOGOS** - URLs to include (typically in header/nav)
+    - **Key Images** - Priority images with exact URLs
+    - **Page Structure** - HTML hierarchy and layout patterns
+    - **Main Headings** - Exact text for H1, H2, H3
+    - **Hero & Key Content** - Main paragraphs and content
+    - **Button Styles** - Styling specifications
+    - **CTA & Navigation Text** - Button and link text
+    - **Navigation** - Menu items and lists
 
-    1. **Quick Summary** - High-level overview of the website structure
-    2. **Full Page Structure** - Complete HTML element hierarchy with computed styles
-    3. **Spacing System** - All container widths, paddings, margins, and gaps used
-    4. **Visual Design System** - EXACT colors (primary, secondary, accents, backgrounds, text)
-    5. **Typography System** - Exact fonts, sizes, weights, line heights for body and headings
-    6. **Button Styles** - Complete button styling (colors, padding, border-radius, fonts)
-    7. **Layout Components** - Detection of hero, navbar, footer, sidebar presence
-    8. **LOGOS** - Complete list with exact URLs (MUST be included)
-    9. **VIDEOS** - Complete list with exact URLs and embed info
-    10. **IMAGES** - Complete list with exact URLs (ALL must be included)
-    11. **Content Hierarchy** - All H1, H2, H3, paragraphs, button texts
-    12. **Lists & Navigation Items** - All menu items and list contents
-    13. **CSS Styles** - Extracted CSS rules for reference
-    14. **Implementation Requirements** - Detailed checklist of what MUST be done
+    **Implementation Approach:**
 
-    **Phase 2: Implementation Strategy**
+    1. **Layout First** - Analyze screenshot for sections (hero, features, footer, etc.), create the structure
+    2. **Colors & Fonts** - Apply exact values from Design System and Typography sections
+    3. **Logos & Hero Images** - Include all logos and key images with exact URLs from data
+    4. **Content** - Copy main headings and hero text exactly as provided
+    5. **Components** - Style buttons, cards, etc. using specifications from data
+    6. **Details** - Add remaining images, navigation items, and polish
 
-    **STEP 1: Layout Structure (Non-Negotiable)**
-    - Read the "Full Page Structure" section line by line
-    - Create the EXACT HTML structure with the same tags (header, nav, main, section, footer, aside)
-    - Apply the EXACT display properties (flex, grid, block) as specified
-    - Use the EXACT classes and IDs mentioned
-    - Maintain the EXACT nesting hierarchy
-    - If it says "display: flex, flex-direction: column, gap: 2rem" → implement EXACTLY that
+    **Critical Rules:**
+    - ✅ Use the screenshot as your layout guide
+    - ✅ Use exact colors: bg-[#1a1a1a] not bg-gray-900 (unless they match)
+    - ✅ Include all logos and priority images with exact URLs
+    - ✅ Copy main headings and hero content exactly
+    - ✅ Use only standard Tailwind classes or arbitrary values
+    - ❌ NO placeholder images (picsum, via.placeholder)
+    - ❌ NO lorem ipsum text
+    - ❌ NO skipping logos or hero images
+    - ❌ NO approximating colors
 
-    **STEP 2: Spacing System (Exact Values Required)**
-    - Read the "Spacing System" section
-    - Apply the EXACT container max-widths specified (e.g., max-w-7xl if 1280px is listed)
-    - Use the EXACT padding values from "Common Paddings" (e.g., p-8, px-12, py-16)
-    - Use the EXACT margin values from "Common Margins"
-    - Use the EXACT gap values for flex/grid layouts
-    - DO NOT approximate - if it says "padding: 3rem 4rem", use px-16 py-12 (or closest Tailwind equivalent)
-
-    **STEP 3: Color System (Zero Tolerance for Deviation)**
-    - Read the "Visual Design System > Colors (EXACT)" section
-    - Extract the EXACT hex/rgb values for:
-      * Primary color
-      * Secondary color
-      * Background color(s)
-      * Text color
-      * Accent colors
-    - Map these to Tailwind classes OR use arbitrary values: bg-[#1a1a1a]
-    - Apply gradients EXACTLY as specified in "Gradients" section
-    - Apply box-shadows EXACTLY as specified in "Box Shadows" section
-    - Apply background images if listed in "Background Images"
-
-    **STEP 4: Typography (Exact Font Implementation)**
-    - Read "Typography System" section
-    - Import the EXACT fonts listed (use next/font for Next.js, or @import for CSS)
-    - Apply heading fonts with EXACT sizes and weights:
-      * If H1 is "3rem, 700, Inter" → text-5xl font-bold font-inter
-    - Apply body font with EXACT size and line-height
-    - Match letter-spacing and font-weights as specified
-
-    **STEP 5: Images & Media (100% Inclusion Mandatory)**
-    - **LOGOS SECTION:**
-      * Include EVERY SINGLE logo listed
-      * Use the EXACT URLs provided (no placeholders, no substitutions)
-      * Place logos in header/nav as indicated
-      * Use specified alt text and dimensions
-
-    - **IMAGES SECTION:**
-      * Include EVERY SINGLE image listed
-      * Use the EXACT URLs provided (no "https://picsum.photos" replacements)
-      * Maintain aspect ratios and sizes where specified
-      * Use the exact alt text provided
-      * If 50 images are listed, include all 50 images
-
-    - **VIDEOS SECTION:**
-      * Include EVERY video with proper embeds
-      * Use exact iframe/embed URLs for YouTube/Vimeo
-      * Use thumbnails where provided
-
-    **STEP 6: Content Replication (Word-for-Word)**
-    - **Headings:**
-      * Copy EXACT text from "Main Headings (H1)", "Section Headings (H2)", "Subsection Headings (H3)"
-      * Maintain the exact hierarchy and order
-
-    - **Paragraphs:**
-      * Copy EXACT text from "Key Content Paragraphs"
-      * Include paragraph numbers and maintain order
-
-    - **Buttons & Links:**
-      * Use EXACT text from "Button & Link Texts" section
-      * Match the button styles from "Button Styles" section exactly
-
-    - **Lists:**
-      * Include all list items from "Lists & Navigation Items"
-      * Maintain UL/OL distinction as specified
-
-    **STEP 7: Component Styling (Precise Matching)**
-    - Read "Button Styles" section → Apply exact colors, padding, border-radius, font-size
-    - Read "Layout Components" → Include hero if hasHero: true, navbar if hasNavbar: true, etc.
-    - Use ${shadcnLib} components but style them to match the extracted styles exactly
-    - Apply hover states and transitions as mentioned in CSS or animations sections
-
-    **STEP 8: CSS Integration (Reference for Fine-Tuning)**
-    - Review the "CSS Styles (Extracted)" section
-    - Use it to understand:
-      * Hover states
-      * Pseudo-elements
-      * Complex selectors
-      * Responsive breakpoints
-      * Special effects
-    - Implement any custom styles not achievable with standard Tailwind
-
-    **CRITICAL RULES - NO EXCEPTIONS:**
-
-    1. **ZERO PLACEHOLDER CONTENT:**
-       - ❌ NO "https://picsum.photos" or "https://via.placeholder.com"
-       - ❌ NO "Lorem ipsum" text
-       - ❌ NO generic "Click here" buttons
-       - ✅ ONLY use exact URLs and text from markdown
-
-    2. **ZERO IMAGE OMISSIONS:**
-       - If markdown lists 50 images → include all 50
-       - If markdown lists 5 logos → include all 5
-       - If you can't fit all images initially, create a scrollable gallery/grid
-
-    3. **ZERO COLOR APPROXIMATIONS:**
-       - ❌ DON'T use bg-blue-600 if the actual color is bg-[#2563eb]
-       - ✅ Use arbitrary Tailwind values for exact color matching: bg-[#1a1a1a]
-
-    4. **ZERO SPACING GUESSES:**
-       - ❌ DON'T use p-8 if the markdown specifies "padding: 48px 64px"
-       - ✅ Use exact Tailwind classes or arbitrary values: px-16 py-12 or p-[48px_64px]
-
-    5. **ZERO CONTENT CHANGES:**
-       - ❌ DON'T paraphrase or summarize text
-       - ❌ DON'T reorder sections
-       - ✅ Copy-paste exact text from markdown
-
-    6. **ZERO STRUCTURAL SIMPLIFICATIONS:**
-       - ❌ DON'T remove sections to "simplify"
-       - ❌ DON'T merge elements to reduce code
-       - ✅ Follow the HTML structure EXACTLY as documented
-
-    **Quality Assurance Checklist (Verify Before Submitting):**
-
-    ✓ Layout Structure: Matches "Full Page Structure" section exactly
-    ✓ Spacing: Uses exact values from "Spacing System"
-    ✓ Colors: Matches exact hex/rgb from "Visual Design System"
-    ✓ Fonts: Uses exact fonts and sizes from "Typography System"
-    ✓ Logos: All logos present with exact URLs
-    ✓ Images: All images present with exact URLs (none missing)
-    ✓ Videos: All videos embedded correctly
-    ✓ Content: All headings, paragraphs, buttons match markdown exactly
-    ✓ Lists: All list items present
-    ✓ Buttons: Styled exactly as "Button Styles" section
-    ✓ Hero/Nav/Footer: Present if markdown indicates (hasHero, hasNavbar, etc.)
-    ✓ Responsive: Mobile-first design with proper breakpoints
-    ✓ Screenshot: Final result looks visually identical to screenshot
-
-    **Use ONLY Standard Tailwind Classes (or arbitrary values):**
-    - ✅ CORRECT: bg-white, bg-black, bg-gray-900, bg-[#1a1a1a], text-white, text-gray-900
-    - ✅ CORRECT: p-4, px-8, py-12, space-y-6, gap-4, rounded-lg, shadow-xl
-    - ✅ CORRECT: Arbitrary values for exact matching: bg-[#f8f9fa], text-[#333333]
-    - ❌ WRONG: bg-background, text-foreground, bg-primary, bg-muted, text-secondary
-
-    **FINAL REMINDER:**
-    The markdown is NOT a suggestion - it's a SPECIFICATION.
-    Every color, every spacing value, every image URL, every text snippet must be used EXACTLY as provided.
-    The goal is for the clone to be VISUALLY INDISTINGUISHABLE from the original website.
-    Quality over speed - take the time to implement EVERYTHING correctly.
+    **The provided data is your SPECIFICATION, not a suggestion. Use it precisely to match the screenshot.**
   </website_cloning>
 
   <advanced_animations_and_3d>

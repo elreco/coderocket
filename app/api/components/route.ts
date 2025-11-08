@@ -842,7 +842,6 @@ const validateRequest = async (
     }
   }
 
-  // Fonction pour optimiser le markdown en gardant les infos essentielles
   const optimizeMarkdownForTokens = (markdown: string): string => {
     const sections: { [key: string]: string } = {};
     let currentSection = "";
@@ -865,66 +864,45 @@ const validateRequest = async (
 
     let optimized = "";
 
-    // Quick Summary - Garder en entier (petit)
     if (sections["Quick Summary"]) {
       optimized += "## Quick Summary\n" + sections["Quick Summary"] + "\n";
     }
 
-    // Full Page Structure - Limiter à 30 éléments max
     if (sections["Full Page Structure"]) {
       const lines = sections["Full Page Structure"].split("\n");
-      const limited = lines.slice(0, 200).join("\n");
-      optimized += "## Full Page Structure (Key Elements)\n" + limited + "\n\n";
+      const limited = lines.slice(0, 120).join("\n");
+      optimized += "## Page Structure\n" + limited + "\n\n";
     }
 
-    // Spacing System - Garder top 5 de chaque
-    if (sections["Spacing System"]) {
-      const lines = sections["Spacing System"].split("\n");
-      const limited = lines.slice(0, 40).join("\n");
-      optimized += "## Spacing System\n" + limited + "\n\n";
-    }
-
-    // Visual Design System - GARDER EN ENTIER (critique)
     if (sections["Visual Design System"]) {
-      optimized +=
-        "## Visual Design System\n" + sections["Visual Design System"] + "\n";
+      const lines = sections["Visual Design System"].split("\n");
+      optimized += "## Design System\n" + lines.join("\n") + "\n\n";
     }
 
-    // Typography System - GARDER EN ENTIER (critique)
     if (sections["Typography System"]) {
-      optimized +=
-        "## Typography System\n" + sections["Typography System"] + "\n";
+      optimized += "## Typography\n" + sections["Typography System"] + "\n";
     }
 
-    // Button Styles - GARDER EN ENTIER (important)
     if (sections["Button Styles"]) {
-      optimized += "## Button Styles\n" + sections["Button Styles"] + "\n";
+      const lines = sections["Button Styles"].split("\n");
+      const limited = lines.slice(0, 25).join("\n");
+      optimized += "## Button Styles\n" + limited + "\n\n";
     }
 
-    // Layout Components - GARDER
     if (sections["Layout Components"]) {
-      optimized +=
-        "## Layout Components\n" + sections["Layout Components"] + "\n";
+      optimized += "## Layout Info\n" + sections["Layout Components"] + "\n";
     }
 
-    // Component Counts - GARDER
-    if (sections["Component Counts"]) {
-      optimized +=
-        "## Component Counts\n" + sections["Component Counts"] + "\n";
-    }
-
-    // LOGOS - GARDER TOUS (critique)
     if (sections["LOGOS (MUST INCLUDE):"]) {
-      optimized +=
-        "## LOGOS (MUST INCLUDE)\n" + sections["LOGOS (MUST INCLUDE):"] + "\n";
+      optimized += "## LOGOS\n" + sections["LOGOS (MUST INCLUDE):"] + "\n";
     }
 
-    // VIDEOS - GARDER TOUS
     if (sections["VIDEOS:"]) {
-      optimized += "## VIDEOS\n" + sections["VIDEOS:"] + "\n";
+      const lines = sections["VIDEOS:"].split("\n");
+      const limited = lines.slice(0, 35).join("\n");
+      optimized += "## Videos\n" + limited + "\n\n";
     }
 
-    // IMAGES - Limiter à 30 images max (compromis)
     if (sections["IMAGES (ALL MUST BE INCLUDED):"]) {
       const lines = sections["IMAGES (ALL MUST BE INCLUDED):"].split("\n");
       const imageCount = lines.filter((l) => l.startsWith("### Image ")).length;
@@ -932,78 +910,65 @@ const validateRequest = async (
       const limited = lines
         .filter((line) => {
           if (line.startsWith("### Image ")) imageLines++;
-          return imageLines <= 30 || !line.startsWith("### Image ");
+          return imageLines <= 20 || !line.startsWith("### Image ");
         })
-        .slice(0, 600);
+        .slice(0, 400);
 
       optimized +=
-        `## IMAGES (Top 30 of ${imageCount} total)\n` +
+        `## Key Images (Top 20 of ${imageCount})\n` +
         limited.join("\n") +
         "\n\n";
-      if (imageCount > 30) {
-        optimized += `NOTE: ${imageCount - 30} more images exist but omitted for token efficiency. Use the images above strategically.\n\n`;
+      if (imageCount > 20) {
+        optimized += `(${imageCount - 20} more images available but prioritize the ones above)\n\n`;
       }
     }
 
-    // Content Hierarchy - Limiter
     if (sections["Content Hierarchy"]) {
       const lines = sections["Content Hierarchy"].split("\n");
-      const limited = lines.slice(0, 80).join("\n");
-      optimized += "## Content Hierarchy (Key Headings)\n" + limited + "\n\n";
+      const limited = lines.slice(0, 50).join("\n");
+      optimized += "## Main Headings\n" + limited + "\n\n";
     }
 
-    // Key Content Paragraphs - Top 20
     if (sections["Key Content Paragraphs"]) {
       const lines = sections["Key Content Paragraphs"].split("\n");
-      const limited = lines.slice(0, 60).join("\n");
-      optimized += "## Key Content Paragraphs (Top 20)\n" + limited + "\n\n";
+      const limited = lines.slice(0, 35).join("\n");
+      optimized += "## Hero & Key Content\n" + limited + "\n\n";
     }
 
-    // Button & Link Texts - Top 30
     if (sections["Button & Link Texts"]) {
       const lines = sections["Button & Link Texts"].split("\n");
-      const limited = lines.slice(0, 35).join("\n");
-      optimized += "## Button & Link Texts (Top 30)\n" + limited + "\n\n";
+      const limited = lines.slice(0, 25).join("\n");
+      optimized += "## CTA & Navigation Text\n" + limited + "\n\n";
     }
 
-    // Lists - Top 5 listes
     if (sections["Lists & Navigation Items"]) {
       const lines = sections["Lists & Navigation Items"].split("\n");
-      const limited = lines.slice(0, 80).join("\n");
-      optimized += "## Lists & Navigation Items (Top 5)\n" + limited + "\n\n";
+      const limited = lines.slice(0, 50).join("\n");
+      optimized += "## Navigation\n" + limited + "\n\n";
     }
 
-    // CSS - Limiter fortement (15k chars max)
-    if (sections["CSS Styles (Extracted)"]) {
-      const cssContent = sections["CSS Styles (Extracted)"];
-      const limited = cssContent.substring(0, 15000);
-      optimized += "## CSS Styles (Key Rules - Reference)\n" + limited + "\n\n";
-      if (cssContent.length > 15000) {
-        optimized +=
-          "... (CSS truncated for tokens, use above for key styling patterns)\n\n";
-      }
-    }
+    optimized += `## HOW TO CLONE
 
-    // Implementation Requirements - Garder mais résumer
-    optimized += `## IMPLEMENTATION REQUIREMENTS
+**Primary Reference:** Use the SCREENSHOT as your main visual guide.
 
-**CRITICAL - Use Exact Values:**
-- Colors: Use EXACT hex/rgb from Visual Design System section
-- Fonts: Import and use EXACT fonts from Typography System
-- Spacing: Use EXACT padding/margin/gap values from Spacing System
-- Images: Include ALL logos + top 30 images with EXACT URLs (no placeholders)
-- Structure: Follow Full Page Structure hierarchy
-- Content: Copy EXACT text from Content Hierarchy and paragraphs
-- Buttons: Match Button Styles section exactly
+**Step-by-step approach:**
+1. Analyze screenshot layout (sections, grid, spacing)
+2. Apply exact colors from Design System (use bg-[#exact-color])
+3. Include logos with exact URLs from LOGOS section
+4. Import and use exact fonts from Typography section
+5. Copy main headings and hero content from above sections
+6. Add key images from Key Images section (use exact URLs)
+7. Match button styles from Button Styles section
+8. Follow page structure hierarchy
 
-**Zero Tolerance For:**
-❌ Placeholder images (picsum, via.placeholder)
-❌ Lorem ipsum or generic text
-❌ Approximating colors (use arbitrary values: bg-[#1a1a1a])
-❌ Guessing spacing (use exact Tailwind or arbitrary values)
-❌ Skipping logos or key images
+**Critical:**
+✅ Screenshot = truth for layout and visual design
+✅ Data above = specifications for colors, fonts, images, content
+✅ No placeholders (no picsum, no lorem ipsum)
+✅ Exact colors (use Tailwind arbitrary: bg-[#1a1a1a])
+✅ Include all logos and hero images
 
-**Goal:** Visually indistinguishable clone matching the screenshot.`;
+**Goal:** Create a visual clone that matches the screenshot using exact specifications from the data.`;
 
     return optimized;
   };
@@ -1036,13 +1001,15 @@ const validateRequest = async (
 
         enhancedPrompt = `Clone this website: ${chat.clone_url}
 
-A screenshot is attached showing the exact visual design to match.
+# PRIMARY REFERENCE
+A screenshot is attached - this is your MAIN visual reference for layout and design.
 
-# WEBSITE DATA & SPECIFICATIONS
+# EXTRACTED SPECIFICATIONS
+The data below contains exact specifications extracted from the website:
 
 ${optimizedMarkdown}
 
-**The data above is extracted from the original website. Use it as your SPECIFICATION (not suggestion).**`;
+**Important:** The screenshot shows WHAT to build. The data provides EXACT specifications (colors, fonts, images, content) for HOW to build it accurately.`;
 
         // Handle screenshot with proper dimension validation and resizing
         if (cloneResult.data.screenshot) {

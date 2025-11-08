@@ -492,8 +492,8 @@ function analyzeComponents(
     },
     media: {
       logos: logos.slice(0, 10),
-      images: images.slice(0, 100),
-      videos: videos.slice(0, 20),
+      images: images.slice(0, 30),
+      videos: videos.slice(0, 10),
     },
   };
 }
@@ -693,10 +693,9 @@ function createStructuredDescription(
     components.media.logos.forEach((logo, idx) => {
       description += `\n### Logo ${idx + 1}:\n`;
       description += `- URL: ${logo.src}\n`;
-      description += `- Alt Text: ${logo.alt || "Logo"}\n`;
+      description += `- Alt: ${logo.alt || "Logo"}\n`;
       if (logo.width) description += `- Width: ${logo.width}\n`;
       if (logo.height) description += `- Height: ${logo.height}\n`;
-      description += `- Usage: This logo should be prominently displayed, typically in the header/navigation area\n`;
     });
     description += `\n`;
   }
@@ -718,16 +717,19 @@ function createStructuredDescription(
   if (components.media.images.length > 0) {
     description += `## IMAGES (ALL MUST BE INCLUDED):\n`;
     description += `Total Images: ${components.media.images.length}\n\n`;
-    description += `CRITICAL: Every single image listed below MUST be included in the final component with the exact URLs provided.\n\n`;
-    components.media.images.forEach((img, idx) => {
+    const imagesToShow = Math.min(components.media.images.length, 30);
+    description += `Key images to include (showing ${imagesToShow} most important):\n\n`;
+    components.media.images.slice(0, imagesToShow).forEach((img, idx) => {
       description += `### Image ${idx + 1}:\n`;
       description += `- URL: ${img.src}\n`;
-      if (img.alt) description += `- Alt Text: ${img.alt}\n`;
+      if (img.alt) description += `- Alt: ${img.alt}\n`;
       if (img.width) description += `- Width: ${img.width}\n`;
       if (img.height) description += `- Height: ${img.height}\n`;
-      if (img.format) description += `- Format: ${img.format}\n`;
       description += `\n`;
     });
+    if (components.media.images.length > imagesToShow) {
+      description += `(${components.media.images.length - imagesToShow} additional images available but prioritize the above)\n\n`;
+    }
   }
 
   description += `## Content Hierarchy\n`;
@@ -740,7 +742,7 @@ function createStructuredDescription(
 
   description += `### Section Headings (H2):\n`;
   $("h2").each((i, el) => {
-    if (i < 15) {
+    if (i < 8) {
       const text = $(el).text().trim();
       if (text) description += `- "${text}"\n`;
     }
@@ -749,7 +751,7 @@ function createStructuredDescription(
 
   description += `### Subsection Headings (H3):\n`;
   $("h3").each((i, el) => {
-    if (i < 15) {
+    if (i < 8) {
       const text = $(el).text().trim();
       if (text) description += `- "${text}"\n`;
     }
@@ -759,9 +761,9 @@ function createStructuredDescription(
   description += `## Key Content Paragraphs\n`;
   let paragraphCount = 0;
   $("p").each((i, el) => {
-    if (paragraphCount >= 50) return;
+    if (paragraphCount >= 15) return;
     const text = $(el).text().trim();
-    if (text && text.length > 20 && text.length < 300) {
+    if (text && text.length > 30 && text.length < 250) {
       description += `${paragraphCount + 1}. "${text}"\n\n`;
       paragraphCount++;
     }
@@ -770,9 +772,9 @@ function createStructuredDescription(
   description += `## Button & Link Texts\n`;
   let buttonCount = 0;
   $("button, a.btn, a.button, [role='button']").each((i, el) => {
-    if (buttonCount >= 50) return;
+    if (buttonCount >= 20) return;
     const text = $(el).text().trim();
-    if (text && text.length < 100) {
+    if (text && text.length < 80) {
       description += `- "${text}"\n`;
       buttonCount++;
     }
@@ -783,14 +785,14 @@ function createStructuredDescription(
   if (lists.length > 0) {
     description += `## Lists & Navigation Items\n`;
     description += `Total Lists: ${lists.length}\n\n`;
-    lists.slice(0, 10).each((idx, list) => {
+    lists.slice(0, 5).each((idx, list) => {
       const items: string[] = [];
       $(list)
         .find("li")
-        .slice(0, 15)
+        .slice(0, 10)
         .each((i, li) => {
           const text = $(li).text().trim();
-          if (text && text.length < 100) {
+          if (text && text.length < 80) {
             items.push(text);
           }
         });
@@ -813,69 +815,34 @@ function createStructuredDescription(
 
   description += `## CSS Styles (Extracted)\n`;
   description += `### Key CSS Rules (Use as reference for precise styling):\n`;
-  description += `\`\`\`css\n${allCSS.substring(0, 30000)}\n\`\`\`\n\n`;
+  description += `\`\`\`css\n${allCSS.substring(0, 20000)}\n\`\`\`\n\n`;
 
-  description += `## IMPLEMENTATION REQUIREMENTS (MUST FOLLOW):\n\n`;
-  description += `### Color System:\n`;
-  description += `- Use EXACTLY the colors listed in the Visual Design System section\n`;
-  description += `- Apply the correct color to each element type (backgrounds, text, accents)\n`;
-  description += `- Include all gradients specified\n`;
-  description += `- Match box shadows precisely\n\n`;
+  description += `## IMPLEMENTATION APPROACH:\n\n`;
 
-  description += `### Typography:\n`;
-  description += `- Import the EXACT fonts specified (use Google Fonts or similar)\n`;
-  description += `- Apply heading styles with correct sizes, weights, and line heights\n`;
-  description += `- Use body text styles as specified\n`;
-  description += `- Maintain proper text hierarchy\n\n`;
+  description += `**Key Priorities:**\n`;
+  description += `1. Layout & Structure - Match visual hierarchy from screenshot\n`;
+  description += `2. Colors - Use exact values from Visual Design System\n`;
+  description += `3. Typography - Import and apply exact fonts\n`;
+  description += `4. Images - Include all logos + key images with exact URLs\n`;
+  description += `5. Content - Copy main headings and hero text exactly\n`;
+  description += `6. Components - Match button/card styles precisely\n\n`;
 
-  description += `### Layout & Structure:\n`;
-  description += `- Follow the HTML Structure Overview section precisely\n`;
-  description += `- Use the exact display properties (flex, grid, block) as specified\n`;
-  description += `- Apply all padding, margin, and gap values from the Spacing System\n`;
-  description += `- Respect max-width constraints for containers\n`;
-  description += `- Include all structural elements (header, nav, main, footer, sections)\n\n`;
+  description += `**Essential Requirements:**\n`;
+  description += `✅ Use exact colors (Tailwind arbitrary: bg-[#1a1a1a])\n`;
+  description += `✅ Include all logos with exact URLs\n`;
+  description += `✅ Import exact fonts from Typography section\n`;
+  description += `✅ Copy main headings and hero content\n`;
+  description += `✅ Match button styles (colors, padding, radius)\n`;
+  description += `✅ Follow spacing patterns from Spacing System\n\n`;
 
-  description += `### Images & Media:\n`;
-  description += `- Include EVERY SINGLE logo listed with exact URLs\n`;
-  description += `- Include EVERY SINGLE image listed with exact URLs\n`;
-  description += `- Use proper alt text for accessibility\n`;
-  description += `- Maintain aspect ratios and sizes where specified\n`;
-  description += `- Include all videos with proper embeds\n`;
-  description += `- Apply background images where specified\n\n`;
+  description += `**Avoid:**\n`;
+  description += `❌ Placeholder images (picsum, via.placeholder)\n`;
+  description += `❌ Lorem ipsum or generic text\n`;
+  description += `❌ Approximating colors\n`;
+  description += `❌ Skipping logos or hero images\n\n`;
 
-  description += `### Components:\n`;
-  description += `- Replicate button styles exactly (colors, padding, border-radius, fonts)\n`;
-  description += `- Include all button and link texts as listed\n`;
-  description += `- Recreate cards and other components with proper styling\n`;
-  description += `- Include all lists and navigation items\n`;
-  description += `- Add tables if present\n\n`;
-
-  description += `### Content:\n`;
-  description += `- Include ALL headings (H1, H2, H3) with exact text\n`;
-  description += `- Include ALL key paragraphs with exact text\n`;
-  description += `- Include all button and link texts\n`;
-  description += `- Maintain content hierarchy and flow\n\n`;
-
-  description += `### Styling Details:\n`;
-  description += `- Reference the extracted CSS for precise styling rules\n`;
-  description += `- Apply animations and transitions as specified\n`;
-  description += `- Use proper border-radius values\n`;
-  description += `- Apply box-shadows correctly\n`;
-  description += `- Ensure hover states work properly\n\n`;
-
-  description += `### Final Checks:\n`;
-  description += `- The final component should be visually INDISTINGUISHABLE from the original\n`;
-  description += `- Every color, font, spacing, image, and text should match exactly\n`;
-  description += `- Test responsive design at different screen sizes\n`;
-  description += `- Verify all images load correctly\n`;
-  description += `- Check that all links and buttons are properly styled\n\n`;
-
-  description += `### Critical Notes:\n`;
-  description += `- This is not a "close approximation" - it must be EXACT\n`;
-  description += `- Do not skip any images, logos, or content sections\n`;
-  description += `- Do not simplify the layout or structure\n`;
-  description += `- Do not change colors or fonts to "similar" ones - use the EXACT values\n`;
-  description += `- Quality over speed - take time to match everything precisely\n`;
+  description += `**Approach:**\n`;
+  description += `The screenshot shows the visual design. The data above provides exact specifications (colors, fonts, images, content). Combine both to create an accurate clone.\n`;
 
   return description;
 }
