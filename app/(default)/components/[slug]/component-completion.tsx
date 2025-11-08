@@ -236,11 +236,18 @@ export default function ComponentCompletion({
 
           const subPromise = (async () => {
             try {
+              const { data: authData } = await supabase.auth.getUser();
+              const loggedInUserId = authData?.user?.id;
+
+              if (!loggedInUserId) {
+                return null;
+              }
+
               const { data } = await supabase
                 .from("subscriptions")
                 .select("*, prices(*, products(*))")
                 .in("status", ["trialing", "active"])
-                .eq("user_id", user?.id || chat.user_id)
+                .eq("user_id", loggedInUserId)
                 .maybeSingle();
               return data;
             } catch {
@@ -250,10 +257,16 @@ export default function ComponentCompletion({
 
           const githubPromise = (async () => {
             try {
+              const { data: authData } = await supabase.auth.getUser();
+              const loggedInUserId = authData?.user?.id;
+
+              if (!loggedInUserId) {
+                return null;
+              }
               const { data } = await supabase
                 .from("github_connections")
                 .select("*")
-                .eq("user_id", user?.id || chat.user_id)
+                .eq("user_id", loggedInUserId)
                 .maybeSingle();
               return data;
             } catch {
