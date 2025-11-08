@@ -240,7 +240,7 @@ export default function ComponentCompletion({
                 .from("subscriptions")
                 .select("*, prices(*, products(*))")
                 .in("status", ["trialing", "active"])
-                .eq("user_id", chat.user_id)
+                .eq("user_id", user?.id || chat.user_id)
                 .maybeSingle();
               return data;
             } catch {
@@ -253,7 +253,7 @@ export default function ComponentCompletion({
               const { data } = await supabase
                 .from("github_connections")
                 .select("*")
-                .eq("user_id", chat.user_id)
+                .eq("user_id", user?.id || chat.user_id)
                 .maybeSingle();
               return data;
             } catch {
