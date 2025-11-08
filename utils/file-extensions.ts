@@ -4,6 +4,7 @@ import { html } from "@codemirror/lang-html";
 import { javascript } from "@codemirror/lang-javascript";
 import { json } from "@codemirror/lang-json";
 import { markdown } from "@codemirror/lang-markdown";
+import { sql } from "@codemirror/lang-sql";
 import { vue } from "@codemirror/lang-vue";
 import {
   SiHtml5,
@@ -17,7 +18,7 @@ import {
   SiAngular,
 } from "@icons-pack/react-simple-icons";
 import { svelte } from "@replit/codemirror-lang-svelte";
-import { Braces } from "lucide-react";
+import { Braces, Database } from "lucide-react";
 
 import { Framework } from "./config";
 
@@ -67,6 +68,10 @@ const FILE_EXTENSIONS: Record<string, FileExtensionConfig> = {
   md: {
     icon: SiMarkdown,
     color: "text-[#000000]",
+  },
+  sql: {
+    icon: Database,
+    color: "text-[#00758F]",
   },
 };
 
@@ -132,6 +137,8 @@ export const getLanguageExtension = (filename: string, framework?: string) => {
       return [svelte()];
     case "md":
       return [markdown()];
+    case "sql":
+      return [sql()];
     default:
       return [html()];
   }
