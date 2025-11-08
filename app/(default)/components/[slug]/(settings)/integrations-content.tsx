@@ -3,7 +3,7 @@
 import { SiSupabase } from "@icons-pack/react-simple-icons";
 import { Plug2, Loader2, ExternalLink } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 
 import {
   fetchUserIntegrations,
@@ -52,8 +52,13 @@ export default function IntegrationsContent() {
   const subscription = contextSubscription;
   const isPremium = !!subscription;
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     if (!user) return;
+
+    if (!isPremium) {
+      setIsLoading(false);
+      return;
+    }
 
     setIsLoading(true);
     const [allIntegrations, enabledIntegrations] = await Promise.all([
@@ -71,11 +76,11 @@ export default function IntegrationsContent() {
     setSelectedIntegrations(selected);
 
     setIsLoading(false);
-  };
+  }, [user, chatId, isPremium]);
 
   useEffect(() => {
     loadData();
-  }, [user, chatId]);
+  }, [loadData]);
 
   const handleToggleIntegration = async (
     type: IntegrationType,

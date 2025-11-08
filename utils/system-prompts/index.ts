@@ -297,7 +297,58 @@ IMPORTANT: Always use Tailwind CSS v4 syntax, not v3.
           template: '<zard-button>Click me</zard-button>'
         })
       - NEVER use JSX syntax in Angular, always use Angular template syntax
-      - Use Angular signals for reactive state management when appropriate`
+      - Use Angular signals for reactive state management when appropriate
+
+      CRITICAL ANGULAR TEMPLATE SYNTAX RULES:
+      - NEVER use ${{}} in templates - this is JavaScript template literal syntax, NOT Angular!
+      - ALWAYS use {{ }} for interpolation (NO dollar sign): {{ value }}, {{ method() }}
+      - Use *ngIf for conditional rendering: <div *ngIf="condition">...</div>
+      - Use *ngFor for loops: <div *ngFor="let item of items">{{ item }}</div>
+      - Use [property]="value" for property binding: <input [value]="name">
+      - Use (event)="handler()" for event binding: <button (click)="onClick()">Click</button>
+      - Use [(ngModel)]="value" for two-way binding (requires FormsModule): <input [(ngModel)]="name">
+      - NEVER mix JavaScript and Angular syntax in templates
+      - NEVER use template literals syntax in Angular templates
+
+      ANGULAR TEMPLATE BEST PRACTICES:
+      - Keep templates clean and readable - extract complex logic to component methods
+      - Use trackBy with *ngFor for performance: *ngFor="let item of items; trackBy: trackById"
+      - Prefer property binding over interpolation for non-text content: [src]="imageUrl" not src="{{ imageUrl }}"
+      - Use pipes for data transformation: {{ price | currency }} not {{ formatPrice(price) }}
+      - Always handle null/undefined with safe navigation operator: {{ user?.name }} or *ngIf="user"
+
+      ANGULAR COMPONENT STRUCTURE:
+      - Define component properties with proper types
+      - Use dependency injection in constructor for services
+      - Initialize data in ngOnInit lifecycle hook, not in constructor
+      - Use signals for reactive state when possible (Angular 16+)
+      - Keep component logic separate from template logic
+
+      Example of CORRECT Angular component:
+      @Component({
+        selector: 'app-pricing-card',
+        standalone: true,
+        imports: [CommonModule, CurrencyPipe],
+        template: \`
+          <div class="card">
+            <h2>{{ title }}</h2>
+            <p class="price">{{ price | currency }}</p>
+            <button (click)="onSelect()">Select Plan</button>
+            <ul>
+              <li *ngFor="let feature of features">{{ feature }}</li>
+            </ul>
+          </div>
+        \`
+      })
+      export class PricingCardComponent {
+        title = 'Premium Plan';
+        price = 29.99;
+        features = ['Feature 1', 'Feature 2', 'Feature 3'];
+
+        onSelect() {
+          console.log('Plan selected');
+        }
+      }`
           : ""
       }
       ${
@@ -365,7 +416,32 @@ IMPORTANT: Always use Tailwind CSS v4 syntax, not v3.
       - Use .html extension for Angular templates when template is in a separate file
       - Component structure: @Component decorator with selector, standalone: true, imports, templateUrl/template
       - When using Angular Router, import RouterModule in standalone components and use routerLink directives
-      - Configure path aliases in tsconfig.json (@ => src/)`
+      - Configure path aliases in tsconfig.json (@ => src/)
+
+      ANGULAR FILE STRUCTURE:
+      - Component files: *.component.ts (e.g., app.component.ts, pricing-card.component.ts)
+      - Service files: *.service.ts (e.g., api.service.ts, auth.service.ts)
+      - Pipe files: *.pipe.ts (e.g., format-date.pipe.ts)
+      - Directive files: *.directive.ts (e.g., highlight.directive.ts)
+      - Guard files: *.guard.ts (e.g., auth.guard.ts)
+      - NEVER use .tsx extension in Angular projects
+      - For inline templates, use template property with backticks
+      - For separate template files, use templateUrl property pointing to .html file
+
+      ANGULAR INLINE VS EXTERNAL TEMPLATES:
+      - Use inline templates for components with less than 10 lines of HTML
+      - Use external .html files for larger templates
+      - Inline template example: template: \`<div>{{ content }}</div>\`
+      - External template example: templateUrl: './component.component.html'
+      - NEVER mix template literal syntax (dollar sign with braces) with Angular interpolation syntax (double curly braces only)
+
+      ANGULAR TYPESCRIPT SYNTAX:
+      - Use proper TypeScript decorators: @Component, @Injectable, @Input, @Output
+      - Define input properties: @Input() title: string = '';
+      - Define output events: @Output() selected = new EventEmitter<void>();
+      - Use proper typing for component properties
+      - Use interfaces for complex data structures
+      - Import necessary Angular modules in the imports array of standalone components`
           : ""
       }
       ${

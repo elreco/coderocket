@@ -446,12 +446,16 @@ export default function Hero({ popularComponents = [] }: HeroProps) {
         setIsLoggedIn(!!userId);
 
         if (userId) {
-          const [sub, integrations] = await Promise.all([
-            getSubscription(userId),
-            fetchUserIntegrations(),
-          ]);
+          const sub = await getSubscription(userId);
           setSubscription(sub);
-          setUserIntegrations(integrations);
+
+          if (sub) {
+            const integrations = await fetchUserIntegrations();
+            setUserIntegrations(integrations);
+          } else {
+            setUserIntegrations([]);
+            setSelectedIntegration(null);
+          }
         } else {
           setSubscription(null);
           setUserIntegrations([]);
@@ -475,12 +479,16 @@ export default function Hero({ popularComponents = [] }: HeroProps) {
           setSubscription(null);
         } else if (event === "SIGNED_IN" && session?.user) {
           setIsLoggedIn(true);
-          const [sub, integrations] = await Promise.all([
-            getSubscription(session.user.id),
-            fetchUserIntegrations(),
-          ]);
+          const sub = await getSubscription(session.user.id);
           setSubscription(sub);
-          setUserIntegrations(integrations);
+
+          if (sub) {
+            const integrations = await fetchUserIntegrations();
+            setUserIntegrations(integrations);
+          } else {
+            setUserIntegrations([]);
+            setSelectedIntegration(null);
+          }
         }
       },
     );

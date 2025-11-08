@@ -5,4 +5,7 @@ import { Component } from '@angular/core';
   imports: [],
   templateUrl: './app.html',
 })
-export class App {}
+export class App {
+  title = 'Hello CodeRocket';
+  version = '1.0.0';
+}

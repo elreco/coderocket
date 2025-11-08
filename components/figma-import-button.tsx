@@ -1,6 +1,6 @@
 import { SiFigma } from "@icons-pack/react-simple-icons";
 import { Loader2, ExternalLink, Download, Crown } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -61,11 +61,11 @@ export function FigmaImportButton({
 
   const isPremium = !!subscription;
 
-  useEffect(() => {
-    loadIntegrations();
-  }, []);
+  const loadIntegrations = useCallback(async () => {
+    if (!isPremium || !isLoggedIn) {
+      return;
+    }
 
-  const loadIntegrations = async () => {
     setIsLoadingIntegrations(true);
     try {
       const response = await fetch("/api/integrations");
@@ -84,7 +84,13 @@ export function FigmaImportButton({
     } finally {
       setIsLoadingIntegrations(false);
     }
-  };
+  }, [isPremium, isLoggedIn]);
+
+  useEffect(() => {
+    if (isPremium && isLoggedIn) {
+      loadIntegrations();
+    }
+  }, [isPremium, isLoggedIn, loadIntegrations]);
 
   const extractFileKey = (url: string): string | null => {
     const match = url.match(/figma\.com\/(?:file|design)\/([a-zA-Z0-9]+)/);
