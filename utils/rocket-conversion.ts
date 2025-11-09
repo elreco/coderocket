@@ -19,20 +19,20 @@ export function formatRockets(rockets: number): string {
 
 export const ROCKET_LIMITS_PER_PLAN = {
   free: {
-    monthly_rockets: 8,
-    description: "up to 20 generations",
+    monthly_rockets: 5,
+    description: "up to 20 generations per month",
   },
   starter: {
     monthly_rockets: 60,
-    description: "up to 240 generations",
+    description: "up to 240 generations per month",
   },
   pro: {
     monthly_rockets: 120,
-    description: "up to 480 generations",
+    description: "up to 480 generations per month",
   },
   enterprise: {
     monthly_rockets: 800,
-    description: "up to 3,200 generations",
+    description: "up to 3,200 generations per month",
   },
 };
 
