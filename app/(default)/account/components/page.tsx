@@ -36,14 +36,6 @@ export default async function AccountComponents({
     initialSelectedFrameworks,
     true,
   );
-  const initialPopularChats = await getAllPublicChats(
-    4,
-    0,
-    true,
-    searchQuery,
-    initialSelectedFrameworks,
-    true,
-  );
   return (
     <Container className="pr-2 sm:pr-11">
       <PageTitle title="My Components" subtitle="All my generated components" />
@@ -63,7 +55,6 @@ export default async function AccountComponents({
       </div>
       <ComponentsInfiniteScroll
         initialChats={initialChats}
-        initialPopularChats={initialPopularChats}
         initialSearchQuery={searchQuery}
         initialSelectedFrameworks={initialSelectedFrameworks}
         isAccountPage={true}

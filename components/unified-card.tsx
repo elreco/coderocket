@@ -20,6 +20,12 @@ import { getRelativeDate } from "@/utils/date";
 
 import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
 import { Button } from "./ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "./ui/tooltip";
 
 export interface UnifiedCardData {
   id: string;
@@ -192,35 +198,45 @@ export function UnifiedCard({
       <div className="flex h-24 flex-col">
         {/* Title and Author */}
         <div className="mt-2 flex items-center gap-2">
-          <Avatar
-            className="size-8 border border-border"
-            onClick={handleAuthorClick}
-          >
-            <AvatarImage src={data.user_avatar_url || undefined} />
-            <AvatarFallback>
-              <img
-                src={`${avatarApi}${data.author?.name}`}
-                alt="logo"
-                className="size-full"
-              />
-            </AvatarFallback>
-          </Avatar>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Avatar
+                  className="size-8 cursor-pointer border border-border"
+                  onClick={handleAuthorClick}
+                >
+                  <AvatarImage src={data.user_avatar_url || undefined} />
+                  <AvatarFallback>
+                    <img
+                      src={`${avatarApi}${data.author?.name}`}
+                      alt="logo"
+                      className="size-full"
+                    />
+                  </AvatarFallback>
+                </Avatar>
+              </TooltipTrigger>
+              <TooltipContent className="flex items-center gap-2 px-3 py-2">
+                <Avatar className="size-6 border border-border">
+                  <AvatarImage src={data.user_avatar_url || undefined} />
+                  <AvatarFallback>
+                    <img
+                      src={`${avatarApi}${data.author?.name}`}
+                      alt="logo"
+                      className="size-full"
+                    />
+                  </AvatarFallback>
+                </Avatar>
+                <span className="text-xs font-medium">
+                  {data.author?.name || "Anonymous user"}
+                </span>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
           <div className="flex flex-col gap-0.5">
             <h1 className="line-clamp-1 max-w-full break-all text-xs font-medium text-foreground hover:text-foreground/80">
               {data.title}
             </h1>
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              {data.author && (
-                <>
-                  <span
-                    className="cursor-pointer hover:text-muted-foreground/80 hover:underline"
-                    onClick={handleAuthorClick}
-                  >
-                    {data.author.name}
-                  </span>
-                  <span className="text-muted-foreground/60">•</span>
-                </>
-              )}
               <span>{getRelativeDate(data.createdAt)}</span>
             </div>
           </div>

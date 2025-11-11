@@ -43,7 +43,6 @@ const MAX_PAGE = 40;
 
 interface ComponentsInfiniteScrollProps {
   initialChats: GetComponentsReturnType[] | null;
-  initialPopularChats: GetComponentsReturnType[] | null;
   initialSearchQuery?: string;
   initialSelectedFrameworks?: Framework[];
   initialSort?: "newest" | "top";
@@ -59,7 +58,6 @@ interface ComponentsInfiniteScrollProps {
 
 export function ComponentsInfiniteScroll({
   initialChats,
-  initialPopularChats,
   initialSearchQuery = "",
   initialSelectedFrameworks = [],
   initialSort = "newest",
@@ -81,9 +79,6 @@ export function ComponentsInfiniteScroll({
 
   const [publicChats, setPublicChats] = useState<GetComponentsReturnType[]>(
     initialChats ?? [],
-  );
-  const [popularChats, setPopularChats] = useState<GetComponentsReturnType[]>(
-    initialPopularChats ?? [],
   );
 
   const [page, setPage] = useState<number>(0);
@@ -168,22 +163,6 @@ export function ComponentsInfiniteScroll({
     }
   }
 
-  async function doFetchPopularChats(
-    search?: string,
-    frameworks?: Framework[],
-  ) {
-    const data = await getAllPublicChats(
-      4,
-      0,
-      true,
-      search,
-      frameworks,
-      isAccountPage,
-      isLikedPage,
-    );
-    setPopularChats(data.filter(Boolean));
-  }
-
   function handleSearchInput(e: React.ChangeEvent<HTMLInputElement>) {
     const value = e.target.value.slice(0, MAX_SEARCH_LENGTH);
     setSearchQuery(value);
@@ -211,7 +190,6 @@ export function ComponentsInfiniteScroll({
       reset: true,
       sortByTop: sortBy === "top",
     });
-    await doFetchPopularChats(searchQuery, selectedFrameworks);
 
     setIsLoading(false);
     setTimeout(() => setShowSkeleton(false), 300);
@@ -231,7 +209,6 @@ export function ComponentsInfiniteScroll({
       reset: true,
       sortByTop: sortBy === "top",
     });
-    await doFetchPopularChats("", selectedFrameworks);
   }
 
   async function handleFrameworkSelection(framework: Framework | null) {
@@ -260,7 +237,6 @@ export function ComponentsInfiniteScroll({
       reset: true,
       sortByTop: sortBy === "top",
     });
-    await doFetchPopularChats(searchQuery, newFrameworks);
 
     setIsLoading(false);
     setTimeout(() => setShowSkeleton(false), 300);
@@ -312,8 +288,7 @@ export function ComponentsInfiniteScroll({
     }
   }
 
-  const hasNoResults =
-    !showSkeleton && publicChats.length === 0 && popularChats.length === 0;
+  const hasNoResults = !showSkeleton && publicChats.length === 0;
 
   const showBrowseLayout =
     !isAccountPage &&
@@ -334,7 +309,6 @@ export function ComponentsInfiniteScroll({
       reset: true,
       sortByTop: sortBy === "top",
     });
-    await doFetchPopularChats(searchQuery, [framework]);
 
     setIsLoading(false);
     setTimeout(() => setShowSkeleton(false), 300);
@@ -570,7 +544,6 @@ export function ComponentsInfiniteScroll({
                     reset: true,
                     sortByTop: false,
                   });
-                  await doFetchPopularChats("", []);
                   setIsLoading(false);
                   setTimeout(() => setShowSkeleton(false), 300);
                 }}

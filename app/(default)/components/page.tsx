@@ -43,7 +43,6 @@ export default async function Components({
 
   const [
     initialChats,
-    initialPopularChats,
     reactComponents,
     vueComponents,
     htmlComponents,
@@ -58,13 +57,12 @@ export default async function Components({
       searchQuery,
       initialSelectedFrameworks,
     ),
-    getAllPublicChats(4, 0, true, searchQuery, initialSelectedFrameworks),
-    getComponentsByFramework(Framework.REACT, 10),
-    getComponentsByFramework(Framework.VUE, 10),
-    getComponentsByFramework(Framework.HTML, 10),
-    getComponentsByFramework(Framework.SVELTE, 10),
-    getComponentsByFramework(Framework.ANGULAR, 10),
-    getMostPopularComponents(10),
+    getComponentsByFramework(Framework.REACT, 4),
+    getComponentsByFramework(Framework.VUE, 4),
+    getComponentsByFramework(Framework.HTML, 4),
+    getComponentsByFramework(Framework.SVELTE, 4),
+    getComponentsByFramework(Framework.ANGULAR, 4),
+    getMostPopularComponents(6),
   ]);
 
   return (
@@ -79,7 +77,6 @@ export default async function Components({
       </div>
       <ComponentsInfiniteScroll
         initialChats={initialChats}
-        initialPopularChats={initialPopularChats}
         initialSearchQuery={searchQuery}
         initialSelectedFrameworks={initialSelectedFrameworks}
         initialSort={initialSort}

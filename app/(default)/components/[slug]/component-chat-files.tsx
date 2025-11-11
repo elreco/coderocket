@@ -471,7 +471,7 @@ ${extractedFiles
           </div>
         ) : (
           <div className="flex w-full flex-col gap-2 overflow-x-auto break-words text-sm">
-            <div className="flex items-center justify-between">
+            <div className="mt-1 flex flex-col items-start">
               <div className="mr-2 flex items-center">
                 {message.is_github_pull ? (
                   <Avatar className="size-10 rounded-none bg-gray-900">
@@ -507,10 +507,11 @@ ${extractedFiles
                   <AlertDialogTrigger asChild>
                     <Button
                       variant="destructive"
+                      className="mt-2 p-2 text-xs"
                       size="sm"
                       disabled={isLoading}
                     >
-                      <Trash2 className="size-4" />
+                      <Trash2 className="size-3" />
                       Delete version
                     </Button>
                   </AlertDialogTrigger>
