@@ -14,23 +14,20 @@ export function BuyExtraMessages() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
-  const [pairs, setPairs] = useState(1);
+  const [quantity, setQuantity] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const buyRockets = searchParams.get("buy_rockets");
 
-  // Vérifier si l'utilisateur vient d'acheter des messages supplémentaires
-  const rockets = searchParams.get("rockets");
+  const purchasedRockets = searchParams.get("rockets");
 
-  // Afficher un toast si l'utilisateur vient d'acheter des messages supplémentaires
-  if (rockets) {
+  if (purchasedRockets) {
     toast({
       title: "Purchase successful!",
-      description: `You have successfully purchased ${parseInt(rockets || "0")} Rocket${
-        parseInt(rockets || "0") > 1 ? "s" : ""
+      description: `You have successfully purchased ${parseInt(purchasedRockets || "0")} Rocket${
+        parseInt(purchasedRockets || "0") > 1 ? "s" : ""
       }! 🚀`,
       duration: 5000,
     });
-    // Rediriger pour supprimer le paramètre de l'URL
     router.replace("/account");
   }
 
@@ -46,29 +43,28 @@ export function BuyExtraMessages() {
   }
 
   const handleIncrement = () => {
-    setPairs(pairs + 1);
+    setQuantity(quantity + 1);
   };
 
   const handleDecrement = () => {
-    if (pairs > 1) {
-      setPairs(pairs - 1);
+    if (quantity > 1) {
+      setQuantity(quantity - 1);
     }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value);
     if (!isNaN(value) && value > 0) {
-      setPairs(value);
+      setQuantity(value);
     }
   };
 
   const handlePurchase = async () => {
     setIsLoading(true);
     try {
-      // Send the number of versions to purchase directly
       const data = await postData({
         url: "/api/purchase-extra-message",
-        data: { quantity: pairs },
+        data: { quantity },
       });
 
       if (data.sessionUrl) {
@@ -79,7 +75,7 @@ export function BuyExtraMessages() {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "An error occurred while processing your template.",
+        description: "An error occurred while processing your purchase.",
         duration: 4000,
       });
     } finally {
@@ -87,8 +83,7 @@ export function BuyExtraMessages() {
     }
   };
 
-  // Calculate price
-  const totalPrice = pairs;
+  const totalPrice = quantity;
 
   return (
     <Card
@@ -109,7 +104,7 @@ export function BuyExtraMessages() {
             variant="outline"
             size="icon"
             onClick={handleDecrement}
-            disabled={pairs <= 1}
+            disabled={quantity <= 1}
           >
             <Minus className="size-4" />
           </Button>
@@ -117,7 +112,7 @@ export function BuyExtraMessages() {
           <Input
             type="number"
             min="1"
-            value={pairs}
+            value={quantity}
             onChange={handleInputChange}
             className="w-20 text-center"
           />
@@ -127,13 +122,14 @@ export function BuyExtraMessages() {
           </Button>
 
           <div className="ml-4 text-lg font-medium">
-            ${totalPrice.toFixed(2)} for {pairs} 🚀 Rocket{pairs > 1 ? "s" : ""}
+            ${totalPrice.toFixed(2)} for {quantity} 🚀 Rocket
+            {quantity > 1 ? "s" : ""}
           </div>
         </div>
 
         <Button onClick={handlePurchase} className="w-1/2" loading={isLoading}>
           <ShoppingCart className="mr-2 size-4" />
-          Purchase {pairs} Rocket{pairs > 1 ? "s" : ""}
+          Purchase {quantity} Rocket{quantity > 1 ? "s" : ""}
         </Button>
       </div>
 

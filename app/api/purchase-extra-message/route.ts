@@ -4,14 +4,9 @@ import { createOrRetrieveCustomer } from "@/utils/supabase-admin";
 
 export async function POST(req: Request) {
   if (req.method === "POST") {
-    // Get the number of versions to purchase (default 1)
     const { quantity = 1 } = await req.json();
 
-    // Calculate the actual number of messages (1 version = 2 messages)
-    const rocketsQuantity = quantity;
-
     try {
-      // Get the user from Supabase auth
       const supabase = await createClient();
       const {
         data: { user },
@@ -26,7 +21,6 @@ export async function POST(req: Request) {
         );
       }
 
-      // Get or create the customer in Stripe
       const customer = await createOrRetrieveCustomer({
         uuid: user.id,
         email: user.email || "",
@@ -34,7 +28,6 @@ export async function POST(req: Request) {
 
       const unit_amount = 100;
 
-      // Create a payment session in Stripe
       const session = await stripe.checkout.sessions.create({
         tax_id_collection: { enabled: true },
         billing_address_collection: "required",
@@ -58,11 +51,11 @@ export async function POST(req: Request) {
         ],
         mode: "payment",
         allow_promotion_codes: true,
-        success_url: `https://www.coderocket.app/account?rockets=${rocketsQuantity}`,
+        success_url: `https://www.coderocket.app/account?rockets=${quantity}`,
         cancel_url: `https://www.coderocket.app/`,
         metadata: {
           userId: user.id,
-          rockets: rocketsQuantity.toString(),
+          rockets: quantity.toString(),
         },
       });
 
