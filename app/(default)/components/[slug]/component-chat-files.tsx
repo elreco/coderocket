@@ -437,7 +437,6 @@ ${extractedFiles
               createdAt={message.created_at}
               userAvatarUrl={message.chats.user.avatar_url}
               userFullName={message.chats.user.full_name}
-              disableLink
             />
             <Markdown>{message.content}</Markdown>
             <PromptFiles

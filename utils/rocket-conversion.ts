@@ -23,16 +23,16 @@ export const ROCKET_LIMITS_PER_PLAN = {
     description: "up to 20 generations per month",
   },
   starter: {
-    monthly_rockets: 60,
-    description: "up to 240 generations per month",
+    monthly_rockets: 45,
+    description: "up to 180 generations per month",
   },
   pro: {
-    monthly_rockets: 120,
-    description: "up to 480 generations per month",
+    monthly_rockets: 90,
+    description: "up to 360 generations per month",
   },
   enterprise: {
-    monthly_rockets: 800,
-    description: "up to 3,200 generations per month",
+    monthly_rockets: 600,
+    description: "up to 2,400 generations per month",
   },
 };
 

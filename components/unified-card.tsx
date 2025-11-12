@@ -201,19 +201,18 @@ export function UnifiedCard({
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Avatar
-                  className="size-8 cursor-pointer border border-border"
-                  onClick={handleAuthorClick}
-                >
-                  <AvatarImage src={data.user_avatar_url || undefined} />
-                  <AvatarFallback>
-                    <img
-                      src={`${avatarApi}${data.author?.name}`}
-                      alt="logo"
-                      className="size-full"
-                    />
-                  </AvatarFallback>
-                </Avatar>
+                <div onClick={handleAuthorClick}>
+                  <Avatar className="size-8 cursor-pointer border border-border">
+                    <AvatarImage src={data.user_avatar_url || undefined} />
+                    <AvatarFallback>
+                      <img
+                        src={`${avatarApi}${data.author?.name}`}
+                        alt="logo"
+                        className="size-full"
+                      />
+                    </AvatarFallback>
+                  </Avatar>
+                </div>
               </TooltipTrigger>
               <TooltipContent className="flex items-center gap-2 px-3 py-2">
                 <Avatar className="size-6 border border-border">
