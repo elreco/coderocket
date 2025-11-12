@@ -1190,7 +1190,15 @@ Use standard Tailwind CSS classes and shadcn/ui components.`;
     selectedVersion !== undefined
       ? await fetchUserMessageByChatIdAndVersion(id, selectedVersion)
       : await fetchLastUserMessageByChatId(id);
-  if (!lastUserMessage) throw new Error("No last user message");
+
+  if (!lastUserMessage) {
+    console.error("No user message found for chat:", { id, selectedVersion });
+    throw new Error(
+      selectedVersion !== undefined
+        ? "chat-version-not-found"
+        : "chat-corrupted",
+    );
+  }
 
   // Utiliser le prompt détaillé s'il est disponible, sinon utiliser le prompt existant
   let updatedPrompt = enhancedPrompt || "";

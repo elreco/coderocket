@@ -482,9 +482,19 @@ export const createChat = async (prompt: string, formData: FormData) => {
     messageData.files = filesArray;
   }
 
-  await supabase.from("messages").insert(messageData);
+  const { error: messageError } = await supabase
+    .from("messages")
+    .insert(messageData);
 
-  // Note: Token tracking is now done automatically in the API route
+  if (messageError) {
+    await supabase.from("chats").delete().eq("id", data.id);
+    return {
+      error: {
+        title: "Failed to create message",
+        description: "Please try again later.",
+      },
+    };
+  }
 
   const integrationId = formData.get("integrationId")?.toString();
   if (integrationId) {

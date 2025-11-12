@@ -438,6 +438,26 @@ export default function ComponentCompletion({
           });
           return;
         }
+        if (error.message === "chat-corrupted") {
+          toast({
+            variant: "destructive",
+            title: "Component data is corrupted",
+            description:
+              "This component has missing data and cannot be edited. Please create a new component or remix this one.",
+            duration: 6000,
+          });
+          return;
+        }
+        if (error.message === "chat-version-not-found") {
+          toast({
+            variant: "destructive",
+            title: "Version not found",
+            description:
+              "The selected version does not exist. Please select another version.",
+            duration: 4000,
+          });
+          return;
+        }
         if (error.message === "limit-exceeded") {
           const subscription = await getSubscription();
           if (!subscription) {
