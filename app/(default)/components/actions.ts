@@ -565,26 +565,8 @@ export const getAllPublicChats = async (
       return [];
     }
 
-    const chatIds = data.map((chat) => chat.chat_id);
-
-    const { data: screenshots } = await supabase
-      .from("messages")
-      .select("chat_id, screenshot, version")
-      .in("chat_id", chatIds)
-      .eq("role", "assistant")
-      .not("screenshot", "is", null)
-      .order("version", { ascending: false });
-
-    const screenshotMap = new Map<string, string>();
-    if (screenshots) {
-      screenshots.forEach((msg) => {
-        if (!screenshotMap.has(msg.chat_id) && msg.screenshot) {
-          screenshotMap.set(msg.chat_id, msg.screenshot);
-        }
-      });
-    }
-
     if (user) {
+      const chatIds = data.map((chat) => chat.chat_id);
       const { data: userLikes } = await supabase
         .from("chat_likes")
         .select("chat_id")
@@ -598,14 +580,14 @@ export const getAllPublicChats = async (
       return data.map((chat) => ({
         ...chat,
         user_has_liked: likedChatIds.has(chat.chat_id),
-        screenshot: screenshotMap.get(chat.chat_id) || undefined,
+        screenshot: chat.last_assistant_message,
       }));
     }
 
     return data.map((chat) => ({
       ...chat,
       user_has_liked: false,
-      screenshot: screenshotMap.get(chat.chat_id) || undefined,
+      screenshot: chat.last_assistant_message,
     }));
   } catch (err) {
     console.error("Unexpected error in getAllPublicChats:", err);
@@ -1043,26 +1025,8 @@ export const getComponentsByFramework = async (
       return [];
     }
 
-    const chatIds = data.map((chat) => chat.chat_id);
-
-    const { data: screenshots } = await supabase
-      .from("messages")
-      .select("chat_id, screenshot, version")
-      .in("chat_id", chatIds)
-      .eq("role", "assistant")
-      .not("screenshot", "is", null)
-      .order("version", { ascending: false });
-
-    const screenshotMap = new Map<string, string>();
-    if (screenshots) {
-      screenshots.forEach((msg) => {
-        if (!screenshotMap.has(msg.chat_id) && msg.screenshot) {
-          screenshotMap.set(msg.chat_id, msg.screenshot);
-        }
-      });
-    }
-
     if (user) {
+      const chatIds = data.map((chat) => chat.chat_id);
       const { data: userLikes } = await supabase
         .from("chat_likes")
         .select("chat_id")
@@ -1076,14 +1040,14 @@ export const getComponentsByFramework = async (
       return data.map((chat) => ({
         ...chat,
         user_has_liked: likedChatIds.has(chat.chat_id),
-        screenshot: screenshotMap.get(chat.chat_id) || undefined,
+        screenshot: chat.last_assistant_message,
       }));
     }
 
     return data.map((chat) => ({
       ...chat,
       user_has_liked: false,
-      screenshot: screenshotMap.get(chat.chat_id) || undefined,
+      screenshot: chat.last_assistant_message,
     }));
   } catch (err) {
     console.error("Unexpected error in getComponentsByFramework:", err);
@@ -1117,26 +1081,8 @@ export const getMostPopularComponents = async (limit: number = 10) => {
       return [];
     }
 
-    const chatIds = data.map((chat) => chat.chat_id);
-
-    const { data: screenshots } = await supabase
-      .from("messages")
-      .select("chat_id, screenshot, version")
-      .in("chat_id", chatIds)
-      .eq("role", "assistant")
-      .not("screenshot", "is", null)
-      .order("version", { ascending: false });
-
-    const screenshotMap = new Map<string, string>();
-    if (screenshots) {
-      screenshots.forEach((msg) => {
-        if (!screenshotMap.has(msg.chat_id) && msg.screenshot) {
-          screenshotMap.set(msg.chat_id, msg.screenshot);
-        }
-      });
-    }
-
     if (user) {
+      const chatIds = data.map((chat) => chat.chat_id);
       const { data: userLikes } = await supabase
         .from("chat_likes")
         .select("chat_id")
@@ -1150,14 +1096,14 @@ export const getMostPopularComponents = async (limit: number = 10) => {
       return data.map((chat) => ({
         ...chat,
         user_has_liked: likedChatIds.has(chat.chat_id),
-        screenshot: screenshotMap.get(chat.chat_id) || undefined,
+        screenshot: chat.last_assistant_message,
       }));
     }
 
     return data.map((chat) => ({
       ...chat,
       user_has_liked: false,
-      screenshot: screenshotMap.get(chat.chat_id) || undefined,
+      screenshot: chat.last_assistant_message,
     }));
   } catch (err) {
     console.error("Unexpected error in getMostPopularComponents:", err);

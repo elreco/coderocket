@@ -154,7 +154,12 @@ export const getLatestComponentsByUserId = async (
       console.error("Error fetching public chats:", error);
       return [];
     }
-    return data || [];
+    return (
+      data?.map((chat) => ({
+        ...chat,
+        screenshot: chat.last_assistant_message,
+      })) || []
+    );
   } catch (err) {
     console.error("Unexpected error in getAllPublicChats:", err);
     return [];
@@ -352,25 +357,30 @@ export const getLatestMarketplaceListingsByUserId = async (
       return [];
     }
 
-    // Get screenshots for each listing
-    const listingsWithScreenshots = await Promise.all(
-      listings.map(async (listing) => {
-        const { data: message } = await supabase
-          .from("messages")
-          .select("screenshot")
-          .eq("chat_id", listing.chat_id)
-          .eq("version", listing.version)
-          .eq("role", "assistant")
-          .single();
+    const { data: messages } = await supabase
+      .from("messages")
+      .select("chat_id, version, screenshot")
+      .in(
+        "chat_id",
+        listings.map((l) => l.chat_id),
+      )
+      .eq("role", "assistant");
 
-        return {
-          ...listing,
-          screenshot: message?.screenshot || null,
-        };
-      }),
-    );
+    const screenshotMap = new Map<string, string>();
+    if (messages) {
+      messages.forEach((msg) => {
+        const key = `${msg.chat_id}-${msg.version}`;
+        if (msg.screenshot && !screenshotMap.has(key)) {
+          screenshotMap.set(key, msg.screenshot);
+        }
+      });
+    }
 
-    return listingsWithScreenshots;
+    return listings.map((listing) => ({
+      ...listing,
+      screenshot:
+        screenshotMap.get(`${listing.chat_id}-${listing.version}`) || null,
+    }));
   } catch (error) {
     console.error("Error in getLatestMarketplaceListingsByUserId:", error);
     return [];
