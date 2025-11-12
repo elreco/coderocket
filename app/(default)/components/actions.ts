@@ -502,7 +502,7 @@ export const createChat = async (prompt: string, formData: FormData) => {
  * 🔹 Récupère les composants publics avec pagination et recherche sécurisée.
  */
 export const getAllPublicChats = async (
-  limit: number = 20,
+  limit: number = 16,
   offset: number = 0,
   isPopular: boolean = false,
   searchQuery?: string,

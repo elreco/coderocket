@@ -29,7 +29,7 @@ export default async function AccountComponents({
     ? frameworks.split(",").map((framework) => framework as Framework)
     : [];
   const initialChats = await getAllPublicChats(
-    20,
+    16,
     0,
     false,
     searchQuery,

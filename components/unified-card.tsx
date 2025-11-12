@@ -110,7 +110,7 @@ export function UnifiedCard({
     <div className="flex flex-col">
       <div
         className={cn(
-          "w-full bg-center overflow-hidden relative card rounded-md mx-auto cursor-pointer border border-primary/20 transition-all duration-800 hover:border-primary hover:shadow-lg",
+          "w-full bg-center overflow-hidden relative card rounded-md mx-auto cursor-pointer border border-primary/20 transition-all duration-800 hover:shadow-lg",
           isReverse ? "bg-background" : "bg-primary/5",
           data.isLiked && "border border-pink-500",
           className,

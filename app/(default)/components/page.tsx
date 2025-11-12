@@ -51,7 +51,7 @@ export default async function Components({
     mostPopularComponents,
   ] = await Promise.all([
     getAllPublicChats(
-      20,
+      16,
       0,
       initialSort === "top",
       searchQuery,
