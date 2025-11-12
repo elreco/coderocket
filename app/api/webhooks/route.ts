@@ -181,17 +181,13 @@ export async function POST(req: Request) {
                 );
                 // Don't fail the webhook, but log the error
               }
-            }
-            // Handle extra messages purchases
-            else if (metadata && metadata.extraMessages && metadata.userId) {
+            } else if (metadata && metadata.rockets && metadata.userId) {
               const userId = metadata.userId;
-              const extraMessages = parseInt(metadata.extraMessages, 10);
+              const rockets = parseInt(metadata.rockets, 10);
 
-              if (extraMessages > 0) {
-                // Mettre à jour le compteur de messages supplémentaires dans la base de données
+              if (rockets > 0) {
                 const supabase = await createClient();
 
-                // Vérifier si l'utilisateur existe déjà dans la table extra_messages
                 const { data: existingData } = await supabase
                   .from("extra_messages")
                   .select("*")
@@ -199,19 +195,17 @@ export async function POST(req: Request) {
                   .single();
 
                 if (existingData) {
-                  // Mettre à jour le nombre de messages supplémentaires
                   await supabase
                     .from("extra_messages")
                     .update({
-                      count: existingData.count + extraMessages,
+                      count: existingData.count + rockets,
                       updated_at: new Date().toISOString(),
                     })
                     .eq("user_id", userId);
                 } else {
-                  // Créer une nouvelle entrée
                   await supabase.from("extra_messages").insert({
                     user_id: userId,
-                    count: extraMessages,
+                    count: rockets,
                     created_at: new Date().toISOString(),
                     updated_at: new Date().toISOString(),
                   });
