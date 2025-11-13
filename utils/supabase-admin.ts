@@ -103,58 +103,30 @@ const copyBillingDetailsToCustomer = async (
   if (error) throw error;
 };
 
-async function getEuroAmount(
-  amount: number,
-  currency: string,
-): Promise<number> {
-  console.log(`💱 Converting ${amount} ${currency} to EUR`);
-  if (currency === "eur") return amount / 100;
-
-  try {
-    const res = await fetch(
-      `https://api.exchangerate.host/convert?from=${currency}&to=eur`,
-    );
-
-    if (!res.ok) {
-      console.error(
-        `❌ Exchange rate API error: ${res.status} ${res.statusText}`,
-      );
-      return amount / 100;
-    }
-
-    const data = await res.json();
-
-    if (!data.success || !data.info?.rate) {
-      console.error("❌ Invalid exchange rate response:", data);
-      return amount / 100;
-    }
-
-    const rate = data.info.rate;
-    const euroAmount = (amount / 100) * rate;
-    console.log(`✅ Converted to ${euroAmount} EUR (rate: ${rate})`);
-    return euroAmount;
-  } catch (error) {
-    console.error("❌ Error fetching exchange rate:", error);
-    return amount / 100;
-  }
-}
-
 export const updatePaymentRecord = async (
   paymentIntent: Stripe.PaymentIntent,
 ) => {
   const supabase = await createClient();
 
   try {
-    const amount_euro = await getEuroAmount(
-      paymentIntent.amount_received,
-      paymentIntent.currency,
-    );
+    const { data: existingPayment } = await supabase
+      .from("payments")
+      .select("payment_id")
+      .eq("payment_id", paymentIntent.id)
+      .single();
+
+    if (existingPayment) {
+      console.log(
+        `Payment record already exists: ${paymentIntent.id}, skipping insert`,
+      );
+      return;
+    }
 
     const { error } = await supabase.from("payments").insert({
       payment_id: paymentIntent.id,
       created: new Date(paymentIntent.created * 1000).toISOString(),
       amount: paymentIntent.amount,
-      amount_euro,
+      amount_euro: paymentIntent.amount_received / 100,
       payment_currency: paymentIntent.currency,
       description: paymentIntent.description,
       stripe_customer_id: paymentIntent.customer?.toString() || null,
@@ -165,7 +137,9 @@ export const updatePaymentRecord = async (
       throw error;
     }
 
-    console.log(`Payment record inserted: ${paymentIntent.id}`);
+    console.log(
+      `Payment record inserted: ${paymentIntent.id}, amount: ${paymentIntent.amount_received / 100} ${paymentIntent.currency}`,
+    );
   } catch (error) {
     console.error("Failed to update payment record:", error);
     throw error;
@@ -232,7 +206,7 @@ const manageSubscriptionStatusChange = async (
     .upsert([subscriptionData]);
   if (error) throw error;
   console.log(
-    `Inserted/updated subscription [${subscription.id}] for user [${uuid}]`,
+    `[manageSubscriptionStatusChange] Inserted/updated subscription [${subscription.id}] for user [${uuid}], status=${subscription.status}, price_id=${subscription.items.data[0].price.id}`,
   );
 
   // For a new subscription copy the billing details to the customer object.

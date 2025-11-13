@@ -33,6 +33,17 @@ export async function getSubscription(userId?: string) {
       .eq("user_id", userId ?? data.user.id)
       .maybeSingle()
       .throwOnError();
+
+    if (subscription) {
+      console.log(
+        `[getSubscription] User ${userId ?? data.user.id}: plan=${subscription.prices?.products?.name}, status=${subscription.status}`,
+      );
+    } else {
+      console.log(
+        `[getSubscription] User ${userId ?? data.user.id}: No active subscription`,
+      );
+    }
+
     return subscription;
   } catch (error) {
     console.error("Error:", error);

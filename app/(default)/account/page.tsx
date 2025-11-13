@@ -20,6 +20,7 @@ import { getUserTokenUsage } from "@/utils/token-pricing";
 import { getUser, updateEmail, updateName } from "./actions";
 import { BuyExtraMessages } from "./components/buy-extra-messages";
 import GitHubConnection from "./components/github-connection";
+import SubscriptionRefresh from "./components/subscription-refresh";
 import { getGithubConnection } from "./github-actions";
 import ManageSubscriptionButton from "./manage-subscription-button";
 import UnsubscribeSurveyDialog from "./unsubscribe-survey-dialog";
@@ -117,6 +118,7 @@ export default async function Account() {
 
   return (
     <Container>
+      <SubscriptionRefresh />
       <PageTitle
         title="My Account"
         subtitle="Manage your account and billing."

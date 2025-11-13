@@ -42,7 +42,10 @@ export function getPlanRocketLimits(planName: string): {
 } {
   const normalizedPlan = planName.toLowerCase();
 
-  if (normalizedPlan.includes("enterprise")) {
+  if (
+    normalizedPlan.includes("enterprise") ||
+    normalizedPlan.includes("entreprise")
+  ) {
     return ROCKET_LIMITS_PER_PLAN.enterprise;
   }
   if (normalizedPlan.includes("pro")) {

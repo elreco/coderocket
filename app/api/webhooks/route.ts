@@ -135,6 +135,9 @@ export async function POST(req: Request) {
         case "customer.subscription.deleted":
           // eslint-disable-next-line no-case-declarations
           const subscription = event.data.object as Stripe.Subscription;
+          console.log(
+            `[webhook] ${event.type}: subscription_id=${subscription.id}, customer=${subscription.customer}, status=${subscription.status}, price_id=${subscription.items.data[0]?.price.id}`,
+          );
           await manageSubscriptionStatusChange(
             subscription.id,
             subscription.customer as string,
@@ -160,6 +163,9 @@ export async function POST(req: Request) {
         case "checkout.session.completed":
           // eslint-disable-next-line no-case-declarations
           const checkoutSession = event.data.object as Stripe.Checkout.Session;
+          console.log(
+            `[webhook] checkout.session.completed: mode=${checkoutSession.mode}, customer=${checkoutSession.customer}, subscription=${checkoutSession.subscription}`,
+          );
           if (checkoutSession.mode === "subscription") {
             const subscriptionId = checkoutSession.subscription;
             await manageSubscriptionStatusChange(
