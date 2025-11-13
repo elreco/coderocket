@@ -386,19 +386,38 @@ ${extractedFiles
         );
 
         if (refreshedLastAssistantMessage) {
-          // Force webcontainer to be not ready for the new displayed version
           handleVersionSelect(refreshedLastAssistantMessage.version);
           setWebcontainerReady(false);
         }
       }
-    } catch {
-      toast({
-        variant: "destructive",
-        title: "Premium account required",
-        description:
-          "You are not premium, you can't delete a version. Please upgrade to premium and try again.",
-        duration: 4000,
-      });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+
+      if (errorMessage.includes("Only the last version")) {
+        toast({
+          variant: "destructive",
+          title: "Cannot delete version",
+          description:
+            "Only the last version can be deleted. Please delete newer versions first.",
+          duration: 4000,
+        });
+      } else if (errorMessage.includes("payment-required")) {
+        toast({
+          variant: "destructive",
+          title: "Premium account required",
+          description:
+            "You need a premium account to delete versions. Please upgrade and try again.",
+          duration: 4000,
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error deleting version",
+          description: errorMessage || "An unexpected error occurred.",
+          duration: 4000,
+        });
+      }
       setForceBuild(false);
     } finally {
       setIsDeleting(false);
@@ -500,57 +519,75 @@ ${extractedFiles
                   </p>
                 </div>
               </div>
-              {messages.length > 2 && authorized && (
-                <AlertDialog
-                  open={isAlertOpen || isDeleting}
-                  onOpenChange={setIsAlertOpen}
-                >
-                  <AlertDialogTrigger asChild>
-                    <Button
-                      variant="destructive"
-                      className="mt-2 p-2 text-xs"
-                      size="sm"
-                      disabled={isLoading}
+              {messages.length > 2 &&
+                authorized &&
+                (() => {
+                  const assistantMessages = messages.filter(
+                    (m) => m.role === "assistant",
+                  );
+                  const highestVersion = Math.max(
+                    ...assistantMessages.map((m) => m.version),
+                  );
+                  const isLastVersion = message.version === highestVersion;
+                  const canDelete =
+                    assistantMessages.length === 1 || isLastVersion;
+
+                  if (!canDelete) {
+                    return null;
+                  }
+
+                  return (
+                    <AlertDialog
+                      open={isAlertOpen || isDeleting}
+                      onOpenChange={setIsAlertOpen}
                     >
-                      <Trash2 className="size-3" />
-                      Delete version
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Delete Version</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Are you sure you want to delete this version?
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel disabled={isDeleting}>
-                        Cancel
-                      </AlertDialogCancel>
-                      <AlertDialogAction asChild>
+                      <AlertDialogTrigger asChild>
                         <Button
-                          onClick={() => handleDeleteVersion(message.id)}
-                          disabled={isDeleting}
-                          loading={isDeleting}
                           variant="destructive"
+                          className="mt-2 p-2 text-xs"
+                          size="sm"
+                          disabled={isLoading}
                         >
-                          {isDeleting ? (
-                            <>
-                              <Loader2 className="mr-2 size-4 animate-spin" />
-                              Deleting...
-                            </>
-                          ) : (
-                            <>
-                              <Trash2 className="size-4" />
-                              Delete version
-                            </>
-                          )}
+                          <Trash2 className="size-3" />
+                          Delete version
                         </Button>
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              )}
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Version</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to delete this version?
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel disabled={isDeleting}>
+                            Cancel
+                          </AlertDialogCancel>
+                          <AlertDialogAction asChild>
+                            <Button
+                              onClick={() => handleDeleteVersion(message.id)}
+                              disabled={isDeleting}
+                              loading={isDeleting}
+                              variant="destructive"
+                            >
+                              {isDeleting ? (
+                                <>
+                                  <Loader2 className="mr-2 size-4 animate-spin" />
+                                  Deleting...
+                                </>
+                              ) : (
+                                <>
+                                  <Trash2 className="size-4" />
+                                  Delete version
+                                </>
+                              )}
+                            </Button>
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  );
+                })()}
             </div>
             <ChunkReader
               chunks={chunks}

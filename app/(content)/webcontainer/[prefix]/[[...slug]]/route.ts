@@ -276,7 +276,7 @@ export async function GET(
       "API Route: Erreur lors de la récupération du blob",
       blobResp.status,
     );
-    return new NextResponse("Erreur de fetch sur le blob", { status: 500 });
+    return new NextResponse("Try to refresh the page", { status: 500 });
   }
 
   const data = await blobResp.arrayBuffer();

@@ -542,12 +542,17 @@ export async function POST(req: Request) {
 
     return stream.toTextStreamResponse();
   } catch (error: unknown) {
+    console.error("=== API Components Route Error ===");
+    console.error("Error details:", error);
     if (error instanceof Error) {
+      console.error("Error message:", error.message);
+      console.error("Error stack:", error.stack);
       return new Response(JSON.stringify({ error: error.message }), {
         status: 500,
         headers: { "Content-Type": "application/json" },
       });
     }
+    console.error("Unknown error type:", typeof error);
     return new Response(JSON.stringify({ error: "Internal server error" }), {
       status: 500,
       headers: { "Content-Type": "application/json" },
@@ -1294,160 +1299,178 @@ const updateDataAfterCompletion = async (
   }[],
   version: number,
 ) => {
-  const supabase = await createClient();
-  const { data: userData } = await supabase.auth.getUser();
-  const user = userData.user;
+  try {
+    const supabase = await createClient();
+    const { data: userData } = await supabase.auth.getUser();
+    const user = userData.user;
 
-  if (!user) {
-    throw new Error("User not authenticated");
-  }
+    if (!user) {
+      throw new Error("User not authenticated");
+    }
 
-  const chat = await fetchChatById(chatId);
-  if (!chat) return console.error("Could not get chat data");
-
-  if (!text) {
-    console.error("❌ updateDataAfterCompletion: No completion text provided");
-    return;
-  }
-
-  // FIXED: Use previous artifact code from messages instead of chats table
-  const previousArtifactCode =
-    (await getPreviousArtifactCode(chatId, version)) || "";
-  const artifactCode = getUpdatedArtifactCode(text, previousArtifactCode);
-
-  // Fetch current tokens
-  const { data: currentChatData, error } = await supabase
-    .from("chats")
-    .select("input_tokens, output_tokens, title")
-    .eq("id", chatId)
-    .single();
-
-  if (error) {
-    console.error("Error fetching current tokens:", error);
-    return;
-  }
-
-  const currentInputTokens = currentChatData?.input_tokens || 0;
-  const currentOutputTokens = currentChatData?.output_tokens || 0;
-  // Update with the sum of previous and new tokens
-  if (currentChatData.title) {
-    await supabase
-      .from("chats")
-      .update({
-        artifact_code: artifactCode,
-        input_tokens: currentInputTokens + (usage.inputTokens ?? 0),
-        output_tokens: currentOutputTokens + (usage.outputTokens ?? 0),
-      })
-      .eq("id", chatId);
-  } else {
-    await supabase
-      .from("chats")
-      .update({
-        artifact_code: artifactCode,
-        title: extractTitle(text),
-        input_tokens: currentInputTokens + (usage.inputTokens ?? 0),
-        output_tokens: currentOutputTokens + (usage.outputTokens ?? 0),
-      })
-      .eq("id", chatId);
-  }
-  const cacheCreationInputTokens = 0;
-  const cacheReadInputTokens = usage.cachedInputTokens ?? 0;
-
-  const modelUsed = "claude-sonnet-4-5";
-  const cost = calculateTokenCost(
-    {
-      input_tokens: usage.inputTokens ?? 0,
-      output_tokens: usage.outputTokens ?? 0,
-      cache_creation_input_tokens: cacheCreationInputTokens,
-      cache_read_input_tokens: cacheReadInputTokens,
-    },
-    modelUsed,
-  );
-
-  const { error: updateUserError } = await supabase
-    .from("messages")
-    .update({
-      input_tokens: usage.inputTokens ?? 0,
-      cache_creation_input_tokens: cacheCreationInputTokens,
-      cache_read_input_tokens: cacheReadInputTokens,
-    })
-    .eq("chat_id", chatId)
-    .eq("version", version)
-    .eq("role", "user");
-
-  if (updateUserError) {
-    console.error("Error updating user message:", updateUserError);
-  }
-
-  const theme = extractDataTheme(text);
-
-  let content = text;
-  let hasError = false;
-  if (finishReason === "length" || finishReason === "error") {
-    content = `${text}\n\n<!-- FINISH_REASON: ${finishReason} -->`;
-    hasError = true;
-  }
-
-  const subscription = await getSubscription();
-  let subscriptionType = "trial";
-  if (subscription) {
-    subscriptionType =
-      subscription.prices?.products?.name?.toLowerCase() || "trial";
-  }
-
-  const { error: insertAssistantError, data: insertedMessage } = await supabase
-    .from("messages")
-    .insert({
-      chat_id: chatId,
-      screenshot: null,
-      version,
-      content: content,
-      theme,
-      role: "assistant",
-      input_tokens: usage.inputTokens ?? 0,
-      output_tokens: usage.outputTokens ?? 0,
-      subscription_type: subscriptionType,
-      artifact_code: artifactCode,
-      cache_creation_input_tokens: cacheCreationInputTokens,
-      cache_read_input_tokens: cacheReadInputTokens,
-      cost_usd: cost,
-      model_used: modelUsed,
-    })
-    .select()
-    .single();
-
-  if (insertAssistantError) {
-    console.error("Error inserting assistant message:", insertAssistantError);
-  }
-
-  // Token tracking is done below in token_usage_tracking table
-
-  if (insertedMessage) {
-    await supabase.from("token_usage_tracking").insert({
-      user_id: user.id,
-      chat_id: chatId,
-      message_id: insertedMessage.id,
-      usage_type: "generation",
-      model_used: modelUsed,
-      input_tokens: usage.inputTokens ?? 0,
-      output_tokens: usage.outputTokens ?? 0,
-      cache_creation_input_tokens: cacheCreationInputTokens,
-      cache_read_input_tokens: cacheReadInputTokens,
-      cost_usd: cost,
-    });
-  }
-
-  after(async () => {
-    if (hasError) {
+    const chat = await fetchChatById(chatId);
+    if (!chat) {
+      console.error("Could not get chat data");
       return;
     }
 
-    if (chat.framework === Framework.HTML) {
-      await takeScreenshot(chatId, version, theme, Framework.HTML);
-    } else {
-      await buildComponent(chatId, version);
+    if (!text) {
+      console.error(
+        "❌ updateDataAfterCompletion: No completion text provided",
+      );
+      return;
     }
 
-    await autoSyncToGithubAfterGeneration(chatId, version);
-  });
+    // FIXED: Use previous artifact code from messages instead of chats table
+    const previousArtifactCode =
+      (await getPreviousArtifactCode(chatId, version)) || "";
+    const artifactCode = getUpdatedArtifactCode(text, previousArtifactCode);
+
+    // Fetch current tokens
+    const { data: currentChatData, error } = await supabase
+      .from("chats")
+      .select("input_tokens, output_tokens, title")
+      .eq("id", chatId)
+      .single();
+
+    if (error) {
+      console.error("Error fetching current tokens:", error);
+      return;
+    }
+
+    const currentInputTokens = currentChatData?.input_tokens || 0;
+    const currentOutputTokens = currentChatData?.output_tokens || 0;
+    // Update with the sum of previous and new tokens
+    if (currentChatData.title) {
+      await supabase
+        .from("chats")
+        .update({
+          artifact_code: artifactCode,
+          input_tokens: currentInputTokens + (usage.inputTokens ?? 0),
+          output_tokens: currentOutputTokens + (usage.outputTokens ?? 0),
+        })
+        .eq("id", chatId);
+    } else {
+      await supabase
+        .from("chats")
+        .update({
+          artifact_code: artifactCode,
+          title: extractTitle(text),
+          input_tokens: currentInputTokens + (usage.inputTokens ?? 0),
+          output_tokens: currentOutputTokens + (usage.outputTokens ?? 0),
+        })
+        .eq("id", chatId);
+    }
+    const cacheCreationInputTokens = 0;
+    const cacheReadInputTokens = usage.cachedInputTokens ?? 0;
+
+    const modelUsed = "claude-sonnet-4-5";
+    const cost = calculateTokenCost(
+      {
+        input_tokens: usage.inputTokens ?? 0,
+        output_tokens: usage.outputTokens ?? 0,
+        cache_creation_input_tokens: cacheCreationInputTokens,
+        cache_read_input_tokens: cacheReadInputTokens,
+      },
+      modelUsed,
+    );
+
+    const { error: updateUserError } = await supabase
+      .from("messages")
+      .update({
+        input_tokens: usage.inputTokens ?? 0,
+        cache_creation_input_tokens: cacheCreationInputTokens,
+        cache_read_input_tokens: cacheReadInputTokens,
+      })
+      .eq("chat_id", chatId)
+      .eq("version", version)
+      .eq("role", "user");
+
+    if (updateUserError) {
+      console.error("Error updating user message:", updateUserError);
+    }
+
+    const theme = extractDataTheme(text);
+
+    let content = text;
+    let hasError = false;
+    if (finishReason === "length" || finishReason === "error") {
+      content = `${text}\n\n<!-- FINISH_REASON: ${finishReason} -->`;
+      hasError = true;
+    }
+
+    const subscription = await getSubscription();
+    let subscriptionType = "trial";
+    if (subscription) {
+      subscriptionType =
+        subscription.prices?.products?.name?.toLowerCase() || "trial";
+    }
+
+    const { error: insertAssistantError, data: insertedMessage } =
+      await supabase
+        .from("messages")
+        .insert({
+          chat_id: chatId,
+          screenshot: null,
+          version,
+          content: content,
+          theme,
+          role: "assistant",
+          input_tokens: usage.inputTokens ?? 0,
+          output_tokens: usage.outputTokens ?? 0,
+          subscription_type: subscriptionType,
+          artifact_code: artifactCode,
+          cache_creation_input_tokens: cacheCreationInputTokens,
+          cache_read_input_tokens: cacheReadInputTokens,
+          cost_usd: cost,
+          model_used: modelUsed,
+        })
+        .select()
+        .single();
+
+    if (insertAssistantError) {
+      console.error("Error inserting assistant message:", insertAssistantError);
+    }
+
+    // Token tracking is done below in token_usage_tracking table
+
+    if (insertedMessage) {
+      await supabase.from("token_usage_tracking").insert({
+        user_id: user.id,
+        chat_id: chatId,
+        message_id: insertedMessage.id,
+        usage_type: "generation",
+        model_used: modelUsed,
+        input_tokens: usage.inputTokens ?? 0,
+        output_tokens: usage.outputTokens ?? 0,
+        cache_creation_input_tokens: cacheCreationInputTokens,
+        cache_read_input_tokens: cacheReadInputTokens,
+        cost_usd: cost,
+      });
+    }
+
+    after(async () => {
+      if (hasError) {
+        return;
+      }
+
+      if (chat.framework === Framework.HTML) {
+        await takeScreenshot(chatId, version, theme, Framework.HTML);
+      } else {
+        await buildComponent(chatId, version);
+      }
+
+      await autoSyncToGithubAfterGeneration(chatId, version);
+    });
+  } catch (error) {
+    console.error("=== updateDataAfterCompletion Error ===");
+    console.error("ChatId:", chatId);
+    console.error("Version:", version);
+    console.error("Error details:", error);
+    if (error instanceof Error) {
+      console.error("Error message:", error.message);
+      console.error("Error stack:", error.stack);
+    }
+    throw error;
+  }
 };

@@ -24,11 +24,13 @@ export default function SubscriptionRefresh() {
 
       const timer = setTimeout(() => {
         setHasRefreshed(true);
-        const url = new URL(window.location.href);
-        url.searchParams.delete("session_id");
-        url.searchParams.delete("from_checkout");
-        router.replace(url.pathname + url.search);
-        router.refresh();
+        if (typeof window !== "undefined") {
+          const url = new URL(window.location.href);
+          url.searchParams.delete("session_id");
+          url.searchParams.delete("from_checkout");
+          router.replace(url.pathname + url.search);
+          router.refresh();
+        }
       }, 3000);
 
       return () => clearTimeout(timer);

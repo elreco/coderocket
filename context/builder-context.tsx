@@ -116,6 +116,25 @@ export const BuilderProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
+      const { data: message } = await supabase
+        .from("messages")
+        .select("artifact_code")
+        .eq("chat_id", chatId)
+        .eq("role", "assistant")
+        .eq("version", version)
+        .single();
+
+      if (
+        !message?.artifact_code ||
+        message.artifact_code.trim().length === 0 ||
+        !message.artifact_code.includes("<coderocketFile")
+      ) {
+        console.log(
+          `Skipping build for version ${version}: invalid or empty artifact code`,
+        );
+        return;
+      }
+
       pendingBuildsRef.current.add(version);
 
       try {

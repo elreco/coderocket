@@ -854,7 +854,7 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
           )}
           <div
             className={cn(
-              "flex flex-col px-2 py-6 sm:px-4",
+              "flex flex-col p-3",
               "transition-all duration-200",
               isLoading &&
                 input &&
@@ -1122,7 +1122,7 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
               )}
             </div>
             {isLoading && (
-              <div className="flex flex-col p-3 transition-all">
+              <div className="flex flex-col px-3 pb-1 transition-all">
                 <ChunkReader
                   chunks={streamingChunks}
                   files={chatFiles}
@@ -1132,7 +1132,7 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
                 />
               </div>
             )}
-            <div className="flex flex-col p-3">
+            <div className="flex flex-col px-3 pb-1">
               <div className="mt-2 flex gap-1">
                 <span className="size-2 animate-[typing_1s_ease-in-out_infinite] rounded-full bg-foreground/50"></span>
                 <span className="size-2 animate-[typing_1s_ease-in-out_infinite] rounded-full bg-foreground/50 delay-300"></span>

@@ -118,7 +118,9 @@ export default async function Account() {
 
   return (
     <Container>
-      <SubscriptionRefresh />
+      <Suspense fallback={null}>
+        <SubscriptionRefresh />
+      </Suspense>
       <PageTitle
         title="My Account"
         subtitle="Manage your account and billing."

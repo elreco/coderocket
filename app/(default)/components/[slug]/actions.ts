@@ -30,7 +30,6 @@ import {
 import {
   fetchAssistantMessageByChatIdAndVersion,
   fetchChatById,
-  fetchLastAssistantMessageByChatId,
 } from "../actions";
 
 export const updateArtifactCode = async (
@@ -217,102 +216,54 @@ export const deleteVersionByMessageId = async (messageId: number) => {
   if (!message) {
     throw new Error("Message not found or user not authorized.");
   }
-  // Suppression des messages avec la même version
+
+  const { data: allVersions } = await supabase
+    .from("messages")
+    .select("version")
+    .eq("chat_id", message.chat_id)
+    .eq("role", "assistant")
+    .order("version", { ascending: false });
+
+  if (!allVersions || allVersions.length === 0) {
+    throw new Error("No versions found");
+  }
+
+  const totalVersions = allVersions.length;
+  const highestVersion = allVersions[0].version;
+
+  if (totalVersions > 1 && message.version !== highestVersion) {
+    throw new Error(
+      "Only the last version can be deleted when multiple versions exist",
+    );
+  }
+
   const { error: deleteError } = await supabase
     .from("messages")
     .delete()
     .eq("version", message.version)
     .eq("chat_id", message.chat_id);
+
   if (deleteError) {
     throw new Error(`Failed to delete messages: ${deleteError.message}`);
   }
-  // Récupération des messages ayant une version supérieure
-  const { data: messagesToUpdate, error: fetchMessagesError } = await supabase
-    .from("messages")
-    .select("id, version")
-    .gt("version", message.version)
-    .eq("chat_id", message.chat_id);
-  if (fetchMessagesError) {
-    throw new Error(
-      `Failed to fetch messages for version update: ${fetchMessagesError.message}`,
+
+  try {
+    await fetch(
+      `${builderApiUrl}/build/${message.chat_id}/${message.version}`,
+      {
+        method: "DELETE",
+      },
     );
-  }
-  // Mise à jour des messages individuellement
-  for (const msg of messagesToUpdate) {
-    const { error: updateError } = await supabase
-      .from("messages")
-      .update({ version: msg.version - 1 })
-      .eq("id", msg.id);
-
-    if (updateError) {
-      throw new Error(
-        `Failed to update message ID ${msg.id}: ${updateError.message}`,
-      );
-    }
-  }
-  // get new messages
-  const refreshedChatMessages = await fetchLastAssistantMessageByChatId(
-    message.chat_id,
-  );
-  if (!refreshedChatMessages) {
-    throw new Error("No refreshed chat messages found");
+  } catch (error) {
+    console.error("Failed to delete build from Vercel Blob:", error);
   }
 
-  // FIXED: Use latest artifact code from messages instead of chats table
   const latestArtifactCode = await getLatestArtifactCode(message.chat_id);
-  const finalArtifactCode =
-    refreshedChatMessages.artifact_code || latestArtifactCode || "";
 
-  // Note: No need to delete builds manually - forceBuild: true will handle cleanup
-
-  // Mark ALL remaining versions as not built since build environment may have changed
-  // When we delete a version, the build chain is broken and all versions need to be rebuilt
-  const { data: allRemainingMessages } = await supabase
-    .from("messages")
-    .select("id, version")
-    .eq("chat_id", message.chat_id)
-    .eq("role", "assistant");
-
-  if (allRemainingMessages && allRemainingMessages.length > 0) {
-    // Mark ALL versions as not built since the build environment is reset
-    await supabase
-      .from("messages")
-      .update({ is_built: false })
-      .eq("chat_id", message.chat_id)
-      .eq("role", "assistant");
-
-    console.log(
-      `Marked ${allRemainingMessages.length} versions as not built after deletion`,
-    );
-  }
-
-  // Update chats table with the artifact code from the new latest version
   await supabase
     .from("chats")
-    .update({ artifact_code: finalArtifactCode })
+    .update({ artifact_code: latestArtifactCode || "" })
     .eq("id", message.chat_id);
-
-  // Find what will be the displayed version after deletion and renaming
-  // After deletion and version renaming, the new highest version will need to be built
-  if (refreshedChatMessages && refreshedChatMessages.version >= 0) {
-    // Get the framework to know if we should build
-    const { data: chat } = await supabase
-      .from("chats")
-      .select("framework")
-      .eq("id", message.chat_id)
-      .single();
-
-    // Build the new latest version if it's a web framework
-    if (chat?.framework !== Framework.HTML) {
-      after(async () => {
-        await buildComponent(
-          message.chat_id,
-          refreshedChatMessages.version,
-          true,
-        );
-      });
-    }
-  }
 };
 
 export const updateTheme = async (
