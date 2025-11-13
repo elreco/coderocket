@@ -102,7 +102,7 @@ export function ComponentsInfiniteScroll({
   ) {
     const params = new URLSearchParams();
 
-    if (query) {
+    if (query && query.trim()) {
       params.set("search", query);
     }
 
@@ -116,6 +116,7 @@ export function ComponentsInfiniteScroll({
 
     const queryString = params.toString();
     const newUrl = `${pathname}${queryString ? `?${queryString}` : ""}`;
+
     window.history.replaceState(null, "", newUrl);
   }
 
@@ -197,8 +198,8 @@ export function ComponentsInfiniteScroll({
 
   async function handleClearSearch() {
     setSearchQuery("");
-    setIsLoading(false);
-    setShowSkeleton(false);
+    setIsLoading(true);
+    setShowSkeleton(true);
 
     updateURLQuery("", selectedFrameworks, sortBy);
 
@@ -209,6 +210,9 @@ export function ComponentsInfiniteScroll({
       reset: true,
       sortByTop: sortBy === "top",
     });
+
+    setIsLoading(false);
+    setTimeout(() => setShowSkeleton(false), 300);
   }
 
   async function handleFrameworkSelection(framework: Framework | null) {
@@ -331,7 +335,12 @@ export function ComponentsInfiniteScroll({
           />
           {searchQuery && (
             <button
-              onClick={handleClearSearch}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleClearSearch();
+              }}
+              type="button"
               className="ml-2 text-muted-foreground hover:text-primary"
             >
               <X className="size-4" />
@@ -575,9 +584,24 @@ export function ComponentsInfiniteScroll({
               </p>
               <Button
                 onClick={async () => {
+                  setSearchQuery("");
+                  setSelectedFrameworks([]);
                   setSortBy("newest");
-                  await handleClearSearch();
-                  await handleFrameworkSelection(null);
+                  setIsLoading(true);
+                  setShowSkeleton(true);
+
+                  updateURLQuery("", [], "newest");
+
+                  await doFetchPublicChats({
+                    pageToFetch: 0,
+                    search: "",
+                    frameworks: [],
+                    reset: true,
+                    sortByTop: false,
+                  });
+
+                  setIsLoading(false);
+                  setTimeout(() => setShowSkeleton(false), 300);
                   setDropdownOpen(false);
                 }}
                 className="mt-4 flex items-center gap-2"
