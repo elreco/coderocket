@@ -723,6 +723,7 @@ export type Database = {
       messages: {
         Row: {
           artifact_code: string | null;
+          build_error: Json | null;
           cache_creation_input_tokens: number | null;
           cache_read_input_tokens: number | null;
           chat_id: string;
@@ -747,6 +748,7 @@ export type Database = {
         };
         Insert: {
           artifact_code?: string | null;
+          build_error?: Json | null;
           cache_creation_input_tokens?: number | null;
           cache_read_input_tokens?: number | null;
           chat_id: string;
@@ -771,6 +773,7 @@ export type Database = {
         };
         Update: {
           artifact_code?: string | null;
+          build_error?: Json | null;
           cache_creation_input_tokens?: number | null;
           cache_read_input_tokens?: number | null;
           chat_id?: string;

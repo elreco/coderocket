@@ -5,17 +5,13 @@ import React from "react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { WebcontainerRender } from "@/components/webcontainer/webcontainer-render";
-/* import { WebcontainerTerminal } from "@/components/webcontainer/webcontainer-terminal"; */
+import { useBuilder } from "@/context/builder-context";
 import {
   useComponentContext,
   WebcontainerLoadingState,
 } from "@/context/component-context";
-import { useWebcontainer } from "@/context/webcontainer-context";
 import { createContinuePrompt } from "@/utils/completion-parser";
 import { FREE_CHAR_LIMIT } from "@/utils/config";
-
-import { Markdown } from "./markdown";
 
 function LoadingStateComponent({ state }: { state: WebcontainerLoadingState }) {
   const { setInput, handleSubmitToAI, authorized, messages } =
@@ -73,7 +69,7 @@ function LoadingStateComponent({ state }: { state: WebcontainerLoadingState }) {
 }
 
 export default function ComponentPreview() {
-  const { loadingState, buildError } = useWebcontainer();
+  const { loadingState, buildError } = useBuilder();
   const {
     chatId,
     selectedVersion,
@@ -83,7 +79,6 @@ export default function ComponentPreview() {
     isWebcontainerReady,
     handleSubmitToAI,
   } = useComponentContext();
-  const { previewId } = useWebcontainer();
   const [iframeLoading, setIframeLoading] = React.useState(false);
 
   React.useEffect(() => {
@@ -100,9 +95,10 @@ export default function ComponentPreview() {
 
   return (
     <>
-      {loadingState && !previewId && !isLoading && !buildError && (
-        <LoadingStateComponent state={loadingState} />
-      )}
+      {loadingState &&
+        loadingState !== "error" &&
+        !isLoading &&
+        !buildError && <LoadingStateComponent state={loadingState} />}
 
       {buildError && !isLoading && (
         <div className="flex size-full h-full items-center justify-center px-4 xl:w-2/3">
@@ -117,58 +113,75 @@ export default function ComponentPreview() {
                 <p className="mb-4 whitespace-pre-line text-sm">
                   {buildError.description}
                 </p>
-                <Markdown>{buildError.content}</Markdown>
+                {buildError.exitCode && (
+                  <p className="mb-2 text-sm text-muted-foreground">
+                    Exit code: {buildError.exitCode}
+                  </p>
+                )}
+                {buildError.errors && buildError.errors.length > 0 ? (
+                  <div className="rounded-md bg-muted p-4">
+                    <p className="mb-2 font-mono text-xs font-semibold">
+                      Build Output:
+                    </p>
+                    <pre className="max-h-96 overflow-auto whitespace-pre-wrap break-words font-mono text-xs text-red-600 dark:text-red-400">
+                      {buildError.errors.join("\n\n---\n\n")}
+                    </pre>
+                  </div>
+                ) : (
+                  <div className="rounded-md bg-muted p-4">
+                    <p className="font-mono text-xs text-muted-foreground">
+                      No error output captured. The build process failed but did
+                      not produce error messages.
+                    </p>
+                  </div>
+                )}
               </div>
-              {authorized && buildError.content && (
-                <Button
-                  className="mt-2 self-end"
-                  onClick={() => {
-                    const errorContent = buildError.content;
-                    const truncatedContent =
-                      errorContent.length > FREE_CHAR_LIMIT
-                        ? errorContent.substring(0, FREE_CHAR_LIMIT)
-                        : errorContent;
-                    const continuePrompt =
-                      "Fix the following error: " + truncatedContent;
-                    setInput(continuePrompt);
-                    handleSubmitToAI(continuePrompt);
-                  }}
-                >
-                  <WandSparkles className="size-4" />
-                  Ask CodeRocket to fix it
-                </Button>
-              )}
+              {authorized &&
+                buildError.errors &&
+                buildError.errors.length > 0 && (
+                  <Button
+                    className="mt-2 self-end"
+                    onClick={() => {
+                      const errorContent =
+                        buildError.errors?.join("\n\n") || "";
+                      const truncatedContent =
+                        errorContent.length > FREE_CHAR_LIMIT
+                          ? errorContent.substring(0, FREE_CHAR_LIMIT)
+                          : errorContent;
+                      const continuePrompt =
+                        "Fix the following error: " + truncatedContent;
+                      setInput(continuePrompt);
+                      handleSubmitToAI(continuePrompt);
+                    }}
+                  >
+                    <WandSparkles className="size-4" />
+                    Ask CodeRocket to fix it
+                  </Button>
+                )}
             </AlertDescription>
           </Alert>
         </div>
       )}
-      {/* Priority: Use built API if available, otherwise fallback to webcontainer */}
       {chatId &&
         selectedVersion !== undefined &&
         !isLoading &&
         !buildError &&
         !loadingState && (
-          <>
-            {isWebcontainerReady ? (
-              <div className="relative size-full">
-                {iframeLoading && (
-                  <div className="absolute inset-0 z-10 flex items-center justify-center bg-background">
-                    <LoadingStateComponent state="starting" />
-                  </div>
-                )}
-                <iframe
-                  src={`https://${chatId}-${selectedVersion}.webcontainer.coderocket.app`}
-                  className="size-full border-none"
-                  sandbox="allow-scripts allow-forms allow-popups allow-modals allow-storage-access-by-user-activation allow-same-origin"
-                  allow="credentialless"
-                  loading="eager"
-                  onLoad={() => setIframeLoading(false)}
-                />
+          <div className="relative size-full">
+            {iframeLoading && (
+              <div className="absolute inset-0 z-10 flex items-center justify-center bg-background">
+                <LoadingStateComponent state="starting" />
               </div>
-            ) : previewId ? (
-              <WebcontainerRender previewId={previewId} />
-            ) : null}
-          </>
+            )}
+            <iframe
+              src={`https://${chatId}-${selectedVersion}.webcontainer.coderocket.app`}
+              className="size-full border-none"
+              sandbox="allow-scripts allow-forms allow-popups allow-modals allow-storage-access-by-user-activation allow-same-origin"
+              allow="credentialless"
+              loading="eager"
+              onLoad={() => setIframeLoading(false)}
+            />
+          </div>
         )}
     </>
   );

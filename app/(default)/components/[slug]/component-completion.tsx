@@ -53,12 +53,12 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { BuilderProvider } from "@/context/builder-context";
 import {
   ChatMessage,
   ComponentContext,
   WebcontainerLoadingState,
 } from "@/context/component-context";
-import { WebcontainerProvider } from "@/context/webcontainer-context";
 import { useToast } from "@/hooks/use-toast";
 import type { CustomDomainData } from "@/types/custom-domain";
 import { Tables } from "@/types_db";
@@ -1181,17 +1181,21 @@ export default function ComponentCompletion({
 
   return (
     <ComponentContext.Provider value={contextValue}>
-      <WebcontainerProvider>
+      <BuilderProvider>
         <Container className="!p-0 lg:overflow-hidden">
           <div className="grid size-full max-h-full grid-cols-1 justify-center xl:grid-cols-4 xl:flex-row">
             <div className="col-span-1 flex size-full min-h-full flex-col xl:col-span-3 xl:mb-0">
               <div className="relative flex h-auto flex-col items-center justify-start py-1.5 pr-2 xl:h-12 xl:flex-row xl:justify-between xl:pl-14">
                 <h1 className="mb-2 flex min-w-0 max-w-full flex-1 items-center gap-2 font-medium lg:mb-0">
-                  {title ? (
+                  {title ||
+                  fetchedChat?.title ||
+                  selectedVersion !== undefined ? (
                     <>
                       <p className="mx-10 min-w-0 max-w-full xl:mx-0">
                         <span className="block truncate text-center first-letter:uppercase">
-                          {title}
+                          {title ||
+                            fetchedChat?.title ||
+                            `Version #${selectedVersion}`}
                         </span>
                       </p>
                       {fetchedChat?.is_deployed &&
@@ -1639,7 +1643,7 @@ export default function ComponentCompletion({
             </DialogContent>
           </Dialog>
         </Container>
-      </WebcontainerProvider>
+      </BuilderProvider>
     </ComponentContext.Provider>
   );
 }

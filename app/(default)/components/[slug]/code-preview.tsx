@@ -25,8 +25,8 @@ import RenderComponent from "@/app/(default)/components/[slug]/component-preview
 import RenderHtmlComponent from "@/components/renders/render-html-component";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useBuilder } from "@/context/builder-context";
 import { useComponentContext } from "@/context/component-context";
-import { useWebcontainer } from "@/context/webcontainer-context";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { ChatFile } from "@/utils/completion-parser";
@@ -122,7 +122,7 @@ export default function CodePreview() {
     authorized,
     iframeKey,
   } = useComponentContext();
-  const { buildError } = useWebcontainer();
+  const { buildError } = useBuilder();
   const [, copy] = useCopyToClipboard();
   const codeMirrorRef = useRef<ReactCodeMirrorRef>(null);
   const [isFileTreeOpen, setIsFileTreeOpen] = useState(false);

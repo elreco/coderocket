@@ -3,6 +3,12 @@ const nextConfig = {
   experimental: {
     serverActions: {
       bodySizeLimit: "2mb",
+      allowedOrigins: [
+        "coderocket.app",
+        "www.coderocket.app",
+        "*.coderocket.app",
+        "localhost:4002",
+      ],
     },
   },
   async redirects() {
@@ -16,23 +22,6 @@ const nextConfig = {
         source: '/marketplace/:path*',
         destination: '/templates/:path*',
         permanent: true,
-      },
-    ];
-  },
-  async headers() {
-    return [
-      {
-        source: '/(.*)',
-        headers: [
-          {
-            key: 'Cross-Origin-Embedder-Policy',
-            value: 'credentialless',
-          },
-          {
-            key: 'Cross-Origin-Opener-Policy',
-            value: 'same-origin',
-          },
-        ],
       },
     ];
   },

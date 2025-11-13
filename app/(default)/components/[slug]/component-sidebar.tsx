@@ -33,8 +33,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { UserWidget } from "@/components/user-widget";
+import { useBuilder } from "@/context/builder-context";
 import { useComponentContext } from "@/context/component-context";
-import { useWebcontainer } from "@/context/webcontainer-context";
 import { toast } from "@/hooks/use-toast";
 import { cn, truncateMiddle } from "@/lib/utils";
 import { Tables } from "@/types_db";
@@ -95,7 +95,7 @@ export default function ComponentSidebar({
     isLengthError,
     fetchedChat,
   } = useComponentContext();
-  const { buildError } = useWebcontainer();
+  const { buildError } = useBuilder();
 
   const [isLoaderVisible, setLoaderVisible] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -882,12 +882,12 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
           </div>
           <div
             className={cn(
-              "flex flex-col p-3",
+              "flex flex-col",
               "transition-all duration-200",
               isLoading ? "block" : "hidden",
             )}
           >
-            <div className="flex w-full flex-col gap-2 overflow-x-auto break-words text-sm">
+            <div className="flex w-full flex-col gap-2 overflow-x-auto break-words p-3 text-sm">
               {input && (
                 <div className="flex items-center">
                   <Avatar className="mr-2 size-10 rounded-none">
@@ -1120,7 +1120,9 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
                   )}
                 </div>
               )}
-              {isLoading && (
+            </div>
+            {isLoading && (
+              <div className="flex flex-col p-3 transition-all">
                 <ChunkReader
                   chunks={streamingChunks}
                   files={chatFiles}
@@ -1128,7 +1130,9 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
                   chatId={chatId}
                   messageId={0}
                 />
-              )}
+              </div>
+            )}
+            <div className="flex flex-col p-3">
               <div className="mt-2 flex gap-1">
                 <span className="size-2 animate-[typing_1s_ease-in-out_infinite] rounded-full bg-foreground/50"></span>
                 <span className="size-2 animate-[typing_1s_ease-in-out_infinite] rounded-full bg-foreground/50 delay-300"></span>
@@ -1168,7 +1172,8 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
                         size="sm"
                         className="mr-2"
                         onClick={() => {
-                          const errorContent = buildError.content;
+                          const errorContent =
+                            buildError.errors?.join("\n\n") || "";
                           const truncatedContent =
                             errorContent.length > FREE_CHAR_LIMIT
                               ? errorContent.substring(0, FREE_CHAR_LIMIT)

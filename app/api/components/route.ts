@@ -1190,15 +1190,7 @@ Use standard Tailwind CSS classes and shadcn/ui components.`;
     selectedVersion !== undefined
       ? await fetchUserMessageByChatIdAndVersion(id, selectedVersion)
       : await fetchLastUserMessageByChatId(id);
-
-  if (!lastUserMessage) {
-    console.error("No user message found for chat:", { id, selectedVersion });
-    throw new Error(
-      selectedVersion !== undefined
-        ? "chat-version-not-found"
-        : "chat-corrupted",
-    );
-  }
+  if (!lastUserMessage) throw new Error("No last user message");
 
   // Utiliser le prompt détaillé s'il est disponible, sinon utiliser le prompt existant
   let updatedPrompt = enhancedPrompt || "";
@@ -1318,23 +1310,10 @@ const updateDataAfterCompletion = async (
     return;
   }
 
+  // FIXED: Use previous artifact code from messages instead of chats table
   const previousArtifactCode =
     (await getPreviousArtifactCode(chatId, version)) || "";
-  let artifactCode = getUpdatedArtifactCode(text, previousArtifactCode);
-
-  if (!artifactCode || artifactCode.trim() === "") {
-    const { data: previousMessage } = await supabase
-      .from("messages")
-      .select("artifact_code")
-      .eq("chat_id", chatId)
-      .eq("role", "assistant")
-      .eq("version", version - 1)
-      .single();
-
-    if (previousMessage) {
-      artifactCode = previousMessage.artifact_code || previousArtifactCode;
-    }
-  }
+  const artifactCode = getUpdatedArtifactCode(text, previousArtifactCode);
 
   // Fetch current tokens
   const { data: currentChatData, error } = await supabase

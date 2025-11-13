@@ -417,14 +417,36 @@ export const buildComponent = async (
     });
 
     const responseData = await builderResponse.json();
-    if (responseData.errors) {
-      throw new Error(responseData.errors);
+    const supabase = await createClient();
+
+    if (responseData.errors || responseData.event === "error") {
+      const buildError = {
+        title: "Build Failed",
+        description:
+          responseData.details || "The build process encountered errors.",
+        errors: responseData.errors || [],
+        exitCode: responseData.exitCode,
+      };
+
+      await supabase
+        .from("messages")
+        .update({
+          is_built: false,
+          build_error: buildError,
+        })
+        .eq("chat_id", chatId)
+        .eq("role", "assistant")
+        .eq("version", version);
+
+      return;
     }
 
-    const supabase = await createClient();
     await supabase
       .from("messages")
-      .update({ is_built: responseData.event === "success" })
+      .update({
+        is_built: responseData.event === "success",
+        build_error: null,
+      })
       .eq("chat_id", chatId)
       .eq("role", "assistant")
       .eq("version", version);
@@ -437,6 +459,20 @@ export const buildComponent = async (
     );
   } catch (error) {
     console.error("API error:", error);
+    const supabase = await createClient();
+    await supabase
+      .from("messages")
+      .update({
+        is_built: false,
+        build_error: {
+          title: "Build Error",
+          description: "An unexpected error occurred during the build process.",
+          errors: [error instanceof Error ? error.message : String(error)],
+        },
+      })
+      .eq("chat_id", chatId)
+      .eq("role", "assistant")
+      .eq("version", version);
   }
 };
 
