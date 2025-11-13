@@ -1090,6 +1090,7 @@ export default function ComponentCompletion({
     setCanvas,
     isLoading,
     selectedVersion,
+    setSelectedVersion,
     chatFiles,
     activeTab,
     editorValue,

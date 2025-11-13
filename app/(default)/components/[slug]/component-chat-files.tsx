@@ -59,6 +59,7 @@ export default function ComponentChatFiles({
     refreshChatData,
     setForceBuild,
     setWebcontainerReady,
+    setSelectedVersion,
   } = useComponentContext();
 
   const [files, setFiles] = useState<ChatFile[]>([]);
@@ -368,11 +369,12 @@ ${extractedFiles
     try {
       setIsDeleting(true);
 
-      // Mark webcontainer as not ready since we're deleting a version
       setWebcontainerReady(false);
       setForceBuild(true);
 
       await deleteVersionByMessageId(messageId);
+
+      setSelectedVersion(undefined);
 
       const refreshedChatMessages =
         refreshChatData !== undefined ? await refreshChatData() : [];
@@ -385,9 +387,8 @@ ${extractedFiles
 
         if (refreshedLastAssistantMessage) {
           // Force webcontainer to be not ready for the new displayed version
-          // This ensures it will go through the full build process
-          setWebcontainerReady(false);
           handleVersionSelect(refreshedLastAssistantMessage.version);
+          setWebcontainerReady(false);
         }
       }
     } catch {
@@ -398,6 +399,7 @@ ${extractedFiles
           "You are not premium, you can't delete a version. Please upgrade to premium and try again.",
         duration: 4000,
       });
+      setForceBuild(false);
     } finally {
       setIsDeleting(false);
       setIsAlertOpen(false);

@@ -360,12 +360,11 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
       // Mettre à jour les états ensemble pour éviter les sauts
       setStreamingChunks(newChunks);
       setChatFiles(extractedFiles);
-    } else if (!isLoading && !isLengthError && !buildError) {
-      // Réinitialiser les états lorsque le chargement est terminé
+    } else if (!isLoading) {
       setStreamingChunks([]);
       setChatFiles([]);
     }
-  }, [completion, isLoading, isLengthError, buildError]);
+  }, [completion, isLoading]);
 
   const handleFileClick = (version: number) => {
     setActiveTab("chat");
@@ -756,7 +755,11 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
           )}
           {activeTab === "chat" &&
             messages
-              .filter((m) => m.version === selectedVersion)
+              .filter((m) => {
+                if (m.version !== selectedVersion) return false;
+                if (isLoading && m.role === "assistant") return false;
+                return true;
+              })
               .map((m) => <ComponentChatFiles message={m} key={m.id} />)}
           {activeTab === "history" && (
             <div className="flex flex-col gap-2 p-3">
@@ -1117,13 +1120,15 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
                   )}
                 </div>
               )}
-              <ChunkReader
-                chunks={streamingChunks}
-                files={chatFiles}
-                handleFileClick={handleFileClick}
-                chatId={chatId}
-                messageId={0}
-              />
+              {isLoading && (
+                <ChunkReader
+                  chunks={streamingChunks}
+                  files={chatFiles}
+                  handleFileClick={handleFileClick}
+                  chatId={chatId}
+                  messageId={0}
+                />
+              )}
               <div className="mt-2 flex gap-1">
                 <span className="size-2 animate-[typing_1s_ease-in-out_infinite] rounded-full bg-foreground/50"></span>
                 <span className="size-2 animate-[typing_1s_ease-in-out_infinite] rounded-full bg-foreground/50 delay-300"></span>

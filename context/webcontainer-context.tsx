@@ -60,6 +60,7 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
     loadingState,
     isLengthError,
     forceBuild,
+    setForceBuild,
   } = useComponentContext();
 
   const shellProcessRef = useRef<WebContainerProcess | null>(null);
@@ -98,12 +99,15 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   useEffect(() => {
-    cleanupWebcontainer();
-    setBuildError(null);
-    setPreviewId(undefined);
-    setLoadingState(null);
-    lastBuiltVersionRef.current = undefined;
-    lastBuiltChatIdRef.current = undefined;
+    const resetWebcontainer = async () => {
+      await cleanupWebcontainer();
+      setBuildError(null);
+      setPreviewId(undefined);
+      setLoadingState(null);
+      lastBuiltVersionRef.current = undefined;
+      lastBuiltChatIdRef.current = undefined;
+    };
+    resetWebcontainer();
   }, [chatId, setLoadingState, cleanupWebcontainer]);
 
   useEffect(() => {
@@ -172,6 +176,10 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
       setBuildError(null);
       setPreviewId(undefined);
       setLoadingState("initializing");
+
+      if (forceBuild) {
+        setForceBuild(false);
+      }
 
       await cleanupWebcontainer();
       const currentSetupId = setupIdRef.current;
@@ -370,6 +378,7 @@ export const WebcontainerProvider = ({ children }: { children: ReactNode }) => {
     isLengthError,
     setLoadingState,
     forceBuild,
+    setForceBuild,
     cleanupWebcontainer,
   ]);
 

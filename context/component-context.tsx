@@ -29,6 +29,7 @@ interface ComponentContextType {
   isLoading: boolean;
   setCompletion: (value: string) => void;
   selectedVersion: number | undefined;
+  setSelectedVersion: (value: number | undefined) => void;
   chatFiles: ChatFile[];
   activeTab: string;
   editorValue: string;

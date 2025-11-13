@@ -1318,10 +1318,23 @@ const updateDataAfterCompletion = async (
     return;
   }
 
-  // FIXED: Use previous artifact code from messages instead of chats table
   const previousArtifactCode =
     (await getPreviousArtifactCode(chatId, version)) || "";
-  const artifactCode = getUpdatedArtifactCode(text, previousArtifactCode);
+  let artifactCode = getUpdatedArtifactCode(text, previousArtifactCode);
+
+  if (!artifactCode || artifactCode.trim() === "") {
+    const { data: previousMessage } = await supabase
+      .from("messages")
+      .select("artifact_code")
+      .eq("chat_id", chatId)
+      .eq("role", "assistant")
+      .eq("version", version - 1)
+      .single();
+
+    if (previousMessage) {
+      artifactCode = previousMessage.artifact_code || previousArtifactCode;
+    }
+  }
 
   // Fetch current tokens
   const { data: currentChatData, error } = await supabase
