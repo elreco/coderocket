@@ -3,6 +3,7 @@ import { createClient } from "./supabase/server";
 
 export interface UploadedFileInfo {
   path: string;
+  publicUrl: string;
   type: "image" | "pdf" | "text";
   mimeType: string;
   source?: string;
@@ -60,8 +61,13 @@ export async function uploadFiles(
         }
 
         if (pdfData?.path) {
+          const { data: publicUrlData } = supabase.storage
+            .from("images")
+            .getPublicUrl(pdfData.path);
+
           uploadedFiles.push({
             path: pdfData.path,
+            publicUrl: publicUrlData.publicUrl,
             type: "pdf",
             mimeType: file.type,
           });
@@ -82,8 +88,13 @@ export async function uploadFiles(
         }
 
         if (textData?.path) {
+          const { data: publicUrlData } = supabase.storage
+            .from("images")
+            .getPublicUrl(textData.path);
+
           uploadedFiles.push({
             path: textData.path,
+            publicUrl: publicUrlData.publicUrl,
             type: "text",
             mimeType: file.type,
           });
@@ -102,8 +113,13 @@ export async function uploadFiles(
         }
 
         if (imageData?.path) {
+          const { data: publicUrlData } = supabase.storage
+            .from("images")
+            .getPublicUrl(imageData.path);
+
           uploadedFiles.push({
             path: imageData.path,
+            publicUrl: publicUrlData.publicUrl,
             type: "image",
             mimeType: file.type,
           });

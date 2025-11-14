@@ -12,3 +12,5 @@ CREATE POLICY "Anyone can view custom domains for public deployed chats"
 COMMENT ON POLICY "Anyone can view custom domains for public deployed chats" ON custom_domains IS
   'Allows anyone to view custom domains for public deployed chats so that visitors can see the correct URL in the deployed badge';
 
+
+

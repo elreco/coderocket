@@ -87,15 +87,22 @@ function optimizeMarkdownForTokens(markdown: string): string {
 const buildIntelligentContext = async (
   messages: Tables<"messages">[],
 ): Promise<ContextResult> => {
-  // Smart context management with token-aware limits
-  const baseMaxMessages = 20; // Reduced from 30 to prevent token overflow
-  const maxCriticalMessages = 5; // Reduced from 8 to save tokens
+  const CONTEXT_MODE = process.env.CONTEXT_MODE || "balanced";
+
+  const contextSettings = {
+    minimal: { baseMaxMessages: 30, maxCriticalMessages: 6 },
+    balanced: { baseMaxMessages: 40, maxCriticalMessages: 8 },
+    full: { baseMaxMessages: 50, maxCriticalMessages: 10 },
+  };
+
+  const { baseMaxMessages, maxCriticalMessages } =
+    contextSettings[CONTEXT_MODE as keyof typeof contextSettings] ||
+    contextSettings.balanced;
 
   if (messages.length <= baseMaxMessages) {
     return { limitedMessages: messages };
   }
 
-  // Analyze message complexity with token awareness
   const avgContentLength =
     messages.reduce((sum, m) => sum + (m.content?.length || 0), 0) /
     messages.length;
@@ -104,36 +111,29 @@ const buildIntelligentContext = async (
     0,
   );
 
-  // More aggressive reduction for large contexts
   const complexityFactor =
-    avgContentLength > 1000 ? 0.5 : avgContentLength > 500 ? 0.7 : 1.0;
+    avgContentLength > 2000 ? 0.6 : avgContentLength > 1000 ? 0.8 : 1.0;
   let dynamicMaxMessages = Math.floor(baseMaxMessages * complexityFactor);
 
-  // Emergency reduction if total content is massive
-  if (totalContentLength > 50000) {
-    // ~12k tokens
+  if (totalContentLength > 150000) {
     console.warn(
-      "⚠️ Very large conversation detected, aggressive context reduction",
+      "⚠️ Very large conversation detected, context reduction applied",
     );
-    dynamicMaxMessages = Math.min(dynamicMaxMessages, 10);
+    dynamicMaxMessages = Math.max(dynamicMaxMessages, 25);
   }
 
-  // Always preserve critical messages (early project context)
   const criticalMessages = messages.slice(0, maxCriticalMessages);
 
-  // Preserve key milestone messages (every 5th version after critical)
   const milestoneMessages = messages
     .slice(maxCriticalMessages)
     .filter(
       (m, index) =>
-        (index + maxCriticalMessages) % 5 === 0 && m.role === "assistant",
+        (index + maxCriticalMessages) % 4 === 0 && m.role === "assistant",
     )
-    .slice(-3); // Keep last 3 milestones
+    .slice(-5);
 
-  // Get the most recent messages
   const recentMessages = messages.slice(-dynamicMaxMessages);
 
-  // Check for overlaps and create unique message set
   const criticalVersions = new Set(criticalMessages.map((m) => m.version));
   const milestoneVersions = new Set(milestoneMessages.map((m) => m.version));
 
@@ -142,7 +142,6 @@ const buildIntelligentContext = async (
 
   const uniqueRecentMessages = recentMessages.filter(isNotDuplicate);
 
-  // Create enhanced context summary with more detail
   let contextSummary: string | undefined;
 
   if (messages.length > dynamicMaxMessages + maxCriticalMessages) {
@@ -151,38 +150,34 @@ const buildIntelligentContext = async (
       -dynamicMaxMessages,
     );
     const userRequests = skippedMessages.filter((m) => m.role === "user");
-    const aiResponses = skippedMessages.filter((m) => m.role === "assistant");
 
-    // Extract key themes from skipped user messages
-    const themes = userRequests.slice(-5).map((m) => {
-      const content = m.content?.toLowerCase() || "";
+    const CONTEXT_MODE = process.env.CONTEXT_MODE || "balanced";
+    const summaryDepth =
+      CONTEXT_MODE === "minimal" ? 5 : CONTEXT_MODE === "full" ? 12 : 8;
 
-      const isAddition = content.includes("add") || content.includes("create");
-      const isFix = content.includes("fix") || content.includes("bug");
-      const isStyling = content.includes("style") || content.includes("design");
-      const isImprovement =
-        content.includes("improve") || content.includes("enhance");
-
-      if (isAddition) return "feature additions";
-      if (isFix) return "bug fixes";
-      if (isStyling) return "styling updates";
-      if (isImprovement) return "improvements";
-      return "modifications";
+    const recentUserRequests = userRequests.slice(-summaryDepth);
+    const detailedThemes = recentUserRequests.map((m, idx) => {
+      const content = m.content || "";
+      const preview = content.substring(0, 80).replace(/\n/g, " ");
+      return `${idx + 1}. ${preview}${content.length > 80 ? "..." : ""}`;
     });
 
-    const uniqueThemes = Array.from(new Set(themes));
+    const summaryFormat =
+      CONTEXT_MODE === "minimal"
+        ? `[${userRequests.length} interactions omitted. Build on existing code in current_project_state.]`
+        : CONTEXT_MODE === "full"
+          ? `[CONTEXT: ${userRequests.length} omitted interactions between initial setup and recent messages]\n\nRecent omitted requests:\n${detailedThemes.join("\n")}\n\nIMPORTANT: All previous code and decisions are preserved in current_project_state. Build incrementally.`
+          : `[${userRequests.length} interactions omitted - showing ${summaryDepth} most recent]\n\n${detailedThemes.join("\n")}\n\nBuild on current_project_state.`;
 
-    contextSummary = `[Context Bridge: ${userRequests.length} user requests and ${aiResponses.length} AI responses were processed in the middle of this conversation, focusing on: ${uniqueThemes.join(", ")}. The project has evolved through multiple iterations while maintaining its core structure. Key architectural decisions and component patterns from earlier iterations remain relevant.]`;
+    contextSummary = summaryFormat;
   }
 
-  // Combine all messages and maintain chronological order
   const combinedMessages = [
     ...criticalMessages,
     ...milestoneMessages,
     ...uniqueRecentMessages,
   ].sort((a, b) => a.version - b.version);
 
-  // Save context summary to database for persistence
   if (contextSummary && messages.length > 0) {
     await saveContextToDatabase(
       messages[0].chat_id,
@@ -616,6 +611,7 @@ const buildMessagesToOpenAi = async (
   selectedVersion?: number,
   uploadedFilesInfo?: {
     path: string;
+    publicUrl?: string;
     type: "image" | "pdf" | "text";
     mimeType: string;
     source?: string;
@@ -734,10 +730,25 @@ const buildMessagesToOpenAi = async (
   // Préparer le contenu du message final de l'utilisateur
   const finalMessageContent: Array<TextPart | ImagePart> = [];
 
+  let uploadedFilesContext = "";
+  if (uploadedFilesInfo && uploadedFilesInfo.length > 0) {
+    const filesWithPublicUrls = uploadedFilesInfo.filter((f) => f.publicUrl);
+    if (filesWithPublicUrls.length > 0) {
+      uploadedFilesContext =
+        "\n\n<uploaded_files>\nThe following files have been uploaded and are available at these public URLs. You can reference these URLs in your generated code:\n\n";
+      filesWithPublicUrls.forEach((file, index) => {
+        const fileNumber = index + 1;
+        uploadedFilesContext += `${fileNumber}. ${file.type.toUpperCase()} file: ${file.publicUrl}\n`;
+      });
+      uploadedFilesContext +=
+        "\nIMPORTANT: When referencing these files in your code (e.g., in <img> src attributes or other file references), use these exact public URLs.\n</uploaded_files>\n\n";
+    }
+  }
+
   // Toujours inclure le texte du prompt (avec le contexte des fichiers locked au début si présent)
   const finalPromptText = currentFilesContext
-    ? currentFilesContext + updatedPrompt
-    : updatedPrompt;
+    ? currentFilesContext + uploadedFilesContext + updatedPrompt
+    : uploadedFilesContext + updatedPrompt;
 
   finalMessageContent.push({
     type: "text",
@@ -860,16 +871,41 @@ const validateRequest = async (
 
   let currentFilesContext = "";
   if (currentArtifactCode) {
+    const CONTEXT_MODE = process.env.CONTEXT_MODE || "balanced";
+    const codeLimits = {
+      minimal: 8000,
+      balanced: 12000,
+      full: 20000,
+    };
+    const codeLimit =
+      codeLimits[CONTEXT_MODE as keyof typeof codeLimits] || 12000;
+
+    const fileRegex = /<coderocketFile[^>]*name=["']([^"']+)["'][^>]*>/g;
     const lockedFilesRegex =
       /<coderocketFile[^>]*locked=["']true["'][^>]*name=["']([^"']+)["'][^>]*>|<coderocketFile[^>]*name=["']([^"']+)["'][^>]*locked=["']true["'][^>]*>/g;
+
+    const allFiles: string[] = [];
     const lockedFiles: string[] = [];
+
     let match;
+    while ((match = fileRegex.exec(currentArtifactCode)) !== null) {
+      allFiles.push(match[1]);
+    }
+
     while ((match = lockedFilesRegex.exec(currentArtifactCode)) !== null) {
       lockedFiles.push(match[1] || match[2]);
     }
 
+    const codePreview =
+      currentArtifactCode.length > codeLimit
+        ? currentArtifactCode.substring(0, codeLimit) +
+          `\n\n...(${Math.round((currentArtifactCode.length - codeLimit) / 1000)}k more chars - showing ${codeLimit / 1000}k/${Math.round(currentArtifactCode.length / 1000)}k total)`
+        : currentArtifactCode;
+
+    currentFilesContext = `\n\n<current_project_state>\nProject has ${allFiles.length} files: ${allFiles.join(", ")}\n\nCurrent code:\n${codePreview}\n</current_project_state>\n\n`;
+
     if (lockedFiles.length > 0) {
-      currentFilesContext = `\n\n<locked_files>\nThe following files are locked and must NOT be modified, deleted, or included in your response:\n${lockedFiles.map((f) => `- ${f}`).join("\n")}\n</locked_files>\n\n`;
+      currentFilesContext += `<locked_files>\nLocked files (DO NOT modify): ${lockedFiles.join(", ")}\n</locked_files>\n\n`;
     }
   }
 
@@ -1315,6 +1351,7 @@ Use standard Tailwind CSS classes and shadcn/ui components.`;
   const updatedImages: string[] = [];
   const uploadedFilesInfo: {
     path: string;
+    publicUrl?: string;
     type: "image" | "pdf" | "text";
     mimeType: string;
     source?: string;
@@ -1323,8 +1360,12 @@ Use standard Tailwind CSS classes and shadcn/ui components.`;
   // Add clone screenshot if available
   if (cloneScreenshot) {
     updatedImages.push(cloneScreenshot);
+    const { data: publicUrlData } = supabase.storage
+      .from("images")
+      .getPublicUrl(cloneScreenshot);
     uploadedFilesInfo.push({
       path: cloneScreenshot,
+      publicUrl: publicUrlData.publicUrl,
       type: "image",
       mimeType: "image/jpeg",
       source: "clone",
@@ -1368,8 +1409,12 @@ Use standard Tailwind CSS classes and shadcn/ui components.`;
       const parsedFiles = parseFileItems(lastUserMessage.files);
       parsedFiles.forEach((file) => {
         updatedImages.push(file.url);
+        const { data: publicUrlData } = supabase.storage
+          .from("images")
+          .getPublicUrl(file.url);
         uploadedFilesInfo.push({
           path: file.url,
+          publicUrl: publicUrlData.publicUrl,
           type: (file.type as "image" | "pdf" | "text") || "image",
           mimeType: file.mimeType || "application/octet-stream",
           source: file.source,
@@ -1377,6 +1422,15 @@ Use standard Tailwind CSS classes and shadcn/ui components.`;
       });
     } else if (lastUserMessage.prompt_image) {
       updatedImages.push(lastUserMessage.prompt_image);
+      const { data: publicUrlData } = supabase.storage
+        .from("images")
+        .getPublicUrl(lastUserMessage.prompt_image);
+      uploadedFilesInfo.push({
+        path: lastUserMessage.prompt_image,
+        publicUrl: publicUrlData.publicUrl,
+        type: "image",
+        mimeType: "image/jpeg",
+      });
     }
   }
 

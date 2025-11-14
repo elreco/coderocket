@@ -99,12 +99,20 @@ export async function cloneWebsite(url: string) {
           console.error("❌ Firecrawl fallback also failed:", firecrawlError);
 
           if (puppeteerData && (puppeteerData.markdown || puppeteerData.html)) {
-            console.warn("⚠️ Firecrawl failed but Puppeteer data available - using partial data (no screenshot)");
+            console.warn(
+              "⚠️ Firecrawl failed but Puppeteer data available - using partial data (no screenshot)",
+            );
             websiteData = puppeteerData;
             usedMethod = "simple-partial";
           } else {
-            const fcMsg = firecrawlError instanceof Error ? firecrawlError.message : "unknown";
-            const ppMsg = puppeteerError instanceof Error ? puppeteerError.message : "unknown";
+            const fcMsg =
+              firecrawlError instanceof Error
+                ? firecrawlError.message
+                : "unknown";
+            const ppMsg =
+              puppeteerError instanceof Error
+                ? puppeteerError.message
+                : "unknown";
             throw new Error(
               `Both scrapers failed. Firecrawl: ${fcMsg}. Puppeteer: ${ppMsg}`,
             );
@@ -112,7 +120,9 @@ export async function cloneWebsite(url: string) {
         }
       } else {
         if (puppeteerData && (puppeteerData.markdown || puppeteerData.html)) {
-          console.warn("⚠️ Firecrawl not configured - using partial Puppeteer data (no screenshot)");
+          console.warn(
+            "⚠️ Firecrawl not configured - using partial Puppeteer data (no screenshot)",
+          );
           websiteData = puppeteerData;
           usedMethod = "simple-partial";
         } else {

@@ -129,3 +129,5 @@ Planned improvements to the file locking feature:
 - Keyboard shortcuts for quick locking
 - Lock rules based on file patterns (e.g., `*.config.js`)
 
+
+
