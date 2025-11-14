@@ -23,10 +23,13 @@ export async function cloneWebsite(url: string) {
 
     console.log("✨ Trying simple scraper first (FREE)...");
     let shouldTryFirecrawl = false;
+    let puppeteerData = null;
+    let puppeteerError = null;
 
     try {
       const scraping = scrapeWebsiteSimple(url);
-      websiteData = await Promise.race([scraping, timeout]);
+      puppeteerData = await Promise.race([scraping, timeout]);
+      websiteData = puppeteerData;
 
       const contentToCheck = (
         websiteData.markdown ||
@@ -74,6 +77,7 @@ export async function cloneWebsite(url: string) {
         "❌ Simple scraper failed with error, trying Firecrawl fallback:",
         simpleError,
       );
+      puppeteerError = simpleError;
       shouldTryFirecrawl = true;
     }
 
@@ -81,19 +85,41 @@ export async function cloneWebsite(url: string) {
       const firecrawlApiKey = process.env.FIRECRAWL_API_KEY;
 
       if (firecrawlApiKey) {
-        usedMethod = "firecrawl-fallback";
+        try {
+          usedMethod = "firecrawl-fallback";
 
-        const scraping = scrapeWebsiteWithFirecrawl(url);
-        websiteData = await Promise.race([scraping, timeout]);
-        console.log("✅ Firecrawl fallback successful:", {
-          title: websiteData.title,
-          hasMarkdown: !!websiteData.markdown,
-          hasScreenshot: !!websiteData.screenshot,
-        });
+          const scraping = scrapeWebsiteWithFirecrawl(url);
+          websiteData = await Promise.race([scraping, timeout]);
+          console.log("✅ Firecrawl fallback successful:", {
+            title: websiteData.title,
+            hasMarkdown: !!websiteData.markdown,
+            hasScreenshot: !!websiteData.screenshot,
+          });
+        } catch (firecrawlError) {
+          console.error("❌ Firecrawl fallback also failed:", firecrawlError);
+
+          if (puppeteerData && (puppeteerData.markdown || puppeteerData.html)) {
+            console.warn("⚠️ Firecrawl failed but Puppeteer data available - using partial data (no screenshot)");
+            websiteData = puppeteerData;
+            usedMethod = "simple-partial";
+          } else {
+            const fcMsg = firecrawlError instanceof Error ? firecrawlError.message : "unknown";
+            const ppMsg = puppeteerError instanceof Error ? puppeteerError.message : "unknown";
+            throw new Error(
+              `Both scrapers failed. Firecrawl: ${fcMsg}. Puppeteer: ${ppMsg}`,
+            );
+          }
+        }
       } else {
-        throw new Error(
-          "Website has bot protection and Firecrawl API key is not configured. Please add FIRECRAWL_API_KEY to your environment variables.",
-        );
+        if (puppeteerData && (puppeteerData.markdown || puppeteerData.html)) {
+          console.warn("⚠️ Firecrawl not configured - using partial Puppeteer data (no screenshot)");
+          websiteData = puppeteerData;
+          usedMethod = "simple-partial";
+        } else {
+          throw new Error(
+            "Scraping failed and Firecrawl API key is not configured. Please add FIRECRAWL_API_KEY to your environment variables.",
+          );
+        }
       }
     }
 
