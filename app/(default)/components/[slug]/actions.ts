@@ -425,14 +425,33 @@ export const buildComponent = async (
       .eq("role", "assistant")
       .eq("version", version);
 
-    await takeScreenshot(
-      chatId,
-      version,
-      undefined,
-      chat.framework || Framework.REACT,
-    );
+    try {
+      let buildExists = false;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        buildExists = await checkExistingComponent(chatId, version);
+        if (buildExists) break;
+        if (attempt < 2) {
+          await new Promise((resolve) => setTimeout(resolve, 2000));
+        }
+      }
+
+      if (buildExists) {
+        await takeScreenshot(
+          chatId,
+          version,
+          undefined,
+          chat.framework || Framework.REACT,
+        );
+      } else {
+        console.warn(
+          `Build ${chatId}-${version} not available on Vercel Blob after 3 attempts, skipping screenshot`,
+        );
+      }
+    } catch (screenshotError) {
+      console.error("Screenshot error (non-blocking):", screenshotError);
+    }
   } catch (error) {
-    console.error("API error:", error);
+    console.error("Build API error:", error);
     const supabase = await createClient();
     await supabase
       .from("messages")
@@ -486,6 +505,23 @@ export const checkExistingComponent = async (
       },
     },
   );
+
+  if (!builderResponse.ok) {
+    console.error(
+      `Builder API error (${builderResponse.status}) when checking build existence`,
+    );
+    return false;
+  }
+
+  const contentType = builderResponse.headers.get("content-type");
+  if (!contentType || !contentType.includes("application/json")) {
+    const responseText = await builderResponse.text();
+    console.error(
+      "Builder API did not return JSON when checking build:",
+      responseText.substring(0, 200),
+    );
+    return false;
+  }
 
   const responseData = await builderResponse.json();
 

@@ -30,6 +30,16 @@ async function getBrowser(): Promise<Browser> {
     "--disable-web-security",
     "--disable-dev-shm-usage",
     "--disable-gpu",
+    "--window-size=1920,1080",
+    "--disable-background-timer-throttling",
+    "--disable-backgrounding-occluded-windows",
+    "--disable-renderer-backgrounding",
+    "--disable-infobars",
+    "--disable-breakpad",
+    "--disable-canvas-aa",
+    "--disable-2d-canvas-clip-aa",
+    "--disable-gl-drawing-for-tests",
+    "--enable-webgl",
   ];
 
   if (isDev) {
@@ -138,24 +148,31 @@ async function waitForCloudflareChallenge(page: Page): Promise<boolean> {
         bodyText.includes("checking your browser") ||
         bodyText.includes("cloudflare") ||
         bodyText.includes("just a moment") ||
+        bodyText.includes("verifying you are human") ||
+        bodyText.includes("ddos protection") ||
         title.includes("just a moment") ||
-        title.includes("cloudflare")
+        title.includes("cloudflare") ||
+        title.includes("attention required")
       );
     });
 
     if (isCloudflareChallenge) {
-      console.log("Cloudflare challenge detected, waiting...");
+      console.log("Cloudflare challenge detected, waiting up to 10 seconds...");
 
       await page
         .waitForFunction(
           () => {
             const bodyText = document.body.innerText.toLowerCase();
-            return !bodyText.includes("checking your browser");
+            return (
+              !bodyText.includes("checking your browser") &&
+              !bodyText.includes("just a moment") &&
+              !bodyText.includes("verifying you are human")
+            );
           },
-          { timeout: 15000 },
+          { timeout: 10000 },
         )
         .catch(() => {
-          console.log("Cloudflare challenge timeout");
+          console.log("Cloudflare challenge timeout after 10s");
         });
 
       await new Promise((resolve) => setTimeout(resolve, 2000));
@@ -367,30 +384,72 @@ export async function scrapeWebsiteSimple(
     });
 
     await page.setUserAgent(
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
     );
 
     await page.setExtraHTTPHeaders({
       "Accept-Language": "en-US,en;q=0.9,fr;q=0.8",
       Accept:
-        "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+        "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+      "Accept-Encoding": "gzip, deflate, br",
+      "sec-ch-ua":
+        '"Chromium";v="131", "Not_A Brand";v="24", "Google Chrome";v="131"',
+      "sec-ch-ua-mobile": "?0",
+      "sec-ch-ua-platform": '"Windows"',
+      "Sec-Fetch-Dest": "document",
+      "Sec-Fetch-Mode": "navigate",
+      "Sec-Fetch-Site": "none",
+      "Sec-Fetch-User": "?1",
+      "Upgrade-Insecure-Requests": "1",
+      "Cache-Control": "max-age=0",
+      DNT: "1",
+      Connection: "keep-alive",
     });
 
     await page.evaluateOnNewDocument(() => {
       Object.defineProperty(navigator, "webdriver", {
         get: () => false,
       });
+
+      Object.defineProperty(navigator, "plugins", {
+        get: () => [1, 2, 3, 4, 5],
+      });
+
+      Object.defineProperty(navigator, "languages", {
+        get: () => ["en-US", "en", "fr"],
+      });
+
+      Object.defineProperty(window, "chrome", {
+        value: {
+          runtime: {},
+        },
+        writable: true,
+        configurable: true,
+      });
+
+      const getParameter = () => {
+        return Promise.resolve({
+          state: "prompt" as PermissionState,
+        } as PermissionStatus);
+      };
+
+      Object.defineProperty(navigator.permissions, "query", {
+        value: getParameter,
+      });
     });
+
+    const randomDelay = Math.floor(Math.random() * 2000) + 1000;
+    await new Promise((resolve) => setTimeout(resolve, randomDelay));
 
     try {
       await page.goto(url, {
         waitUntil: "networkidle2",
-        timeout: 30000,
+        timeout: 45000,
       });
     } catch {
       await page.goto(url, {
         waitUntil: "domcontentloaded",
-        timeout: 30000,
+        timeout: 45000,
       });
     }
 
@@ -398,7 +457,20 @@ export async function scrapeWebsiteSimple(
 
     const hadCloudflare = await waitForCloudflareChallenge(page);
     if (hadCloudflare) {
-      await new Promise((resolve) => setTimeout(resolve, 3000));
+      console.log("Waiting extra time after Cloudflare...");
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      const stillCloudflare = await page.evaluate(() => {
+        const bodyText = document.body.innerText.toLowerCase();
+        return (
+          bodyText.includes("cloudflare") ||
+          bodyText.includes("checking your browser")
+        );
+      });
+
+      if (stillCloudflare) {
+        throw new Error("Cloudflare protection could not be bypassed");
+      }
     }
 
     await handleCookiePopups(page);

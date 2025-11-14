@@ -64,7 +64,7 @@ export function ChunkReader({
           <div className="w-full space-y-2">
             <div
               className={cn(
-                "rounded-lg border border-primary/30 bg-primary/10 p-2 text-foreground",
+                "rounded-lg my-2 border border-primary/30 bg-primary/10 p-2 text-foreground",
               )}
             >
               <div className="mb-3 flex items-center justify-between">

@@ -9,6 +9,11 @@ interface WebsiteContent {
   description: string | null;
   url: string;
   screenshot?: string;
+  images?: Array<{
+    url: string;
+    alt: string;
+    isLogo: boolean;
+  }>;
   metaTags?: Record<string, string>;
   links?: string[];
   extractedData?: {
@@ -64,13 +69,63 @@ export async function scrapeWebsiteWithFirecrawl(
     formats: ["markdown", "screenshot"],
     onlyMainContent: false,
     blockAds: true,
+    removeTags: ["script", "style", "noscript"],
     maxAge: 3600000,
     actions: [
-      { type: "wait", milliseconds: 1500 },
+      { type: "wait", milliseconds: 2000 },
+      {
+        type: "click",
+        selector:
+          'button:has-text("Accept"), button:has-text("Accepter"), button[id*="accept"], button[class*="accept"], #cookie-accept, .cookie-accept',
+      },
+      { type: "wait", milliseconds: 500 },
+      {
+        type: "executeJavascript",
+        script: `
+          // Hide common cookie/consent popups
+          const popupSelectors = [
+            '[class*="cookie"]',
+            '[id*="cookie"]',
+            '[class*="consent"]',
+            '[id*="consent"]',
+            '[class*="gdpr"]',
+            '[class*="popup"]',
+            '[class*="modal"]',
+            '[role="dialog"]',
+            '[aria-modal="true"]',
+            '.notification-bar',
+            '.banner'
+          ];
+
+          popupSelectors.forEach(selector => {
+            document.querySelectorAll(selector).forEach(el => {
+              const text = el.innerText?.toLowerCase() || '';
+              if (text.includes('cookie') || text.includes('consent') || text.includes('privacy') || text.includes('gdpr')) {
+                el.style.display = 'none';
+                el.remove();
+              }
+            });
+          });
+
+          // Remove fixed overlays
+          document.querySelectorAll('body > div').forEach(el => {
+            const style = window.getComputedStyle(el);
+            if (style.position === 'fixed' && parseInt(style.zIndex) > 1000) {
+              el.style.display = 'none';
+            }
+          });
+
+          // Remove body overflow hidden (often set by modals)
+          document.body.style.overflow = 'auto';
+        `,
+      },
+      { type: "wait", milliseconds: 1000 },
+      { type: "scroll", direction: "down" },
+      { type: "wait", milliseconds: 1000 },
       { type: "screenshot", fullPage: true },
     ],
-    waitFor: 2000,
-    timeout: 45000,
+    waitFor: 3000,
+    timeout: 60000,
   });
 
   if (!result) {
@@ -83,7 +138,44 @@ export async function scrapeWebsiteWithFirecrawl(
     hasMarkdown: !!result.markdown,
     markdownLength: result.markdown?.length || 0,
     hasScreenshot: !!result.screenshot,
+    screenshotType: typeof result.screenshot,
+    screenshotPreview: result.screenshot?.substring(0, 100),
   });
+
+  let processedScreenshot: string | undefined = undefined;
+
+  if (result.screenshot) {
+    if (result.screenshot.startsWith("http")) {
+      console.log(
+        "Firecrawl screenshot is a URL, fetching and converting to base64...",
+      );
+      try {
+        const response = await fetch(result.screenshot);
+        const arrayBuffer = await response.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+        processedScreenshot = buffer.toString("base64");
+        console.log(
+          "Screenshot converted to base64, size:",
+          processedScreenshot.length,
+        );
+      } catch (error) {
+        console.error(
+          "Failed to fetch and convert screenshot from URL:",
+          error,
+        );
+      }
+    } else if (result.screenshot.startsWith("data:image")) {
+      console.log(
+        "Firecrawl screenshot has data URI prefix, extracting base64...",
+      );
+      const base64Match = result.screenshot.match(/base64,(.+)/);
+      if (base64Match) {
+        processedScreenshot = base64Match[1];
+      }
+    } else {
+      processedScreenshot = result.screenshot;
+    }
+  }
 
   return {
     html: result.html || "",
@@ -91,7 +183,8 @@ export async function scrapeWebsiteWithFirecrawl(
     title: result.metadata?.title || url,
     description: result.metadata?.description || null,
     url,
-    screenshot: result.screenshot || undefined,
+    screenshot: processedScreenshot,
+    images: [],
     metaTags: result.metadata as Record<string, string>,
     links: result.links || [],
     extractedData: {},
