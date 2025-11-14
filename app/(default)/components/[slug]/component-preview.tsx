@@ -81,6 +81,47 @@ export default function ComponentPreview() {
   } = useComponentContext();
   const [iframeLoading, setIframeLoading] = React.useState(false);
 
+  const getInitialDisplayVersion = () => {
+    if (selectedVersion === undefined) return undefined;
+    const isGenerating =
+      isLoading || (loadingState && loadingState !== "error");
+    if (selectedVersion > 0 && isGenerating) {
+      return selectedVersion - 1;
+    }
+    return selectedVersion;
+  };
+
+  const [displayVersion, setDisplayVersion] = React.useState<
+    number | undefined
+  >(getInitialDisplayVersion);
+
+  React.useEffect(() => {
+    if (selectedVersion === undefined) return;
+
+    const isGenerating =
+      isLoading || (loadingState && loadingState !== "error");
+
+    if (displayVersion === undefined) {
+      if (selectedVersion > 0 && isGenerating) {
+        setDisplayVersion(selectedVersion - 1);
+      } else if (!isGenerating) {
+        setDisplayVersion(selectedVersion);
+      }
+    } else if (
+      !isGenerating &&
+      displayVersion !== selectedVersion &&
+      isWebcontainerReady
+    ) {
+      setDisplayVersion(selectedVersion);
+    }
+  }, [
+    isLoading,
+    selectedVersion,
+    displayVersion,
+    loadingState,
+    isWebcontainerReady,
+  ]);
+
   React.useEffect(() => {
     if (isWebcontainerReady) {
       setIframeLoading(true);
@@ -93,12 +134,20 @@ export default function ComponentPreview() {
     }
   }, [chatId, selectedVersion, isWebcontainerReady]);
 
+  const isFirstGeneration = selectedVersion === 0;
+  const shouldShowLoader =
+    (isFirstGeneration && isLoading) ||
+    (isFirstGeneration && loadingState && loadingState !== "error");
+  const isGeneratingNewVersion =
+    !isFirstGeneration &&
+    (isLoading || loadingState) &&
+    loadingState !== "error";
+
   return (
     <>
-      {loadingState &&
-        loadingState !== "error" &&
-        !isLoading &&
-        !buildError && <LoadingStateComponent state={loadingState} />}
+      {shouldShowLoader && !buildError && (
+        <LoadingStateComponent state={loadingState || "processing"} />
+      )}
 
       {buildError && !isLoading && (
         <div className="flex size-full h-full items-center justify-center px-4 xl:w-2/3">
@@ -163,24 +212,40 @@ export default function ComponentPreview() {
         </div>
       )}
       {chatId &&
-        selectedVersion !== undefined &&
-        !isLoading &&
+        displayVersion !== undefined &&
         !buildError &&
-        !loadingState && (
+        !shouldShowLoader && (
           <div className="relative size-full">
-            {iframeLoading && (
-              <div className="absolute inset-0 z-10 flex items-center justify-center bg-background">
-                <LoadingStateComponent state="starting" />
+            {isGeneratingNewVersion && (
+              <div className="absolute right-4 top-4 z-20 flex items-center gap-2 rounded-full border border-primary bg-background px-4 py-2 shadow-xl">
+                <Loader2 className="size-4 animate-spin text-primary" />
+                <span className="text-sm font-medium text-primary">
+                  {loadingState === "processing"
+                    ? `Building version ${selectedVersion}...`
+                    : loadingState === "deploying"
+                      ? `Deploying version ${selectedVersion}...`
+                      : `Generating version ${selectedVersion}...`}
+                </span>
               </div>
             )}
-            <iframe
-              src={`https://${chatId}-${selectedVersion}.webcontainer.coderocket.app`}
-              className="size-full border-none"
-              sandbox="allow-scripts allow-forms allow-popups allow-modals allow-storage-access-by-user-activation allow-same-origin"
-              allow="credentialless"
-              loading="eager"
-              onLoad={() => setIframeLoading(false)}
-            />
+            {iframeLoading &&
+              isWebcontainerReady &&
+              !isGeneratingNewVersion && (
+                <div className="absolute inset-0 z-10 flex items-center justify-center bg-background">
+                  <LoadingStateComponent state="starting" />
+                </div>
+              )}
+            {displayVersion !== undefined && (
+              <iframe
+                key={`iframe-${displayVersion}`}
+                src={`https://${chatId}-${displayVersion}.webcontainer.coderocket.app`}
+                className="size-full border-none"
+                sandbox="allow-scripts allow-forms allow-popups allow-modals allow-storage-access-by-user-activation allow-same-origin"
+                allow="credentialless"
+                loading="eager"
+                onLoad={() => setIframeLoading(false)}
+              />
+            )}
           </div>
         )}
     </>

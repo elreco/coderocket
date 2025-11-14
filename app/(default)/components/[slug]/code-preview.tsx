@@ -45,6 +45,7 @@ const RenderContent = React.memo(
     currentGeneratingFile,
     isWebcontainerReady,
     iframeKey,
+    selectedVersion,
   }: {
     isLoading: boolean;
     artifactFiles: ChatFile[];
@@ -53,8 +54,11 @@ const RenderContent = React.memo(
     currentGeneratingFile: string | null;
     isWebcontainerReady: boolean;
     iframeKey?: number;
+    selectedVersion?: number;
   }) => {
-    if (isLoading && !isWebcontainerReady) {
+    const isFirstGeneration = selectedVersion === 0;
+
+    if (isLoading && !isWebcontainerReady && isFirstGeneration) {
       return (
         <ComponentLoadingMockup fileName={currentGeneratingFile || undefined} />
       );
@@ -85,6 +89,7 @@ const RenderContent = React.memo(
     if (prevProps.isWebcontainerReady !== nextProps.isWebcontainerReady)
       return false;
     if (prevProps.iframeKey !== nextProps.iframeKey) return false;
+    if (prevProps.selectedVersion !== nextProps.selectedVersion) return false;
 
     const areFilesEqual = (prev: ChatFile[], next: ChatFile[]) => {
       if (prev.length !== next.length) return false;
@@ -121,6 +126,7 @@ export default function CodePreview() {
     isWebcontainerReady,
     authorized,
     iframeKey,
+    selectedVersion,
   } = useComponentContext();
   const { buildError } = useBuilder();
   const [, copy] = useCopyToClipboard();
@@ -240,6 +246,7 @@ export default function CodePreview() {
           currentGeneratingFile={currentGeneratingFile}
           isWebcontainerReady={isWebcontainerReady}
           iframeKey={iframeKey}
+          selectedVersion={selectedVersion}
         />
       </div>
       <div
