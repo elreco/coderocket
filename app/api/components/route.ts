@@ -59,6 +59,30 @@ interface ContextResult {
   contextSummary?: string;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function optimizeMarkdownForTokens(markdown: string): string {
+  const maxLength = 15000;
+
+  if (markdown.length <= maxLength) {
+    return markdown;
+  }
+
+  const lines = markdown.split("\n");
+  let result = "";
+  let currentLength = 0;
+
+  for (const line of lines) {
+    if (currentLength + line.length > maxLength) {
+      result += "\n\n... (content truncated to fit token limits) ...";
+      break;
+    }
+    result += line + "\n";
+    currentLength += line.length + 1;
+  }
+
+  return result.trim();
+}
+
 const buildIntelligentContext = async (
   messages: Tables<"messages">[],
 ): Promise<ContextResult> => {
@@ -495,7 +519,6 @@ export async function POST(req: Request) {
         ...messages,
       ],
       model: anthropicModel("claude-sonnet-4-5"),
-      toolChoice: "none",
       maxOutputTokens: dynamicMaxTokens,
       onStepFinish: async ({ text, usage, finishReason }) => {
         console.log("=== AI Generation Step Finished ===");
@@ -1004,17 +1027,40 @@ const validateRequest = async (
           ) + "%",
         );
 
+        const images = (
+          data as {
+            images?: Array<{ url: string; alt: string; isLogo: boolean }>;
+          }
+        ).images;
+        const imagesList =
+          images && images.length > 0
+            ? `\n\n# IMAGE ASSETS\nUse these exact URLs for images:\n${images
+                .filter((img) => img.isLogo)
+                .map(
+                  (img, idx) =>
+                    `${idx + 1}. Logo: ${img.url} (alt: "${img.alt}")`,
+                )
+                .join("\n")}\n${images
+                .filter((img) => !img.isLogo)
+                .slice(0, 30)
+                .map(
+                  (img, idx) =>
+                    `${idx + 1}. Image: ${img.url} (alt: "${img.alt}")`,
+                )
+                .join("\n")}`
+            : "";
+
         enhancedPrompt = `Clone this website: ${chat.clone_url}
 
-# PRIMARY REFERENCE
-A screenshot is attached - this is your MAIN visual reference for layout and design.
+# VISUAL REFERENCE
+A screenshot is attached - this is your PRIMARY reference. Study it carefully for layout, colors, fonts, spacing, and design.
 
-# EXTRACTED SPECIFICATIONS
-The data below contains exact specifications extracted from the website:
+# CONTENT
+Use this content in your implementation:
 
-${optimizedMarkdown}
+${optimizedMarkdown}${imagesList}
 
-**Important:** The screenshot shows WHAT to build. The data provides EXACT specifications (colors, fonts, images, content) for HOW to build it accurately.`;
+**Instructions:** The screenshot shows the design. The content above provides the text and images. Combine both to create an accurate clone.`;
 
         // Handle screenshot with proper dimension validation and resizing
         if (cloneResult.data.screenshot) {
@@ -1022,6 +1068,7 @@ ${optimizedMarkdown}
             const buffer = Buffer.from(cloneResult.data.screenshot, "base64");
             console.log("Screenshot buffer size:", buffer.length, "bytes");
 
+            // Read metadata from original buffer first
             const metadata = await sharp(buffer).metadata();
 
             console.log(
@@ -1030,14 +1077,16 @@ ${optimizedMarkdown}
               "x",
               metadata.height,
             );
+            console.log("Original format:", metadata.format);
 
             // Check if either dimension exceeds Anthropic's 8000px limit
             const maxDimension = 8000;
             const needsResize =
-              metadata.width > maxDimension || metadata.height > maxDimension;
+              (metadata.width || 0) > maxDimension ||
+              (metadata.height || 0) > maxDimension;
 
-            let processedBuffer: Buffer = buffer;
-            if (needsResize) {
+            let processedBuffer: Buffer;
+            if (needsResize && metadata.width && metadata.height) {
               console.log("⚠️ Image exceeds 8000px limit, resizing...");
 
               // Calculate new dimensions maintaining aspect ratio
@@ -1061,7 +1110,7 @@ ${optimizedMarkdown}
                   fit: "inside",
                   withoutEnlargement: true,
                 })
-                .jpeg({ quality: 80 })
+                .jpeg({ quality: 85 })
                 .toBuffer();
 
               console.log(
@@ -1069,6 +1118,12 @@ ${optimizedMarkdown}
                 processedBuffer.length,
                 "bytes",
               );
+            } else {
+              // Just convert to JPEG without resizing
+              console.log("Converting to JPEG...");
+              processedBuffer = await sharp(buffer)
+                .jpeg({ quality: 85 })
+                .toBuffer();
             }
 
             const screenshotFileName = `${Date.now()}-${user?.id}-screenshot.jpg`;

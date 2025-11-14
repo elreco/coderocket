@@ -6,33 +6,40 @@ This directory contains two website scraping implementations:
 
 ### Files
 
-- `website-scraper-advanced.ts` - **Primary scraper** using Puppeteer (FREE)
+- `website-scraper-simple.ts` - **Primary scraper** using Puppeteer (FREE) - Simple & efficient
 - `website-scraper-firecrawl.ts` - **Fallback scraper** using Firecrawl API
+- `website-scraper-advanced.ts` - **Legacy scraper** (deprecated, kept for reference)
 
-## Why Advanced Scraper?
+## Why Simple Scraper?
 
-The advanced scraper is now the default method because it provides:
+The simple scraper is inspired by same.new's approach and provides:
 
 1. **100% FREE** - No API costs, runs on your own infrastructure
-2. **Higher fidelity** - Direct access to HTML, CSS, and computed styles
-3. **Better analysis** - Extracts real colors, fonts, layout structure from source
-4. **Full control** - Customizable scraping behavior and timeout
+2. **Efficient** - Extracts only what's needed, reducing token usage
+3. **AI-first** - Trusts Claude's vision capabilities to analyze screenshots
+4. **Clean output** - Simple markdown + screenshot + images
 5. **Vercel compatible** - Uses `@sparticuz/chromium` for serverless deployment
 
 ### What it extracts:
 
-- Full-page high-quality screenshot
-- Complete HTML source
-- Markdown conversion of content
-- **Real colors** from styles and classes
-- **Real fonts** from CSS and Google Fonts links
-- **Layout structure** (hero, navbar, footer, sidebar detection)
-- Meta tags and descriptions
-- All links from the page
+- **High-quality screenshot** (full page) - Primary visual reference
+- **Clean markdown** - Text content from the page (headings, paragraphs, links)
+- **Image URLs** - Logos and key images with their exact URLs
+- **Metadata** - Title and description
+
+### Philosophy
+
+Instead of extracting every CSS detail, color, and font programmatically (which is fragile and token-heavy), we:
+- Provide a high-quality screenshot for the AI to analyze visually
+- Give clean content (markdown) for text and structure
+- Include image URLs for assets
+- Let Claude's vision capabilities do the heavy lifting
+
+This approach is simpler, more robust, and produces better results.
 
 ## Fallback Strategy
 
-If the advanced scraper fails (network issues, bot protection, etc.), the system automatically falls back to Firecrawl if the API key is configured.
+If the simple scraper fails (network issues, bot protection, etc.), the system automatically falls back to Firecrawl if the API key is configured.
 
 ## Usage
 
@@ -49,7 +56,7 @@ if (result.success) {
 
 ## Configuration
 
-### For Advanced Scraper (Primary)
+### For Simple Scraper (Primary)
 
 No configuration needed! It works out of the box.
 
@@ -65,9 +72,10 @@ Get your API key at [firecrawl.dev](https://www.firecrawl.dev/)
 
 ## Vercel Deployment
 
-The advanced scraper is optimized for Vercel:
+The simple scraper is optimized for Vercel:
 
 - Uses `@sparticuz/chromium` for serverless Chromium
 - Automatically detects environment (dev vs production)
 - Falls back to Firecrawl if Puppeteer fails in production
+- Lightweight and fast, reducing cold start times
 

@@ -129,26 +129,12 @@ export default function ComponentSidebar({
   const [isLoadingSubscription, setIsLoadingSubscription] = useState(true);
   const [scrapingStatus, setScrapingStatus] = useState<{
     progress: number;
-    images: Array<{ url: string; alt: string }>;
-    colors: string[];
-    fonts: string[];
-    structure: { sections: number; imageCount: number };
     screenshot?: string | null;
-    videosCount: number;
     error?: string | null;
-    markdown?: string;
-    html?: string;
   }>({
     progress: 0,
-    images: [],
-    colors: [],
-    fonts: [],
-    structure: { sections: 0, imageCount: 0 },
     screenshot: null,
-    videosCount: 0,
     error: null,
-    markdown: undefined,
-    html: undefined,
   });
 
   useEffect(() => {
@@ -506,18 +492,8 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
 
         setScrapingStatus({
           progress: 100,
-          images: [],
-          colors: [],
-          fonts: [],
-          structure: {
-            sections: 0,
-            imageCount: 0,
-          },
           screenshot: result.data.screenshot || null,
-          videosCount: 0,
           error: null,
-          markdown: result.data.markdown,
-          html: result.data.html,
         });
 
         return true;
@@ -559,77 +535,15 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
         if (!hasRealData) {
           intervalId = setInterval(() => {
             setScrapingStatus((prev) => {
-              // Smooth incremental progress (2-5% per tick)
               const progressIncrement = Math.floor(Math.random() * 4) + 2;
               const newProgress = Math.min(
                 prev.progress + progressIncrement,
                 95,
               );
 
-              // Simulate discovering images and colors as progress increases
-              const newImages = [...prev.images];
-              const newColors = [...prev.colors];
-              const newFonts = [...prev.fonts];
-              const newStructure = { ...prev.structure };
-
-              // Add simulated images at certain progress points
-              if (newProgress > 30 && prev.progress <= 30) {
-                const imageCount = Math.floor(Math.random() * 3) + 1;
-                for (let i = 0; i < imageCount; i++) {
-                  newImages.push({
-                    url: `https://picsum.photos/seed/${Math.random()}/${200}/${150}`,
-                    alt: `Found image ${newImages.length + 1}`,
-                  });
-                }
-                newStructure.imageCount = newImages.length;
-              }
-
-              if (newProgress > 50 && prev.progress <= 50) {
-                // Add some colors
-                const colors = [
-                  "#3B82F6",
-                  "#10B981",
-                  "#F59E0B",
-                  "#EF4444",
-                  "#8B5CF6",
-                ];
-                for (let i = 0; i < Math.min(3, colors.length); i++) {
-                  if (!newColors.includes(colors[i])) {
-                    newColors.push(colors[i]);
-                  }
-                }
-
-                // Add some fonts
-                const fonts = ["Inter", "Roboto", "Open Sans", "Montserrat"];
-                for (let i = 0; i < Math.min(2, fonts.length); i++) {
-                  if (!newFonts.includes(fonts[i])) {
-                    newFonts.push(fonts[i]);
-                  }
-                }
-
-                // Update sections count
-                newStructure.sections = Math.floor(Math.random() * 5) + 3;
-              }
-
-              if (newProgress > 70 && prev.progress <= 70) {
-                const imageCount = Math.floor(Math.random() * 4) + 2;
-                for (let i = 0; i < imageCount; i++) {
-                  newImages.push({
-                    url: `https://picsum.photos/seed/${Math.random()}/${200}/${150}`,
-                    alt: `Found image ${newImages.length + 1}`,
-                  });
-                }
-                newStructure.imageCount = newImages.length;
-              }
-
               return {
                 progress: newProgress,
-                images: newImages,
-                colors: newColors,
-                fonts: newFonts,
-                structure: newStructure,
-                videosCount:
-                  newProgress > 60 ? Math.floor(Math.random() * 3) : 0,
+                screenshot: prev.screenshot,
                 error: prev.error,
               };
             });
