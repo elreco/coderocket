@@ -66,11 +66,14 @@ export async function scrapeWebsiteWithFirecrawl(
   console.log(`Starting Firecrawl scraping for: ${url}`);
 
   const result = await firecrawl.scrape(url, {
-    formats: ["markdown", "screenshot"],
+    formats: [
+      "markdown",
+      {
+        type: "screenshot",
+        fullPage: true,
+      },
+    ],
     onlyMainContent: false,
-    blockAds: true,
-    removeTags: ["script", "style", "noscript"],
-    maxAge: 3600000,
     actions: [
       { type: "wait", milliseconds: 2000 },
       {
@@ -82,7 +85,6 @@ export async function scrapeWebsiteWithFirecrawl(
       {
         type: "executeJavascript",
         script: `
-          // Hide common cookie/consent popups
           const popupSelectors = [
             '[class*="cookie"]',
             '[id*="cookie"]',
@@ -107,7 +109,6 @@ export async function scrapeWebsiteWithFirecrawl(
             });
           });
 
-          // Remove fixed overlays
           document.querySelectorAll('body > div').forEach(el => {
             const style = window.getComputedStyle(el);
             if (style.position === 'fixed' && parseInt(style.zIndex) > 1000) {
@@ -115,14 +116,12 @@ export async function scrapeWebsiteWithFirecrawl(
             }
           });
 
-          // Remove body overflow hidden (often set by modals)
           document.body.style.overflow = 'auto';
         `,
       },
       { type: "wait", milliseconds: 1000 },
       { type: "scroll", direction: "down" },
       { type: "wait", milliseconds: 1000 },
-      { type: "screenshot", fullPage: true },
     ],
     waitFor: 3000,
     timeout: 60000,

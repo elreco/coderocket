@@ -18,6 +18,7 @@ import {
 import { useEffect, useState, useRef, useCallback } from "react";
 
 import { getSubscription } from "@/app/supabase-server";
+import { CloneAnotherPageButton } from "@/components/clone-another-page-button";
 import { FigmaImportButton } from "@/components/figma-import-button";
 import { FileBadge } from "@/components/file-badge";
 import { ImageUploadArea } from "@/components/image-upload-area";
@@ -136,6 +137,9 @@ export default function ComponentSidebar({
     screenshot: null,
     error: null,
   });
+  const [isCloneAnotherPageActive, setIsCloneAnotherPageActive] =
+    useState(false);
+  const [currentCloneUrl, setCurrentCloneUrl] = useState<string | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -469,12 +473,13 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
       if (progressInterval) clearInterval(progressInterval);
 
       if (result.success && result.data) {
+        const cloneData = result.data;
         console.log("Clone data received:", {
-          hasScreenshot: !!result.data.screenshot,
-          screenshotType: typeof result.data.screenshot,
-          screenshotLength: result.data.screenshot?.length,
-          hasMarkdown: !!result.data.markdown,
-          hasHtml: !!result.data.html,
+          hasScreenshot: !!cloneData.screenshot,
+          screenshotType: typeof cloneData.screenshot,
+          screenshotLength: cloneData.screenshot?.length,
+          hasMarkdown: !!cloneData.markdown,
+          hasHtml: !!cloneData.html,
         });
 
         const finalSteps = [90, 95, 100];
@@ -485,14 +490,14 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
             progress: finalSteps[i],
             screenshot:
               i === finalSteps.length - 1
-                ? result.data.screenshot || null
+                ? cloneData.screenshot || null
                 : prev.screenshot,
           }));
         }
 
         setScrapingStatus({
           progress: 100,
-          screenshot: result.data.screenshot || null,
+          screenshot: cloneData.screenshot || null,
           error: null,
         });
 
@@ -520,9 +525,11 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
   }, []);
 
   useEffect(() => {
-    // Only run this effect when in clone mode with a URL
-    if (fetchedChat?.clone_url && selectedVersion === -1 && isLoading) {
-      // Try to fetch real data first
+    if (
+      fetchedChat?.clone_url &&
+      ((selectedVersion === -1 && isLoading) || isCloneAnotherPageActive) &&
+      isLoading
+    ) {
       let intervalId: NodeJS.Timeout;
       let hasRealData = false;
 
@@ -531,7 +538,6 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
           hasRealData = await fetchCloneData(fetchedChat.clone_url);
         }
 
-        // If we couldn't get real data, simulate progress
         if (!hasRealData) {
           intervalId = setInterval(() => {
             setScrapingStatus((prev) => {
@@ -557,7 +563,25 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
         if (intervalId) clearInterval(intervalId);
       };
     }
-  }, [fetchedChat?.clone_url, selectedVersion, isLoading, fetchCloneData]);
+  }, [
+    fetchedChat?.clone_url,
+    selectedVersion,
+    isLoading,
+    fetchCloneData,
+    isCloneAnotherPageActive,
+  ]);
+
+  useEffect(() => {
+    if (!isLoading && isCloneAnotherPageActive) {
+      setIsCloneAnotherPageActive(false);
+      setCurrentCloneUrl(null);
+      setScrapingStatus({
+        progress: 0,
+        screenshot: null,
+        error: null,
+      });
+    }
+  }, [isLoading, isCloneAnotherPageActive]);
 
   return (
     <div
@@ -822,218 +846,220 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
                   </div>
                 </div>
               )}
-              {fetchedChat?.clone_url && selectedVersion === -1 && (
-                <div className="mb-4 mt-2 flex flex-col gap-3 rounded-lg border border-primary/30 bg-primary/10 p-4 text-sm">
-                  <div className="flex items-center">
-                    {completion ? (
-                      <CheckCircle className="mr-2 size-5 text-green-500" />
-                    ) : (
-                      <Loader className="mr-2 size-5 animate-spin text-primary" />
-                    )}
-                    {completion ? (
-                      <p className="font-medium text-green-600">
-                        Website{" "}
-                        {truncateMiddle(
-                          fetchedChat.clone_url
-                            .replace(/^https?:\/\/(www\.)?/i, "")
-                            .replace(/\/$/, ""),
-                          35,
-                        )}{" "}
-                        analyzed
-                      </p>
-                    ) : (
-                      <p className="font-medium text-primary">
-                        Scraping{" "}
-                        {truncateMiddle(
-                          fetchedChat.clone_url
-                            .replace(/^https?:\/\/(www\.)?/i, "")
-                            .replace(/\/$/, ""),
-                          35,
-                        )}
-                      </p>
-                    )}
-                  </div>
-                  {!completion ? (
-                    <p className="ml-2 text-xs text-orange-500">
-                      This may take a while
-                    </p>
-                  ) : null}
-
-                  {scrapingStatus.error && (
-                    <div className="mt-2 rounded-lg border border-red-400/30 bg-red-500/10 p-2 text-xs">
-                      <p className="font-medium text-red-600">
-                        Analysis encountered an issue:
-                      </p>
-                      <p className="text-muted-foreground">
-                        {scrapingStatus.error}
-                      </p>
-                      <p className="mt-1 text-xs">
-                        Using fallback analysis methods instead.
-                      </p>
+              {fetchedChat?.clone_url &&
+                ((selectedVersion === -1 && isLoading) ||
+                  isCloneAnotherPageActive) && (
+                  <div className="mb-4 mt-2 flex flex-col gap-3 rounded-lg border border-primary/30 bg-primary/10 p-4 text-sm">
+                    <div className="flex items-center">
+                      {!isLoading ? (
+                        <CheckCircle className="mr-2 size-5 text-green-500" />
+                      ) : (
+                        <Loader className="mr-2 size-5 animate-spin text-primary" />
+                      )}
+                      {!isLoading ? (
+                        <p className="font-medium text-green-600">
+                          Website{" "}
+                          {truncateMiddle(
+                            (currentCloneUrl || fetchedChat.clone_url)
+                              .replace(/^https?:\/\/(www\.)?/i, "")
+                              .replace(/\/$/, ""),
+                            35,
+                          )}{" "}
+                          analyzed
+                        </p>
+                      ) : (
+                        <p className="font-medium text-primary">
+                          Scraping{" "}
+                          {truncateMiddle(
+                            (currentCloneUrl || fetchedChat.clone_url)
+                              .replace(/^https?:\/\/(www\.)?/i, "")
+                              .replace(/\/$/, ""),
+                            35,
+                          )}
+                        </p>
+                      )}
                     </div>
-                  )}
+                    {isLoading ? (
+                      <p className="ml-2 text-xs text-orange-500">
+                        This may take a while
+                      </p>
+                    ) : null}
 
-                  {!scrapingStatus.error && (
-                    <>
-                      <div className="relative h-2 w-full overflow-hidden rounded-full bg-primary/10">
-                        <div
-                          className="h-full bg-gradient-to-r from-primary to-primary/80 transition-all duration-1000 ease-in-out"
-                          style={{ width: `${scrapingStatus.progress}%` }}
-                        >
-                          <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-                        </div>
+                    {scrapingStatus.error && (
+                      <div className="mt-2 rounded-lg border border-red-400/30 bg-red-500/10 p-2 text-xs">
+                        <p className="font-medium text-red-600">
+                          Analysis encountered an issue:
+                        </p>
+                        <p className="text-muted-foreground">
+                          {scrapingStatus.error}
+                        </p>
+                        <p className="mt-1 text-xs">
+                          Using fallback analysis methods instead.
+                        </p>
                       </div>
+                    )}
 
-                      <div className="mt-3 flex flex-col gap-2">
-                        {[
-                          {
-                            progress: 0,
-                            label: "Initializing scraper",
-                            detail: "Connecting to website...",
-                            icon: "⚙️",
-                          },
-                          {
-                            progress: 20,
-                            label: "Loading page",
-                            detail: "Fetching HTML & assets...",
-                            icon: "🌐",
-                          },
-                          {
-                            progress: 40,
-                            label: "Extracting content",
-                            detail: "Analyzing structure & text...",
-                            icon: "📄",
-                          },
-                          {
-                            progress: 60,
-                            label: "Capturing design",
-                            detail: "Colors, fonts & layout...",
-                            icon: "🎨",
-                          },
-                          {
-                            progress: 80,
-                            label: "Taking screenshot",
-                            detail: "Visual reference...",
-                            icon: "📸",
-                          },
-                          {
-                            progress: 95,
-                            label: "Finalizing",
-                            detail: "Preparing for AI...",
-                            icon: "✨",
-                          },
-                        ].map((step, index) => {
-                          const nextStepProgress =
-                            [20, 40, 60, 80, 95, 100][index] || 100;
-                          const isActive =
-                            scrapingStatus.progress >= step.progress &&
-                            scrapingStatus.progress < nextStepProgress;
-                          const isCompleted =
-                            scrapingStatus.progress >= nextStepProgress;
+                    {!scrapingStatus.error && (
+                      <>
+                        <div className="relative h-2 w-full overflow-hidden rounded-full bg-primary/10">
+                          <div
+                            className="h-full bg-gradient-to-r from-primary to-primary/80 transition-all duration-1000 ease-in-out"
+                            style={{ width: `${scrapingStatus.progress}%` }}
+                          >
+                            <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+                          </div>
+                        </div>
 
-                          return (
-                            <div
-                              key={step.label}
-                              className={cn(
-                                "flex items-start gap-3 rounded-lg border p-2.5 transition-all duration-700 ease-in-out",
-                                isActive &&
-                                  "border-primary/40 bg-primary/5 shadow-sm scale-[1.01]",
-                                isCompleted &&
-                                  "border-green-500/30 bg-green-500/5 opacity-70",
-                                !isActive &&
-                                  !isCompleted &&
-                                  "border-border/50 opacity-50",
-                              )}
-                            >
+                        <div className="mt-3 flex flex-col gap-2">
+                          {[
+                            {
+                              progress: 0,
+                              label: "Initializing scraper",
+                              detail: "Connecting to website...",
+                              icon: "⚙️",
+                            },
+                            {
+                              progress: 20,
+                              label: "Loading page",
+                              detail: "Fetching HTML & assets...",
+                              icon: "🌐",
+                            },
+                            {
+                              progress: 40,
+                              label: "Extracting content",
+                              detail: "Analyzing structure & text...",
+                              icon: "📄",
+                            },
+                            {
+                              progress: 60,
+                              label: "Capturing design",
+                              detail: "Colors, fonts & layout...",
+                              icon: "🎨",
+                            },
+                            {
+                              progress: 80,
+                              label: "Taking screenshot",
+                              detail: "Visual reference...",
+                              icon: "📸",
+                            },
+                            {
+                              progress: 95,
+                              label: "Finalizing",
+                              detail: "Preparing for AI...",
+                              icon: "✨",
+                            },
+                          ].map((step, index) => {
+                            const nextStepProgress =
+                              [20, 40, 60, 80, 95, 100][index] || 100;
+                            const isActive =
+                              scrapingStatus.progress >= step.progress &&
+                              scrapingStatus.progress < nextStepProgress;
+                            const isCompleted =
+                              scrapingStatus.progress >= nextStepProgress;
+
+                            return (
                               <div
+                                key={step.label}
                                 className={cn(
-                                  "flex size-7 shrink-0 items-center justify-center rounded-full text-sm transition-all",
-                                  isActive && "animate-pulse bg-primary/20",
-                                  isCompleted && "bg-primary/10",
-                                  !isActive && !isCompleted && "bg-muted/50",
+                                  "flex items-start gap-3 rounded-lg border p-2.5 transition-all duration-700 ease-in-out",
+                                  isActive &&
+                                    "border-primary/40 bg-primary/5 shadow-sm scale-[1.01]",
+                                  isCompleted &&
+                                    "border-green-500/30 bg-green-500/5 opacity-70",
+                                  !isActive &&
+                                    !isCompleted &&
+                                    "border-border/50 opacity-50",
                                 )}
                               >
-                                {isCompleted ? (
-                                  <svg
-                                    className="size-4 text-primary"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
+                                <div
+                                  className={cn(
+                                    "flex size-7 shrink-0 items-center justify-center rounded-full text-sm transition-all",
+                                    isActive && "animate-pulse bg-primary/20",
+                                    isCompleted && "bg-primary/10",
+                                    !isActive && !isCompleted && "bg-muted/50",
+                                  )}
+                                >
+                                  {isCompleted ? (
+                                    <svg
+                                      className="size-4 text-primary"
+                                      fill="none"
+                                      viewBox="0 0 24 24"
+                                      stroke="currentColor"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M5 13l4 4L19 7"
+                                      />
+                                    </svg>
+                                  ) : (
+                                    <span>{step.icon}</span>
+                                  )}
+                                </div>
+                                <div className="flex-1 pt-0.5">
+                                  <p
+                                    className={cn(
+                                      "text-xs font-medium transition-colors",
+                                      isActive && "text-foreground",
+                                      !isActive && "text-muted-foreground",
+                                    )}
                                   >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2}
-                                      d="M5 13l4 4L19 7"
-                                    />
-                                  </svg>
-                                ) : (
-                                  <span>{step.icon}</span>
-                                )}
+                                    {step.label}
+                                  </p>
+                                  <p
+                                    className={cn(
+                                      "text-xs transition-colors",
+                                      isActive && "text-muted-foreground",
+                                      !isActive && "text-muted-foreground/60",
+                                    )}
+                                  >
+                                    {step.detail}
+                                  </p>
+                                </div>
                               </div>
-                              <div className="flex-1 pt-0.5">
-                                <p
-                                  className={cn(
-                                    "text-xs font-medium transition-colors",
-                                    isActive && "text-foreground",
-                                    !isActive && "text-muted-foreground",
-                                  )}
-                                >
-                                  {step.label}
-                                </p>
-                                <p
-                                  className={cn(
-                                    "text-xs transition-colors",
-                                    isActive && "text-muted-foreground",
-                                    !isActive && "text-muted-foreground/60",
-                                  )}
-                                >
-                                  {step.detail}
-                                </p>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </>
-                  )}
+                            );
+                          })}
+                        </div>
+                      </>
+                    )}
 
-                  {scrapingStatus.screenshot && !scrapingStatus.error && (
-                    <div className="mt-4 overflow-hidden rounded-lg border border-primary/20 bg-primary/5 p-3">
-                      <p className="mb-2 flex items-center gap-2 text-xs font-semibold text-foreground">
-                        <svg
-                          className="size-4 text-primary"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    {scrapingStatus.screenshot && !scrapingStatus.error && (
+                      <div className="mt-4 overflow-hidden rounded-lg border border-primary/20 bg-primary/5 p-3">
+                        <p className="mb-2 flex items-center gap-2 text-xs font-semibold text-foreground">
+                          <svg
+                            className="size-4 text-primary"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                            />
+                          </svg>
+                          Visual Reference Captured
+                        </p>
+                        <div className="max-h-[250px] overflow-y-auto rounded-md border border-border">
+                          <img
+                            src={
+                              scrapingStatus.screenshot.startsWith("http")
+                                ? scrapingStatus.screenshot
+                                : `data:image/jpeg;base64,${scrapingStatus.screenshot}`
+                            }
+                            alt="Website screenshot"
+                            className="w-full object-cover"
+                            onError={() => {
+                              console.error("Screenshot load error");
+                            }}
                           />
-                        </svg>
-                        Visual Reference Captured
-                      </p>
-                      <div className="max-h-[250px] overflow-y-auto rounded-md border border-border">
-                        <img
-                          src={
-                            scrapingStatus.screenshot.startsWith("http")
-                              ? scrapingStatus.screenshot
-                              : `data:image/jpeg;base64,${scrapingStatus.screenshot}`
-                          }
-                          alt="Website screenshot"
-                          className="w-full object-cover"
-                          onError={() => {
-                            console.error("Screenshot load error");
-                          }}
-                        />
+                        </div>
                       </div>
-                    </div>
-                  )}
-                </div>
-              )}
+                    )}
+                  </div>
+                )}
             </div>
             {isLoading && (
               <div className="flex flex-col px-3 pb-1 transition-all">
@@ -1232,6 +1258,28 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
                     )}
                   </div>
                 </div>
+                {fetchedChat?.clone_url && !isLoadingSubscription && (
+                  <div className="w-full p-2">
+                    <div className="flex justify-end">
+                      <CloneAnotherPageButton
+                        originalUrl={fetchedChat.clone_url}
+                        disabled={isLoading || isLengthError || !!buildError}
+                        onSubmit={(url) => {
+                          const clonePrompt = `Clone another page: ${url}`;
+                          setInput(clonePrompt);
+                          setIsCloneAnotherPageActive(true);
+                          setCurrentCloneUrl(url);
+                          setScrapingStatus({
+                            progress: 0,
+                            screenshot: null,
+                            error: null,
+                          });
+                          submitPrompt(clonePrompt);
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
                 {!isLoading && files.length > 0 && (
                   <div className="flex gap-2 overflow-x-auto p-2">
                     {files.map((file, index) => (

@@ -36,6 +36,7 @@ import {
   PREMIUM_CHAR_LIMIT,
   MAX_VERSIONS_PER_COMPONENT,
 } from "@/utils/config";
+import { isSameDomain } from "@/utils/domain-helper";
 import { uploadFiles } from "@/utils/file-uploader";
 import {
   buildIntegrationContext,
@@ -253,6 +254,7 @@ export async function POST(req: Request) {
       messagesFromDatabase,
       framework,
       updatedPrompt,
+      userPromptForDisplay,
       updatedImages,
       uploadedFilesInfo,
       currentFilesContext,
@@ -352,7 +354,7 @@ export async function POST(req: Request) {
         chat_id: id,
         screenshot: null,
         version,
-        content: updatedPrompt,
+        content: userPromptForDisplay,
         role: "user",
         prompt_image: updatedImages.length > 0 ? updatedImages[0] : null,
         files: filesData,
@@ -813,6 +815,7 @@ const validateRequest = async (
   subscription: Tables<"subscriptions"> | null;
   framework: Framework;
   updatedPrompt: string;
+  userPromptForDisplay: string;
   updatedImages: string[];
   uploadedFilesInfo: {
     path: string;
@@ -1003,11 +1006,37 @@ const validateRequest = async (
 
   // Vérifier si c'est un site cloné et récupérer les détails si nécessaire
   let enhancedPrompt = finalPrompt;
+  let userDisplayPrompt = finalPrompt;
   let cloneScreenshot: string | null = null;
 
-  if (chat.clone_url && prompt?.includes("Clone this website:") && !aiPrompt) {
+  let urlToClone: string | null = null;
+  let isAdditionalPageClone = false;
+
+  if (chat.clone_url && !aiPrompt) {
+    if (prompt?.includes("Clone this website:")) {
+      urlToClone = chat.clone_url;
+    } else if (prompt?.includes("Clone another page:")) {
+      const anotherPageMatch = prompt.match(
+        /Clone another page: (https?:\/\/[^\s]+)/,
+      );
+      if (anotherPageMatch && anotherPageMatch[1]) {
+        const requestedUrl = anotherPageMatch[1];
+        if (isSameDomain(chat.clone_url, requestedUrl)) {
+          urlToClone = requestedUrl;
+          isAdditionalPageClone = true;
+          userDisplayPrompt = `Clone another page: ${requestedUrl}`;
+        } else {
+          throw new Error(
+            "Cannot clone a page from a different domain. Please use a URL from the same website.",
+          );
+        }
+      }
+    }
+  }
+
+  if (urlToClone) {
     try {
-      const cloneResult = await cloneWebsite(chat.clone_url);
+      const cloneResult = await cloneWebsite(urlToClone);
 
       if (cloneResult.success && cloneResult.data) {
         const data = cloneResult.data;
@@ -1050,7 +1079,20 @@ const validateRequest = async (
                 .join("\n")}`
             : "";
 
-        enhancedPrompt = `Clone this website: ${chat.clone_url}
+        if (isAdditionalPageClone) {
+          enhancedPrompt = `Clone another page from the same website: ${urlToClone}
+
+# VISUAL REFERENCE
+A screenshot is attached - this is your PRIMARY reference. Study it carefully for layout, colors, fonts, spacing, and design.
+
+# CONTENT
+Use this content in your implementation:
+
+${optimizedMarkdown}${imagesList}
+
+**Instructions:** This is an additional page from the same website. Maintain consistency with the existing design system while incorporating the new content and layout from this page. The screenshot shows the design. The content above provides the text and images. Combine both to create an accurate clone.`;
+        } else {
+          enhancedPrompt = `Clone this website: ${urlToClone}
 
 # VISUAL REFERENCE
 A screenshot is attached - this is your PRIMARY reference. Study it carefully for layout, colors, fonts, spacing, and design.
@@ -1061,6 +1103,7 @@ Use this content in your implementation:
 ${optimizedMarkdown}${imagesList}
 
 **Instructions:** The screenshot shows the design. The content above provides the text and images. Combine both to create an accurate clone.`;
+        }
 
         // Handle screenshot with proper dimension validation and resizing
         if (cloneResult.data.screenshot) {
@@ -1148,14 +1191,22 @@ ${optimizedMarkdown}${imagesList}
         }
       } else {
         console.error("Failed to clone website:", cloneResult.error);
-        enhancedPrompt = `Clone this website: ${chat.clone_url}
+        const action = isAdditionalPageClone ? "another page" : "this website";
+        enhancedPrompt = `Clone ${action}: ${urlToClone}
 
 Unable to extract complete website data. Please recreate the visual layout and functionality based on the URL provided.
 Use standard Tailwind CSS classes and shadcn/ui components.`;
       }
     } catch (error) {
       console.error("Error during website cloning:", error);
-      enhancedPrompt = `Clone this website: ${chat.clone_url}
+      if (
+        error instanceof Error &&
+        error.message.includes("different domain")
+      ) {
+        throw error;
+      }
+      const action = isAdditionalPageClone ? "another page" : "this website";
+      enhancedPrompt = `Clone ${action}: ${urlToClone}
 
 Unable to extract complete website data. Please recreate the visual layout and functionality based on the URL provided.
 Use standard Tailwind CSS classes and shadcn/ui components.`;
@@ -1254,9 +1305,11 @@ Use standard Tailwind CSS classes and shadcn/ui components.`;
 
   // Utiliser le prompt détaillé s'il est disponible, sinon utiliser le prompt existant
   let updatedPrompt = enhancedPrompt || "";
+  let userPromptForDisplay = userDisplayPrompt || "";
 
   if (!enhancedPrompt) {
     updatedPrompt = lastUserMessage.content || "";
+    userPromptForDisplay = lastUserMessage.content || "";
   }
 
   const updatedImages: string[] = [];
@@ -1332,6 +1385,7 @@ Use standard Tailwind CSS classes and shadcn/ui components.`;
     subscription,
     framework: (chat.framework || "react") as Framework,
     updatedPrompt,
+    userPromptForDisplay,
     updatedImages,
     uploadedFilesInfo,
     currentFilesContext,
