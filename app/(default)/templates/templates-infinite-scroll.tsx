@@ -51,7 +51,7 @@ import {
 } from "./actions";
 import { TemplateCard } from "./template-card";
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 16;
 const MAX_PAGE = 40;
 
 interface TemplatesInfiniteScrollProps {

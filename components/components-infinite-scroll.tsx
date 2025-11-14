@@ -38,7 +38,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Framework, MAX_SEARCH_LENGTH } from "@/utils/config";
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 16;
 const MAX_PAGE = 40;
 
 interface ComponentsInfiniteScrollProps {
