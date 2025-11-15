@@ -52,6 +52,20 @@ export function CloneAnotherPageButton({
       urlToUse = "https://" + urlToUse;
     }
 
+    try {
+      new URL(urlToUse);
+    } catch {
+      toast({
+        variant: "destructive",
+        title: "Invalid URL",
+        description:
+          "Please enter a valid website URL (e.g., https://netflix.com).",
+        duration: 4000,
+      });
+      setIsValidating(false);
+      return;
+    }
+
     if (!isSameDomain(originalUrl, urlToUse)) {
       toast({
         variant: "destructive",

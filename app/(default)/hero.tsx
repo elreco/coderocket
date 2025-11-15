@@ -617,14 +617,26 @@ export default function Hero({ popularComponents = [] }: HeroProps) {
         return;
       }
 
-      // Add protocol if missing
       let urlToUse = websiteUrl.trim();
       if (!/^https?:\/\//i.test(urlToUse)) {
         urlToUse = "https://" + urlToUse;
-        setWebsiteUrl(urlToUse); // Update the state with properly formatted URL
       }
 
-      // Check if website is restricted
+      try {
+        new URL(urlToUse);
+      } catch {
+        toast({
+          variant: "destructive",
+          title: "Invalid URL",
+          description:
+            "Please enter a valid website URL (e.g., https://netflix.com).",
+          duration: 4000,
+        });
+        return;
+      }
+
+      setWebsiteUrl(urlToUse);
+
       const restriction = isRestrictedWebsite(urlToUse);
       if (restriction) {
         toast({
