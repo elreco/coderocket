@@ -18,7 +18,6 @@ import {
   Heart,
   Info,
   Share,
-  MoreHorizontal,
   Rocket,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -38,12 +37,6 @@ import {
   DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useSidebar } from "@/components/ui/sidebar";
@@ -143,7 +136,6 @@ export default function ComponentCompletion({
 
   const [isLiked, setIsLiked] = useState(false);
 
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [shareLink, setShareLink] = useState("");
 
@@ -1268,155 +1260,51 @@ export default function ComponentCompletion({
                       </TabsTrigger>
                     </TabsList>
                   </Tabs>
-                  {(fetchedChat?.framework === Framework.HTML ||
-                    (isWebcontainerReady &&
-                      fetchedChat?.framework !== Framework.HTML)) && (
-                    <>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            onClick={() => setIframeKey((prev) => prev + 1)}
-                            className="flex items-center"
-                            disabled={isLoading}
-                          >
-                            <RefreshCw className="w-5" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Reload preview</p>
-                        </TooltipContent>
-                      </Tooltip>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            onClick={() => setIsModalOpen(true)}
-                            className="flex items-center"
-                            disabled={isLoading || isLengthError}
-                          >
-                            <Fullscreen className="w-5" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          {isLengthError ? (
-                            <p>The component has an error</p>
-                          ) : (
-                            <p>Display in fullscreen</p>
-                          )}
-                        </TooltipContent>
-                      </Tooltip>
-                      {(isWebcontainerReady ||
-                        fetchedChat?.framework === Framework.HTML) && (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="secondary"
-                              size="sm"
-                              onClick={() => {
-                                const url =
-                                  fetchedChat?.framework === Framework.HTML
-                                    ? `https://www.coderocket.app/content/${chatId}/${selectedVersion}`
-                                    : `https://${chatId}-${selectedVersion}.preview.coderocket.app`;
 
-                                window.open(url, "_blank");
-                              }}
-                              className="flex items-center"
-                              disabled={isLoading || isLengthError}
-                            >
-                              <ExternalLink className="w-5" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>
-                              {isLengthError
-                                ? "The component has an error"
-                                : "Open in a new tab"}
-                            </p>
-                          </TooltipContent>
-                        </Tooltip>
-                      )}
-                      <Dialog
-                        open={isModalOpen}
-                        onOpenChange={handleFullscreenToggle}
-                      >
-                        <DialogContent className="z-[9999] h-[98%] max-w-[98%] rounded-none p-10">
-                          <DialogTitle className="hidden">
-                            Fullscreen
-                          </DialogTitle>
-                          <DialogDescription className="z-50">
-                            {fetchedChat?.framework !== Framework.HTML &&
-                            isWebcontainerReady ? (
-                              <iframe
-                                key={iframeKey}
-                                className="size-full rounded-md border-none"
-                                src={`https://${chatId}-${selectedVersion}.webcontainer.coderocket.app`}
-                                sandbox="allow-scripts allow-forms allow-popups allow-modals allow-storage-access-by-user-activation allow-same-origin"
-                                allow="credentialless"
-                                loading="eager"
-                              />
-                            ) : (
-                              <RenderHtmlComponent
-                                key={iframeKey}
-                                files={artifactFiles}
-                              />
-                            )}
-                          </DialogDescription>
-                        </DialogContent>
-                      </Dialog>
-                    </>
-                  )}
-
-                  <DropdownMenu
-                    open={isDropdownOpen}
-                    onOpenChange={setIsDropdownOpen}
-                  >
-                    <DropdownMenuTrigger asChild>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
                       <Button
-                        size="sm"
                         variant="secondary"
-                        disabled={isLoading}
-                      >
-                        <MoreHorizontal className="w-5" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-48">
-                      <DropdownMenuItem
-                        onSelect={(e) => {
+                        size="sm"
+                        onClick={() => {
                           if (!isVisible || isLoading || isLengthError) {
-                            e.preventDefault();
                             return;
                           }
-                          setIsDropdownOpen(false);
                           share();
                         }}
                         disabled={!isVisible || isLoading || isLengthError}
-                        className="cursor-pointer"
+                        className="flex items-center"
                       >
-                        <Share className="mr-2 size-4" />
-                        <span>Share</span>
-                      </DropdownMenuItem>
-                      {isUserLoggedIn && (
-                        <DropdownMenuItem
-                          onSelect={(e) => {
+                        <Share className="w-5" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Share</p>
+                    </TooltipContent>
+                  </Tooltip>
+                  {isUserLoggedIn && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => {
                             if (isRemixing || isLoading) {
-                              e.preventDefault();
                               return;
                             }
-                            setIsDropdownOpen(false);
                             setIsRemixModalOpen(true);
                           }}
                           disabled={isRemixing || isLoading}
-                          className="cursor-pointer"
+                          className="flex items-center"
                         >
-                          <GitFork className="mr-2 size-4" />
-                          <span>Remix</span>
-                        </DropdownMenuItem>
-                      )}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                          <GitFork className="w-5" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Remix</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
                   <Sheet>
                     <SheetTrigger asChild>
                       <Button
@@ -1433,6 +1321,105 @@ export default function ComponentCompletion({
                   </Sheet>
                 </div>
               </div>
+              {(fetchedChat?.framework === Framework.HTML ||
+                (isWebcontainerReady &&
+                  fetchedChat?.framework !== Framework.HTML)) &&
+                isCanvas && (
+                  <div className="flex items-center justify-end gap-2 border-t border-border bg-secondary p-2">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="background"
+                          size="sm"
+                          onClick={() => setIframeKey((prev) => prev + 1)}
+                          className="flex items-center"
+                          disabled={isLoading}
+                        >
+                          <RefreshCw className="w-5" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Reload preview</p>
+                      </TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="background"
+                          size="sm"
+                          onClick={() => setIsModalOpen(true)}
+                          className="flex items-center"
+                          disabled={isLoading || isLengthError}
+                        >
+                          <Fullscreen className="w-5" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        {isLengthError ? (
+                          <p>The component has an error</p>
+                        ) : (
+                          <p>Display in fullscreen</p>
+                        )}
+                      </TooltipContent>
+                    </Tooltip>
+                    {(isWebcontainerReady ||
+                      fetchedChat?.framework === Framework.HTML) && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="background"
+                            size="sm"
+                            onClick={() => {
+                              const url =
+                                fetchedChat?.framework === Framework.HTML
+                                  ? `https://www.coderocket.app/content/${chatId}/${selectedVersion}`
+                                  : `https://${chatId}-${selectedVersion}.preview.coderocket.app`;
+
+                              window.open(url, "_blank");
+                            }}
+                            className="flex items-center"
+                            disabled={isLoading || isLengthError}
+                          >
+                            <ExternalLink className="w-5" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>
+                            {isLengthError
+                              ? "The component has an error"
+                              : "Open in a new tab"}
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
+                    <Dialog
+                      open={isModalOpen}
+                      onOpenChange={handleFullscreenToggle}
+                    >
+                      <DialogContent className="z-[9999] h-[98%] max-w-[98%] rounded-none p-10">
+                        <DialogTitle className="hidden">Fullscreen</DialogTitle>
+                        <DialogDescription className="z-50">
+                          {fetchedChat?.framework !== Framework.HTML &&
+                          isWebcontainerReady ? (
+                            <iframe
+                              key={iframeKey}
+                              className="size-full rounded-md border-none"
+                              src={`https://${chatId}-${selectedVersion}.webcontainer.coderocket.app`}
+                              sandbox="allow-scripts allow-forms allow-popups allow-modals allow-storage-access-by-user-activation allow-same-origin"
+                              allow="credentialless"
+                              loading="eager"
+                            />
+                          ) : (
+                            <RenderHtmlComponent
+                              key={iframeKey}
+                              files={artifactFiles}
+                            />
+                          )}
+                        </DialogDescription>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                )}
               <div className="relative m-0 flex h-full max-h-full flex-1 flex-col border-t lg:border-b-0">
                 {!isLoading && isCanvas && (
                   <div className="absolute bottom-0 right-0 z-[9000] flex w-full items-center justify-end gap-2 p-2">
