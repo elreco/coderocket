@@ -58,14 +58,16 @@ export async function generateMetadata({
           currency: listing.currency,
         }).format(listing.price_cents / 100);
 
-  const title = `${listing.title} - ${priceFormatted} | CodeRocket Templates`;
-  const description = `${listing.description} | ${listing.price_cents === 0 ? "Free" : "Premium"} ${listing.chat.framework} component with source code included. Instant download and GitHub export available.`;
+  const title = `${listing.title} - ${priceFormatted} | CodeRocket Templates | Tailwind AI`;
+  const description = `${listing.description} | ${listing.price_cents === 0 ? "Free" : "Premium"} ${listing.chat.framework} component created with Tailwind AI. Source code included. Instant download and GitHub export available.`;
 
   return {
     title,
     description,
     keywords: [
       listing.title,
+      "tailwind ai",
+      "Tailwind AI",
       `${listing.chat.framework} component`,
       "marketplace",
       "CodeRocket",
@@ -74,6 +76,8 @@ export async function generateMetadata({
       listing.category?.name,
       "GitHub export",
       "instant download",
+      "tailwind ai template",
+      "tailwind component generator",
     ]
       .filter(Boolean)
       .join(", "),

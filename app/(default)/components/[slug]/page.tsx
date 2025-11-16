@@ -47,21 +47,25 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 
   const componentTitle = chat.title || "Tailwind Component";
-  const fullTitle = `${componentTitle} - CodeRocket`;
+  const fullTitle = `${componentTitle} - CodeRocket | Tailwind AI Component`;
   const componentUrl = `https://www.coderocket.app/components/${chat.slug}`;
 
   const description = lastUserMessage?.content
     ? `${lastUserMessage.content.slice(0, 155)}...`
-    : `AI-generated ${chat.framework} component using Tailwind CSS v4. Create, customize, and deploy stunning web components instantly with CodeRocket.`;
+    : `AI-generated ${chat.framework} component using Tailwind CSS v4. Created with CodeRocket (formerly Tailwind AI). Create, customize, and deploy stunning web components instantly.`;
 
   const keywords = [
     componentTitle.toLowerCase(),
+    "tailwind ai",
+    "Tailwind AI",
     `${chat.framework} component`,
     `tailwind ${chat.framework}`,
     "tailwind css component",
     "ai generated component",
+    "tailwind ai generator",
     "responsive design",
     chat.framework,
+    "tailwind component generator",
   ];
 
   if (chat.clone_url) {
@@ -162,12 +166,16 @@ export default async function Components({ params }: Props) {
   const authorized = connectedUser?.id === chat?.user_id;
   const user = chat?.user || { id: chat?.user_id };
 
+  const likesCount = chat.likes || 0;
+  const hasEnoughLikes = likesCount >= 5;
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "SoftwareSourceCode",
     name: chat.title || "Tailwind Component",
     description:
-      lastUserMessage.content?.slice(0, 200) || "AI-generated component",
+      lastUserMessage.content?.slice(0, 200) ||
+      "AI-generated component created with CodeRocket (formerly Tailwind AI)",
     url: `https://www.coderocket.app/components/${chat.slug}`,
     programmingLanguage: chat.framework,
     runtimePlatform: "Web Browser",
@@ -180,8 +188,17 @@ export default async function Components({ params }: Props) {
     interactionStatistic: {
       "@type": "InteractionCounter",
       interactionType: "https://schema.org/LikeAction",
-      userInteractionCount: chat.likes || 0,
+      userInteractionCount: likesCount,
     },
+    ...(hasEnoughLikes && {
+      aggregateRating: {
+        "@type": "AggregateRating",
+        ratingValue: "4.5",
+        ratingCount: likesCount.toString(),
+        bestRating: "5",
+        worstRating: "1",
+      },
+    }),
     image:
       lastAssistantMessage?.screenshot || "https://www.coderocket.app/og.png",
     license: "https://creativecommons.org/licenses/by/4.0/",

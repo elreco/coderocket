@@ -17,11 +17,38 @@ export async function generateMetadata({
   const searchQuery = search || "";
   return {
     title: searchQuery
-      ? `Results for "${searchQuery}" - Public Components - CodeRocket`
-      : "Public Components - CodeRocket",
+      ? `Results for "${searchQuery}" - Public Components - CodeRocket | Tailwind AI`
+      : "Public Components - CodeRocket | Tailwind AI Components",
     description: searchQuery
-      ? `Discover the latest AI components for "${searchQuery}".`
-      : "Last Tailwind components generated with AI by our users with React, Vue, and HTML",
+      ? `Discover the latest Tailwind AI components for "${searchQuery}". Browse AI-generated React, Vue, Svelte, Angular, and HTML components created with CodeRocket (formerly Tailwind AI).`
+      : "Browse public Tailwind AI components generated with CodeRocket (formerly Tailwind AI). Discover React, Vue, Svelte, Angular, and HTML components created by our community. Free to explore and remix.",
+    keywords: [
+      "tailwind ai",
+      "Tailwind AI",
+      "tailwind ai components",
+      "public components",
+      "ai components",
+      "tailwind css components",
+      "react components",
+      "vue components",
+      "svelte components",
+      "angular components",
+      "html components",
+      "tailwind ai generator",
+      "CodeRocket",
+    ].join(", "),
+    openGraph: {
+      title: searchQuery
+        ? `Results for "${searchQuery}" - Public Components - CodeRocket`
+        : "Public Components - CodeRocket | Tailwind AI",
+      description: searchQuery
+        ? `Discover the latest Tailwind AI components for "${searchQuery}".`
+        : "Browse public Tailwind AI components generated with CodeRocket. Discover React, Vue, Svelte, Angular, and HTML components.",
+      url: "https://www.coderocket.app/components",
+    },
+    alternates: {
+      canonical: "https://www.coderocket.app/components",
+    },
   };
 }
 

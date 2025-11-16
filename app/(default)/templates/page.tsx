@@ -17,17 +17,20 @@ export async function generateMetadata({
   const searchQuery = search || "";
 
   const title = searchQuery
-    ? `${searchQuery} - AI Component Templates | CodeRocket Templates`
-    : "Templates - AI Component Templates | CodeRocket";
+    ? `${searchQuery} - Tailwind AI Component Templates | CodeRocket Templates`
+    : "Templates - Tailwind AI Component Templates | CodeRocket";
 
   const description = searchQuery
-    ? `Discover AI component templates for "${searchQuery}". Free and premium options available. Source code included, GitHub export. 1000+ templates available.`
-    : "Browse free and premium AI component templates created by experts. Landing pages, UI components, email templates. Source code included, direct GitHub export.";
+    ? `Discover Tailwind AI component templates for "${searchQuery}". Free and premium options available. Source code included, GitHub export. 1000+ templates available. Created with CodeRocket (formerly Tailwind AI).`
+    : "Browse free and premium Tailwind AI component templates created by experts. Landing pages, UI components, email templates. Source code included, direct GitHub export. Created with CodeRocket (formerly Tailwind AI).";
 
   return {
     title,
     description,
     keywords: [
+      "tailwind ai",
+      "Tailwind AI",
+      "tailwind ai templates",
       "AI components",
       "React templates",
       "landing pages",
@@ -39,6 +42,8 @@ export async function generateMetadata({
       "email templates",
       "source code",
       "GitHub export",
+      "tailwind ai generator",
+      "tailwind component templates",
     ].join(", "),
     authors: [{ name: "CodeRocket" }],
     creator: "CodeRocket",
@@ -139,7 +144,7 @@ export default async function TemplatesPage({
             "@type": "Marketplace",
             name: "CodeRocket Templates",
             description:
-              "Free and premium AI component templates for developers",
+              "Free and premium Tailwind AI component templates for developers. Created with CodeRocket (formerly Tailwind AI).",
             url: "https://www.coderocket.app/templates",
             provider: {
               "@type": "Organization",

@@ -6,15 +6,15 @@ import { PageTitle } from "@/components/page-title";
 import Faq from "./faq";
 
 const metadata = {
-  title: "FAQ - CodeRocket AI Website Builder",
+  title: "FAQ - CodeRocket Tailwind AI Website Builder",
   description:
-    "Frequently asked questions about CodeRocket. Learn about our AI-powered Tailwind website builder, features, pricing, and how to create production-ready web applications.",
+    "Frequently asked questions about CodeRocket (formerly Tailwind AI). Learn about our AI-powered Tailwind website builder, features, pricing, and how to create production-ready web applications.",
   keywords:
-    "CodeRocket FAQ, AI builder questions, Tailwind help, how to use CodeRocket, website builder FAQ",
+    "tailwind ai FAQ, Tailwind AI FAQ, CodeRocket FAQ, AI builder questions, Tailwind help, how to use CodeRocket, website builder FAQ, tailwind ai help",
   openGraph: {
-    title: "FAQ - CodeRocket AI Website Builder",
+    title: "FAQ - CodeRocket Tailwind AI Website Builder",
     description:
-      "Get answers to frequently asked questions about CodeRocket AI-powered Tailwind website builder.",
+      "Get answers to frequently asked questions about CodeRocket (formerly Tailwind AI) - AI-powered Tailwind website builder.",
     url: "https://www.coderocket.app/faq",
   },
   alternates: {

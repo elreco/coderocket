@@ -23,16 +23,19 @@ const rubik = Plus_Jakarta_Sans({
 
 const meta = {
   title:
-    "CodeRocket - Build Stunning Tailwind Websites with AI | Formerly Tailwind AI",
+    "CodeRocket - Tailwind AI Website Builder | Generate Tailwind Components with AI",
   metadataBase: new URL("https://www.coderocket.app"),
   description:
-    "Generate production-ready Tailwind v4 websites and components with AI in seconds. Create from scratch or clone existing sites. Support for React, Vue, Svelte, Angular. Free to start.",
+    "CodeRocket (formerly Tailwind AI) - Build production-ready Tailwind v4 websites and components with AI in seconds. Generate React, Vue, Svelte, Angular components. Clone websites or create from scratch. Free to start.",
   cardImage: "https://www.coderocket.app/og.png",
   robots: "index, follow",
   favicon: "/favicon.ico",
   url: "https://www.coderocket.app",
   type: "website",
   keywords: [
+    "tailwind ai",
+    "Tailwind AI",
+    "tailwind ai generator",
     "AI website builder",
     "Tailwind CSS generator",
     "AI web development",
@@ -48,10 +51,12 @@ const meta = {
     "AI design tool",
     "frontend development",
     "rapid prototyping",
+    "tailwind css ai",
+    "tailwind component generator",
   ],
   twitter: {
     card: "summary_large_image",
-    title: "CodeRocket - AI-Powered Tailwind App Builder",
+    title: "CodeRocket - Tailwind AI Website Builder",
     description:
       "Build production-ready Tailwind v4 websites and components with AI. Clone existing sites or create from scratch. Support for React, Vue, Svelte, Angular. Deploy instantly.",
     images: ["https://www.coderocket.app/og.png"],
@@ -157,7 +162,7 @@ export default async function RootLayout({ children }: PropsWithChildren) {
                   name: "CodeRocket",
                   url: "https://www.coderocket.app",
                   description:
-                    "AI-powered website builder that creates production-ready Tailwind v4 websites and components. Build complete web applications from scratch or clone existing sites. Deploy instantly.",
+                    "CodeRocket (formerly Tailwind AI) - AI-powered website builder that creates production-ready Tailwind v4 websites and components. Build complete web applications from scratch or clone existing sites. Deploy instantly.",
                   applicationCategory: "DeveloperApplication",
                   operatingSystem: "Any",
                   browserRequirements:
@@ -196,13 +201,6 @@ export default async function RootLayout({ children }: PropsWithChildren) {
                     "Image-to-code conversion",
                     "Supabase integration",
                   ],
-                  aggregateRating: {
-                    "@type": "AggregateRating",
-                    ratingValue: "4.8",
-                    ratingCount: "500",
-                    bestRating: "5",
-                    worstRating: "1",
-                  },
                 },
                 {
                   "@type": "WebSite",

@@ -11,15 +11,15 @@ import { createClient } from "@/utils/supabase/server";
 import Pricing from "./pricing";
 
 export const metadata = {
-  title: "Pricing - CodeRocket AI Website Builder",
+  title: "Pricing - CodeRocket Tailwind AI Website Builder",
   description:
-    "Start building AI-powered Tailwind websites for free. Premium plans unlock unlimited components, website cloning, GitHub integration, custom domains, and more. Try free, upgrade anytime.",
+    "Start building AI-powered Tailwind websites for free with CodeRocket (formerly Tailwind AI). Premium plans unlock unlimited components, website cloning, GitHub integration, custom domains, and more. Try free, upgrade anytime.",
   keywords:
-    "CodeRocket pricing, AI website builder pricing, Tailwind generator cost, web development pricing, AI tool subscription",
+    "tailwind ai pricing, Tailwind AI pricing, CodeRocket pricing, AI website builder pricing, Tailwind generator cost, web development pricing, AI tool subscription, tailwind ai cost",
   openGraph: {
-    title: "CodeRocket Pricing - AI Website Builder Plans",
+    title: "Pricing - CodeRocket Tailwind AI Website Builder",
     description:
-      "Start free, upgrade to premium for unlimited AI-powered Tailwind components and website generation.",
+      "Start free, upgrade to premium for unlimited AI-powered Tailwind components and website generation. Created with CodeRocket (formerly Tailwind AI).",
     url: "https://www.coderocket.app/pricing",
   },
   alternates: {
