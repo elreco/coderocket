@@ -167,7 +167,6 @@ export default async function Components({ params }: Props) {
   const user = chat?.user || { id: chat?.user_id };
 
   const likesCount = chat.likes || 0;
-  const hasEnoughLikes = likesCount >= 5;
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -190,15 +189,13 @@ export default async function Components({ params }: Props) {
       interactionType: "https://schema.org/LikeAction",
       userInteractionCount: likesCount,
     },
-    ...(hasEnoughLikes && {
-      aggregateRating: {
-        "@type": "AggregateRating",
-        ratingValue: "4.5",
-        ratingCount: likesCount.toString(),
-        bestRating: "5",
-        worstRating: "1",
-      },
-    }),
+    aggregateRating: {
+      "@type": "AggregateRating",
+      ratingValue: "4.5",
+      ratingCount: likesCount.toString(),
+      bestRating: "5",
+      worstRating: "1",
+    },
     image:
       lastAssistantMessage?.screenshot || "https://www.coderocket.app/og.png",
     license: "https://creativecommons.org/licenses/by/4.0/",
