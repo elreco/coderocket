@@ -167,15 +167,17 @@ export default async function Components({ params }: Props) {
   const user = chat?.user || { id: chat?.user_id };
 
   const likesCount = chat.likes || 0;
+  const componentUrl = `https://www.coderocket.app/components/${chat.slug}`;
 
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "SoftwareSourceCode",
+    "@id": componentUrl,
     name: chat.title || "Tailwind Component",
     description:
       lastUserMessage.content?.slice(0, 200) ||
       "AI-generated component created with CodeRocket (formerly Tailwind AI)",
-    url: `https://www.coderocket.app/components/${chat.slug}`,
+    url: componentUrl,
     programmingLanguage: chat.framework,
     runtimePlatform: "Web Browser",
     ...(chat.clone_url && { codeRepository: chat.clone_url }),
@@ -195,6 +197,10 @@ export default async function Components({ params }: Props) {
       ratingCount: likesCount.toString(),
       bestRating: "5",
       worstRating: "1",
+      itemReviewed: {
+        "@type": "SoftwareSourceCode",
+        "@id": componentUrl,
+      },
     },
     image:
       lastAssistantMessage?.screenshot || "https://www.coderocket.app/og.png",
