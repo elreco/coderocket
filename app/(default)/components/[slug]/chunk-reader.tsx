@@ -64,11 +64,11 @@ export function ChunkReader({
           <div className="w-full space-y-2">
             <div
               className={cn(
-                "rounded-lg my-2 border border-primary/30 bg-primary/10 p-2 text-foreground",
+                "border-primary/30 bg-primary/10 text-foreground my-2 rounded-lg border p-2",
               )}
             >
               <div className="mb-3 flex items-center justify-between">
-                <h3 className="text-xs font-semibold text-primary">
+                <h3 className="text-primary text-xs font-semibold">
                   {isLoading
                     ? "Generating Files..."
                     : artifactFiles.length === 1
@@ -81,7 +81,7 @@ export function ChunkReader({
                       <TooltipTrigger>
                         <Badge
                           variant="secondary"
-                          className="cursor-default border border-border"
+                          className="border-border cursor-default border"
                         >
                           <Paintbrush className="mr-1 size-3" />{" "}
                           <span className="first-letter:uppercase">
@@ -108,17 +108,17 @@ export function ChunkReader({
                       <div
                         key={fileIndex}
                         className={cn(
-                          "group flex items-center justify-between rounded p-1 bg-foreground w-full",
+                          "group bg-foreground flex w-full items-center justify-between rounded p-1",
                           !file.isDelete &&
-                            "hover:bg-gradient-to-l from-primary via-primary/90 to-primary/80 hover:text-foreground",
+                            "from-primary via-primary/90 to-primary/80 hover:text-foreground hover:bg-linear-to-l",
                           isLoading || file.isDelete
                             ? "cursor-not-allowed opacity-50"
                             : "cursor-pointer",
-                          file.isIncomplete && "opacity-100 text-amber-600",
+                          file.isIncomplete && "text-amber-600 opacity-100",
                           activeTab === file.name &&
                             isSelectedVersion &&
                             !isCanvas &&
-                            "bg-gradient-to-l from-primary via-primary/90 to-primary/80 text-foreground",
+                            "from-primary via-primary/90 to-primary/80 text-foreground bg-linear-to-l",
                         )}
                         onClick={() =>
                           version !== undefined && !isLoading && !file.isDelete
@@ -132,10 +132,10 @@ export function ChunkReader({
                           />
                           <div
                             className={cn(
-                              "flex items-center font-medium whitespace-pre-wrap text-sm mr-2",
+                              "mr-2 flex items-center text-sm font-medium whitespace-pre-wrap",
                               !file.isDelete &&
                                 "text-background group-hover:text-foreground",
-                              file.isDelete && "!text-red-500",
+                              file.isDelete && "text-red-500!",
                               file.isIncomplete &&
                                 "text-primary group-hover:text-foreground",
                               activeTab === file.name &&
@@ -160,7 +160,7 @@ export function ChunkReader({
                         {!file.isDelete && (
                           <div
                             className={cn(
-                              "whitespace-nowrap text-xs text-background font-semibold opacity-75",
+                              "text-background text-xs font-semibold whitespace-nowrap opacity-75",
                               "group-hover:text-foreground",
                               activeTab === file.name &&
                                 isSelectedVersion &&

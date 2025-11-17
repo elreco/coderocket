@@ -74,7 +74,7 @@ export function NavUser({
               size="lg"
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
-              <Avatar className="size-8 rounded-lg transition-all duration-300 group-hover:border-primary">
+              <Avatar className="group-hover:border-primary size-8 rounded-lg transition-all duration-300">
                 <AvatarImage src={user.avatar_url || undefined} />
                 <AvatarFallback>
                   <img
@@ -94,7 +94,7 @@ export function NavUser({
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent
-            className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
+            className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
             side={isMobile ? "bottom" : "right"}
             align="end"
             sideOffset={4}

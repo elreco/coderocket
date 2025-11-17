@@ -39,13 +39,13 @@ export function DeleteDomainDialog({
       <AlertDialogContent>
         <AlertDialogHeader>
           <div className="flex items-center gap-2">
-            <AlertTriangle className="size-5 text-destructive" />
+            <AlertTriangle className="text-destructive size-5" />
             <AlertDialogTitle>Remove Custom Domain</AlertDialogTitle>
           </div>
           <AlertDialogDescription className="space-y-2 pt-2">
             <p>
               Are you sure you want to remove{" "}
-              <span className="font-semibold text-foreground">{domain}</span>?
+              <span className="text-foreground font-semibold">{domain}</span>?
             </p>
             <p className="text-destructive">
               Your application will no longer be accessible at this domain. This

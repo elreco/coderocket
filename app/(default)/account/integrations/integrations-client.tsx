@@ -193,7 +193,7 @@ export default function IntegrationsClient({
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-semibold">Your Integrations</h2>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             {integrations.length === 0
               ? "No integrations configured yet. Add one below to get started."
               : `${integrations.length} integration${integrations.length > 1 ? "s" : ""} configured`}
@@ -226,11 +226,11 @@ export default function IntegrationsClient({
             >
               <CardHeader>
                 <div className="flex items-start justify-between">
-                  <div className="rounded-lg border bg-background p-2">
+                  <div className="bg-background rounded-lg border p-2">
                     {integration.icon}
                   </div>
                   {!integration.available && (
-                    <span className="rounded-full bg-muted px-2 py-1 text-xs font-medium">
+                    <span className="bg-muted rounded-full px-2 py-1 text-xs font-medium">
                       Coming Soon
                     </span>
                   )}

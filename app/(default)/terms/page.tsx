@@ -15,7 +15,7 @@ export default function TermsPage() {
         subtitle="Last updated: December 2024"
       />
 
-      <div className="prose prose-gray max-w-none dark:prose-invert">
+      <div className="prose prose-gray dark:prose-invert max-w-none">
         <div className="space-y-8">
           <section>
             <h2 className="mb-4 text-2xl font-semibold">

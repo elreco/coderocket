@@ -63,11 +63,11 @@ function CarouselButtons() {
     <>
       {canScrollPrev && (
         <>
-          <div className="pointer-events-none absolute left-0 top-0 z-10 h-full w-24 bg-gradient-to-r from-background via-background/80 to-transparent" />
+          <div className="from-background via-background/80 pointer-events-none absolute top-0 left-0 z-10 h-full w-24 bg-linear-to-r to-transparent" />
           <Button
             variant="outline"
             size="icon"
-            className="absolute left-2 top-1/2 z-20 size-8 -translate-y-1/2 rounded-full"
+            className="absolute top-1/2 left-2 z-20 size-8 -translate-y-1/2 rounded-full"
             onClick={scrollPrev}
           >
             <ChevronLeft className="size-4" />
@@ -76,11 +76,11 @@ function CarouselButtons() {
       )}
       {canScrollNext && (
         <>
-          <div className="pointer-events-none absolute right-0 top-0 z-10 h-full w-24 bg-gradient-to-l from-background via-background/80 to-transparent" />
+          <div className="from-background via-background/80 pointer-events-none absolute top-0 right-0 z-10 h-full w-24 bg-linear-to-l to-transparent" />
           <Button
             variant="outline"
             size="icon"
-            className="absolute right-2 top-1/2 z-20 size-8 -translate-y-1/2 rounded-full"
+            className="absolute top-1/2 right-2 z-20 size-8 -translate-y-1/2 rounded-full"
             onClick={scrollNext}
           >
             <ChevronRight className="size-4" />

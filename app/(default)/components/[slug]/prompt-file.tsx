@@ -125,7 +125,7 @@ export function PromptFiles({
         const badge = (
           <div
             key={index}
-            className="group relative flex shrink-0 cursor-pointer items-center gap-2 rounded-lg border border-border bg-background px-3 py-1.5 transition-all hover:border-primary hover:shadow-sm"
+            className="group border-border bg-background hover:border-primary relative flex shrink-0 cursor-pointer items-center gap-2 rounded-lg border px-3 py-1.5 transition-all hover:shadow-xs"
           >
             {fileInfo.type === "image" ? (
               <img
@@ -136,10 +136,10 @@ export function PromptFiles({
             ) : isFigmaFile ? (
               <SiFigma className="size-4 text-[#F24E1E]" />
             ) : (
-              <FileText className="size-4 text-muted-foreground" />
+              <FileText className="text-muted-foreground size-4" />
             )}
             <span
-              className="text-sm font-medium text-foreground"
+              className="text-foreground text-sm font-medium"
               title={fileInfo.name}
             >
               {fileInfo.name.length > 20
@@ -156,12 +156,12 @@ export function PromptFiles({
               <HoverCardContent
                 side="top"
                 align="center"
-                className="z-[9999] w-auto max-w-2xl rounded-md border-2 border-primary p-0"
+                className="border-primary z-9999 w-auto max-w-2xl rounded-md border-2 p-0"
               >
                 <img
                   src={fileInfo.url}
                   alt={fileInfo.name}
-                  className="max-h-[32rem] w-auto rounded-md object-contain"
+                  className="max-h-128 w-auto rounded-md object-contain"
                 />
               </HoverCardContent>
             </HoverCard>

@@ -107,18 +107,18 @@ export default async function UserPage({
           <Card className="mb-4">
             <CardContent className="relative">
               {!subscription ? (
-                <Badge className="absolute right-2 top-2 hover:bg-primary">
+                <Badge className="hover:bg-primary absolute top-2 right-2">
                   Free user
                 </Badge>
               ) : (
-                <Badge className="absolute right-2 top-2 bg-amber-500 hover:bg-amber-500">
+                <Badge className="absolute top-2 right-2 bg-amber-500 hover:bg-amber-500">
                   Pro user
                 </Badge>
               )}
               <div className="flex items-center justify-center py-6 lg:py-10">
                 <div className="w-full space-y-6 lg:space-y-12">
                   <div className="flex flex-col items-center space-y-4">
-                    <Avatar className="size-16 border border-primary lg:size-20">
+                    <Avatar className="border-primary size-16 border lg:size-20">
                       <AvatarImage src={user.avatar_url || undefined} />
                       <AvatarFallback>
                         <img
@@ -134,7 +134,7 @@ export default async function UserPage({
                       </h5>
                       <TooltipProvider>
                         <div className="flex items-center gap-2 text-xs lg:text-sm">
-                          <Calendar className="size-4 text-muted-foreground" />
+                          <Calendar className="text-muted-foreground size-4" />
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <span>{getRelativeDate(user.created_at)}</span>
@@ -152,7 +152,7 @@ export default async function UserPage({
                       <h5 className="text-base font-semibold lg:text-lg">
                         {getComponentsCount}
                       </h5>
-                      <div className="text-xs text-muted-foreground lg:text-sm">
+                      <div className="text-muted-foreground text-xs lg:text-sm">
                         Components
                       </div>
                     </div>
@@ -160,7 +160,7 @@ export default async function UserPage({
                       <h5 className="text-base font-semibold lg:text-lg">
                         {getRemixesCount}
                       </h5>
-                      <div className="text-xs text-muted-foreground lg:text-sm">
+                      <div className="text-muted-foreground text-xs lg:text-sm">
                         Remixes
                       </div>
                     </div>
@@ -168,7 +168,7 @@ export default async function UserPage({
                       <h5 className="text-base font-semibold lg:text-lg">
                         {getLikesCount}
                       </h5>
-                      <div className="text-xs text-muted-foreground lg:text-sm">
+                      <div className="text-muted-foreground text-xs lg:text-sm">
                         Likes
                       </div>
                     </div>
@@ -213,7 +213,7 @@ export default async function UserPage({
                             <p className="truncate text-sm font-medium">
                               {activity.chat?.title || "Untitled Component"}
                             </p>
-                            <p className="text-sm text-muted-foreground">
+                            <p className="text-muted-foreground text-sm">
                               {activity.type === "like" && "Liked a component"}
                               {activity.type === "remix" &&
                                 "Remixed a component"}
@@ -222,7 +222,7 @@ export default async function UserPage({
                             </p>
                           </div>
                         </div>
-                        <p className="shrink-0 whitespace-nowrap text-sm text-muted-foreground">
+                        <p className="text-muted-foreground shrink-0 text-sm whitespace-nowrap">
                           {getRelativeDate(activity.created_at)}
                         </p>
                       </div>
@@ -230,7 +230,7 @@ export default async function UserPage({
                   ))
                 ) : (
                   <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-muted-foreground text-sm">
                       No activity yet
                     </p>
                   </div>
@@ -270,7 +270,7 @@ export default async function UserPage({
                     <p className="text-2xl font-bold">
                       {marketplaceStats.totalListings}
                     </p>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-muted-foreground text-sm">
                       Total Listings
                     </p>
                   </div>
@@ -278,7 +278,7 @@ export default async function UserPage({
                     <p className="text-2xl font-bold">
                       {marketplaceStats.activeListings}
                     </p>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-muted-foreground text-sm">
                       Active Listings
                     </p>
                   </div>
@@ -297,7 +297,7 @@ export default async function UserPage({
                           <p className="truncate font-medium">
                             {marketplaceStats.topSellingListing.title}
                           </p>
-                          <p className="text-sm text-muted-foreground">
+                          <p className="text-muted-foreground text-sm">
                             {marketplaceStats.topSellingListing.total_sales ||
                               0}{" "}
                             uses
@@ -311,7 +311,7 @@ export default async function UserPage({
                               100
                             ).toFixed(2)}
                           </p>
-                          <p className="text-sm text-muted-foreground">
+                          <p className="text-muted-foreground text-sm">
                             $
                             {(
                               (marketplaceStats.topSellingListing.price_cents *
@@ -330,9 +330,9 @@ export default async function UserPage({
                 {/* Marketplace Badge */}
                 {marketplaceStats.isMarketplaceSeller &&
                   marketplaceStats.joinedMarketplaceAt && (
-                    <div className="flex items-center justify-center gap-2 rounded-lg bg-primary/10 p-3">
-                      <TrendingUp className="size-4 text-primary" />
-                      <span className="text-sm font-medium text-primary">
+                    <div className="bg-primary/10 flex items-center justify-center gap-2 rounded-lg p-3">
+                      <TrendingUp className="text-primary size-4" />
+                      <span className="text-primary text-sm font-medium">
                         Marketplace Seller since{" "}
                         {new Date(
                           marketplaceStats.joinedMarketplaceAt,
@@ -382,7 +382,7 @@ export default async function UserPage({
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
-                <p className="text-sm text-muted-foreground">
+                <p className="text-muted-foreground text-sm">
                   No components created yet
                 </p>
               </div>
@@ -456,7 +456,7 @@ export default async function UserPage({
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
-                <p className="text-sm text-muted-foreground">
+                <p className="text-muted-foreground text-sm">
                   No marketplace listings yet
                 </p>
               </div>

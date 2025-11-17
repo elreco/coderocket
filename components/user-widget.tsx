@@ -22,7 +22,7 @@ export function UserWidget({
 }) {
   const content = (
     <div className="flex items-center space-x-2">
-      <Avatar className="size-8 border border-primary">
+      <Avatar className="border-primary size-8 border">
         <AvatarImage src={userAvatarUrl || undefined} />
         <AvatarFallback>
           <img
@@ -33,10 +33,10 @@ export function UserWidget({
         </AvatarFallback>
       </Avatar>
       <div className="flex flex-col justify-center">
-        <p className="text-sm font-semibold transition-colors duration-300 group-hover:text-primary">
+        <p className="group-hover:text-primary text-sm font-semibold transition-colors duration-300">
           {userFullName || "Anonymous user"}
         </p>
-        <p className="whitespace-nowrap text-xs font-medium transition-colors duration-300 group-hover:text-primary/80">
+        <p className="group-hover:text-primary/80 text-xs font-medium whitespace-nowrap transition-colors duration-300">
           {getRelativeDate(createdAt)}
         </p>
       </div>
@@ -47,7 +47,7 @@ export function UserWidget({
     return (
       <div
         onClick={onClick}
-        className="group flex w-full cursor-pointer items-center justify-start rounded-md p-1 transition-all duration-300 hover:bg-primary/10"
+        className="group hover:bg-primary/10 flex w-full cursor-pointer items-center justify-start rounded-md p-1 transition-all duration-300"
       >
         {content}
       </div>
@@ -58,7 +58,7 @@ export function UserWidget({
     <Link
       href={`/users/${id}`}
       onClick={onClick}
-      className="group flex w-full cursor-pointer items-center justify-start rounded-md p-1 transition-all duration-300 hover:bg-primary/10"
+      className="group hover:bg-primary/10 flex w-full cursor-pointer items-center justify-start rounded-md p-1 transition-all duration-300"
     >
       {content}
     </Link>

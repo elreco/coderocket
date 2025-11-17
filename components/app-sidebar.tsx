@@ -190,7 +190,7 @@ export function AppSidebar({
                   src="/logo-white.png"
                 />
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate text-sm font-semibold text-sidebar-primary group-hover/link:text-sidebar-primary-foreground">
+                  <span className="text-sidebar-primary group-hover/link:text-sidebar-primary-foreground truncate text-sm font-semibold">
                     CodeRocket
                   </span>
                   <span className="truncate text-xs">AI-powered Tailwind</span>

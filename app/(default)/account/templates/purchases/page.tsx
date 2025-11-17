@@ -98,18 +98,18 @@ export default async function MyPurchasesPage({
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">
+                    <CardTitle className="text-muted-foreground text-sm font-medium">
                       Total Purchases
                     </CardTitle>
                     <div className="text-2xl font-bold">{totalTemplates}</div>
                   </div>
-                  <div className="rounded-full bg-muted p-2">
-                    <Box className="size-4 text-muted-foreground" />
+                  <div className="bg-muted rounded-full p-2">
+                    <Box className="text-muted-foreground size-4" />
                   </div>
                 </div>
               </CardHeader>
               <CardContent className="pt-0">
-                <p className="text-sm text-muted-foreground">
+                <p className="text-muted-foreground text-sm">
                   Total templates used
                 </p>
               </CardContent>
@@ -119,20 +119,20 @@ export default async function MyPurchasesPage({
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">
+                    <CardTitle className="text-muted-foreground text-sm font-medium">
                       Total Spent
                     </CardTitle>
                     <div className="text-2xl font-bold">
                       ${(totalSpent / 100).toFixed(2)}
                     </div>
                   </div>
-                  <div className="rounded-full bg-muted p-2">
-                    <DollarSign className="size-4 text-muted-foreground" />
+                  <div className="bg-muted rounded-full p-2">
+                    <DollarSign className="text-muted-foreground size-4" />
                   </div>
                 </div>
               </CardHeader>
               <CardContent className="pt-0">
-                <p className="text-sm text-muted-foreground">
+                <p className="text-muted-foreground text-sm">
                   Across all purchases
                 </p>
               </CardContent>
@@ -142,7 +142,7 @@ export default async function MyPurchasesPage({
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">
+                    <CardTitle className="text-muted-foreground text-sm font-medium">
                       Avg. Purchase
                     </CardTitle>
                     <div className="text-2xl font-bold">
@@ -152,13 +152,13 @@ export default async function MyPurchasesPage({
                         : "0.00"}
                     </div>
                   </div>
-                  <div className="rounded-full bg-muted p-2">
-                    <DollarSign className="size-4 text-muted-foreground" />
+                  <div className="bg-muted rounded-full p-2">
+                    <DollarSign className="text-muted-foreground size-4" />
                   </div>
                 </div>
               </CardHeader>
               <CardContent className="pt-0">
-                <p className="text-sm text-muted-foreground">
+                <p className="text-muted-foreground text-sm">
                   Average component price
                 </p>
               </CardContent>
@@ -168,8 +168,8 @@ export default async function MyPurchasesPage({
           {purchases.length === 0 ? (
             <Card className="p-8 text-center">
               <CardContent className="space-y-4">
-                <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-muted">
-                  <Box className="size-8 text-muted-foreground" />
+                <div className="bg-muted mx-auto flex size-16 items-center justify-center rounded-full">
+                  <Box className="text-muted-foreground size-8" />
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold">
@@ -250,13 +250,13 @@ function PurchaseCard({
           </div>
 
           {/* Price Badge */}
-          <div className="absolute right-3 top-3">
+          <div className="absolute top-3 right-3">
             {purchase.price_paid_cents === 0 ? (
-              <Badge className="bg-emerald-500 text-white shadow-sm">
+              <Badge className="bg-emerald-500 text-white shadow-xs">
                 FREE
               </Badge>
             ) : (
-              <Badge className="bg-green-600 text-white shadow-sm">
+              <Badge className="bg-green-600 text-white shadow-xs">
                 {new Intl.NumberFormat("en-US", {
                   style: "currency",
                   currency: purchase.currency,
@@ -266,8 +266,8 @@ function PurchaseCard({
           </div>
 
           {/* Used Badge */}
-          <div className="absolute left-3 top-3">
-            <Badge className="bg-blue-600 text-white shadow-sm">
+          <div className="absolute top-3 left-3">
+            <Badge className="bg-blue-600 text-white shadow-xs">
               <CheckCircle className="mr-1 size-3" />
               Used
             </Badge>
@@ -279,10 +279,10 @@ function PurchaseCard({
           <div className="flex flex-1 flex-col space-y-4">
             {/* Title and Details */}
             <div className="flex-1 space-y-2">
-              <h3 className="line-clamp-2 min-h-10 font-semibold text-foreground">
+              <h3 className="text-foreground line-clamp-2 min-h-10 font-semibold">
                 {purchase.listing.title}
               </h3>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <div className="text-muted-foreground flex items-center gap-2 text-xs">
                 <span>
                   by{" "}
                   <Link
@@ -308,7 +308,7 @@ function PurchaseCard({
                   {purchase.listing.chat.framework || "html"}
                 </span>
               </Badge>
-              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <div className="text-muted-foreground flex items-center gap-1 text-xs">
                 <Tag className="size-3" />
                 <span>{purchase.listing.category.name}</span>
               </div>

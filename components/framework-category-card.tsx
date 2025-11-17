@@ -63,9 +63,9 @@ export function FrameworkCategoryCard({
   return (
     <button
       onClick={onClick}
-      className="group relative w-[320px] shrink-0 overflow-hidden rounded-lg border border-border bg-gradient-to-br from-secondary to-background p-4 text-left transition-all duration-300 hover:border-primary hover:shadow-xl"
+      className="group cursor-pointer border-border from-secondary to-background hover:border-primary relative w-[320px] shrink-0 overflow-hidden rounded-lg border bg-linear-to-br p-4 text-left transition-all duration-300 hover:shadow-xl"
     >
-      <div className="absolute right-3 top-3 z-0">
+      <div className="absolute top-3 right-3 z-0">
         <Icon
           className={`${config.color} size-12 opacity-10 transition-all duration-700 ease-out group-hover:opacity-100`}
         />
@@ -80,7 +80,7 @@ export function FrameworkCategoryCard({
             style={{
               transitionTimingFunction: "cubic-bezier(0, 0, .2, 1)",
             }}
-            className={`relative aspect-video w-full overflow-hidden rounded bg-background ${
+            className={`bg-background relative aspect-video w-full overflow-hidden rounded ${
               index === 0
                 ? "z-10 origin-top-left transition-transform duration-500 group-hover:scale-[2.05]"
                 : "transition-opacity delay-200 duration-500 group-hover:opacity-0"
@@ -94,7 +94,7 @@ export function FrameworkCategoryCard({
                 className="object-cover"
               />
             ) : (
-              <div className="flex size-full items-center justify-center bg-secondary text-xs text-muted-foreground">
+              <div className="bg-secondary text-muted-foreground flex size-full items-center justify-center text-xs">
                 No preview
               </div>
             )}
@@ -105,7 +105,7 @@ export function FrameworkCategoryCard({
             (_, index) => (
               <div
                 key={`empty-${index}`}
-                className="aspect-video rounded border border-dashed border-border bg-secondary/50 transition-opacity delay-200 duration-500 ease-out group-hover:opacity-0"
+                className="border-border bg-secondary/50 aspect-video rounded border border-dashed transition-opacity delay-200 duration-500 ease-out group-hover:opacity-0"
               />
             ),
           )}

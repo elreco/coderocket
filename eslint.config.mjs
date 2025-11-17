@@ -1,3 +1,4 @@
+/* eslint-disable import/no-anonymous-default-export */
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -11,11 +12,29 @@ const compat = new FlatCompat({
   recommendedConfig: js.configs.recommended,
   allConfig: js.configs.all,
 });
+
+const baseConfig = compat.extends("eslint-config-elreco/next-ts");
+
 export default [
-  ...compat.extends("eslint-config-elreco/next-ts"),
+  ...baseConfig,
   {
     rules: {
       "@typescript-eslint/triple-slash-reference": "off",
+      "tailwindcss/classnames-order": "off",
+      "tailwindcss/enforces-negative-arbitrary-values": "off",
+      "tailwindcss/enforces-shorthand": "off",
+      "tailwindcss/migration-from-tailwind-2": "off",
+      "tailwindcss/no-arbitrary-value": "off",
+      "tailwindcss/no-custom-classname": "off",
+      "tailwindcss/no-contradicting-classname": "off",
+    },
+    settings: {
+      tailwindcss: {
+        callees: ["cn", "cva", "cx"],
+        removeDuplicates: true,
+        whitelist: [],
+        config: path.join(__dirname, "tailwind.config.js"),
+      },
     },
   },
 ];

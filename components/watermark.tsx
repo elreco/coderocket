@@ -4,7 +4,7 @@ import React from "react";
 
 export const Watermark = ({ slug }: { slug?: string | null }) => {
   return (
-    <div className="absolute bottom-0 right-0 z-[9999] m-6">
+    <div className="absolute right-0 bottom-0 z-9999 m-6">
       <Link
         href={
           slug
@@ -12,7 +12,7 @@ export const Watermark = ({ slug }: { slug?: string | null }) => {
             : "https://www.coderocket.app"
         }
       >
-        <div className="flex cursor-pointer items-center gap-2 rounded-lg bg-primary p-2 shadow-lg hover:bg-primary/90">
+        <div className="bg-primary hover:bg-primary/90 flex cursor-pointer items-center gap-2 rounded-lg p-2 shadow-lg">
           <img
             src="https://www.coderocket.app/logo-white.png"
             alt="CodeRocket"

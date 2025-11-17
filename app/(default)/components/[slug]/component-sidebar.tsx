@@ -586,7 +586,7 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
   return (
     <div
       className={cn(
-        "relative flex size-full flex-col overflow-hidden border-l-0 bg-secondary xl:border-l xl:flex-row",
+        "bg-secondary relative flex size-full flex-col overflow-hidden border-l-0 xl:flex-row xl:border-l",
         className,
       )}
     >
@@ -638,21 +638,21 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
         </TabsList>
       </Tabs>
 
-      <div className="flex flex-1 flex-col overflow-hidden bg-background">
+      <div className="bg-background flex flex-1 flex-col overflow-hidden">
         {activeTab === "chat" && (
-          <div className="flex h-12 items-center gap-2 bg-background px-4 py-1.5">
+          <div className="bg-background flex h-12 items-center gap-2 px-4 py-1.5">
             <MessageSquare className="size-4" />
             <h3 className="text-base font-medium">Chat</h3>
           </div>
         )}
         {activeTab === "history" && (
-          <div className="flex h-12 items-center gap-2 bg-background px-4 py-1.5">
+          <div className="bg-background flex h-12 items-center gap-2 px-4 py-1.5">
             <BookOpen className="size-4" />
             <h3 className="text-base font-medium">History</h3>
           </div>
         )}
         {authorized && activeTab === "github" && (
-          <div className="flex h-12 items-center gap-2 bg-background px-4 py-1.5">
+          <div className="bg-background flex h-12 items-center gap-2 px-4 py-1.5">
             <Github className="size-4" />
             <h3 className="text-base font-medium">GitHub Sync</h3>
           </div>
@@ -660,19 +660,19 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
         {authorized &&
           selectedFramework !== Framework.HTML &&
           activeTab === "integrations" && (
-            <div className="flex h-12 items-center gap-2 bg-background px-4 py-1.5">
+            <div className="bg-background flex h-12 items-center gap-2 px-4 py-1.5">
               <Plug2 className="size-4" />
               <h3 className="text-base font-medium">Integrations</h3>
             </div>
           )}
         {authorized && activeTab === "deployment" && (
-          <div className="flex h-12 items-center gap-2 bg-background px-4 py-1.5">
+          <div className="bg-background flex h-12 items-center gap-2 px-4 py-1.5">
             <Rocket className="size-4" />
             <h3 className="text-base font-medium">Deployment</h3>
           </div>
         )}
         {authorized && activeTab === "settings" && (
-          <div className="flex h-12 items-center gap-2 bg-background px-4 py-1.5">
+          <div className="bg-background flex h-12 items-center gap-2 px-4 py-1.5">
             <Settings className="size-4" />
             <h3 className="text-base font-medium">Settings</h3>
           </div>
@@ -681,13 +681,13 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
         <div
           ref={containerRef}
           className={cn(
-            "flex flex-1 flex-col overflow-y-auto overflow-x-hidden scroll-smooth border-r border-border bg-secondary",
+            "border-border bg-secondary flex flex-1 flex-col overflow-x-hidden overflow-y-auto scroll-smooth border-r",
             activeTab === "chat" && "rounded-r-lg border-y",
             activeTab !== "chat" && "rounded-tr-lg border-t",
           )}
         >
           {isLoaderVisible && (
-            <div className="absolute inset-0 z-10 flex size-full flex-col items-start bg-secondary p-4">
+            <div className="bg-secondary absolute inset-0 z-10 flex size-full flex-col items-start p-4">
               <ComponentSidebarSkeleton />
             </div>
           )}
@@ -719,17 +719,17 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
                               handleFileClick(m.version)
                             }
                             className={cn(
-                              "rounded-lg border border-primary/20 bg-primary/5 p-2 transition-all",
+                              "border-primary/20 bg-primary/5 rounded-lg border p-2 transition-all",
                               m.version === selectedVersion
-                                ? "cursor-default border-primary/30"
+                                ? "border-primary/30 cursor-default"
                                 : isLoading
                                   ? "cursor-not-allowed opacity-70"
-                                  : "cursor-pointer hover:border-primary/30",
+                                  : "hover:border-primary/30 cursor-pointer",
                             )}
                           >
                             <div className="flex w-full items-center justify-between gap-2 p-1">
                               <div className="flex w-full items-center gap-2">
-                                <Avatar className="size-8 border border-primary">
+                                <Avatar className="border-primary size-8 border">
                                   <AvatarImage
                                     src={user?.avatar_url || undefined}
                                   />
@@ -745,7 +745,7 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
                                   <span className="text-sm font-semibold">
                                     {user?.full_name}
                                   </span>
-                                  <span className="text-xs text-muted-foreground">
+                                  <span className="text-muted-foreground text-xs">
                                     Version #{m.version}
                                   </span>
                                 </div>
@@ -757,7 +757,7 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
                               )}
                             </div>
                             <p className="mt-2 truncate text-sm">{m.content}</p>
-                            <p className="mt-2 text-right text-xs text-muted-foreground">
+                            <p className="text-muted-foreground mt-2 text-right text-xs">
                               {getRelativeDate(m.created_at)}
                             </p>
                           </div>
@@ -804,7 +804,7 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
                 : "hidden",
             )}
           >
-            <div className="flex flex-col gap-3 rounded-lg border border-primary/20 bg-primary/5 p-2 transition-all">
+            <div className="border-primary/20 bg-primary/5 flex flex-col gap-3 rounded-lg border p-2 transition-all">
               <UserWidget
                 id={user?.id}
                 createdAt={new Date().toISOString()}
@@ -825,7 +825,7 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
               isLoading ? "block" : "hidden",
             )}
           >
-            <div className="flex w-full flex-col gap-2 overflow-x-auto break-words p-3 text-sm">
+            <div className="flex w-full flex-col gap-2 overflow-x-auto p-3 text-sm wrap-break-word">
               {input && (
                 <div className="flex items-center">
                   <Avatar className="mr-2 size-10 rounded-none">
@@ -835,12 +835,12 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
                   <div className="ml-2 flex flex-col items-start">
                     <h2
                       className={cn(
-                        "text-lg font-semibold transition-all group-hover:text-primary",
+                        "group-hover:text-primary text-lg font-semibold transition-all",
                       )}
                     >
                       Generating version...
                     </h2>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-muted-foreground text-xs">
                       {getRelativeDate(new Date().toISOString())}
                     </p>
                   </div>
@@ -849,12 +849,12 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
               {fetchedChat?.clone_url &&
                 ((selectedVersion === -1 && isLoading) ||
                   isCloneAnotherPageActive) && (
-                  <div className="mb-4 mt-2 flex flex-col gap-3 rounded-lg border border-primary/30 bg-primary/10 p-4 text-sm">
+                  <div className="border-primary/30 bg-primary/10 mt-2 mb-4 flex flex-col gap-3 rounded-lg border p-4 text-sm">
                     <div className="flex items-center">
                       {!isLoading ? (
                         <CheckCircle className="mr-2 size-5 text-green-500" />
                       ) : (
-                        <Loader className="mr-2 size-5 animate-spin text-primary" />
+                        <Loader className="text-primary mr-2 size-5 animate-spin" />
                       )}
                       {!isLoading ? (
                         <p className="font-medium text-green-600">
@@ -868,7 +868,7 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
                           analyzed
                         </p>
                       ) : (
-                        <p className="font-medium text-primary">
+                        <p className="text-primary font-medium">
                           Scraping{" "}
                           {truncateMiddle(
                             (currentCloneUrl || fetchedChat.clone_url)
@@ -901,12 +901,12 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
 
                     {!scrapingStatus.error && (
                       <>
-                        <div className="relative h-2 w-full overflow-hidden rounded-full bg-primary/10">
+                        <div className="bg-primary/10 relative h-2 w-full overflow-hidden rounded-full">
                           <div
-                            className="h-full bg-gradient-to-r from-primary to-primary/80 transition-all duration-1000 ease-in-out"
+                            className="from-primary to-primary/80 h-full bg-linear-to-r transition-all duration-1000 ease-in-out"
                             style={{ width: `${scrapingStatus.progress}%` }}
                           >
-                            <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+                            <div className="absolute inset-0 animate-pulse bg-linear-to-r from-transparent via-white/20 to-transparent" />
                           </div>
                         </div>
 
@@ -963,7 +963,7 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
                                 className={cn(
                                   "flex items-start gap-3 rounded-lg border p-2.5 transition-all duration-700 ease-in-out",
                                   isActive &&
-                                    "border-primary/40 bg-primary/5 shadow-sm scale-[1.01]",
+                                    "border-primary/40 bg-primary/5 scale-[1.01] shadow-xs",
                                   isCompleted &&
                                     "border-green-500/30 bg-green-500/5 opacity-70",
                                   !isActive &&
@@ -974,14 +974,14 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
                                 <div
                                   className={cn(
                                     "flex size-7 shrink-0 items-center justify-center rounded-full text-sm transition-all",
-                                    isActive && "animate-pulse bg-primary/20",
+                                    isActive && "bg-primary/20 animate-pulse",
                                     isCompleted && "bg-primary/10",
                                     !isActive && !isCompleted && "bg-muted/50",
                                   )}
                                 >
                                   {isCompleted ? (
                                     <svg
-                                      className="size-4 text-primary"
+                                      className="text-primary size-4"
                                       fill="none"
                                       viewBox="0 0 24 24"
                                       stroke="currentColor"
@@ -1025,10 +1025,10 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
                     )}
 
                     {scrapingStatus.screenshot && !scrapingStatus.error && (
-                      <div className="mt-4 overflow-hidden rounded-lg border border-primary/20 bg-primary/5 p-3">
-                        <p className="mb-2 flex items-center gap-2 text-xs font-semibold text-foreground">
+                      <div className="border-primary/20 bg-primary/5 mt-4 overflow-hidden rounded-lg border p-3">
+                        <p className="text-foreground mb-2 flex items-center gap-2 text-xs font-semibold">
                           <svg
-                            className="size-4 text-primary"
+                            className="text-primary size-4"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -1042,7 +1042,7 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
                           </svg>
                           Visual Reference Captured
                         </p>
-                        <div className="max-h-[250px] overflow-y-auto rounded-md border border-border">
+                        <div className="border-border max-h-[250px] overflow-y-auto rounded-md border">
                           <img
                             src={
                               scrapingStatus.screenshot.startsWith("http")
@@ -1074,9 +1074,9 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
             )}
             <div className="flex flex-col px-3 pb-1">
               <div className="mt-2 flex gap-1">
-                <span className="size-2 animate-[typing_1s_ease-in-out_infinite] rounded-full bg-foreground/50"></span>
-                <span className="size-2 animate-[typing_1s_ease-in-out_infinite] rounded-full bg-foreground/50 delay-300"></span>
-                <span className="delay-[600ms] size-2 animate-[typing_1s_ease-in-out_infinite] rounded-full bg-foreground/50"></span>
+                <span className="bg-foreground/50 size-2 animate-[typing_1s_ease-in-out_infinite] rounded-full"></span>
+                <span className="bg-foreground/50 size-2 animate-[typing_1s_ease-in-out_infinite] rounded-full delay-300"></span>
+                <span className="bg-foreground/50 size-2 animate-[typing_1s_ease-in-out_infinite] rounded-full delay-600"></span>
               </div>
             </div>
           </div>
@@ -1087,7 +1087,7 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
             onSubmit={(e) => handleSubmit(e)}
           >
             {authorized && (
-              <div className="flex w-full flex-col bg-background">
+              <div className="bg-background flex w-full flex-col">
                 <div className="flex w-full items-center justify-between space-x-1 px-2 pt-2">
                   <div className="flex items-center gap-2">
                     {/* Continue your work button */}
@@ -1322,16 +1322,16 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
                         handleSubmit(event);
                       }
                     }}
-                    className="max-h-[400px] min-h-[76px] border-none bg-background pl-1 focus-visible:ring-0 focus-visible:ring-offset-0"
+                    className="bg-background max-h-[400px] min-h-[76px] border-none pl-1 focus-visible:ring-0 focus-visible:ring-offset-0"
                   />
                   <div
                     className={cn(
-                      "my-0.5 text-xs text-foreground transition-opacity",
+                      "text-foreground my-0.5 text-xs transition-opacity",
                       input.length <= 3 && "opacity-0",
                     )}
                   >
-                    Use <kbd className="rounded-sm bg-secondary p-1">Shift</kbd>{" "}
-                    + <kbd className="rounded-sm bg-secondary p-1">Return</kbd>{" "}
+                    Use <kbd className="bg-secondary rounded-sm p-1">Shift</kbd>{" "}
+                    + <kbd className="bg-secondary rounded-sm p-1">Return</kbd>{" "}
                     for a new line
                   </div>
                   <div className="flex w-full items-center space-x-1">
@@ -1342,7 +1342,7 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
                             type="button"
                             size="sm"
                             variant="ghost"
-                            className="size-9 p-0 hover:bg-background"
+                            className="hover:bg-background size-9 p-0"
                             disabled={
                               isLoading || isImprovingLoading || hasImproved
                             }
@@ -1393,7 +1393,7 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
         )}
       </div>
 
-      <div className="hidden h-full w-14 flex-col space-y-4 bg-background p-2 xl:flex">
+      <div className="bg-background hidden h-full w-14 flex-col space-y-4 p-2 xl:flex">
         <Button
           variant="ghost"
           size="icon"

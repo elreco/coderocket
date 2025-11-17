@@ -114,7 +114,7 @@ export default function GitHubConnection({
           <Github className="size-6" />
           <div>
             <h3 className="font-medium">GitHub Integration</h3>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               {connection
                 ? `Connected as @${connection.github_username}`
                 : "Connect your GitHub account to sync your components"}
@@ -159,12 +159,12 @@ export default function GitHubConnection({
       </div>
 
       {connection && (
-        <div className="rounded-md bg-secondary p-4 text-sm">
+        <div className="bg-secondary rounded-md p-4 text-sm">
           <div className="mb-2 flex items-center gap-2 font-medium text-emerald-600">
             <CheckCircle className="size-4" />
             <span>GitHub Connected</span>
           </div>
-          <ul className="space-y-1 text-muted-foreground">
+          <ul className="text-muted-foreground space-y-1">
             <li>You can now sync your components to GitHub repositories</li>
             <li>Each component can be pushed to its own repository</li>
             <li>Collaborate with others and edit your code locally</li>

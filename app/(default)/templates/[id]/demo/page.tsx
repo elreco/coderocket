@@ -70,7 +70,7 @@ export default async function MarketplaceDemoPage({
   return (
     <div className="flex h-screen flex-col">
       {/* Top Banner */}
-      <div className="flex items-center justify-between border-b bg-background/95 px-4 py-3 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="bg-background/95 supports-backdrop-filter:bg-background/60 flex items-center justify-between border-b px-4 py-3 shadow-xs backdrop-blur-sm">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="sm" asChild>
             <Link
@@ -84,7 +84,7 @@ export default async function MarketplaceDemoPage({
           <div className="flex items-center gap-3">
             <div>
               <h1 className="text-sm font-semibold">{listing.title}</h1>
-              <p className="text-xs text-muted-foreground">Live Demo</p>
+              <p className="text-muted-foreground text-xs">Live Demo</p>
             </div>
             <Badge variant="secondary" className="text-xs">
               {listing.category.name}
@@ -122,7 +122,7 @@ export default async function MarketplaceDemoPage({
                 {priceFormatted}
               </div>
             )}
-            <div className="text-xs text-muted-foreground">
+            <div className="text-muted-foreground text-xs">
               {listing.price_cents === 0
                 ? "Free template"
                 : "One-time purchase"}
@@ -163,8 +163,8 @@ export default async function MarketplaceDemoPage({
       </div>
 
       {/* Bottom info bar */}
-      <div className="border-t bg-muted/50 px-4 py-2">
-        <div className="flex items-center justify-between text-xs text-muted-foreground">
+      <div className="bg-muted/50 border-t px-4 py-2">
+        <div className="text-muted-foreground flex items-center justify-between text-xs">
           <div className="flex items-center gap-4">
             <span>Demo hosted externally</span>
             <span>•</span>
