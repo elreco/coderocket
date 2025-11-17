@@ -118,7 +118,7 @@ export default function AuthUI() {
             <span className="w-full border-t" />
           </div>
           <div className="relative flex justify-center text-xs uppercase">
-            <span className="rounded-md bg-secondary px-2">
+            <span className="bg-secondary rounded-md px-2">
               Or continue with
             </span>
           </div>
@@ -158,7 +158,7 @@ export default function AuthUI() {
             <span className="w-full border-t" />
           </div>
           <div className="relative flex justify-center text-xs uppercase">
-            <span className="rounded-md bg-secondary px-2">
+            <span className="bg-secondary rounded-md px-2">
               You don&apos;t have an account?
             </span>
           </div>

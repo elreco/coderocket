@@ -110,7 +110,7 @@ export function UnifiedCard({
     <div className="flex flex-col">
       <div
         className={cn(
-          "w-full bg-center overflow-hidden relative card rounded-md mx-auto cursor-pointer border border-primary/20 transition-all duration-800 hover:shadow-lg",
+          "card border-primary/20 relative mx-auto w-full cursor-pointer overflow-hidden rounded-md border bg-center transition-all duration-800 hover:shadow-lg",
           isReverse ? "bg-background" : "bg-primary/5",
           data.isLiked && "border border-pink-500",
           className,
@@ -137,11 +137,11 @@ export function UnifiedCard({
           </div>
 
           {/* Top Right Badges */}
-          <div className="absolute right-3 top-3 flex flex-row items-center gap-2">
+          <div className="absolute top-3 right-3 flex flex-row items-center gap-2">
             {priceFormatted && (
               <Badge
                 className={cn(
-                  "font-semibold shadow-sm",
+                  "font-semibold shadow-xs",
                   data.price === 0
                     ? "bg-emerald-500 text-white hover:bg-emerald-600"
                     : "bg-green-600 text-white hover:bg-green-700",
@@ -151,7 +151,7 @@ export function UnifiedCard({
               </Badge>
             )}
             {data.totalSales !== undefined && (
-              <Badge className="bg-blue-600 text-white shadow-sm hover:bg-blue-700">
+              <Badge className="bg-blue-600 text-white shadow-xs hover:bg-blue-700">
                 <Activity className="mr-1 size-3" />
                 {data.totalSales} use{data.totalSales !== 1 ? "s" : ""}
               </Badge>
@@ -161,7 +161,7 @@ export function UnifiedCard({
               <span className="first-letter:uppercase">{data.framework}</span>
             </Badge>
             {data.likes !== undefined && data.likes > 0 && (
-              <Badge className="bg-pink-500 text-white shadow-sm hover:bg-pink-600">
+              <Badge className="bg-pink-500 text-white shadow-xs hover:bg-pink-600">
                 <Heart className="mr-1 size-3" />
                 {data.likes}
               </Badge>
@@ -178,9 +178,9 @@ export function UnifiedCard({
           </div>
 
           {/* Top Left Badges */}
-          <div className="absolute left-3 top-3 flex flex-col gap-2">
+          <div className="absolute top-3 left-3 flex flex-col gap-2">
             {data.isOwnItem && (
-              <Badge className="bg-purple-600 text-white shadow-sm">
+              <Badge className="bg-purple-600 text-white shadow-xs">
                 <User className="mr-1 size-3" />
                 Your Item
               </Badge>
@@ -202,7 +202,7 @@ export function UnifiedCard({
             <Tooltip>
               <TooltipTrigger asChild>
                 <div onClick={handleAuthorClick}>
-                  <Avatar className="size-8 cursor-pointer border border-border">
+                  <Avatar className="border-border size-8 cursor-pointer border">
                     <AvatarImage src={data.user_avatar_url || undefined} />
                     <AvatarFallback>
                       <img
@@ -215,7 +215,7 @@ export function UnifiedCard({
                 </div>
               </TooltipTrigger>
               <TooltipContent className="flex items-center gap-2 px-3 py-2">
-                <Avatar className="size-6 border border-border">
+                <Avatar className="border-border size-6 border">
                   <AvatarImage src={data.user_avatar_url || undefined} />
                   <AvatarFallback>
                     <img
@@ -232,10 +232,10 @@ export function UnifiedCard({
             </Tooltip>
           </TooltipProvider>
           <div className="flex flex-col gap-0.5">
-            <h1 className="line-clamp-1 max-w-full break-all text-xs font-medium text-foreground hover:text-foreground/80">
+            <h1 className="text-foreground hover:text-foreground/80 line-clamp-1 max-w-full text-xs font-medium break-all">
               {data.title}
             </h1>
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <div className="text-muted-foreground flex items-center gap-1.5 text-xs">
               <span>{getRelativeDate(data.createdAt)}</span>
             </div>
           </div>
@@ -243,7 +243,7 @@ export function UnifiedCard({
 
         {/* Framework Badge and Stats */}
         <div className="mt-2 flex items-center justify-between">
-          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+          <div className="text-muted-foreground flex items-center gap-3 text-xs">
             {data.isRemixed && (
               <div className="flex items-center gap-1">
                 <GitFork className="size-3" />
@@ -276,7 +276,7 @@ export function UnifiedCard({
             {data.href && (
               <Link
                 href={data.href}
-                className="rounded p-1 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
+                className="text-muted-foreground hover:bg-muted hover:text-foreground rounded p-1 text-xs"
                 onClick={(e) => e.stopPropagation()}
                 title="View listing"
               >

@@ -142,13 +142,13 @@ const TextareaWithLimit = React.forwardRef<
             isLoggedIn &&
             valueLength > characterLimit &&
             displayMessage && (
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 <span className="font-medium text-yellow-600">
                   Limit: {FREE_CHAR_LIMIT} characters.
                 </span>{" "}
                 <a
                   href="/pricing"
-                  className="text-primary underline hover:text-primary/80"
+                  className="text-primary hover:text-primary/80 underline"
                 >
                   Upgrade to a paid plan
                 </a>{" "}
@@ -158,7 +158,7 @@ const TextareaWithLimit = React.forwardRef<
           {showCounter && !isLoadingSubscription && isLoggedIn && (
             <span
               className={cn(
-                "text-xs ml-auto",
+                "ml-auto text-xs",
                 valueLength > characterLimit
                   ? "text-destructive font-medium"
                   : "text-muted-foreground",
@@ -172,7 +172,7 @@ const TextareaWithLimit = React.forwardRef<
           <Button
             variant="ghost"
             size="sm"
-            className="absolute right-0.5 top-0.5 size-6 p-0"
+            className="absolute top-0.5 right-0.5 size-6 p-0"
             disabled={isLoading}
             onClick={() => {
               onChange?.("", true);

@@ -219,7 +219,7 @@ export function SupabaseConfigDialog({
                   <span className="w-full border-t" />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-2 text-muted-foreground">
+                  <span className="bg-background text-muted-foreground px-2">
                     Or configure manually
                   </span>
                 </div>
@@ -235,7 +235,7 @@ export function SupabaseConfigDialog({
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               A friendly name to identify this integration
             </p>
           </div>
@@ -249,7 +249,7 @@ export function SupabaseConfigDialog({
               value={projectUrl}
               onChange={(e) => setProjectUrl(e.target.value)}
             />
-            <div className="flex items-start gap-2 text-xs text-muted-foreground">
+            <div className="text-muted-foreground flex items-start gap-2 text-xs">
               <p className="flex-1">Found in your Supabase project settings</p>
               <a
                 href="https://supabase.com/dashboard"
@@ -272,7 +272,7 @@ export function SupabaseConfigDialog({
               value={anonKey}
               onChange={(e) => setAnonKey(e.target.value)}
             />
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               Public key for client-side operations
             </p>
           </div>
@@ -288,7 +288,7 @@ export function SupabaseConfigDialog({
               value={accessToken}
               onChange={(e) => setAccessToken(e.target.value)}
             />
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               Required for automatic migrations. Generate it in Supabase
               Dashboard → Account → Access Tokens
             </p>
@@ -302,7 +302,7 @@ export function SupabaseConfigDialog({
               value={projectId}
               onChange={(e) => setProjectId(e.target.value)}
             />
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               Required for migrations. Find it in your project URL (the part
               before .supabase.co)
             </p>

@@ -61,7 +61,7 @@ export default function ComponentSettings({
                 <div
                   key={theme}
                   className={cn(
-                    "relative aspect-video cursor-pointer rounded-md items-center justify-center border-2 border-primary/20 opacity-75 transition-all duration-300 hover:border-primary hover:opacity-100 overflow-hidden p-1",
+                    "border-primary/20 hover:border-primary relative aspect-video cursor-pointer items-center justify-center overflow-hidden rounded-md border-2 p-1 opacity-75 transition-all duration-300 hover:opacity-100",
                     {
                       "border-primary opacity-100":
                         extractDataTheme(completion) === theme,
@@ -70,7 +70,7 @@ export default function ComponentSettings({
                   onClick={() => setTheme(theme)}
                 >
                   {isSettingLoading === theme && (
-                    <Loader className="absolute inset-0 z-10 m-auto size-6 animate-spin text-foreground opacity-100" />
+                    <Loader className="text-foreground absolute inset-0 z-10 m-auto size-6 animate-spin opacity-100" />
                   )}
                   <img
                     src={`/daisy-themes/${theme}.png`}

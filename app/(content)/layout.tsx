@@ -31,7 +31,7 @@ export const metadata = {
 
 export default function RootLayout({ children }: PropsWithChildren) {
   return (
-    <html className={cn("dark size-full antialiased bg-white", rubik.variable)}>
+    <html className={cn("dark size-full bg-white antialiased", rubik.variable)}>
       <body className="relative size-full bg-white">{children}</body>
       <GoogleAnalytics gaId={gaId} />
     </html>

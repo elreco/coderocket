@@ -26,12 +26,12 @@ function LoadingStateComponent({ state }: { state: WebcontainerLoadingState }) {
   if (state === "token-limit") {
     return (
       <div className="flex size-full flex-col items-center justify-center space-y-4 p-8 text-center">
-        <div className="flex size-16 items-center justify-center rounded-full bg-blue-100 text-primary dark:bg-violet-900/20 dark:text-primary">
+        <div className="text-primary dark:text-primary flex size-16 items-center justify-center rounded-full bg-blue-100 dark:bg-violet-900/20">
           <RefreshCw className="size-8" />
         </div>
         <div className="max-w-md space-y-2">
           <h3 className="text-xl font-semibold">Generation in progress</h3>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             The AI has reached its token limit, but don&apos;t worry! This is
             completely normal when creating complex projects. The project is on
             the right track!
@@ -49,7 +49,7 @@ function LoadingStateComponent({ state }: { state: WebcontainerLoadingState }) {
 
   return (
     <div className="flex size-full flex-col items-center justify-center space-y-4 p-8 text-center">
-      <Loader2 className="size-8 animate-spin text-primary" />
+      <Loader2 className="text-primary size-8 animate-spin" />
       <div className="space-y-2">
         <h3 className="font-semibold">
           {state === "initializing" && "Initializing WebContainer..."}
@@ -57,7 +57,7 @@ function LoadingStateComponent({ state }: { state: WebcontainerLoadingState }) {
           {state === "processing" && "Processing application..."}
           {state === "starting" && "Starting application..."}
         </h3>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-muted-foreground text-sm">
           {state === "initializing" && "Setting up development environment."}
           {state === "deploying" && "It may take a few minutes."}
           {state === "processing" && "Analyzing and generating component."}
@@ -153,32 +153,32 @@ export default function ComponentPreview() {
         <div className="flex size-full h-full items-center justify-center px-4 xl:w-2/3">
           <Alert
             variant="default"
-            className="h-2/3 max-h-[80vh] w-full items-center justify-center bg-secondary text-foreground"
+            className="bg-secondary text-foreground h-2/3 max-h-[80vh] w-full items-center justify-center"
           >
             <AlertCircle className="size-6" />
-            <AlertDescription className="flex size-full flex-col !pl-12">
+            <AlertDescription className="flex size-full flex-col pl-12!">
               <p className="text-lg font-semibold">{buildError.title}</p>
               <div className="flex size-full flex-col overflow-y-auto">
-                <p className="mb-4 whitespace-pre-line text-sm">
+                <p className="mb-4 text-sm whitespace-pre-line">
                   {buildError.description}
                 </p>
                 {buildError.exitCode && (
-                  <p className="mb-2 text-sm text-muted-foreground">
+                  <p className="text-muted-foreground mb-2 text-sm">
                     Exit code: {buildError.exitCode}
                   </p>
                 )}
                 {buildError.errors && buildError.errors.length > 0 ? (
-                  <div className="rounded-md bg-muted p-4">
+                  <div className="bg-muted rounded-md p-4">
                     <p className="mb-2 font-mono text-xs font-semibold">
                       Build Output:
                     </p>
-                    <pre className="max-h-96 overflow-auto whitespace-pre-wrap break-words font-mono text-xs text-red-600 dark:text-red-400">
+                    <pre className="max-h-96 overflow-auto font-mono text-xs wrap-break-word whitespace-pre-wrap text-red-600 dark:text-red-400">
                       {buildError.errors.join("\n\n---\n\n")}
                     </pre>
                   </div>
                 ) : (
-                  <div className="rounded-md bg-muted p-4">
-                    <p className="font-mono text-xs text-muted-foreground">
+                  <div className="bg-muted rounded-md p-4">
+                    <p className="text-muted-foreground font-mono text-xs">
                       No error output captured. The build process failed but did
                       not produce error messages.
                     </p>
@@ -217,9 +217,9 @@ export default function ComponentPreview() {
         !shouldShowLoader && (
           <div className="relative size-full">
             {isGeneratingNewVersion && (
-              <div className="absolute right-4 top-4 z-20 flex items-center gap-2 rounded-full border border-primary bg-background px-4 py-2 shadow-xl">
-                <Loader2 className="size-4 animate-spin text-primary" />
-                <span className="text-sm font-medium text-primary">
+              <div className="border-primary bg-background absolute top-4 right-4 z-20 flex items-center gap-2 rounded-full border px-4 py-2 shadow-xl">
+                <Loader2 className="text-primary size-4 animate-spin" />
+                <span className="text-primary text-sm font-medium">
                   {loadingState === "processing"
                     ? `Building version ${selectedVersion}...`
                     : loadingState === "deploying"
@@ -231,7 +231,7 @@ export default function ComponentPreview() {
             {iframeLoading &&
               isWebcontainerReady &&
               !isGeneratingNewVersion && (
-                <div className="absolute inset-0 z-10 flex items-center justify-center bg-background">
+                <div className="bg-background absolute inset-0 z-10 flex items-center justify-center">
                   <LoadingStateComponent state="starting" />
                 </div>
               )}

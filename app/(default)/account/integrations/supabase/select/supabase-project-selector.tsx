@@ -94,7 +94,7 @@ export default function SupabaseProjectSelector({
     <Card>
       <CardHeader>
         <CardTitle>Select a Supabase Project</CardTitle>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-muted-foreground text-sm">
           Choose which Supabase project you want to integrate with your account
         </p>
       </CardHeader>
@@ -106,7 +106,7 @@ export default function SupabaseProjectSelector({
           {projects.map((project) => (
             <div
               key={project.id}
-              className="flex items-center space-x-3 rounded-lg border p-4 hover:bg-accent"
+              className="hover:bg-accent flex items-center space-x-3 rounded-lg border p-4"
             >
               <RadioGroupItem value={project.id} id={project.id} />
               <Label
@@ -119,7 +119,7 @@ export default function SupabaseProjectSelector({
                     <CheckCircle2 className="size-4 text-green-500" />
                   )}
                 </div>
-                <span className="text-xs text-muted-foreground">
+                <span className="text-muted-foreground text-xs">
                   {project.id} • {project.region}
                 </span>
               </Label>

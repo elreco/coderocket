@@ -184,7 +184,7 @@ export function FigmaImportButton({
         action: (
           <a
             href="/login"
-            className="inline-flex h-8 items-center justify-center rounded-md bg-primary px-3 text-xs font-medium text-primary-foreground"
+            className="bg-primary text-primary-foreground inline-flex h-8 items-center justify-center rounded-md px-3 text-xs font-medium"
           >
             Login
           </a>
@@ -202,7 +202,7 @@ export function FigmaImportButton({
         action: (
           <a
             href="/pricing"
-            className="inline-flex h-8 items-center justify-center rounded-md bg-primary px-3 text-xs font-medium text-primary-foreground"
+            className="bg-primary text-primary-foreground inline-flex h-8 items-center justify-center rounded-md px-3 text-xs font-medium"
           >
             Upgrade
           </a>
@@ -263,7 +263,7 @@ export function FigmaImportButton({
           <div className="space-y-4 py-4">
             {isLoadingIntegrations ? (
               <div className="flex items-center justify-center py-8">
-                <Loader2 className="size-6 animate-spin text-muted-foreground" />
+                <Loader2 className="text-muted-foreground size-6 animate-spin" />
               </div>
             ) : integrations.length === 0 ? (
               <div className="space-y-4">
@@ -315,13 +315,13 @@ export function FigmaImportButton({
                     value={figmaUrl}
                     onChange={(e) => setFigmaUrl(e.target.value)}
                   />
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-muted-foreground text-xs">
                     Paste the URL of the Figma file you want to import
                   </p>
                 </div>
 
-                <div className="rounded-lg border bg-muted p-3">
-                  <p className="text-xs text-muted-foreground">
+                <div className="bg-muted rounded-lg border p-3">
+                  <p className="text-muted-foreground text-xs">
                     <strong>Note:</strong> The converter will extract the design
                     structure and convert it to {framework.toUpperCase()} code.
                     Complex designs may require manual adjustments.

@@ -392,7 +392,7 @@ export default function DeploymentContent() {
             <p className="font-medium text-green-700 dark:text-green-400">
               Application Deployed
             </p>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="text-muted-foreground mt-1 text-sm">
               Your app is live and accessible at:
             </p>
             <div className="mt-3 space-y-2">
@@ -401,7 +401,7 @@ export default function DeploymentContent() {
                   href={`https://${deployedUrl}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 break-all text-sm font-medium text-primary hover:underline"
+                  className="text-primary inline-flex items-center gap-1.5 text-sm font-medium break-all hover:underline"
                 >
                   <span className="break-all">{deployedUrl}</span>
                   <ExternalLink className="size-3.5 shrink-0" />
@@ -417,7 +417,7 @@ export default function DeploymentContent() {
                   href={`https://${currentSubdomain}.coderocket.app`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 break-all text-xs text-muted-foreground hover:text-primary hover:underline"
+                  className="text-muted-foreground hover:text-primary inline-flex items-center gap-1.5 text-xs break-all hover:underline"
                 >
                   <span className="break-all">
                     Also available at: {currentSubdomain}.coderocket.app
@@ -425,7 +425,7 @@ export default function DeploymentContent() {
                   <ExternalLink className="size-3 shrink-0" />
                 </a>
               )}
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 Version #{currentDeployedVersion}
               </p>
             </div>
@@ -444,7 +444,7 @@ export default function DeploymentContent() {
             <p className="font-medium text-yellow-700 dark:text-yellow-400">
               View Only
             </p>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="text-muted-foreground mt-1 text-sm">
               You do not have permission to manage deployment for this
               application. Only the owner can deploy or modify deployment
               settings.
@@ -478,7 +478,7 @@ export default function DeploymentContent() {
               ))}
             </SelectContent>
           </Select>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-muted-foreground text-xs">
             Select which version of your application to deploy. The latest
             version is selected by default.
           </p>
@@ -518,7 +518,7 @@ export default function DeploymentContent() {
                   disabled={!isOwner}
                   className="pr-32"
                 />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+                <span className="text-muted-foreground absolute top-1/2 right-3 -translate-y-1/2 text-sm">
                   .coderocket.app
                 </span>
               </div>
@@ -564,7 +564,7 @@ export default function DeploymentContent() {
               )}
             </p>
           )}
-          <p className="text-xs text-muted-foreground">
+          <p className="text-muted-foreground text-xs">
             Subdomain must be 3-63 characters, contain only lowercase letters,
             numbers, and hyphens, and start/end with a letter or number.
           </p>
@@ -578,7 +578,7 @@ export default function DeploymentContent() {
                 <p className="font-medium text-blue-700 dark:text-blue-400">
                   Want to use your own domain?
                 </p>
-                <p className="mt-1 text-sm text-muted-foreground">
+                <p className="text-muted-foreground mt-1 text-sm">
                   After deploying with a CodeRocket subdomain, you&apos;ll be
                   able to add your custom domain (like{" "}
                   <span className="font-mono">app.yourdomain.com</span>) in the{" "}
@@ -685,9 +685,9 @@ export default function DeploymentContent() {
         </form>
       </div>
 
-      <div className="rounded-lg border border-border bg-muted/50 p-4">
+      <div className="border-border bg-muted/50 rounded-lg border p-4">
         <h3 className="mb-2 font-medium">About Deployment</h3>
-        <ul className="space-y-2 text-sm text-muted-foreground">
+        <ul className="text-muted-foreground space-y-2 text-sm">
           <li className="flex gap-2">
             <span className="text-primary">•</span>
             <span>

@@ -188,7 +188,7 @@ export function StripeOnboardingClient({
                   </span>
                 )}
               </div>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 {userData?.stripe_onboarding_completed
                   ? "Your account is ready to receive payments"
                   : userData?.stripe_account_id
@@ -232,10 +232,10 @@ export function StripeOnboardingClient({
         </CardHeader>
         <CardContent>
           {!userData?.stripe_account_id ? (
-            <div className="flex flex-col items-center space-y-4 text-center sm:flex-row sm:items-start sm:space-x-6 sm:space-y-0 sm:text-left">
+            <div className="flex flex-col items-center space-y-4 text-center sm:flex-row sm:items-start sm:space-y-0 sm:space-x-6 sm:text-left">
               <div className="flex-1 space-y-2">
                 <h3 className="font-medium">Create Your Stripe Account</h3>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-muted-foreground text-sm">
                   Set up your Stripe Express account to start accepting payments
                   and manage your template earnings.
                 </p>
@@ -262,10 +262,10 @@ export function StripeOnboardingClient({
               </div>
             </div>
           ) : !userData?.stripe_onboarding_completed ? (
-            <div className="flex flex-col items-center space-y-4 text-center sm:flex-row sm:items-start sm:space-x-6 sm:space-y-0 sm:text-left">
+            <div className="flex flex-col items-center space-y-4 text-center sm:flex-row sm:items-start sm:space-y-0 sm:space-x-6 sm:text-left">
               <div className="flex-1 space-y-2">
                 <h3 className="font-medium">Complete Your Setup</h3>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-muted-foreground text-sm">
                   Finish configuring your Stripe account to start receiving
                   payments from your template sales.
                 </p>
@@ -311,10 +311,10 @@ export function StripeOnboardingClient({
               </div>
             </div>
           ) : showSuccessMessage && !userData?.stripe_onboarding_completed ? (
-            <div className="flex flex-col items-center space-y-4 text-center sm:flex-row sm:items-start sm:space-x-6 sm:space-y-0 sm:text-left">
+            <div className="flex flex-col items-center space-y-4 text-center sm:flex-row sm:items-start sm:space-y-0 sm:space-x-6 sm:text-left">
               <div className="flex-1 space-y-2">
                 <h3 className="font-medium">Setup Complete!</h3>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-muted-foreground text-sm">
                   Your Stripe setup is complete! Update your account information
                   to reflect the latest status.
                 </p>
@@ -360,13 +360,13 @@ export function StripeOnboardingClient({
               </div>
             </div>
           ) : (
-            <div className="flex flex-col items-center space-y-4 text-center sm:flex-row sm:items-start sm:space-x-6 sm:space-y-0 sm:text-left">
+            <div className="flex flex-col items-center space-y-4 text-center sm:flex-row sm:items-start sm:space-y-0 sm:space-x-6 sm:text-left">
               <div className="flex-1 space-y-2">
                 <h3 className="flex items-center gap-2 font-medium text-green-600">
                   <CheckCircle className="size-4" />
                   Account Ready
                 </h3>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-muted-foreground text-sm">
                   Your account is fully set up and ready to receive payments.
                   Access your Stripe dashboard to manage your account.
                 </p>
@@ -426,7 +426,7 @@ export function StripeOnboardingClient({
         <CardContent>
           <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
             <div className="flex-1">
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 Access your template tools and manage your templates.
               </p>
             </div>
@@ -468,7 +468,7 @@ export function StripeOnboardingClient({
             <div className="grid gap-4 md:grid-cols-2">
               <div>
                 <h4 className="mb-2 font-medium">What you&apos;ll need:</h4>
-                <ul className="space-y-1 text-sm text-muted-foreground">
+                <ul className="text-muted-foreground space-y-1 text-sm">
                   <li>• Government-issued ID</li>
                   <li>• Bank account information</li>
                   <li>• Business information (if applicable)</li>
@@ -477,7 +477,7 @@ export function StripeOnboardingClient({
               </div>
               <div>
                 <h4 className="mb-2 font-medium">Key benefits:</h4>
-                <ul className="space-y-1 text-sm text-muted-foreground">
+                <ul className="text-muted-foreground space-y-1 text-sm">
                   <li>• 70% revenue share</li>
                   <li>• Automatic payouts</li>
                   <li>• Fraud protection</li>

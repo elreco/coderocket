@@ -211,7 +211,7 @@ export function FigmaConfigDialog({
                   <span className="w-full border-t" />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-2 text-muted-foreground">
+                  <span className="bg-background text-muted-foreground px-2">
                     Or configure manually
                   </span>
                 </div>
@@ -227,7 +227,7 @@ export function FigmaConfigDialog({
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               A friendly name to identify this integration
             </p>
           </div>
@@ -242,7 +242,7 @@ export function FigmaConfigDialog({
               onChange={(e) => setAccessToken(e.target.value)}
             />
             <div className="space-y-1">
-              <div className="flex items-start gap-2 text-xs text-muted-foreground">
+              <div className="text-muted-foreground flex items-start gap-2 text-xs">
                 <p className="flex-1">
                   Generate a token in your Figma account settings
                 </p>
@@ -256,7 +256,7 @@ export function FigmaConfigDialog({
                   <ExternalLink className="size-3" />
                 </a>
               </div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 Required scopes: <strong>current_user:read</strong> and{" "}
                 <strong>file_content:read</strong>
               </p>

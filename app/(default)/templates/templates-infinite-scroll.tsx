@@ -436,7 +436,7 @@ export function TemplatesInfiniteScroll({
     <div>
       {/* Search bar & filters */}
       <div className="flex flex-col items-center justify-between gap-2 space-y-2 sm:flex-row sm:space-y-0">
-        <div className="relative flex w-full max-w-xl items-center rounded-md border border-border bg-secondary pl-3 focus-within:border-primary">
+        <div className="border-border bg-secondary focus-within:border-primary relative flex w-full max-w-xl items-center rounded-md border pl-3">
           <Search className="mr-2 size-4 shrink-0 opacity-50" />
           <Input
             id="search"
@@ -445,13 +445,13 @@ export function TemplatesInfiniteScroll({
             maxLength={MAX_SEARCH_LENGTH}
             onKeyDown={handleKeyDown}
             onChange={handleSearchInput}
-            className="flex w-full rounded-md border-none bg-transparent py-3 text-sm font-normal outline-none placeholder:text-muted-foreground focus:ring-0 focus-visible:ring-0 disabled:cursor-not-allowed disabled:opacity-50"
+            className="placeholder:text-muted-foreground flex w-full rounded-md border-none bg-transparent py-3 text-sm font-normal outline-hidden focus:ring-0 focus-visible:ring-0 disabled:cursor-not-allowed disabled:opacity-50"
             autoComplete="off"
           />
           {searchQuery && (
             <button
               onClick={handleClearSearch}
-              className="ml-2 text-muted-foreground hover:text-primary"
+              className="text-muted-foreground hover:text-primary ml-2"
             >
               <X className="size-4" />
             </button>
@@ -478,7 +478,7 @@ export function TemplatesInfiniteScroll({
               <Button
                 size="lg"
                 variant="secondary"
-                className="relative flex w-full items-center gap-2 border border-border p-[22px] sm:w-auto"
+                className="border-border relative flex w-full items-center gap-2 border p-[22px] sm:w-auto"
               >
                 <Filter className="size-4" />
                 Filters
@@ -515,7 +515,7 @@ export function TemplatesInfiniteScroll({
                       <Button
                         size="lg"
                         variant="secondary"
-                        className="flex w-full items-center justify-between gap-2 border border-border p-[22px]"
+                        className="border-border flex w-full items-center justify-between gap-2 border p-[22px]"
                       >
                         <span className="truncate">
                           {selectedCategories.length > 0
@@ -537,7 +537,7 @@ export function TemplatesInfiniteScroll({
                     <DropdownMenuContent className="w-[300px]">
                       <DropdownMenuItem
                         key="all"
-                        className="flex cursor-pointer items-center space-x-2 capitalize text-primary"
+                        className="text-primary flex cursor-pointer items-center space-x-2 capitalize"
                         onClick={() => {
                           handleCategorySelection(null);
                           setDropdownOpen(false);
@@ -580,7 +580,7 @@ export function TemplatesInfiniteScroll({
                       <Button
                         size="lg"
                         variant="secondary"
-                        className="flex w-full items-center justify-between gap-2 border border-border p-[22px]"
+                        className="border-border flex w-full items-center justify-between gap-2 border p-[22px]"
                       >
                         <span className="flex items-center gap-2 truncate">
                           {selectedFramework ? (
@@ -610,7 +610,7 @@ export function TemplatesInfiniteScroll({
                     <DropdownMenuContent className="w-[300px]">
                       <DropdownMenuItem
                         key="all-frameworks"
-                        className="flex cursor-pointer items-center space-x-2 capitalize text-primary"
+                        className="text-primary flex cursor-pointer items-center space-x-2 capitalize"
                         onClick={() => {
                           handleFrameworkSelection(null);
                           setFrameworkDropdownOpen(false);
@@ -652,7 +652,7 @@ export function TemplatesInfiniteScroll({
                       <Button
                         size="lg"
                         variant="secondary"
-                        className="flex w-full items-center justify-between gap-2 border border-border p-[22px]"
+                        className="border-border flex w-full items-center justify-between gap-2 border p-[22px]"
                       >
                         <span className="truncate">
                           {priceFilter === "free"
@@ -668,7 +668,7 @@ export function TemplatesInfiniteScroll({
                     <DropdownMenuContent className="w-[300px]">
                       <DropdownMenuItem
                         key="all-prices"
-                        className="flex cursor-pointer items-center space-x-2 capitalize text-primary"
+                        className="text-primary flex cursor-pointer items-center space-x-2 capitalize"
                         onClick={() => {
                           handlePriceFilterSelection("all");
                           setPriceDropdownOpen(false);
@@ -738,7 +738,7 @@ export function TemplatesInfiniteScroll({
           {/* Create Template Button */}
           <SmartCreateTemplateButton
             size="lg"
-            className="flex w-full items-center gap-2 border border-border p-[22px] sm:w-auto"
+            className="border-border flex w-full items-center gap-2 border p-[22px] sm:w-auto"
           >
             Add Template
           </SmartCreateTemplateButton>
@@ -747,10 +747,10 @@ export function TemplatesInfiniteScroll({
 
       {/* Popular first, then Public */}
       {hasNoResults ? (
-        <div className="mt-6 flex min-h-[400px] flex-col items-center justify-center rounded-lg border border-dashed border-border bg-secondary px-4 py-6 text-center">
-          <SearchX className="size-12 text-muted-foreground" />
+        <div className="border-border bg-secondary mt-6 flex min-h-[400px] flex-col items-center justify-center rounded-lg border border-dashed px-4 py-6 text-center">
+          <SearchX className="text-muted-foreground size-12" />
           <h3 className="mt-4 text-lg font-semibold">No components found</h3>
-          <p className="mt-2 max-w-sm text-sm text-muted-foreground">
+          <p className="text-muted-foreground mt-2 max-w-sm text-sm">
             {searchQuery
               ? `No results found for "${searchQuery}". Try adjusting your search or filters.`
               : "No components available. Try changing your filters or search for something else."}
@@ -785,7 +785,7 @@ export function TemplatesInfiniteScroll({
             </Button>
             <SmartCreateTemplateButton
               size="lg"
-              className="flex w-full items-center gap-2 border border-border p-[22px] sm:w-auto"
+              className="border-border flex w-full items-center gap-2 border p-[22px] sm:w-auto"
             >
               Add Template
             </SmartCreateTemplateButton>

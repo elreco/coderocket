@@ -511,7 +511,7 @@ export function CreateTemplateForm({ categories }: CreateListingFormProps) {
               <div>
                 <CardTitle>Select Component</CardTitle>
                 {!isComponentSectionMinimized && (
-                  <p className="mt-1 text-sm text-muted-foreground">
+                  <p className="text-muted-foreground mt-1 text-sm">
                     Choose a private component from your collection to list on
                     the marketplace.
                   </p>
@@ -542,11 +542,11 @@ export function CreateTemplateForm({ categories }: CreateListingFormProps) {
           <CardContent className="space-y-4">
             {isComponentSectionMinimized && selectedComponent ? (
               /* Minimized View */
-              <div className="flex items-center justify-between rounded-lg bg-muted/50 p-4">
+              <div className="bg-muted/50 flex items-center justify-between rounded-lg p-4">
                 <div className="flex items-center gap-4">
                   {selectedComponent.screenshot && (
                     <div
-                      className="size-12 shrink-0 rounded-md bg-muted bg-cover bg-center"
+                      className="bg-muted size-12 shrink-0 rounded-md bg-cover bg-center"
                       style={{
                         backgroundImage: `url(${selectedComponent.screenshot})`,
                       }}
@@ -580,7 +580,7 @@ export function CreateTemplateForm({ categories }: CreateListingFormProps) {
                         {selectedComponent.title}
                       </h3>
                     </div>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-muted-foreground text-xs">
                       {selectedComponent.total_versions} version
                       {selectedComponent.total_versions !== 1 ? "s" : ""} •
                       {getRelativeDate(selectedComponent.created_at)}
@@ -602,7 +602,7 @@ export function CreateTemplateForm({ categories }: CreateListingFormProps) {
               <>
                 {/* Search */}
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                  <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
                   <Input
                     placeholder="Search your private components..."
                     value={searchQuery}
@@ -619,7 +619,7 @@ export function CreateTemplateForm({ categories }: CreateListingFormProps) {
                       <span>Loading your components...</span>
                     </div>
                   ) : components.length === 0 ? (
-                    <div className="p-8 text-center text-muted-foreground">
+                    <div className="text-muted-foreground p-8 text-center">
                       {searchQuery
                         ? "No components found matching your search."
                         : "No private components found. Create a private component first."}
@@ -629,7 +629,7 @@ export function CreateTemplateForm({ categories }: CreateListingFormProps) {
                       <div
                         className={cn(
                           viewMode === "grid"
-                            ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+                            ? "grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"
                             : "space-y-2",
                         )}
                       >
@@ -683,7 +683,7 @@ export function CreateTemplateForm({ categories }: CreateListingFormProps) {
               </CardHeader>
               <CardContent className="space-y-4">
                 {/* Selected Component Info */}
-                <div className="rounded-lg bg-muted/50 p-4">
+                <div className="bg-muted/50 rounded-lg p-4">
                   <div className="mb-3 flex items-center gap-3">
                     {(() => {
                       const FrameworkIcon =
@@ -713,7 +713,7 @@ export function CreateTemplateForm({ categories }: CreateListingFormProps) {
                       );
                     })()}
                   </div>
-                  <p className="mb-3 text-sm text-muted-foreground">
+                  <p className="text-muted-foreground mb-3 text-sm">
                     {selectedComponent.total_versions} version
                     {selectedComponent.total_versions !== 1 ? "s" : ""} •
                     Created {getRelativeDate(selectedComponent.created_at)}
@@ -723,7 +723,7 @@ export function CreateTemplateForm({ categories }: CreateListingFormProps) {
                   {selectedComponent.screenshot && (
                     <div className="mb-3">
                       <div
-                        className="aspect-video w-full rounded-md bg-muted bg-cover bg-center"
+                        className="bg-muted aspect-video w-full rounded-md bg-cover bg-center"
                         style={{
                           backgroundImage: `url(${selectedComponent.screenshot})`,
                         }}
@@ -772,7 +772,7 @@ export function CreateTemplateForm({ categories }: CreateListingFormProps) {
                       </SelectContent>
                     </Select>
                   ) : (
-                    <div className="flex items-center justify-center rounded-md border p-4 text-muted-foreground">
+                    <div className="text-muted-foreground flex items-center justify-center rounded-md border p-4">
                       No versions available
                     </div>
                   )}
@@ -856,7 +856,7 @@ export function CreateTemplateForm({ categories }: CreateListingFormProps) {
                     {!stripeStatus.onboardingComplete ? "(Free only)" : "*"}
                   </Label>
                   <div className="relative">
-                    <DollarSign className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                    <DollarSign className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
                     <Input
                       id="price"
                       type="number"
@@ -899,11 +899,11 @@ export function CreateTemplateForm({ categories }: CreateListingFormProps) {
                       </div>
                     </div>
                   ) : (
-                    <div className="rounded-lg border bg-muted/30 p-3 text-xs">
+                    <div className="bg-muted/30 rounded-lg border p-3 text-xs">
                       <div className="mb-2 font-medium">
                         Template Pricing Options:
                       </div>
-                      <div className="space-y-1 text-muted-foreground">
+                      <div className="text-muted-foreground space-y-1">
                         <div>
                           • <strong>$0.00 - Free Template:</strong> Share your
                           component with the community. No Stripe account
@@ -1027,16 +1027,16 @@ function ComponentCard({
         onClick={onSelect}
         disabled={isSelecting}
         className={cn(
-          "w-full p-4 rounded-lg border-2 text-left transition-all duration-300 hover:border-primary",
+          "cursor-pointer hover:border-primary w-full rounded-lg border-2 p-4 text-left transition-all duration-300",
           isSelected
-            ? "border-primary bg-primary/5 ring-2 ring-primary/20"
+            ? "border-primary bg-primary/5 ring-primary/20 ring-2"
             : "border-primary/20",
-          isSelecting && "opacity-60 cursor-wait",
+          isSelecting && "cursor-wait opacity-60",
         )}
       >
         <div className="flex items-center gap-4">
           <div
-            className="relative size-16 shrink-0 rounded-md bg-muted bg-cover bg-center"
+            className="bg-muted relative size-16 shrink-0 rounded-md bg-cover bg-center"
             style={{
               backgroundImage: component.screenshot
                 ? `url(${component.screenshot})`
@@ -1044,12 +1044,12 @@ function ComponentCard({
             }}
           >
             {isSelecting && (
-              <div className="absolute inset-0 flex items-center justify-center bg-background/80">
-                <Loader2 className="size-6 animate-spin text-primary" />
+              <div className="bg-background/80 absolute inset-0 flex items-center justify-center">
+                <Loader2 className="text-primary size-6 animate-spin" />
               </div>
             )}
             {!component.screenshot && !isSelecting && (
-              <div className="flex size-full items-center justify-center text-xs text-muted-foreground">
+              <div className="text-muted-foreground flex size-full items-center justify-center text-xs">
                 No preview
               </div>
             )}
@@ -1066,7 +1066,7 @@ function ComponentCard({
                 {component.title || "Untitled Component"}
               </h3>
             </div>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               {component.total_versions} version
               {component.total_versions !== 1 ? "s" : ""} •
               {getRelativeDate(component.created_at)}
@@ -1083,15 +1083,15 @@ function ComponentCard({
       onClick={onSelect}
       disabled={isSelecting}
       className={cn(
-        "group relative overflow-hidden rounded-lg border-2 transition-all duration-300 hover:border-primary bg-secondary",
+        "group cursor-pointer hover:border-primary bg-secondary relative overflow-hidden rounded-lg border-2 transition-all duration-300",
         isSelected
-          ? "border-primary ring-2 ring-primary/20"
+          ? "border-primary ring-primary/20 ring-2"
           : "border-primary/20",
-        isSelecting && "opacity-60 cursor-wait",
+        isSelecting && "cursor-wait opacity-60",
       )}
     >
       <div
-        className="aspect-video w-full bg-muted bg-cover bg-center"
+        className="bg-muted aspect-video w-full bg-cover bg-center"
         style={{
           backgroundImage: component.screenshot
             ? `url(${component.screenshot})`
@@ -1100,12 +1100,12 @@ function ComponentCard({
       >
         {/* Selection indicator or loading spinner */}
         {isSelecting ? (
-          <div className="absolute inset-0 flex items-center justify-center bg-background/80">
-            <Loader2 className="size-8 animate-spin text-primary" />
+          <div className="bg-background/80 absolute inset-0 flex items-center justify-center">
+            <Loader2 className="text-primary size-8 animate-spin" />
           </div>
         ) : isSelected ? (
-          <div className="absolute inset-0 flex items-center justify-center bg-primary/10">
-            <div className="rounded-full bg-primary p-2 text-primary-foreground">
+          <div className="bg-primary/10 absolute inset-0 flex items-center justify-center">
+            <div className="bg-primary text-primary-foreground rounded-full p-2">
               <Plus className="size-4" />
             </div>
           </div>
@@ -1124,7 +1124,7 @@ function ComponentCard({
         <h3 className="line-clamp-2 text-left text-sm font-medium">
           {component.title || "Untitled Component"}
         </h3>
-        <p className="mt-1 text-xs text-muted-foreground">
+        <p className="text-muted-foreground mt-1 text-xs">
           {component.total_versions} version
           {component.total_versions !== 1 ? "s" : ""} •
           {getRelativeDate(component.created_at)}

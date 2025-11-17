@@ -33,7 +33,7 @@ export default async function IntegrationsPage() {
         <div className="space-y-6">
           <PremiumFeatureAlert description="Backend integrations are available for premium users only. Upgrade your plan to connect Supabase, Stripe, and other services to automatically generate full-stack applications with backend functionality." />
 
-          <div className="rounded-lg border bg-muted/50 p-8">
+          <div className="bg-muted/50 rounded-lg border p-8">
             <h3 className="mb-4 text-lg font-semibold">
               What you get with Premium:
             </h3>

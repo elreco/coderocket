@@ -143,7 +143,7 @@ const FolderContent = ({
             <div className="flex items-center">
               <button
                 onClick={() => toggleFolder(fullPath)}
-                className="flex w-full items-center gap-1.5 rounded px-2 py-1 text-sm hover:bg-accent"
+                className="hover:bg-accent flex w-full items-center gap-1.5 rounded px-2 py-1 text-sm"
                 style={{ paddingLeft: `${depth * 12 + 8}px` }}
               >
                 {isOpen ? (
@@ -151,7 +151,7 @@ const FolderContent = ({
                 ) : (
                   <ChevronRight className="size-3.5 shrink-0" />
                 )}
-                <Folder className="size-4 shrink-0 text-muted-foreground" />
+                <Folder className="text-muted-foreground size-4 shrink-0" />
                 <span className="truncate">{subFolderName}</span>
               </button>
               {authorized && (
@@ -164,12 +164,12 @@ const FolderContent = ({
                           handleFolderLock(fullPath, subFolder, !allLocked);
                         }}
                         disabled={isLoading}
-                        className="absolute right-1 opacity-0 transition-opacity disabled:cursor-not-allowed group-hover:opacity-100"
+                        className="absolute right-1 opacity-0 transition-opacity group-hover:opacity-100 disabled:cursor-not-allowed"
                       >
                         {allLocked ? (
-                          <Lock className="size-3.5 text-primary" />
+                          <Lock className="text-primary size-3.5" />
                         ) : (
-                          <Unlock className="size-3.5 text-muted-foreground hover:text-foreground" />
+                          <Unlock className="text-muted-foreground hover:text-foreground size-3.5" />
                         )}
                       </button>
                     </TooltipTrigger>
@@ -249,14 +249,14 @@ const FolderContent = ({
                       disabled={
                         isLoading || (!!fullPath && savingFiles.has(fullPath))
                       }
-                      className="absolute right-1 opacity-0 transition-opacity disabled:cursor-not-allowed group-hover:opacity-100"
+                      className="absolute right-1 opacity-0 transition-opacity group-hover:opacity-100 disabled:cursor-not-allowed"
                     >
                       {fullPath && savingFiles.has(fullPath) ? (
-                        <Loader2 className="size-3.5 animate-spin text-primary" />
+                        <Loader2 className="text-primary size-3.5 animate-spin" />
                       ) : file.isLocked ? (
-                        <Lock className="size-3.5 text-primary" />
+                        <Lock className="text-primary size-3.5" />
                       ) : (
-                        <Unlock className="size-3.5 text-muted-foreground hover:text-foreground" />
+                        <Unlock className="text-muted-foreground hover:text-foreground size-3.5" />
                       )}
                     </button>
                   </TooltipTrigger>
@@ -448,7 +448,7 @@ export function CodePreviewFileTree({
 
   if (artifactFiles.length === 0) {
     return (
-      <div className="flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground">
+      <div className="text-muted-foreground flex items-center gap-2 px-3 py-2 text-sm">
         <Loader className="size-4 animate-spin" />
         <span>Loading files...</span>
       </div>

@@ -65,7 +65,7 @@ export default function AuthUIMagicLink() {
             <span className="w-full border-t" />
           </div>
           <div className="relative flex justify-center text-xs uppercase">
-            <span className="rounded-md bg-secondary px-2 text-white">Or</span>
+            <span className="bg-secondary rounded-md px-2 text-white">Or</span>
           </div>
         </div>
         <Link href="/login">

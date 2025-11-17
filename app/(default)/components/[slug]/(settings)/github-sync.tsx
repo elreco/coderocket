@@ -79,7 +79,7 @@ function PageHeader() {
       <div className="flex items-center justify-between">
         <h3 className="text-base font-semibold">Modify Code on GitHub</h3>
       </div>
-      <p className="text-sm text-muted-foreground">
+      <p className="text-muted-foreground text-sm">
         Synchronize your component code with GitHub for local development.{" "}
         <a
           href="https://docs.coderocket.app/github/overview"
@@ -320,7 +320,7 @@ export default function GitHubSync({ closeSheet }: { closeSheet: () => void }) {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-8">
-        <Loader2 className="size-6 animate-spin text-muted-foreground" />
+        <Loader2 className="text-muted-foreground size-6 animate-spin" />
       </div>
     );
   }
@@ -389,7 +389,7 @@ export default function GitHubSync({ closeSheet }: { closeSheet: () => void }) {
                 className="mt-1"
                 disabled={isCreatingRepo}
               />
-              <p className="mt-1 text-xs text-muted-foreground">
+              <p className="text-muted-foreground mt-1 text-xs">
                 Repository will be created as:{" "}
                 {githubConnection?.github_username || "unknown"}/{repoName}
               </p>
@@ -440,7 +440,7 @@ export default function GitHubSync({ closeSheet }: { closeSheet: () => void }) {
               <div className="mb-3 flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium">Sync Current Version</p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-muted-foreground text-sm">
                     Push{" "}
                     <span className="font-semibold">
                       version {selectedVersion}
@@ -503,7 +503,7 @@ export default function GitHubSync({ closeSheet }: { closeSheet: () => void }) {
             </div>
 
             {fetchedChat?.last_github_sync && (
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 Last synced:{" "}
                 {new Date(fetchedChat.last_github_sync).toLocaleString()}
               </p>

@@ -147,9 +147,9 @@ export function MigrationRunner({
         Database Migration Detected
       </AlertTitle>
       <AlertDescription>
-        <div className="mt-2 space-y-3 break-words ">
+        <div className="mt-2 space-y-3 wrap-break-word ">
           <div className="text-sm text-blue-800 dark:text-blue-200">
-            <p className="break-words font-medium">{migrationFile.name}</p>
+            <p className="font-medium wrap-break-word">{migrationFile.name}</p>
             <div className="mt-1 flex flex-col gap-4 text-blue-600 dark:text-blue-300">
               {tables.length > 0 && (
                 <span className="flex items-center gap-1">
@@ -266,7 +266,7 @@ export function MigrationRunner({
             </DialogTitle>
           </DialogHeader>
           <ScrollArea className="max-h-[500px]">
-            <pre className="rounded-md bg-muted p-4 text-sm">
+            <pre className="bg-muted rounded-md p-4 text-sm">
               <code>{migrationFile.content}</code>
             </pre>
           </ScrollArea>

@@ -94,11 +94,11 @@ export default async function Components({
 
   return (
     <Container className="overflow-x-hidden pr-2 sm:pr-11">
-      <div className="mb-4 mt-14 flex flex-col items-center justify-center space-y-4">
+      <div className="mt-14 mb-4 flex flex-col items-center justify-center space-y-4">
         <h1 className="text-center text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
           Browse Public Components
         </h1>
-        <h2 className="mb-8 text-center text-lg text-primary sm:text-xl">
+        <h2 className="text-primary mb-8 text-center text-lg sm:text-xl">
           Last Tailwind components generated with AI by our users
         </h2>
       </div>

@@ -48,13 +48,13 @@ export const CodeBlock = memo(
     return (
       <div
         className={cn(
-          "relative overflow-x-auto group text-left my-4 min-h-10",
+          "group relative my-4 min-h-10 overflow-x-auto text-left",
           className,
         )}
       >
         <div
           className={cn(
-            "bg-white absolute top-1 right-1 rounded-md z-10 text-lg flex items-center justify-center opacity-0 group-hover:opacity-100 mx-2",
+            "absolute top-1 right-1 z-10 mx-2 flex items-center justify-center rounded-md bg-white text-lg opacity-0 group-hover:opacity-100",
             {
               "rounded-l-0 opacity-100": copied,
             },
@@ -63,7 +63,7 @@ export const CodeBlock = memo(
           {!disableCopy && (
             <button
               className={cn(
-                "flex items-center bg-transparent p-1.5 justify-center before:bg-white before:rounded-l-md before:text-gray-500 before:border-r before:border-gray-300",
+                "flex items-center justify-center bg-transparent p-1.5 before:rounded-l-md before:border-r before:border-gray-300 before:bg-white before:text-gray-500",
                 {
                   "before:opacity-0": !copied,
                   "before:opacity-100": copied,
@@ -72,7 +72,7 @@ export const CodeBlock = memo(
               title="Copy Code"
               onClick={() => copyToClipboard()}
             >
-              <ClipboardCopy className="size-4 text-background" />
+              <ClipboardCopy className="text-background size-4" />
             </button>
           )}
         </div>

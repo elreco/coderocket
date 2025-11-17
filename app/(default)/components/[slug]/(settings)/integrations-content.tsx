@@ -164,7 +164,7 @@ export default function IntegrationsContent() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-8">
-        <Loader2 className="size-6 animate-spin text-muted-foreground" />
+        <Loader2 className="text-muted-foreground size-6 animate-spin" />
       </div>
     );
   }
@@ -174,7 +174,7 @@ export default function IntegrationsContent() {
       <div className="space-y-4 p-4">
         <div>
           <h3 className="text-base font-semibold">Active Integrations</h3>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="text-muted-foreground mt-1 text-sm">
             Connect backend services to generate full-stack applications.{" "}
             <a
               href="https://docs.coderocket.app/integrations/migrations"
@@ -247,7 +247,7 @@ export default function IntegrationsContent() {
             </Link>
           </Button>
         </div>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="text-muted-foreground mt-1 text-sm">
           Connect backend services to generate full-stack applications.{" "}
           <a
             href="https://docs.coderocket.app/integrations/migrations"
@@ -267,7 +267,7 @@ export default function IntegrationsContent() {
           const selectedId = selectedIntegrations.get(type);
 
           return (
-            <div key={type} className="space-y-2 rounded-lg border bg-card p-4">
+            <div key={type} className="bg-card space-y-2 rounded-lg border p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   {getIntegrationIcon(type)}
@@ -306,7 +306,7 @@ export default function IntegrationsContent() {
               )}
 
               {integrationsOfType.length === 1 && isEnabled && (
-                <p className="text-xs text-muted-foreground">
+                <p className="text-muted-foreground text-xs">
                   Using: {integrationsOfType[0]?.name}
                 </p>
               )}

@@ -146,7 +146,7 @@ export default async function Account() {
             </div>
           }
         >
-          <div className="my-8 text-xl font-medium text-primary">
+          <div className="text-primary my-8 text-xl font-medium">
             <div className="flex flex-col items-center gap-2">
               <p className="text-2xl text-amber-500">
                 {subscription
@@ -201,15 +201,15 @@ export default async function Account() {
                     } 🚀 Rockets per month
                   </li>
                   <li className="flex items-center text-sm">
-                    <XIcon className="mr-2 size-4 text-border" />
+                    <XIcon className="text-border mr-2 size-4" />
                     Improve prompt
                   </li>
                   <li className="flex items-center text-sm">
-                    <XIcon className="mr-2 size-4 text-border" />
+                    <XIcon className="text-border mr-2 size-4" />
                     Generate with files
                   </li>
                   <li className="flex items-center text-sm">
-                    <XIcon className="mr-2 size-4 text-border" />
+                    <XIcon className="text-border mr-2 size-4" />
                     AI Full Power
                   </li>
                 </>
@@ -237,7 +237,7 @@ export default async function Account() {
           <form
             id="userInfoForm"
             action={handleUserInfoUpdate}
-            className="mb-4 mt-8 space-y-6"
+            className="mt-8 mb-4 space-y-6"
           >
             <div className="space-y-2">
               <label className="text-sm font-medium">Full Name</label>
@@ -249,7 +249,7 @@ export default async function Account() {
                 placeholder="Your name"
                 maxLength={64}
               />
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 64 characters maximum
               </p>
             </div>
@@ -287,7 +287,7 @@ export default async function Account() {
           }
         >
           <div className="my-8">
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               Configure integrations like Supabase, Stripe, and more to
               automatically generate full-stack applications with backend
               functionality.
@@ -314,10 +314,10 @@ export default async function Account() {
           title="Usage"
           description={"Track your Rockets usage for the current month"}
         >
-          <div className="mb-4 mt-8 space-y-4">
+          <div className="mt-8 mb-4 space-y-4">
             <div className="grid gap-4">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">
+                <span className="text-muted-foreground text-sm">
                   🚀 Rockets used for the current period
                 </span>
                 <span className="font-medium">
@@ -327,7 +327,7 @@ export default async function Account() {
 
               <Progress value={(rocketsUsed / rocketLimit) * 100} />
 
-              <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <div className="text-muted-foreground flex items-center justify-between text-xs">
                 <span>{planDescription}</span>
                 <span>
                   {((rocketsUsed / rocketLimit) * 100).toFixed(0)}% used
@@ -335,7 +335,7 @@ export default async function Account() {
               </div>
 
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Resets on</span>
+                <span className="text-muted-foreground text-sm">Resets on</span>
                 <span className="font-medium">
                   {resetDate ? format(resetDate, "d MMMM yyyy") : "N/A"}
                 </span>
@@ -351,7 +351,7 @@ export default async function Account() {
                       {extraRockets}
                     </span>
                   </div>
-                  <p className="mt-1 text-xs text-muted-foreground">
+                  <p className="text-muted-foreground mt-1 text-xs">
                     Use these when you reach your monthly limit
                   </p>
                 </div>
@@ -376,7 +376,7 @@ interface Props {
 
 function Card({ title, description, footer, children }: Props) {
   return (
-    <div className="flex size-full flex-col rounded-md border bg-card">
+    <div className="bg-card flex size-full flex-col rounded-md border">
       <div className="grow px-5 py-4">
         <h3 className="mb-1 text-2xl font-medium">{title}</h3>
         <p>{description}</p>

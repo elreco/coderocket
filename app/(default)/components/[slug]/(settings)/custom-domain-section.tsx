@@ -276,7 +276,7 @@ export default function CustomDomainSection({
   };
 
   return (
-    <div className="space-y-4 border-t border-border pt-6">
+    <div className="border-border space-y-4 border-t pt-6">
       <div className="flex items-center gap-2">
         <Globe className="size-5" />
         <h3 className="text-base font-semibold">Custom Domain</h3>
@@ -295,15 +295,15 @@ export default function CustomDomainSection({
 
       {customDomain ? (
         <div className="space-y-4">
-          <div className="rounded-lg border border-border bg-muted/50 p-4">
+          <div className="border-border bg-muted/50 rounded-lg border p-4">
             <div className="space-y-3">
               <div className="space-y-3">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
-                    <p className="break-all font-medium leading-tight">
+                    <p className="leading-tight font-medium break-all">
                       {customDomain.domain}
                     </p>
-                    <p className="mt-1.5 text-sm text-muted-foreground">
+                    <p className="text-muted-foreground mt-1.5 text-sm">
                       {customDomain.is_verified ? (
                         <span className="inline-flex items-center gap-1 text-green-600 dark:text-green-400">
                           <CheckCircle2 className="size-4" />
@@ -365,7 +365,7 @@ export default function CustomDomainSection({
                       href={`https://${customDomain.domain}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 break-all font-medium underline"
+                      className="inline-flex items-center gap-1.5 font-medium break-all underline"
                     >
                       <span className="break-all">
                         https://{customDomain.domain}
@@ -389,22 +389,22 @@ export default function CustomDomainSection({
                   </p>
 
                   <div className="space-y-3">
-                    <div className="rounded-md border border-border bg-muted p-3">
-                      <p className="mb-3 text-xs font-semibold uppercase text-muted-foreground">
+                    <div className="border-border bg-muted rounded-md border p-3">
+                      <p className="text-muted-foreground mb-3 text-xs font-semibold uppercase">
                         Record 1: Verification (TXT)
                       </p>
                       <div className="space-y-3">
                         <div>
-                          <p className="mb-1 text-xs text-muted-foreground">
+                          <p className="text-muted-foreground mb-1 text-xs">
                             Type
                           </p>
-                          <code className="block rounded bg-background px-2 py-1.5 text-xs">
+                          <code className="bg-background block rounded px-2 py-1.5 text-xs">
                             TXT
                           </code>
                         </div>
                         <div>
                           <div className="mb-1 flex items-center justify-between">
-                            <p className="text-xs text-muted-foreground">
+                            <p className="text-muted-foreground text-xs">
                               Host
                             </p>
                             <Button
@@ -421,13 +421,13 @@ export default function CustomDomainSection({
                               Copy
                             </Button>
                           </div>
-                          <code className="block break-all rounded bg-background px-2 py-1.5 text-xs">
+                          <code className="bg-background block rounded px-2 py-1.5 text-xs break-all">
                             _coderocket-verify.{customDomain.domain}
                           </code>
                         </div>
                         <div>
                           <div className="mb-1 flex items-center justify-between">
-                            <p className="text-xs text-muted-foreground">
+                            <p className="text-muted-foreground text-xs">
                               Value
                             </p>
                             <Button
@@ -442,29 +442,29 @@ export default function CustomDomainSection({
                               Copy
                             </Button>
                           </div>
-                          <code className="block break-all rounded bg-background px-2 py-1.5 text-xs">
+                          <code className="bg-background block rounded px-2 py-1.5 text-xs break-all">
                             {customDomain.verification_token}
                           </code>
                         </div>
                       </div>
                     </div>
 
-                    <div className="rounded-md border border-border bg-muted p-3">
-                      <p className="mb-3 text-xs font-semibold uppercase text-muted-foreground">
+                    <div className="border-border bg-muted rounded-md border p-3">
+                      <p className="text-muted-foreground mb-3 text-xs font-semibold uppercase">
                         Record 2: Routing (CNAME)
                       </p>
                       <div className="space-y-3">
                         <div>
-                          <p className="mb-1 text-xs text-muted-foreground">
+                          <p className="text-muted-foreground mb-1 text-xs">
                             Type
                           </p>
-                          <code className="block rounded bg-background px-2 py-1.5 text-xs">
+                          <code className="bg-background block rounded px-2 py-1.5 text-xs">
                             CNAME
                           </code>
                         </div>
                         <div>
                           <div className="mb-1 flex items-center justify-between">
-                            <p className="text-xs text-muted-foreground">
+                            <p className="text-muted-foreground text-xs">
                               Host
                             </p>
                             <Button
@@ -479,13 +479,13 @@ export default function CustomDomainSection({
                               Copy
                             </Button>
                           </div>
-                          <code className="block break-all rounded bg-background px-2 py-1.5 text-xs">
+                          <code className="bg-background block rounded px-2 py-1.5 text-xs break-all">
                             {customDomain.domain}
                           </code>
                         </div>
                         <div>
                           <div className="mb-1 flex items-center justify-between">
-                            <p className="text-xs text-muted-foreground">
+                            <p className="text-muted-foreground text-xs">
                               Value
                             </p>
                             <Button
@@ -498,7 +498,7 @@ export default function CustomDomainSection({
                               Copy
                             </Button>
                           </div>
-                          <code className="block break-all rounded bg-background px-2 py-1.5 text-xs">
+                          <code className="bg-background block rounded px-2 py-1.5 text-xs break-all">
                             coderocket.app
                           </code>
                         </div>
@@ -507,7 +507,7 @@ export default function CustomDomainSection({
                   </div>
 
                   <div className="space-y-2">
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-muted-foreground text-xs">
                       DNS propagation can take up to 48 hours, but usually
                       completes within a few minutes.
                     </p>
@@ -562,7 +562,7 @@ export default function CustomDomainSection({
               onChange={(e) => setDomain(e.target.value.toLowerCase())}
               disabled={!isOwner || !isDeployed}
             />
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               Enter your custom domain (e.g., app.example.com or example.com)
             </p>
           </div>
@@ -585,9 +585,9 @@ export default function CustomDomainSection({
             )}
           </Button>
 
-          <div className="rounded-lg border border-border bg-muted/50 p-4">
+          <div className="border-border bg-muted/50 rounded-lg border p-4">
             <h4 className="mb-2 font-medium">About Custom Domains</h4>
-            <ul className="space-y-2 text-sm text-muted-foreground">
+            <ul className="text-muted-foreground space-y-2 text-sm">
               <li className="flex gap-2">
                 <span className="text-primary">•</span>
                 <span>Use your own domain name for your deployed app</span>
@@ -610,7 +610,7 @@ export default function CustomDomainSection({
                 <p className="font-medium text-green-700 dark:text-green-400">
                   Automatic HTTPS / SSL
                 </p>
-                <p className="mt-1 text-sm text-muted-foreground">
+                <p className="text-muted-foreground mt-1 text-sm">
                   SSL certificates are automatically provisioned and managed by
                   Vercel. Once your domain is verified, HTTPS will be enabled
                   within minutes. No action required!

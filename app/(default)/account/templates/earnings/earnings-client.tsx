@@ -224,20 +224,20 @@ export function EarningsClient({
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <div className="space-y-1">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
+                <CardTitle className="text-muted-foreground text-sm font-medium">
                   Total Earnings
                 </CardTitle>
                 <div className="text-2xl font-bold">
                   ${(totalEarnings / 100).toFixed(2)}
                 </div>
               </div>
-              <div className="rounded-full bg-muted p-2">
-                <DollarSign className="size-4 text-muted-foreground" />
+              <div className="bg-muted rounded-full p-2">
+                <DollarSign className="text-muted-foreground size-4" />
               </div>
             </div>
           </CardHeader>
           <CardContent className="pt-0">
-            <p className="text-sm text-muted-foreground">All time earnings</p>
+            <p className="text-muted-foreground text-sm">All time earnings</p>
           </CardContent>
         </Card>
 
@@ -245,20 +245,20 @@ export function EarningsClient({
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <div className="space-y-1">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
+                <CardTitle className="text-muted-foreground text-sm font-medium">
                   Available
                 </CardTitle>
                 <div className="text-2xl font-bold text-green-600">
                   ${(availableEarnings / 100).toFixed(2)}
                 </div>
               </div>
-              <div className="rounded-full bg-muted p-2">
-                <TrendingUp className="size-4 text-muted-foreground" />
+              <div className="bg-muted rounded-full p-2">
+                <TrendingUp className="text-muted-foreground size-4" />
               </div>
             </div>
           </CardHeader>
           <CardContent className="pt-0">
-            <p className="text-sm text-muted-foreground">Ready for payout</p>
+            <p className="text-muted-foreground text-sm">Ready for payout</p>
           </CardContent>
         </Card>
 
@@ -266,20 +266,20 @@ export function EarningsClient({
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <div className="space-y-1">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
+                <CardTitle className="text-muted-foreground text-sm font-medium">
                   Pending
                 </CardTitle>
                 <div className="text-2xl font-bold text-orange-600">
                   ${(pendingEarnings / 100).toFixed(2)}
                 </div>
               </div>
-              <div className="rounded-full bg-muted p-2">
-                <Clock className="size-4 text-muted-foreground" />
+              <div className="bg-muted rounded-full p-2">
+                <Clock className="text-muted-foreground size-4" />
               </div>
             </div>
           </CardHeader>
           <CardContent className="pt-0">
-            <p className="text-sm text-muted-foreground">Processing (7 days)</p>
+            <p className="text-muted-foreground text-sm">Processing (7 days)</p>
           </CardContent>
         </Card>
 
@@ -287,20 +287,20 @@ export function EarningsClient({
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <div className="space-y-1">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
+                <CardTitle className="text-muted-foreground text-sm font-medium">
                   Paid Out
                 </CardTitle>
                 <div className="text-2xl font-bold">
                   ${(paidOut / 100).toFixed(2)}
                 </div>
               </div>
-              <div className="rounded-full bg-muted p-2">
-                <CheckCircle className="size-4 text-muted-foreground" />
+              <div className="bg-muted rounded-full p-2">
+                <CheckCircle className="text-muted-foreground size-4" />
               </div>
             </div>
           </CardHeader>
           <CardContent className="pt-0">
-            <p className="text-sm text-muted-foreground">Total withdrawn</p>
+            <p className="text-muted-foreground text-sm">Total withdrawn</p>
           </CardContent>
         </Card>
       </div>
@@ -318,7 +318,7 @@ export function EarningsClient({
           <div className="flex items-center justify-between">
             <div>
               <div className="font-medium">Available for payout</div>
-              <div className="text-sm text-muted-foreground">
+              <div className="text-muted-foreground text-sm">
                 Earnings available after 7-day processing period
               </div>
             </div>
@@ -353,7 +353,7 @@ export function EarningsClient({
           </div>
 
           {availableEarnings < 5000 && (
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               You need at least $50.00 to request a payout.
             </p>
           )}
@@ -378,7 +378,7 @@ export function EarningsClient({
                     <div className="font-medium">
                       ${(payout.amount_cents / 100).toFixed(2)}
                     </div>
-                    <div className="text-sm text-muted-foreground">
+                    <div className="text-muted-foreground text-sm">
                       {formatDistance(new Date(payout.created_at), new Date(), {
                         addSuffix: true,
                       })}
@@ -397,7 +397,7 @@ export function EarningsClient({
                       {payout.status}
                     </Badge>
                     {payout.arrival_date && (
-                      <div className="mt-1 text-xs text-muted-foreground">
+                      <div className="text-muted-foreground mt-1 text-xs">
                         Arrives{" "}
                         {formatDistance(
                           new Date(payout.arrival_date),
@@ -422,7 +422,7 @@ export function EarningsClient({
         </CardHeader>
         <CardContent>
           {earnings.length === 0 ? (
-            <div className="py-6 text-center text-muted-foreground">
+            <div className="text-muted-foreground py-6 text-center">
               No earnings yet. Start selling components to see earnings here.
             </div>
           ) : (
@@ -437,7 +437,7 @@ export function EarningsClient({
                       {earning.marketplace_purchases?.marketplace_listings
                         ?.title || "Unknown Component"}
                     </div>
-                    <div className="text-sm text-muted-foreground">
+                    <div className="text-muted-foreground text-sm">
                       {formatDistance(
                         new Date(earning.created_at),
                         new Date(),

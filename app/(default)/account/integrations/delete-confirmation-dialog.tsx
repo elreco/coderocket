@@ -42,13 +42,13 @@ export function DeleteConfirmationDialog({
       <AlertDialogContent>
         <AlertDialogHeader>
           <div className="flex items-center gap-2">
-            <AlertTriangle className="size-5 text-destructive" />
+            <AlertTriangle className="text-destructive size-5" />
             <AlertDialogTitle>Remove Integration</AlertDialogTitle>
           </div>
           <AlertDialogDescription className="space-y-2 pt-2">
             <p>
               Are you sure you want to delete{" "}
-              <span className="font-semibold text-foreground">
+              <span className="text-foreground font-semibold">
                 {integration.name}
               </span>
               ?

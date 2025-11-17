@@ -65,7 +65,7 @@ export function IntegrationCard({
     <Card className="relative">
       <CardHeader>
         <div className="flex items-center gap-3">
-          <div className="rounded-lg border bg-background p-2">
+          <div className="bg-background rounded-lg border p-2">
             {integrationIcons[integration.integration_type]}
           </div>
           <div className="flex-1">
@@ -84,7 +84,7 @@ export function IntegrationCard({
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
-          <div className="text-sm text-muted-foreground">
+          <div className="text-muted-foreground text-sm">
             <p>Created: {formattedDate}</p>
             <p className="mt-1">
               Status:{" "}

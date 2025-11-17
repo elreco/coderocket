@@ -193,19 +193,19 @@ export default async function MarketplaceListingPage({
           {/* Component Preview Image */}
           {listing.screenshot && (
             <Link href={`/templates/${listing.id}/demo`}>
-              <div className="group relative cursor-pointer overflow-hidden rounded-lg border-2 border-primary/20 bg-gradient-to-br from-primary/5 via-transparent to-primary/10 p-1 shadow-lg transition-all duration-300 hover:border-primary hover:shadow-xl">
+              <div className="group border-primary/20 from-primary/5 to-primary/10 hover:border-primary relative cursor-pointer overflow-hidden rounded-lg border-2 bg-linear-to-br via-transparent p-1 shadow-lg transition-all duration-300 hover:shadow-xl">
                 {/* Decorative gradient overlay */}
-                <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-primary/10 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+                <div className="from-primary/10 to-primary/10 absolute inset-0 bg-linear-to-r via-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
 
                 {/* Demo button - always visible */}
-                <div className="absolute right-4 top-4 z-10">
-                  <div className="rounded-md border border-primary/20 bg-primary px-3 py-1 text-xs font-medium text-primary-foreground shadow-lg backdrop-blur-sm transition-all duration-300 group-hover:bg-primary/90">
+                <div className="absolute top-4 right-4 z-10">
+                  <div className="border-primary/20 bg-primary text-primary-foreground group-hover:bg-primary/90 rounded-md border px-3 py-1 text-xs font-medium shadow-lg backdrop-blur-xs transition-all duration-300">
                     Live Demo
                   </div>
                 </div>
 
                 {/* Image container */}
-                <div className="relative overflow-hidden rounded-lg bg-background/50 backdrop-blur-sm">
+                <div className="bg-background/50 relative overflow-hidden rounded-lg backdrop-blur-xs">
                   <img
                     src={listing.screenshot}
                     alt={`Preview of ${listing.title}`}
@@ -213,7 +213,7 @@ export default async function MarketplaceListingPage({
                   />
 
                   {/* Subtle overlay on hover */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+                  <div className="absolute inset-0 bg-linear-to-t from-black/20 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
                 </div>
               </div>
             </Link>
@@ -239,9 +239,9 @@ export default async function MarketplaceListingPage({
               {listing.title}
             </h1>
 
-            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+            <div className="text-muted-foreground flex items-center gap-4 text-sm">
               <div className="flex items-center gap-2">
-                <Avatar className="size-6 border border-primary">
+                <Avatar className="border-primary size-6 border">
                   <AvatarImage src={listing.seller.avatar_url || undefined} />
                   <AvatarFallback>
                     <img
@@ -253,7 +253,7 @@ export default async function MarketplaceListingPage({
                 </Avatar>
                 <Link
                   href={`/users/${listing.seller.id}`}
-                  className="font-medium hover:text-primary"
+                  className="hover:text-primary font-medium"
                 >
                   {listing.seller.full_name || "Anonymous"}
                 </Link>
@@ -270,7 +270,7 @@ export default async function MarketplaceListingPage({
           {/* Description */}
           <div className="space-y-4">
             <h2 className="text-xl font-semibold">Description</h2>
-            <div className="prose prose-sm max-w-none text-muted-foreground">
+            <div className="prose prose-sm text-muted-foreground max-w-none">
               <p className="whitespace-pre-wrap">{listing.description}</p>
             </div>
           </div>
@@ -289,7 +289,7 @@ export default async function MarketplaceListingPage({
                 <CardContent>
                   <p className="font-medium">{listing.category.name}</p>
                   {listing.category.description && (
-                    <p className="mt-1 text-sm text-muted-foreground">
+                    <p className="text-muted-foreground mt-1 text-sm">
                       {listing.category.description}
                     </p>
                   )}
@@ -310,7 +310,7 @@ export default async function MarketplaceListingPage({
                       {listing.chat.framework}
                     </span>
                   </div>
-                  <p className="mt-1 text-sm text-muted-foreground">
+                  <p className="text-muted-foreground mt-1 text-sm">
                     AI-generated component
                   </p>
                 </CardContent>
@@ -355,11 +355,11 @@ export default async function MarketplaceListingPage({
               {isOwnListing ? (
                 /* User's own listing */
                 <div className="space-y-3">
-                  <div className="rounded-lg bg-muted/50 p-4 text-center">
-                    <p className="text-sm font-medium text-muted-foreground">
+                  <div className="bg-muted/50 rounded-lg p-4 text-center">
+                    <p className="text-muted-foreground text-sm font-medium">
                       This is your listing
                     </p>
-                    <p className="mt-1 text-xs text-muted-foreground">
+                    <p className="text-muted-foreground mt-1 text-xs">
                       You cannot purchase your own component
                     </p>
                   </div>
@@ -389,7 +389,7 @@ export default async function MarketplaceListingPage({
               )}
 
               {listing.price_cents > 0 && (
-                <div className="space-y-2 text-sm text-muted-foreground">
+                <div className="text-muted-foreground space-y-2 text-sm">
                   <div className="flex items-center gap-2">
                     <Download className="size-4" />
                     <span>Instant download after purchase</span>
@@ -403,7 +403,7 @@ export default async function MarketplaceListingPage({
 
               <Separator />
 
-              <div className="text-xs text-muted-foreground">
+              <div className="text-muted-foreground text-xs">
                 <p>
                   By purchasing, you agree to the{" "}
                   <Link href="/terms" className="underline hover:no-underline">
@@ -429,7 +429,7 @@ export default async function MarketplaceListingPage({
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center gap-3">
-                <Avatar className="border border-primary">
+                <Avatar className="border-primary border">
                   <AvatarImage src={listing.seller.avatar_url || undefined} />
                   <AvatarFallback>
                     <img
@@ -442,11 +442,11 @@ export default async function MarketplaceListingPage({
                 <div>
                   <Link
                     href={`/users/${listing.seller.id}`}
-                    className="font-medium hover:text-primary"
+                    className="hover:text-primary font-medium"
                   >
                     {listing.seller.full_name || "Anonymous"}
                   </Link>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-muted-foreground text-sm">
                     Premium Creator
                   </p>
                 </div>
@@ -509,10 +509,10 @@ export default async function MarketplaceListingPage({
             </CardContent>
           </Card>
 
-          <div className="mt-8 rounded-lg border border-dashed border-border bg-muted/50 p-6 text-center">
-            <BookOpen className="mx-auto size-8 text-muted-foreground" />
+          <div className="border-border bg-muted/50 mt-8 rounded-lg border border-dashed p-6 text-center">
+            <BookOpen className="text-muted-foreground mx-auto size-8" />
             <h3 className="mt-2 font-semibold">Need help customizing?</h3>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="text-muted-foreground mt-1 text-sm">
               Learn how to modify and customize your templates
             </p>
             <Button asChild variant="outline" className="mt-3">

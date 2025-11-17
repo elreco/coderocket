@@ -1174,16 +1174,16 @@ export default function ComponentCompletion({
   return (
     <ComponentContext.Provider value={contextValue}>
       <BuilderProvider>
-        <Container className="!p-0 lg:overflow-hidden">
+        <Container className="p-0! lg:overflow-hidden">
           <div className="grid size-full max-h-full grid-cols-1 justify-center xl:grid-cols-4 xl:flex-row">
             <div className="col-span-1 flex size-full min-h-full flex-col xl:col-span-3 xl:mb-0">
               <div className="relative flex h-auto flex-col items-center justify-start py-1.5 pr-2 xl:h-12 xl:flex-row xl:justify-between xl:pl-14">
-                <h1 className="mb-2 flex min-w-0 max-w-full flex-1 items-center gap-2 font-medium lg:mb-0">
+                <h1 className="mb-2 flex max-w-full min-w-0 flex-1 items-center gap-2 font-medium lg:mb-0">
                   {title ||
                   fetchedChat?.title ||
                   selectedVersion !== undefined ? (
                     <>
-                      <p className="mx-10 min-w-0 max-w-full xl:mx-0">
+                      <p className="mx-10 max-w-full min-w-0 xl:mx-0">
                         <span className="block truncate text-center first-letter:uppercase">
                           {title ||
                             fetchedChat?.title ||
@@ -1325,7 +1325,7 @@ export default function ComponentCompletion({
                 (isWebcontainerReady &&
                   fetchedChat?.framework !== Framework.HTML)) &&
                 isCanvas && (
-                  <div className="flex items-center justify-end gap-2 border-t border-border bg-secondary p-2">
+                  <div className="border-border bg-secondary flex items-center justify-end gap-2 border-t p-2">
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <Button
@@ -1396,7 +1396,7 @@ export default function ComponentCompletion({
                       open={isModalOpen}
                       onOpenChange={handleFullscreenToggle}
                     >
-                      <DialogContent className="z-[9999] h-[98%] max-w-[98%] rounded-none p-10">
+                      <DialogContent className="z-9999 h-full w-full max-w-full! rounded-none p-10">
                         <DialogTitle className="hidden">Fullscreen</DialogTitle>
                         <DialogDescription className="z-50">
                           {fetchedChat?.framework !== Framework.HTML &&
@@ -1422,7 +1422,7 @@ export default function ComponentCompletion({
                 )}
               <div className="relative m-0 flex h-full max-h-full flex-1 flex-col border-t lg:border-b-0">
                 {!isLoading && isCanvas && (
-                  <div className="absolute bottom-0 right-0 z-[9000] flex w-full items-center justify-end gap-2 p-2">
+                  <div className="absolute right-0 bottom-0 z-9000 flex w-full items-center justify-end gap-2 p-2">
                     {fetchedChat?.clone_url && (
                       <ClonedUrlBadge
                         url={fetchedChat.clone_url}
@@ -1492,7 +1492,7 @@ export default function ComponentCompletion({
           <Dialog open={isShareModalOpen} onOpenChange={setIsShareModalOpen}>
             <DialogContent className="max-w-md sm:max-w-2xl">
               <div className="mb-6 flex flex-col items-center justify-center text-center">
-                <Share className="mb-2 size-12 text-primary" />
+                <Share className="text-primary mb-2 size-12" />
                 <DialogTitle className="text-xl font-semibold">
                   Share Your Component
                 </DialogTitle>
@@ -1532,7 +1532,7 @@ export default function ComponentCompletion({
           <Dialog open={isRemixModalOpen} onOpenChange={setIsRemixModalOpen}>
             <DialogContent className="max-w-md sm:max-w-2xl">
               <div className="mb-6 flex flex-col items-center justify-center text-center">
-                <GitFork className="mb-2 size-12 text-primary" />
+                <GitFork className="text-primary mb-2 size-12" />
                 <DialogTitle className="text-xl font-semibold">
                   {hasAlreadyRemixed
                     ? "Already Remixed"
@@ -1548,21 +1548,21 @@ export default function ComponentCompletion({
                 {hasAlreadyRemixed ? (
                   <div className="mb-4">
                     {remixOriginalChat && (
-                      <div className="rounded-md bg-secondary p-4">
+                      <div className="bg-secondary rounded-md p-4">
                         <p className="mb-2 font-medium">Want to try again?</p>
                         <p className="mb-4">
                           You can go back to the original component that was
                           used as the base for this remix and create a new remix
                           from there:
                         </p>
-                        <div className="flex flex-col items-start gap-2 rounded-md bg-background p-3 text-sm">
+                        <div className="bg-background flex flex-col items-start gap-2 rounded-md p-3 text-sm">
                           <div className="flex items-center gap-2">
-                            <GitFork className="size-4 text-primary" />
+                            <GitFork className="text-primary size-4" />
                             <span>Original component:</span>
                           </div>
                           <a
                             href={`/components/${remixOriginalChat.slug}`}
-                            className="flex items-center gap-1 font-medium text-primary hover:underline"
+                            className="text-primary flex items-center gap-1 font-medium hover:underline"
                           >
                             {remixOriginalChat.title ||
                               `Component ${remixOriginalChat.slug}`}

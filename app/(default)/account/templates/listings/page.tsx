@@ -86,18 +86,18 @@ export default async function MyTemplatesPage() {
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <div className="space-y-1">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
+                <CardTitle className="text-muted-foreground text-sm font-medium">
                   Total Listings
                 </CardTitle>
                 <div className="text-2xl font-bold">{listings.length}</div>
               </div>
-              <div className="rounded-full bg-muted p-2">
-                <Eye className="size-4 text-muted-foreground" />
+              <div className="bg-muted rounded-full p-2">
+                <Eye className="text-muted-foreground size-4" />
               </div>
             </div>
           </CardHeader>
           <CardContent className="pt-0">
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               {activeListings.length} active, {inactiveListings.length} inactive
             </p>
           </CardContent>
@@ -107,18 +107,18 @@ export default async function MyTemplatesPage() {
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <div className="space-y-1">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
+                <CardTitle className="text-muted-foreground text-sm font-medium">
                   Total Sales
                 </CardTitle>
                 <div className="text-2xl font-bold">{totalSales}</div>
               </div>
-              <div className="rounded-full bg-muted p-2">
-                <TrendingUp className="size-4 text-muted-foreground" />
+              <div className="bg-muted rounded-full p-2">
+                <TrendingUp className="text-muted-foreground size-4" />
               </div>
             </div>
           </CardHeader>
           <CardContent className="pt-0">
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               Across all components
             </p>
           </CardContent>
@@ -128,20 +128,20 @@ export default async function MyTemplatesPage() {
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <div className="space-y-1">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
+                <CardTitle className="text-muted-foreground text-sm font-medium">
                   Estimated Earnings
                 </CardTitle>
                 <div className="text-2xl font-bold">
                   ${totalEarnings.toFixed(2)}
                 </div>
               </div>
-              <div className="rounded-full bg-muted p-2">
-                <DollarSign className="size-4 text-muted-foreground" />
+              <div className="bg-muted rounded-full p-2">
+                <DollarSign className="text-muted-foreground size-4" />
               </div>
             </div>
           </CardHeader>
           <CardContent className="pt-0">
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               70% after platform fees
             </p>
           </CardContent>
@@ -151,7 +151,7 @@ export default async function MyTemplatesPage() {
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <div className="space-y-1">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
+                <CardTitle className="text-muted-foreground text-sm font-medium">
                   Avg. Sale Price
                 </CardTitle>
                 <div className="text-2xl font-bold">
@@ -165,13 +165,13 @@ export default async function MyTemplatesPage() {
                     : "0.00"}
                 </div>
               </div>
-              <div className="rounded-full bg-muted p-2">
-                <DollarSign className="size-4 text-muted-foreground" />
+              <div className="bg-muted rounded-full p-2">
+                <DollarSign className="text-muted-foreground size-4" />
               </div>
             </div>
           </CardHeader>
           <CardContent className="pt-0">
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               Average listing price
             </p>
           </CardContent>
@@ -179,9 +179,9 @@ export default async function MyTemplatesPage() {
       </div>
 
       {listings.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-border bg-muted/50 p-12 pb-10 text-center">
+        <div className="border-border bg-muted/50 rounded-lg border border-dashed p-12 pb-10 text-center">
           <h3 className="mb-4 text-lg font-semibold">No Templates Yet</h3>
-          <p className="mb-6 text-muted-foreground">
+          <p className="text-muted-foreground mb-6">
             You haven&apos;t created any templates yet. Start selling your
             components to earn money!
           </p>

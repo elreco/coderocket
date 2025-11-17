@@ -103,32 +103,32 @@ export const Markdown = memo(
           return <pre {...rest}>{children}</pre>;
         },
         h1: ({ children }) => (
-          <h1 className="my-2 border-b border-border pb-[0.3em] text-2xl font-semibold leading-tight">
+          <h1 className="border-border my-2 border-b pb-[0.3em] text-2xl leading-tight font-semibold">
             {children}
           </h1>
         ),
         h2: ({ children }) => (
-          <h2 className="my-2 border-b border-border pb-[0.3em] text-xl font-semibold leading-tight">
+          <h2 className="border-border my-2 border-b pb-[0.3em] text-xl leading-tight font-semibold">
             {children}
           </h2>
         ),
         h3: ({ children }) => (
-          <h3 className="my-2 text-lg font-semibold leading-tight">
+          <h3 className="my-2 text-lg leading-tight font-semibold">
             {children}
           </h3>
         ),
         h4: ({ children }) => (
-          <h4 className="my-2 text-base font-semibold leading-tight">
+          <h4 className="my-2 text-base leading-tight font-semibold">
             {children}
           </h4>
         ),
         h5: ({ children }) => (
-          <h5 className="my-2 text-sm font-semibold leading-tight">
+          <h5 className="my-2 text-sm leading-tight font-semibold">
             {children}
           </h5>
         ),
         h6: ({ children }) => (
-          <h6 className="my-2 text-xs font-semibold leading-tight">
+          <h6 className="my-2 text-xs leading-tight font-semibold">
             {children}
           </h6>
         ),
@@ -180,7 +180,7 @@ export const Markdown = memo(
         a: ({ children, href }) => (
           <a
             href={href}
-            className="cursor-pointer text-primary no-underline hover:underline"
+            className="text-primary cursor-pointer no-underline hover:underline"
           >
             {children}
           </a>
@@ -188,7 +188,7 @@ export const Markdown = memo(
         code: ({ children, className }) => {
           const isInline = !className;
           return isInline ? (
-            <code className="w-full rounded-md bg-border px-[0.4em] py-[0.2em] font-mono text-[13px] text-foreground">
+            <code className="bg-border text-foreground w-full rounded-md px-[0.4em] py-[0.2em] font-mono text-[13px]">
               {children}
             </code>
           ) : (
@@ -196,7 +196,7 @@ export const Markdown = memo(
           );
         },
         blockquote: ({ children }) => (
-          <blockquote className="m-0 my-2 border-l-4 border-border pl-4 text-foreground">
+          <blockquote className="border-border text-foreground m-0 my-2 border-l-4 pl-4">
             {children}
           </blockquote>
         ),
@@ -213,17 +213,17 @@ export const Markdown = memo(
         thead: ({ children }) => <thead>{children}</thead>,
         tbody: ({ children }) => <tbody>{children}</tbody>,
         tr: ({ children }) => (
-          <tr className="border-b border-border">{children}</tr>
+          <tr className="border-border border-b">{children}</tr>
         ),
         th: ({ children }) => (
-          <th className="border border-border px-4 py-2 text-left font-semibold">
+          <th className="border-border border px-4 py-2 text-left font-semibold">
             {children}
           </th>
         ),
         td: ({ children }) => (
-          <td className="border border-border px-4 py-2">{children}</td>
+          <td className="border-border border px-4 py-2">{children}</td>
         ),
-        hr: () => <hr className="my-4 border-t border-border" />,
+        hr: () => <hr className="border-border my-4 border-t" />,
         img: ({ src, alt, ...props }) => (
           <img
             src={src}
@@ -247,10 +247,10 @@ export const Markdown = memo(
           <span className={className}>{children}</span>
         ),
         small: ({ children }) => (
-          <small className="text-sm text-muted-foreground">{children}</small>
+          <small className="text-muted-foreground text-sm">{children}</small>
         ),
         kbd: ({ children }) => (
-          <kbd className="rounded-md border border-border bg-muted px-1.5 py-0.5 font-mono text-xs">
+          <kbd className="border-border bg-muted rounded-md border px-1.5 py-0.5 font-mono text-xs">
             {children}
           </kbd>
         ),
@@ -262,16 +262,16 @@ export const Markdown = memo(
         abbr: ({ children, title }) => (
           <abbr
             title={title}
-            className="cursor-help border-b border-dotted border-muted-foreground"
+            className="border-muted-foreground cursor-help border-b border-dotted"
           >
             {children}
           </abbr>
         ),
         cite: ({ children }) => (
-          <cite className="italic text-muted-foreground">{children}</cite>
+          <cite className="text-muted-foreground italic">{children}</cite>
         ),
         details: ({ children }) => (
-          <details className="my-2 rounded-lg border border-border p-2">
+          <details className="border-border my-2 rounded-lg border p-2">
             {children}
           </details>
         ),

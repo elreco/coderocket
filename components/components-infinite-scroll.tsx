@@ -321,7 +321,7 @@ export function ComponentsInfiniteScroll({
   return (
     <div className="w-full overflow-hidden">
       <div className="mb-14 flex w-full flex-col items-center justify-center gap-4">
-        <div className="relative flex w-full max-w-2xl items-center rounded-md border border-border bg-secondary pl-3 focus-within:border-primary">
+        <div className="border-border bg-secondary focus-within:border-primary relative flex w-full max-w-2xl items-center rounded-md border pl-3">
           <Search className="mr-2 size-4 shrink-0 opacity-50" />
           <Input
             id="search"
@@ -330,7 +330,7 @@ export function ComponentsInfiniteScroll({
             maxLength={MAX_SEARCH_LENGTH}
             onKeyDown={handleKeyDown}
             onChange={handleSearchInput}
-            className="flex w-full rounded-md border-none bg-transparent py-3 text-sm font-normal outline-none placeholder:text-muted-foreground focus:ring-0 focus-visible:ring-0 disabled:cursor-not-allowed disabled:opacity-50"
+            className="placeholder:text-muted-foreground flex w-full rounded-md border-none bg-transparent py-3 text-sm font-normal outline-hidden focus:ring-0 focus-visible:ring-0 disabled:cursor-not-allowed disabled:opacity-50"
             autoComplete="off"
           />
           {searchQuery && (
@@ -341,7 +341,7 @@ export function ComponentsInfiniteScroll({
                 handleClearSearch();
               }}
               type="button"
-              className="ml-2 text-muted-foreground hover:text-primary"
+              className="text-muted-foreground hover:text-primary ml-2"
             >
               <X className="size-4" />
             </button>
@@ -407,9 +407,9 @@ export function ComponentsInfiniteScroll({
           )}
 
           <div className="w-full">
-            <div className="mb-6 flex items-center justify-end border-t border-border py-4">
+            <div className="border-border mb-6 flex items-center justify-end border-t py-4">
               <div className="flex items-center gap-2">
-                <div className="flex rounded-lg border border-border bg-secondary p-1">
+                <div className="border-border bg-secondary flex rounded-lg border p-1">
                   <button
                     onClick={() => handleSortChange("newest")}
                     className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
@@ -434,12 +434,12 @@ export function ComponentsInfiniteScroll({
               </div>
             </div>
             {publicChats.length === 0 && !showSkeleton ? (
-              <div className="flex min-h-[400px] w-full flex-col items-center justify-center rounded-lg border border-dashed border-border bg-secondary px-4 py-6 text-center">
-                <SearchX className="size-12 text-muted-foreground" />
+              <div className="border-border bg-secondary flex min-h-[400px] w-full flex-col items-center justify-center rounded-lg border border-dashed px-4 py-6 text-center">
+                <SearchX className="text-muted-foreground size-12" />
                 <h3 className="mt-4 text-lg font-semibold">
                   No components found
                 </h3>
-                <p className="mt-2 max-w-sm text-sm text-muted-foreground">
+                <p className="text-muted-foreground mt-2 max-w-sm text-sm">
                   No components available at the moment.
                 </p>
               </div>
@@ -491,7 +491,7 @@ export function ComponentsInfiniteScroll({
                 <Button
                   size="lg"
                   variant="secondary"
-                  className="flex w-full items-center gap-2 border border-border p-[22px] sm:w-auto"
+                  className="border-border flex w-full items-center gap-2 border p-[22px] sm:w-auto"
                 >
                   {selectedFrameworks.length > 0
                     ? selectedFrameworks.map((fw) => (
@@ -508,7 +508,7 @@ export function ComponentsInfiniteScroll({
               <DropdownMenuContent>
                 <DropdownMenuItem
                   key="all"
-                  className="flex cursor-pointer items-center space-x-2 capitalize text-primary"
+                  className="text-primary flex cursor-pointer items-center space-x-2 capitalize"
                   onClick={() => {
                     handleFrameworkSelection(null);
                     setDropdownOpen(false);
@@ -538,7 +538,7 @@ export function ComponentsInfiniteScroll({
               <Button
                 size="lg"
                 variant="secondary"
-                className="flex w-full items-center gap-2 border border-border p-[22px] sm:w-auto"
+                className="border-border flex w-full items-center gap-2 border p-[22px] sm:w-auto"
                 onClick={async () => {
                   setSearchQuery("");
                   setSelectedFrameworks([]);
@@ -564,8 +564,8 @@ export function ComponentsInfiniteScroll({
           </div>
 
           {hasNoResults ? (
-            <div className="mt-6 flex min-h-[400px] flex-col items-center justify-center rounded-lg border border-dashed border-border bg-secondary px-4 py-6 text-center">
-              <SearchX className="size-12 text-muted-foreground" />
+            <div className="border-border bg-secondary mt-6 flex min-h-[400px] flex-col items-center justify-center rounded-lg border border-dashed px-4 py-6 text-center">
+              <SearchX className="text-muted-foreground size-12" />
               {isLikedPage ? (
                 <h3 className="mt-4 text-lg font-semibold">
                   No liked components found
@@ -575,7 +575,7 @@ export function ComponentsInfiniteScroll({
                   No components found
                 </h3>
               )}
-              <p className="mt-2 max-w-sm text-sm text-muted-foreground">
+              <p className="text-muted-foreground mt-2 max-w-sm text-sm">
                 {isLikedPage
                   ? `No liked components found. Try changing your filters or search for something else.`
                   : searchQuery
@@ -612,9 +612,9 @@ export function ComponentsInfiniteScroll({
             </div>
           ) : (
             <>
-              <div className="my-6 flex items-center justify-end border-t border-border py-4">
+              <div className="border-border my-6 flex items-center justify-end border-t py-4">
                 <div className="flex items-center gap-2">
-                  <div className="flex rounded-lg border border-border bg-secondary p-1">
+                  <div className="border-border bg-secondary flex rounded-lg border p-1">
                     <button
                       onClick={() => handleSortChange("newest")}
                       className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${

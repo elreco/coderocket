@@ -235,7 +235,7 @@ export default function CodePreview() {
       <div
         className={cn(
           "group flex flex-col items-center justify-center",
-          isCanvas ? "opacity-100 size-full" : "opacity-0 size-0",
+          isCanvas ? "size-full opacity-100" : "size-0 opacity-0",
         )}
       >
         <RenderContent
@@ -252,19 +252,19 @@ export default function CodePreview() {
       <div
         className={cn(
           "group transition-opacity",
-          isCanvas ? "opacity-0 size-0" : "opacity-100 size-full",
+          isCanvas ? "size-0 opacity-0" : "size-full opacity-100",
         )}
       >
         <div className="relative flex size-full flex-row rounded-none border-none">
           <div
             className={cn(
-              "absolute inset-y-0 left-0 z-50 w-64 shrink-0 flex-col bg-background shadow-lg transition-transform duration-300 md:relative md:z-auto md:flex md:shadow-none",
+              "bg-background absolute inset-y-0 left-0 z-50 w-64 shrink-0 flex-col shadow-lg transition-transform duration-300 md:relative md:z-auto md:flex md:shadow-none",
               isFileTreeOpen
                 ? "flex translate-x-0"
                 : "hidden -translate-x-full md:flex md:translate-x-0",
             )}
           >
-            <div className="flex shrink-0 items-center justify-between border-b border-border p-2 md:hidden">
+            <div className="border-border flex shrink-0 items-center justify-between border-b p-2 md:hidden">
               <span className="text-sm font-medium">Files</span>
               <Button
                 variant="ghost"
@@ -290,7 +290,7 @@ export default function CodePreview() {
           )}
 
           <div className="relative flex flex-1 flex-col items-start justify-start overflow-hidden">
-            <div className="m-0 flex h-0 w-full grow rounded-bl-lg border-b border-l border-border">
+            <div className="border-border m-0 flex h-0 w-full grow rounded-bl-lg border-b border-l">
               <CodeMirror
                 ref={codeMirrorRef}
                 theme={draculaInit({
@@ -320,7 +320,7 @@ export default function CodePreview() {
               />
             </div>
 
-            <div className="flex w-full items-center gap-2 overflow-x-auto bg-background p-2">
+            <div className="bg-background flex w-full items-center gap-2 overflow-x-auto p-2">
               <Button
                 variant="ghost"
                 size="icon"
@@ -329,7 +329,7 @@ export default function CodePreview() {
               >
                 <PanelLeft className="size-4" />
               </Button>
-              <Badge className="shrink-0 hover:bg-primary">
+              <Badge className="hover:bg-primary shrink-0">
                 <FrameworkIcon className="mr-1 size-3" />
                 <span className="first-letter:uppercase">
                   {selectedFramework}

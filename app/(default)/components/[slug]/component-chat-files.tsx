@@ -448,11 +448,11 @@ ${extractedFiles
     <div
       ref={messageRef}
       data-message-id={message.id}
-      className={cn("flex p-3 flex-col transition-all")}
+      className={cn("flex flex-col p-3 transition-all")}
     >
       <div className="flex w-full gap-2">
         {message.role === "user" ? (
-          <div className="flex w-full flex-col gap-1 rounded-lg border border-primary/20 bg-primary/5 p-2 transition-all">
+          <div className="border-primary/20 bg-primary/5 flex w-full flex-col gap-1 rounded-lg border p-2 transition-all">
             <UserWidget
               id={message.chats.user.id}
               createdAt={message.created_at}
@@ -490,7 +490,7 @@ ${extractedFiles
             />
           </div>
         ) : (
-          <div className="flex w-full flex-col gap-2 overflow-x-auto break-words text-sm">
+          <div className="flex w-full flex-col gap-2 overflow-x-auto text-sm wrap-break-word">
             <div className="mt-1 flex flex-col items-start">
               <div className="mr-2 flex items-center">
                 {message.is_github_pull ? (
@@ -514,7 +514,7 @@ ${extractedFiles
                       </Badge>
                     )}
                   </div>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-muted-foreground text-xs">
                     {getRelativeDate(message.created_at)}
                   </p>
                 </div>
@@ -608,7 +608,7 @@ ${extractedFiles
             />
             {message.input_tokens !== null &&
               message.output_tokens !== null && (
-                <div className="mt-1 text-xs text-muted-foreground">
+                <div className="text-muted-foreground mt-1 text-xs">
                   Cost:{" "}
                   {tokensToRockets(
                     (message.input_tokens || 0) + (message.output_tokens || 0),

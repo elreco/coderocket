@@ -576,7 +576,7 @@ export default function Hero({ popularComponents = [] }: HeroProps) {
         action: (
           <a
             href="/login"
-            className="inline-flex h-8 items-center justify-center rounded-md bg-primary px-3 text-xs font-medium text-primary-foreground"
+            className="bg-primary text-primary-foreground inline-flex h-8 items-center justify-center rounded-md px-3 text-xs font-medium"
           >
             Login
           </a>
@@ -744,7 +744,7 @@ export default function Hero({ popularComponents = [] }: HeroProps) {
         action: (
           <a
             href="/login"
-            className="inline-flex h-8 items-center justify-center rounded-md bg-primary px-3 text-xs font-medium text-primary-foreground"
+            className="bg-primary text-primary-foreground inline-flex h-8 items-center justify-center rounded-md px-3 text-xs font-medium"
           >
             Login
           </a>
@@ -770,7 +770,7 @@ export default function Hero({ popularComponents = [] }: HeroProps) {
         action: (
           <a
             href="/pricing"
-            className="inline-flex h-8 items-center justify-center rounded-md bg-primary px-3 text-xs font-medium text-primary-foreground"
+            className="bg-primary text-primary-foreground inline-flex h-8 items-center justify-center rounded-md px-3 text-xs font-medium"
           >
             Upgrade
           </a>
@@ -799,7 +799,7 @@ export default function Hero({ popularComponents = [] }: HeroProps) {
         action: (
           <a
             href="/login"
-            className="inline-flex h-8 items-center justify-center rounded-md bg-primary px-3 text-xs font-medium text-primary-foreground"
+            className="bg-primary text-primary-foreground inline-flex h-8 items-center justify-center rounded-md px-3 text-xs font-medium"
           >
             Login
           </a>
@@ -838,7 +838,7 @@ export default function Hero({ popularComponents = [] }: HeroProps) {
         action: (
           <a
             href="/pricing"
-            className="inline-flex h-8 items-center justify-center rounded-md bg-primary px-3 text-xs font-medium text-primary-foreground"
+            className="bg-primary text-primary-foreground inline-flex h-8 items-center justify-center rounded-md px-3 text-xs font-medium"
           >
             Upgrade
           </a>
@@ -870,7 +870,7 @@ export default function Hero({ popularComponents = [] }: HeroProps) {
         maxOpacity={0.1}
         duration={1}
         className={cn(
-          "[mask-image:radial-gradient(500px_circle_at_center,hsl(var(--secondary)),transparent)]",
+          "mask-[radial-gradient(500px_circle_at_center,hsl(var(--secondary)),transparent)]",
           "inset-x-0 inset-y-[-20%] h-full skew-y-12 opacity-75",
         )}
       />
@@ -890,7 +890,7 @@ export default function Hero({ popularComponents = [] }: HeroProps) {
             Build Stunning Web Apps
             <span className="text-primary"> with AI</span>
           </h1>
-          <p className="text-center text-lg text-muted-foreground">
+          <p className="text-muted-foreground text-center text-lg">
             {generationMode === "scratch" ? (
               <>
                 Generate production-ready Tailwind v4 components from text or
@@ -904,7 +904,7 @@ export default function Hero({ popularComponents = [] }: HeroProps) {
           </p>
           <form
             id="generate-form"
-            className="group relative z-10 flex w-full flex-col items-center justify-center gap-x-0 space-y-3 rounded-lg border border-border bg-secondary p-3 text-center xl:w-3/4"
+            className="group border-border bg-secondary relative z-10 flex w-full flex-col items-center justify-center space-y-3 gap-x-0 rounded-lg border p-3 text-center xl:w-3/4"
             onSubmit={handleSubmit}
           >
             <Tabs
@@ -915,17 +915,17 @@ export default function Hero({ popularComponents = [] }: HeroProps) {
                 setGenerationMode(value as "scratch" | "clone");
               }}
             >
-              <TabsList className="mb-3 w-full bg-secondary">
+              <TabsList className="bg-secondary mb-3 w-full">
                 <TabsTrigger
                   value="scratch"
-                  className="w-1/2 bg-secondary p-2"
+                  className="bg-secondary w-1/2 p-2"
                   disabled={loading} // Disable tab when loading
                 >
                   Generate from scratch
                 </TabsTrigger>
                 <TabsTrigger
                   value="clone"
-                  className="w-1/2 bg-secondary p-2"
+                  className="bg-secondary w-1/2 p-2"
                   disabled={selectedFramework === Framework.HTML || loading} // Also disable when loading
                 >
                   Clone a website
@@ -965,19 +965,19 @@ export default function Hero({ popularComponents = [] }: HeroProps) {
                         }}
                         subscription={subscription}
                         isLoadingSubscription={isLoadingSubscription}
-                        className="max-h-[400px] min-h-[76px] border-none bg-secondary pl-1 focus-visible:ring-0 focus-visible:ring-offset-0"
+                        className="bg-secondary max-h-[400px] min-h-[76px] border-none pl-1 focus-visible:ring-0 focus-visible:ring-offset-0"
                       />
                     </div>
                   </div>
                   <div
                     className={cn(
-                      "my-0.5 text-xs text-foreground transition-opacity",
+                      "text-foreground my-0.5 text-xs transition-opacity",
                       prompt.length <= 3 && "opacity-0",
                     )}
                   >
                     Use{" "}
-                    <kbd className="rounded-sm bg-background p-1">Shift</kbd> +{" "}
-                    <kbd className="rounded-sm bg-background p-1">Return</kbd>{" "}
+                    <kbd className="bg-background rounded-sm p-1">Shift</kbd> +{" "}
+                    <kbd className="bg-background rounded-sm p-1">Return</kbd>{" "}
                     for a new line
                   </div>
                 </div>
@@ -998,7 +998,7 @@ export default function Hero({ popularComponents = [] }: HeroProps) {
                           value={websiteUrl}
                           onChange={(e) => setWebsiteUrl(e.target.value)}
                           disabled={loading}
-                          className="border-none bg-secondary pl-1 focus-visible:ring-0 focus-visible:ring-offset-0"
+                          className="bg-secondary border-none pl-1 focus-visible:ring-0 focus-visible:ring-offset-0"
                         />
                       </div>
                     </div>
@@ -1162,7 +1162,7 @@ export default function Hero({ popularComponents = [] }: HeroProps) {
                                 <div
                                   key={theme}
                                   className={cn(
-                                    "relative aspect-video cursor-pointer rounded-md items-center justify-center border-2 border-primary/20 opacity-75 transition-all duration-300 hover:border-primary hover:opacity-100 overflow-hidden p-1",
+                                    "border-primary/20 hover:border-primary relative aspect-video cursor-pointer items-center justify-center overflow-hidden rounded-md border-2 p-1 opacity-75 transition-all duration-300 hover:opacity-100",
                                     {
                                       "border-primary opacity-100":
                                         selectedTheme === theme,
@@ -1206,7 +1206,7 @@ export default function Hero({ popularComponents = [] }: HeroProps) {
                                 action: (
                                   <a
                                     href="/login"
-                                    className="inline-flex h-8 items-center justify-center rounded-md bg-primary px-3 text-xs font-medium text-primary-foreground"
+                                    className="bg-primary text-primary-foreground inline-flex h-8 items-center justify-center rounded-md px-3 text-xs font-medium"
                                   >
                                     Login
                                   </a>
@@ -1235,7 +1235,7 @@ export default function Hero({ popularComponents = [] }: HeroProps) {
                                 action: (
                                   <a
                                     href="/pricing"
-                                    className="inline-flex h-8 items-center justify-center rounded-md bg-primary px-3 text-xs font-medium text-primary-foreground"
+                                    className="bg-primary text-primary-foreground inline-flex h-8 items-center justify-center rounded-md px-3 text-xs font-medium"
                                   >
                                     Upgrade
                                   </a>
@@ -1263,7 +1263,7 @@ export default function Hero({ popularComponents = [] }: HeroProps) {
                               )
                             }
                           >
-                            <SelectTrigger className="h-8 w-full rounded-md border-background sm:w-auto">
+                            <SelectTrigger className="border-background h-8 w-full rounded-md sm:w-auto">
                               <div className="flex items-center gap-2">
                                 <SiSupabase className="size-3.5 shrink-0 text-green-600" />
                                 <span className="hidden sm:inline">
@@ -1339,7 +1339,7 @@ export default function Hero({ popularComponents = [] }: HeroProps) {
                       }
                     }}
                   >
-                    <SelectTrigger className="h-8 w-full rounded-md border-background sm:w-auto">
+                    <SelectTrigger className="border-background h-8 w-full rounded-md sm:w-auto">
                       <div className="flex items-center gap-2">
                         {(() => {
                           const config = frameworkConfig[selectedFramework];
@@ -1579,7 +1579,7 @@ export default function Hero({ popularComponents = [] }: HeroProps) {
         open={showPromptIdeasDialog}
         onOpenChange={setShowPromptIdeasDialog}
       >
-        <DialogContent className="mx-4 max-h-[80vh] max-w-4xl overflow-y-auto sm:mx-6">
+        <DialogContent className="mx-4 max-h-[80vh] max-w-6xl sm:max-w-4xl overflow-y-auto sm:mx-6">
           <DialogHeader>
             <DialogTitle className="text-2xl">
               Tailwind Component Prompt Ideas
@@ -1597,7 +1597,7 @@ export default function Hero({ popularComponents = [] }: HeroProps) {
               return (
                 <div
                   key={categoryIndex}
-                  className="group rounded-lg border border-border bg-background p-6 shadow-sm transition-all hover:shadow-md"
+                  className="group border-border bg-background rounded-lg border p-6 shadow-xs transition-all hover:shadow-md"
                 >
                   <div className="mb-4 flex items-center gap-3">
                     <div
@@ -1622,7 +1622,7 @@ export default function Hero({ popularComponents = [] }: HeroProps) {
                         }}
                         disabled={loading}
                         className={cn(
-                          "group/item relative w-full rounded-md border border-border bg-card px-3 py-2 text-left text-sm transition-all hover:border-primary hover:bg-accent",
+                          "group/item border-border bg-card hover:border-primary hover:bg-accent relative w-full rounded-md border px-3 py-2 text-left text-sm transition-all",
                           loading && "pointer-events-none opacity-50",
                         )}
                       >
@@ -1630,15 +1630,15 @@ export default function Hero({ popularComponents = [] }: HeroProps) {
                           <span className="font-medium">{prompt.text}</span>
                           {"integration" in prompt &&
                             prompt.integration === "supabase" && (
-                              <SiSupabase className="size-3 text-muted-foreground" />
+                              <SiSupabase className="text-muted-foreground size-3" />
                             )}
                           {"integration" in prompt &&
                             prompt.integration === "database" && (
-                              <Database className="size-3 text-muted-foreground" />
+                              <Database className="text-muted-foreground size-3" />
                             )}
                           {"integration" in prompt &&
                             prompt.integration === "stripe" && (
-                              <CreditCard className="size-3 text-muted-foreground" />
+                              <CreditCard className="text-muted-foreground size-3" />
                             )}
                         </div>
                       </button>
@@ -1660,7 +1660,7 @@ export default function Hero({ popularComponents = [] }: HeroProps) {
                   Most Popular Components
                 </h2>
 
-                <motion.p className="text-sm text-muted-foreground">
+                <motion.p className="text-muted-foreground text-sm">
                   Discover the most loved components created by our community.
                 </motion.p>
               </div>

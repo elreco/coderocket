@@ -111,7 +111,7 @@ export function EditTemplateForm({ template }: EditTemplateFormProps) {
               placeholder="Enter a compelling title for your component"
               disabled={isLoading}
             />
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               {formData.title.length}/100 characters
             </p>
           </div>
@@ -135,7 +135,7 @@ export function EditTemplateForm({ template }: EditTemplateFormProps) {
               placeholder="Describe what makes your component special..."
               disabled={isLoading}
             />
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               {formData.description.length}/1000 characters
             </p>
           </div>
@@ -146,7 +146,7 @@ export function EditTemplateForm({ template }: EditTemplateFormProps) {
               Price (USD) <span className="text-red-500">*</span>
             </Label>
             <div className="relative">
-              <DollarSign className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <DollarSign className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
               <Input
                 id="price"
                 type="number"
@@ -162,7 +162,7 @@ export function EditTemplateForm({ template }: EditTemplateFormProps) {
                 disabled={isLoading}
               />
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               Set a competitive price for your component (minimum $0.01)
             </p>
           </div>

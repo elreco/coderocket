@@ -13,28 +13,28 @@ export function ThinkingBlock({ content }: ThinkingBlockProps) {
   const [isExpanded, setIsExpanded] = useState(true);
 
   return (
-    <div className="my-4 rounded-lg border border-muted-foreground/20 bg-muted/30 transition-all">
+    <div className="border-muted-foreground/20 bg-muted/30 my-4 rounded-lg border transition-all">
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="flex w-full items-center gap-2 px-4 py-3 text-left transition-colors hover:bg-muted/50"
+        className="hover:bg-muted/50 flex w-full items-center gap-2 px-4 py-3 text-left transition-colors"
       >
         {isExpanded ? (
-          <ChevronDown className="size-4 text-muted-foreground" />
+          <ChevronDown className="text-muted-foreground size-4" />
         ) : (
-          <ChevronRight className="size-4 text-muted-foreground" />
+          <ChevronRight className="text-muted-foreground size-4" />
         )}
-        <Brain className="size-4 text-muted-foreground" />
-        <span className="text-sm font-medium text-muted-foreground">
+        <Brain className="text-muted-foreground size-4" />
+        <span className="text-muted-foreground text-sm font-medium">
           Thinking process
         </span>
-        <span className="ml-auto text-xs text-muted-foreground/60">
+        <span className="text-muted-foreground/60 ml-auto text-xs">
           {isExpanded ? "Hide" : "Show"}
         </span>
       </button>
 
       {isExpanded && (
-        <div className="border-t border-muted-foreground/20 px-4 py-3">
-          <div className="prose prose-sm max-w-none text-muted-foreground dark:prose-invert [&>*]:text-muted-foreground">
+        <div className="border-muted-foreground/20 border-t px-4 py-3">
+          <div className="prose prose-sm text-muted-foreground dark:prose-invert *:text-muted-foreground max-w-none">
             <Markdown>{content}</Markdown>
           </div>
         </div>

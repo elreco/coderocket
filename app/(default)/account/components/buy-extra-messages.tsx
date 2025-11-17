@@ -88,7 +88,7 @@ export function BuyExtraMessages() {
   return (
     <Card
       id="buy-rockets-section"
-      className="w-full rounded-md border bg-card p-5"
+      className="bg-card w-full rounded-md border p-5"
     >
       <h3 className="mb-1 flex items-center gap-2 text-2xl font-medium">
         🚀 Buy Rockets
@@ -133,9 +133,9 @@ export function BuyExtraMessages() {
         </Button>
       </div>
 
-      <div className="rounded-lg bg-muted p-3 text-sm">
+      <div className="bg-muted rounded-lg p-3 text-sm">
         <p className="font-medium">What&apos;s a Rocket? 🚀</p>
-        <p className="mt-1 text-muted-foreground">
+        <p className="text-muted-foreground mt-1">
           Each Rocket = 10,000 AI tokens. Use Rockets when you reach your
           monthly limit to keep creating. Rockets never expire and stack with
           your plan.

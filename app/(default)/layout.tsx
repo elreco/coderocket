@@ -225,7 +225,7 @@ export default async function RootLayout({ children }: PropsWithChildren) {
           }}
         />
       </head>
-      <body className="size-full overflow-x-hidden bg-background">
+      <body className="bg-background size-full overflow-x-hidden">
         <SidebarProvider defaultOpen={defaultOpen} className="size-full">
           <AppSidebar defaultUser={user} />
           <main className="relative size-full overflow-x-hidden">

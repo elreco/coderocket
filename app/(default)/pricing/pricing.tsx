@@ -120,11 +120,11 @@ export default function Pricing({ user, products, subscription }: Props) {
       <div className="flex flex-col items-center">
         <div className="my-4 size-full items-center space-y-4 sm:my-4 sm:grid sm:grid-cols-2 sm:gap-6 sm:space-y-0 lg:mx-auto lg:max-w-4xl xl:mx-0 xl:max-w-none xl:grid-cols-4 xl:space-y-0">
           {/* Plan Trial */}
-          <div className="flex h-full flex-col divide-y divide-border rounded-lg border bg-card p-3">
+          <div className="bg-card flex h-full flex-col rounded-lg border p-3">
             <h3 className="mb-4 pl-3 text-lg font-bold text-white">Trial</h3>
             <div className="grow p-3">
               <p>
-                <span className="text-5xl font-bold text-primary">$0</span>
+                <span className="text-primary text-5xl font-bold">$0</span>
                 <span className="text-base font-medium text-white">/month</span>
               </p>
               <p className="mt-4 ">
@@ -142,21 +142,21 @@ export default function Pricing({ user, products, subscription }: Props) {
                 {FREE_CHAR_LIMIT} characters limit per prompt
               </p>
               <p className="mt-4 flex items-center text-sm font-medium ">
-                <XIcon className="mr-2 size-4 text-border" /> Improve prompt
+                <XIcon className="text-border mr-2 size-4" /> Improve prompt
               </p>
 
               <p className="mt-4 flex items-center text-sm font-medium ">
-                <XIcon className="mr-2 size-4 text-border" /> Generate with
+                <XIcon className="text-border mr-2 size-4" /> Generate with
                 files
               </p>
               <p className="mt-4 flex items-center text-sm font-medium ">
-                <XIcon className="mr-2 size-4 text-border" /> AI Full Power
+                <XIcon className="text-border mr-2 size-4" /> AI Full Power
               </p>
               <p className="mt-4 flex items-center text-sm font-medium ">
-                <XIcon className="mr-2 size-4 text-border" /> GitHub Sync
+                <XIcon className="text-border mr-2 size-4" /> GitHub Sync
               </p>
               <p className="mt-4 flex items-center text-sm font-medium ">
-                <XIcon className="mr-2 size-4 text-border" /> Support
+                <XIcon className="text-border mr-2 size-4" /> Support
               </p>
             </div>
             <Button
@@ -210,19 +210,19 @@ export default function Pricing({ user, products, subscription }: Props) {
               return (
                 <div
                   key={price.id}
-                  className="flex h-full flex-col divide-y divide-border rounded-lg border bg-card p-3"
+                  className="bg-card flex h-full flex-col rounded-lg border p-3"
                 >
                   <h3 className="mb-4 pl-3 text-lg font-bold text-white">
                     {product.name}
                   </h3>
                   <div className="relative grow p-3">
                     {savings > 0 && (
-                      <div className="absolute right-2 top-2 rounded-md bg-emerald-500 px-2 py-1 text-xs font-bold text-white">
+                      <div className="absolute top-2 right-2 rounded-md bg-emerald-500 px-2 py-1 text-xs font-bold text-white">
                         Save {savings}%
                       </div>
                     )}
                     <p>
-                      <span className="text-5xl font-bold text-primary">
+                      <span className="text-primary text-5xl font-bold">
                         {priceString}
                       </span>
                       <span className="text-base font-medium text-white">
@@ -266,11 +266,11 @@ export default function Pricing({ user, products, subscription }: Props) {
                           Support
                         </p>
                         <p className="mt-4 flex items-center text-sm font-medium ">
-                          <XIcon className="mr-2 size-4 text-border" /> AI Full
+                          <XIcon className="text-border mr-2 size-4" /> AI Full
                           Power
                         </p>
                         <p className="mt-4 flex items-center text-sm font-medium ">
-                          <XIcon className="mr-2 size-4 text-border" /> Extended
+                          <XIcon className="text-border mr-2 size-4" /> Extended
                           support
                         </p>
                       </>
@@ -306,7 +306,7 @@ export default function Pricing({ user, products, subscription }: Props) {
 
         {/* Section pour l'achat de Rockets */}
         <div className="mt-12 w-full max-w-2xl">
-          <div className="rounded-lg border bg-card p-6">
+          <div className="bg-card rounded-lg border p-6">
             <h3 className="mb-2 flex items-center gap-2 text-xl font-bold">
               🚀 Need More? Buy Rockets!
             </h3>
@@ -315,7 +315,7 @@ export default function Pricing({ user, products, subscription }: Props) {
               Each Rocket = 10,000 AI tokens. They never expire and can be used
               anytime you need them.
             </p>
-            <p className="mb-4 text-sm text-muted-foreground">
+            <p className="text-muted-foreground mb-4 text-sm">
               💡 Your usage is based on actual AI costs with transparent
               pricing. See the exact cost of each generation in real-time in
               your chat.

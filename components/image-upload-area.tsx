@@ -52,7 +52,7 @@ export const ImageUploadArea = memo(
           action: (
             <a
               href="/login"
-              className="inline-flex h-8 items-center justify-center rounded-md bg-primary px-3 text-xs font-medium text-primary-foreground"
+              className="bg-primary text-primary-foreground inline-flex h-8 items-center justify-center rounded-md px-3 text-xs font-medium"
             >
               Login
             </a>
@@ -70,7 +70,7 @@ export const ImageUploadArea = memo(
           action: (
             <a
               href="/pricing"
-              className="inline-flex h-8 items-center justify-center rounded-md bg-primary px-3 text-xs font-medium text-primary-foreground"
+              className="bg-primary text-primary-foreground inline-flex h-8 items-center justify-center rounded-md px-3 text-xs font-medium"
             >
               Upgrade
             </a>
@@ -127,7 +127,7 @@ export const ImageUploadArea = memo(
             action: (
               <a
                 href="/login"
-                className="inline-flex h-8 items-center justify-center rounded-md bg-primary px-3 text-xs font-medium text-primary-foreground"
+                className="bg-primary text-primary-foreground inline-flex h-8 items-center justify-center rounded-md px-3 text-xs font-medium"
               >
                 Login
               </a>
@@ -145,7 +145,7 @@ export const ImageUploadArea = memo(
             action: (
               <a
                 href="/pricing"
-                className="inline-flex h-8 items-center justify-center rounded-md bg-primary px-3 text-xs font-medium text-primary-foreground"
+                className="bg-primary text-primary-foreground inline-flex h-8 items-center justify-center rounded-md px-3 text-xs font-medium"
               >
                 Upgrade
               </a>
@@ -198,7 +198,7 @@ export const ImageUploadArea = memo(
                 !disabled &&
                 isLoggedIn &&
                 isPremium &&
-                "scale-105 border-2 border-dashed border-primary shadow-lg",
+                "border-primary scale-105 border-2 border-dashed shadow-lg",
             )}
             size="sm"
             type="button"

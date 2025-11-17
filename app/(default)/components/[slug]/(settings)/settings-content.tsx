@@ -94,10 +94,10 @@ export default function SettingsContent() {
       <div>
         <h4 className="mb-4 text-base font-semibold">Change visibility</h4>
         <div className="space-y-4">
-          <div className="mb-5 flex flex-row items-center justify-between rounded-lg bg-background p-4">
+          <div className="bg-background mb-5 flex flex-row items-center justify-between rounded-lg p-4">
             <div className="space-y-0.5">
               <Label>Private mode</Label>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 When private, the component will not be visible to the public.
                 Components listed on the marketplace must remain private to
                 maintain exclusivity for buyers.
