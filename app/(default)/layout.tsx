@@ -26,7 +26,7 @@ const meta = {
     "CodeRocket - Tailwind AI Website Builder | Generate Tailwind Components with AI",
   metadataBase: new URL("https://www.coderocket.app"),
   description:
-    "CodeRocket (formerly Tailwind AI) - Build production-ready Tailwind v4 websites and components with AI in seconds. Generate React, Vue, Svelte, Angular components. Clone websites or create from scratch. Free to start.",
+    "CodeRocket (formerly Tailwind AI) - Build production-ready Tailwind v4 websites and components with AI in seconds. Clone a website from any URL or create experiences from scratch. Generate React, Vue, Svelte, Angular components. Free to start.",
   cardImage: "https://www.coderocket.app/og.png",
   robots: "index, follow",
   favicon: "/favicon.ico",
@@ -58,7 +58,7 @@ const meta = {
     card: "summary_large_image",
     title: "CodeRocket - Tailwind AI Website Builder",
     description:
-      "Build production-ready Tailwind v4 websites and components with AI. Clone existing sites or create from scratch. Support for React, Vue, Svelte, Angular. Deploy instantly.",
+      "Build production-ready Tailwind v4 websites and components with AI. Clone a website from any URL or create from scratch. Support for React, Vue, Svelte, Angular. Deploy instantly.",
     images: ["https://www.coderocket.app/og.png"],
     creator: "@coderocketapp",
     site: "@coderocketapp",
@@ -162,7 +162,7 @@ export default async function RootLayout({ children }: PropsWithChildren) {
                   name: "CodeRocket",
                   url: "https://www.coderocket.app",
                   description:
-                    "CodeRocket (formerly Tailwind AI) - AI-powered website builder that creates production-ready Tailwind v4 websites and components. Build complete web applications from scratch or clone existing sites. Deploy instantly.",
+                    "CodeRocket (formerly Tailwind AI) - AI-powered website builder that creates production-ready Tailwind v4 websites and components. Build complete web applications from scratch or clone a website from any URL. Deploy instantly.",
                   applicationCategory: "DeveloperApplication",
                   operatingSystem: "Any",
                   browserRequirements:
@@ -191,7 +191,7 @@ export default async function RootLayout({ children }: PropsWithChildren) {
                   ],
                   featureList: [
                     "AI-powered Tailwind v4 component generation",
-                    "Website cloning from URL",
+                    "Clone a website from any URL",
                     "Multiple framework support (React, Vue, Svelte, Angular, HTML)",
                     "Responsive design generation",
                     "Real-time code preview",

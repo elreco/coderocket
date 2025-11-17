@@ -52,7 +52,7 @@ export function ClonedUrlBadge({
       <Tooltip>
         <TooltipTrigger asChild>{buttonContent}</TooltipTrigger>
         <TooltipContent>
-          <p>Component generated from this URL</p>
+          <p>Component cloned from this website</p>
         </TooltipContent>
       </Tooltip>
     );

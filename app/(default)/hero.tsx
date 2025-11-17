@@ -928,7 +928,7 @@ export default function Hero({ popularComponents = [] }: HeroProps) {
                   className="w-1/2 bg-secondary p-2"
                   disabled={selectedFramework === Framework.HTML || loading} // Also disable when loading
                 >
-                  Generate using a URL
+                  Clone a website
                 </TabsTrigger>
               </TabsList>
 
