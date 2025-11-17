@@ -274,7 +274,14 @@ export async function POST(req: Request) {
       });
     }
 
-    const version = lastUserMessage.version + 1;
+    const latestVersion = messagesFromDatabase.reduce((max, message) => {
+      if (typeof message.version !== "number") {
+        return max;
+      }
+      return Math.max(max, message.version);
+    }, -1);
+
+    const version = latestVersion + 1;
 
     let filesData;
     if (uploadedFilesInfo.length > 0) {
