@@ -1150,6 +1150,8 @@ export type Database = {
           full_name: string | null;
           id: string;
           ip_address: string | null;
+          last_email_scenario: string | null;
+          last_email_sent_at: string | null;
           payment_method: Json | null;
           stripe_account_id: string | null;
           stripe_account_status: string | null;
@@ -1164,6 +1166,8 @@ export type Database = {
           full_name?: string | null;
           id: string;
           ip_address?: string | null;
+          last_email_scenario?: string | null;
+          last_email_sent_at?: string | null;
           payment_method?: Json | null;
           stripe_account_id?: string | null;
           stripe_account_status?: string | null;
@@ -1178,6 +1182,8 @@ export type Database = {
           full_name?: string | null;
           id?: string;
           ip_address?: string | null;
+          last_email_scenario?: string | null;
+          last_email_sent_at?: string | null;
           payment_method?: Json | null;
           stripe_account_id?: string | null;
           stripe_account_status?: string | null;
