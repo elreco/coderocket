@@ -12,8 +12,19 @@
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit"
   },
-  "eslint.validate": ["javascript", "typescript", "javascriptreact", "typescriptreact"],
+  "eslint.validate": [
+    "javascript",
+    "typescript",
+    "javascriptreact",
+    "typescriptreact"
+  ],
   "eslint.format.enable": true,
   "npm.packageManager": "npm",
-  "i18n-ally.localesPaths": ["public/locales"]
+  "i18n-ally.localesPaths": [
+    "public/locales"
+  ],
+  "files.associations": {
+    "*.css": "tailwindcss",
+    "*.scss": "tailwindcss",
+  },
 }
