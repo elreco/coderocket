@@ -84,99 +84,68 @@ function optimizeMarkdownForTokens(markdown: string): string {
   return result.trim();
 }
 
+const MAX_VERSION_HISTORY = 10;
+const MAX_INITIAL_VERSIONS = 3;
+const SUMMARY_PREVIEW_LENGTH = 80;
+const SUMMARY_MAX_ITEMS = 6;
+
 const buildIntelligentContext = async (
   messages: Tables<"messages">[],
 ): Promise<ContextResult> => {
-  const CONTEXT_MODE = process.env.CONTEXT_MODE || "balanced";
-
-  const contextSettings = {
-    minimal: { baseMaxMessages: 30, maxCriticalMessages: 6 },
-    balanced: { baseMaxMessages: 40, maxCriticalMessages: 8 },
-    full: { baseMaxMessages: 50, maxCriticalMessages: 10 },
-  };
-
-  const { baseMaxMessages, maxCriticalMessages } =
-    contextSettings[CONTEXT_MODE as keyof typeof contextSettings] ||
-    contextSettings.balanced;
-
-  if (messages.length <= baseMaxMessages) {
-    return { limitedMessages: messages };
+  if (messages.length === 0) {
+    return { limitedMessages: [] };
   }
 
-  const avgContentLength =
-    messages.reduce((sum, m) => sum + (m.content?.length || 0), 0) /
-    messages.length;
-  const totalContentLength = messages.reduce(
-    (sum, m) => sum + (m.content?.length || 0),
+  const orderedVersions: number[] = [];
+  const versionSet = new Set<number>();
+  for (const message of messages) {
+    if (!versionSet.has(message.version)) {
+      versionSet.add(message.version);
+      orderedVersions.push(message.version);
+    }
+  }
+
+  const initialVersions = orderedVersions.slice(
     0,
+    Math.min(MAX_INITIAL_VERSIONS, orderedVersions.length),
+  );
+  const recentVersions = orderedVersions.slice(-MAX_VERSION_HISTORY);
+  const versionsToKeep = new Set([...initialVersions, ...recentVersions]);
+  if (versionSet.has(-1)) {
+    versionsToKeep.add(-1);
+  }
+
+  const limitedMessages = messages.filter((m) => versionsToKeep.has(m.version));
+  const omittedMessages = messages.filter(
+    (m) => !versionsToKeep.has(m.version),
   );
 
-  const complexityFactor =
-    avgContentLength > 2000 ? 0.6 : avgContentLength > 1000 ? 0.8 : 1.0;
-  let dynamicMaxMessages = Math.floor(baseMaxMessages * complexityFactor);
-
-  if (totalContentLength > 150000) {
-    console.warn(
-      "⚠️ Very large conversation detected, context reduction applied",
-    );
-    dynamicMaxMessages = Math.max(dynamicMaxMessages, 25);
-  }
-
-  const criticalMessages = messages.slice(0, maxCriticalMessages);
-
-  const milestoneMessages = messages
-    .slice(maxCriticalMessages)
-    .filter(
-      (m, index) =>
-        (index + maxCriticalMessages) % 4 === 0 && m.role === "assistant",
-    )
-    .slice(-5);
-
-  const recentMessages = messages.slice(-dynamicMaxMessages);
-
-  const criticalVersions = new Set(criticalMessages.map((m) => m.version));
-  const milestoneVersions = new Set(milestoneMessages.map((m) => m.version));
-
-  const isNotDuplicate = (m: Tables<"messages">) =>
-    !criticalVersions.has(m.version) && !milestoneVersions.has(m.version);
-
-  const uniqueRecentMessages = recentMessages.filter(isNotDuplicate);
-
   let contextSummary: string | undefined;
-
-  if (messages.length > dynamicMaxMessages + maxCriticalMessages) {
-    const skippedMessages = messages.slice(
-      maxCriticalMessages,
-      -dynamicMaxMessages,
+  if (omittedMessages.length > 0) {
+    const omittedVersions = Array.from(
+      new Set(omittedMessages.map((m) => m.version)),
     );
-    const userRequests = skippedMessages.filter((m) => m.role === "user");
-
-    const CONTEXT_MODE = process.env.CONTEXT_MODE || "balanced";
-    const summaryDepth =
-      CONTEXT_MODE === "minimal" ? 5 : CONTEXT_MODE === "full" ? 12 : 8;
-
-    const recentUserRequests = userRequests.slice(-summaryDepth);
+    const userRequests = omittedMessages.filter((m) => m.role === "user");
+    const recentUserRequests = userRequests.slice(-SUMMARY_MAX_ITEMS);
     const detailedThemes = recentUserRequests.map((m, idx) => {
       const content = m.content || "";
-      const preview = content.substring(0, 80).replace(/\n/g, " ");
-      return `${idx + 1}. ${preview}${content.length > 80 ? "..." : ""}`;
+      const preview = content
+        .substring(0, SUMMARY_PREVIEW_LENGTH)
+        .replace(/\s+/g, " ")
+        .trim();
+      const needsEllipsis = content.length > SUMMARY_PREVIEW_LENGTH;
+      return `${idx + 1}. ${preview}${needsEllipsis ? "..." : ""}`;
     });
 
-    const summaryFormat =
-      CONTEXT_MODE === "minimal"
-        ? `[${userRequests.length} interactions omitted. Build on existing code in current_project_state.]`
-        : CONTEXT_MODE === "full"
-          ? `[CONTEXT: ${userRequests.length} omitted interactions between initial setup and recent messages]\n\nRecent omitted requests:\n${detailedThemes.join("\n")}\n\nIMPORTANT: All previous code and decisions are preserved in current_project_state. Build incrementally.`
-          : `[${userRequests.length} interactions omitted - showing ${summaryDepth} most recent]\n\n${detailedThemes.join("\n")}\n\nBuild on current_project_state.`;
-
-    contextSummary = summaryFormat;
+    const summaryHeader = `[Omitted ${omittedVersions.length} versions totalling ${omittedMessages.length} messages]`;
+    const summaryBody =
+      detailedThemes.length > 0
+        ? `\n\nRecent omitted user requests:\n${detailedThemes.join(
+            "\n",
+          )}\n\nContinue building upon the preserved versions.`
+        : `\n\nAll critical user context is preserved in the included versions.`;
+    contextSummary = summaryHeader + summaryBody;
   }
-
-  const combinedMessages = [
-    ...criticalMessages,
-    ...milestoneMessages,
-    ...uniqueRecentMessages,
-  ].sort((a, b) => a.version - b.version);
 
   if (contextSummary && messages.length > 0) {
     await saveContextToDatabase(
@@ -187,7 +156,7 @@ const buildIntelligentContext = async (
   }
 
   return {
-    limitedMessages: combinedMessages,
+    limitedMessages,
     contextSummary,
   };
 };
