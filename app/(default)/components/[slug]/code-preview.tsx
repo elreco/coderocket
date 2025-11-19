@@ -71,6 +71,11 @@ const RenderContent = React.memo(
     onRouteChange: (path: string) => void;
   }) => {
     const isFirstGeneration = selectedVersion === 0;
+    const isPreviousVersionError =
+      !isFirstGeneration &&
+      !isLoading &&
+      artifactFiles.length === 0 &&
+      !isWebcontainerReady;
     const responsiveWrapperClass = cn(
       "relative size-full transition-all duration-300",
       breakpoint === "desktop" && "w-full h-full",
@@ -80,7 +85,10 @@ const RenderContent = React.memo(
         "w-[375px] h-full max-w-full max-h-full shadow-2xl",
     );
 
-    if (isLoading && !isWebcontainerReady && isFirstGeneration) {
+    if (
+      (isLoading && !isWebcontainerReady && isFirstGeneration) ||
+      isPreviousVersionError
+    ) {
       return (
         <ComponentLoadingMockup fileName={currentGeneratingFile || undefined} />
       );
@@ -140,7 +148,10 @@ const RenderContent = React.memo(
       );
     };
 
-    // Compare chatFiles only if framework is html
+    if (prevProps.artifactFiles.length !== nextProps.artifactFiles.length) {
+      return false;
+    }
+
     if (
       nextProps.selectedFramework === Framework.HTML &&
       !areFilesEqual(prevProps.artifactFiles, nextProps.artifactFiles)
@@ -170,7 +181,7 @@ export default function CodePreview() {
     navigatePreview,
     previewPath,
     breakpoint,
-    setAddressBarValue,
+    syncPreviewPath,
   } = useComponentContext();
   const { buildError } = useBuilder();
   const [, copy] = useCopyToClipboard();
@@ -285,9 +296,9 @@ export default function CodePreview() {
 
   const handleHtmlRouteChange = useCallback(
     (path: string) => {
-      setAddressBarValue(path);
+      syncPreviewPath(path);
     },
-    [setAddressBarValue],
+    [syncPreviewPath],
   );
 
   return (

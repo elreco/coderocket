@@ -81,6 +81,7 @@ export default function ComponentPreview() {
     handleSubmitToAI,
     breakpoint,
     previewPath,
+    syncPreviewPath,
   } = useComponentContext();
   const [iframeLoading, setIframeLoading] = React.useState(false);
 
@@ -137,6 +138,47 @@ export default function ComponentPreview() {
     }
   }, [chatId, selectedVersion, isWebcontainerReady]);
 
+  React.useEffect(() => {
+    const handleRouteMessage = (event: MessageEvent) => {
+      if (
+        !event.data ||
+        typeof event.data !== "object" ||
+        event.data.type !== "coderocket-route-change"
+      ) {
+        return;
+      }
+
+      const path = (event.data as { path?: string }).path;
+      if (typeof path !== "string") {
+        return;
+      }
+
+      if (event.origin && event.origin !== "null") {
+        try {
+          const originHost = new URL(event.origin).hostname;
+          const allowedHosts = [
+            "preview.coderocket.app",
+            "webcontainer.coderocket.app",
+          ];
+          const isAllowed = allowedHosts.some(
+            (host) => originHost === host || originHost.endsWith(`.${host}`),
+          );
+          if (!isAllowed) {
+            return;
+          }
+        } catch {
+          // Ignore URL parsing errors and accept the message
+        }
+      }
+
+      syncPreviewPath(path);
+    };
+
+    window.addEventListener("message", handleRouteMessage);
+    return () => {
+      window.removeEventListener("message", handleRouteMessage);
+    };
+  }, [syncPreviewPath]);
   const isFirstGeneration = selectedVersion === 0;
   const shouldShowLoader =
     (isFirstGeneration && isLoading) ||

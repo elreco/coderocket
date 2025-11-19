@@ -82,6 +82,8 @@ interface ComponentContextType {
   navigatePreview: (path: string, options?: { pushHistory?: boolean }) => void;
   addressBarValue: string;
   setAddressBarValue: (value: string) => void;
+  setPreviewPath: (value: string) => void;
+  syncPreviewPath: (path: string, options?: { pushHistory?: boolean }) => void;
 }
 
 export const ComponentContext = createContext<ComponentContextType | undefined>(

@@ -153,33 +153,48 @@ export default function ComponentCompletion({
     return nextPath || "/";
   }, []);
 
+  const pushPathToHistory = useCallback(
+    (normalizedPath: string, shouldPushHistory: boolean) => {
+      if (!shouldPushHistory) {
+        return;
+      }
+      setNavigationHistory((prev) => {
+        const activeIndex = historyIndexRef.current;
+        const trimmedHistory =
+          activeIndex < prev.length - 1 ? prev.slice(0, activeIndex + 1) : prev;
+        if (trimmedHistory[trimmedHistory.length - 1] === normalizedPath) {
+          const currentIndex = trimmedHistory.length - 1;
+          setHistoryIndex(currentIndex);
+          historyIndexRef.current = currentIndex;
+          return trimmedHistory;
+        }
+        const updatedHistory = [...trimmedHistory, normalizedPath];
+        const newIndex = updatedHistory.length - 1;
+        setHistoryIndex(newIndex);
+        historyIndexRef.current = newIndex;
+        return updatedHistory;
+      });
+    },
+    [setNavigationHistory, setHistoryIndex],
+  );
+
   const navigatePreview = useCallback(
     (targetPath: string, options?: { pushHistory?: boolean }) => {
       const normalizedPath = normalizePreviewPath(targetPath);
       setPreviewPath(normalizedPath);
       setAddressBarValue(normalizedPath);
-      if (options?.pushHistory !== false) {
-        setNavigationHistory((prev) => {
-          const activeIndex = historyIndexRef.current;
-          const trimmedHistory =
-            activeIndex < prev.length - 1
-              ? prev.slice(0, activeIndex + 1)
-              : prev;
-          if (trimmedHistory[trimmedHistory.length - 1] === normalizedPath) {
-            const currentIndex = trimmedHistory.length - 1;
-            setHistoryIndex(currentIndex);
-            historyIndexRef.current = currentIndex;
-            return trimmedHistory;
-          }
-          const updatedHistory = [...trimmedHistory, normalizedPath];
-          const newIndex = updatedHistory.length - 1;
-          setHistoryIndex(newIndex);
-          historyIndexRef.current = newIndex;
-          return updatedHistory;
-        });
-      }
+      pushPathToHistory(normalizedPath, options?.pushHistory !== false);
     },
-    [normalizePreviewPath],
+    [normalizePreviewPath, pushPathToHistory],
+  );
+
+  const syncPreviewPath = useCallback(
+    (targetPath: string, options?: { pushHistory?: boolean }) => {
+      const normalizedPath = normalizePreviewPath(targetPath);
+      setAddressBarValue(normalizedPath);
+      pushPathToHistory(normalizedPath, options?.pushHistory !== false);
+    },
+    [normalizePreviewPath, pushPathToHistory],
   );
 
   useEffect(() => {
@@ -249,6 +264,7 @@ export default function ComponentCompletion({
 
   const isHtmlFrameworkSelected = fetchedChat?.framework === Framework.HTML;
   const previewPathSuffix = previewPath === "/" ? "" : previewPath;
+  const sharePathSuffix = addressBarValue === "/" ? "" : addressBarValue;
   const canGoBack = historyIndex > 0;
   const canGoForward = historyIndex < navigationHistory.length - 1;
   const canUseSpaNavigation =
@@ -1253,6 +1269,8 @@ export default function ComponentCompletion({
     navigatePreview,
     addressBarValue,
     setAddressBarValue,
+    setPreviewPath,
+    syncPreviewPath,
   };
 
   useEffect(() => {
@@ -1452,236 +1470,231 @@ export default function ComponentCompletion({
                   </Sheet>
                 </div>
               </div>
-              {(fetchedChat?.framework === Framework.HTML ||
-                (isWebcontainerReady &&
-                  fetchedChat?.framework !== Framework.HTML)) &&
-                isCanvas && (
-                  <div className="border-border bg-secondary flex flex-col gap-2 border-t p-2 lg:flex-row lg:items-center lg:justify-between">
-                    <div className="flex w-full flex-1 flex-col gap-2 lg:flex-row lg:items-center">
-                      <div className="flex items-center gap-2">
+              {isCanvas && (
+                <div className="border-border bg-secondary flex flex-col gap-2 border-t p-2 lg:flex-row lg:items-center lg:justify-between">
+                  <div className="flex w-full flex-1 flex-col gap-2 lg:flex-row lg:items-center">
+                    <div className="flex items-center gap-2">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setIsModalOpen(true)}
+                            className="flex items-center"
+                            disabled={isLoading || isLengthError}
+                          >
+                            <Fullscreen className="w-5" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          {isLengthError ? (
+                            <p>The component has an error</p>
+                          ) : (
+                            <p>Display in fullscreen</p>
+                          )}
+                        </TooltipContent>
+                      </Tooltip>
+                      {(isWebcontainerReady ||
+                        fetchedChat?.framework === Framework.HTML) && (
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => setIsModalOpen(true)}
+                              onClick={() => {
+                                if (isLengthError) {
+                                  return;
+                                }
+                                const url =
+                                  fetchedChat?.framework === Framework.HTML
+                                    ? `https://www.coderocket.app/content/${chatId}/${selectedVersion}`
+                                    : `https://${chatId}-${selectedVersion}.preview.coderocket.app${sharePathSuffix}`;
+                                window.open(url, "_blank");
+                              }}
                               className="flex items-center"
                               disabled={isLoading || isLengthError}
                             >
-                              <Fullscreen className="w-5" />
+                              <ExternalLink className="w-5" />
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>
-                            {isLengthError ? (
-                              <p>The component has an error</p>
-                            ) : (
-                              <p>Display in fullscreen</p>
+                            <p>
+                              {isLengthError
+                                ? "The component has an error"
+                                : "Open in a new tab"}
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
+                    </div>
+                    <div className="flex w-full flex-1 items-center gap-2">
+                      <div className="border-border p-0 bg-background flex w-full flex-1 items-center gap-2 rounded-md border">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          type="button"
+                          className="size-8"
+                          onClick={handleGoBack}
+                          disabled={!canGoBack || !isNavigationEnabled}
+                        >
+                          <ArrowLeft className="size-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          type="button"
+                          className="size-8"
+                          onClick={handleGoForward}
+                          disabled={!canGoForward || !isNavigationEnabled}
+                        >
+                          <ArrowRight className="size-4" />
+                        </Button>
+                        <form onSubmit={handleAddressSubmit} className="flex-1">
+                          <Input
+                            ref={addressInputRef}
+                            value={addressBarValue}
+                            onChange={(event) =>
+                              setAddressBarValue(event.target.value)
+                            }
+                            onFocus={() => setAddressFocused(true)}
+                            onBlur={() => setAddressFocused(false)}
+                            disabled={!isNavigationEnabled}
+                            placeholder={navigationPlaceholder}
+                            className={cn(
+                              "h-8 border-0 bg-transparent p-0 text-sm focus-visible:ring-0 focus-visible:ring-offset-0",
+                              !addressFocused && "text-muted-foreground",
                             )}
+                          />
+                        </form>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              type="button"
+                              className="size-8"
+                              onClick={() => setIframeKey((prev) => prev + 1)}
+                              disabled={isLoading}
+                            >
+                              <RefreshCw className="size-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Reload preview</p>
                           </TooltipContent>
                         </Tooltip>
-                        {(isWebcontainerReady ||
-                          fetchedChat?.framework === Framework.HTML) && (
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => {
-                                  if (isLengthError) {
-                                    return;
-                                  }
-                                  const url =
-                                    fetchedChat?.framework === Framework.HTML
-                                      ? `https://www.coderocket.app/content/${chatId}/${selectedVersion}`
-                                      : `https://${chatId}-${selectedVersion}.preview.coderocket.app${previewPathSuffix}`;
-                                  window.open(url, "_blank");
-                                }}
-                                className="flex items-center"
-                                disabled={isLoading || isLengthError}
-                              >
-                                <ExternalLink className="w-5" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>
-                                {isLengthError
-                                  ? "The component has an error"
-                                  : "Open in a new tab"}
-                              </p>
-                            </TooltipContent>
-                          </Tooltip>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="border-border bg-background flex items-center rounded-md border">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setBreakpoint("desktop")}
+                            className={cn(
+                              "h-8 rounded-r-none px-2",
+                              breakpoint === "desktop" && "bg-secondary",
+                            )}
+                            disabled={isLoading}
+                          >
+                            <Monitor className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Desktop</p>
+                        </TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setBreakpoint("tablet")}
+                            className={cn(
+                              "h-8 rounded-none px-2",
+                              breakpoint === "tablet" && "bg-secondary",
+                            )}
+                            disabled={isLoading}
+                          >
+                            <Tablet className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Tablet</p>
+                        </TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setBreakpoint("mobile")}
+                            className={cn(
+                              "h-8 rounded-l-none px-2",
+                              breakpoint === "mobile" && "bg-secondary",
+                            )}
+                            disabled={isLoading}
+                          >
+                            <Smartphone className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Mobile</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+                  </div>
+                  <Dialog
+                    open={isModalOpen}
+                    onOpenChange={handleFullscreenToggle}
+                  >
+                    <DialogContent className="z-9999 h-full w-full max-w-full! rounded-none p-10">
+                      <DialogTitle className="hidden">Fullscreen</DialogTitle>
+                      <DialogDescription
+                        className={cn(
+                          "z-50 flex items-center justify-center",
+                          breakpoint === "tablet" && "bg-muted",
+                          breakpoint === "mobile" && "bg-muted",
                         )}
-                      </div>
-                      <div className="flex w-full flex-1 items-center gap-2">
-                        <div className="border-border p-0 bg-background flex w-full flex-1 items-center gap-2 rounded-md border">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            type="button"
-                            className="size-8"
-                            onClick={handleGoBack}
-                            disabled={!canGoBack || !isNavigationEnabled}
-                          >
-                            <ArrowLeft className="size-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            type="button"
-                            className="size-8"
-                            onClick={handleGoForward}
-                            disabled={!canGoForward || !isNavigationEnabled}
-                          >
-                            <ArrowRight className="size-4" />
-                          </Button>
-                          <form
-                            onSubmit={handleAddressSubmit}
-                            className="flex-1"
-                          >
-                            <Input
-                              ref={addressInputRef}
-                              value={addressBarValue}
-                              onChange={(event) =>
-                                setAddressBarValue(event.target.value)
-                              }
-                              onFocus={() => setAddressFocused(true)}
-                              onBlur={() => setAddressFocused(false)}
-                              disabled={!isNavigationEnabled}
-                              placeholder={navigationPlaceholder}
-                              className={cn(
-                                "h-8 border-0 bg-transparent p-0 text-sm focus-visible:ring-0 focus-visible:ring-offset-0",
-                                !addressFocused && "text-muted-foreground",
-                              )}
-                            />
-                          </form>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                type="button"
-                                className="size-8"
-                                onClick={() => setIframeKey((prev) => prev + 1)}
-                                disabled={isLoading}
-                              >
-                                <RefreshCw className="size-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>Reload preview</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="border-border bg-background flex items-center rounded-md border">
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setBreakpoint("desktop")}
-                              className={cn(
-                                "h-8 rounded-r-none px-2",
-                                breakpoint === "desktop" && "bg-secondary",
-                              )}
-                              disabled={isLoading}
-                            >
-                              <Monitor className="h-4 w-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Desktop</p>
-                          </TooltipContent>
-                        </Tooltip>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setBreakpoint("tablet")}
-                              className={cn(
-                                "h-8 rounded-none px-2",
-                                breakpoint === "tablet" && "bg-secondary",
-                              )}
-                              disabled={isLoading}
-                            >
-                              <Tablet className="h-4 w-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Tablet</p>
-                          </TooltipContent>
-                        </Tooltip>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setBreakpoint("mobile")}
-                              className={cn(
-                                "h-8 rounded-l-none px-2",
-                                breakpoint === "mobile" && "bg-secondary",
-                              )}
-                              disabled={isLoading}
-                            >
-                              <Smartphone className="h-4 w-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Mobile</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </div>
-                    </div>
-                    <Dialog
-                      open={isModalOpen}
-                      onOpenChange={handleFullscreenToggle}
-                    >
-                      <DialogContent className="z-9999 h-full w-full max-w-full! rounded-none p-10">
-                        <DialogTitle className="hidden">Fullscreen</DialogTitle>
-                        <DialogDescription
+                      >
+                        <div
                           className={cn(
-                            "z-50 flex items-center justify-center",
-                            breakpoint === "tablet" && "bg-muted",
-                            breakpoint === "mobile" && "bg-muted",
+                            "relative transition-all duration-300",
+                            breakpoint === "desktop" && "size-full",
+                            breakpoint === "tablet" &&
+                              "w-[768px] h-[1024px] max-w-full max-h-full shadow-2xl",
+                            breakpoint === "mobile" &&
+                              "w-[375px] h-[667px] max-w-full max-h-full shadow-2xl",
                           )}
                         >
-                          <div
-                            className={cn(
-                              "relative transition-all duration-300",
-                              breakpoint === "desktop" && "size-full",
-                              breakpoint === "tablet" &&
-                                "w-[768px] h-[1024px] max-w-full max-h-full shadow-2xl",
-                              breakpoint === "mobile" &&
-                                "w-[375px] h-[667px] max-w-full max-h-full shadow-2xl",
-                            )}
-                          >
-                            {fetchedChat?.framework !== Framework.HTML &&
-                            isWebcontainerReady ? (
-                              <iframe
-                                key={iframeKey}
-                                className="size-full rounded-md border-none"
-                                src={`https://${chatId}-${selectedVersion}.webcontainer.coderocket.app${previewPathSuffix}`}
-                                sandbox="allow-scripts allow-forms allow-popups allow-modals allow-storage-access-by-user-activation allow-same-origin"
-                                allow="credentialless"
-                                loading="eager"
-                              />
-                            ) : (
-                              <RenderHtmlComponent
-                                key={iframeKey}
-                                files={artifactFiles}
-                                navigationTarget={previewPath}
-                                onNavigation={(path) => navigatePreview(path)}
-                              />
-                            )}
-                          </div>
-                        </DialogDescription>
-                      </DialogContent>
-                    </Dialog>
-                  </div>
-                )}
+                          {fetchedChat?.framework !== Framework.HTML &&
+                          isWebcontainerReady ? (
+                            <iframe
+                              key={iframeKey}
+                              className="size-full rounded-md border-none"
+                              src={`https://${chatId}-${selectedVersion}.webcontainer.coderocket.app${previewPathSuffix}`}
+                              sandbox="allow-scripts allow-forms allow-popups allow-modals allow-storage-access-by-user-activation allow-same-origin"
+                              allow="credentialless"
+                              loading="eager"
+                            />
+                          ) : (
+                            <RenderHtmlComponent
+                              key={iframeKey}
+                              files={artifactFiles}
+                              navigationTarget={previewPath}
+                              onNavigation={(path) => navigatePreview(path)}
+                              onRouteChange={(path) => syncPreviewPath(path)}
+                            />
+                          )}
+                        </div>
+                      </DialogDescription>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              )}
               <div className="relative m-0 flex h-full max-h-full flex-1 flex-col border-t lg:border-b-0">
                 {!isLoading && isCanvas && (
                   <div className="absolute right-0 bottom-0 z-9000 flex w-full items-center justify-end gap-2 p-2">

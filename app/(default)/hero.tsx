@@ -66,6 +66,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Spotlight } from "@/components/ui/spotlight";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -1087,6 +1088,104 @@ export default function Hero({ popularComponents = [] }: HeroProps) {
                       </TabsTrigger>
                     </TabsList>
                   </Tabs>
+                  <Select
+                    disabled={loading}
+                    defaultValue="react"
+                    value={selectedFramework}
+                    onValueChange={(value) => {
+                      setSelectedFramework(value as Framework);
+                      if (value === Framework.HTML) {
+                        setGenerationMode("scratch");
+                        setSelectedIntegration(null);
+                      }
+                    }}
+                  >
+                    <SelectTrigger className="h-8 w-full rounded-md sm:w-auto">
+                      <div className="flex items-center gap-2">
+                        {(() => {
+                          const config = frameworkConfig[selectedFramework];
+                          const Icon = config.icon;
+                          return (
+                            <>
+                              <Icon className="size-3 shrink-0" />
+                              <span className="hidden sm:inline">
+                                {selectedFramework.charAt(0).toUpperCase() +
+                                  selectedFramework.slice(1)}
+                              </span>
+                            </>
+                          );
+                        })()}
+                      </div>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.values(Framework)
+                        .filter(
+                          (framework) =>
+                            !(
+                              generationMode === "clone" &&
+                              framework === Framework.HTML
+                            ),
+                        )
+                        .map((framework) => {
+                          const config = frameworkConfig[framework];
+                          const Icon = config.icon;
+
+                          return (
+                            <SelectItem
+                              key={framework}
+                              value={framework}
+                              className={cn(
+                                "cursor-pointer",
+                                config.disabled &&
+                                  "cursor-not-allowed opacity-50",
+                              )}
+                              disabled={config.disabled}
+                              onSelect={
+                                config.disabled
+                                  ? (e) => e.preventDefault()
+                                  : undefined
+                              }
+                            >
+                              <div
+                                className={cn(
+                                  "mr-2 flex w-full flex-row items-center justify-between",
+                                  config.disabled && "pointer-events-none",
+                                )}
+                              >
+                                <div className="flex items-center">
+                                  <Icon className="mr-2 size-3" />
+                                  <span className="text-sm">
+                                    {framework.charAt(0).toUpperCase() +
+                                      framework.slice(1)}
+                                  </span>
+                                </div>
+                                {config.badge && (
+                                  <Badge
+                                    variant={
+                                      config.badge === "Soon"
+                                        ? "outline"
+                                        : "secondary"
+                                    }
+                                    className={cn(
+                                      "text-xs",
+                                      config.badge === "Soon" ? "ml-2" : "mr-1",
+                                    )}
+                                  >
+                                    {config.badge}
+                                  </Badge>
+                                )}
+                              </div>
+                            </SelectItem>
+                          );
+                        })}
+                    </SelectContent>
+                  </Select>
+                  {generationMode === "scratch" && isLoadingSubscription && (
+                    <>
+                      <Skeleton className="h-8 w-20 rounded-sm bg-background" />
+                      <Skeleton className="h-8 w-20 rounded-sm bg-background" />
+                    </>
+                  )}
                   {generationMode === "scratch" && !isLoadingSubscription && (
                     <>
                       <ImageUploadArea
@@ -1210,6 +1309,10 @@ export default function Hero({ popularComponents = [] }: HeroProps) {
                     </Sheet>
                   )}
                   {selectedFramework !== Framework.HTML &&
+                    isLoadingSubscription && (
+                      <Skeleton className="h-8 w-20 rounded-sm bg-background" />
+                    )}
+                  {selectedFramework !== Framework.HTML &&
                     !isLoadingSubscription && (
                       <>
                         {!isLoggedIn ? (
@@ -1284,7 +1387,7 @@ export default function Hero({ popularComponents = [] }: HeroProps) {
                               )
                             }
                           >
-                            <SelectTrigger className="border-background h-8 w-full rounded-md sm:w-auto">
+                            <SelectTrigger className="h-8 w-full rounded-md sm:w-auto">
                               <div className="flex items-center gap-2">
                                 <SiSupabase className="size-3.5 shrink-0 text-green-600" />
                                 <span className="hidden sm:inline">
@@ -1346,98 +1449,6 @@ export default function Hero({ popularComponents = [] }: HeroProps) {
                         )}
                       </>
                     )}
-                  <Select
-                    disabled={loading}
-                    defaultValue="react"
-                    value={selectedFramework}
-                    onValueChange={(value) => {
-                      setSelectedFramework(value as Framework);
-                      if (value === Framework.HTML) {
-                        setGenerationMode("scratch");
-                        setSelectedIntegration(null);
-                      }
-                    }}
-                  >
-                    <SelectTrigger className="h-8 w-full rounded-md sm:w-auto">
-                      <div className="flex items-center gap-2">
-                        {(() => {
-                          const config = frameworkConfig[selectedFramework];
-                          const Icon = config.icon;
-                          return (
-                            <>
-                              <Icon className="size-3 shrink-0" />
-                              <span className="hidden sm:inline">
-                                {selectedFramework.charAt(0).toUpperCase() +
-                                  selectedFramework.slice(1)}
-                              </span>
-                            </>
-                          );
-                        })()}
-                      </div>
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.values(Framework)
-                        .filter(
-                          (framework) =>
-                            !(
-                              generationMode === "clone" &&
-                              framework === Framework.HTML
-                            ),
-                        )
-                        .map((framework) => {
-                          const config = frameworkConfig[framework];
-                          const Icon = config.icon;
-
-                          return (
-                            <SelectItem
-                              key={framework}
-                              value={framework}
-                              className={cn(
-                                "cursor-pointer",
-                                config.disabled &&
-                                  "cursor-not-allowed opacity-50",
-                              )}
-                              disabled={config.disabled}
-                              onSelect={
-                                config.disabled
-                                  ? (e) => e.preventDefault()
-                                  : undefined
-                              }
-                            >
-                              <div
-                                className={cn(
-                                  "mr-2 flex w-full flex-row items-center justify-between",
-                                  config.disabled && "pointer-events-none",
-                                )}
-                              >
-                                <div className="flex items-center">
-                                  <Icon className="mr-2 size-3" />
-                                  <span className="text-sm">
-                                    {framework.charAt(0).toUpperCase() +
-                                      framework.slice(1)}
-                                  </span>
-                                </div>
-                                {config.badge && (
-                                  <Badge
-                                    variant={
-                                      config.badge === "Soon"
-                                        ? "outline"
-                                        : "secondary"
-                                    }
-                                    className={cn(
-                                      "text-xs",
-                                      config.badge === "Soon" ? "ml-2" : "mr-1",
-                                    )}
-                                  >
-                                    {config.badge}
-                                  </Badge>
-                                )}
-                              </div>
-                            </SelectItem>
-                          );
-                        })}
-                    </SelectContent>
-                  </Select>
                 </div>
                 <div className="flex items-center justify-end space-x-0 lg:space-x-2">
                   {generationMode === "scratch" && (
