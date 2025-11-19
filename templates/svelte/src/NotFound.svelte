@@ -12,8 +12,16 @@
         CodeRocket.app
       </h1>
     </div>
+    <h2 class="text-[#FFFFFF] text-4xl font-bold">404</h2>
     <p class="text-[#FFFFFF] text-xl">
-      AI-powered Tailwind website builder
+      Page not found
     </p>
+    <a
+      href="/"
+      class="text-[#6366F1] hover:text-[#818CF8] text-lg underline transition-colors"
+    >
+      Go back home
+    </a>
   </div>
 </div>
+

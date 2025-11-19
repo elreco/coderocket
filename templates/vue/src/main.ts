@@ -2,6 +2,7 @@ import { createApp } from "vue";
 
 import App from "./App.vue";
 import "./globals.css";
+import router from "./router";
 
 const setupRouteChangeBridge = () => {
   if (typeof window === "undefined") {
@@ -54,4 +55,4 @@ const setupRouteChangeBridge = () => {
 
 setupRouteChangeBridge();
 
-createApp(App).mount("#app");
+createApp(App).use(router).mount("#app");

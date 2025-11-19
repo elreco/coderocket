@@ -1,11 +1,11 @@
 import { Component } from '@angular/core';
+import { RouterOutlet } from '@angular/router';
 
 @Component({
   selector: 'app-root',
-  imports: [],
-  templateUrl: './app.html',
+  imports: [RouterOutlet],
+  template: '<router-outlet></router-outlet>',
 })
 export class App {
-  title = 'Hello CodeRocket';
-  version = '1.0.0';
+  title = 'CodeRocket';
 }

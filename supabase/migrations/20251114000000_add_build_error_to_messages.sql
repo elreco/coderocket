@@ -6,3 +6,4 @@ COMMENT ON COLUMN public.messages.build_error IS 'Stores build error information
 
 
 
+

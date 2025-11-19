@@ -205,19 +205,22 @@ export const appConfig: ApplicationConfig = {
 <coderocketFile name="src/app/app.css">
 
 </coderocketFile>
-<coderocketFile name="src/app/app.html">
-<div class="min-h-screen flex items-center justify-center">
-  <div class="text-center">
-    <h1 class="text-4xl font-bold">{{ title }}</h1>
-    <p class="text-muted-foreground mt-2">Version {{ version }}</p>
-  </div>
-</div>
-
-</coderocketFile>
 <coderocketFile name="src/app/app.routes.ts">
 import { Routes } from '@angular/router';
 
-export const routes: Routes = [];
+import { HomeComponent } from './home';
+import { NotFoundComponent } from './not-found';
+
+export const routes: Routes = [
+  {
+    path: '',
+    component: HomeComponent,
+  },
+  {
+    path: '**',
+    component: NotFoundComponent,
+  },
+];
 
 </coderocketFile>
 <coderocketFile name="src/app/app.spec.ts">
@@ -249,16 +252,91 @@ describe('App', () => {
 </coderocketFile>
 <coderocketFile name="src/app/app.ts">
 import { Component } from '@angular/core';
+import { RouterOutlet } from '@angular/router';
 
 @Component({
   selector: 'app-root',
-  imports: [],
-  templateUrl: './app.html',
+  imports: [RouterOutlet],
+  template: '<router-outlet></router-outlet>',
 })
 export class App {
-  title = 'Hello CodeRocket';
-  version = '1.0.0';
+  title = 'CodeRocket';
 }
+
+</coderocketFile>
+<coderocketFile name="src/app/home.html">
+<div
+  class="flex min-h-screen flex-col items-center justify-center bg-[#0B0B1D] px-4 py-16"
+>
+  <div class="flex flex-col items-center gap-6 text-center">
+    <div class="flex items-center gap-3">
+      <img
+        src="https://www.coderocket.app/logo-alternate.png"
+        alt="CodeRocket"
+        class="h-12 w-12"
+      />
+      <h1 class="text-[#FFFFFF] text-5xl font-bold">
+        CodeRocket.app
+      </h1>
+    </div>
+    <p class="text-[#FFFFFF] text-xl">
+      AI-powered Tailwind website builder
+    </p>
+  </div>
+</div>
+
+
+</coderocketFile>
+<coderocketFile name="src/app/home.ts">
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-home',
+  imports: [],
+  templateUrl: './home.html',
+})
+export class HomeComponent {}
+
+</coderocketFile>
+<coderocketFile name="src/app/not-found.html">
+<div
+  class="flex min-h-screen flex-col items-center justify-center bg-[#0B0B1D] px-4 py-16"
+>
+  <div class="flex flex-col items-center gap-6 text-center">
+    <div class="flex items-center gap-3">
+      <img
+        src="https://www.coderocket.app/logo-alternate.png"
+        alt="CodeRocket"
+        class="h-12 w-12"
+      />
+      <h1 class="text-[#FFFFFF] text-5xl font-bold">
+        CodeRocket.app
+      </h1>
+    </div>
+    <h2 class="text-[#FFFFFF] text-4xl font-bold">404</h2>
+    <p class="text-[#FFFFFF] text-xl">
+      Page not found
+    </p>
+    <a
+      href="/"
+      class="text-[#6366F1] hover:text-[#818CF8] text-lg underline transition-colors"
+    >
+      Go back home
+    </a>
+  </div>
+</div>
+
+
+</coderocketFile>
+<coderocketFile name="src/app/not-found.ts">
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-not-found',
+  imports: [],
+  templateUrl: './not-found.html',
+})
+export class NotFoundComponent {}
 
 </coderocketFile>
 <coderocketFile name="src/app/shared/utils/cn.ts">
@@ -311,7 +389,7 @@ export { clamp, roundToStep, convertValueToPercentage };
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Angular</title>
+  <title>CodeRocket - Welcome</title>
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
@@ -494,7 +572,7 @@ bootstrapApplication(App, appConfig).catch((err) => console.error(err));
     <meta charset="UTF-8" />
     <base href="/" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Hello CodeRocket</title>
+    <title>CodeRocket - Welcome</title>
   </head>
   <body>
     <div id="root"></div>
@@ -564,13 +642,54 @@ bootstrapApplication(App, appConfig).catch((err) => console.error(err));
 <coderocketFile name="src/App.tsx">
 function App() {
   return (
-    <div className="flex min-h-screen items-center justify-center">
-      <h1 className="text-4xl font-bold">Hello CodeRocket</h1>
+    <div className="flex min-h-screen flex-col items-center justify-center bg-[#0B0B1D] px-4 py-16">
+      <div className="flex flex-col items-center gap-6 text-center">
+        <div className="flex items-center gap-3">
+          <img
+            src="https://www.coderocket.app/logo-alternate.png"
+            alt="CodeRocket"
+            className="h-12 w-12"
+          />
+          <h1 className="text-[#FFFFFF] text-5xl font-bold">CodeRocket.app</h1>
+        </div>
+        <p className="text-[#FFFFFF] text-xl">
+          AI-powered Tailwind website builder
+        </p>
+      </div>
     </div>
   );
 }
 
 export default App;
+
+</coderocketFile>
+<coderocketFile name="src/NotFound.tsx">
+function NotFound() {
+  return (
+    <div className="flex min-h-screen flex-col items-center justify-center bg-[#0B0B1D] px-4 py-16">
+      <div className="flex flex-col items-center gap-6 text-center">
+        <div className="flex items-center gap-3">
+          <img
+            src="https://www.coderocket.app/logo-alternate.png"
+            alt="CodeRocket"
+            className="h-12 w-12"
+          />
+          <h1 className="text-[#FFFFFF] text-5xl font-bold">CodeRocket.app</h1>
+        </div>
+        <h2 className="text-[#FFFFFF] text-4xl font-bold">404</h2>
+        <p className="text-[#FFFFFF] text-xl">Page not found</p>
+        <a
+          href="/"
+          className="text-[#6366F1] hover:text-[#818CF8] text-lg underline transition-colors"
+        >
+          Go back home
+        </a>
+      </div>
+    </div>
+  );
+}
+
+export default NotFound;
 
 </coderocketFile>
 <coderocketFile name="src/globals.css">
@@ -645,8 +764,10 @@ export function cn(...inputs: ClassValue[]) {
 <coderocketFile name="src/main.tsx">
 import React from "react";
 import ReactDOM from "react-dom/client";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 
 import App from "./App.tsx";
+import NotFound from "./NotFound.tsx";
 import "./globals.css";
 
 const setupRouteChangeBridge = () => {
@@ -702,7 +823,12 @@ setupRouteChangeBridge();
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <App />
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<App />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </BrowserRouter>
   </React.StrictMode>,
 );
 
@@ -895,7 +1021,7 @@ export default defineConfig({
     <base href="/" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>svelte</title>
+    <title>CodeRocket - Welcome</title>
   </head>
   <body>
     <div id="app"></div>
@@ -940,9 +1066,98 @@ export default defineConfig({
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img" class="iconify iconify--logos" width="31.88" height="32" preserveAspectRatio="xMidYMid meet" viewBox="0 0 256 257"><defs><linearGradient id="IconifyId1813088fe1fbc01fb466" x1="-.828%" x2="57.636%" y1="7.652%" y2="78.411%"><stop offset="0%" stop-color="#41D1FF"></stop><stop offset="100%" stop-color="#BD34FE"></stop></linearGradient><linearGradient id="IconifyId1813088fe1fbc01fb467" x1="43.376%" x2="50.316%" y1="2.242%" y2="89.03%"><stop offset="0%" stop-color="#FFEA83"></stop><stop offset="8.333%" stop-color="#FFDD35"></stop><stop offset="100%" stop-color="#FFA800"></stop></linearGradient></defs><path fill="url(#IconifyId1813088fe1fbc01fb466)" d="M255.153 37.938L134.897 252.976c-2.483 4.44-8.862 4.466-11.382.048L.875 37.958c-2.746-4.814 1.371-10.646 6.827-9.67l120.385 21.517a6.537 6.537 0 0 0 2.322-.004l117.867-21.483c5.438-.991 9.574 4.796 6.877 9.62Z"></path><path fill="url(#IconifyId1813088fe1fbc01fb467)" d="M185.432.063L96.44 17.501a3.268 3.268 0 0 0-2.634 3.014l-5.474 92.456a3.268 3.268 0 0 0 3.997 3.378l24.777-5.718c2.318-.535 4.413 1.507 3.936 3.838l-7.361 36.047c-.495 2.426 1.782 4.5 4.151 3.78l15.304-4.649c2.372-.72 4.652 1.36 4.15 3.788l-11.698 56.621c-.732 3.542 3.979 5.473 5.943 2.437l1.313-2.028l72.516-144.72c1.215-2.423-.88-5.186-3.54-4.672l-25.505 4.922c-2.396.462-4.435-1.77-3.759-4.114l16.646-57.705c.677-2.35-1.37-4.583-3.769-4.113Z"></path></svg>
 </coderocketFile>
 <coderocketFile name="src/App.svelte">
-<div class="min-h-screen flex items-center justify-center">
-  <h1 class="text-4xl font-bold">Hello CodeRocket</h1>
+<div
+  class="flex min-h-screen flex-col items-center justify-center bg-[#0B0B1D] px-4 py-16"
+>
+  <div class="flex flex-col items-center gap-6 text-center">
+    <div class="flex items-center gap-3">
+      <img
+        src="https://www.coderocket.app/logo-alternate.png"
+        alt="CodeRocket"
+        class="h-12 w-12"
+      />
+      <h1 class="text-[#FFFFFF] text-5xl font-bold">
+        CodeRocket.app
+      </h1>
+    </div>
+    <p class="text-[#FFFFFF] text-xl">
+      AI-powered Tailwind website builder
+    </p>
+  </div>
 </div>
+
+</coderocketFile>
+<coderocketFile name="src/NotFound.svelte">
+<div
+  class="flex min-h-screen flex-col items-center justify-center bg-[#0B0B1D] px-4 py-16"
+>
+  <div class="flex flex-col items-center gap-6 text-center">
+    <div class="flex items-center gap-3">
+      <img
+        src="https://www.coderocket.app/logo-alternate.png"
+        alt="CodeRocket"
+        class="h-12 w-12"
+      />
+      <h1 class="text-[#FFFFFF] text-5xl font-bold">
+        CodeRocket.app
+      </h1>
+    </div>
+    <h2 class="text-[#FFFFFF] text-4xl font-bold">404</h2>
+    <p class="text-[#FFFFFF] text-xl">
+      Page not found
+    </p>
+    <a
+      href="/"
+      class="text-[#6366F1] hover:text-[#818CF8] text-lg underline transition-colors"
+    >
+      Go back home
+    </a>
+  </div>
+</div>
+
+
+</coderocketFile>
+<coderocketFile name="src/Router.svelte">
+<script>
+  import { onMount } from 'svelte';
+  import App from './App.svelte';
+  import NotFound from './NotFound.svelte';
+
+  let Component = App;
+
+  const updateRoute = () => {
+    const path = window.location.pathname;
+    Component = path === '/' ? App : NotFound;
+  };
+
+  onMount(() => {
+    updateRoute();
+
+    window.addEventListener('popstate', updateRoute);
+    window.addEventListener('hashchange', updateRoute);
+
+    const originalPushState = history.pushState;
+    const originalReplaceState = history.replaceState;
+
+    history.pushState = function (...args) {
+      originalPushState.apply(history, args);
+      updateRoute();
+    };
+
+    history.replaceState = function (...args) {
+      originalReplaceState.apply(history, args);
+      updateRoute();
+    };
+
+    return () => {
+      window.removeEventListener('popstate', updateRoute);
+      window.removeEventListener('hashchange', updateRoute);
+    };
+  });
+</script>
+
+<svelte:component this={Component} />
+
 
 </coderocketFile>
 <coderocketFile name="src/app.css">
@@ -1106,7 +1321,7 @@ export type WithElementRef<T, U extends HTMLElement = HTMLElement> = T & {
 import { mount } from "svelte";
 
 import "./app.css";
-import App from "./App.svelte";
+import Router from "./Router.svelte";
 
 const setupRouteChangeBridge = () => {
   if (typeof window === "undefined") {
@@ -1159,7 +1374,7 @@ const setupRouteChangeBridge = () => {
 
 setupRouteChangeBridge();
 
-const app = mount(App, {
+const app = mount(Router, {
   target: document.getElementById("app")!,
 });
 
@@ -1296,7 +1511,7 @@ export default defineConfig({
     <meta charset="UTF-8" />
     <base href="/" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Hello CodeRocket</title>
+    <title>CodeRocket - Welcome</title>
   </head>
   <body>
     <div id="app"></div>
@@ -1347,10 +1562,72 @@ export default defineConfig({
 </coderocketFile>
 <coderocketFile name="src/App.vue">
 <template>
-  <div class="min-h-screen flex items-center justify-center">
-    <h1 class="text-4xl font-bold">Hello CodeRocket</h1>
+  <router-view />
+</template>
+
+<script setup lang="ts"></script>
+
+</coderocketFile>
+<coderocketFile name="src/Home.vue">
+<template>
+  <div
+    class="flex min-h-screen flex-col items-center justify-center bg-[#0B0B1D] px-4 py-16"
+  >
+    <div class="flex flex-col items-center gap-6 text-center">
+      <div class="flex items-center gap-3">
+        <img
+          src="https://www.coderocket.app/logo-alternate.png"
+          alt="CodeRocket"
+          class="h-12 w-12"
+        />
+        <h1 class="text-[#FFFFFF] text-5xl font-bold">
+          CodeRocket.app
+        </h1>
+      </div>
+      <p class="text-[#FFFFFF] text-xl">
+        AI-powered Tailwind website builder
+      </p>
+    </div>
   </div>
 </template>
+
+<script setup lang="ts"></script>
+
+
+</coderocketFile>
+<coderocketFile name="src/NotFound.vue">
+<template>
+  <div
+    class="flex min-h-screen flex-col items-center justify-center bg-[#0B0B1D] px-4 py-16"
+  >
+    <div class="flex flex-col items-center gap-6 text-center">
+      <div class="flex items-center gap-3">
+        <img
+          src="https://www.coderocket.app/logo-alternate.png"
+          alt="CodeRocket"
+          class="h-12 w-12"
+        />
+        <h1 class="text-[#FFFFFF] text-5xl font-bold">
+          CodeRocket.app
+        </h1>
+      </div>
+      <h2 class="text-[#FFFFFF] text-4xl font-bold">404</h2>
+      <p class="text-[#FFFFFF] text-xl">
+        Page not found
+      </p>
+      <a
+        href="/"
+        class="text-[#6366F1] hover:text-[#818CF8] text-lg underline transition-colors"
+      >
+        Go back home
+      </a>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts"></script>
+
+
 </coderocketFile>
 <coderocketFile name="src/globals.css">
 @import "tailwindcss";
@@ -1426,6 +1703,7 @@ import { createApp } from "vue";
 
 import App from "./App.vue";
 import "./globals.css";
+import router from "./router";
 
 const setupRouteChangeBridge = () => {
   if (typeof window === "undefined") {
@@ -1478,7 +1756,30 @@ const setupRouteChangeBridge = () => {
 
 setupRouteChangeBridge();
 
-createApp(App).mount("#app");
+createApp(App).use(router).mount("#app");
+
+</coderocketFile>
+<coderocketFile name="src/router.ts">
+import { createRouter, createWebHistory } from "vue-router";
+
+import Home from "./Home.vue";
+import NotFound from "./NotFound.vue";
+
+const router = createRouter({
+  history: createWebHistory(),
+  routes: [
+    {
+      path: "/",
+      component: Home,
+    },
+    {
+      path: "/:pathMatch(.*)*",
+      component: NotFound,
+    },
+  ],
+});
+
+export default router;
 
 </coderocketFile>
 <coderocketFile name="src/vite-env.d.ts">

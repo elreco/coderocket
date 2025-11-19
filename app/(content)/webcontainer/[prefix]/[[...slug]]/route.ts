@@ -230,16 +230,115 @@ export async function GET(
 
   // 8. Détermine le type MIME
   let mimeType: string;
-  if (matchedBlob.pathname.endsWith("index.html")) {
-    mimeType = "text/html"; // 👈 Assure que index.html est servi correctement
+  const isIndexHtml = matchedBlob.pathname.endsWith("index.html");
+  if (isIndexHtml) {
+    mimeType = "text/html";
   } else if (matchedBlob.pathname.endsWith(".js")) {
-    mimeType = "application/javascript"; // 👈 Correct MIME type for JavaScript
+    mimeType = "application/javascript";
   } else {
     const extension = "." + (filePath.split(".").pop() ?? "");
     mimeType = mime.lookup(extension) || "application/octet-stream";
   }
 
   console.log("API Route: Servant fichier avec Content-Type", mimeType);
+
+  if (isIndexHtml && hostname?.includes("preview.coderocket.app")) {
+    const parts = prefix.split("-");
+    parts.pop();
+    const chatId = parts.join("-");
+    const supabase = await createClient();
+    const { data: chat } = await supabase
+      .from("chats")
+      .select("slug")
+      .eq("id", chatId)
+      .maybeSingle();
+
+    const chatSlug = chat?.slug || null;
+    const iframeSrc = `https://${prefix}.webcontainer.coderocket.app${slug.length > 0 ? "/" + slug.join("/") : ""}`;
+    const watermarkUrl = chatSlug
+      ? `https://www.coderocket.app/components/${chatSlug}`
+      : "https://www.coderocket.app";
+
+    const htmlWithWatermark = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CodeRocket Preview</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { margin: 0; overflow: hidden; }
+    #watermark {
+      position: fixed;
+      right: 24px;
+      bottom: 24px;
+      z-index: 9999;
+    }
+    #watermark a {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: hsl(var(--primary));
+      padding: 8px 12px;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+    #watermark a:hover {
+      background: #4F46E5;
+    }
+    #watermark img {
+      width: 24px;
+      height: 24px;
+    }
+    #watermark span {
+      color: white;
+      font-size: 14px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    iframe {
+      width: 100%;
+      height: 100vh;
+      border: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="watermark">
+    <a href="${watermarkUrl}" target="_blank" rel="noopener noreferrer">
+      <img src="https://www.coderocket.app/logo-white.png" alt="CodeRocket" />
+      <span>Built with CodeRocket 🚀</span>
+    </a>
+  </div>
+  <iframe src="${iframeSrc}" sandbox="allow-scripts allow-forms allow-popups allow-modals allow-storage-access-by-user-activation allow-same-origin" allow="credentialless"></iframe>
+</body>
+</html>`;
+
+    return new NextResponse(htmlWithWatermark, {
+      headers: {
+        "Content-Type": "text/html",
+        "Cache-Control":
+          "no-store, no-cache, must-revalidate, proxy-revalidate",
+        Pragma: "no-cache",
+        Expires: "0",
+        "Surrogate-Control": "no-store",
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "*",
+        "Access-Control-Allow-Headers": "*",
+        "X-Frame-Options": "ALLOWALL",
+        "Content-Security-Policy": "frame-ancestors *",
+        "Cross-Origin-Isolation": "require-corp",
+        "Cross-Origin-Opener-Policy": "same-origin",
+        "Cross-Origin-Embedder-Policy": "credentialless",
+        "Cross-Origin-Resource-Policy": "cross-origin",
+      },
+    });
+  }
 
   return new NextResponse(data, {
     headers: {

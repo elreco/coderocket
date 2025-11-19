@@ -1,7 +1,7 @@
 import { mount } from "svelte";
 
 import "./app.css";
-import App from "./App.svelte";
+import Router from "./Router.svelte";
 
 const setupRouteChangeBridge = () => {
   if (typeof window === "undefined") {
@@ -54,7 +54,7 @@ const setupRouteChangeBridge = () => {
 
 setupRouteChangeBridge();
 
-const app = mount(App, {
+const app = mount(Router, {
   target: document.getElementById("app")!,
 });
 
