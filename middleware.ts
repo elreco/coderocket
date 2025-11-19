@@ -68,7 +68,7 @@ export async function middleware(request: NextRequest) {
   }
 
   const subdomainConfig = {
-    "preview.coderocket.app": "preview",
+    "preview.coderocket.app": "webcontainer",
     "webcontainer.coderocket.app": "webcontainer",
   } as const;
 
