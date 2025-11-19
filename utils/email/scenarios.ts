@@ -8,7 +8,7 @@ export enum EmailScenario {
   MilestoneCelebrate = "milestone-celebrate",
 }
 
-type ScenarioInput = {
+export type ScenarioInput = {
   userName?: string;
   dashboardUrl?: string;
   templateUrl?: string;

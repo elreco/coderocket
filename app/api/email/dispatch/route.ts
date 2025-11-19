@@ -1,4 +1,5 @@
 import { z } from "zod";
+
 import { EmailScenario } from "@/utils/email/scenarios";
 import { dispatchEmail } from "@/utils/email/send-email";
 
@@ -51,4 +52,3 @@ export async function POST(req: Request) {
     );
   }
 }
-

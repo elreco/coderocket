@@ -1,16 +1,19 @@
 import { Resend } from "resend";
+
 import { createClient } from "@/utils/supabase/server";
-import { buildScenarioConfig, EmailScenario } from "./scenarios";
-import { renderEmailTemplate } from "./template";
+
+import { buildScenarioConfig, EmailScenario, ScenarioInput } from "./scenarios";
 import { fetchEmailShowcase } from "./showcase";
+import { renderEmailTemplate } from "./template";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-const fromAddress = process.env.RESEND_FROM_ADDRESS ?? "Tailwind AI <hello@mail.coderocket.app>";
+const fromAddress =
+  process.env.RESEND_FROM_ADDRESS ?? "CodeRocket <hello@mail.coderocket.app>";
 
 type DispatchOptions = {
   to: string;
   scenario: EmailScenario;
-  data?: Parameters<typeof buildScenarioConfig>[1];
+  data?: ScenarioInput;
   userId?: string;
 };
 
@@ -68,4 +71,3 @@ async function updateUserEmailMetadata(
     console.error("Failed to update user email metadata", error);
   }
 }
-
