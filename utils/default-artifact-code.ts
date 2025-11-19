@@ -393,8 +393,26 @@ export { clamp, roundToStep, convertValueToPercentage };
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <style>
+    [ng-cloak],
+    [data-ng-cloak],
+    [x-ng-cloak],
+    .ng-cloak,
+    .x-ng-cloak {
+      display: none !important;
+    }
+    body {
+      margin: 0;
+      background-color: #0B0B1D;
+      color: #FFFFFF;
+    }
+    app-root {
+      display: block;
+      min-height: 100vh;
+    }
+  </style>
 </head>
-<body>
+<body ng-cloak>
   <app-root></app-root>
 </body>
 </html>
@@ -1118,47 +1136,36 @@ export default defineConfig({
 
 </coderocketFile>
 <coderocketFile name="src/Router.svelte">
-<script>
+<script lang="ts">
   import { onMount } from 'svelte';
   import App from './App.svelte';
   import NotFound from './NotFound.svelte';
-
-  let Component = App;
-
+  let Component: any = $state(App);
   const updateRoute = () => {
     const path = window.location.pathname;
     Component = path === '/' ? App : NotFound;
   };
-
   onMount(() => {
     updateRoute();
-
     window.addEventListener('popstate', updateRoute);
     window.addEventListener('hashchange', updateRoute);
-
     const originalPushState = history.pushState;
     const originalReplaceState = history.replaceState;
-
-    history.pushState = function (...args) {
+    history.pushState = function (...args: any[]) {
       originalPushState.apply(history, args);
       updateRoute();
     };
-
-    history.replaceState = function (...args) {
+    history.replaceState = function (...args: any[]) {
       originalReplaceState.apply(history, args);
       updateRoute();
     };
-
     return () => {
       window.removeEventListener('popstate', updateRoute);
       window.removeEventListener('hashchange', updateRoute);
     };
   });
 </script>
-
 <svelte:component this={Component} />
-
-
 </coderocketFile>
 <coderocketFile name="src/app.css">
 @import "tailwindcss";

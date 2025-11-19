@@ -82,6 +82,7 @@ export default function ComponentPreview() {
     breakpoint,
     previewPath,
     syncPreviewPath,
+    isLengthError,
   } = useComponentContext();
   const [iframeLoading, setIframeLoading] = React.useState(false);
 
@@ -182,9 +183,12 @@ export default function ComponentPreview() {
   const isFirstGeneration = selectedVersion === 0;
   const shouldShowLoader =
     (isFirstGeneration && isLoading) ||
-    (isFirstGeneration && loadingState && loadingState !== "error");
+    (isFirstGeneration && loadingState && loadingState !== "error") ||
+    (isLengthError && isLoading) ||
+    (isLengthError && loadingState && loadingState !== "error");
   const isGeneratingNewVersion =
     !isFirstGeneration &&
+    !isLengthError &&
     (isLoading || loadingState) &&
     loadingState !== "error";
   const previewPathSuffix = previewPath === "/" ? "" : previewPath;
