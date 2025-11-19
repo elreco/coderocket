@@ -998,8 +998,8 @@ export default function Hero({ popularComponents = [] }: HeroProps) {
                     )}
                   >
                     Use{" "}
-                    <kbd className="bg-background rounded-sm p-1">Shift</kbd> +{" "}
-                    <kbd className="bg-background rounded-sm p-1">Return</kbd>{" "}
+                    <kbd className="bg-background rounded-md p-1">Shift</kbd> +{" "}
+                    <kbd className="bg-background rounded-md p-1">Return</kbd>{" "}
                     for a new line
                   </div>
                 </div>
@@ -1182,8 +1182,8 @@ export default function Hero({ popularComponents = [] }: HeroProps) {
                   </Select>
                   {generationMode === "scratch" && isLoadingSubscription && (
                     <>
-                      <Skeleton className="h-8 w-20 rounded-sm bg-background" />
-                      <Skeleton className="h-8 w-20 rounded-sm bg-background" />
+                      <Skeleton className="h-8 w-20 rounded-md bg-background" />
+                      <Skeleton className="h-8 w-20 rounded-md bg-background" />
                     </>
                   )}
                   {generationMode === "scratch" && !isLoadingSubscription && (
@@ -1310,7 +1310,7 @@ export default function Hero({ popularComponents = [] }: HeroProps) {
                   )}
                   {selectedFramework !== Framework.HTML &&
                     isLoadingSubscription && (
-                      <Skeleton className="h-8 w-20 rounded-sm bg-background" />
+                      <Skeleton className="h-8 w-20 rounded-md bg-background" />
                     )}
                   {selectedFramework !== Framework.HTML &&
                     !isLoadingSubscription && (

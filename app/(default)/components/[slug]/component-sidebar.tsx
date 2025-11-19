@@ -1330,8 +1330,8 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
                       input.length <= 3 && "opacity-0",
                     )}
                   >
-                    Use <kbd className="bg-secondary rounded-sm p-1">Shift</kbd>{" "}
-                    + <kbd className="bg-secondary rounded-sm p-1">Return</kbd>{" "}
+                    Use <kbd className="bg-secondary rounded-md p-1">Shift</kbd>{" "}
+                    + <kbd className="bg-secondary rounded-md p-1">Return</kbd>{" "}
                     for a new line
                   </div>
                   <div className="flex w-full items-center space-x-1">

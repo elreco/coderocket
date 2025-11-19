@@ -215,7 +215,7 @@ button {
 }
 
 .markdown pre {
-  @apply block whitespace-pre-wrap wrap-break-word text-sm bg-foreground/10 p-2 rounded-sm;
+  @apply block whitespace-pre-wrap wrap-break-word text-sm bg-foreground/10 p-2 rounded-md;
 }
 
 * {

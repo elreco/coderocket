@@ -255,7 +255,7 @@ export const Markdown = memo(
           </kbd>
         ),
         mark: ({ children }) => (
-          <mark className="rounded-sm bg-yellow-200 px-1 py-0.5 dark:bg-yellow-800">
+          <mark className="rounded-md bg-yellow-200 px-1 py-0.5 dark:bg-yellow-800">
             {children}
           </mark>
         ),
