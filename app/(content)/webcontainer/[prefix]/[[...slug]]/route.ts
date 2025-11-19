@@ -20,7 +20,8 @@ export async function GET(
 
   const url = new URL(request.url);
   const { prefix: routePrefix, slug: routeSlug = [] } = await context.params;
-  const hostname = url.hostname || request.headers.get("host") || "";
+  const originalHostname = request.headers.get("host") || "";
+  const hostname = url.hostname || originalHostname || "";
   const pathname = url.pathname;
   const notFoundHtml = `
         <!DOCTYPE html>
@@ -241,8 +242,14 @@ export async function GET(
   }
 
   console.log("API Route: Servant fichier avec Content-Type", mimeType);
+  console.log(
+    "API Route: Original hostname =",
+    originalHostname,
+    "| URL hostname =",
+    url.hostname,
+  );
 
-  if (isIndexHtml && hostname?.includes("preview.coderocket.app")) {
+  if (isIndexHtml && originalHostname?.includes("preview.coderocket.app")) {
     const parts = prefix.split("-");
     parts.pop();
     const chatId = parts.join("-");
@@ -266,20 +273,24 @@ export async function GET(
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CodeRocket Preview</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { margin: 0; overflow: hidden; }
+    body { margin: 0; overflow: hidden; font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
     #watermark {
       position: fixed;
       right: 24px;
       bottom: 24px;
       z-index: 9999;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     }
     #watermark a {
       display: flex;
       align-items: center;
       gap: 8px;
-      background: hsl(var(--primary));
+      background: #6366F1;
       padding: 8px 12px;
       border-radius: 8px;
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
@@ -300,6 +311,7 @@ export async function GET(
       display: flex;
       align-items: center;
       gap: 4px;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     }
     iframe {
       width: 100%;
