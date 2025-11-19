@@ -80,6 +80,7 @@ export default function ComponentPreview() {
     isWebcontainerReady,
     handleSubmitToAI,
     breakpoint,
+    previewPath,
   } = useComponentContext();
   const [iframeLoading, setIframeLoading] = React.useState(false);
 
@@ -144,6 +145,7 @@ export default function ComponentPreview() {
     !isFirstGeneration &&
     (isLoading || loadingState) &&
     loadingState !== "error";
+  const previewPathSuffix = previewPath === "/" ? "" : previewPath;
 
   return (
     <>
@@ -256,7 +258,7 @@ export default function ComponentPreview() {
               {displayVersion !== undefined && (
                 <iframe
                   key={`iframe-${displayVersion}`}
-                  src={`https://${chatId}-${displayVersion}.webcontainer.coderocket.app`}
+                  src={`https://${chatId}-${displayVersion}.webcontainer.coderocket.app${previewPathSuffix}`}
                   className="size-full border-none"
                   sandbox="allow-scripts allow-forms allow-popups allow-modals allow-storage-access-by-user-activation allow-same-origin"
                   allow="credentialless"

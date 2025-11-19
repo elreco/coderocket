@@ -17,7 +17,7 @@ import {
   PanelLeftClose,
   PanelLeft,
 } from "lucide-react";
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, useCallback } from "react";
 import React from "react";
 import { useCopyToClipboard } from "usehooks-ts";
 
@@ -26,7 +26,10 @@ import RenderHtmlComponent from "@/components/renders/render-html-component";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useBuilder } from "@/context/builder-context";
-import { useComponentContext } from "@/context/component-context";
+import {
+  BreakpointType,
+  useComponentContext,
+} from "@/context/component-context";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { ChatFile } from "@/utils/completion-parser";
@@ -46,6 +49,9 @@ const RenderContent = React.memo(
     isWebcontainerReady,
     iframeKey,
     selectedVersion,
+    previewPath,
+    onHtmlNavigation,
+    breakpoint,
   }: {
     isLoading: boolean;
     artifactFiles: ChatFile[];
@@ -55,8 +61,22 @@ const RenderContent = React.memo(
     isWebcontainerReady: boolean;
     iframeKey?: number;
     selectedVersion?: number;
+    previewPath: string;
+    onHtmlNavigation: (
+      path: string,
+      options?: { pushHistory?: boolean },
+    ) => void;
+    breakpoint: BreakpointType;
   }) => {
     const isFirstGeneration = selectedVersion === 0;
+    const responsiveWrapperClass = cn(
+      "relative size-full transition-all duration-300",
+      breakpoint === "desktop" && "w-full h-full",
+      breakpoint === "tablet" &&
+        "w-[768px] h-full max-w-full max-h-full shadow-2xl",
+      breakpoint === "mobile" &&
+        "w-[375px] h-full max-w-full max-h-full shadow-2xl",
+    );
 
     if (isLoading && !isWebcontainerReady && isFirstGeneration) {
       return (
@@ -68,13 +88,28 @@ const RenderContent = React.memo(
       artifactFiles.length > 0 &&
       selectedFramework === Framework.HTML
     ) {
-      return isLengthError ? (
-        <div
-          className="flex size-full items-center justify-center bg-cover bg-center"
-          style={{ backgroundImage: "url(/placeholder.svg)" }}
-        ></div>
-      ) : (
-        <RenderHtmlComponent key={iframeKey} files={artifactFiles} />
+      if (isLengthError) {
+        return (
+          <div className="flex size-full items-center justify-center">
+            <div
+              className="flex size-full items-center justify-center bg-cover bg-center"
+              style={{ backgroundImage: "url(/placeholder.svg)" }}
+            ></div>
+          </div>
+        );
+      }
+
+      return (
+        <div className="flex size-full items-center justify-center">
+          <div className={responsiveWrapperClass}>
+            <RenderHtmlComponent
+              key={iframeKey}
+              files={artifactFiles}
+              navigationTarget={previewPath}
+              onNavigation={onHtmlNavigation}
+            />
+          </div>
+        </div>
       );
     }
 
@@ -90,6 +125,8 @@ const RenderContent = React.memo(
       return false;
     if (prevProps.iframeKey !== nextProps.iframeKey) return false;
     if (prevProps.selectedVersion !== nextProps.selectedVersion) return false;
+    if (prevProps.previewPath !== nextProps.previewPath) return false;
+    if (prevProps.breakpoint !== nextProps.breakpoint) return false;
 
     const areFilesEqual = (prev: ChatFile[], next: ChatFile[]) => {
       if (prev.length !== next.length) return false;
@@ -127,6 +164,9 @@ export default function CodePreview() {
     authorized,
     iframeKey,
     selectedVersion,
+    navigatePreview,
+    previewPath,
+    breakpoint,
   } = useComponentContext();
   const { buildError } = useBuilder();
   const [, copy] = useCopyToClipboard();
@@ -230,6 +270,15 @@ export default function CodePreview() {
               ? SiAngular
               : SiHtml5;
 
+  const handleHtmlNavigation = useCallback(
+    (path: string, options?: { pushHistory?: boolean }) => {
+      navigatePreview(path, {
+        pushHistory: options?.pushHistory,
+      });
+    },
+    [navigatePreview],
+  );
+
   return (
     <div className="flex size-full flex-col overflow-hidden xl:flex-row">
       <div
@@ -247,6 +296,9 @@ export default function CodePreview() {
           isWebcontainerReady={isWebcontainerReady}
           iframeKey={iframeKey}
           selectedVersion={selectedVersion}
+          previewPath={previewPath}
+          onHtmlNavigation={handleHtmlNavigation}
+          breakpoint={breakpoint}
         />
       </div>
       <div

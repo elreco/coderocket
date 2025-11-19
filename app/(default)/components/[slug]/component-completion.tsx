@@ -22,9 +22,11 @@ import {
   Monitor,
   Tablet,
   Smartphone,
+  ArrowLeft,
+  ArrowRight,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useRef } from "react";
+import { useCallback, useEffect, useState, useRef, FormEvent } from "react";
 import { useCopyToClipboard } from "usehooks-ts";
 
 import { getSubscription } from "@/app/supabase-server";
@@ -122,6 +124,65 @@ export default function ComponentCompletion({
     useState<WebcontainerLoadingState>(null);
   const [iframeKey, setIframeKey] = useState(0);
   const [breakpoint, setBreakpoint] = useState<BreakpointType>("desktop");
+  const [previewPath, setPreviewPath] = useState("/");
+  const [addressBarValue, setAddressBarValue] = useState("/");
+  const [navigationHistory, setNavigationHistory] = useState<string[]>(["/"]);
+  const [historyIndex, setHistoryIndex] = useState(0);
+  const historyIndexRef = useRef(0);
+
+  const normalizePreviewPath = useCallback((value: string) => {
+    if (!value) {
+      return "/";
+    }
+    let nextPath = value.trim();
+    if (!nextPath.startsWith("/")) {
+      nextPath = `/${nextPath}`;
+    }
+    if (nextPath.includes("?")) {
+      nextPath = nextPath.split("?")[0];
+    }
+    if (nextPath.includes("#")) {
+      nextPath = nextPath.split("#")[0];
+    }
+    nextPath = nextPath.replace(/\/+/g, "/");
+    if (nextPath.length > 1 && nextPath.endsWith("/")) {
+      nextPath = nextPath.slice(0, -1);
+    }
+    return nextPath || "/";
+  }, []);
+
+  const navigatePreview = useCallback(
+    (targetPath: string, options?: { pushHistory?: boolean }) => {
+      const normalizedPath = normalizePreviewPath(targetPath);
+      setPreviewPath(normalizedPath);
+      setAddressBarValue(normalizedPath);
+      if (options?.pushHistory !== false) {
+        setNavigationHistory((prev) => {
+          const activeIndex = historyIndexRef.current;
+          const trimmedHistory =
+            activeIndex < prev.length - 1
+              ? prev.slice(0, activeIndex + 1)
+              : prev;
+          if (trimmedHistory[trimmedHistory.length - 1] === normalizedPath) {
+            const currentIndex = trimmedHistory.length - 1;
+            setHistoryIndex(currentIndex);
+            historyIndexRef.current = currentIndex;
+            return trimmedHistory;
+          }
+          const updatedHistory = [...trimmedHistory, normalizedPath];
+          const newIndex = updatedHistory.length - 1;
+          setHistoryIndex(newIndex);
+          historyIndexRef.current = newIndex;
+          return updatedHistory;
+        });
+      }
+    },
+    [normalizePreviewPath],
+  );
+
+  useEffect(() => {
+    historyIndexRef.current = historyIndex;
+  }, [historyIndex]);
 
   const [chatFiles, setChatFiles] = useState<ChatFile[]>([]);
   const [artifactFiles, setArtifactFiles] = useState<ChatFile[]>([]);
@@ -174,6 +235,59 @@ export default function ComponentCompletion({
     string | null
   >(null);
   const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const initialPath = "/";
+    setPreviewPath(initialPath);
+    setAddressBarValue(initialPath);
+    setNavigationHistory([initialPath]);
+    setHistoryIndex(0);
+    historyIndexRef.current = 0;
+  }, [chatId, selectedVersion, fetchedChat?.framework]);
+
+  const isHtmlFrameworkSelected = fetchedChat?.framework === Framework.HTML;
+  const previewPathSuffix = previewPath === "/" ? "" : previewPath;
+  const canGoBack = historyIndex > 0;
+  const canGoForward = historyIndex < navigationHistory.length - 1;
+  const canUseSpaNavigation =
+    !isHtmlFrameworkSelected &&
+    isWebcontainerReady &&
+    selectedVersion !== undefined &&
+    !isLoading;
+  const canUseHtmlNavigation =
+    isHtmlFrameworkSelected && artifactFiles.length > 0 && !isLengthError;
+  const isNavigationEnabled = canUseSpaNavigation || canUseHtmlNavigation;
+  const navigationPlaceholder = isHtmlFrameworkSelected ? "/index.html" : "/";
+
+  const handleAddressSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!isNavigationEnabled) {
+      return;
+    }
+    navigatePreview(addressBarValue);
+  };
+
+  const handleGoBack = () => {
+    if (!canGoBack) {
+      return;
+    }
+    const newIndex = historyIndex - 1;
+    const targetPath = navigationHistory[newIndex] || "/";
+    setHistoryIndex(newIndex);
+    historyIndexRef.current = newIndex;
+    navigatePreview(targetPath, { pushHistory: false });
+  };
+
+  const handleGoForward = () => {
+    if (!canGoForward) {
+      return;
+    }
+    const newIndex = historyIndex + 1;
+    const targetPath = navigationHistory[newIndex] || "/";
+    setHistoryIndex(newIndex);
+    historyIndexRef.current = newIndex;
+    navigatePreview(targetPath, { pushHistory: false });
+  };
 
   useEffect(() => {
     const checkUserAuth = async () => {
@@ -1132,6 +1246,8 @@ export default function ComponentCompletion({
     githubConnection,
     breakpoint,
     setBreakpoint,
+    previewPath,
+    navigatePreview,
   };
 
   useEffect(() => {
@@ -1257,14 +1373,16 @@ export default function ComponentCompletion({
                         className="flex items-center justify-center"
                       >
                         <Eye className="size-4 md:hidden" />
-                        <span className="hidden md:inline">Preview</span>
+                        <span className="hidden text-xs md:inline">
+                          Preview
+                        </span>
                       </TabsTrigger>
                       <TabsTrigger
                         value="code"
                         className="flex items-center justify-center"
                       >
                         <CodeIcon className="size-4 md:hidden" />
-                        <span className="hidden md:inline">Code</span>
+                        <span className="hidden text-xs md:inline">Code</span>
                       </TabsTrigger>
                     </TabsList>
                   </Tabs>
@@ -1333,74 +1451,117 @@ export default function ComponentCompletion({
                 (isWebcontainerReady &&
                   fetchedChat?.framework !== Framework.HTML)) &&
                 isCanvas && (
-                  <div className="border-border bg-secondary flex items-center justify-between gap-2 border-t p-2">
-                    <div className="flex items-center gap-2">
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setIframeKey((prev) => prev + 1)}
-                            className="flex items-center"
-                            disabled={isLoading}
-                          >
-                            <RefreshCw className="w-5" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Reload preview</p>
-                        </TooltipContent>
-                      </Tooltip>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setIsModalOpen(true)}
-                            className="flex items-center"
-                            disabled={isLoading || isLengthError}
-                          >
-                            <Fullscreen className="w-5" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          {isLengthError ? (
-                            <p>The component has an error</p>
-                          ) : (
-                            <p>Display in fullscreen</p>
-                          )}
-                        </TooltipContent>
-                      </Tooltip>
-                      {(isWebcontainerReady ||
-                        fetchedChat?.framework === Framework.HTML) && (
+                  <div className="border-border bg-secondary flex flex-col gap-2 border-t p-2 lg:flex-row lg:items-center lg:justify-between">
+                    <div className="flex w-full flex-1 flex-col gap-2 lg:flex-row lg:items-center">
+                      <div className="flex items-center gap-2">
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => {
-                                const url =
-                                  fetchedChat?.framework === Framework.HTML
-                                    ? `https://www.coderocket.app/content/${chatId}/${selectedVersion}`
-                                    : `https://${chatId}-${selectedVersion}.preview.coderocket.app`;
-
-                                window.open(url, "_blank");
-                              }}
+                              onClick={() => setIsModalOpen(true)}
                               className="flex items-center"
                               disabled={isLoading || isLengthError}
                             >
-                              <ExternalLink className="w-5" />
+                              <Fullscreen className="w-5" />
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>
-                              {isLengthError
-                                ? "The component has an error"
-                                : "Open in a new tab"}
-                            </p>
+                            {isLengthError ? (
+                              <p>The component has an error</p>
+                            ) : (
+                              <p>Display in fullscreen</p>
+                            )}
                           </TooltipContent>
                         </Tooltip>
-                      )}
+                        {(isWebcontainerReady ||
+                          fetchedChat?.framework === Framework.HTML) && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  if (isLengthError) {
+                                    return;
+                                  }
+                                  const url =
+                                    fetchedChat?.framework === Framework.HTML
+                                      ? `https://www.coderocket.app/content/${chatId}/${selectedVersion}`
+                                      : `https://${chatId}-${selectedVersion}.preview.coderocket.app${previewPathSuffix}`;
+                                  window.open(url, "_blank");
+                                }}
+                                className="flex items-center"
+                                disabled={isLoading || isLengthError}
+                              >
+                                <ExternalLink className="w-5" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>
+                                {isLengthError
+                                  ? "The component has an error"
+                                  : "Open in a new tab"}
+                              </p>
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
+                      </div>
+                      <div className="flex w-full flex-1 items-center gap-2">
+                        <div className="border-border bg-background flex w-full flex-1 items-center gap-2 rounded-md border p-0">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            type="button"
+                            className="size-8"
+                            onClick={handleGoBack}
+                            disabled={!canGoBack || !isNavigationEnabled}
+                          >
+                            <ArrowLeft className="size-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            type="button"
+                            className="size-8"
+                            onClick={handleGoForward}
+                            disabled={!canGoForward || !isNavigationEnabled}
+                          >
+                            <ArrowRight className="size-4" />
+                          </Button>
+                          <form
+                            onSubmit={handleAddressSubmit}
+                            className="flex-1"
+                          >
+                            <Input
+                              value={addressBarValue}
+                              onChange={(event) =>
+                                setAddressBarValue(event.target.value)
+                              }
+                              disabled={!isNavigationEnabled}
+                              placeholder={navigationPlaceholder}
+                              className="h-8 border-0 bg-transparent px-2 py-1 text-sm focus-visible:ring-0 focus-visible:ring-offset-0"
+                            />
+                          </form>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                type="button"
+                                className="size-8"
+                                onClick={() => setIframeKey((prev) => prev + 1)}
+                                disabled={isLoading}
+                              >
+                                <RefreshCw className="size-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Reload preview</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </div>
+                      </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="border-border bg-background flex items-center rounded-md border">
@@ -1491,7 +1652,7 @@ export default function ComponentCompletion({
                               <iframe
                                 key={iframeKey}
                                 className="size-full rounded-md border-none"
-                                src={`https://${chatId}-${selectedVersion}.webcontainer.coderocket.app`}
+                                src={`https://${chatId}-${selectedVersion}.webcontainer.coderocket.app${previewPathSuffix}`}
                                 sandbox="allow-scripts allow-forms allow-popups allow-modals allow-storage-access-by-user-activation allow-same-origin"
                                 allow="credentialless"
                                 loading="eager"
@@ -1500,6 +1661,8 @@ export default function ComponentCompletion({
                               <RenderHtmlComponent
                                 key={iframeKey}
                                 files={artifactFiles}
+                                navigationTarget={previewPath}
+                                onNavigation={(path) => navigatePreview(path)}
                               />
                             )}
                           </div>

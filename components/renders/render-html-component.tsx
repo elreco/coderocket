@@ -1,83 +1,152 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 
 import type { ChatFile } from "@/utils/completion-parser";
 
-export default function RenderHtmlComponent({ files }: { files: ChatFile[] }) {
-  // State to track the currently displayed file
+interface RenderHtmlComponentProps {
+  files: ChatFile[];
+  navigationTarget?: string;
+  onNavigation?: (path: string, options?: { pushHistory?: boolean }) => void;
+}
+
+export default function RenderHtmlComponent({
+  files,
+  navigationTarget,
+  onNavigation,
+}: RenderHtmlComponentProps) {
   const [currentFile, setCurrentFile] = useState<ChatFile | null>(
     files.length > 0 ? files[0] : null,
   );
+  const [currentRoute, setCurrentRoute] = useState("/");
 
-  // Update current file when files prop changes
   useEffect(() => {
     if (files.length > 0) {
       setCurrentFile(files[0]);
+      setCurrentRoute("/");
+    } else {
+      setCurrentFile(null);
+      setCurrentRoute("/");
     }
   }, [files]);
 
-  // Function to find a file by name
-  const findFileByName = (name: string): ChatFile | null => {
-    // Try exact match first
-    let file = files.find((f) => f.name === name);
+  const findFileByName = useCallback(
+    (name: string): ChatFile | null => {
+      let file = files.find((f) => f.name === name);
+      if (!file && name.startsWith("./")) {
+        file = files.find((f) => f.name === name.substring(2));
+      }
+      if (!file) {
+        const fileName = name.split("/").pop();
+        if (fileName) {
+          file = files.find((f) => f.name === fileName);
+        }
+      }
+      return file || null;
+    },
+    [files],
+  );
 
-    // If not found, try without ./ prefix
-    if (!file && name.startsWith("./")) {
-      file = files.find((f) => f.name === name.substring(2));
+  const normalizeRoute = useCallback((value: string) => {
+    if (!value) {
+      return "/";
     }
-
-    // If not found, try just the filename (without path)
-    if (!file) {
-      const fileName = name.split("/").pop();
-      if (fileName) {
-        file = files.find((f) => f.name === fileName);
-      }
+    let route = value.trim();
+    if (route.startsWith("http://") || route.startsWith("https://")) {
+      return "/";
     }
-
-    return file || null;
-  };
-
-  // Handle message from iframe
-  const handleMessage = (event: MessageEvent) => {
-    if (event.data && event.data.type === "linkClick") {
-      const href = event.data.href;
-
-      // Handle anchor links
-      if (href.startsWith("#")) {
-        return; // Let the iframe handle this
-      }
-
-      // Extract filename from href
-      let fileName = href;
-
-      // Remove query params and hash
-      if (fileName.includes("?")) {
-        fileName = fileName.split("?")[0];
-      }
-      if (fileName.includes("#")) {
-        fileName = fileName.split("#")[0];
-      }
-
-      // Find the file
-      const file = findFileByName(fileName);
-
-      if (file) {
-        setCurrentFile(file);
-      }
+    if (route.startsWith("./")) {
+      route = route.slice(1);
     }
-  };
+    if (!route.startsWith("/")) {
+      route = `/${route}`;
+    }
+    if (route.includes("?")) {
+      route = route.split("?")[0];
+    }
+    if (route.includes("#")) {
+      route = route.split("#")[0];
+    }
+    return route === "" ? "/" : route.replace(/\/+/g, "/");
+  }, []);
 
-  // Add event listener for messages from iframe
+  const resolveFileFromRoute = useCallback(
+    (route: string): ChatFile | null => {
+      if (!files.length) {
+        return null;
+      }
+      const trimmed = route === "/" ? "index.html" : route.replace(/^\//, "");
+      const candidates = [trimmed];
+      if (!trimmed.endsWith(".html")) {
+        candidates.push(`${trimmed}.html`);
+        candidates.push(`${trimmed}/index.html`);
+      }
+      if (!trimmed.startsWith("./")) {
+        candidates.push(`./${trimmed}`);
+      }
+      for (const candidate of candidates) {
+        const found = findFileByName(candidate);
+        if (found) {
+          return found;
+        }
+      }
+      return files[0] || null;
+    },
+    [files, findFileByName],
+  );
+
+  const handleInternalNavigation = useCallback(
+    (
+      target: string,
+      options?: { pushHistory?: boolean; notifyParent?: boolean },
+    ) => {
+      const normalizedRoute = normalizeRoute(target);
+      const file = resolveFileFromRoute(normalizedRoute);
+      if (!file) {
+        return;
+      }
+      setCurrentFile(file);
+      setCurrentRoute(normalizedRoute);
+      if (options?.notifyParent === false) {
+        return;
+      }
+      onNavigation?.(normalizedRoute, {
+        pushHistory: options?.pushHistory,
+      });
+    },
+    [normalizeRoute, onNavigation, resolveFileFromRoute],
+  );
+
+  const handleMessage = useCallback(
+    (event: MessageEvent) => {
+      if (event.data && event.data.type === "linkClick") {
+        const href = event.data.href;
+        if (href.startsWith("#")) {
+          return;
+        }
+        handleInternalNavigation(href, { pushHistory: true });
+      }
+    },
+    [handleInternalNavigation],
+  );
+
   useEffect(() => {
     window.addEventListener("message", handleMessage);
     return () => {
       window.removeEventListener("message", handleMessage);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [files]); // Re-add listener when files change
+  }, [handleMessage]);
 
-  // Inject script to intercept link clicks
+  useEffect(() => {
+    if (!navigationTarget) {
+      return;
+    }
+    handleInternalNavigation(navigationTarget, {
+      pushHistory: false,
+      notifyParent: false,
+    });
+  }, [handleInternalNavigation, navigationTarget]);
+
   const injectLinkInterceptor = (content: string): string => {
     const script = `
       <script>
@@ -131,6 +200,7 @@ export default function RenderHtmlComponent({ files }: { files: ChatFile[] }) {
 
   return (
     <iframe
+      key={currentRoute}
       srcDoc={prepareContent()}
       style={{
         width: "100%",

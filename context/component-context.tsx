@@ -78,6 +78,8 @@ interface ComponentContextType {
   githubConnection: Tables<"github_connections"> | null;
   breakpoint: BreakpointType;
   setBreakpoint: (value: BreakpointType) => void;
+  previewPath: string;
+  navigatePreview: (path: string, options?: { pushHistory?: boolean }) => void;
 }
 
 export const ComponentContext = createContext<ComponentContextType | undefined>(

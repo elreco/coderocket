@@ -904,18 +904,18 @@ export default function Hero({ popularComponents = [] }: HeroProps) {
           </p>
           <form
             id="generate-form"
-            className="group border-border bg-secondary relative z-10 flex w-full flex-col items-center justify-center space-y-3 gap-x-0 rounded-lg border p-3 text-center xl:w-3/4"
+            className="group bg-secondary relative z-10 flex w-full flex-col items-center justify-center space-y-3 gap-x-0 rounded-lg border p-3 text-center xl:w-3/4"
             onSubmit={handleSubmit}
           >
             <Tabs
               defaultValue="scratch"
-              className="w-full"
+              className="w-full border-none"
               onValueChange={(value) => {
                 if (loading) return; // Prevent tab change when loading
                 setGenerationMode(value as "scratch" | "clone");
               }}
             >
-              <TabsList className="bg-secondary mb-3 w-full">
+              <TabsList className="bg-secondary mb-3 w-full border-none">
                 <TabsTrigger
                   value="scratch"
                   className="bg-secondary w-1/2 p-2"
@@ -923,13 +923,34 @@ export default function Hero({ popularComponents = [] }: HeroProps) {
                 >
                   Generate from scratch
                 </TabsTrigger>
-                <TabsTrigger
-                  value="clone"
-                  className="bg-secondary w-1/2 p-2"
-                  disabled={selectedFramework === Framework.HTML || loading} // Also disable when loading
-                >
-                  Clone a website
-                </TabsTrigger>
+                {selectedFramework === Framework.HTML ? (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="w-1/2">
+                          <TabsTrigger
+                            value="clone"
+                            className="bg-secondary w-full p-2"
+                            disabled
+                          >
+                            Clone a website
+                          </TabsTrigger>
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent className="text-center">
+                        Website cloning is unavailable in HTML mode.
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                ) : (
+                  <TabsTrigger
+                    value="clone"
+                    className="bg-secondary w-1/2 p-2"
+                    disabled={loading} // Also disable when loading
+                  >
+                    Clone a website
+                  </TabsTrigger>
+                )}
               </TabsList>
 
               <TabsContent value="scratch" className="h-32 w-full">
