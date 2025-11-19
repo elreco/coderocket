@@ -685,33 +685,17 @@ export default function DeploymentContent() {
         </form>
       </div>
 
-      <div className="border-border bg-muted/50 rounded-lg border p-4">
-        <h3 className="mb-2 font-medium">About Deployment</h3>
-        <ul className="text-muted-foreground space-y-2 text-sm">
-          <li className="flex gap-2">
-            <span className="text-primary">•</span>
-            <span>
-              Your application will be accessible at your CodeRocket subdomain
-            </span>
-          </li>
-          <li className="flex gap-2">
-            <span className="text-primary">•</span>
-            <span>
-              All deployments include HTTPS/SSL certificates automatically
-            </span>
-          </li>
-          <li className="flex gap-2">
-            <span className="text-primary">•</span>
-            <span>The deployment uses the selected version of your code</span>
-          </li>
-          <li className="flex gap-2">
-            <span className="text-primary">•</span>
-            <span>
-              You can add a custom domain after deployment (see section below)
-            </span>
-          </li>
-        </ul>
-      </div>
+      <p className="text-muted-foreground text-sm">
+        Learn more about deployment features and best practices.{" "}
+        <a
+          href="https://docs.coderocket.app/deployment/overview"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-foreground underline decoration-dotted underline-offset-4 hover:decoration-solid"
+        >
+          View documentation
+        </a>
+      </p>
 
       {isDeployed && subscription && (
         <CustomDomainSection

@@ -1326,6 +1326,15 @@ export default function ComponentCompletion({
             setWebcontainerReady(true);
             setForceBuild(false);
           }
+
+          if (
+            payload.new.role === "assistant" &&
+            payload.new.version === selectedVersion &&
+            payload.new.screenshot &&
+            payload.new.screenshot !== payload.old?.screenshot
+          ) {
+            setLastAssistantMessage(payload.new as Tables<"messages">);
+          }
         },
       )
       .subscribe();
@@ -1822,7 +1831,14 @@ export default function ComponentCompletion({
                 </p>
               </div>
               <DialogDescription>
-                <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                <div
+                  className={cn(
+                    "grid gap-6",
+                    lastAssistantMessage?.screenshot
+                      ? "grid-cols-1 lg:grid-cols-2"
+                      : "grid-cols-1",
+                  )}
+                >
                   <div className="space-y-6">
                     <div>
                       <p className="mb-3 text-sm font-medium text-white">

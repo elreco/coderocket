@@ -360,12 +360,19 @@ export default function GitHubSync({ closeSheet }: { closeSheet: () => void }) {
 
       {!hasGithubRepo ? (
         <div className="space-y-4">
-          <AlertBox
-            icon={SiGithub}
-            title="Create GitHub Repository"
-            description="Create a new repository to sync this component with GitHub."
-            variant="blue"
-          />
+          <div className="rounded-lg border border-blue-500/30 bg-blue-500/10 p-4">
+            <div className="flex items-start gap-3">
+              <SiGithub className="size-5 shrink-0 text-blue-500" />
+              <div className="flex-1">
+                <p className="font-medium text-blue-700 dark:text-blue-400">
+                  Create GitHub Repository
+                </p>
+                <p className="text-muted-foreground mt-1 text-sm">
+                  Create a new repository to sync this component with GitHub.
+                </p>
+              </div>
+            </div>
+          </div>
 
           <form
             onSubmit={(e) => {
