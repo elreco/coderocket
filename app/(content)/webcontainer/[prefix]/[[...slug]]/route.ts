@@ -18,9 +18,10 @@ export async function GET(
 ) {
   console.log("API Route: Reçu requête pour", request.url);
 
+  const url = new URL(request.url);
   const { prefix: routePrefix, slug: routeSlug = [] } = await context.params;
-  const hostname = request.headers.get("host") || "";
-  const pathname = request.nextUrl.pathname;
+  const hostname = url.hostname || request.headers.get("host") || "";
+  const pathname = url.pathname;
   const notFoundHtml = `
         <!DOCTYPE html>
         <html>

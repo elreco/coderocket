@@ -80,6 +80,8 @@ interface ComponentContextType {
   setBreakpoint: (value: BreakpointType) => void;
   previewPath: string;
   navigatePreview: (path: string, options?: { pushHistory?: boolean }) => void;
+  addressBarValue: string;
+  setAddressBarValue: (value: string) => void;
 }
 
 export const ComponentContext = createContext<ComponentContextType | undefined>(

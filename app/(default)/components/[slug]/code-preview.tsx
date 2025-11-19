@@ -52,6 +52,7 @@ const RenderContent = React.memo(
     previewPath,
     onHtmlNavigation,
     breakpoint,
+    onRouteChange,
   }: {
     isLoading: boolean;
     artifactFiles: ChatFile[];
@@ -67,6 +68,7 @@ const RenderContent = React.memo(
       options?: { pushHistory?: boolean },
     ) => void;
     breakpoint: BreakpointType;
+    onRouteChange: (path: string) => void;
   }) => {
     const isFirstGeneration = selectedVersion === 0;
     const responsiveWrapperClass = cn(
@@ -107,6 +109,7 @@ const RenderContent = React.memo(
               files={artifactFiles}
               navigationTarget={previewPath}
               onNavigation={onHtmlNavigation}
+              onRouteChange={onRouteChange}
             />
           </div>
         </div>
@@ -167,6 +170,7 @@ export default function CodePreview() {
     navigatePreview,
     previewPath,
     breakpoint,
+    setAddressBarValue,
   } = useComponentContext();
   const { buildError } = useBuilder();
   const [, copy] = useCopyToClipboard();
@@ -279,6 +283,13 @@ export default function CodePreview() {
     [navigatePreview],
   );
 
+  const handleHtmlRouteChange = useCallback(
+    (path: string) => {
+      setAddressBarValue(path);
+    },
+    [setAddressBarValue],
+  );
+
   return (
     <div className="flex size-full flex-col overflow-hidden xl:flex-row">
       <div
@@ -299,6 +310,7 @@ export default function CodePreview() {
           previewPath={previewPath}
           onHtmlNavigation={handleHtmlNavigation}
           breakpoint={breakpoint}
+          onRouteChange={handleHtmlRouteChange}
         />
       </div>
       <div

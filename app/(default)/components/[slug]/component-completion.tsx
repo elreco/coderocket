@@ -129,6 +129,8 @@ export default function ComponentCompletion({
   const [navigationHistory, setNavigationHistory] = useState<string[]>(["/"]);
   const [historyIndex, setHistoryIndex] = useState(0);
   const historyIndexRef = useRef(0);
+  const addressInputRef = useRef<HTMLInputElement | null>(null);
+  const [addressFocused, setAddressFocused] = useState(false);
 
   const normalizePreviewPath = useCallback((value: string) => {
     if (!value) {
@@ -265,6 +267,7 @@ export default function ComponentCompletion({
       return;
     }
     navigatePreview(addressBarValue);
+    addressInputRef.current?.blur();
   };
 
   const handleGoBack = () => {
@@ -1248,6 +1251,8 @@ export default function ComponentCompletion({
     setBreakpoint,
     previewPath,
     navigatePreview,
+    addressBarValue,
+    setAddressBarValue,
   };
 
   useEffect(() => {
@@ -1508,7 +1513,7 @@ export default function ComponentCompletion({
                         )}
                       </div>
                       <div className="flex w-full flex-1 items-center gap-2">
-                        <div className="border-border bg-background flex w-full flex-1 items-center gap-2 rounded-md border p-0">
+                        <div className="border-border p-0 bg-background flex w-full flex-1 items-center gap-2 rounded-md border">
                           <Button
                             variant="ghost"
                             size="icon"
@@ -1534,13 +1539,19 @@ export default function ComponentCompletion({
                             className="flex-1"
                           >
                             <Input
+                              ref={addressInputRef}
                               value={addressBarValue}
                               onChange={(event) =>
                                 setAddressBarValue(event.target.value)
                               }
+                              onFocus={() => setAddressFocused(true)}
+                              onBlur={() => setAddressFocused(false)}
                               disabled={!isNavigationEnabled}
                               placeholder={navigationPlaceholder}
-                              className="h-8 border-0 bg-transparent px-2 py-1 text-sm focus-visible:ring-0 focus-visible:ring-offset-0"
+                              className={cn(
+                                "h-8 border-0 bg-transparent p-0 text-sm focus-visible:ring-0 focus-visible:ring-offset-0",
+                                !addressFocused && "text-muted-foreground",
+                              )}
                             />
                           </form>
                           <Tooltip>

@@ -8,12 +8,14 @@ interface RenderHtmlComponentProps {
   files: ChatFile[];
   navigationTarget?: string;
   onNavigation?: (path: string, options?: { pushHistory?: boolean }) => void;
+  onRouteChange?: (path: string) => void;
 }
 
 export default function RenderHtmlComponent({
   files,
   navigationTarget,
   onNavigation,
+  onRouteChange,
 }: RenderHtmlComponentProps) {
   const [currentFile, setCurrentFile] = useState<ChatFile | null>(
     files.length > 0 ? files[0] : null,
@@ -113,8 +115,9 @@ export default function RenderHtmlComponent({
       onNavigation?.(normalizedRoute, {
         pushHistory: options?.pushHistory,
       });
+      onRouteChange?.(normalizedRoute);
     },
-    [normalizeRoute, onNavigation, resolveFileFromRoute],
+    [normalizeRoute, onNavigation, onRouteChange, resolveFileFromRoute],
   );
 
   const handleMessage = useCallback(
