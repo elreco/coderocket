@@ -9,6 +9,7 @@ import {
   ExternalLink,
   Zap,
   Layers,
+  Copy,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 
@@ -386,51 +387,90 @@ export default function DeploymentContent() {
       </div>
 
       {isDeployed && currentDeployedVersion !== undefined && deployedUrl && (
-        <div className="flex items-start gap-3 rounded-lg border border-green-500/30 bg-green-500/10 p-4">
-          <CheckCircle2 className="size-5 shrink-0 text-green-500" />
-          <div className="min-w-0 flex-1">
-            <p className="font-medium text-green-700 dark:text-green-400">
-              Application Deployed
-            </p>
-            <p className="text-muted-foreground mt-1 text-sm">
-              Your app is live and accessible at:
-            </p>
-            <div className="mt-3 space-y-2">
-              <div className="flex flex-wrap items-center gap-2">
+        <>
+          <div className="rounded-lg border border-green-500/30 bg-green-500/10 p-4">
+            <div className="flex items-start gap-3">
+              <CheckCircle2 className="size-5 mt-1 shrink-0 text-green-500" />
+              <div className="min-w-0 flex-1">
+                <p className="font-medium text-green-500 mb-2">
+                  Application Deployed
+                </p>
+                <p className="text-white text-sm">Your app is live</p>
+
+                <span className="text-green-500 text-xs font-semibold">
+                  Version #{currentDeployedVersion}
+                </span>
+                <span className="text-white text-xs font-semibold">
+                  {" "}
+                  is deployed
+                </span>
+              </div>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <div className="group flex items-center gap-2 rounded-md border border-green-500/30 bg-background px-3 py-2.5 transition-colors hover:border-green-500/50 hover:bg-green-500/5">
+              <Globe className="size-4 shrink-0 text-green-600 dark:text-green-400" />
+              <div className="min-w-0 flex-1 overflow-x-auto">
                 <a
                   href={`https://${deployedUrl}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-primary inline-flex items-center gap-1.5 text-sm font-medium break-all hover:underline"
+                  className="block whitespace-nowrap font-medium text-foreground"
                 >
-                  <span className="break-all">{deployedUrl}</span>
-                  <ExternalLink className="size-3.5 shrink-0" />
+                  {deployedUrl}
                 </a>
-                {customDomain?.is_verified && (
-                  <span className="inline-flex shrink-0 items-center rounded-full bg-green-500/20 px-2 py-0.5 text-xs font-medium text-green-700 dark:text-green-400">
-                    Custom Domain
-                  </span>
-                )}
               </div>
-              {customDomain?.is_verified && currentSubdomain && (
+              <div className="flex shrink-0 items-center gap-1">
+                <button
+                  onClick={async () => {
+                    await navigator.clipboard.writeText(
+                      `https://${deployedUrl}`,
+                    );
+                    toast({
+                      variant: "default",
+                      title: "URL copied",
+                      description: "The URL has been copied to your clipboard",
+                      duration: 2000,
+                    });
+                  }}
+                  className="text-muted-foreground hover:text-foreground rounded p-1 transition-colors"
+                  aria-label="Copy URL"
+                >
+                  <Copy className="size-4" />
+                </button>
                 <a
-                  href={`https://${currentSubdomain}.coderocket.app`}
+                  href={`https://${deployedUrl}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-muted-foreground hover:text-primary inline-flex items-center gap-1.5 text-xs break-all hover:underline"
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label="Open in new tab"
                 >
-                  <span className="break-all">
-                    Also available at: {currentSubdomain}.coderocket.app
-                  </span>
-                  <ExternalLink className="size-3 shrink-0" />
+                  <ExternalLink className="size-4" />
                 </a>
-              )}
-              <p className="text-muted-foreground text-xs">
-                Version #{currentDeployedVersion}
-              </p>
+              </div>
             </div>
+            {customDomain?.is_verified && (
+              <div className="flex items-center gap-2">
+                <span className="inline-flex shrink-0 items-center rounded-full bg-green-500/20 px-2 py-0.5 text-xs font-medium text-green-700 dark:text-green-400">
+                  Custom Domain
+                </span>
+              </div>
+            )}
+            {customDomain?.is_verified && currentSubdomain && (
+              <a
+                href={`https://${currentSubdomain}.coderocket.app`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:text-primary inline-flex items-center gap-1.5 text-xs break-all hover:underline"
+              >
+                <span className="break-all">
+                  Also available at: {currentSubdomain}.coderocket.app
+                </span>
+                <ExternalLink className="size-3 shrink-0" />
+              </a>
+            )}
           </div>
-        </div>
+        </>
       )}
 
       {!subscription && (
@@ -573,12 +613,12 @@ export default function DeploymentContent() {
         {!isDeployed && (
           <div className="rounded-lg border border-blue-500/30 bg-blue-500/10 p-4">
             <div className="flex items-start gap-3">
-              <Globe className="size-5 shrink-0 text-blue-500" />
+              <Globe className="size-5 mt-1 shrink-0 text-blue-500" />
               <div className="flex-1">
                 <p className="font-medium text-blue-700 dark:text-blue-400">
                   Want to use your own domain?
                 </p>
-                <p className="text-muted-foreground mt-1 text-sm">
+                <p className="text-white mt-1 text-sm">
                   After deploying with a CodeRocket subdomain, you&apos;ll be
                   able to add your custom domain (like{" "}
                   <span className="font-mono">app.yourdomain.com</span>) in the{" "}

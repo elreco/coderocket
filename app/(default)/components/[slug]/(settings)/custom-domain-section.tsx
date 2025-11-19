@@ -305,8 +305,8 @@ export default function CustomDomainSection({
                     </p>
                     <p className="text-muted-foreground mt-1.5 text-sm">
                       {customDomain.is_verified ? (
-                        <span className="inline-flex items-center gap-1 text-green-600 dark:text-green-400">
-                          <CheckCircle2 className="size-4" />
+                        <span className="inline-flex items-center gap-1 text-green-500 dark:text-green-400">
+                          <CheckCircle2 className="size-4 mt-1" />
                           Verified
                         </span>
                       ) : (
@@ -585,32 +585,14 @@ export default function CustomDomainSection({
             )}
           </Button>
 
-          <div className="border-border bg-muted/50 rounded-lg border p-4">
-            <h4 className="mb-2 font-medium">About Custom Domains</h4>
-            <ul className="text-muted-foreground space-y-2 text-sm">
-              <li className="flex gap-2">
-                <span className="text-primary">•</span>
-                <span>Use your own domain name for your deployed app</span>
-              </li>
-              <li className="flex gap-2">
-                <span className="text-primary">•</span>
-                <span>DNS verification required to prove domain ownership</span>
-              </li>
-              <li className="flex gap-2">
-                <span className="text-primary">•</span>
-                <span>One custom domain per project</span>
-              </li>
-            </ul>
-          </div>
-
           <div className="rounded-lg border border-green-500/30 bg-green-500/10 p-4">
             <div className="flex items-start gap-3">
-              <Shield className="size-5 shrink-0 text-green-500" />
+              <Shield className="size-5 shrink-0 text-green-500 mt-1" />
               <div className="flex-1">
-                <p className="font-medium text-green-700 dark:text-green-400">
+                <p className="font-medium mb-2 text-green-500">
                   Automatic HTTPS / SSL
                 </p>
-                <p className="text-muted-foreground mt-1 text-sm">
+                <p className="text-white text-sm">
                   SSL certificates are automatically provisioned and managed by
                   Vercel. Once your domain is verified, HTTPS will be enabled
                   within minutes. No action required!

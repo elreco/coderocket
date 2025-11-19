@@ -362,27 +362,6 @@ export default function Hero({ popularComponents = [] }: HeroProps) {
   }, []);
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      setIsLoggedIn(!!user);
-
-      if (user) {
-        try {
-          const sub = await getSubscription();
-          setSubscription(sub);
-        } catch (error) {
-          console.error("Error fetching subscription:", error);
-        }
-      }
-    };
-
-    checkAuth();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
     if (prompt) {
       localStorage.setItem("lastPrompt", prompt);
     }
@@ -451,8 +430,14 @@ export default function Hero({ popularComponents = [] }: HeroProps) {
           setSubscription(sub);
 
           if (sub) {
-            const integrations = await fetchUserIntegrations();
-            setUserIntegrations(integrations);
+            fetchUserIntegrations()
+              .then((integrations) => {
+                setUserIntegrations(integrations);
+              })
+              .catch((error) => {
+                console.error("Error fetching integrations:", error);
+                setUserIntegrations([]);
+              });
           } else {
             setUserIntegrations([]);
             setSelectedIntegration(null);
@@ -464,6 +449,9 @@ export default function Hero({ popularComponents = [] }: HeroProps) {
         }
       } catch (error) {
         console.error("Error fetching subscription:", error);
+        setSubscription(null);
+        setUserIntegrations([]);
+        setSelectedIntegration(null);
       } finally {
         setIsLoadingSubscription(false);
       }
@@ -480,13 +468,26 @@ export default function Hero({ popularComponents = [] }: HeroProps) {
           setSubscription(null);
         } else if (event === "SIGNED_IN" && session?.user) {
           setIsLoggedIn(true);
-          const sub = await getSubscription(session.user.id);
-          setSubscription(sub);
+          try {
+            const sub = await getSubscription(session.user.id);
+            setSubscription(sub);
 
-          if (sub) {
-            const integrations = await fetchUserIntegrations();
-            setUserIntegrations(integrations);
-          } else {
+            if (sub) {
+              fetchUserIntegrations()
+                .then((integrations) => {
+                  setUserIntegrations(integrations);
+                })
+                .catch((error) => {
+                  console.error("Error fetching integrations:", error);
+                  setUserIntegrations([]);
+                });
+            } else {
+              setUserIntegrations([]);
+              setSelectedIntegration(null);
+            }
+          } catch (error) {
+            console.error("Error fetching subscription:", error);
+            setSubscription(null);
             setUserIntegrations([]);
             setSelectedIntegration(null);
           }
@@ -497,7 +498,7 @@ export default function Hero({ popularComponents = [] }: HeroProps) {
     return () => {
       authListener?.subscription.unsubscribe();
     };
-  }, []);
+  }, [supabase]);
 
   const handleImageChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
