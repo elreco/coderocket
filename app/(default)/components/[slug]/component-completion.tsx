@@ -19,6 +19,9 @@ import {
   Info,
   Share,
   Rocket,
+  Monitor,
+  Tablet,
+  Smartphone,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
@@ -51,8 +54,10 @@ import {
   ChatMessage,
   ComponentContext,
   WebcontainerLoadingState,
+  BreakpointType,
 } from "@/context/component-context";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 import type { CustomDomainData } from "@/types/custom-domain";
 import { Tables } from "@/types_db";
 import {
@@ -116,6 +121,7 @@ export default function ComponentCompletion({
   const [loadingState, setLoadingState] =
     useState<WebcontainerLoadingState>(null);
   const [iframeKey, setIframeKey] = useState(0);
+  const [breakpoint, setBreakpoint] = useState<BreakpointType>("desktop");
 
   const [chatFiles, setChatFiles] = useState<ChatFile[]>([]);
   const [artifactFiles, setArtifactFiles] = useState<ChatFile[]>([]);
@@ -1124,6 +1130,8 @@ export default function ComponentCompletion({
     customDomain,
     subscription,
     githubConnection,
+    breakpoint,
+    setBreakpoint,
   };
 
   useEffect(() => {
@@ -1325,96 +1333,176 @@ export default function ComponentCompletion({
                 (isWebcontainerReady &&
                   fetchedChat?.framework !== Framework.HTML)) &&
                 isCanvas && (
-                  <div className="border-border bg-secondary flex items-center justify-end gap-2 border-t p-2">
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="background"
-                          size="sm"
-                          onClick={() => setIframeKey((prev) => prev + 1)}
-                          className="flex items-center"
-                          disabled={isLoading}
-                        >
-                          <RefreshCw className="w-5" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Reload preview</p>
-                      </TooltipContent>
-                    </Tooltip>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="background"
-                          size="sm"
-                          onClick={() => setIsModalOpen(true)}
-                          className="flex items-center"
-                          disabled={isLoading || isLengthError}
-                        >
-                          <Fullscreen className="w-5" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        {isLengthError ? (
-                          <p>The component has an error</p>
-                        ) : (
-                          <p>Display in fullscreen</p>
-                        )}
-                      </TooltipContent>
-                    </Tooltip>
-                    {(isWebcontainerReady ||
-                      fetchedChat?.framework === Framework.HTML) && (
+                  <div className="border-border bg-secondary flex items-center justify-between gap-2 border-t p-2">
+                    <div className="flex items-center gap-2">
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Button
-                            variant="background"
+                            variant="ghost"
                             size="sm"
-                            onClick={() => {
-                              const url =
-                                fetchedChat?.framework === Framework.HTML
-                                  ? `https://www.coderocket.app/content/${chatId}/${selectedVersion}`
-                                  : `https://${chatId}-${selectedVersion}.preview.coderocket.app`;
-
-                              window.open(url, "_blank");
-                            }}
+                            onClick={() => setIframeKey((prev) => prev + 1)}
                             className="flex items-center"
-                            disabled={isLoading || isLengthError}
+                            disabled={isLoading}
                           >
-                            <ExternalLink className="w-5" />
+                            <RefreshCw className="w-5" />
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p>
-                            {isLengthError
-                              ? "The component has an error"
-                              : "Open in a new tab"}
-                          </p>
+                          <p>Reload preview</p>
                         </TooltipContent>
                       </Tooltip>
-                    )}
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setIsModalOpen(true)}
+                            className="flex items-center"
+                            disabled={isLoading || isLengthError}
+                          >
+                            <Fullscreen className="w-5" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          {isLengthError ? (
+                            <p>The component has an error</p>
+                          ) : (
+                            <p>Display in fullscreen</p>
+                          )}
+                        </TooltipContent>
+                      </Tooltip>
+                      {(isWebcontainerReady ||
+                        fetchedChat?.framework === Framework.HTML) && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                const url =
+                                  fetchedChat?.framework === Framework.HTML
+                                    ? `https://www.coderocket.app/content/${chatId}/${selectedVersion}`
+                                    : `https://${chatId}-${selectedVersion}.preview.coderocket.app`;
+
+                                window.open(url, "_blank");
+                              }}
+                              className="flex items-center"
+                              disabled={isLoading || isLengthError}
+                            >
+                              <ExternalLink className="w-5" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>
+                              {isLengthError
+                                ? "The component has an error"
+                                : "Open in a new tab"}
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="border-border bg-background flex items-center rounded-md border">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setBreakpoint("desktop")}
+                              className={cn(
+                                "h-8 rounded-r-none px-2",
+                                breakpoint === "desktop" && "bg-secondary",
+                              )}
+                              disabled={isLoading}
+                            >
+                              <Monitor className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Desktop</p>
+                          </TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setBreakpoint("tablet")}
+                              className={cn(
+                                "h-8 rounded-none px-2",
+                                breakpoint === "tablet" && "bg-secondary",
+                              )}
+                              disabled={isLoading}
+                            >
+                              <Tablet className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Tablet</p>
+                          </TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setBreakpoint("mobile")}
+                              className={cn(
+                                "h-8 rounded-l-none px-2",
+                                breakpoint === "mobile" && "bg-secondary",
+                              )}
+                              disabled={isLoading}
+                            >
+                              <Smartphone className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Mobile</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+                    </div>
                     <Dialog
                       open={isModalOpen}
                       onOpenChange={handleFullscreenToggle}
                     >
                       <DialogContent className="z-9999 h-full w-full max-w-full! rounded-none p-10">
                         <DialogTitle className="hidden">Fullscreen</DialogTitle>
-                        <DialogDescription className="z-50">
-                          {fetchedChat?.framework !== Framework.HTML &&
-                          isWebcontainerReady ? (
-                            <iframe
-                              key={iframeKey}
-                              className="size-full rounded-md border-none"
-                              src={`https://${chatId}-${selectedVersion}.webcontainer.coderocket.app`}
-                              sandbox="allow-scripts allow-forms allow-popups allow-modals allow-storage-access-by-user-activation allow-same-origin"
-                              allow="credentialless"
-                              loading="eager"
-                            />
-                          ) : (
-                            <RenderHtmlComponent
-                              key={iframeKey}
-                              files={artifactFiles}
-                            />
+                        <DialogDescription
+                          className={cn(
+                            "z-50 flex items-center justify-center",
+                            breakpoint === "tablet" && "bg-muted",
+                            breakpoint === "mobile" && "bg-muted",
                           )}
+                        >
+                          <div
+                            className={cn(
+                              "relative transition-all duration-300",
+                              breakpoint === "desktop" && "size-full",
+                              breakpoint === "tablet" &&
+                                "w-[768px] h-[1024px] max-w-full max-h-full shadow-2xl",
+                              breakpoint === "mobile" &&
+                                "w-[375px] h-[667px] max-w-full max-h-full shadow-2xl",
+                            )}
+                          >
+                            {fetchedChat?.framework !== Framework.HTML &&
+                            isWebcontainerReady ? (
+                              <iframe
+                                key={iframeKey}
+                                className="size-full rounded-md border-none"
+                                src={`https://${chatId}-${selectedVersion}.webcontainer.coderocket.app`}
+                                sandbox="allow-scripts allow-forms allow-popups allow-modals allow-storage-access-by-user-activation allow-same-origin"
+                                allow="credentialless"
+                                loading="eager"
+                              />
+                            ) : (
+                              <RenderHtmlComponent
+                                key={iframeKey}
+                                files={artifactFiles}
+                              />
+                            )}
+                          </div>
                         </DialogDescription>
                       </DialogContent>
                     </Dialog>
@@ -1463,7 +1551,7 @@ export default function ComponentCompletion({
                             onClick={handleLikeClick}
                             variant="secondary"
                             size="sm"
-                            className={`ml-2 flex items-center gap-1 rounded-full p-2 shadow-md transition-colors ${
+                            className={`ml-2 flex items-center border-none gap-1 rounded-full p-2 shadow-md transition-colors ${
                               isLiked
                                 ? "bg-primary text-secondary hover:bg-primary"
                                 : "bg-pink-500 text-pink-300 hover:bg-pink-400"

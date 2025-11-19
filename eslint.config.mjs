@@ -33,7 +33,7 @@ export default [
         callees: ["cn", "cva", "cx"],
         removeDuplicates: true,
         whitelist: [],
-        config: path.join(__dirname, "tailwind.config.js"),
+        config: false,
       },
     },
   },

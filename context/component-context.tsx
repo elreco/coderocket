@@ -23,6 +23,8 @@ export type WebcontainerLoadingState =
   | "token-limit"
   | null;
 
+export type BreakpointType = "desktop" | "tablet" | "mobile";
+
 interface ComponentContextType {
   isCanvas: boolean;
   setCanvas: (value: boolean) => void;
@@ -74,6 +76,8 @@ interface ComponentContextType {
   customDomain: CustomDomainData | null;
   subscription: Tables<"subscriptions"> | null;
   githubConnection: Tables<"github_connections"> | null;
+  breakpoint: BreakpointType;
+  setBreakpoint: (value: BreakpointType) => void;
 }
 
 export const ComponentContext = createContext<ComponentContextType | undefined>(

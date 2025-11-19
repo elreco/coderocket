@@ -74,7 +74,7 @@ export function NavUser({
               size="lg"
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
-              <Avatar className="group-hover:border-primary size-8 rounded-lg transition-all duration-300">
+              <Avatar className="group-hover:border-primary rounded-lg transition-all duration-300 size-full">
                 <AvatarImage src={user.avatar_url || undefined} />
                 <AvatarFallback>
                   <img

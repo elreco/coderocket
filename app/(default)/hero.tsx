@@ -1315,13 +1315,11 @@ export default function Hero({ popularComponents = [] }: HeroProps) {
                               type="button"
                               size="sm"
                               variant="background"
-                              className="h-8 w-full gap-2 text-xs sm:w-auto"
+                              className="h-8 w-full gap-2 sm:w-auto"
                               disabled={loading}
                             >
                               <SiSupabase className="size-3.5 shrink-0 text-green-600" />
-                              <span className="hidden sm:inline">
-                                Connect Supabase
-                              </span>
+                              <span className="hidden sm:inline">Supabase</span>
                             </Button>
                           </Link>
                         )}
@@ -1339,7 +1337,7 @@ export default function Hero({ popularComponents = [] }: HeroProps) {
                       }
                     }}
                   >
-                    <SelectTrigger className="border-background h-8 w-full rounded-md sm:w-auto">
+                    <SelectTrigger className="h-8 w-full rounded-md sm:w-auto">
                       <div className="flex items-center gap-2">
                         {(() => {
                           const config = frameworkConfig[selectedFramework];

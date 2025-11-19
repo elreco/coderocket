@@ -10,6 +10,7 @@ import {
   useComponentContext,
   WebcontainerLoadingState,
 } from "@/context/component-context";
+import { cn } from "@/lib/utils";
 import { createContinuePrompt } from "@/utils/completion-parser";
 import { FREE_CHAR_LIMIT } from "@/utils/config";
 
@@ -78,6 +79,7 @@ export default function ComponentPreview() {
     setInput,
     isWebcontainerReady,
     handleSubmitToAI,
+    breakpoint,
   } = useComponentContext();
   const [iframeLoading, setIframeLoading] = React.useState(false);
 
@@ -215,37 +217,54 @@ export default function ComponentPreview() {
         displayVersion !== undefined &&
         !buildError &&
         !shouldShowLoader && (
-          <div className="relative size-full">
-            {isGeneratingNewVersion && (
-              <div className="border-primary bg-background absolute top-4 right-4 z-20 flex items-center gap-2 rounded-full border px-4 py-2 shadow-xl">
-                <Loader2 className="text-primary size-4 animate-spin" />
-                <span className="text-primary text-sm font-medium">
-                  {loadingState === "processing"
-                    ? `Building version ${selectedVersion}...`
-                    : loadingState === "deploying"
-                      ? `Deploying version ${selectedVersion}...`
-                      : `Generating version ${selectedVersion}...`}
-                </span>
-              </div>
+          <div
+            className={cn(
+              "relative size-full flex items-center justify-center",
+              breakpoint === "tablet" && "bg-muted",
+              breakpoint === "mobile" && "bg-muted",
             )}
-            {iframeLoading &&
-              isWebcontainerReady &&
-              !isGeneratingNewVersion && (
-                <div className="bg-background absolute inset-0 z-10 flex items-center justify-center">
-                  <LoadingStateComponent state="starting" />
+          >
+            <div
+              className={cn(
+                "relative size-full transition-all duration-300",
+                breakpoint === "desktop" && "w-full h-full",
+                breakpoint === "tablet" &&
+                  "w-[768px] h-full max-w-full max-h-full shadow-2xl",
+                breakpoint === "mobile" &&
+                  "w-[375px] h-full max-w-full max-h-full shadow-2xl",
+              )}
+            >
+              {isGeneratingNewVersion && (
+                <div className="border-primary bg-background absolute top-4 right-4 z-20 flex items-center gap-2 rounded-full border px-4 py-2 shadow-xl">
+                  <Loader2 className="text-primary size-4 animate-spin" />
+                  <span className="text-primary text-sm font-medium">
+                    {loadingState === "processing"
+                      ? `Building version ${selectedVersion}...`
+                      : loadingState === "deploying"
+                        ? `Deploying version ${selectedVersion}...`
+                        : `Generating version ${selectedVersion}...`}
+                  </span>
                 </div>
               )}
-            {displayVersion !== undefined && (
-              <iframe
-                key={`iframe-${displayVersion}`}
-                src={`https://${chatId}-${displayVersion}.webcontainer.coderocket.app`}
-                className="size-full border-none"
-                sandbox="allow-scripts allow-forms allow-popups allow-modals allow-storage-access-by-user-activation allow-same-origin"
-                allow="credentialless"
-                loading="eager"
-                onLoad={() => setIframeLoading(false)}
-              />
-            )}
+              {iframeLoading &&
+                isWebcontainerReady &&
+                !isGeneratingNewVersion && (
+                  <div className="bg-background absolute inset-0 z-10 flex items-center justify-center">
+                    <LoadingStateComponent state="starting" />
+                  </div>
+                )}
+              {displayVersion !== undefined && (
+                <iframe
+                  key={`iframe-${displayVersion}`}
+                  src={`https://${chatId}-${displayVersion}.webcontainer.coderocket.app`}
+                  className="size-full border-none"
+                  sandbox="allow-scripts allow-forms allow-popups allow-modals allow-storage-access-by-user-activation allow-same-origin"
+                  allow="credentialless"
+                  loading="eager"
+                  onLoad={() => setIframeLoading(false)}
+                />
+              )}
+            </div>
           </div>
         )}
     </>
