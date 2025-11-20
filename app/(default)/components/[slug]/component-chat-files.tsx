@@ -621,7 +621,7 @@ ${extractedFiles
                 src={message.screenshot || undefined}
                 alt="screenshot"
                 className={cn(
-                  "size-full max-w-full cursor-pointer rounded-md border transition-all duration-300",
+                  "h-auto w-full max-w-full cursor-pointer rounded-md border transition-all duration-300",
                   isLoading ? "cursor-default" : "cursor-pointer",
                 )}
                 onClick={() => handleFileClick(message.version)}

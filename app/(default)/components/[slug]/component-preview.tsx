@@ -84,6 +84,7 @@ export default function ComponentPreview() {
     syncPreviewPath,
     isLengthError,
     isScrapingWebsite,
+    isContinuingFromLengthError,
   } = useComponentContext();
   const [iframeLoading, setIframeLoading] = React.useState(false);
 
@@ -184,6 +185,7 @@ export default function ComponentPreview() {
   const isFirstGeneration = selectedVersion === 0;
   const shouldShowLoader =
     isScrapingWebsite ||
+    isContinuingFromLengthError ||
     (isFirstGeneration && isLoading) ||
     (isFirstGeneration && loadingState && loadingState !== "error") ||
     (isLengthError &&
@@ -266,8 +268,7 @@ export default function ComponentPreview() {
       {chatId &&
         displayVersion !== undefined &&
         !buildError &&
-        !shouldShowLoader &&
-        !isLengthError && (
+        !shouldShowLoader && (
           <div
             className={cn(
               "relative size-full flex items-center justify-center",

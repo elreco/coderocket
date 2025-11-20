@@ -131,6 +131,12 @@ IMPORTANT: Always use Tailwind CSS v4 syntax, not v3.
        - Add key images in their appropriate sections
        - Use exact URLs provided, don't replace with placeholders
 
+    4. **Component Architecture (React/Vue/Angular/Svelte)**:
+       - Break the UI into reusable section components (Navbar, Hero, Features, Pricing, Footer, etc.)
+       - Each major section must live in its own component/file and be imported into a clean page entry (e.g., \`pages/index.tsx\`)
+       - Do NOT dump the entire page into a single component—mirror the screenshot with a composition of smaller components
+       - Extract repeated patterns (cards, CTAs, testimonial blocks) into dedicated sub-components
+
     **Critical Rules:**
     - ✅ The screenshot is your PRIMARY design reference - trust your visual analysis
     - ✅ Extract colors from what you see: use arbitrary values like bg-[#1a1a1a] for precision

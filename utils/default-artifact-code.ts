@@ -394,13 +394,6 @@ export { clamp, roundToStep, convertValueToPercentage };
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <style>
-    [ng-cloak],
-    [data-ng-cloak],
-    [x-ng-cloak],
-    .ng-cloak,
-    .x-ng-cloak {
-      display: none !important;
-    }
     body {
       margin: 0;
       background-color: #0B0B1D;
@@ -412,7 +405,7 @@ export { clamp, roundToStep, convertValueToPercentage };
     }
   </style>
 </head>
-<body ng-cloak>
+<body>
   <app-root></app-root>
 </body>
 </html>
@@ -516,6 +509,7 @@ bootstrapApplication(App, appConfig).catch((err) => console.error(err));
     "isolatedModules": true,
     "experimentalDecorators": true,
     "importHelpers": true,
+    "allowImportingTsExtensions": true,
     "target": "ES2022",
     "module": "preserve",
     "baseUrl": "./",

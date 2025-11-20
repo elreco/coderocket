@@ -39,7 +39,6 @@ import { useComponentContext } from "@/context/component-context";
 import { toast } from "@/hooks/use-toast";
 import { cn, truncateMiddle } from "@/lib/utils";
 import { Tables } from "@/types_db";
-import { cloneWebsite } from "@/utils/actions/clone-website";
 import {
   ChatFile,
   ContentChunk,
@@ -99,6 +98,7 @@ export default function ComponentSidebar({
     sidebarTab: activeTab,
     setSidebarTab: setActiveTab,
     setIsScrapingWebsite,
+    setIsContinuingFromLengthError,
   } = useComponentContext();
   const { buildError } = useBuilder();
 
@@ -126,6 +126,13 @@ export default function ComponentSidebar({
   const hasAssistantMessage = useMemo(
     () => messages.some((m) => m.role === "assistant"),
     [messages],
+  );
+  const selectedAssistantMessage = useMemo(
+    () =>
+      messages.find(
+        (m) => m.role === "assistant" && m.version === selectedVersion,
+      ),
+    [messages, selectedVersion],
   );
   const [subscription, setSubscription] = useState<
     | (Tables<"subscriptions"> & {
@@ -209,6 +216,7 @@ export default function ComponentSidebar({
       return;
     }
 
+    setIsContinuingFromLengthError(false);
     submitPrompt(input);
   };
 
@@ -458,85 +466,27 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
     }
   };
 
-  const fetchCloneData = useCallback(
-    async (url: string) => {
-      if (!url) return false;
+  const startScrapeSimulation = useCallback(() => {
+    setIsScrapingWebsite(true);
+    setScrapingStatus({
+      progress: 5,
+      screenshot: null,
+      error: null,
+    });
 
-      let progressInterval: NodeJS.Timeout | null = null;
-      let currentProgress = 0;
+    let currentProgress = 5;
+    const intervalId = setInterval(() => {
+      currentProgress += Math.random() * 6 + 1;
+      if (currentProgress > 92) currentProgress = 92;
+      setScrapingStatus((prev) => ({
+        ...prev,
+        progress: currentProgress,
+        error: null,
+      }));
+    }, 900);
 
-      setIsScrapingWebsite(true);
-
-      try {
-        setScrapingStatus((prev) => ({ ...prev, progress: 5 }));
-        currentProgress = 5;
-
-        progressInterval = setInterval(() => {
-          currentProgress += Math.random() * 8 + 2;
-          if (currentProgress > 85) currentProgress = 85;
-          setScrapingStatus((prev) => ({ ...prev, progress: currentProgress }));
-        }, 1200);
-
-        const result = await cloneWebsite(url);
-
-        if (progressInterval) clearInterval(progressInterval);
-
-        if (result.success && result.data) {
-          const cloneData = result.data;
-          console.log("Clone data received:", {
-            hasScreenshot: !!cloneData.screenshot,
-            screenshotType: typeof cloneData.screenshot,
-            screenshotLength: cloneData.screenshot?.length,
-            hasMarkdown: !!cloneData.markdown,
-            hasHtml: !!cloneData.html,
-          });
-
-          const finalSteps = [90, 95, 100];
-          for (let i = 0; i < finalSteps.length; i++) {
-            await new Promise((resolve) => setTimeout(resolve, 200));
-            setScrapingStatus((prev) => ({
-              ...prev,
-              progress: finalSteps[i],
-              screenshot:
-                i === finalSteps.length - 1
-                  ? cloneData.screenshot || null
-                  : prev.screenshot,
-            }));
-          }
-
-          setScrapingStatus({
-            progress: 100,
-            screenshot: cloneData.screenshot || null,
-            error: null,
-          });
-
-          return true;
-        } else if (!result.success) {
-          setScrapingStatus((prev) => ({
-            ...prev,
-            error: result.error || "Failed to analyze website",
-            progress: 95,
-          }));
-          return false;
-        }
-      } catch (error) {
-        if (progressInterval) clearInterval(progressInterval);
-        console.error("Error fetching clone data:", error);
-        setScrapingStatus((prev) => ({
-          ...prev,
-          error:
-            error instanceof Error ? error.message : "Unknown error occurred",
-          progress: 95,
-        }));
-      } finally {
-        if (progressInterval) clearInterval(progressInterval);
-        setIsScrapingWebsite(false);
-      }
-
-      return false;
-    },
-    [setIsScrapingWebsite],
-  );
+    return intervalId;
+  }, [setIsScrapingWebsite]);
 
   useEffect(() => {
     if (
@@ -544,58 +494,42 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
       ((selectedVersion === -1 && isLoading) || isCloneAnotherPageActive) &&
       isLoading
     ) {
-      let intervalId: NodeJS.Timeout;
-      let hasRealData = false;
-
-      const fetchData = async () => {
-        if (fetchedChat.clone_url) {
-          hasRealData = await fetchCloneData(fetchedChat.clone_url);
-        }
-
-        if (!hasRealData) {
-          intervalId = setInterval(() => {
-            setScrapingStatus((prev) => {
-              const progressIncrement = Math.floor(Math.random() * 4) + 2;
-              const newProgress = Math.min(
-                prev.progress + progressIncrement,
-                95,
-              );
-
-              return {
-                progress: newProgress,
-                screenshot: prev.screenshot,
-                error: prev.error,
-              };
-            });
-          }, 800);
-        }
-      };
-
-      fetchData();
+      const intervalId = startScrapeSimulation();
 
       return () => {
-        if (intervalId) clearInterval(intervalId);
+        if (intervalId) {
+          clearInterval(intervalId);
+          setIsScrapingWebsite(false);
+        }
       };
     }
   }, [
     fetchedChat?.clone_url,
     selectedVersion,
     isLoading,
-    fetchCloneData,
+    startScrapeSimulation,
     isCloneAnotherPageActive,
+    setIsScrapingWebsite,
   ]);
 
   useEffect(() => {
     if (!isLoading && isCloneAnotherPageActive) {
       setIsCloneAnotherPageActive(false);
       setCurrentCloneUrl(null);
-      setScrapingStatus({
-        progress: 0,
-        screenshot: null,
-        error: null,
-      });
     }
   }, [isLoading, isCloneAnotherPageActive]);
+
+  useEffect(() => {
+    if (!isLoading) {
+      setIsScrapingWebsite(false);
+      setScrapingStatus((prev) => ({
+        progress: prev.progress >= 100 ? prev.progress : 100,
+        screenshot:
+          selectedAssistantMessage?.screenshot ?? prev.screenshot ?? null,
+        error: null,
+      }));
+    }
+  }, [isLoading, selectedAssistantMessage, setIsScrapingWebsite]);
 
   return (
     <div
@@ -1111,6 +1045,7 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
                         size="sm"
                         className="mr-2"
                         onClick={() => {
+                          setIsContinuingFromLengthError(true);
                           const continuePrompt = createContinuePrompt(messages);
                           setInput(continuePrompt);
                           submitPrompt(continuePrompt);

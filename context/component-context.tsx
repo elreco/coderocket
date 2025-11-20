@@ -86,6 +86,8 @@ interface ComponentContextType {
   syncPreviewPath: (path: string, options?: { pushHistory?: boolean }) => void;
   isScrapingWebsite: boolean;
   setIsScrapingWebsite: (value: boolean) => void;
+  isContinuingFromLengthError: boolean;
+  setIsContinuingFromLengthError: (value: boolean) => void;
 }
 
 export const ComponentContext = createContext<ComponentContextType | undefined>(

@@ -229,6 +229,8 @@ export default function ComponentCompletion({
   const [isLoading, setIsLoading] = useState(true);
   const [forceBuild, setForceBuild] = useState(false);
   const [isLengthError, setIsLengthError] = useState(false);
+  const [isContinuingFromLengthError, setIsContinuingFromLengthError] =
+    useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [fetchedChat, setFetchedChat] = useState<Tables<"chats"> | null>(null);
@@ -552,6 +554,7 @@ export default function ComponentCompletion({
       experimental_throttle: 500,
       onError: async (error: Error) => {
         setIsSubmitting(false);
+        setIsContinuingFromLengthError(false);
         const artifactCodeToUse =
           fetchedChat?.artifact_code ||
           (fetchedChat?.framework && fetchedChat.framework !== Framework.HTML
@@ -727,6 +730,7 @@ export default function ComponentCompletion({
       onFinish: async () => {
         try {
           setIsSubmitting(false);
+          setIsContinuingFromLengthError(false);
           await refreshChatData();
           const refreshedLastAssistantMessage =
             await fetchLastAssistantMessageByChatId(chatId);
@@ -1291,6 +1295,8 @@ export default function ComponentCompletion({
     syncPreviewPath,
     isScrapingWebsite,
     setIsScrapingWebsite,
+    isContinuingFromLengthError,
+    setIsContinuingFromLengthError,
   };
 
   useEffect(() => {
