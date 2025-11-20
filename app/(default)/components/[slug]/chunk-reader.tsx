@@ -143,6 +143,7 @@ export function ChunkReader({
                                 !isCanvas &&
                                 !file.isDelete &&
                                 "text-foreground",
+                              file.isDelete && "group-hover:text-red-500!",
                             )}
                           >
                             {file.isDelete ? (

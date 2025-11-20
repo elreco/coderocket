@@ -1053,6 +1053,16 @@ const validateRequest = async (
       if (cloneResult.success && cloneResult.data) {
         const data = cloneResult.data;
 
+        console.log("🧠 Scrape payload sent to AI:", {
+          url: urlToClone,
+          title: data.title,
+          description: data.description,
+          htmlLength: data.html?.length || 0,
+          markdownLength: data.markdown?.length || 0,
+          hasScreenshot: Boolean(data.screenshot),
+          images: data.images || [],
+        });
+
         // Optimiser le markdown pour réduire les tokens
         const optimizedMarkdown = data.markdown
           ? optimizeMarkdownForTokens(data.markdown)

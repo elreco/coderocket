@@ -1,54 +1,47 @@
 "use server";
 
-import chromium from "@sparticuz/chromium";
-import puppeteerCore from "puppeteer-core";
-
-import { defaultTheme, Framework } from "./config";
+import { builderApiUrl, defaultTheme, Framework } from "./config";
 import { createClient } from "./supabase/server";
 /**
- * Lance Puppeteer pour prendre un screenshot d'une URL.
- * @param url L'adresse complète de la page à capturer (ex: https://<hash>.webcontainer.io).
- * @returns Buffer d'image PNG.
+ * Endpoint distant pour récupérer les captures d'écran.
  */
-
-export async function getBrowser() {
-  const executablePath = await chromium.executablePath();
-  const browser = await puppeteerCore.launch({
-    args: [...chromium.args, "--disable-extensions"],
-    defaultViewport: chromium.defaultViewport,
-    executablePath,
-    headless: true,
-    ignoreDefaultArgs: ["--disable-extensions"],
-  });
-  return browser;
-}
+const SCREENSHOT_ENDPOINT = builderApiUrl
+  ? `${builderApiUrl.replace(/\/$/, "")}/capture-screenshot`
+  : null;
 
 export async function captureScreenshot(url: string) {
-  // Lance un navigateur headless
+  if (!SCREENSHOT_ENDPOINT) {
+    console.error("Screenshot endpoint is not configured");
+    return undefined;
+  }
+
   try {
-    const browser = await getBrowser();
-    const page = await browser.newPage();
-    // Configure la taille de la fenêtre
-    await page.setViewport({
-      width: 1200,
-      height: 630,
-      deviceScaleFactor: 1,
+    const response = await fetch(SCREENSHOT_ENDPOINT, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      cache: "no-store",
+      body: JSON.stringify({ url }),
     });
 
-    // Ou bien lors du goto :
-    await page.goto(url, {
-      waitUntil: "networkidle0",
-    });
-    await new Promise((resolve) => setTimeout(resolve, 5000));
-    // Prend la capture d'écran au format PNG (renvoie un Buffer)
-    const screenshot = await page.screenshot({
-      type: "png",
-    });
+    if (!response.ok) {
+      throw new Error(
+        `Remote screenshot responded with status ${response.status}`,
+      );
+    }
 
-    await browser.close();
-    return screenshot;
+    const payload = await response.json();
+    const base64Screenshot =
+      payload?.data?.screenshot ?? payload?.screenshot ?? null;
+
+    if (!base64Screenshot || typeof base64Screenshot !== "string") {
+      throw new Error("Remote screenshot returned an invalid payload");
+    }
+
+    return Buffer.from(base64Screenshot, "base64");
   } catch (error) {
-    console.error("Failed to capture screenshot", error);
+    console.error("Failed to capture screenshot remotely", error);
     return undefined;
   }
 }

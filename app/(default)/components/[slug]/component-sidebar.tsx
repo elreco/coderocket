@@ -15,7 +15,7 @@ import {
   Rocket,
   Database,
 } from "lucide-react";
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 
 import { getSubscription } from "@/app/supabase-server";
 import { CloneAnotherPageButton } from "@/components/clone-another-page-button";
@@ -91,10 +91,14 @@ export default function ComponentSidebar({
     setInput,
     chatId,
     selectedFramework,
+    isWebcontainerReady,
     files,
     setFiles,
     isLengthError,
     fetchedChat,
+    sidebarTab: activeTab,
+    setSidebarTab: setActiveTab,
+    setIsScrapingWebsite,
   } = useComponentContext();
   const { buildError } = useBuilder();
 
@@ -102,8 +106,6 @@ export default function ComponentSidebar({
   const containerRef = useRef<HTMLDivElement>(null);
   const currentVersionRef = useRef<HTMLDivElement | null>(null);
   const [streamingChunks, setStreamingChunks] = useState<ContentChunk[]>([]);
-  const { sidebarTab: activeTab, setSidebarTab: setActiveTab } =
-    useComponentContext();
   const [hasImproved, setHasImproved] = useState(false);
   const [isImprovingLoading, setIsImprovingLoading] = useState(false);
   const [chatFiles, setChatFiles] = useState<ChatFile[]>([]);
@@ -121,6 +123,10 @@ export default function ComponentSidebar({
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [inputIsValid, setInputIsValid] = useState(true);
+  const hasAssistantMessage = useMemo(
+    () => messages.some((m) => m.role === "assistant"),
+    [messages],
+  );
   const [subscription, setSubscription] = useState<
     | (Tables<"subscriptions"> & {
         prices: Partial<Tables<"prices">> | null;
@@ -452,77 +458,85 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
     }
   };
 
-  const fetchCloneData = useCallback(async (url: string) => {
-    if (!url) return false;
+  const fetchCloneData = useCallback(
+    async (url: string) => {
+      if (!url) return false;
 
-    let progressInterval: NodeJS.Timeout | null = null;
-    let currentProgress = 0;
+      let progressInterval: NodeJS.Timeout | null = null;
+      let currentProgress = 0;
 
-    try {
-      setScrapingStatus((prev) => ({ ...prev, progress: 5 }));
-      currentProgress = 5;
+      setIsScrapingWebsite(true);
 
-      progressInterval = setInterval(() => {
-        currentProgress += Math.random() * 8 + 2;
-        if (currentProgress > 85) currentProgress = 85;
-        setScrapingStatus((prev) => ({ ...prev, progress: currentProgress }));
-      }, 1200);
+      try {
+        setScrapingStatus((prev) => ({ ...prev, progress: 5 }));
+        currentProgress = 5;
 
-      const result = await cloneWebsite(url);
+        progressInterval = setInterval(() => {
+          currentProgress += Math.random() * 8 + 2;
+          if (currentProgress > 85) currentProgress = 85;
+          setScrapingStatus((prev) => ({ ...prev, progress: currentProgress }));
+        }, 1200);
 
-      if (progressInterval) clearInterval(progressInterval);
+        const result = await cloneWebsite(url);
 
-      if (result.success && result.data) {
-        const cloneData = result.data;
-        console.log("Clone data received:", {
-          hasScreenshot: !!cloneData.screenshot,
-          screenshotType: typeof cloneData.screenshot,
-          screenshotLength: cloneData.screenshot?.length,
-          hasMarkdown: !!cloneData.markdown,
-          hasHtml: !!cloneData.html,
-        });
+        if (progressInterval) clearInterval(progressInterval);
 
-        const finalSteps = [90, 95, 100];
-        for (let i = 0; i < finalSteps.length; i++) {
-          await new Promise((resolve) => setTimeout(resolve, 200));
+        if (result.success && result.data) {
+          const cloneData = result.data;
+          console.log("Clone data received:", {
+            hasScreenshot: !!cloneData.screenshot,
+            screenshotType: typeof cloneData.screenshot,
+            screenshotLength: cloneData.screenshot?.length,
+            hasMarkdown: !!cloneData.markdown,
+            hasHtml: !!cloneData.html,
+          });
+
+          const finalSteps = [90, 95, 100];
+          for (let i = 0; i < finalSteps.length; i++) {
+            await new Promise((resolve) => setTimeout(resolve, 200));
+            setScrapingStatus((prev) => ({
+              ...prev,
+              progress: finalSteps[i],
+              screenshot:
+                i === finalSteps.length - 1
+                  ? cloneData.screenshot || null
+                  : prev.screenshot,
+            }));
+          }
+
+          setScrapingStatus({
+            progress: 100,
+            screenshot: cloneData.screenshot || null,
+            error: null,
+          });
+
+          return true;
+        } else if (!result.success) {
           setScrapingStatus((prev) => ({
             ...prev,
-            progress: finalSteps[i],
-            screenshot:
-              i === finalSteps.length - 1
-                ? cloneData.screenshot || null
-                : prev.screenshot,
+            error: result.error || "Failed to analyze website",
+            progress: 95,
           }));
+          return false;
         }
-
-        setScrapingStatus({
-          progress: 100,
-          screenshot: cloneData.screenshot || null,
-          error: null,
-        });
-
-        return true;
-      } else if (!result.success) {
+      } catch (error) {
+        if (progressInterval) clearInterval(progressInterval);
+        console.error("Error fetching clone data:", error);
         setScrapingStatus((prev) => ({
           ...prev,
-          error: result.error || "Failed to analyze website",
+          error:
+            error instanceof Error ? error.message : "Unknown error occurred",
           progress: 95,
         }));
-        return false;
+      } finally {
+        if (progressInterval) clearInterval(progressInterval);
+        setIsScrapingWebsite(false);
       }
-    } catch (error) {
-      if (progressInterval) clearInterval(progressInterval);
-      console.error("Error fetching clone data:", error);
-      setScrapingStatus((prev) => ({
-        ...prev,
-        error:
-          error instanceof Error ? error.message : "Unknown error occurred",
-        progress: 95,
-      }));
-    }
 
-    return false;
-  }, []);
+      return false;
+    },
+    [setIsScrapingWebsite],
+  );
 
   useEffect(() => {
     if (
@@ -1296,7 +1310,11 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
                   <TextareaWithLimit
                     ref={inputRef}
                     autoFocus
-                    disabled={isLoading || isLengthError}
+                    disabled={
+                      isLoading ||
+                      isLengthError ||
+                      (!isWebcontainerReady && hasAssistantMessage)
+                    }
                     isLoading={isLoading}
                     value={input}
                     onChange={(value, isValid) => {
@@ -1379,6 +1397,11 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
                     <Button
                       size="sm"
                       loading={isLoading}
+                      disabled={
+                        isLoading ||
+                        (!isWebcontainerReady && hasAssistantMessage) ||
+                        isLengthError
+                      }
                       type="submit"
                       className="flex w-full items-center"
                     >

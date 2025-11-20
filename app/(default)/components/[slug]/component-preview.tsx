@@ -83,6 +83,7 @@ export default function ComponentPreview() {
     previewPath,
     syncPreviewPath,
     isLengthError,
+    isScrapingWebsite,
   } = useComponentContext();
   const [iframeLoading, setIframeLoading] = React.useState(false);
 
@@ -182,10 +183,11 @@ export default function ComponentPreview() {
   }, [syncPreviewPath]);
   const isFirstGeneration = selectedVersion === 0;
   const shouldShowLoader =
+    isScrapingWebsite ||
     (isFirstGeneration && isLoading) ||
     (isFirstGeneration && loadingState && loadingState !== "error") ||
-    (isLengthError && isLoading) ||
-    (isLengthError && loadingState && loadingState !== "error");
+    (isLengthError &&
+      (isLoading || (loadingState && loadingState !== "error")));
   const isGeneratingNewVersion =
     !isFirstGeneration &&
     !isLengthError &&
@@ -264,7 +266,8 @@ export default function ComponentPreview() {
       {chatId &&
         displayVersion !== undefined &&
         !buildError &&
-        !shouldShowLoader && (
+        !shouldShowLoader &&
+        !isLengthError && (
           <div
             className={cn(
               "relative size-full flex items-center justify-center",

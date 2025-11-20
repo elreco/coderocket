@@ -2,23 +2,22 @@
 
 ## Current Implementation
 
-This directory contains two website scraping implementations:
+This directory contains the remote website scraping implementation that powers the **Clone website** feature. The actual scraping now runs inside the Fly.io `tailwind-ai-builder` service (Puppeteer + Stealth), and the Next.js app simply calls the `/scrape-simple` endpoint.
 
 ### Files
 
-- `website-scraper-simple.ts` - **Primary scraper** using Puppeteer (FREE) - Simple & efficient
-- `website-scraper-firecrawl.ts` - **Fallback scraper** using Firecrawl API
+- `website-scraper-simple.ts` - client helper that forwards requests to the builder API
 - `website-scraper-advanced.ts` - **Legacy scraper** (deprecated, kept for reference)
 
 ## Why Simple Scraper?
 
 The simple scraper is inspired by same.new's approach and provides:
 
-1. **100% FREE** - No API costs, runs on your own infrastructure
+1. **Runs remotely** - Puppeteer + Stealth executed on Fly.io builder
 2. **Efficient** - Extracts only what's needed, reducing token usage
 3. **AI-first** - Trusts Claude's vision capabilities to analyze screenshots
 4. **Clean output** - Simple markdown + screenshot + images
-5. **Vercel compatible** - Uses `@sparticuz/chromium` for serverless deployment
+5. **Vercel friendly** - Next.js simply calls the remote endpoint
 
 ### What it extracts:
 
@@ -39,7 +38,7 @@ This approach is simpler, more robust, and produces better results.
 
 ## Fallback Strategy
 
-If the simple scraper fails (network issues, bot protection, etc.), the system automatically falls back to Firecrawl if the API key is configured.
+There is no longer a Firecrawl fallback. If the remote scraper cannot bypass a site's protection, the clone request fails with an explicit error so you can surface the message to the user.
 
 ## Usage
 
@@ -56,26 +55,11 @@ if (result.success) {
 
 ## Configuration
 
-### For Simple Scraper (Primary)
+Set one of the following environment variables so the Next.js app knows how to reach the builder service:
 
-No configuration needed! It works out of the box.
+- `WEBSITE_SCRAPER_URL`
+- `BUILDER_SCRAPER_URL`
+- `BUILDER_URL`
 
-### For Firecrawl Fallback (Optional)
-
-Set your Firecrawl API key in `.env.local` for fallback support:
-
-```bash
-FIRECRAWL_API_KEY=fc-your-api-key
-```
-
-Get your API key at [firecrawl.dev](https://www.firecrawl.dev/)
-
-## Vercel Deployment
-
-The simple scraper is optimized for Vercel:
-
-- Uses `@sparticuz/chromium` for serverless Chromium
-- Automatically detects environment (dev vs production)
-- Falls back to Firecrawl if Puppeteer fails in production
-- Lightweight and fast, reducing cold start times
+If none are provided, it defaults to the `builderApiUrl` constant defined in `utils/config.ts`.
 

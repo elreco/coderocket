@@ -148,6 +148,7 @@ export default function ComponentCompletion({
   const historyIndexRef = useRef(0);
   const addressInputRef = useRef<HTMLInputElement | null>(null);
   const [addressFocused, setAddressFocused] = useState(false);
+  const [isScrapingWebsite, setIsScrapingWebsite] = useState(false);
 
   const normalizePreviewPath = useCallback((value: string) => {
     if (!value) {
@@ -992,13 +993,13 @@ export default function ComponentCompletion({
     });
   };
 
-  const refreshChat = async () => {
+  const refreshChat = useCallback(async () => {
     const refreshedChat = await fetchChatById(chatId);
     if (!refreshedChat) return;
     setFetchedChat(refreshedChat);
-  };
+  }, [chatId]);
 
-  const refreshChatData = async () => {
+  const refreshChatData = useCallback(async () => {
     const refreshedChatMessages = await fetchMessagesByChatId(chatId, false);
     if (!refreshedChatMessages) return;
     setMessages(refreshedChatMessages);
@@ -1072,7 +1073,7 @@ export default function ComponentCompletion({
     }
 
     return refreshedChatMessages;
-  };
+  }, [chatId, selectedVersion, supabase]);
 
   const handleChatFiles = (
     _completion: string,
@@ -1288,11 +1289,25 @@ export default function ComponentCompletion({
     setAddressBarValue,
     setPreviewPath,
     syncPreviewPath,
+    isScrapingWebsite,
+    setIsScrapingWebsite,
   };
 
   useEffect(() => {
     const channel = supabase
       .channel("schema-db-changes")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "messages",
+          filter: `chat_id=eq.${chatId}`,
+        },
+        async () => {
+          await refreshChatData();
+        },
+      )
       .on(
         "postgres_changes",
         {
@@ -1342,7 +1357,7 @@ export default function ComponentCompletion({
     return () => {
       channel.unsubscribe();
     };
-  }, [chatId, selectedVersion, isLoading]);
+  }, [chatId, selectedVersion, isLoading, refreshChatData, supabase]);
 
   return (
     <ComponentContext.Provider value={contextValue}>
