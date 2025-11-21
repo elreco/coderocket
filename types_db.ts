@@ -345,6 +345,48 @@ export type Database = {
         };
         Relationships: [];
       };
+      email_jobs: {
+        Row: {
+          attempts: number;
+          created_at: string;
+          email: string;
+          id: string;
+          last_error: string | null;
+          payload: Json | null;
+          scenario: string;
+          scheduled_at: string;
+          status: string;
+          updated_at: string;
+          user_id: string | null;
+        };
+        Insert: {
+          attempts?: number;
+          created_at?: string;
+          email: string;
+          id?: string;
+          last_error?: string | null;
+          payload?: Json | null;
+          scenario: string;
+          scheduled_at?: string;
+          status?: string;
+          updated_at?: string;
+          user_id?: string | null;
+        };
+        Update: {
+          attempts?: number;
+          created_at?: string;
+          email?: string;
+          id?: string;
+          last_error?: string | null;
+          payload?: Json | null;
+          scenario?: string;
+          scheduled_at?: string;
+          status?: string;
+          updated_at?: string;
+          user_id?: string | null;
+        };
+        Relationships: [];
+      };
       extra_messages: {
         Row: {
           count: number;
@@ -1147,9 +1189,12 @@ export type Database = {
           avatar_url: string | null;
           billing_address: Json | null;
           created_at: string | null;
+          email: string | null;
           full_name: string | null;
           id: string;
           ip_address: string | null;
+          last_email_scenario: string | null;
+          last_email_sent_at: string | null;
           payment_method: Json | null;
           stripe_account_id: string | null;
           stripe_account_status: string | null;
@@ -1161,9 +1206,12 @@ export type Database = {
           avatar_url?: string | null;
           billing_address?: Json | null;
           created_at?: string | null;
+          email?: string | null;
           full_name?: string | null;
           id: string;
           ip_address?: string | null;
+          last_email_scenario?: string | null;
+          last_email_sent_at?: string | null;
           payment_method?: Json | null;
           stripe_account_id?: string | null;
           stripe_account_status?: string | null;
@@ -1175,9 +1223,12 @@ export type Database = {
           avatar_url?: string | null;
           billing_address?: Json | null;
           created_at?: string | null;
+          email?: string | null;
           full_name?: string | null;
           id?: string;
           ip_address?: string | null;
+          last_email_scenario?: string | null;
+          last_email_sent_at?: string | null;
           payment_method?: Json | null;
           stripe_account_id?: string | null;
           stripe_account_status?: string | null;
@@ -1262,6 +1313,16 @@ export type Database = {
       calculate_available_earnings: {
         Args: { seller_uuid: string };
         Returns: number;
+      };
+      enqueue_email_job: {
+        Args: {
+          p_email: string;
+          p_payload?: Json;
+          p_scenario: string;
+          p_scheduled_at?: string;
+          p_user_id: string;
+        };
+        Returns: undefined;
       };
       generate_api_key: { Args: never; Returns: string };
       get_all_components: {
