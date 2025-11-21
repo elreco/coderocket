@@ -1,14 +1,7 @@
 import { createClient } from "@/utils/supabase/server";
 
-export async function GET(req: Request) {
+export async function GET() {
   try {
-    const cronHeader = req.headers.get("x-vercel-cron");
-    if (cronHeader !== "1") {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-      });
-    }
-
     const supabase = await createClient();
 
     // Update pending earnings to available after 7 days
@@ -44,6 +37,6 @@ export async function GET(req: Request) {
 }
 
 // Also allow POST for manual triggers
-export async function POST(req: Request) {
-  return GET(req);
+export async function POST() {
+  return GET();
 }

@@ -1,6 +1,10 @@
+import { createClient } from "@supabase/supabase-js";
 import { MetadataRoute } from "next";
 
-import { createClient } from "@/utils/supabase/server";
+import { Database } from "@/types_db";
+
+export const dynamic = "force-static";
+export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = "https://www.coderocket.app";
@@ -76,7 +80,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ];
 
   try {
-    const supabase = await createClient();
+    const supabase = createClient<Database>(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    );
     const { data: publicComponents } = await supabase
       .from("chats")
       .select("slug, created_at")

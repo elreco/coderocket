@@ -15,12 +15,6 @@ const payloadSchema = z.object({
 });
 
 export async function GET(req: Request) {
-  const cronHeader = req.headers.get("x-vercel-cron");
-  if (cronHeader !== "1") {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401,
-    });
-  }
   const url = new URL(req.url);
   const segment = url.searchParams.get("segment");
   const limitParam = url.searchParams.get("limit");
