@@ -7,6 +7,16 @@ import { EmailScenario } from "./scenarios";
 
 type UserRow = Database["public"]["Tables"]["users"]["Row"];
 
+type UserSelection = Pick<
+  UserRow,
+  | "id"
+  | "email"
+  | "full_name"
+  | "last_email_scenario"
+  | "last_email_sent_at"
+  | "created_at"
+>;
+
 export const emailSegmentIds = [
   "onboarding-day2",
   "onboarding-day5",
@@ -64,7 +74,9 @@ const segmentMap: Record<EmailSegmentId, SegmentDefinition> = {
 };
 
 type SegmentResult = {
-  users: Array<Required<Pick<UserRow, "id" | "email">> & Pick<UserRow, "full_name">>;
+  users: Array<
+    Required<Pick<UserRow, "id" | "email">> & Pick<UserRow, "full_name">
+  >;
   scenario: EmailScenario;
 };
 
@@ -78,7 +90,10 @@ export async function resolveSegmentRecipients(
   }
   const supabase = await createClient();
   const now = new Date();
-  const maxLimit = Math.min(Math.max(limit ?? definition.defaultLimit, 1), 1000);
+  const maxLimit = Math.min(
+    Math.max(limit ?? definition.defaultLimit, 1),
+    1000,
+  );
   const fetchLimit = Math.min(maxLimit * 3, 3000);
   let query = supabase
     .from("users")
@@ -90,8 +105,14 @@ export async function resolveSegmentRecipients(
     .limit(fetchLimit);
 
   if (definition.createdDaysAgoRange) {
-    const upperBound = subDays(now, definition.createdDaysAgoRange.min).toISOString();
-    const lowerBound = subDays(now, definition.createdDaysAgoRange.max).toISOString();
+    const upperBound = subDays(
+      now,
+      definition.createdDaysAgoRange.min,
+    ).toISOString();
+    const lowerBound = subDays(
+      now,
+      definition.createdDaysAgoRange.max,
+    ).toISOString();
     query = query.gte("created_at", lowerBound).lte("created_at", upperBound);
   } else if (definition.minAccountAgeDays) {
     const cutoff = subDays(now, definition.minAccountAgeDays).toISOString();
@@ -103,8 +124,9 @@ export async function resolveSegmentRecipients(
     throw new Error(error.message);
   }
   const filtered =
-    data?.filter((user) => filterUser(user, definition, now)).slice(0, maxLimit) ??
-    [];
+    data
+      ?.filter((user) => filterUser(user, definition, now))
+      .slice(0, maxLimit) ?? [];
   return {
     users: filtered.map((user) => ({
       id: user.id,
@@ -116,7 +138,7 @@ export async function resolveSegmentRecipients(
 }
 
 function filterUser(
-  user: UserRow,
+  user: UserSelection,
   definition: SegmentDefinition,
   now: Date,
 ): boolean {
@@ -139,7 +161,10 @@ function filterUser(
     }
   }
   if (definition.cooldownDays && user.last_email_sent_at) {
-    const sinceLastEmail = differenceInDays(now, new Date(user.last_email_sent_at));
+    const sinceLastEmail = differenceInDays(
+      now,
+      new Date(user.last_email_sent_at),
+    );
     if (sinceLastEmail < definition.cooldownDays) {
       return false;
     }
@@ -161,4 +186,3 @@ function filterUser(
   }
   return true;
 }
-

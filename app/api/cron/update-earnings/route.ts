@@ -2,9 +2,8 @@ import { createClient } from "@/utils/supabase/server";
 
 export async function GET(req: Request) {
   try {
-    // Verify this is a cron request (you might want to add authentication)
-    const authHeader = req.headers.get("authorization");
-    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    const cronHeader = req.headers.get("x-vercel-cron");
+    if (cronHeader !== "1") {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
       });

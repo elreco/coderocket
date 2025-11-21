@@ -11,6 +11,19 @@ const payloadSchema = z.object({
 const scenarioSet = new Set(Object.values(EmailScenario));
 const maxAttempts = 5;
 
+export async function GET(req: Request) {
+  const cronHeader = req.headers.get("x-vercel-cron");
+  if (cronHeader !== "1") {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+    });
+  }
+  const url = new URL(req.url);
+  const limitParam = url.searchParams.get("limit");
+  const limit = limitParam ? parseInt(limitParam, 10) : 100;
+  return await processJobs(limit);
+}
+
 export async function POST(req: Request) {
   let body: unknown = {};
   try {
@@ -20,6 +33,10 @@ export async function POST(req: Request) {
   }
   const parsed = payloadSchema.safeParse(body);
   const limit = parsed.success && parsed.data.limit ? parsed.data.limit : 100;
+  return await processJobs(limit);
+}
+
+async function processJobs(limit: number) {
   const supabase = await createClient();
   const nowIso = new Date().toISOString();
   const { data: jobs, error } = await supabase

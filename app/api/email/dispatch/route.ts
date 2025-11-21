@@ -39,7 +39,7 @@ export async function POST(req: Request) {
     return new Response(
       JSON.stringify({
         id: result.data?.id ?? null,
-        status: result.data?.createdAt ? "queued" : "pending",
+        status: result.data?.id ? "queued" : "pending",
       }),
       { status: 200 },
     );

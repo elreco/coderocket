@@ -17,4 +17,3 @@ export function isSameDomain(url1: string, url2: string): boolean {
 
   return domain1 === domain2;
 }
-

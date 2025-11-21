@@ -14,10 +14,51 @@ const payloadSchema = z.object({
   dryRun: z.boolean().optional(),
 });
 
+export async function GET(req: Request) {
+  const cronHeader = req.headers.get("x-vercel-cron");
+  if (cronHeader !== "1") {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+    });
+  }
+  const url = new URL(req.url);
+  const segment = url.searchParams.get("segment");
+  const limitParam = url.searchParams.get("limit");
+  const dryRunParam = url.searchParams.get("dryRun");
+
+  if (!segment) {
+    return new Response(
+      JSON.stringify({ error: "Missing segment parameter" }),
+      { status: 400 },
+    );
+  }
+
+  const input = payloadSchema.parse({
+    segment,
+    limit: limitParam ? parseInt(limitParam, 10) : undefined,
+    dryRun: dryRunParam === "true",
+  });
+
+  return await processSegment(input);
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();
     const input = payloadSchema.parse(body);
+    return await processSegment(input);
+  } catch (error) {
+    return new Response(
+      JSON.stringify({
+        error: error instanceof Error ? error.message : "Unknown error",
+      }),
+      { status: 400 },
+    );
+  }
+}
+
+async function processSegment(input: z.infer<typeof payloadSchema>) {
+  try {
     const { users, scenario: defaultScenario } = await resolveSegmentRecipients(
       input.segment,
       input.limit,

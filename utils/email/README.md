@@ -120,64 +120,66 @@ curl -X POST https://www.coderocket.app/api/email/jobs/process \
 
 ### Configuration complète des crons
 
-#### 1. Traitement de la file d'attente (transactionnel)
-Traitement des emails de bienvenue automatiquement ajoutés par le trigger `handle_new_user` :
-```bash
-supabase cron create process-email-jobs '*/5 * * * *' \
-  --request-body '{ "limit": 200 }' \
-  --url https://www.coderocket.app/api/email/jobs/process
-```
-Exécution toutes les 5 minutes pour vider la file `email_jobs`.
+Ajoutez ces crons dans `vercel.json` (section `crons`) :
 
-#### 2. Onboarding J+2
-Email de tips envoyé aux utilisateurs créés il y a 2-3 jours :
-```bash
-supabase cron create onboarding-day2 '0 10 * * *' \
-  --request-body '{ "segment": "onboarding-day2" }' \
-  --url https://www.coderocket.app/api/email/segments
+```json
+{
+  "crons": [
+    {
+      "path": "/api/email/jobs/process?limit=200",
+      "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/email/segments?segment=onboarding-day2",
+      "schedule": "0 10 * * *"
+    },
+    {
+      "path": "/api/email/segments?segment=onboarding-day5",
+      "schedule": "0 10 * * *"
+    },
+    {
+      "path": "/api/email/segments?segment=reactivation-14d",
+      "schedule": "0 9 * * 1"
+    },
+    {
+      "path": "/api/email/segments?segment=reactivation-30d",
+      "schedule": "0 9 * * 1"
+    },
+    {
+      "path": "/api/email/segments?segment=weekly-pulse",
+      "schedule": "0 8 * * 1"
+    }
+  ]
+}
 ```
-Exécution tous les jours à 10h.
 
-#### 3. Onboarding J+5
-Email de challenge envoyé aux utilisateurs créés il y a 5-6 jours :
-```bash
-supabase cron create onboarding-day5 '0 10 * * *' \
-  --request-body '{ "segment": "onboarding-day5" }' \
-  --url https://www.coderocket.app/api/email/segments
-```
-Exécution tous les jours à 10h.
+**Détails de chaque cron :**
 
-#### 4. Réactivation douce (14 jours)
-Relance pour les comptes inactifs depuis 14+ jours :
-```bash
-supabase cron create reactivation-14d '0 9 * * 1' \
-  --request-body '{ "segment": "reactivation-14d" }' \
-  --url https://www.coderocket.app/api/email/segments
-```
-Exécution chaque lundi à 9h.
+1. **Traitement de la file d'attente** (`*/5 * * * *`) - Toutes les 5 minutes
+   - Route : `/api/email/jobs/process`
+   - Traite les emails transactionnels (bienvenue) ajoutés par le trigger
 
-#### 5. Réactivation avec offre (30 jours)
-Offre spéciale pour les comptes inactifs depuis 30+ jours :
-```bash
-supabase cron create reactivation-30d '0 9 * * 1' \
-  --request-body '{ "segment": "reactivation-30d" }' \
-  --url https://www.coderocket.app/api/email/segments
-```
-Exécution chaque lundi à 9h.
+2. **Onboarding J+2** (`0 10 * * *`) - Tous les jours à 10h
+   - Route : `/api/email/segments?segment=onboarding-day2`
+   - Email de tips pour les comptes créés il y a 2-3 jours
 
-#### 6. Pulse hebdomadaire
-Newsletter hebdomadaire pour tous les utilisateurs actifs :
-```bash
-supabase cron create weekly-pulse '0 8 * * 1' \
-  --request-body '{ "segment": "weekly-pulse" }' \
-  --url https://www.coderocket.app/api/email/segments
-```
-Exécution chaque lundi à 8h.
+3. **Onboarding J+5** (`0 10 * * *`) - Tous les jours à 10h
+   - Route : `/api/email/segments?segment=onboarding-day5`
+   - Email de challenge pour les comptes créés il y a 5-6 jours
 
-### Notes sur les crons
-- Ajustez les horaires (`'0 10 * * *'`) selon votre fuseau horaire et vos préférences.
-- Pour limiter le volume par exécution, ajoutez `"limit": 500` dans le `--request-body`.
-- Surveillez les quotas Resend (100/jour en free tier) et répartissez les envois si nécessaire.
+4. **Réactivation 14j** (`0 9 * * 1`) - Chaque lundi à 9h
+   - Route : `/api/email/segments?segment=reactivation-14d`
+   - Relance douce pour comptes inactifs depuis 14+ jours
+
+5. **Réactivation 30j** (`0 9 * * 1`) - Chaque lundi à 9h
+   - Route : `/api/email/segments?segment=reactivation-30d`
+   - Offre spéciale pour comptes inactifs depuis 30+ jours
+
+6. **Pulse hebdomadaire** (`0 8 * * 1`) - Chaque lundi à 8h
+   - Route : `/api/email/segments?segment=weekly-pulse`
+   - Newsletter hebdomadaire pour tous les utilisateurs actifs
+
+**Note :** Les routes acceptent à la fois GET (query params) pour les crons Vercel et POST (body JSON) pour les appels manuels. Vous pouvez aussi ajouter `&limit=500` dans les query params pour limiter le volume par exécution.
 
 ### Helper SQL
 ```sql
