@@ -239,6 +239,7 @@ export default function ComponentCompletion({
   const [messages, setMessages] = useState<ChatMessage[]>([]);
 
   const [isLiked, setIsLiked] = useState(false);
+  const [likesCount, setLikesCount] = useState<number>(0);
 
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [shareLink, setShareLink] = useState("");
@@ -370,6 +371,7 @@ export default function ComponentCompletion({
 
       setIsLiked(hasLiked);
       setFetchedChat(chat);
+      setLikesCount(chat.likes || 0);
       setLastAssistantMessage(assistantMsg || null);
       setMessages(msgs as ChatMessage[]);
       setSelectedVersion(userMsg?.version || 0);
@@ -1001,6 +1003,7 @@ export default function ComponentCompletion({
     const refreshedChat = await fetchChatById(chatId);
     if (!refreshedChat) return;
     setFetchedChat(refreshedChat);
+    setLikesCount(refreshedChat.likes || 0);
   }, [chatId]);
 
   const refreshChatData = useCallback(async () => {
@@ -1010,6 +1013,7 @@ export default function ComponentCompletion({
     const refreshedChat = await fetchChatById(chatId);
     if (!refreshedChat) return;
     setFetchedChat(refreshedChat);
+    setLikesCount(refreshedChat.likes || 0);
     // Always get artifact code from the selected version, not from chats table
     const artifactCodeFromVersion = await getArtifactCodeByVersion(
       chatId,
@@ -1193,8 +1197,18 @@ export default function ComponentCompletion({
       return;
     }
 
-    setIsLiked(!isLiked);
-    toggleChatLike(chatId);
+    const newIsLiked = !isLiked;
+    setIsLiked(newIsLiked);
+    setLikesCount((prev) => (newIsLiked ? prev + 1 : Math.max(0, prev - 1)));
+
+    const result = await toggleChatLike(chatId);
+
+    if (result?.error) {
+      setIsLiked(!newIsLiked);
+      setLikesCount((prev) => (newIsLiked ? Math.max(0, prev - 1) : prev + 1));
+    } else {
+      await refreshChat();
+    }
   };
 
   const handleRemixClick = async () => {
@@ -1298,6 +1312,12 @@ export default function ComponentCompletion({
     isContinuingFromLengthError,
     setIsContinuingFromLengthError,
   };
+
+  useEffect(() => {
+    if (fetchedChat?.likes !== undefined) {
+      setLikesCount(fetchedChat.likes || 0);
+    }
+  }, [fetchedChat?.likes]);
 
   useEffect(() => {
     const channel = supabase
@@ -1820,7 +1840,13 @@ export default function ComponentCompletion({
                                 : "bg-pink-500 text-pink-300 hover:bg-pink-400"
                             }`}
                           >
-                            <Heart className="size-5" />
+                            <Heart
+                              className="size-5"
+                              fill={isLiked ? "currentColor" : "none"}
+                            />
+                            {likesCount > 0 && (
+                              <span className="font-medium">{likesCount}</span>
+                            )}
                             <span>{isLiked ? "Unlike" : "Like"}</span>
                           </Button>
                         </motion.div>
