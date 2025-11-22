@@ -58,6 +58,8 @@ export async function cloneWebsite(url: string) {
       hasMarkdown: !!websiteData.markdown,
       hasScreenshot: !!websiteData.screenshot,
       imagesFound: websiteData.images?.length || 0,
+      hasDesignMetadata: !!websiteData.designMetadata,
+      animationLibrary: websiteData.designMetadata?.animationLibrary || null,
     });
 
     return {

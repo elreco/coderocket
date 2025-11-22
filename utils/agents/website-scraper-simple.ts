@@ -14,6 +14,12 @@ interface WebsiteContent {
     alt: string;
     isLogo: boolean;
   }>;
+  designMetadata?: {
+    colors: string[];
+    fonts: string[];
+    hasAnimations: boolean;
+    animationLibrary: string | null;
+  } | null;
 }
 
 const SCRAPER_ENDPOINT = `${builderApiUrl}/scrape-simple`;
@@ -60,5 +66,6 @@ export async function scrapeWebsiteSimple(
     url: data.url ?? url,
     screenshot: data.screenshot ?? "",
     images: Array.isArray(data.images) ? data.images : [],
+    designMetadata: data.designMetadata ?? null,
   };
 }

@@ -60,19 +60,40 @@ interface ContextResult {
   contextSummary?: string;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function optimizeMarkdownForTokens(markdown: string): string {
-  const maxLength = 15000;
+function optimizeMarkdownForWebsiteClone(markdown: string): string {
+  const maxLength = 25000;
 
   if (markdown.length <= maxLength) {
     return markdown;
   }
 
   const lines = markdown.split("\n");
+  const priorityPatterns = [/^#+\s/, /^\*\s/, /^-\s/, /^\d+\.\s/];
+
+  const priorityLines: string[] = [];
+  const regularLines: string[] = [];
+
+  for (const line of lines) {
+    const isPriority = priorityPatterns.some((pattern) => pattern.test(line));
+    if (isPriority) {
+      priorityLines.push(line);
+    } else {
+      regularLines.push(line);
+    }
+  }
+
   let result = "";
   let currentLength = 0;
 
-  for (const line of lines) {
+  for (const line of priorityLines) {
+    if (currentLength + line.length > maxLength * 0.8) {
+      break;
+    }
+    result += line + "\n";
+    currentLength += line.length + 1;
+  }
+
+  for (const line of regularLines) {
     if (currentLength + line.length > maxLength) {
       result += "\n\n... (content truncated to fit token limits) ...";
       break;
@@ -885,137 +906,6 @@ const validateRequest = async (
     }
   }
 
-  const optimizeMarkdownForTokens = (markdown: string): string => {
-    const sections: { [key: string]: string } = {};
-    let currentSection = "";
-    let currentContent = "";
-
-    markdown.split("\n").forEach((line) => {
-      if (line.startsWith("## ")) {
-        if (currentSection) {
-          sections[currentSection] = currentContent;
-        }
-        currentSection = line.replace("## ", "");
-        currentContent = "";
-      } else {
-        currentContent += line + "\n";
-      }
-    });
-    if (currentSection) {
-      sections[currentSection] = currentContent;
-    }
-
-    let optimized = "";
-
-    if (sections["Quick Summary"]) {
-      optimized += "## Quick Summary\n" + sections["Quick Summary"] + "\n";
-    }
-
-    if (sections["Full Page Structure"]) {
-      const lines = sections["Full Page Structure"].split("\n");
-      const limited = lines.slice(0, 120).join("\n");
-      optimized += "## Page Structure\n" + limited + "\n\n";
-    }
-
-    if (sections["Visual Design System"]) {
-      const lines = sections["Visual Design System"].split("\n");
-      optimized += "## Design System\n" + lines.join("\n") + "\n\n";
-    }
-
-    if (sections["Typography System"]) {
-      optimized += "## Typography\n" + sections["Typography System"] + "\n";
-    }
-
-    if (sections["Button Styles"]) {
-      const lines = sections["Button Styles"].split("\n");
-      const limited = lines.slice(0, 25).join("\n");
-      optimized += "## Button Styles\n" + limited + "\n\n";
-    }
-
-    if (sections["Layout Components"]) {
-      optimized += "## Layout Info\n" + sections["Layout Components"] + "\n";
-    }
-
-    if (sections["LOGOS (MUST INCLUDE):"]) {
-      optimized += "## LOGOS\n" + sections["LOGOS (MUST INCLUDE):"] + "\n";
-    }
-
-    if (sections["VIDEOS:"]) {
-      const lines = sections["VIDEOS:"].split("\n");
-      const limited = lines.slice(0, 35).join("\n");
-      optimized += "## Videos\n" + limited + "\n\n";
-    }
-
-    if (sections["IMAGES (ALL MUST BE INCLUDED):"]) {
-      const lines = sections["IMAGES (ALL MUST BE INCLUDED):"].split("\n");
-      const imageCount = lines.filter((l) => l.startsWith("### Image ")).length;
-      let imageLines = 0;
-      const limited = lines
-        .filter((line) => {
-          if (line.startsWith("### Image ")) imageLines++;
-          return imageLines <= 20 || !line.startsWith("### Image ");
-        })
-        .slice(0, 400);
-
-      optimized +=
-        `## Key Images (Top 20 of ${imageCount})\n` +
-        limited.join("\n") +
-        "\n\n";
-      if (imageCount > 20) {
-        optimized += `(${imageCount - 20} more images available but prioritize the ones above)\n\n`;
-      }
-    }
-
-    if (sections["Content Hierarchy"]) {
-      const lines = sections["Content Hierarchy"].split("\n");
-      const limited = lines.slice(0, 50).join("\n");
-      optimized += "## Main Headings\n" + limited + "\n\n";
-    }
-
-    if (sections["Key Content Paragraphs"]) {
-      const lines = sections["Key Content Paragraphs"].split("\n");
-      const limited = lines.slice(0, 35).join("\n");
-      optimized += "## Hero & Key Content\n" + limited + "\n\n";
-    }
-
-    if (sections["Button & Link Texts"]) {
-      const lines = sections["Button & Link Texts"].split("\n");
-      const limited = lines.slice(0, 25).join("\n");
-      optimized += "## CTA & Navigation Text\n" + limited + "\n\n";
-    }
-
-    if (sections["Lists & Navigation Items"]) {
-      const lines = sections["Lists & Navigation Items"].split("\n");
-      const limited = lines.slice(0, 50).join("\n");
-      optimized += "## Navigation\n" + limited + "\n\n";
-    }
-
-    optimized += `## HOW TO CLONE
-
-**Primary Reference:** Use the SCREENSHOT as your main visual guide.
-
-**Step-by-step approach:**
-1. Analyze screenshot layout (sections, grid, spacing)
-2. Apply exact colors from Design System (use bg-[#exact-color])
-3. Include logos with exact URLs from LOGOS section
-4. Import and use exact fonts from Typography section
-5. Copy main headings and hero content from above sections
-6. Add key images from Key Images section (use exact URLs)
-7. Match button styles from Button Styles section
-8. Follow page structure hierarchy
-
-**Critical:**
-✅ Screenshot = truth for layout and visual design
-✅ Data above = specifications for colors, fonts, images, content
-✅ No placeholders (no picsum, no lorem ipsum)
-✅ Exact colors (use Tailwind arbitrary: bg-[#1a1a1a])
-✅ Include all logos and hero images
-
-**Goal:** Create a visual clone that matches the screenshot using exact specifications from the data.`;
-
-    return optimized;
-  };
-
   // Vérifier si c'est un site cloné et récupérer les détails si nécessaire
   let enhancedPrompt = finalPrompt;
   let userDisplayPrompt = finalPrompt;
@@ -1061,11 +951,12 @@ const validateRequest = async (
           markdownLength: data.markdown?.length || 0,
           hasScreenshot: Boolean(data.screenshot),
           images: data.images || [],
+          designMetadata: data.designMetadata || null,
         });
 
         // Optimiser le markdown pour réduire les tokens
         const optimizedMarkdown = data.markdown
-          ? optimizeMarkdownForTokens(data.markdown)
+          ? optimizeMarkdownForWebsiteClone(data.markdown)
           : "";
 
         console.log("📊 Markdown optimization:");
@@ -1101,30 +992,52 @@ const validateRequest = async (
                 .join("\n")}`
             : "";
 
+        const designMetadata = (
+          data as {
+            designMetadata?: {
+              colors: string[];
+              fonts: string[];
+              hasAnimations: boolean;
+              animationLibrary: string | null;
+            } | null;
+          }
+        ).designMetadata;
+
+        const metadataSection = designMetadata
+          ? `\n\n# DESIGN METADATA
+${designMetadata.colors.length > 0 ? `- Colors detected: ${designMetadata.colors.join(", ")}` : ""}
+${designMetadata.fonts.length > 0 ? `- Fonts detected: ${designMetadata.fonts.join(", ")}` : ""}
+${designMetadata.hasAnimations ? `- Animation library detected: ${designMetadata.animationLibrary || "Unknown"}` : ""}`
+          : "";
+
+        const animationInstructions = designMetadata?.hasAnimations
+          ? ` This site uses ${designMetadata.animationLibrary || "animations"} - recreate similar scroll-triggered animations and transitions using framer-motion.`
+          : "";
+
         if (isAdditionalPageClone) {
           enhancedPrompt = `Clone another page from the same website: ${urlToClone}
 
 # VISUAL REFERENCE
-A screenshot is attached - this is your PRIMARY reference. Study it carefully for layout, colors, fonts, spacing, and design.
+A screenshot is attached - this is your PRIMARY reference. Study it carefully for layout, colors, fonts, spacing, and design.${metadataSection}
 
 # CONTENT
 Use this content in your implementation:
 
 ${optimizedMarkdown}${imagesList}
 
-**Instructions:** This is an additional page from the same website. Maintain consistency with the existing design system while incorporating the new content and layout from this page. The screenshot shows the design. The content above provides the text and images. Combine both to create an accurate clone.`;
+**Instructions:** This is an additional page from the same website. Maintain consistency with the existing design system while incorporating the new content and layout from this page. The screenshot shows the design. The content above provides the text and images.${animationInstructions} Combine both to create an accurate clone.`;
         } else {
           enhancedPrompt = `Clone this website: ${urlToClone}
 
 # VISUAL REFERENCE
-A screenshot is attached - this is your PRIMARY reference. Study it carefully for layout, colors, fonts, spacing, and design.
+A screenshot is attached - this is your PRIMARY reference. Study it carefully for layout, colors, fonts, spacing, and design.${metadataSection}
 
 # CONTENT
 Use this content in your implementation:
 
 ${optimizedMarkdown}${imagesList}
 
-**Instructions:** The screenshot shows the design. The content above provides the text and images. Combine both to create an accurate clone.`;
+**Instructions:** The screenshot shows the design. The content above provides the text and images.${animationInstructions} Combine both to create an accurate clone.`;
         }
 
         // Handle screenshot with proper dimension validation and resizing
