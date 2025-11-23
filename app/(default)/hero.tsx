@@ -702,6 +702,26 @@ export default function Hero({ popularComponents = [] }: HeroProps) {
 
     const { slug, error } = await createChat(finalPrompt, formData);
     if (error) {
+      const isLimitError =
+        error.title?.toLowerCase().includes("rocket limit") ||
+        error.title?.toLowerCase().includes("limit") ||
+        error.title?.toLowerCase().includes("reached");
+
+      if (isLimitError) {
+        toast({
+          variant: "destructive",
+          title: error.title,
+          description: error.description,
+          duration: 5000,
+        });
+        setTimeout(() => {
+          router.push("/pricing?reason=limit-exceeded");
+        }, 500);
+        setLoading(false);
+        setLoadingAction(null);
+        return;
+      }
+
       toast({
         variant: "destructive",
         title: error.title,

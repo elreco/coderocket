@@ -613,9 +613,14 @@ export default function ComponentCompletion({
           return;
         }
         if (error.message === "limit-exceeded") {
+          const restoredVersion =
+            selectedVersion !== undefined && selectedVersion > 0
+              ? selectedVersion - 1
+              : (selectedVersion ?? 0);
+          setSelectedVersion(restoredVersion);
+
           const subscription = await getSubscription();
           if (!subscription) {
-            // Utiliser le premier jour du mois en cours comme période de départ
             const today = new Date();
             const currentPeriodStart = new Date(
               today.getFullYear(),
@@ -686,6 +691,7 @@ export default function ComponentCompletion({
           );
           setIsLoading(false);
           setCanvas(true);
+
           toast({
             variant: "destructive",
             title: "You have reached the limit of your plan",
@@ -866,7 +872,8 @@ export default function ComponentCompletion({
     setCanvas(true);
     setCurrentGeneratingFile(null);
 
-    const newVersion = (selectedVersion ?? 0) + 1;
+    const previousVersion = selectedVersion ?? 0;
+    const newVersion = previousVersion + 1;
     setSelectedVersion(newVersion);
 
     complete(inputData);
