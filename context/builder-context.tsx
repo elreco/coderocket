@@ -39,9 +39,13 @@ export const BuilderProvider = ({ children }: { children: ReactNode }) => {
     useComponentContext();
 
   useEffect(() => {
-    if (selectedVersion === undefined || isLoading) {
+    if (selectedVersion === undefined) {
       setBuildError(null);
       setLoadingState(null);
+      return;
+    }
+
+    if (isLoading) {
       return;
     }
 

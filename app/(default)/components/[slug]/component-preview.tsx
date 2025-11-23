@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2, AlertCircle, WandSparkles, RefreshCw } from "lucide-react";
+import { Loader2, AlertCircle, RefreshCw, WandSparkles } from "lucide-react";
 import React from "react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -216,8 +216,7 @@ export default function ComponentPreview() {
   const isGeneratingNewVersion =
     !isFirstGeneration &&
     !isLengthError &&
-    (isLoading || loadingState) &&
-    loadingState !== "error";
+    (isLoading || (loadingState && loadingState !== "error"));
   const previewPathSuffix = previewPath === "/" ? "" : previewPath;
 
   return (
@@ -226,8 +225,23 @@ export default function ComponentPreview() {
         <LoadingStateComponent state={loadingState || "processing"} />
       )}
 
-      {buildError && !isLoading && (
-        <div className="flex size-full h-full items-center justify-center px-4 xl:w-2/3">
+      {buildError && (
+        <div className="relative flex size-full h-full items-center justify-center px-4">
+          {(isLoading || (loadingState && loadingState !== "error")) &&
+            !isFirstGeneration && (
+              <div className="border-primary bg-background absolute top-4 z-20 flex items-center gap-2 rounded-full border px-4 py-2 shadow-xl right-4">
+                <Loader2 className="text-primary size-4 animate-spin" />
+                <span className="text-primary text-sm font-medium">
+                  {isLoading
+                    ? `Fixing version ${selectedVersion}...`
+                    : loadingState === "processing"
+                      ? `Building version ${selectedVersion}...`
+                      : loadingState === "deploying"
+                        ? `Deploying version ${selectedVersion}...`
+                        : `Fixing version ${selectedVersion}...`}
+                </span>
+              </div>
+            )}
           <Alert
             variant="default"
             className="bg-secondary text-foreground h-2/3 max-h-[80vh] w-full items-center justify-center"
@@ -264,7 +278,9 @@ export default function ComponentPreview() {
               </div>
               {authorized &&
                 buildError.errors &&
-                buildError.errors.length > 0 && (
+                buildError.errors.length > 0 &&
+                !isLoading &&
+                loadingState === "error" && (
                   <Button
                     className="mt-2 self-end"
                     onClick={() => {

@@ -327,6 +327,10 @@ IMPORTANT: Always use Tailwind CSS v4 syntax, not v3.
     </import_validation>
     <shadcn_ui_components>
       - Prioritize creating reusable, functional components from ${shadcnLib} if missing.
+      - CRITICAL BUTTON STYLING: When using ${shadcnLib} Button components, ALWAYS use the variant prop (default, outline, secondary, destructive, ghost, link) instead of manually adding text and background color classes.
+      - NEVER add text-white or bg-white classes to Button components - the variants already handle proper contrast automatically.
+      - If you need custom button colors, use the variant system or ensure proper contrast (dark text on light backgrounds, light text on dark backgrounds).
+      - Example: Use <Button variant="default">Click</Button> NOT <Button className="text-white bg-white">Click</Button>
 
       ${
         framework === Framework.ANGULAR

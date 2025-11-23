@@ -100,7 +100,7 @@ export default function ComponentSidebar({
     setIsScrapingWebsite,
     setIsContinuingFromLengthError,
   } = useComponentContext();
-  const { buildError } = useBuilder();
+  const { buildError, loadingState } = useBuilder();
 
   const [isLoaderVisible, setLoaderVisible] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -1055,7 +1055,7 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
                         Continue generation
                       </Button>
                     )}
-                    {!isLoading && buildError && (
+                    {!isLoading && loadingState === "error" && buildError && (
                       <Button
                         type="button"
                         size="sm"
@@ -1143,68 +1143,75 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
                         </ComponentTheme>
                       </div>
                     )}
-                    {!isLoadingSubscription && (
-                      <>
-                        <ImageUploadArea
-                          fileInputRef={fileInputRef}
-                          disabled={
-                            isLoading ||
-                            isLengthError ||
-                            !!buildError ||
-                            files.length >= maxImagesUpload
-                          }
-                          handleButtonClick={handleButtonClick}
-                          handleImageChange={handleFileChange}
-                          onDrop={(droppedFiles) => {
-                            const validFiles: File[] = [];
+                    {!isLoadingSubscription &&
+                      !(
+                        buildError &&
+                        buildError.errors &&
+                        buildError.errors.length > 0
+                      ) && (
+                        <>
+                          <ImageUploadArea
+                            fileInputRef={fileInputRef}
+                            disabled={
+                              isLoading ||
+                              isLengthError ||
+                              !!buildError ||
+                              files.length >= maxImagesUpload
+                            }
+                            handleButtonClick={handleButtonClick}
+                            handleImageChange={handleFileChange}
+                            onDrop={(droppedFiles) => {
+                              const validFiles: File[] = [];
 
-                            for (const file of droppedFiles) {
-                              if (
-                                files.length + validFiles.length >=
-                                maxImagesUpload
-                              ) {
-                                toast({
-                                  variant: "destructive",
-                                  title: "Too many files",
-                                  description: `Maximum ${maxImagesUpload} files allowed`,
-                                  duration: 4000,
-                                });
-                                break;
+                              for (const file of droppedFiles) {
+                                if (
+                                  files.length + validFiles.length >=
+                                  maxImagesUpload
+                                ) {
+                                  toast({
+                                    variant: "destructive",
+                                    title: "Too many files",
+                                    description: `Maximum ${maxImagesUpload} files allowed`,
+                                    duration: 4000,
+                                  });
+                                  break;
+                                }
+
+                                const validation = validateFile(file);
+                                if (!validation.valid) {
+                                  toast({
+                                    variant: "destructive",
+                                    title: "Invalid file",
+                                    description: validation.error,
+                                    duration: 4000,
+                                  });
+                                  continue;
+                                }
+
+                                validFiles.push(file);
                               }
 
-                              const validation = validateFile(file);
-                              if (!validation.valid) {
-                                toast({
-                                  variant: "destructive",
-                                  title: "Invalid file",
-                                  description: validation.error,
-                                  duration: 4000,
-                                });
-                                continue;
+                              if (validFiles.length > 0) {
+                                setFiles((prev) => [...prev, ...validFiles]);
                               }
-
-                              validFiles.push(file);
+                            }}
+                            label="Files"
+                            subscription={subscription}
+                            isLoggedIn={isLoggedIn}
+                          />
+                          <FigmaImportButton
+                            disabled={
+                              isLoading || isLengthError || !!buildError
                             }
-
-                            if (validFiles.length > 0) {
-                              setFiles((prev) => [...prev, ...validFiles]);
-                            }
-                          }}
-                          label="Files"
-                          subscription={subscription}
-                          isLoggedIn={isLoggedIn}
-                        />
-                        <FigmaImportButton
-                          disabled={isLoading || isLengthError || !!buildError}
-                          framework={selectedFramework}
-                          subscription={subscription}
-                          isLoggedIn={isLoggedIn}
-                          onFileImport={(file) => {
-                            setFiles((prev) => [...prev, file]);
-                          }}
-                        />
-                      </>
-                    )}
+                            framework={selectedFramework}
+                            subscription={subscription}
+                            isLoggedIn={isLoggedIn}
+                            onFileImport={(file) => {
+                              setFiles((prev) => [...prev, file]);
+                            }}
+                          />
+                        </>
+                      )}
                   </div>
                 </div>
                 {fetchedChat?.clone_url && !isLoadingSubscription && (
