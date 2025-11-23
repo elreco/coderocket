@@ -13,6 +13,7 @@ import {
 import { cn } from "@/lib/utils";
 import { createContinuePrompt } from "@/utils/completion-parser";
 import { FREE_CHAR_LIMIT } from "@/utils/config";
+import { createClient } from "@/utils/supabase/client";
 
 function LoadingStateComponent({ state }: { state: WebcontainerLoadingState }) {
   const { setInput, handleSubmitToAI, authorized, messages } =
@@ -101,6 +102,8 @@ export default function ComponentPreview() {
   const [displayVersion, setDisplayVersion] = React.useState<
     number | undefined
   >(getInitialDisplayVersion);
+  const [previousVersionHasError, setPreviousVersionHasError] =
+    React.useState(false);
 
   React.useEffect(() => {
     if (selectedVersion === undefined) return;
@@ -110,9 +113,26 @@ export default function ComponentPreview() {
 
     if (displayVersion === undefined) {
       if (selectedVersion > 0 && isGenerating) {
-        setDisplayVersion(selectedVersion - 1);
+        const prevVersion = selectedVersion - 1;
+        setDisplayVersion(prevVersion);
+        const supabase = createClient();
+        supabase
+          .from("messages")
+          .select("build_error, content")
+          .eq("chat_id", chatId)
+          .eq("role", "assistant")
+          .eq("version", prevVersion)
+          .single()
+          .then(({ data }) => {
+            const hasError =
+              data?.build_error ||
+              data?.content?.includes("<!-- FINISH_REASON: length -->") ||
+              data?.content?.includes("<!-- FINISH_REASON: error -->");
+            setPreviousVersionHasError(!!hasError);
+          });
       } else if (!isGenerating) {
         setDisplayVersion(selectedVersion);
+        setPreviousVersionHasError(false);
       }
     } else if (
       !isGenerating &&
@@ -120,6 +140,7 @@ export default function ComponentPreview() {
       isWebcontainerReady
     ) {
       setDisplayVersion(selectedVersion);
+      setPreviousVersionHasError(false);
     }
   }, [
     isLoading,
@@ -127,6 +148,7 @@ export default function ComponentPreview() {
     displayVersion,
     loadingState,
     isWebcontainerReady,
+    chatId,
   ]);
 
   React.useEffect(() => {
@@ -183,13 +205,14 @@ export default function ComponentPreview() {
     };
   }, [syncPreviewPath]);
   const isFirstGeneration = selectedVersion === 0;
+  const isGenerating = isLoading || (loadingState && loadingState !== "error");
   const shouldShowLoader =
     isScrapingWebsite ||
     isContinuingFromLengthError ||
     (isFirstGeneration && isLoading) ||
     (isFirstGeneration && loadingState && loadingState !== "error") ||
-    (isLengthError &&
-      (isLoading || (loadingState && loadingState !== "error")));
+    (isLengthError && isGenerating) ||
+    (!isFirstGeneration && isGenerating && previousVersionHasError);
   const isGeneratingNewVersion =
     !isFirstGeneration &&
     !isLengthError &&
