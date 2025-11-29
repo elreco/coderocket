@@ -834,12 +834,6 @@ export const remixChat = async (
     throw new Error("Only subscribers can remix projects");
   }
 
-  if (originalChat.remix_chat_id) {
-    throw new Error(
-      "You have already remixed this component. You cannot remix the same component more than once.",
-    );
-  }
-
   const uniqueId = await generateUniqueNanoid();
   // Create a new chat as a remix - let Supabase generate the UUID
   const { data: newChat, error } = await supabase
@@ -875,21 +869,16 @@ export const remixChat = async (
     throw new Error("Could not determine the latest version");
   }
 
-  // Calculate how many versions to fetch (up to 10 most recent versions)
-  const startVersion = Math.max(
-    0,
-    selectedVersion !== undefined
-      ? selectedVersion - 9
-      : versionData.version - 9,
-  );
+  const targetVersion =
+    selectedVersion !== undefined ? selectedVersion : versionData.version;
 
-  // Get messages from the last 10 versions (or all if less than 10) of the original chat
+  // Get all messages from version 0 to the target version
   const { data: originalMessages } = await supabase
     .from("messages")
     .select("*")
     .eq("chat_id", chatId)
-    .gte("version", startVersion)
-    .lte("version", selectedVersion)
+    .gte("version", 0)
+    .lte("version", targetVersion)
     .order("version", { ascending: true })
     .order("created_at", { ascending: true });
 
@@ -897,8 +886,8 @@ export const remixChat = async (
     throw new Error("Original chat has no messages");
   }
 
-  // Calculate version offset to start at version 0 in the new chat
-  const versionOffset = startVersion;
+  // No version offset needed - we copy from version 0
+  const versionOffset = 0;
 
   // Flatten and map all messages to insert them, adjusting the version number
   const messagesToInsert = originalMessages.map((message) => ({
@@ -1004,7 +993,10 @@ const createRemixTitle = (originalTitle: string) => {
   if (baseTitle.startsWith("Remix of ")) {
     baseTitle = baseTitle.substring(9);
   }
-  return `Remix - ${baseTitle}`;
+  if (baseTitle.startsWith("Remix - ")) {
+    baseTitle = baseTitle.substring(8);
+  }
+  return baseTitle;
 };
 
 export const getComponentsByFramework = async (

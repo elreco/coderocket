@@ -34,7 +34,6 @@ import {
   storageUrl,
   MAX_TOKENS_PER_REQUEST,
   PREMIUM_CHAR_LIMIT,
-  MAX_VERSIONS_PER_COMPONENT,
 } from "@/utils/config";
 import { isSameDomain } from "@/utils/domain-helper";
 import { uploadFiles } from "@/utils/file-uploader";
@@ -1219,13 +1218,6 @@ Use standard Tailwind CSS classes and shadcn/ui components.`;
         throw new Error("limit-exceeded");
       }
     }
-  }
-
-  if (
-    messagesFromDatabase.filter((m) => m.role === "assistant")?.length >
-    MAX_VERSIONS_PER_COMPONENT
-  ) {
-    throw new Error("more-than-x-versions");
   }
 
   if (!subscription && (image || files.length > 0)) {

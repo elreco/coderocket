@@ -15,7 +15,6 @@ import {
   GitFork,
   Eye,
   Code as CodeIcon,
-  X,
   Heart,
   Info,
   Share,
@@ -85,11 +84,7 @@ import {
   extractFilesFromCompletion,
   getUpdatedArtifactCode,
 } from "@/utils/completion-parser";
-import {
-  Framework,
-  MAX_VERSIONS_PER_COMPONENT,
-  crispWebsiteId,
-} from "@/utils/config";
+import { Framework, crispWebsiteId } from "@/utils/config";
 import { defaultArtifactCode } from "@/utils/default-artifact-code";
 import { ROCKET_LIMITS_PER_PLAN } from "@/utils/rocket-conversion";
 import { getArtifactCodeByVersion } from "@/utils/supabase/artifact-helpers";
@@ -579,15 +574,6 @@ export default function ComponentCompletion({
             variant: "destructive",
             title: "You can't upload images with a free plan",
             description: "Please upgrade to continue.",
-            duration: 4000,
-          });
-          return;
-        }
-        if (error.message === "more-than-x-versions") {
-          toast({
-            variant: "destructive",
-            title: `You can't have more than ${MAX_VERSIONS_PER_COMPONENT} versions`,
-            description: "Please remix your component instead.",
             duration: 4000,
           });
           return;
@@ -2063,97 +2049,73 @@ export default function ComponentCompletion({
               <div className="mb-6 flex flex-col items-center justify-center text-center">
                 <GitFork className="text-primary mb-2 size-12" />
                 <DialogTitle className="text-xl font-semibold">
-                  {hasAlreadyRemixed
-                    ? "Already Remixed"
-                    : "Remix This Component"}
+                  Remix This Component
                 </DialogTitle>
                 <p className="text-muted-foreground">
-                  {hasAlreadyRemixed
-                    ? "This component is already remixed"
-                    : "Create your own version of this component! 🚀"}
+                  Create your own version of this component! 🚀
                 </p>
               </div>
               <DialogDescription>
-                {hasAlreadyRemixed ? (
-                  <div className="mb-4">
-                    {remixOriginalChat && (
-                      <div className="bg-secondary rounded-md p-4">
-                        <p className="mb-2 font-medium">Want to try again?</p>
-                        <p className="mb-4">
-                          You can go back to the original component that was
-                          used as the base for this remix and create a new remix
-                          from there:
-                        </p>
-                        <div className="bg-background flex flex-col items-start gap-2 rounded-md p-3 text-sm">
-                          <div className="flex items-center gap-2">
-                            <GitFork className="text-primary size-4" />
-                            <span>Original component:</span>
-                          </div>
-                          <a
-                            href={`/components/${remixOriginalChat.slug}`}
-                            className="text-primary flex items-center gap-1 font-medium hover:underline"
-                          >
-                            {remixOriginalChat.title ||
-                              `Component ${remixOriginalChat.slug}`}
-                            <ExternalLink className="size-3" />
-                          </a>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <>
-                    <p className="mb-4">
-                      Remixing will create a copy of this component that you can
-                      modify and customize. This feature is available for
-                      subscribers only.
-                    </p>
+                <>
+                  <p className="mb-4">
+                    Remixing will create a copy of this component that you can
+                    modify and customize. This feature is available for
+                    subscribers only.
+                  </p>
+                  {hasAlreadyRemixed && remixOriginalChat && (
                     <Alert className="mb-4">
                       <AlertTitle className="mb-2 flex items-center gap-2">
-                        <Info className="size-4" />{" "}
-                        <p>Remixing from selected version</p>
+                        <Info className="size-4" />
+                        <p>This is a remix</p>
                       </AlertTitle>
                       <AlertDescription>
-                        You selected{" "}
-                        <Badge variant="outline">
-                          version #{selectedVersion}
-                        </Badge>{" "}
-                        as the base of your remix. You can change this by
-                        selecting a different version in the sidebar.
+                        This component is a remix of{" "}
+                        <a
+                          href={`/components/${remixOriginalChat.slug}`}
+                          className="text-primary font-medium hover:underline"
+                        >
+                          {remixOriginalChat.title ||
+                            `Component ${remixOriginalChat.slug}`}
+                        </a>
+                        . You can remix it again to create your own version.
                       </AlertDescription>
                     </Alert>
-                  </>
-                )}
-                <div className="flex justify-center">
-                  {hasAlreadyRemixed ? (
-                    <Button
-                      onClick={() => setIsRemixModalOpen(false)}
-                      className="flex w-full max-w-xs items-center justify-center"
-                    >
-                      <X className="size-4" />
-                      <span>Close</span>
-                    </Button>
-                  ) : (
-                    <Button
-                      onClick={() => {
-                        handleRemixClick();
-                      }}
-                      disabled={isRemixing}
-                      className="flex w-full max-w-xs items-center justify-center"
-                    >
-                      {isRemixing ? (
-                        <>
-                          <Loader className="size-4 animate-spin" />
-                          Creating Remix...
-                        </>
-                      ) : (
-                        <>
-                          <GitFork className="size-4" />
-                          Remix Component
-                        </>
-                      )}
-                    </Button>
                   )}
+                  <Alert className="mb-4">
+                    <AlertTitle className="mb-2 flex items-center gap-2">
+                      <Info className="size-4" />{" "}
+                      <p>Remixing from selected version</p>
+                    </AlertTitle>
+                    <AlertDescription>
+                      You selected{" "}
+                      <Badge variant="outline">
+                        version #{selectedVersion}
+                      </Badge>{" "}
+                      as the base of your remix. You can change this by
+                      selecting a different version in the sidebar.
+                    </AlertDescription>
+                  </Alert>
+                </>
+                <div className="flex justify-center">
+                  <Button
+                    onClick={() => {
+                      handleRemixClick();
+                    }}
+                    disabled={isRemixing}
+                    className="flex w-full max-w-xs items-center justify-center"
+                  >
+                    {isRemixing ? (
+                      <>
+                        <Loader className="size-4 animate-spin" />
+                        Creating Remix...
+                      </>
+                    ) : (
+                      <>
+                        <GitFork className="size-4" />
+                        Remix Component
+                      </>
+                    )}
+                  </Button>
                 </div>
               </DialogDescription>
             </DialogContent>

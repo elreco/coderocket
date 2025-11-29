@@ -990,7 +990,7 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
                           </svg>
                           Visual Reference Captured
                         </p>
-                        <div className="border-border max-h-[250px] overflow-y-auto rounded-md border">
+                        <div className="border-border overflow-hidden rounded-md border">
                           <img
                             src={
                               scrapingStatus.screenshot.startsWith("http")
@@ -998,7 +998,7 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
                                 : `data:image/jpeg;base64,${scrapingStatus.screenshot}`
                             }
                             alt="Website screenshot"
-                            className="w-full object-cover"
+                            className="h-auto w-full"
                             onError={() => {
                               console.error("Screenshot load error");
                             }}
