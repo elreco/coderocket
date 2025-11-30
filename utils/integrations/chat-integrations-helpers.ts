@@ -6,6 +6,7 @@ import {
   ChatIntegrationWithDetails,
   SupabaseIntegrationConfig,
 } from "./types";
+import { validateSupabaseSchema } from "./validators";
 
 export async function getActiveChatIntegrations(
   chatId: string,
@@ -42,12 +43,13 @@ export async function getActiveChatIntegrations(
 
 export async function buildIntegrationContext(
   integrations: ChatIntegrationWithDetails[],
-): Promise<string> {
+): Promise<{ context: string; errors: string[] }> {
   if (integrations.length === 0) {
-    return "";
+    return { context: "", errors: [] };
   }
 
   const contextParts: string[] = [];
+  const errors: string[] = [];
 
   for (const integration of integrations) {
     const { user_integrations } = integration;
@@ -57,12 +59,24 @@ export async function buildIntegrationContext(
         decryptIntegrationConfig<SupabaseIntegrationConfig>(
           user_integrations.config as unknown as string,
         );
+
+      const schemaValidation = validateSupabaseSchema(decryptedConfig);
+      if (!schemaValidation.valid) {
+        errors.push(
+          `Supabase integration "${user_integrations.name}": ${schemaValidation.error}`,
+        );
+        continue;
+      }
+
       const supabaseContext = await buildSupabaseContext(decryptedConfig);
       contextParts.push(supabaseContext);
     }
   }
 
-  return contextParts.join("\n\n");
+  return {
+    context: contextParts.join("\n\n"),
+    errors,
+  };
 }
 
 async function buildSupabaseContext(

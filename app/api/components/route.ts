@@ -428,7 +428,21 @@ export async function POST(req: Request) {
 
     // Fetch active integrations for this chat
     const chatIntegrations = await getActiveChatIntegrations(id);
-    const integrationContext = await buildIntegrationContext(chatIntegrations);
+    const { context: integrationContext, errors: integrationErrors } =
+      await buildIntegrationContext(chatIntegrations);
+
+    if (integrationErrors.length > 0) {
+      return new Response(
+        JSON.stringify({
+          error: "Integration validation failed",
+          details: integrationErrors,
+        }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+    }
 
     // Calculate input tokens to prevent context overflow
     const baseSystemPrompt =

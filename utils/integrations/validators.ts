@@ -304,6 +304,87 @@ export async function testFigmaConnection(
   };
 }
 
+export function validateSupabaseSchema(
+  config: SupabaseIntegrationConfig,
+): ValidationResult {
+  if (!config.databaseSchema) {
+    return {
+      valid: false,
+      error:
+        "Database schema is missing. Please add your database schema in the Supabase integration settings.",
+    };
+  }
+
+  if (!config.databaseSchema.tables) {
+    return {
+      valid: false,
+      error:
+        "Database schema tables are missing. Please add at least one table to your schema.",
+    };
+  }
+
+  if (!Array.isArray(config.databaseSchema.tables)) {
+    return {
+      valid: false,
+      error: "Database schema tables must be an array.",
+    };
+  }
+
+  if (config.databaseSchema.tables.length === 0) {
+    return {
+      valid: false,
+      error:
+        "Database schema is empty. Please add at least one table to your schema.",
+    };
+  }
+
+  for (const table of config.databaseSchema.tables) {
+    if (!table.name || typeof table.name !== "string") {
+      return {
+        valid: false,
+        error: `Table name is missing or invalid for table at index ${config.databaseSchema.tables.indexOf(table)}.`,
+      };
+    }
+
+    if (!table.columns || !Array.isArray(table.columns)) {
+      return {
+        valid: false,
+        error: `Table "${table.name}" is missing columns or columns is not an array.`,
+      };
+    }
+
+    if (table.columns.length === 0) {
+      return {
+        valid: false,
+        error: `Table "${table.name}" has no columns. Please add at least one column.`,
+      };
+    }
+
+    for (const column of table.columns) {
+      if (!column.name || typeof column.name !== "string") {
+        return {
+          valid: false,
+          error: `Column name is missing or invalid in table "${table.name}".`,
+        };
+      }
+
+      if (!column.type || typeof column.type !== "string") {
+        return {
+          valid: false,
+          error: `Column type is missing or invalid for column "${column.name}" in table "${table.name}".`,
+        };
+      }
+    }
+  }
+
+  return {
+    valid: true,
+    details: {
+      tables: config.databaseSchema.tables.map((t) => t.name),
+    },
+  };
+}
+
 export async function validateIntegrationConfig(
   type: IntegrationType,
   config: unknown,
