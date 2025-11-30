@@ -46,12 +46,6 @@ const data = {
       url: "/components",
       icon: Globe,
     },
-    {
-      title: "Templates",
-      url: "/templates",
-      icon: Box,
-      isNew: true,
-    },
   ],
   community: [
     {

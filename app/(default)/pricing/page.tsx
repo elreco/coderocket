@@ -44,57 +44,6 @@ export default async function PricingPage({
     <Container className="pr-2 sm:pr-11">
       <PageTitle title="Pricing Plans" subtitle="Start building for free" />
 
-      {reason === "templates-create" && (
-        <div className="mb-8">
-          <Alert className="border-amber-200 bg-amber-50">
-            <AlertDescription className="text-amber-800">
-              <strong>Premium subscription required</strong> - To create premium
-              templates and earn money from sales, you need a premium
-              subscription. You can still create free templates without a
-              subscription. Upgrade now to start earning from your templates!
-            </AlertDescription>
-          </Alert>
-        </div>
-      )}
-
-      {reason === "templates-stripe" && (
-        <div className="mb-8">
-          <Alert className="border-amber-200 bg-amber-50">
-            <AlertDescription className="text-amber-800">
-              <strong>Premium subscription required</strong> - To set up payment
-              processing and receive earnings from template sales, you need a
-              premium subscription. Upgrade now to configure your Stripe account
-              and start earning!
-            </AlertDescription>
-          </Alert>
-        </div>
-      )}
-
-      {reason === "templates-listings" && (
-        <div className="mb-8">
-          <Alert className="border-amber-200 bg-amber-50">
-            <AlertDescription className="text-amber-800">
-              <strong>Premium subscription required</strong> - To manage your
-              premium templates and track earnings, you need a premium
-              subscription. You can still create free templates without a
-              subscription. Upgrade now to access your template dashboard!
-            </AlertDescription>
-          </Alert>
-        </div>
-      )}
-
-      {reason === "templates-earnings" && (
-        <div className="mb-8">
-          <Alert className="border-amber-200 bg-amber-50">
-            <AlertDescription className="text-amber-800">
-              <strong>Premium subscription required</strong> - To view your
-              template earnings and manage payouts, you need a premium
-              subscription. Upgrade now to access your financial dashboard!
-            </AlertDescription>
-          </Alert>
-        </div>
-      )}
-
       {reason === "limit-exceeded" && (
         <div className="mb-8">
           <Alert className="border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950">

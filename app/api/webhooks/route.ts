@@ -1,6 +1,5 @@
 import Stripe from "stripe";
 
-import { handleMarketplacePurchase } from "@/app/(default)/templates/templates-purchase-handler";
 import { stripe } from "@/utils/stripe";
 // eslint-disable-next-line import/order
 import { createClient } from "@/utils/supabase/server";
@@ -39,51 +38,6 @@ async function handleStripeAccountUpdate(account: Stripe.Account) {
   }
 }
 
-async function handleTransferUpdate(
-  transfer: Stripe.Transfer & { failure_message?: string; date?: number },
-  eventType: string,
-) {
-  try {
-    const supabase = await createClient();
-
-    let status = "pending";
-    let arrivalDate = null;
-    let failureReason = null;
-
-    switch (eventType) {
-      case "transfer.paid":
-        status = "paid";
-        break;
-      case "transfer.failed":
-        status = "failed";
-        failureReason = transfer.failure_message || "Transfer failed";
-        break;
-      case "transfer.created":
-        status = "in_transit";
-        if (transfer.date) {
-          arrivalDate = new Date(transfer.date * 1000).toISOString();
-        }
-        break;
-    }
-
-    // Update payout status
-    const { error } = await supabase
-      .from("marketplace_payouts")
-      .update({
-        status,
-        arrival_date: arrivalDate,
-        failure_reason: failureReason,
-      })
-      .eq("stripe_payout_id", transfer.id);
-
-    if (error) {
-      console.error("Failed to update payout status:", error);
-    }
-  } catch (error) {
-    console.error("Error handling transfer update:", error);
-  }
-}
-
 const relevantEvents = new Set([
   "product.created",
   "product.updated",
@@ -95,8 +49,6 @@ const relevantEvents = new Set([
   "customer.subscription.deleted",
   "payment_intent.succeeded",
   "account.updated",
-  "transfer.created",
-  "transfer.updated",
 ]);
 
 export async function POST(req: Request) {
@@ -150,16 +102,6 @@ export async function POST(req: Request) {
           const account = event.data.object as Stripe.Account;
           await handleStripeAccountUpdate(account);
           break;
-        case "transfer.created":
-        case "transfer.updated":
-          // Handle payout status updates
-          // eslint-disable-next-line no-case-declarations
-          const transfer = event.data.object as Stripe.Transfer & {
-            failure_message?: string;
-            date?: number;
-          };
-          await handleTransferUpdate(transfer, event.type);
-          break;
         case "checkout.session.completed":
           // eslint-disable-next-line no-case-declarations
           const checkoutSession = event.data.object as Stripe.Checkout.Session;
@@ -176,18 +118,7 @@ export async function POST(req: Request) {
           } else if (checkoutSession.mode === "payment") {
             const metadata = checkoutSession.metadata;
 
-            // Handle marketplace purchases
-            if (metadata && metadata.type === "marketplace_purchase") {
-              const result = await handleMarketplacePurchase(metadata);
-
-              if (!result.success) {
-                console.error(
-                  "Failed to process marketplace purchase:",
-                  result.error,
-                );
-                // Don't fail the webhook, but log the error
-              }
-            } else if (metadata && metadata.rockets && metadata.userId) {
+            if (metadata && metadata.rockets && metadata.userId) {
               const userId = metadata.userId;
               const rockets = parseInt(metadata.rockets, 10);
 
