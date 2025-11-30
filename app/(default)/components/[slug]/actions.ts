@@ -142,6 +142,32 @@ export const changeVisibilityByChatId = async (
   }
 };
 
+export const updateTitleByChatId = async (chatId: string, title: string) => {
+  const supabase = await createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  const user = userData?.user;
+
+  if (!user) throw new Error("Could not get user");
+
+  if (!title || title.trim().length === 0) {
+    throw new Error("Title cannot be empty");
+  }
+
+  if (title.length > 255) {
+    throw new Error("Title is too long (max 255 characters)");
+  }
+
+  const { error } = await supabase
+    .from("chats")
+    .update({ title: title.trim() })
+    .eq("user_id", user.id)
+    .eq("id", chatId);
+
+  if (error) {
+    throw new Error(`Failed to update title: ${error.message}`);
+  }
+};
+
 export const improvePromptByChatId = async (chatId: string, prompt: string) => {
   const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();

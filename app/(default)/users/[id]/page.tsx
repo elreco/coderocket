@@ -1,9 +1,4 @@
-import {
-  Calendar,
-  Plus,
-  Heart,
-  GitFork,
-} from "lucide-react";
+import { Calendar, Plus, Heart, GitFork } from "lucide-react";
 import { Metadata, ResolvingMetadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -21,7 +16,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { avatarApi, Framework } from "@/utils/config";
+import { avatarApi } from "@/utils/config";
 import { getRelativeDate } from "@/utils/date";
 
 import {
@@ -227,7 +222,6 @@ export default async function UserPage({
               </div>
             </CardContent>
           </Card>
-
         </div>
         <Card className="col-span-1 xl:col-span-2">
           <CardContent>
@@ -271,9 +265,7 @@ export default async function UserPage({
             )}
           </CardContent>
         </Card>
-
       </div>
     </Container>
   );
 }
-

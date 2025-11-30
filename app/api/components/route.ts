@@ -263,6 +263,13 @@ export async function POST(req: Request) {
       });
     }
 
+    const { data: chatData } = await supabase
+      .from("chats")
+      .select("title")
+      .eq("id", id)
+      .single();
+    const componentTitle = chatData?.title;
+
     const latestVersion = messagesFromDatabase.reduce((max, message) => {
       if (typeof message.version !== "number") {
         return max;
@@ -421,6 +428,7 @@ export async function POST(req: Request) {
       selectedVersion,
       uploadedFilesInfo,
       currentFilesContext,
+      componentTitle,
     );
 
     // Add detailed logging for debugging
@@ -627,6 +635,7 @@ const buildMessagesToOpenAi = async (
     source?: string;
   }[],
   currentFilesContext?: string,
+  componentTitle?: string | null,
 ) => {
   // Helper function to extract file URLs from message
   const getMessageFiles = (
@@ -755,10 +764,16 @@ const buildMessagesToOpenAi = async (
     }
   }
 
+  // Ajouter le titre du composant si disponible
+  let titleContext = "";
+  if (componentTitle) {
+    titleContext = `\n\n<component_title>\nThe component title is: "${componentTitle}"\nIMPORTANT: Use this exact title in the <coderocketArtifact title="${componentTitle}"> tag.\n</component_title>\n\n`;
+  }
+
   // Toujours inclure le texte du prompt (avec le contexte des fichiers locked au début si présent)
   const finalPromptText = currentFilesContext
-    ? currentFilesContext + uploadedFilesContext + updatedPrompt
-    : uploadedFilesContext + updatedPrompt;
+    ? currentFilesContext + titleContext + uploadedFilesContext + updatedPrompt
+    : titleContext + uploadedFilesContext + updatedPrompt;
 
   finalMessageContent.push({
     type: "text",

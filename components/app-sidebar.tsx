@@ -8,7 +8,6 @@ import {
   MessageCircle,
   Rocket,
   SquareTerminal,
-  Box,
   HelpCircle,
 } from "lucide-react";
 import Link from "next/link";

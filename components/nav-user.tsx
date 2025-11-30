@@ -2,10 +2,8 @@
 import {
   ChevronsUpDown,
   CreditCard,
-  DollarSign,
   Heart,
   LogOut,
-  Box,
   SquareUserRoundIcon,
   User,
   UserCircle,
