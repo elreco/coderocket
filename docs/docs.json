@@ -68,15 +68,6 @@
         ]
       },
       {
-        "group": "Templates",
-        "pages": [
-          "templates/overview",
-          "templates/using",
-          "templates/sharing",
-          "templates/customization"
-        ]
-      },
-      {
         "group": "Integrations",
         "pages": [
           "integrations/overview",

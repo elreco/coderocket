@@ -35,8 +35,8 @@ export default function TermsPage() {
             </h2>
             <p>
               CodeRocket is an AI-powered platform that generates UI components
-              based on user prompts. Users can create, modify, share, and sell
-              components through our marketplace.
+              based on user prompts. Users can create and modify components for
+              their own projects.
             </p>
           </section>
 
@@ -101,41 +101,11 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="mb-4 text-2xl font-semibold">
-              6. Marketplace Terms
-            </h2>
-            <div className="space-y-3">
-              <p>
-                <strong>6.1 Selling Components:</strong> When you list
-                components for sale, you represent that you have the right to
-                sell them and that they do not infringe on third-party rights.
-              </p>
-              <p>
-                <strong>6.2 Commission:</strong> CodeRocket retains a 30%
-                commission on all marketplace sales.
-              </p>
-              <p>
-                <strong>6.3 Purchased Components:</strong> When you purchase a
-                component, you receive a license to use it in your projects, but
-                you cannot redistribute or resell it.
-              </p>
-              <p>
-                <strong>6.4 Refund Policy:</strong> All sales are final. We do
-                not offer refunds for digital purchases unless required by law.
-              </p>
-            </div>
-          </section>
-
-          <section>
             <h2 className="mb-4 text-2xl font-semibold">7. Payment Terms</h2>
             <div className="space-y-3">
               <p>
                 <strong>7.1 Subscription Fees:</strong> Subscription fees are
                 billed in advance and are non-refundable.
-              </p>
-              <p>
-                <strong>7.2 Marketplace Transactions:</strong> All marketplace
-                transactions are processed through secure payment providers.
               </p>
               <p>
                 <strong>7.3 Taxes:</strong> You are responsible for any

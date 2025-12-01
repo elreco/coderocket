@@ -44,11 +44,6 @@ docs/
 │   ├── setup.mdx         # Setup instructions
 │   ├── synchronization.mdx # Sync guide
 │   └── troubleshooting.mdx # Common issues
-└── templates/            # Templates documentation
-    ├── overview.mdx      # Templates overview
-    ├── using.mdx         # Using templates guide
-    ├── sharing.mdx       # Sharing templates guide
-    └── customization.mdx # Customizing templates
 ```
 
 ## ✏️ Writing Documentation

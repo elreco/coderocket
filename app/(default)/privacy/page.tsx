@@ -23,8 +23,7 @@ export default function PrivacyPage() {
               CodeRocket (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;) is
               committed to protecting your privacy. This Privacy Policy explains
               how we collect, use, disclose, and safeguard your information when
-              you use our AI-powered component generation platform and
-              marketplace.
+              you use our AI-powered component generation platform.
             </p>
           </section>
 
@@ -44,10 +43,7 @@ export default function PrivacyPage() {
                 </p>
                 <ul className="list-disc space-y-1 pl-6">
                   <li>Name and email address when you create an account</li>
-                  <li>
-                    Payment information for subscriptions and marketplace
-                    transactions
-                  </li>
+                  <li>Payment information for subscriptions</li>
                   <li>Profile information and preferences</li>
                   <li>Communications you send to us</li>
                 </ul>
@@ -64,7 +60,6 @@ export default function PrivacyPage() {
                 <ul className="list-disc space-y-1 pl-6">
                   <li>Component generation prompts and preferences</li>
                   <li>Generated components and modifications</li>
-                  <li>Marketplace activity (purchases, sales, listings)</li>
                   <li>Usage patterns and feature interactions</li>
                 </ul>
               </div>

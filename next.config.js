@@ -14,13 +14,23 @@ const nextConfig = {
   async redirects() {
     return [
       {
-        source: '/marketplace',
-        destination: '/templates',
+        source: "/marketplace",
+        destination: "/components",
         permanent: true,
       },
       {
-        source: '/marketplace/:path*',
-        destination: '/templates/:path*',
+        source: "/marketplace/:path*",
+        destination: "/components",
+        permanent: true,
+      },
+      {
+        source: "/templates",
+        destination: "/components",
+        permanent: true,
+      },
+      {
+        source: "/templates/:path*",
+        destination: "/components/:path*",
         permanent: true,
       },
     ];
