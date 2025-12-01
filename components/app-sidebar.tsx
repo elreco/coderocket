@@ -8,7 +8,6 @@ import {
   MessageCircle,
   Rocket,
   SquareTerminal,
-  Box,
   HelpCircle,
 } from "lucide-react";
 import Link from "next/link";
@@ -45,12 +44,6 @@ const data = {
       title: "Browse Components",
       url: "/components",
       icon: Globe,
-    },
-    {
-      title: "Templates",
-      url: "/templates",
-      icon: Box,
-      isNew: true,
     },
   ],
   community: [

@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -10,58 +12,86 @@ import {
 } from "@/components/ui/tooltip";
 import { useComponentContext } from "@/context/component-context";
 import { toast } from "@/hooks/use-toast";
-import { createClient } from "@/utils/supabase/client";
 
-import { changeVisibilityByChatId } from "../actions";
+import { changeVisibilityByChatId, updateTitleByChatId } from "../actions";
 
 export default function SettingsContent() {
-  const { isVisible, setVisible, chatId, subscription } = useComponentContext();
+  const {
+    isVisible,
+    setVisible,
+    chatId,
+    subscription,
+    fetchedChat,
+    refreshChatData,
+  } = useComponentContext();
   const [isVisibilityLoading, setIsVisibilityLoading] = useState(false);
-  const [isListedOnMarketplace, setIsListedOnMarketplace] = useState(false);
-  const [isCheckingMarketplace, setIsCheckingMarketplace] = useState(true);
+  const [title, setTitle] = useState("");
+  const [isTitleLoading, setIsTitleLoading] = useState(false);
+  const [hasTitleChanged, setHasTitleChanged] = useState(false);
 
   const isPremium = !!subscription;
   const isCheckingPremium = false;
 
   useEffect(() => {
-    const checkMarketplaceListing = async () => {
-      try {
-        const supabase = createClient();
-        const { data: userData } = await supabase.auth.getUser();
-
-        if (!userData.user) {
-          setIsCheckingMarketplace(false);
-          return;
-        }
-
-        const { data: marketplaceListing, error } = await supabase
-          .from("marketplace_listings")
-          .select("id")
-          .eq("chat_id", chatId)
-          .eq("seller_id", userData.user.id)
-          .eq("is_active", true)
-          .maybeSingle();
-
-        if (error && error.code !== "PGRST116") {
-          console.error("Error checking marketplace listing:", error);
-        }
-
-        setIsListedOnMarketplace(!!marketplaceListing);
-      } catch (error) {
-        console.error("Error checking marketplace listing:", error);
-        setIsListedOnMarketplace(false);
-      } finally {
-        setIsCheckingMarketplace(false);
-      }
-    };
-
-    if (chatId) {
-      checkMarketplaceListing();
+    if (fetchedChat?.title) {
+      setTitle(fetchedChat.title);
+      setHasTitleChanged(false);
     }
-  }, [chatId]);
+  }, [fetchedChat?.title]);
+
+  const handleTitleChange = (value: string) => {
+    setTitle(value);
+    setHasTitleChanged(value.trim() !== (fetchedChat?.title || ""));
+  };
+
+  const handleTitleSave = async () => {
+    if (!hasTitleChanged || isTitleLoading) return;
+
+    const trimmedTitle = title.trim();
+    if (!trimmedTitle) {
+      toast({
+        variant: "destructive",
+        title: "Title cannot be empty",
+        description: "Please enter a valid title.",
+      });
+      return;
+    }
+
+    if (trimmedTitle.length > 255) {
+      toast({
+        variant: "destructive",
+        title: "Title too long",
+        description: "Title must be 255 characters or less.",
+      });
+      return;
+    }
+
+    try {
+      setIsTitleLoading(true);
+      await updateTitleByChatId(chatId, trimmedTitle);
+      setHasTitleChanged(false);
+      if (refreshChatData) {
+        await refreshChatData();
+      }
+      toast({
+        title: "Title updated",
+        description: "The component title has been updated successfully.",
+      });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      toast({
+        variant: "destructive",
+        title: "Failed to update title",
+        description: errorMessage,
+      });
+    } finally {
+      setIsTitleLoading(false);
+    }
+  };
 
   const handleVisibility = async () => {
-    if (isVisibilityLoading || isListedOnMarketplace || !isPremium) return;
+    if (isVisibilityLoading || !isPremium) return;
     try {
       setIsVisibilityLoading(true);
       await changeVisibilityByChatId(chatId, !isVisible);
@@ -92,6 +122,39 @@ export default function SettingsContent() {
   return (
     <div className="space-y-6 p-3">
       <div>
+        <h4 className="mb-4 text-base font-semibold">Component title</h4>
+        <div className="space-y-4">
+          <div className="bg-background mb-5 flex flex-col gap-3 rounded-lg p-4">
+            <div className="space-y-2">
+              <Input
+                id="component-title"
+                value={title}
+                onChange={(e) => handleTitleChange(e.target.value)}
+                placeholder="Enter component title..."
+                maxLength={255}
+                disabled={isTitleLoading}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    handleTitleSave();
+                  }
+                }}
+              />
+              <p className="text-muted-foreground text-xs">
+                This title will be used in the generated code and component
+                metadata.
+              </p>
+            </div>
+            <Button
+              onClick={handleTitleSave}
+              disabled={isTitleLoading || !hasTitleChanged}
+              className="w-full"
+            >
+              {isTitleLoading ? "Saving..." : "Save title"}
+            </Button>
+          </div>
+        </div>
+      </div>
+      <div>
         <h4 className="mb-4 text-base font-semibold">Change visibility</h4>
         <div className="space-y-4">
           <div className="bg-background mb-5 flex flex-row items-center justify-between rounded-lg p-4">
@@ -99,19 +162,11 @@ export default function SettingsContent() {
               <Label>Private mode</Label>
               <p className="text-muted-foreground text-sm">
                 When private, the component will not be visible to the public.
-                Components listed on the marketplace must remain private to
-                maintain exclusivity for buyers.
               </p>
               {!isPremium && (
                 <p className="text-sm text-amber-600">
                   ⚠️ Premium subscription required to change component
                   visibility.
-                </p>
-              )}
-              {isListedOnMarketplace && (
-                <p className="text-sm text-amber-600">
-                  ⚠️ This component is listed on the marketplace and cannot be
-                  made public.
                 </p>
               )}
             </div>
@@ -123,11 +178,7 @@ export default function SettingsContent() {
                       checked={!isVisible}
                       onCheckedChange={handleVisibility}
                       disabled={
-                        isVisibilityLoading ||
-                        isCheckingMarketplace ||
-                        isCheckingPremium ||
-                        !isPremium ||
-                        (isListedOnMarketplace && !isVisible)
+                        isVisibilityLoading || isCheckingPremium || !isPremium
                       }
                     />
                   </div>
@@ -139,15 +190,6 @@ export default function SettingsContent() {
                       visibility.
                       <br />
                       Upgrade to premium to make your components private.
-                    </p>
-                  </TooltipContent>
-                )}
-                {isListedOnMarketplace && !isVisible && isPremium && (
-                  <TooltipContent>
-                    <p>
-                      Cannot make public: component is listed on marketplace.
-                      <br />
-                      Remove from marketplace first to make it public.
                     </p>
                   </TooltipContent>
                 )}

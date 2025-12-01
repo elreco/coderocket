@@ -2,10 +2,8 @@
 import {
   ChevronsUpDown,
   CreditCard,
-  DollarSign,
   Heart,
   LogOut,
-  Box,
   SquareUserRoundIcon,
   User,
   UserCircle,
@@ -171,33 +169,6 @@ export function NavUser({
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem asChild className="cursor-pointer">
-                <Link
-                  href="/account/templates/listings"
-                  onClick={() => setOpenMobile(false)}
-                >
-                  <Box />
-                  My Listed Templates
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild className="cursor-pointer">
-                <Link
-                  href="/account/templates/earnings"
-                  onClick={() => setOpenMobile(false)}
-                >
-                  <DollarSign />
-                  My Earnings
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild className="cursor-pointer">
-                <Link
-                  href="/account/templates/purchases"
-                  onClick={() => setOpenMobile(false)}
-                >
-                  <Box />
-                  My Templates
-                </Link>
-              </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem

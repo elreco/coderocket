@@ -131,30 +131,6 @@ export const changeVisibilityByChatId = async (
     throw new Error("payment-required");
   }
 
-  // If trying to make the component public, check if it's listed on marketplace
-  // Business rule: Components listed on marketplace must remain private to maintain
-  // exclusivity for buyers who purchase access to these components
-  if (isVisible) {
-    const { data: marketplaceListing, error: marketplaceError } = await supabase
-      .from("marketplace_listings")
-      .select("id, title")
-      .eq("chat_id", chatId)
-      .eq("seller_id", user.id)
-      .eq("is_active", true)
-      .maybeSingle(); // Use maybeSingle() to avoid 406 errors
-
-    if (marketplaceError && marketplaceError.code !== "PGRST116") {
-      // PGRST116 is "no rows returned", which is fine
-      console.error("Error checking marketplace listing:", marketplaceError);
-    }
-
-    if (marketplaceListing) {
-      // This should not happen in normal usage as the UI prevents it,
-      // but we keep this as a security measure
-      throw new Error("marketplace-listed");
-    }
-  }
-
   const { error } = await supabase
     .from("chats")
     .update({ is_private: !isVisible })
@@ -163,6 +139,32 @@ export const changeVisibilityByChatId = async (
 
   if (error) {
     throw new Error(`Failed to update visibility: ${error.message}`);
+  }
+};
+
+export const updateTitleByChatId = async (chatId: string, title: string) => {
+  const supabase = await createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  const user = userData?.user;
+
+  if (!user) throw new Error("Could not get user");
+
+  if (!title || title.trim().length === 0) {
+    throw new Error("Title cannot be empty");
+  }
+
+  if (title.length > 255) {
+    throw new Error("Title is too long (max 255 characters)");
+  }
+
+  const { error } = await supabase
+    .from("chats")
+    .update({ title: title.trim() })
+    .eq("user_id", user.id)
+    .eq("id", chatId);
+
+  if (error) {
+    throw new Error(`Failed to update title: ${error.message}`);
   }
 };
 
