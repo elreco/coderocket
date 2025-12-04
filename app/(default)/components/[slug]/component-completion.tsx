@@ -1549,6 +1549,7 @@ export default function ComponentCompletion({
                           disabled={
                             isLoading ||
                             isLengthError ||
+                            !isWebcontainerReady ||
                             loadingState === "processing" ||
                             loadingState === "starting" ||
                             loadingState === "error"
@@ -1565,38 +1566,37 @@ export default function ComponentCompletion({
                         )}
                       </TooltipContent>
                     </Tooltip>
-                    {(isWebcontainerReady ||
-                      fetchedChat?.framework === Framework.HTML) && (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              if (isLengthError) {
-                                return;
-                              }
-                              const url =
-                                fetchedChat?.framework === Framework.HTML
-                                  ? `https://www.coderocket.app/content/${chatId}/${selectedVersion}`
-                                  : `https://${chatId}-${selectedVersion}.preview.coderocket.app${sharePathSuffix}`;
-                              window.open(url, "_blank");
-                            }}
-                            className="flex items-center"
-                            disabled={isLoading || isLengthError}
-                          >
-                            <ExternalLink className="w-5" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>
-                            {isLengthError
-                              ? "The component has an error"
-                              : "Open in a new tab"}
-                          </p>
-                        </TooltipContent>
-                      </Tooltip>
-                    )}
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            if (isLengthError) {
+                              return;
+                            }
+                            const url =
+                              fetchedChat?.framework === Framework.HTML
+                                ? `https://www.coderocket.app/content/${chatId}/${selectedVersion}`
+                                : `https://${chatId}-${selectedVersion}.preview.coderocket.app${sharePathSuffix}`;
+                            window.open(url, "_blank");
+                          }}
+                          className="flex items-center"
+                          disabled={
+                            isLoading || isLengthError || !isWebcontainerReady
+                          }
+                        >
+                          <ExternalLink className="w-5" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>
+                          {isLengthError
+                            ? "The component has an error"
+                            : "Open in a new tab"}
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
                   </div>
                   <div className="border-border bg-background flex min-w-0 flex-1 items-center gap-2 rounded-md border p-0">
                     <Button
@@ -1649,6 +1649,8 @@ export default function ComponentCompletion({
                           onClick={() => setIframeKey((prev) => prev + 1)}
                           disabled={
                             isLoading ||
+                            isLengthError ||
+                            !isWebcontainerReady ||
                             loadingState === "processing" ||
                             loadingState === "starting" ||
                             loadingState === "error"
@@ -1675,6 +1677,8 @@ export default function ComponentCompletion({
                           )}
                           disabled={
                             isLoading ||
+                            isLengthError ||
+                            !isWebcontainerReady ||
                             loadingState === "processing" ||
                             loadingState === "starting" ||
                             loadingState === "error"
@@ -1699,6 +1703,8 @@ export default function ComponentCompletion({
                           )}
                           disabled={
                             isLoading ||
+                            isLengthError ||
+                            !isWebcontainerReady ||
                             loadingState === "processing" ||
                             loadingState === "starting" ||
                             loadingState === "error"
@@ -1723,6 +1729,8 @@ export default function ComponentCompletion({
                           )}
                           disabled={
                             isLoading ||
+                            isLengthError ||
+                            !isWebcontainerReady ||
                             loadingState === "processing" ||
                             loadingState === "starting" ||
                             loadingState === "error"
