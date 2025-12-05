@@ -349,8 +349,6 @@ export default function ComponentPreview() {
                   key={`iframe-${displayVersion}`}
                   src={`https://${chatId}-${displayVersion}.webcontainer.coderocket.app${previewPathSuffix}`}
                   className="size-full border-none"
-                  sandbox="allow-scripts allow-forms allow-popups allow-modals allow-storage-access-by-user-activation allow-same-origin"
-                  allow="credentialless"
                   loading="eager"
                   onLoad={() => setIframeLoading(false)}
                 />

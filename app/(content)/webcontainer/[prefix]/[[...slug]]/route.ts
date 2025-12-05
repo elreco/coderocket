@@ -327,7 +327,7 @@ export async function GET(
       <span>Built with CodeRocket 🚀</span>
     </a>
   </div>
-  <iframe src="${iframeSrc}" sandbox="allow-scripts allow-forms allow-popups allow-modals allow-storage-access-by-user-activation allow-same-origin" allow="credentialless"></iframe>
+  <iframe src="${iframeSrc}"></iframe>
 </body>
 </html>`;
 

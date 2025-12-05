@@ -211,8 +211,6 @@ export default function RenderHtmlComponent({
         border: "none",
       }}
       className="bg-white"
-      sandbox="allow-scripts allow-forms allow-popups allow-modals allow-storage-access-by-user-activation allow-same-origin"
-      allow="credentialless"
       loading="eager"
     />
   );

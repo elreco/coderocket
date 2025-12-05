@@ -1773,8 +1773,6 @@ export default function ComponentCompletion({
                               key={iframeKey}
                               className="size-full rounded-md border-none"
                               src={`https://${chatId}-${selectedVersion}.webcontainer.coderocket.app${previewPathSuffix}`}
-                              sandbox="allow-scripts allow-forms allow-popups allow-modals allow-storage-access-by-user-activation allow-same-origin"
-                              allow="credentialless"
                               loading="eager"
                             />
                           ) : (
