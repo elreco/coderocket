@@ -42,6 +42,22 @@ export type GetComponentsReturnType = {
   clone_url?: string;
   user_has_liked?: boolean;
   screenshot?: string;
+  views?: number;
+  artifact_code?: string;
+  prompt_image?: string;
+  input_tokens?: number;
+  output_tokens?: number;
+  remix_from_version?: number;
+  metadata?: Record<string, unknown>;
+  github_repo_url?: string;
+  github_repo_name?: string;
+  last_github_sync?: string;
+  last_github_commit_sha?: string;
+  deploy_subdomain?: string;
+  deployed_at?: string;
+  deployed_version?: number;
+  is_deployed?: boolean;
+  remixes_count?: number;
 };
 
 export const fetchChatById = async (idOrSlug: string) => {
@@ -514,18 +530,22 @@ export const createChat = async (prompt: string, formData: FormData) => {
 export const getAllPublicChats = async (
   limit: number = 16,
   offset: number = 0,
-  isPopular: boolean = false,
+  sortBy: "newest" | "top" | "remix" = "newest",
   searchQuery?: string,
   selectedFrameworks?: Framework[],
   isAccountPage?: boolean,
   isLikedPage?: boolean,
+  user?: { id: string } | null,
 ) => {
   try {
     const supabase = await createClient();
-    const { data: userData } = await supabase.auth.getUser();
-    const user = userData.user;
+    let currentUser = user;
+    if (!currentUser) {
+      const { data: userData } = await supabase.auth.getUser();
+      currentUser = userData.user;
+    }
 
-    let query = supabase.rpc("get_components");
+    let query = supabase.rpc("get_chats_with_details");
     // 🔒 Sécuriser la requête de recherche
     if (searchQuery) {
       const sanitizedQuery = searchQuery.trim().slice(0, MAX_SEARCH_LENGTH);
@@ -535,26 +555,30 @@ export const getAllPublicChats = async (
       query = query.in("framework", selectedFrameworks);
     }
 
-    if (isAccountPage && user) {
-      query = query.eq("user_id", user.id);
+    if (isAccountPage && currentUser) {
+      query = query.eq("user_id", currentUser.id);
     } else {
       query = query
         .not("last_assistant_message", "is", null)
         .is("is_private", false);
     }
-    if (isPopular) {
+    if (sortBy === "top") {
       query = query
         .order("likes", { ascending: false })
+        .order("created_at", { ascending: false });
+    } else if (sortBy === "remix") {
+      query = query
+        .order("remixes_count", { ascending: false })
         .order("created_at", { ascending: false });
     } else {
       query = query.order("created_at", { ascending: false });
     }
 
-    if (isLikedPage && user) {
+    if (isLikedPage && currentUser) {
       const { data: likedChats } = await supabase
         .from("chat_likes")
         .select("chat_id")
-        .eq("user_id", user.id);
+        .eq("user_id", currentUser.id);
       if (likedChats) {
         query = query.in(
           "chat_id",
@@ -1002,14 +1026,18 @@ const createRemixTitle = (originalTitle: string) => {
 export const getComponentsByFramework = async (
   framework: Framework,
   limit: number = 10,
+  user?: { id: string } | null,
 ) => {
   try {
     const supabase = await createClient();
-    const { data: userData } = await supabase.auth.getUser();
-    const user = userData.user;
+    let currentUser = user;
+    if (!currentUser) {
+      const { data: userData } = await supabase.auth.getUser();
+      currentUser = userData.user;
+    }
 
     const query = supabase
-      .rpc("get_components")
+      .rpc("get_chats_with_details")
       .eq("framework", framework)
       .not("last_assistant_message", "is", null)
       .is("is_private", false)
@@ -1027,12 +1055,12 @@ export const getComponentsByFramework = async (
       return [];
     }
 
-    if (user) {
+    if (currentUser) {
       const chatIds = data.map((chat) => chat.chat_id);
       const { data: userLikes } = await supabase
         .from("chat_likes")
         .select("chat_id")
-        .eq("user_id", user.id)
+        .eq("user_id", currentUser.id)
         .in("chat_id", chatIds);
 
       const likedChatIds = userLikes
@@ -1057,14 +1085,20 @@ export const getComponentsByFramework = async (
   }
 };
 
-export const getMostPopularComponents = async (limit: number = 10) => {
+export const getMostPopularComponents = async (
+  limit: number = 10,
+  user?: { id: string } | null,
+) => {
   try {
     const supabase = await createClient();
-    const { data: userData } = await supabase.auth.getUser();
-    const user = userData.user;
+    let currentUser = user;
+    if (!currentUser) {
+      const { data: userData } = await supabase.auth.getUser();
+      currentUser = userData.user;
+    }
 
     const query = supabase
-      .rpc("get_components")
+      .rpc("get_chats_with_details")
       .not("last_assistant_message", "is", null)
       .is("is_private", false)
       .gt("likes", 0)
@@ -1083,12 +1117,12 @@ export const getMostPopularComponents = async (limit: number = 10) => {
       return [];
     }
 
-    if (user) {
+    if (currentUser) {
       const chatIds = data.map((chat) => chat.chat_id);
       const { data: userLikes } = await supabase
         .from("chat_likes")
         .select("chat_id")
-        .eq("user_id", user.id)
+        .eq("user_id", currentUser.id)
         .in("chat_id", chatIds);
 
       const likedChatIds = userLikes

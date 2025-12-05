@@ -1,4 +1,4 @@
-import { Link2 } from "lucide-react";
+import { GitFork } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -6,26 +6,25 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { cn, truncateMiddle } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 
-interface ClonedUrlBadgeProps {
+interface RemixOriginalBadgeProps {
   className?: string;
-  url: string;
-  maxLength?: number;
+  originalChat: {
+    slug: string | null;
+    title?: string | null;
+  };
   showTooltip?: boolean;
 }
 
-export function ClonedUrlBadge({
+export function RemixOriginalBadge({
   className,
-  url,
-  maxLength = 30,
+  originalChat,
   showTooltip = true,
-}: ClonedUrlBadgeProps) {
-  const cleanUrl = url.replace(/^https?:\/\/(www\.)?/i, "").replace(/\/$/, "");
-
-  const handleClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-  };
+}: RemixOriginalBadgeProps) {
+  if (!originalChat.slug) {
+    return null;
+  }
 
   const buttonContent = (
     <Button
@@ -35,14 +34,13 @@ export function ClonedUrlBadge({
       className={cn("w-fit py-1 h-auto px-2", className)}
     >
       <a
-        href={url}
+        href={`/components/${originalChat.slug}`}
+        className="inline-flex items-center gap-1 text-xs text-indigo-500 hover:text-indigo-600 hover:underline"
         target="_blank"
         rel="noopener noreferrer"
-        className="inline-flex items-center gap-1 text-xs text-blue-500 hover:text-blue-600 hover:underline"
-        onClick={handleClick}
       >
-        <Link2 className="size-3" />
-        {truncateMiddle(cleanUrl, maxLength)}
+        <GitFork className="size-2" />
+        {originalChat.title || `Component ${originalChat.slug}`}
       </a>
     </Button>
   );
@@ -52,7 +50,7 @@ export function ClonedUrlBadge({
       <Tooltip>
         <TooltipTrigger asChild>{buttonContent}</TooltipTrigger>
         <TooltipContent>
-          <p>Component cloned from this website</p>
+          <p>This component is a remix of this original component</p>
         </TooltipContent>
       </Tooltip>
     );

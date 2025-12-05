@@ -58,7 +58,6 @@ import {
 } from "@/utils/config";
 import { getRelativeDate } from "@/utils/date";
 import { validateFile } from "@/utils/file-helper";
-import { createClient } from "@/utils/supabase/client";
 
 import ComponentTheme from "./(settings)/component-theme";
 import DeploymentContent from "./(settings)/deployment-content";
@@ -99,6 +98,7 @@ export default function ComponentSidebar({
     setSidebarTab: setActiveTab,
     setIsScrapingWebsite,
     setIsContinuingFromLengthError,
+    connectedUser,
   } = useComponentContext();
   const { buildError, loadingState } = useBuilder();
 
@@ -184,13 +184,10 @@ export default function ComponentSidebar({
   }, []);
 
   useEffect(() => {
-    // Charger le statut de l'abonnement au chargement du composant
     const fetchSubscription = async () => {
-      const supabase = await createClient();
       try {
         setIsLoadingSubscription(true);
-        const { data } = await supabase.auth.getUser();
-        const userId = data?.user?.id;
+        const userId = connectedUser?.id;
         setIsLoggedIn(!!userId);
 
         if (userId) {
@@ -207,7 +204,7 @@ export default function ComponentSidebar({
     };
 
     fetchSubscription();
-  }, []);
+  }, [connectedUser]);
 
   const submitPrompt = (promptText: string) => {
     handleSubmitToAI(promptText);
@@ -1061,81 +1058,105 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
                   <div className="flex items-center gap-2">
                     {/* Continue your work button */}
                     {!isLoading && isLengthError && (
-                      <Button
-                        type="button"
-                        size="sm"
-                        className="mr-2"
-                        onClick={() => {
-                          setIsContinuingFromLengthError(true);
-                          const continuePrompt = createContinuePrompt(messages);
-                          setInput(continuePrompt);
-                          submitPrompt(continuePrompt);
-                        }}
-                      >
-                        <RefreshCw className=" size-4" />
-                        Continue generation
-                      </Button>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              type="button"
+                              size="sm"
+                              className="mr-2"
+                              onClick={() => {
+                                setIsContinuingFromLengthError(true);
+                                const continuePrompt =
+                                  createContinuePrompt(messages);
+                                setInput(continuePrompt);
+                                submitPrompt(continuePrompt);
+                              }}
+                            >
+                              <RefreshCw className="size-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Continue generation</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     )}
                     {!isLoading && loadingState === "error" && buildError && (
-                      <Button
-                        type="button"
-                        size="sm"
-                        className="mr-2"
-                        onClick={() => {
-                          const errorContent =
-                            buildError.errors?.join("\n\n") || "";
-                          const truncatedContent =
-                            errorContent.length > FREE_CHAR_LIMIT
-                              ? errorContent.substring(0, FREE_CHAR_LIMIT)
-                              : errorContent;
-                          const continuePrompt =
-                            "Fix the following error: " + truncatedContent;
-                          setInput(continuePrompt);
-                          handleSubmitToAI(continuePrompt);
-                        }}
-                      >
-                        <WandSparkles className="size-4" />
-                        Fix errors
-                      </Button>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              type="button"
+                              size="sm"
+                              className="mr-2"
+                              onClick={() => {
+                                const errorContent =
+                                  buildError.errors?.join("\n\n") || "";
+                                const truncatedContent =
+                                  errorContent.length > FREE_CHAR_LIMIT
+                                    ? errorContent.substring(0, FREE_CHAR_LIMIT)
+                                    : errorContent;
+                                const continuePrompt =
+                                  "Fix the following error: " +
+                                  truncatedContent;
+                                setInput(continuePrompt);
+                                handleSubmitToAI(continuePrompt);
+                              }}
+                            >
+                              <WandSparkles className="size-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Fix errors</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     )}
                     {!isLoading && hasUnexecutedMigration && (
-                      <Button
-                        type="button"
-                        size="sm"
-                        className="mr-2"
-                        onClick={() => {
-                          const migrationSection = document.querySelector(
-                            "[data-migration-runner]",
-                          );
-                          if (migrationSection) {
-                            migrationSection.scrollIntoView({
-                              behavior: "smooth",
-                              block: "center",
-                            });
-                          }
-                        }}
-                      >
-                        <Database className="size-4" />
-                        Run Migration
-                      </Button>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              type="button"
+                              size="sm"
+                              className="mr-2"
+                              onClick={() => {
+                                const migrationSection = document.querySelector(
+                                  "[data-migration-runner]",
+                                );
+                                if (migrationSection) {
+                                  migrationSection.scrollIntoView({
+                                    behavior: "smooth",
+                                    block: "center",
+                                  });
+                                }
+                              }}
+                            >
+                              <Database className="size-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Run Migration</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     )}
                   </div>
                   <div className="flex items-center space-x-2">
                     {selectedFramework === Framework.HTML && !isLengthError && (
                       <div className="text-sm font-semibold">
                         <ComponentTheme>
-                          <Button
-                            type="button"
-                            variant="secondary"
-                            size="sm"
-                            className="flex items-center"
-                            disabled={isLoading}
-                          >
-                            <Paintbrush className="size-4 shrink-0" />
-                            <span className="ml-0.5 hidden sm:inline">
-                              Theme
-                            </span>
-                          </Button>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  type="button"
+                                  variant="secondary"
+                                  size="sm"
+                                  className="flex items-center"
+                                  disabled={isLoading}
+                                >
+                                  <Paintbrush className="size-4 shrink-0" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Theme</TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                         </ComponentTheme>
                       </div>
                     )}
@@ -1191,9 +1212,105 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
                                 setFiles((prev) => [...prev, ...validFiles]);
                               }
                             }}
-                            label="Files"
                             subscription={subscription}
                             isLoggedIn={isLoggedIn}
+                            currentFilesCount={files.length}
+                            onFileSelectFromLibrary={async (libraryFile) => {
+                              try {
+                                const response = await fetch(
+                                  libraryFile.publicUrl,
+                                );
+                                const blob = await response.blob();
+                                const fileName =
+                                  libraryFile.path.split("/").pop() ||
+                                  libraryFile.path;
+                                const file = new File([blob], fileName, {
+                                  type: libraryFile.mimeType,
+                                });
+                                (
+                                  file as File & { __libraryPath?: string }
+                                ).__libraryPath = libraryFile.path;
+
+                                if (files.length >= maxImagesUpload) {
+                                  toast({
+                                    variant: "destructive",
+                                    title: "Too many files",
+                                    description: `Maximum ${maxImagesUpload} files allowed`,
+                                    duration: 4000,
+                                  });
+                                  return;
+                                }
+
+                                const validation = validateFile(file);
+                                if (!validation.valid) {
+                                  toast({
+                                    variant: "destructive",
+                                    title: "Invalid file",
+                                    description: validation.error,
+                                    duration: 4000,
+                                  });
+                                  return;
+                                }
+
+                                setFiles((prev) => [...prev, file]);
+                              } catch (error) {
+                                console.error(
+                                  "Error loading file from library:",
+                                  error,
+                                );
+                                toast({
+                                  variant: "destructive",
+                                  title: "Error loading file",
+                                  description:
+                                    "Failed to load file from library",
+                                  duration: 4000,
+                                });
+                              }
+                            }}
+                            onFileDeleted={(deletedPath) => {
+                              setFiles((prev) =>
+                                prev.filter(
+                                  (file) =>
+                                    (file as File & { __libraryPath?: string })
+                                      .__libraryPath !== deletedPath,
+                                ),
+                              );
+                            }}
+                            onFileUpload={(uploadedFiles) => {
+                              const validFiles: File[] = [];
+
+                              for (const file of uploadedFiles) {
+                                if (
+                                  files.length + validFiles.length >=
+                                  maxImagesUpload
+                                ) {
+                                  toast({
+                                    variant: "destructive",
+                                    title: "Too many files",
+                                    description: `Maximum ${maxImagesUpload} files allowed`,
+                                    duration: 4000,
+                                  });
+                                  break;
+                                }
+
+                                const validation = validateFile(file);
+                                if (!validation.valid) {
+                                  toast({
+                                    variant: "destructive",
+                                    title: "Invalid file",
+                                    description: validation.error,
+                                    duration: 4000,
+                                  });
+                                  continue;
+                                }
+
+                                validFiles.push(file);
+                              }
+
+                              if (validFiles.length > 0) {
+                                setFiles((prev) => [...prev, ...validFiles]);
+                              }
+                            }}
                           />
                           <FigmaImportButton
                             disabled={
@@ -1206,32 +1323,30 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
                               setFiles((prev) => [...prev, file]);
                             }}
                           />
+                          {fetchedChat?.clone_url && (
+                            <CloneAnotherPageButton
+                              originalUrl={fetchedChat.clone_url}
+                              disabled={
+                                isLoading || isLengthError || !!buildError
+                              }
+                              onSubmit={(url) => {
+                                const clonePrompt = `Clone another page: ${url}`;
+                                setInput(clonePrompt);
+                                setIsCloneAnotherPageActive(true);
+                                setCurrentCloneUrl(url);
+                                setScrapingStatus({
+                                  progress: 0,
+                                  screenshot: null,
+                                  error: null,
+                                });
+                                submitPrompt(clonePrompt);
+                              }}
+                            />
+                          )}
                         </>
                       )}
                   </div>
                 </div>
-                {fetchedChat?.clone_url && !isLoadingSubscription && (
-                  <div className="w-full p-2">
-                    <div className="flex justify-end">
-                      <CloneAnotherPageButton
-                        originalUrl={fetchedChat.clone_url}
-                        disabled={isLoading || isLengthError || !!buildError}
-                        onSubmit={(url) => {
-                          const clonePrompt = `Clone another page: ${url}`;
-                          setInput(clonePrompt);
-                          setIsCloneAnotherPageActive(true);
-                          setCurrentCloneUrl(url);
-                          setScrapingStatus({
-                            progress: 0,
-                            screenshot: null,
-                            error: null,
-                          });
-                          submitPrompt(clonePrompt);
-                        }}
-                      />
-                    </div>
-                  </div>
-                )}
                 {!isLoading && files.length > 0 && (
                   <div className="flex gap-2 overflow-x-auto p-2">
                     {files.map((file, index) => (
@@ -1314,13 +1429,6 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
                                 )}
                               />
                             )}
-                            <span className="sr-only">
-                              {isImprovingLoading
-                                ? "Improving prompt..."
-                                : hasImproved
-                                  ? "Prompt improved"
-                                  : "Improve prompt"}
-                            </span>
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent>

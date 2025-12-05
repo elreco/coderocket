@@ -1,3 +1,6 @@
+import { getSubscription } from "@/app/supabase-server";
+
+import { getMaxFilesLimit } from "./config";
 import { getFileType } from "./file-helper";
 import { createClient } from "./supabase/server";
 
@@ -21,6 +24,51 @@ export async function uploadFiles(
   const uploadedFiles: UploadedFileInfo[] = [];
 
   try {
+    const subscription = await getSubscription(userId);
+    if (!subscription) {
+      return {
+        success: false,
+        uploadedFiles: [],
+        error: "Premium subscription required",
+      };
+    }
+
+    const maxFilesLimit = getMaxFilesLimit(subscription);
+
+    const { count, error: countError } = await supabase
+      .from("user_files")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", userId);
+
+    if (countError) {
+      return {
+        success: false,
+        uploadedFiles: [],
+        error: "Failed to check file limit",
+      };
+    }
+
+    const currentFileCount = count || 0;
+
+    if (maxFilesLimit !== Infinity && currentFileCount >= maxFilesLimit) {
+      return {
+        success: false,
+        uploadedFiles: [],
+        error: `File limit reached. Your plan allows ${maxFilesLimit} files maximum. Please delete some files or upgrade your plan.`,
+      };
+    }
+
+    if (
+      maxFilesLimit !== Infinity &&
+      currentFileCount + files.length > maxFilesLimit
+    ) {
+      const remainingSlots = maxFilesLimit - currentFileCount;
+      return {
+        success: false,
+        uploadedFiles: [],
+        error: `Cannot upload ${files.length} file(s). Your plan allows ${maxFilesLimit} files maximum. You can upload ${remainingSlots} more file(s).`,
+      };
+    }
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       const fileType = getFileType(file);
@@ -45,85 +93,70 @@ export async function uploadFiles(
       const extension = getFileExtension(fileType, file.name);
       const fileName = `${timestamp}-${userId}-${i}${extension}`;
 
+      let storageData;
+      let storageError;
+
       if (fileType === "pdf") {
-        const { data: pdfData, error: pdfError } = await supabase.storage
+        const result = await supabase.storage
           .from("images")
           .upload(fileName, file, {
             contentType: file.type,
           });
-
-        if (pdfError) {
-          return {
-            success: false,
-            uploadedFiles: [],
-            error: `Failed to upload PDF ${i + 1}: ${pdfError.message}`,
-          };
-        }
-
-        if (pdfData?.path) {
-          const { data: publicUrlData } = supabase.storage
-            .from("images")
-            .getPublicUrl(pdfData.path);
-
-          uploadedFiles.push({
-            path: pdfData.path,
-            publicUrl: publicUrlData.publicUrl,
-            type: "pdf",
-            mimeType: file.type,
-          });
-        }
+        storageData = result.data;
+        storageError = result.error;
       } else if (fileType === "text") {
-        const { data: textData, error: textError } = await supabase.storage
+        const result = await supabase.storage
           .from("images")
           .upload(fileName, file, {
             contentType: file.type,
           });
-
-        if (textError) {
-          return {
-            success: false,
-            uploadedFiles: [],
-            error: `Failed to upload text file ${i + 1}: ${textError.message}`,
-          };
-        }
-
-        if (textData?.path) {
-          const { data: publicUrlData } = supabase.storage
-            .from("images")
-            .getPublicUrl(textData.path);
-
-          uploadedFiles.push({
-            path: textData.path,
-            publicUrl: publicUrlData.publicUrl,
-            type: "text",
-            mimeType: file.type,
-          });
-        }
+        storageData = result.data;
+        storageError = result.error;
       } else if (fileType === "image") {
-        const { data: imageData, error: imageError } = await supabase.storage
+        const result = await supabase.storage
           .from("images")
           .upload(fileName, file);
+        storageData = result.data;
+        storageError = result.error;
+      } else {
+        continue;
+      }
 
-        if (imageError) {
-          return {
-            success: false,
-            uploadedFiles: [],
-            error: `Failed to upload image ${i + 1}: ${imageError.message}`,
-          };
+      if (storageError) {
+        return {
+          success: false,
+          uploadedFiles: [],
+          error: `Failed to upload file ${i + 1}: ${storageError.message}`,
+        };
+      }
+
+      if (storageData?.path) {
+        const { data: publicUrlData } = supabase.storage
+          .from("images")
+          .getPublicUrl(storageData.path);
+
+        const fileInfo = {
+          path: storageData.path,
+          publicUrl: publicUrlData.publicUrl,
+          type: fileType as "image" | "pdf" | "text",
+          mimeType: file.type,
+        };
+
+        const { error: dbError } = await supabase.from("user_files").insert({
+          user_id: userId,
+          storage_path: storageData.path,
+          public_url: publicUrlData.publicUrl,
+          file_type: fileType,
+          mime_type: file.type,
+          file_size: file.size,
+          original_name: file.name,
+        });
+
+        if (dbError) {
+          console.error("Failed to insert file record:", dbError);
         }
 
-        if (imageData?.path) {
-          const { data: publicUrlData } = supabase.storage
-            .from("images")
-            .getPublicUrl(imageData.path);
-
-          uploadedFiles.push({
-            path: imageData.path,
-            publicUrl: publicUrlData.publicUrl,
-            type: "image",
-            mimeType: file.type,
-          });
-        }
+        uploadedFiles.push(fileInfo);
       }
     }
 

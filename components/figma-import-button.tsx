@@ -20,6 +20,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { toast } from "@/hooks/use-toast";
 import { Tables } from "@/types_db";
 
@@ -217,36 +223,40 @@ export function FigmaImportButton({
 
   return (
     <>
-      <Button
-        variant={isReverse ? "background" : "secondary"}
-        className="w-full transition-all duration-200 lg:w-auto"
-        size="sm"
-        type="button"
-        disabled={disabled || isUploading || isLoading}
-        onClick={handleOpenDialog}
-        title={
-          !isLoggedIn
-            ? "Login to unlock Figma integration"
-            : !isPremium
-              ? "Upgrade to Premium to unlock Figma integration"
-              : "Import design from Figma"
-        }
-      >
-        {isUploading || isLoading ? (
-          <>
-            <Loader2 className="size-3 animate-spin" />
-            <span className="hidden sm:inline">Loading...</span>
-          </>
-        ) : (
-          <>
-            <SiFigma className="size-3 shrink-0 text-[#F24E1E]" />
-            <span className="hidden sm:inline">Figma</span>
-            {(!isLoggedIn || !isPremium) && (
-              <Crown className="size-3 shrink-0 text-amber-500" />
-            )}
-          </>
-        )}
-      </Button>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant={isReverse ? "background" : "secondary"}
+              className="w-full transition-all duration-200 lg:w-auto"
+              size="sm"
+              type="button"
+              disabled={disabled || isUploading || isLoading}
+              onClick={handleOpenDialog}
+            >
+              {isUploading || isLoading ? (
+                <Loader2 className="size-3 animate-spin" />
+              ) : (
+                <>
+                  <SiFigma className="size-3 shrink-0 text-[#F24E1E]" />
+                  {(!isLoggedIn || !isPremium) && (
+                    <Crown className="size-3 shrink-0 text-amber-500" />
+                  )}
+                </>
+              )}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            {!isLoggedIn
+              ? "Login to unlock Figma integration"
+              : !isPremium
+                ? "Upgrade to Premium to unlock Figma integration"
+                : isUploading || isLoading
+                  ? "Loading..."
+                  : "Import design from Figma"}
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="max-w-lg">

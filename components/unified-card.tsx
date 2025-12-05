@@ -7,13 +7,14 @@ import {
   SiSvelte,
   SiAngular,
 } from "@icons-pack/react-simple-icons";
-import { Eye, Activity, Tag, User, GitFork, Heart } from "lucide-react";
+import { Eye, Activity, GitFork, Heart } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ReactNode } from "react";
+import { useState } from "react";
 
-import { ClonedUrlBadge } from "@/components/cloned-url-badge";
+import { toggleChatLike } from "@/app/(default)/components/actions";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { avatarApi, Framework } from "@/utils/config";
 import { getRelativeDate } from "@/utils/date";
@@ -40,43 +41,63 @@ export interface UnifiedCardData {
   href: string;
   price?: number;
   currency?: string;
-  category?: {
-    name: string;
-  };
   totalSales?: number;
   likes?: number;
   isLiked?: boolean;
   isRemixed?: boolean;
-  isOwnItem?: boolean;
+  remixesCount?: number;
   user_avatar_url?: string;
   cloneUrl?: string;
-  badges?: Array<{
-    text: string;
-    variant?: "default" | "secondary" | "outline";
-    className?: string;
-  }>;
-  actions?: ReactNode;
-  stats?: Array<{
-    icon: ReactNode;
-    value: string | number;
-    className?: string;
-  }>;
 }
 
 interface UnifiedCardProps {
   data: UnifiedCardData;
   isReverse?: boolean;
-  showActions?: boolean;
   className?: string;
+  isLoggedIn?: boolean;
 }
 
 export function UnifiedCard({
   data,
   isReverse = false,
-  showActions = false,
   className,
+  isLoggedIn = false,
 }: UnifiedCardProps) {
   const router = useRouter();
+  const { toast } = useToast();
+  const [isLiked, setIsLiked] = useState(data.isLiked || false);
+  const [likesCount, setLikesCount] = useState(data.likes || 0);
+
+  const handleLikeClick = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!isLoggedIn) {
+      toast({
+        title: "Can't like component",
+        description: "Please login to like a component",
+        duration: 4000,
+      });
+      return;
+    }
+
+    const newIsLiked = !isLiked;
+    setIsLiked(newIsLiked);
+    setLikesCount((prev) => (newIsLiked ? prev + 1 : Math.max(0, prev - 1)));
+
+    const result = await toggleChatLike(data.id);
+
+    if (result?.error) {
+      setIsLiked(!newIsLiked);
+      setLikesCount((prev) => (newIsLiked ? Math.max(0, prev - 1) : prev + 1));
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to like component. Please try again.",
+        duration: 4000,
+      });
+    }
+  };
   const FrameworkIcon =
     data.framework === Framework.REACT
       ? SiReact
@@ -87,6 +108,22 @@ export function UnifiedCard({
           : data.framework === Framework.ANGULAR
             ? SiAngular
             : SiHtml5;
+
+  // Framework colors
+  const getFrameworkColorClass = () => {
+    switch (data.framework) {
+      case Framework.REACT:
+        return "group-hover:text-[#61DAFB]"; // React blue
+      case Framework.VUE:
+        return "group-hover:text-[#4FC08D]"; // Vue green
+      case Framework.SVELTE:
+        return "group-hover:text-[#FF3E00]"; // Svelte orange
+      case Framework.ANGULAR:
+        return "group-hover:text-[#DD0031]"; // Angular red
+      default:
+        return "group-hover:text-[#E34F26]"; // HTML orange
+    }
+  };
 
   const priceFormatted =
     data.price !== undefined
@@ -112,7 +149,6 @@ export function UnifiedCard({
         className={cn(
           "card border-border relative mx-auto w-full cursor-pointer overflow-hidden rounded-md border bg-center transition-all duration-800 hover:shadow-lg",
           isReverse ? "bg-background" : "bg-primary/5",
-          data.isLiked && "border border-pink-500",
           className,
         )}
       >
@@ -125,7 +161,7 @@ export function UnifiedCard({
             })`,
           }}
         >
-          <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-all duration-300 ease-in-out group-hover:opacity-100">
+          <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/40 opacity-0 transition-all duration-300 ease-in-out group-hover:opacity-100">
             <Button
               variant="outline"
               size="sm"
@@ -134,6 +170,22 @@ export function UnifiedCard({
               <Eye className="size-8 text-white" />
               <span>View Component</span>
             </Button>
+            {isLoggedIn && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleLikeClick}
+                className="flex translate-y-4 items-center gap-2 transition-transform duration-300 ease-in-out group-hover:translate-y-0"
+              >
+                <Heart
+                  className="size-8 text-white"
+                  fill={isLiked ? "currentColor" : "none"}
+                />
+                {likesCount > 0 && (
+                  <span className="text-white">{likesCount}</span>
+                )}
+              </Button>
+            )}
           </div>
 
           {/* Top Right Badges */}
@@ -143,59 +195,58 @@ export function UnifiedCard({
                 className={cn(
                   "font-semibold shadow-xs",
                   data.price === 0
-                    ? "bg-emerald-500 text-white hover:bg-emerald-600"
-                    : "bg-green-600 text-white hover:bg-green-700",
+                    ? "bg-emerald-500 text-white hover:bg-emerald-500"
+                    : "bg-green-600 text-white hover:bg-green-600",
                 )}
               >
                 {priceFormatted}
               </Badge>
             )}
             {data.totalSales !== undefined && (
-              <Badge className="bg-blue-600 text-white shadow-xs hover:bg-blue-700">
+              <Badge className="bg-blue-600 text-white shadow-xs hover:bg-blue-600">
                 <Activity className="mr-1 size-3" />
                 {data.totalSales} use{data.totalSales !== 1 ? "s" : ""}
               </Badge>
             )}
-            <Badge className="hover:bg-primary">
-              <FrameworkIcon className="mr-1 size-3" />
-              <span className="first-letter:uppercase">{data.framework}</span>
-            </Badge>
-            {data.likes !== undefined && data.likes > 0 && (
-              <Badge className="bg-pink-500 text-white shadow-xs hover:bg-pink-600">
-                <Heart className="mr-1 size-3" />
-                {data.likes}
+            {likesCount > 0 && (
+              <Badge className="bg-pink-500 text-white shadow-xs hover:bg-pink-500">
+                <Heart className="mr-1 size-3" fill="currentColor" />
+                {likesCount}
               </Badge>
             )}
-            {data.badges?.map((badge, index) => (
-              <Badge
-                key={index}
-                variant={badge.variant || "default"}
-                className={badge.className}
+            {data.remixesCount !== undefined && data.remixesCount > 0 && (
+              <Badge className="bg-blue-500 text-white shadow-xs hover:bg-blue-500">
+                <GitFork className="mr-1 size-3" />
+                {data.remixesCount}
+              </Badge>
+            )}
+          </div>
+          {/* Framework Icon - Bottom Right */}
+          <div className="absolute bottom-3 right-3">
+            <div className="flex flex-col items-center gap-1">
+              <FrameworkIcon
+                className={cn(
+                  "size-8 transition-all duration-300 group-hover:opacity-100 drop-shadow-sm",
+                  getFrameworkColorClass(),
+                )}
+                style={{ filter: "drop-shadow(0 1px 1px rgba(0, 0, 0, 0.25))" }}
+              />
+              <span
+                className={cn(
+                  "text-xs font-medium transition-all duration-300 group-hover:opacity-100 capitalize",
+                  getFrameworkColorClass(),
+                )}
+                style={{ textShadow: "0 1px 1px rgba(0, 0, 0, 0.45)" }}
               >
-                {badge.text}
-              </Badge>
-            ))}
-          </div>
-
-          {/* Top Left Badges */}
-          <div className="absolute top-3 left-3 flex flex-col gap-2">
-            {data.isOwnItem && (
-              <Badge className="bg-purple-600 text-white shadow-xs">
-                <User className="mr-1 size-3" />
-                Your Item
-              </Badge>
-            )}
-          </div>
-          <div className="absolute bottom-3 left-3">
-            {data.cloneUrl && (
-              <ClonedUrlBadge url={data.cloneUrl} showTooltip={true} />
-            )}
+                {data.framework}
+              </span>
+            </div>
           </div>
         </div>
 
         {/* Content */}
       </div>
-      <div className="flex h-24 flex-col">
+      <div className="flex min-h-16 flex-col">
         {/* Title and Author */}
         <div className="mt-2 flex items-center gap-2">
           <TooltipProvider>
@@ -240,63 +291,9 @@ export function UnifiedCard({
             </div>
           </div>
         </div>
-
-        {/* Framework Badge and Stats */}
-        <div className="mt-2 flex items-center justify-between">
-          <div className="text-muted-foreground flex items-center gap-3 text-xs">
-            {data.isRemixed && (
-              <div className="flex items-center gap-1">
-                <GitFork className="size-3" />
-                <span>Remixed</span>
-              </div>
-            )}
-
-            {data.category && (
-              <div className="flex items-center gap-1.5">
-                <Tag className="size-3" />
-                <span>{data.category.name}</span>
-              </div>
-            )}
-            {data.stats?.map((stat, index) => (
-              <div
-                key={index}
-                className={cn("flex items-center gap-1", stat.className)}
-              >
-                {stat.icon}
-                <span>{stat.value}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Actions */}
-        {showActions && data.actions && (
-          <div className="mt-1 flex items-center justify-between border-t pt-3">
-            <div className="flex items-center gap-2">{data.actions}</div>
-            {data.href && (
-              <Link
-                href={data.href}
-                className="text-muted-foreground hover:bg-muted hover:text-foreground rounded p-1 text-xs"
-                onClick={(e) => e.stopPropagation()}
-                title="View listing"
-              >
-                <Eye className="size-3.5" />
-              </Link>
-            )}
-          </div>
-        )}
       </div>
     </div>
   );
 
-  return showActions ? (
-    <div
-      className="cursor-pointer"
-      onClick={() => data.href && router.push(data.href)}
-    >
-      {cardContent}
-    </div>
-  ) : (
-    <Link href={data.href}>{cardContent}</Link>
-  );
+  return <Link href={data.href}>{cardContent}</Link>;
 }

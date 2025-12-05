@@ -219,6 +219,7 @@ export default async function Components({ params }: Props) {
         chatId={chat.id}
         authorized={authorized}
         user={user}
+        connectedUser={connectedUser}
       />
     </>
   );

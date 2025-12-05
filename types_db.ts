@@ -1151,6 +1151,45 @@ export type Database = {
         };
         Relationships: [];
       };
+      user_files: {
+        Row: {
+          created_at: string;
+          file_size: number;
+          file_type: string;
+          id: string;
+          mime_type: string;
+          original_name: string | null;
+          public_url: string;
+          storage_path: string;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          file_size?: number;
+          file_type: string;
+          id?: string;
+          mime_type: string;
+          original_name?: string | null;
+          public_url: string;
+          storage_path: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          file_size?: number;
+          file_type?: string;
+          id?: string;
+          mime_type?: string;
+          original_name?: string | null;
+          public_url?: string;
+          storage_path?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       user_integrations: {
         Row: {
           config: Json;
@@ -1306,14 +1345,6 @@ export type Database = {
       };
     };
     Functions: {
-      add_client_credit: {
-        Args: { amount_to_add: number; client_id_param: string };
-        Returns: undefined;
-      };
-      calculate_available_earnings: {
-        Args: { seller_uuid: string };
-        Returns: number;
-      };
       enqueue_email_job: {
         Args: {
           p_email: string;
@@ -1325,120 +1356,41 @@ export type Database = {
         Returns: undefined;
       };
       generate_api_key: { Args: never; Returns: string };
-      get_all_components: {
+      get_chats_with_details: {
         Args: never;
         Returns: {
           chat_id: string;
-          created_at: string;
-          first_user_message: string;
-          framework: string;
-          is_featured: boolean;
-          is_private: boolean;
-          last_assistant_message: string;
-          last_assistant_message_theme: string;
-          slug: string;
-          user_avatar_url: string;
-          user_full_name: string;
           user_id: string;
-        }[];
-      };
-      get_components: {
-        Args: never;
-        Returns: {
-          chat_id: string;
-          clone_url: string;
-          created_at: string;
-          first_user_message: string;
-          framework: string;
-          is_featured: boolean;
-          is_private: boolean;
-          last_assistant_message: string;
-          last_assistant_message_theme: string;
-          likes: number;
-          remix_chat_id: string;
-          slug: string;
-          title: string;
-          user_avatar_url: string;
-          user_full_name: string;
-          user_id: string;
-          views: number;
-        }[];
-      };
-      get_components_with_theme_and_slug: {
-        Args: never;
-        Returns: {
-          chat_id: string;
-          created_at: string;
-          first_user_message: string;
-          is_featured: boolean;
-          is_private: boolean;
-          last_assistant_message: string;
-          last_assistant_message_theme: string;
-          slug: string;
-          user_avatar_url: string;
-          user_full_name: string;
-          user_id: string;
-        }[];
-      };
-      get_components2: {
-        Args: never;
-        Returns: {
-          chat_id: string;
-          created_at: string;
-          first_user_message: string;
-          framework: string;
-          is_featured: boolean;
-          is_private: boolean;
-          last_assistant_message: string;
-          last_assistant_message_theme: string;
-          likes: number;
-          remix_chat_id: string;
-          slug: string;
-          title: string;
-          user_avatar_url: string;
-          user_full_name: string;
-          user_id: string;
-        }[];
-      };
-      get_components3: {
-        Args: never;
-        Returns: {
-          chat_id: string;
-          created_at: string;
-          first_user_message: string;
-          framework: string;
-          is_featured: boolean;
-          is_private: boolean;
-          last_assistant_message: string;
-          last_assistant_message_theme: string;
-          likes: number;
-          remix_chat_id: string;
-          slug: string;
-          title: string;
-          user_avatar_url: string;
-          user_full_name: string;
-          user_id: string;
-        }[];
-      };
-      get_components4: {
-        Args: never;
-        Returns: {
-          chat_id: string;
-          created_at: string;
-          first_user_message: string;
-          framework: string;
-          is_featured: boolean;
-          is_private: boolean;
-          last_assistant_message: string;
-          last_assistant_message_theme: string;
-          likes: number;
-          remix_chat_id: string;
-          slug: string;
-          title: string;
-          user_avatar_url: string;
-          user_full_name: string;
-          user_id: string;
-          views: number;
+          user_full_name: string | null;
+          user_avatar_url: string | null;
+          is_featured: boolean | null;
+          is_private: boolean | null;
+          created_at: string | null;
+          slug: string | null;
+          title: string | null;
+          likes: number | null;
+          first_user_message: string | null;
+          last_assistant_message: string | null;
+          last_assistant_message_theme: string | null;
+          framework: string | null;
+          remix_chat_id: string | null;
+          views: number | null;
+          clone_url: string | null;
+          artifact_code: string | null;
+          prompt_image: string | null;
+          input_tokens: number | null;
+          output_tokens: number | null;
+          remix_from_version: number | null;
+          metadata: Json | null;
+          github_repo_url: string | null;
+          github_repo_name: string | null;
+          last_github_sync: string | null;
+          last_github_commit_sha: string | null;
+          deploy_subdomain: string | null;
+          deployed_at: string | null;
+          deployed_version: number | null;
+          is_deployed: boolean | null;
+          remixes_count: number;
         }[];
       };
       get_median_message_cost: {
@@ -1451,12 +1403,7 @@ export type Database = {
           processing_engine: string;
         }[];
       };
-      increment_listing_sales: {
-        Args: { listing_id_param: string };
-        Returns: undefined;
-      };
       migrate_prompt_image_to_files: { Args: never; Returns: undefined };
-      update_pending_earnings_to_available: { Args: never; Returns: number };
       verify_rls_enabled: {
         Args: never;
         Returns: {

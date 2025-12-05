@@ -5,9 +5,14 @@ import { UnifiedCard, UnifiedCardData } from "./unified-card";
 interface ComponentCardProps {
   chat: GetComponentsReturnType;
   isReverse?: boolean;
+  isLoggedIn?: boolean;
 }
 
-export function ComponentCard({ chat, isReverse }: ComponentCardProps) {
+export function ComponentCard({
+  chat,
+  isReverse,
+  isLoggedIn = false,
+}: ComponentCardProps) {
   const cardData: UnifiedCardData = {
     id: chat.chat_id,
     title: chat.title || chat.first_user_message,
@@ -23,8 +28,15 @@ export function ComponentCard({ chat, isReverse }: ComponentCardProps) {
     likes: chat.likes || 0,
     isLiked: chat.user_has_liked,
     isRemixed: !!chat.remix_chat_id,
+    remixesCount: chat.remixes_count || 0,
     cloneUrl: chat.clone_url,
   };
 
-  return <UnifiedCard data={cardData} isReverse={isReverse} />;
+  return (
+    <UnifiedCard
+      data={cardData}
+      isReverse={isReverse}
+      isLoggedIn={isLoggedIn}
+    />
+  );
 }

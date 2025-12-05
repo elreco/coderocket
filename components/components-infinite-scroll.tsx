@@ -17,7 +17,7 @@ import {
   X,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
   type GetComponentsReturnType,
@@ -37,6 +37,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Framework, MAX_SEARCH_LENGTH } from "@/utils/config";
+import { createClient } from "@/utils/supabase/client";
 
 const PAGE_SIZE = 16;
 const MAX_PAGE = 40;
@@ -45,7 +46,7 @@ interface ComponentsInfiniteScrollProps {
   initialChats: GetComponentsReturnType[] | null;
   initialSearchQuery?: string;
   initialSelectedFrameworks?: Framework[];
-  initialSort?: "newest" | "top";
+  initialSort?: "newest" | "top" | "remix";
   isAccountPage?: boolean;
   isLikedPage?: boolean;
   reactComponents?: GetComponentsReturnType[];
@@ -54,6 +55,7 @@ interface ComponentsInfiniteScrollProps {
   svelteComponents?: GetComponentsReturnType[];
   angularComponents?: GetComponentsReturnType[];
   mostPopularComponents?: GetComponentsReturnType[];
+  initialIsLoggedIn?: boolean;
 }
 
 export function ComponentsInfiniteScroll({
@@ -69,6 +71,7 @@ export function ComponentsInfiniteScroll({
   svelteComponents = [],
   angularComponents = [],
   mostPopularComponents = [],
+  initialIsLoggedIn = false,
 }: ComponentsInfiniteScrollProps) {
   const pathname = usePathname();
 
@@ -93,12 +96,24 @@ export function ComponentsInfiniteScroll({
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
-  const [sortBy, setSortBy] = useState<"newest" | "top">(initialSort);
+  const [sortBy, setSortBy] = useState<"newest" | "top" | "remix">(initialSort);
+  const [isLoggedIn, setIsLoggedIn] = useState(initialIsLoggedIn);
+
+  useEffect(() => {
+    if (initialIsLoggedIn === undefined) {
+      const checkUser = async () => {
+        const supabase = createClient();
+        const { data: userData } = await supabase.auth.getUser();
+        setIsLoggedIn(!!userData.user);
+      };
+      checkUser();
+    }
+  }, [initialIsLoggedIn]);
 
   function updateURLQuery(
     query: string,
     frameworks?: Framework[],
-    sort?: "newest" | "top",
+    sort?: "newest" | "top" | "remix",
   ) {
     const params = new URLSearchParams();
 
@@ -126,12 +141,14 @@ export function ComponentsInfiniteScroll({
     frameworks = [],
     reset = false,
     sortByTop = false,
+    sortByRemix = false,
   }: {
     pageToFetch: number;
     search?: string;
     frameworks?: Framework[];
     reset?: boolean;
     sortByTop?: boolean;
+    sortByRemix?: boolean;
   }) {
     try {
       if (isAccountPage ? pageToFetch >= 500 : pageToFetch >= MAX_PAGE) {
@@ -139,10 +156,11 @@ export function ComponentsInfiniteScroll({
         return;
       }
       setIsFetchingMore(true);
+      const sortType = sortByRemix ? "remix" : sortByTop ? "top" : "newest";
       const data = await getAllPublicChats(
         PAGE_SIZE,
         pageToFetch * PAGE_SIZE,
-        sortByTop,
+        sortType,
         search,
         frameworks,
         isAccountPage,
@@ -190,6 +208,7 @@ export function ComponentsInfiniteScroll({
       frameworks: selectedFrameworks,
       reset: true,
       sortByTop: sortBy === "top",
+      sortByRemix: sortBy === "remix",
     });
 
     setIsLoading(false);
@@ -253,10 +272,11 @@ export function ComponentsInfiniteScroll({
       search: searchQuery,
       frameworks: selectedFrameworks,
       sortByTop: sortBy === "top",
+      sortByRemix: sortBy === "remix",
     });
   };
 
-  const handleSortChange = async (newSort: "newest" | "top") => {
+  const handleSortChange = async (newSort: "newest" | "top" | "remix") => {
     setSortBy(newSort);
     setIsLoading(true);
     setShowSkeleton(true);
@@ -269,6 +289,7 @@ export function ComponentsInfiniteScroll({
       frameworks: selectedFrameworks,
       reset: true,
       sortByTop: newSort === "top",
+      sortByRemix: newSort === "remix",
     });
 
     setIsLoading(false);
@@ -402,7 +423,10 @@ export function ComponentsInfiniteScroll({
               <h2 className="mb-2 text-sm font-semibold">
                 Most Popular Components
               </h2>
-              <ComponentsSlider components={mostPopularComponents} />
+              <ComponentsSlider
+                components={mostPopularComponents}
+                isLoggedIn={isLoggedIn}
+              />
             </div>
           )}
 
@@ -430,6 +454,16 @@ export function ComponentsInfiniteScroll({
                   >
                     Top
                   </button>
+                  <button
+                    onClick={() => handleSortChange("remix")}
+                    className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                      sortBy === "remix"
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    Remix
+                  </button>
                 </div>
               </div>
             </div>
@@ -454,7 +488,11 @@ export function ComponentsInfiniteScroll({
                         />
                       ))
                     : publicChats.map((chat) => (
-                        <ComponentCard key={chat.chat_id} chat={chat} />
+                        <ComponentCard
+                          key={chat.chat_id}
+                          chat={chat}
+                          isLoggedIn={isLoggedIn}
+                        />
                       ))}
                 </div>
                 {hasMore && !showSkeleton && (
@@ -552,6 +590,7 @@ export function ComponentsInfiniteScroll({
                     frameworks: [],
                     reset: true,
                     sortByTop: false,
+                    sortByRemix: false,
                   });
                   setIsLoading(false);
                   setTimeout(() => setShowSkeleton(false), 300);
@@ -635,6 +674,16 @@ export function ComponentsInfiniteScroll({
                     >
                       Top
                     </button>
+                    <button
+                      onClick={() => handleSortChange("remix")}
+                      className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                        sortBy === "remix"
+                          ? "bg-primary text-primary-foreground"
+                          : "text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      Remix
+                    </button>
                   </div>
                 </div>
               </div>
@@ -647,7 +696,11 @@ export function ComponentsInfiniteScroll({
                       />
                     ))
                   : publicChats.map((chat) => (
-                      <ComponentCard key={chat.chat_id} chat={chat} />
+                      <ComponentCard
+                        key={chat.chat_id}
+                        chat={chat}
+                        isLoggedIn={isLoggedIn}
+                      />
                     ))}
               </div>
             </>

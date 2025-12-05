@@ -297,14 +297,19 @@ interface PopularComponent {
   slug: string;
   likes: number;
   user_has_liked: boolean;
+  remixes_count?: number;
   clone_url?: string;
 }
 
 interface HeroProps {
   popularComponents?: PopularComponent[];
+  initialIsLoggedIn?: boolean;
 }
 
-export default function Hero({ popularComponents = [] }: HeroProps) {
+export default function Hero({
+  popularComponents = [],
+  initialIsLoggedIn = false,
+}: HeroProps) {
   const supabase = createClient();
   const { toast } = useToast();
   const [prompt, setPrompt] = useState(() => {
@@ -418,12 +423,21 @@ export default function Hero({ popularComponents = [] }: HeroProps) {
   }, [inputRef, toast]);
 
   useEffect(() => {
+    setIsLoggedIn(initialIsLoggedIn);
+  }, [initialIsLoggedIn]);
+
+  useEffect(() => {
     const fetchSubscription = async () => {
       try {
         setIsLoadingSubscription(true);
+        if (!initialIsLoggedIn) {
+          setSubscription(null);
+          setUserIntegrations([]);
+          setSelectedIntegration(null);
+          return;
+        }
         const { data } = await supabase.auth.getUser();
         const userId = data?.user?.id;
-        setIsLoggedIn(!!userId);
 
         if (userId) {
           const sub = await getSubscription(userId);
@@ -1254,6 +1268,101 @@ export default function Hero({ popularComponents = [] }: HeroProps) {
                         label="Files"
                         subscription={subscription}
                         isLoggedIn={isLoggedIn}
+                        currentFilesCount={images.length}
+                        onFileSelectFromLibrary={async (libraryFile) => {
+                          try {
+                            const response = await fetch(libraryFile.publicUrl);
+                            const blob = await response.blob();
+                            const fileName =
+                              libraryFile.path.split("/").pop() ||
+                              libraryFile.path;
+                            const file = new File([blob], fileName, {
+                              type: libraryFile.mimeType,
+                            });
+                            (
+                              file as File & { __libraryPath?: string }
+                            ).__libraryPath = libraryFile.path;
+
+                            if (images.length >= maxImagesUpload) {
+                              toast({
+                                variant: "destructive",
+                                title: "Too many files",
+                                description: `Maximum ${maxImagesUpload} files allowed`,
+                                duration: 4000,
+                              });
+                              return;
+                            }
+
+                            const validation = validateFile(file);
+                            if (!validation.valid) {
+                              toast({
+                                variant: "destructive",
+                                title: "Invalid file",
+                                description: validation.error,
+                                duration: 4000,
+                              });
+                              return;
+                            }
+
+                            setImages((prev) => [...prev, file]);
+                          } catch (error) {
+                            console.error(
+                              "Error loading file from library:",
+                              error,
+                            );
+                            toast({
+                              variant: "destructive",
+                              title: "Error",
+                              description:
+                                "Failed to load file from library. Please try again.",
+                              duration: 4000,
+                            });
+                          }
+                        }}
+                        onFileDeleted={(deletedPath) => {
+                          setImages((prev) =>
+                            prev.filter(
+                              (file) =>
+                                (file as File & { __libraryPath?: string })
+                                  .__libraryPath !== deletedPath,
+                            ),
+                          );
+                        }}
+                        onFileUpload={(uploadedFiles) => {
+                          const validFiles: File[] = [];
+
+                          for (const file of uploadedFiles) {
+                            if (
+                              images.length + validFiles.length >=
+                              maxImagesUpload
+                            ) {
+                              toast({
+                                variant: "destructive",
+                                title: "Too many files",
+                                description: `Maximum ${maxImagesUpload} files allowed`,
+                                duration: 4000,
+                              });
+                              break;
+                            }
+
+                            const validation = validateFile(file);
+                            if (!validation.valid) {
+                              toast({
+                                variant: "destructive",
+                                title: "Invalid file",
+                                description: validation.error,
+                                duration: 4000,
+                              });
+                              continue;
+                            }
+
+                            validFiles.push(file);
+                          }
+
+                          if (validFiles.length > 0) {
+                            setImages((prev) => [...prev, ...validFiles]);
+                          }
+                        }}
                       />
                       <FigmaImportButton
                         disabled={loading}
@@ -1743,12 +1852,17 @@ export default function Hero({ popularComponents = [] }: HeroProps) {
                       href: `/components/${component.slug}`,
                       likes: component.likes || 0,
                       isLiked: component.user_has_liked,
+                      remixesCount: component.remixes_count || 0,
                       user_avatar_url: component.user_avatar_url,
                       cloneUrl: component.clone_url,
                     };
 
                     return (
-                      <UnifiedCard key={component.chat_id} data={cardData} />
+                      <UnifiedCard
+                        key={component.chat_id}
+                        data={cardData}
+                        isLoggedIn={isLoggedIn}
+                      />
                     );
                   })}
                 </div>

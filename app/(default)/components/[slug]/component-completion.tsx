@@ -4,7 +4,6 @@ import { useCompletion } from "@ai-sdk/react";
 import { SiThreads } from "@icons-pack/react-simple-icons";
 import { Crisp } from "crisp-sdk-web";
 import { format } from "date-fns";
-import { motion } from "framer-motion";
 import {
   Fullscreen,
   Layers,
@@ -48,6 +47,7 @@ import { useCopyToClipboard } from "usehooks-ts";
 import { getSubscription } from "@/app/supabase-server";
 import { ClonedUrlBadge } from "@/components/cloned-url-badge";
 import { Container } from "@/components/container";
+import { RemixOriginalBadge } from "@/components/remix-original-badge";
 import RenderHtmlComponent from "@/components/renders/render-html-component";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -106,12 +106,14 @@ interface Props {
   chatId: string;
   authorized: boolean;
   user: Tables<"users"> | null;
+  connectedUser?: { id: string } | null;
 }
 
 export default function ComponentCompletion({
   chatId,
   authorized,
   user,
+  connectedUser,
 }: Props) {
   const supabase = createClient();
   const [customDomain, setCustomDomain] = useState<CustomDomainData | null>(
@@ -325,12 +327,8 @@ export default function ComponentCompletion({
   };
 
   useEffect(() => {
-    const checkUserAuth = async () => {
-      const { data } = await supabase.auth.getUser();
-      setIsUserLoggedIn(!!data?.user);
-    };
-    checkUserAuth();
-  }, [supabase]);
+    setIsUserLoggedIn(!!connectedUser);
+  }, [connectedUser]);
 
   useEffect(() => {
     const loadInitialData = async () => {
@@ -384,10 +382,7 @@ export default function ComponentCompletion({
 
           const subPromise = (async () => {
             try {
-              const { data: authData } = await supabase.auth.getUser();
-              const loggedInUserId = authData?.user?.id;
-
-              if (!loggedInUserId) {
+              if (!connectedUser?.id) {
                 return null;
               }
 
@@ -395,7 +390,7 @@ export default function ComponentCompletion({
                 .from("subscriptions")
                 .select("*, prices(*, products(*))")
                 .in("status", ["trialing", "active"])
-                .eq("user_id", loggedInUserId)
+                .eq("user_id", connectedUser.id)
                 .maybeSingle();
               return data;
             } catch {
@@ -405,8 +400,10 @@ export default function ComponentCompletion({
 
           const githubPromise = (async () => {
             try {
-              const { data: authData } = await supabase.auth.getUser();
-              const loggedInUserId = authData?.user?.id;
+              if (!connectedUser?.id) {
+                return null;
+              }
+              const loggedInUserId = connectedUser.id;
 
               if (!loggedInUserId) {
                 return null;
@@ -1028,14 +1025,13 @@ export default function ComponentCompletion({
 
         const subPromise = (async () => {
           try {
-            const { data: userData } = await supabase.auth.getUser();
-            if (!userData?.user) return null;
+            if (!connectedUser?.id) return null;
 
             const { data } = await supabase
               .from("subscriptions")
               .select("*, prices(*, products(*))")
               .in("status", ["trialing", "active"])
-              .eq("user_id", userData.user.id)
+              .eq("user_id", connectedUser.id)
               .maybeSingle();
             return data;
           } catch {
@@ -1045,13 +1041,12 @@ export default function ComponentCompletion({
 
         const githubPromise = (async () => {
           try {
-            const { data: userData } = await supabase.auth.getUser();
-            if (!userData?.user) return null;
+            if (!connectedUser?.id) return null;
 
             const { data } = await supabase
               .from("github_connections")
               .select("*")
-              .eq("user_id", userData.user.id)
+              .eq("user_id", connectedUser.id)
               .maybeSingle();
             return data;
           } catch {
@@ -1179,9 +1174,7 @@ export default function ComponentCompletion({
   };
 
   const handleLikeClick = async () => {
-    const { data: user, error } = await supabase.auth.getUser();
-
-    if (error || !user) {
+    if (!connectedUser) {
       toast({
         title: "Can't like component",
         description: "Please login to like a component",
@@ -1304,6 +1297,7 @@ export default function ComponentCompletion({
     setIsScrapingWebsite,
     isContinuingFromLengthError,
     setIsContinuingFromLengthError,
+    connectedUser,
   };
 
   useEffect(() => {
@@ -1498,27 +1492,55 @@ export default function ComponentCompletion({
                     </TooltipContent>
                   </Tooltip>
                   {isUserLoggedIn && (
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          onClick={() => {
-                            if (isRemixing || isLoading) {
-                              return;
-                            }
-                            setIsRemixModalOpen(true);
-                          }}
-                          disabled={isRemixing || isLoading}
-                          className="flex items-center"
-                        >
-                          <GitFork className="w-5" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Remix</p>
-                      </TooltipContent>
-                    </Tooltip>
+                    <>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => {
+                              if (isRemixing || isLoading) {
+                                return;
+                              }
+                              setIsRemixModalOpen(true);
+                            }}
+                            disabled={isRemixing || isLoading}
+                            className="flex items-center"
+                          >
+                            <GitFork className="w-5" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Remix</p>
+                        </TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={handleLikeClick}
+                            disabled={isLoading}
+                            className="flex items-center gap-1"
+                          >
+                            <Heart
+                              className="w-5"
+                              fill={isLiked ? "currentColor" : "none"}
+                            />
+                            {likesCount > 0 && (
+                              <span className="font-medium">{likesCount}</span>
+                            )}
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>
+                            {isLiked
+                              ? "Remove from liked components"
+                              : "Add to liked components"}
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </>
                   )}
                   <Sheet>
                     <SheetTrigger asChild>
@@ -1792,7 +1814,7 @@ export default function ComponentCompletion({
               )}
               <div className="relative m-0 flex h-full max-h-full flex-1 flex-col border-t lg:border-b-0">
                 {!isLoading && isCanvas && (
-                  <div className="absolute right-0 bottom-0 z-9000 flex w-full items-center justify-end gap-2 p-2">
+                  <div className="absolute left-0 bottom-0 z-9000 flex w-full items-center justify-end gap-2 p-2">
                     {fetchedChat?.clone_url && (
                       <ClonedUrlBadge
                         url={fetchedChat.clone_url}
@@ -1800,64 +1822,11 @@ export default function ComponentCompletion({
                       />
                     )}
                     {remixOriginalChat && (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button variant="outline" size="sm" asChild>
-                            <a
-                              href={`/components/${remixOriginalChat.slug}`}
-                              className="flex items-center gap-1"
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              <GitFork className="size-4" />
-                              {remixOriginalChat.title ||
-                                `Component ${remixOriginalChat.slug}`}
-                              <ExternalLink className="size-3" />
-                            </a>
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>
-                            This component is a remix of this original component
-                          </p>
-                        </TooltipContent>
-                      </Tooltip>
+                      <RemixOriginalBadge
+                        originalChat={remixOriginalChat}
+                        showTooltip={true}
+                      />
                     )}
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <motion.div
-                          whileTap={{ scale: 0.9, rotate: 15 }}
-                          transition={{ type: "spring", stiffness: 300 }}
-                        >
-                          <Button
-                            onClick={handleLikeClick}
-                            variant="secondary"
-                            size="sm"
-                            className={`ml-2 flex items-center border-none gap-1 rounded-full p-2 shadow-md transition-colors ${
-                              isLiked
-                                ? "bg-primary text-secondary hover:bg-primary"
-                                : "bg-pink-500 text-pink-300 hover:bg-pink-400"
-                            }`}
-                          >
-                            <Heart
-                              className="size-5"
-                              fill={isLiked ? "currentColor" : "none"}
-                            />
-                            {likesCount > 0 && (
-                              <span className="font-medium">{likesCount}</span>
-                            )}
-                            <span>{isLiked ? "Unlike" : "Like"}</span>
-                          </Button>
-                        </motion.div>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>
-                          {isLiked
-                            ? "Remove from liked components"
-                            : "Add to liked components"}
-                        </p>
-                      </TooltipContent>
-                    </Tooltip>
                   </div>
                 )}
                 <CodePreview />

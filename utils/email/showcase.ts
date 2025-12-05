@@ -57,7 +57,7 @@ export async function fetchEmailShowcase(): Promise<{
   try {
     const supabase = await createClient();
     const { data, error } = await supabase
-      .rpc("get_components")
+      .rpc("get_chats_with_details")
       .not("last_assistant_message", "is", null)
       .is("is_private", false)
       .order("created_at", { ascending: false })

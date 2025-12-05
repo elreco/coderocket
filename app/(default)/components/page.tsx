@@ -1,6 +1,7 @@
 import { ComponentsInfiniteScroll } from "@/components/components-infinite-scroll";
 import { Container } from "@/components/container";
 import { Framework } from "@/utils/config";
+import { createClient } from "@/utils/supabase/server";
 
 import {
   getAllPublicChats,
@@ -66,7 +67,13 @@ export default async function Components({
   const initialSelectedFrameworks = frameworks
     ? frameworks.split(",").map((framework) => framework as Framework)
     : [];
-  const initialSort = (sort === "top" ? "top" : "newest") as "newest" | "top";
+  const initialSort = (
+    sort === "top" ? "top" : sort === "remix" ? "remix" : "newest"
+  ) as "newest" | "top" | "remix";
+
+  const supabase = await createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  const user = userData.user;
 
   const [
     initialChats,
@@ -80,16 +87,19 @@ export default async function Components({
     getAllPublicChats(
       16,
       0,
-      initialSort === "top",
+      initialSort,
       searchQuery,
       initialSelectedFrameworks,
+      false,
+      false,
+      user,
     ),
-    getComponentsByFramework(Framework.REACT, 4),
-    getComponentsByFramework(Framework.VUE, 4),
-    getComponentsByFramework(Framework.HTML, 4),
-    getComponentsByFramework(Framework.SVELTE, 4),
-    getComponentsByFramework(Framework.ANGULAR, 4),
-    getMostPopularComponents(6),
+    getComponentsByFramework(Framework.REACT, 4, user),
+    getComponentsByFramework(Framework.VUE, 4, user),
+    getComponentsByFramework(Framework.HTML, 4, user),
+    getComponentsByFramework(Framework.SVELTE, 4, user),
+    getComponentsByFramework(Framework.ANGULAR, 4, user),
+    getMostPopularComponents(6, user),
   ]);
 
   return (
@@ -113,6 +123,7 @@ export default async function Components({
         svelteComponents={svelteComponents}
         angularComponents={angularComponents}
         mostPopularComponents={mostPopularComponents}
+        initialIsLoggedIn={!!user}
       />
     </Container>
   );

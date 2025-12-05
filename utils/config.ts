@@ -130,3 +130,40 @@ export const getCharacterLimit = (
   }
   return PREMIUM_CHAR_LIMIT;
 };
+
+export const FILE_LIMITS_PER_PLAN = {
+  starter: 10,
+  pro: 50,
+  enterprise: Infinity,
+  free: 0,
+};
+
+export const getMaxFilesLimit = (
+  subscription:
+    | (Tables<"subscriptions"> & {
+        prices:
+          | (Partial<Tables<"prices">> & {
+              products: Partial<Tables<"products">> | null;
+            })
+          | null;
+      })
+    | null,
+): number => {
+  if (!subscription?.prices?.products?.name) {
+    return FILE_LIMITS_PER_PLAN.free;
+  }
+
+  const planName = subscription.prices.products.name.toLowerCase();
+
+  if (planName.includes("enterprise") || planName.includes("entreprise")) {
+    return FILE_LIMITS_PER_PLAN.enterprise;
+  }
+  if (planName.includes("pro")) {
+    return FILE_LIMITS_PER_PLAN.pro;
+  }
+  if (planName.includes("starter")) {
+    return FILE_LIMITS_PER_PLAN.starter;
+  }
+
+  return FILE_LIMITS_PER_PLAN.free;
+};
