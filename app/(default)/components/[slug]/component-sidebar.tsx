@@ -134,6 +134,27 @@ export default function ComponentSidebar({
       ),
     [messages, selectedVersion],
   );
+
+  const currentMessageFiles = useMemo(() => {
+    if (!selectedAssistantMessage?.content) return [];
+    return extractFilesFromCompletion(selectedAssistantMessage.content);
+  }, [selectedAssistantMessage?.content]);
+
+  const hasUnexecutedMigration = useMemo(() => {
+    if (currentMessageFiles.length === 0) return false;
+    const categorized = categorizeFiles(currentMessageFiles);
+    return categorized.migrations.some((migration: ChatFile) => {
+      const migrationsExecuted =
+        selectedAssistantMessage?.migrations_executed as Array<{
+          name: string;
+          executed_at: string;
+        }> | null;
+      const isExecuted = (migrationsExecuted || []).some(
+        (m) => m.name === migration.name,
+      );
+      return !isExecuted;
+    });
+  }, [currentMessageFiles, selectedAssistantMessage?.migrations_executed]);
   const [subscription, setSubscription] = useState<
     | (Tables<"subscriptions"> & {
         prices: Partial<Tables<"prices">> | null;
@@ -1077,52 +1098,27 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
                         Fix errors
                       </Button>
                     )}
-                    {!isLoading &&
-                      chatFiles.length > 0 &&
-                      (() => {
-                        const categorized = categorizeFiles(chatFiles);
-                        const hasUnexecutedMigration =
-                          categorized.migrations.some((migration: ChatFile) => {
-                            const currentMessage = messages.find(
-                              (m) =>
-                                m.version === selectedVersion &&
-                                m.role === "assistant",
-                            );
-                            const migrationsExecuted =
-                              currentMessage?.migrations_executed as Array<{
-                                name: string;
-                                executed_at: string;
-                              }> | null;
-                            const isExecuted = (migrationsExecuted || []).some(
-                              (m) => m.name === migration.name,
-                            );
-                            return !isExecuted;
-                          });
-                        return (
-                          hasUnexecutedMigration && (
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant="secondary"
-                              className="mr-2"
-                              onClick={() => {
-                                const migrationSection = document.querySelector(
-                                  "[data-migration-runner]",
-                                );
-                                if (migrationSection) {
-                                  migrationSection.scrollIntoView({
-                                    behavior: "smooth",
-                                    block: "center",
-                                  });
-                                }
-                              }}
-                            >
-                              <Database className="size-4" />
-                              Run Migration
-                            </Button>
-                          )
-                        );
-                      })()}
+                    {!isLoading && hasUnexecutedMigration && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        className="mr-2"
+                        onClick={() => {
+                          const migrationSection = document.querySelector(
+                            "[data-migration-runner]",
+                          );
+                          if (migrationSection) {
+                            migrationSection.scrollIntoView({
+                              behavior: "smooth",
+                              block: "center",
+                            });
+                          }
+                        }}
+                      >
+                        <Database className="size-4" />
+                        Run Migration
+                      </Button>
+                    )}
                   </div>
                   <div className="flex items-center space-x-2">
                     {selectedFramework === Framework.HTML && !isLengthError && (

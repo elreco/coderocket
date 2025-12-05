@@ -168,7 +168,6 @@ export function NavUser({
                   Liked Components
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuSeparator />
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem

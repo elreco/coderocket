@@ -258,19 +258,27 @@ export function MigrationRunner({
       </AlertDescription>
 
       <Dialog open={showSQL} onOpenChange={setShowSQL}>
-        <DialogContent className="max-w-3xl">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Database className="size-5" />
-              {migrationFile.name}
-            </DialogTitle>
-          </DialogHeader>
-          <ScrollArea className="max-h-[500px]">
-            <pre className="bg-muted rounded-md p-4 text-sm">
-              <code>{migrationFile.content}</code>
-            </pre>
-          </ScrollArea>
-          <div className="flex justify-end">
+        <DialogContent className="w-[90vw] max-w-6xl! sm:max-w-6xl! h-[90vh] flex flex-col overflow-hidden p-0">
+          <div className="shrink-0 px-6 pt-6 pb-4 border-b">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Database className="size-5 shrink-0" />
+                <span className="truncate">{migrationFile.name}</span>
+              </DialogTitle>
+            </DialogHeader>
+          </div>
+          <div className="flex-1 min-h-0 overflow-hidden px-6 py-4">
+            <ScrollArea className="h-full rounded-md border">
+              <div className="p-4">
+                <pre className="text-sm">
+                  <code className="whitespace-pre-wrap wrap-break-word font-mono block">
+                    {migrationFile.content}
+                  </code>
+                </pre>
+              </div>
+            </ScrollArea>
+          </div>
+          <div className="shrink-0 flex justify-end px-6 pt-4 pb-6 border-t">
             <Button onClick={handleCopySQL}>
               {copied ? (
                 <>

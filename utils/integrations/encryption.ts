@@ -1,6 +1,8 @@
 import crypto from "crypto";
 
-const ENCRYPTION_KEY = process.env.INTEGRATION_ENCRYPTION_KEY;
+const ENCRYPTION_KEY =
+  process.env.INTEGRATION_ENCRYPTION_KEY ||
+  "6f1e447fe8b07fff982b04db4a7e47bb747172799a7de54b61a92772332fcc52";
 const ALGORITHM = "aes-256-gcm";
 const IV_LENGTH = 16;
 const SALT_LENGTH = 64;

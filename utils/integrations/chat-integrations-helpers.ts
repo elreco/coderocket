@@ -60,12 +60,14 @@ export async function buildIntegrationContext(
           user_integrations.config as unknown as string,
         );
 
-      const schemaValidation = validateSupabaseSchema(decryptedConfig);
-      if (!schemaValidation.valid) {
-        errors.push(
-          `Supabase integration "${user_integrations.name}": ${schemaValidation.error}`,
-        );
-        continue;
+      const hasSchema =
+        (decryptedConfig.databaseSchema?.tables?.length ?? 0) > 0;
+
+      if (hasSchema) {
+        const schemaValidation = validateSupabaseSchema(decryptedConfig);
+        if (!schemaValidation.valid) {
+          decryptedConfig.databaseSchema = undefined;
+        }
       }
 
       const supabaseContext = await buildSupabaseContext(decryptedConfig);
