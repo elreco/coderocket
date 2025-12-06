@@ -3,6 +3,8 @@ import { createClient } from "@/utils/supabase/server";
 import { getAllPublicChats } from "./components/actions";
 import Hero from "./hero";
 
+export const revalidate = 60; // Revalidate every 60 seconds
+
 export default async function Home() {
   const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();

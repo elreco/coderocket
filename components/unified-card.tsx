@@ -175,14 +175,22 @@ export function UnifiedCard({
                 variant="outline"
                 size="sm"
                 onClick={handleLikeClick}
-                className="flex translate-y-4 items-center gap-2 transition-transform duration-300 ease-in-out group-hover:translate-y-0"
+                className={cn(
+                  "flex translate-y-4 items-center gap-2 transition-transform duration-300 ease-in-out group-hover:translate-y-0",
+                  isLiked && "text-primary",
+                )}
               >
                 <Heart
-                  className="size-8 text-white"
+                  className={cn(
+                    "size-8",
+                    isLiked ? "text-primary fill-primary" : "text-white",
+                  )}
                   fill={isLiked ? "currentColor" : "none"}
                 />
                 {likesCount > 0 && (
-                  <span className="text-white">{likesCount}</span>
+                  <span className={cn(isLiked ? "text-primary" : "text-white")}>
+                    {likesCount}
+                  </span>
                 )}
               </Button>
             )}

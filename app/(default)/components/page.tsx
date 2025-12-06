@@ -54,6 +54,8 @@ export async function generateMetadata({
   };
 }
 
+export const revalidate = 60; // Revalidate every 60 seconds
+
 export default async function Components({
   searchParams,
 }: {
@@ -100,7 +102,7 @@ export default async function Components({
     getComponentsByFramework(Framework.HTML, 4, user),
     getComponentsByFramework(Framework.SVELTE, 4, user),
     getComponentsByFramework(Framework.ANGULAR, 4, user),
-    getMostPopularComponents(6, user),
+    getMostPopularComponents(8, user),
   ]);
 
   return (

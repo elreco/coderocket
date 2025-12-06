@@ -1269,34 +1269,47 @@ export const getDeployedSites = async (
       }
     }
 
-    const deployedSitesWithScreenshots = await Promise.all(
-      filteredChats.map(async (chat) => {
-        const deployedVersion = chatVersionMap.get(chat.chat_id);
-        let deployedScreenshot: string | null = null;
+    // Récupérer tous les screenshots en une seule requête Supabase optimisée
+    const chatIdsForScreenshots = Array.from(chatVersionMap.keys());
+    const screenshotMap = new Map<string, string | null>();
 
-        if (deployedVersion !== undefined) {
-          const { data: deployedMessage } = await supabase
-            .from("messages")
-            .select("screenshot")
-            .eq("chat_id", chat.chat_id)
-            .eq("version", deployedVersion)
-            .eq("role", "assistant")
-            .maybeSingle();
+    if (chatIdsForScreenshots.length > 0) {
+      // Construire les conditions OR pour chaque paire (chat_id, version)
+      const orConditions = Array.from(chatVersionMap.entries())
+        .map(
+          ([chatId, version]) =>
+            `and(chat_id.eq.${chatId},version.eq.${version})`,
+        )
+        .join(",");
 
-          deployedScreenshot = deployedMessage?.screenshot || null;
-        }
+      const { data: screenshots } = await supabase
+        .from("messages")
+        .select("chat_id, screenshot")
+        .eq("role", "assistant")
+        .or(orConditions);
 
-        const component = transformRpcResultToComponentType(
-          chat,
-          likedChatIds.has(chat.chat_id),
-        );
-        return {
-          ...component,
-          custom_domain: domainMap.get(chat.chat_id) || null,
-          deployed_screenshot: deployedScreenshot,
-        };
-      }),
-    );
+      if (screenshots) {
+        screenshots.forEach((msg) => {
+          if (msg.screenshot) {
+            screenshotMap.set(msg.chat_id, msg.screenshot);
+          }
+        });
+      }
+    }
+
+    const deployedSitesWithScreenshots = filteredChats.map((chat) => {
+      const deployedScreenshot = screenshotMap.get(chat.chat_id) || null;
+
+      const component = transformRpcResultToComponentType(
+        chat,
+        likedChatIds.has(chat.chat_id),
+      );
+      return {
+        ...component,
+        custom_domain: domainMap.get(chat.chat_id) || null,
+        deployed_screenshot: deployedScreenshot,
+      };
+    });
 
     const deployedSites = deployedSitesWithScreenshots.filter(
       (site) => site.deployed_screenshot,

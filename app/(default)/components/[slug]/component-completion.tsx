@@ -1521,14 +1521,27 @@ export default function ComponentCompletion({
                             size="sm"
                             onClick={handleLikeClick}
                             disabled={isLoading}
-                            className="flex items-center gap-1"
+                            className={cn(
+                              "flex items-center gap-1",
+                              isLiked && "text-primary",
+                            )}
                           >
                             <Heart
-                              className="w-5"
+                              className={cn(
+                                "w-5",
+                                isLiked && "text-primary fill-primary",
+                              )}
                               fill={isLiked ? "currentColor" : "none"}
                             />
                             {likesCount > 0 && (
-                              <span className="font-medium">{likesCount}</span>
+                              <span
+                                className={cn(
+                                  "font-medium",
+                                  isLiked && "text-primary",
+                                )}
+                              >
+                                {likesCount}
+                              </span>
                             )}
                           </Button>
                         </TooltipTrigger>

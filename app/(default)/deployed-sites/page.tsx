@@ -4,6 +4,8 @@ import { DeployedSiteCard } from "@/components/deployed-site-card";
 
 import { getDeployedSites } from "../components/actions";
 
+export const revalidate = 60; // Revalidate every 60 seconds
+
 export async function generateMetadata() {
   return {
     title: "Deployed Sites - CodeRocket | Tailwind AI",
