@@ -227,7 +227,7 @@ export async function GET(
     return new NextResponse("Try to refresh the page", { status: 500 });
   }
 
-  const data = await blobResp.arrayBuffer();
+  let data = await blobResp.arrayBuffer();
 
   // 8. Détermine le type MIME
   let mimeType: string;
@@ -239,6 +239,214 @@ export async function GET(
   } else {
     const extension = "." + (filePath.split(".").pop() ?? "");
     mimeType = mime.lookup(extension) || "application/octet-stream";
+  }
+
+  // Inject element selection script into HTML files
+  if (isIndexHtml || mimeType === "text/html") {
+    const htmlContent = new TextDecoder().decode(data);
+    const selectionScript = `
+<script>
+(function() {
+  let selectionModeActive = false;
+  let highlightElement = null;
+  let highlightStyle = null;
+  let currentPreviewPath = window.location.pathname || '/';
+  let isHtmlFramework = true;
+
+  function extractElementData(element) {
+    if (!element) return null;
+
+    const dataAttributes = {};
+    for (let i = 0; i < element.attributes.length; i++) {
+      const attr = element.attributes[i];
+      if (attr.name.startsWith('data-')) {
+        dataAttributes[attr.name] = attr.value;
+      }
+    }
+
+    const classes = Array.from(element.classList || []);
+    const computedStyle = window.getComputedStyle ? window.getComputedStyle(element) : null;
+    const styles = {};
+    if (computedStyle) {
+      const importantStyles = ['color', 'backgroundColor', 'fontSize', 'fontFamily', 'padding', 'margin', 'border', 'display', 'position'];
+      importantStyles.forEach(prop => {
+        const value = computedStyle.getPropertyValue(prop);
+        if (value) {
+          styles[prop] = value;
+        }
+      });
+    }
+
+    let filePath = undefined;
+    try {
+      const path = window.location.pathname || currentPreviewPath || '/';
+      if (path === '/' || path === '') {
+        filePath = '/';
+      } else {
+        let cleanPath = path.startsWith('/') ? path.substring(1) : path;
+        if (cleanPath.endsWith('/')) {
+          cleanPath = cleanPath.slice(0, -1);
+        }
+
+        if (isHtmlFramework) {
+          if (!cleanPath.endsWith('.html') && !cleanPath.includes('.')) {
+            cleanPath = cleanPath + '.html';
+          }
+          const fileName = cleanPath.split('/').pop() || 'index.html';
+          filePath = '/' + fileName;
+        } else {
+          filePath = cleanPath ? '/' + cleanPath : '/';
+        }
+      }
+    } catch (e) {
+      filePath = '/';
+    }
+
+    return {
+      html: element.outerHTML.substring(0, 2000),
+      tagName: element.tagName.toLowerCase(),
+      classes: classes,
+      dataAttributes: dataAttributes,
+      styles: styles,
+      filePath: filePath
+    };
+  }
+
+  function highlightElementAtPoint(x, y) {
+    try {
+      const element = document.elementFromPoint(x, y);
+      if (!element || element === highlightElement) return;
+
+      if (highlightStyle !== null && highlightElement) {
+        highlightElement.style.removeProperty('outline');
+        highlightElement.style.removeProperty('outline-offset');
+      }
+
+      highlightElement = element;
+      highlightStyle = element.style.cssText;
+      element.style.outline = '2px solid #6366F1';
+      element.style.outlineOffset = '2px';
+    } catch (e) {
+    }
+  }
+
+  function clearHighlight() {
+    if (highlightElement && highlightStyle !== null) {
+      highlightElement.style.cssText = highlightStyle;
+      highlightElement = null;
+      highlightStyle = null;
+    }
+  }
+
+  function updatePreviewPathFromLocation() {
+    const path = window.location.pathname || '/';
+    if (path !== currentPreviewPath) {
+      currentPreviewPath = path;
+    }
+  }
+
+  const originalPushState = window.history.pushState;
+  const originalReplaceState = window.history.replaceState;
+
+  window.history.pushState = function(...args) {
+    const result = originalPushState.apply(this, args);
+    updatePreviewPathFromLocation();
+    return result;
+  };
+
+  window.history.replaceState = function(...args) {
+    const result = originalReplaceState.apply(this, args);
+    updatePreviewPathFromLocation();
+    return result;
+  };
+
+  window.addEventListener('popstate', updatePreviewPathFromLocation);
+  window.addEventListener('hashchange', updatePreviewPathFromLocation);
+
+  window.addEventListener('message', function(event) {
+    if (event.data && typeof event.data === 'object') {
+      if (event.data.type === 'coderocket-selection-mode') {
+        selectionModeActive = event.data.enabled === true;
+        if (event.data.previewPath !== undefined) {
+          currentPreviewPath = event.data.previewPath || '/';
+        } else {
+          updatePreviewPathFromLocation();
+        }
+        if (event.data.isHtmlFramework !== undefined) {
+          isHtmlFramework = event.data.isHtmlFramework === true;
+        }
+        if (!selectionModeActive) {
+          clearHighlight();
+        }
+      } else if (event.data.type === 'coderocket-element-hover' && selectionModeActive) {
+        highlightElementAtPoint(event.data.x, event.data.y);
+      } else if (event.data.type === 'coderocket-element-select' && selectionModeActive) {
+        const element = document.elementFromPoint(event.data.x, event.data.y);
+        const elementData = extractElementData(element);
+
+        if (elementData) {
+          window.parent.postMessage({
+            type: 'coderocket-element-selected',
+            element: elementData
+          }, '*');
+        }
+
+        clearHighlight();
+      } else if (event.data.type === 'coderocket-scroll' && selectionModeActive) {
+        const scrollableElement = document.elementFromPoint(event.data.x, event.data.y);
+        if (scrollableElement) {
+          let target = scrollableElement;
+          while (target && target !== document.body) {
+            if (target.scrollHeight > target.clientHeight || target.scrollWidth > target.clientWidth) {
+              target.scrollBy(event.data.deltaX || 0, event.data.deltaY || 0);
+              break;
+            }
+            target = target.parentElement;
+          }
+          if (!target || target === document.body) {
+            window.scrollBy(event.data.deltaX || 0, event.data.deltaY || 0);
+          }
+        } else {
+          window.scrollBy(event.data.deltaX || 0, event.data.deltaY || 0);
+        }
+      }
+    }
+  });
+})();
+</script>`;
+
+    let modifiedHtml: string;
+    const coderocketStart = "<!-- CODEROCKET -->";
+    const coderocketEnd = "<!-- /CODEROCKET -->";
+    const coderocketBlock =
+      coderocketStart + "\n" + selectionScript + "\n" + coderocketEnd;
+
+    if (
+      htmlContent.includes(coderocketStart) &&
+      htmlContent.includes(coderocketEnd)
+    ) {
+      const regex = new RegExp(
+        coderocketStart.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") +
+          "[\\s\\S]*?" +
+          coderocketEnd.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+        "g",
+      );
+      modifiedHtml = htmlContent.replace(regex, coderocketBlock);
+    } else if (htmlContent.includes("</body>")) {
+      modifiedHtml = htmlContent.replace(
+        "</body>",
+        coderocketBlock + "\n</body>",
+      );
+    } else if (htmlContent.includes("</html>")) {
+      modifiedHtml = htmlContent.replace(
+        "</html>",
+        coderocketBlock + "\n</html>",
+      );
+    } else {
+      modifiedHtml = htmlContent + coderocketBlock;
+    }
+    const encoded = new TextEncoder().encode(modifiedHtml);
+    data = new Uint8Array(encoded).buffer;
   }
 
   console.log("API Route: Servant fichier avec Content-Type", mimeType);

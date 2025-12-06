@@ -174,6 +174,12 @@ IMPORTANT: Always use Tailwind CSS v4 syntax, not v3.
       - Ensure accessibility by following ARIA guidelines.
       - For each html file, ALWAYS include the minimum required daisyui and tailwindcss CDN links
       - CRITICAL: Each HTML file MUST be a complete, standalone page with all required structural elements (DOCTYPE, html, head, body)
+      - CRITICAL: NEVER modify, remove, or interfere with any code that is between the comment markers \`<!-- CODEROCKET -->\` and \`<!-- /CODEROCKET -->\` (in HTML files) or between \`// CODEROCKET\` and \`// /CODEROCKET\` (in TypeScript/JavaScript files).
+      - This includes all code related to \`window.postMessage\`, \`window.addEventListener('message')\`, \`parent.postMessage\`, \`setupRouteChangeBridge\`, or any code related to \`coderocket-\` message types (e.g., \`coderocket-selection-mode\`, \`coderocket-element-hover\`, \`coderocket-element-select\`, \`coderocket-element-selected\`, \`coderocket-scroll\`, \`coderocket-route-change\`).
+      - These are system-injected scripts essential for element selection, navigation, route tracking, and iframe communication functionality.
+      - If you see any code between these CODEROCKET markers in the current_project_state, preserve it exactly as-is and do not modify it.
+      - This code is automatically injected by the system and must remain untouched for the application to function correctly.
+      - The CODEROCKET markers are the definitive way to identify system code - anything between them is protected and must not be changed.
     </html_validation>
     <component_selection>
       - Use Daisy UI components and Tailwind CSS classes exclusively.
