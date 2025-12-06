@@ -20,7 +20,7 @@ import {
 } from "@/app/(default)/components/actions";
 import { getSubscription } from "@/app/supabase-server";
 import { Tables } from "@/types_db";
-import { cloneWebsite } from "@/utils/actions/clone-website";
+import { cloneWebsite } from "@/utils/agents/website-scraper-simple";
 import { takeScreenshot } from "@/utils/capture-screenshot";
 import {
   extractDataTheme,
@@ -1102,7 +1102,7 @@ ${optimizedMarkdown}${imagesList}
           }
         }
       } else {
-        console.error("Failed to clone website:", cloneResult.error);
+        console.log("⚠️ Clone failed, continuing with URL only");
         const action = isAdditionalPageClone ? "another page" : "this website";
         enhancedPrompt = `Clone ${action}: ${urlToClone}
 
