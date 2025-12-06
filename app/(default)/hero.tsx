@@ -35,6 +35,7 @@ import { useRouter } from "next/navigation";
 import { useRef, useState, useEffect, useCallback } from "react";
 
 import { getSubscription } from "@/app/supabase-server";
+import { AppFooter } from "@/components/app-footer";
 import { Container } from "@/components/container";
 import { FigmaImportButton } from "@/components/figma-import-button";
 import { FileBadge } from "@/components/file-badge";
@@ -920,7 +921,7 @@ export default function Hero({
             Build Stunning Web Apps
             <span className="text-primary"> with AI</span>
           </h1>
-          <p className="text-muted-foreground text-center text-lg">
+          <p className="text-foreground text-center text-lg">
             {generationMode === "scratch" ? (
               <>
                 Generate production-ready Tailwind v4 components from text or
@@ -1908,6 +1909,7 @@ export default function Hero({
           </div>
         </div>
       )}
+      <AppFooter />
     </Container>
   );
 }

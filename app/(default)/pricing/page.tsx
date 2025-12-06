@@ -3,6 +3,7 @@ import {
   getSubscription,
   getActiveProductsWithPrices,
 } from "@/app/supabase-server";
+import { AppFooter } from "@/components/app-footer";
 import { Container } from "@/components/container";
 import { PageTitle } from "@/components/page-title";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -74,6 +75,7 @@ export default async function PricingPage({
           <Faq />
         </div>
       </div>
+      <AppFooter />
     </Container>
   );
 }

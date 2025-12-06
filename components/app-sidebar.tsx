@@ -45,6 +45,11 @@ const data = {
       url: "/components",
       icon: Globe,
     },
+    {
+      title: "Deployed Sites",
+      url: "/deployed-sites",
+      icon: Rocket,
+    },
   ],
   community: [
     {

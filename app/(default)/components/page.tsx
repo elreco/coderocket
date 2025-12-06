@@ -1,3 +1,4 @@
+import { AppFooter } from "@/components/app-footer";
 import { ComponentsInfiniteScroll } from "@/components/components-infinite-scroll";
 import { Container } from "@/components/container";
 import { Framework } from "@/utils/config";
@@ -125,6 +126,7 @@ export default async function Components({
         mostPopularComponents={mostPopularComponents}
         initialIsLoggedIn={!!user}
       />
+      <AppFooter />
     </Container>
   );
 }

@@ -1,3 +1,4 @@
+import { AppFooter } from "@/components/app-footer";
 import { Container } from "@/components/container";
 import { PageTitle } from "@/components/page-title";
 
@@ -9,7 +10,7 @@ export const metadata = {
 
 export default function PrivacyPage() {
   return (
-    <Container className="max-w-4xl">
+    <Container className="w-full">
       <PageTitle
         title="Privacy Policy"
         subtitle="Last updated: December 2024"
@@ -361,10 +362,10 @@ export default function PrivacyPage() {
             </p>
             <div className="rounded-lg bg-gray-50 p-4 dark:bg-gray-800">
               <p>
-                <strong>Email:</strong> privacy@coderocket.app
+                <strong>Email:</strong> alexandrelecorre.pro@gmail.com
               </p>
               <p>
-                <strong>Support:</strong> support@coderocket.app
+                <strong>Support:</strong> alexandrelecorre.pro@gmail.com
               </p>
               <p>
                 <strong>Website:</strong> https://www.coderocket.app
@@ -373,6 +374,7 @@ export default function PrivacyPage() {
           </section>
         </div>
       </div>
+      <AppFooter />
     </Container>
   );
 }

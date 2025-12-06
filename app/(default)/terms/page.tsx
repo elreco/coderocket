@@ -1,3 +1,4 @@
+import { AppFooter } from "@/components/app-footer";
 import { Container } from "@/components/container";
 import { PageTitle } from "@/components/page-title";
 
@@ -9,7 +10,7 @@ export const metadata = {
 
 export default function TermsPage() {
   return (
-    <Container className="max-w-4xl">
+    <Container className="w-full">
       <PageTitle
         title="Terms of Service"
         subtitle="Last updated: December 2024"
@@ -101,15 +102,51 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="mb-4 text-2xl font-semibold">7. Payment Terms</h2>
+            <h2 className="mb-4 text-2xl font-semibold">6. Payment Terms</h2>
             <div className="space-y-3">
               <p>
-                <strong>7.1 Subscription Fees:</strong> Subscription fees are
-                billed in advance and are non-refundable.
+                <strong>6.1 Subscription Fees:</strong> Subscription fees are
+                billed in advance on a monthly or annual basis, as selected by
+                you. Fees are charged automatically at the beginning of each
+                billing cycle.
               </p>
               <p>
-                <strong>7.3 Taxes:</strong> You are responsible for any
-                applicable taxes on your purchases or earnings.
+                <strong>6.2 Refunds:</strong> Subscription fees are
+                non-refundable except as required by law or at our sole
+                discretion. If you cancel your subscription, you will continue
+                to have access to the Service until the end of your current
+                billing period.
+              </p>
+              <p>
+                <strong>6.3 Price Changes:</strong> We reserve the right to
+                modify our pricing at any time. We will provide at least 30
+                days&apos; notice of any price changes. Continued use of the
+                Service after the price change constitutes acceptance of the new
+                pricing.
+              </p>
+              <p>
+                <strong>6.4 Taxes:</strong> You are responsible for any
+                applicable taxes, duties, or fees imposed by your jurisdiction
+                on your purchases or earnings.
+              </p>
+            </div>
+          </section>
+
+          <section>
+            <h2 className="mb-4 text-2xl font-semibold">
+              7. Service Availability
+            </h2>
+            <div className="space-y-3">
+              <p>
+                <strong>7.1 Availability:</strong> We strive to maintain the
+                Service available 24/7, but we do not guarantee uninterrupted
+                access. The Service may be unavailable due to maintenance,
+                updates, or unforeseen circumstances.
+              </p>
+              <p>
+                <strong>7.2 Modifications:</strong> We reserve the right to
+                modify, suspend, or discontinue any part of the Service at any
+                time, with or without notice.
               </p>
             </div>
           </section>
@@ -190,8 +227,12 @@ export default function TermsPage() {
           <section>
             <h2 className="mb-4 text-2xl font-semibold">13. Governing Law</h2>
             <p>
-              These terms shall be interpreted and governed by the laws of [Your
-              Jurisdiction], without regard to its conflict of law provisions.
+              These Terms of Service shall be governed by and construed in
+              accordance with the laws of the jurisdiction in which CodeRocket
+              operates, without regard to its conflict of law provisions. Any
+              disputes arising from these terms shall be subject to the
+              exclusive jurisdiction of the competent courts in that
+              jurisdiction.
             </p>
           </section>
 
@@ -205,7 +246,7 @@ export default function TermsPage() {
             </p>
             <div className="rounded-lg bg-gray-50 p-4 dark:bg-gray-800">
               <p>
-                <strong>Email:</strong> support@coderocket.app
+                <strong>Email:</strong> alexandrelecorre.pro@gmail.com
               </p>
               <p>
                 <strong>Website:</strong> https://www.coderocket.app
@@ -214,6 +255,7 @@ export default function TermsPage() {
           </section>
         </div>
       </div>
+      <AppFooter />
     </Container>
   );
 }

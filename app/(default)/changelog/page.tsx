@@ -1,5 +1,6 @@
 import React from "react";
 
+import { AppFooter } from "@/components/app-footer";
 import { Container } from "@/components/container";
 import { PageTitle } from "@/components/page-title";
 
@@ -69,6 +70,7 @@ export default async function ChangelogPage() {
       />
 
       <Changelog futureWork={futureWorkData} changelog={changelogData} />
+      <AppFooter />
     </Container>
   );
 }

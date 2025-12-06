@@ -431,7 +431,14 @@ export function ComponentsInfiniteScroll({
           )}
 
           <div className="w-full">
-            <div className="border-border mb-6 flex items-center justify-end border-t py-4">
+            <div className="border-border mb-6 flex items-center justify-between border-t py-4">
+              <h2 className="text-base font-semibold">
+                {sortBy === "newest"
+                  ? "Browse by Latest"
+                  : sortBy === "top"
+                    ? "Browse by Most Liked"
+                    : "Browse by Most Remixed"}
+              </h2>
               <div className="flex items-center gap-2">
                 <div className="border-border bg-secondary flex rounded-lg border p-1">
                   <button
@@ -535,7 +542,7 @@ export function ComponentsInfiniteScroll({
                     ? selectedFrameworks.map((fw) => (
                         <span key={fw} className="flex items-center gap-1">
                           {FrameworkIcon(fw)}
-                          <span>{fw}</span>
+                          <span className="capitalize">{fw}</span>
                         </span>
                       ))
                     : "Filter by Frameworks"}
@@ -651,7 +658,14 @@ export function ComponentsInfiniteScroll({
             </div>
           ) : (
             <>
-              <div className="border-border my-6 flex items-center justify-end border-t py-4">
+              <div className="border-border my-6 flex items-center justify-between border-t py-4">
+                <h2 className="text-base font-semibold">
+                  {sortBy === "newest"
+                    ? "Browse by Latest"
+                    : sortBy === "top"
+                      ? "Browse by Most Liked"
+                      : "Browse by Most Remixed"}
+                </h2>
                 <div className="flex items-center gap-2">
                   <div className="border-border bg-secondary flex rounded-lg border p-1">
                     <button

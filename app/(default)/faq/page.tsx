@@ -1,5 +1,6 @@
 "use client";
 
+import { AppFooter } from "@/components/app-footer";
 import { Container } from "@/components/container";
 import { PageTitle } from "@/components/page-title";
 
@@ -137,6 +138,7 @@ export default function FaqPage() {
           </a>
         </div>
       </div>
+      <AppFooter />
     </Container>
   );
 }

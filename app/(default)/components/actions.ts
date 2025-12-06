@@ -1177,3 +1177,140 @@ export const getMostPopularComponents = async (
     return [];
   }
 };
+
+export type GetDeployedSitesReturnType = GetComponentsReturnType & {
+  custom_domain?: string | null;
+  deployed_screenshot?: string | null;
+};
+
+export const getDeployedSites = async (
+  limit: number = 10,
+): Promise<GetDeployedSitesReturnType[]> => {
+  try {
+    const supabase = await createClient();
+    const { data: userData } = await supabase.auth.getUser();
+    const user = userData.user;
+
+    const { data: chats, error } = await supabase
+      .from("chats")
+      .select(
+        `
+        *,
+        user:users!user_id (
+          id,
+          full_name,
+          avatar_url
+        )
+      `,
+      )
+      .eq("is_deployed", true)
+      .eq("is_private", false)
+      .not("deployed_at", "is", null)
+      .order("deployed_at", { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      console.error("Error fetching deployed sites:", error);
+      return [];
+    }
+
+    if (!chats || chats.length === 0) {
+      return [];
+    }
+
+    const chatIds = chats.map((chat) => chat.id);
+    const { data: customDomains } = await supabase
+      .from("custom_domains")
+      .select("chat_id, domain, is_verified")
+      .in("chat_id", chatIds)
+      .eq("is_verified", true);
+
+    const domainMap = new Map<string, string>();
+    if (customDomains) {
+      customDomains.forEach((domain) => {
+        domainMap.set(domain.chat_id, domain.domain);
+      });
+    }
+
+    const chatIdsForRpc = chats.map((chat) => chat.id);
+    const { data: chatsWithDetails } = await supabase
+      .rpc("get_chats_with_details")
+      .in("chat_id", chatIdsForRpc);
+
+    if (!chatsWithDetails || chatsWithDetails.length === 0) {
+      return [];
+    }
+
+    const chatIdsSet = new Set(chatIdsForRpc);
+    const filteredChats = chatsWithDetails.filter((chat) =>
+      chatIdsSet.has(chat.chat_id),
+    );
+
+    const chatVersionMap = new Map<string, number>();
+    chats.forEach((chat) => {
+      if (
+        chat.deployed_version !== null &&
+        chat.deployed_version !== undefined
+      ) {
+        chatVersionMap.set(chat.id, chat.deployed_version);
+      }
+    });
+
+    const likedChatIds = new Set<string>();
+    if (user) {
+      const { data: userLikes } = await supabase
+        .from("chat_likes")
+        .select("chat_id")
+        .eq("user_id", user.id)
+        .in("chat_id", chatIdsForRpc);
+
+      if (userLikes) {
+        userLikes.forEach((like) => likedChatIds.add(like.chat_id));
+      }
+    }
+
+    const deployedSitesWithScreenshots = await Promise.all(
+      filteredChats.map(async (chat) => {
+        const deployedVersion = chatVersionMap.get(chat.chat_id);
+        let deployedScreenshot: string | null = null;
+
+        if (deployedVersion !== undefined) {
+          const { data: deployedMessage } = await supabase
+            .from("messages")
+            .select("screenshot")
+            .eq("chat_id", chat.chat_id)
+            .eq("version", deployedVersion)
+            .eq("role", "assistant")
+            .maybeSingle();
+
+          deployedScreenshot = deployedMessage?.screenshot || null;
+        }
+
+        const component = transformRpcResultToComponentType(
+          chat,
+          likedChatIds.has(chat.chat_id),
+        );
+        return {
+          ...component,
+          custom_domain: domainMap.get(chat.chat_id) || null,
+          deployed_screenshot: deployedScreenshot,
+        };
+      }),
+    );
+
+    const deployedSites = deployedSitesWithScreenshots.filter(
+      (site) => site.deployed_screenshot,
+    );
+
+    deployedSites.sort((a, b) => {
+      const dateA = a.deployed_at ? new Date(a.deployed_at).getTime() : 0;
+      const dateB = b.deployed_at ? new Date(b.deployed_at).getTime() : 0;
+      return dateB - dateA;
+    });
+
+    return deployedSites;
+  } catch (err) {
+    console.error("Unexpected error in getDeployedSites:", err);
+    return [];
+  }
+};
