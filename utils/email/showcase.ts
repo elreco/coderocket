@@ -7,7 +7,7 @@ type RpcComponent = {
   slug: string | null;
   framework: string | null;
   likes: number | null;
-  created_at: string;
+  created_at: string | null;
   title: string | null;
   user_full_name: string | null;
   last_assistant_message: string | null;
@@ -57,7 +57,7 @@ export async function fetchEmailShowcase(): Promise<{
   try {
     const supabase = await createClient();
     const { data, error } = await supabase
-      .rpc("get_components")
+      .rpc("get_chats_with_details")
       .not("last_assistant_message", "is", null)
       .is("is_private", false)
       .order("created_at", { ascending: false })

@@ -8,7 +8,11 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Database } from "@/types_db";
-import { FREE_CHAR_LIMIT, PREMIUM_CHAR_LIMIT } from "@/utils/config";
+import {
+  FREE_CHAR_LIMIT,
+  PREMIUM_CHAR_LIMIT,
+  FILE_LIMITS_PER_PLAN,
+} from "@/utils/config";
 import { postData } from "@/utils/helpers";
 import { ROCKET_LIMITS_PER_PLAN } from "@/utils/rocket-conversion";
 
@@ -150,10 +154,16 @@ export default function Pricing({ user, products, subscription }: Props) {
                 files
               </p>
               <p className="mt-4 flex items-center text-sm font-medium ">
+                <XIcon className="text-border mr-2 size-4" /> File library
+              </p>
+              <p className="mt-4 flex items-center text-sm font-medium ">
                 <XIcon className="text-border mr-2 size-4" /> AI Full Power
               </p>
               <p className="mt-4 flex items-center text-sm font-medium ">
                 <XIcon className="text-border mr-2 size-4" /> GitHub Sync
+              </p>
+              <p className="mt-4 flex items-center text-sm font-medium ">
+                <XIcon className="text-border mr-2 size-4" /> Download code
               </p>
               <p className="mt-4 flex items-center text-sm font-medium ">
                 <XIcon className="text-border mr-2 size-4" /> Support
@@ -235,6 +245,14 @@ export default function Pricing({ user, products, subscription }: Props) {
                       Generate with files
                     </p>
                     <p className="mt-4 flex items-center text-sm font-medium ">
+                      <Check className="mr-2 size-4 text-emerald-500" />{" "}
+                      {product.name === "Starter"
+                        ? `${FILE_LIMITS_PER_PLAN.starter} files maximum`
+                        : product.name === "Pro"
+                          ? `${FILE_LIMITS_PER_PLAN.pro} files maximum`
+                          : "Unlimited files"}
+                    </p>
+                    <p className="mt-4 flex items-center text-sm font-medium ">
                       <Check className="mr-2 size-4 text-emerald-500" /> Improve
                       prompt
                     </p>
@@ -257,6 +275,10 @@ export default function Pricing({ user, products, subscription }: Props) {
                     <p className="mt-4 flex items-center text-sm font-medium ">
                       <Check className="mr-2 size-4 text-emerald-500" /> GitHub
                       Sync
+                    </p>
+                    <p className="mt-4 flex items-center text-sm font-medium ">
+                      <Check className="mr-2 size-4 text-emerald-500" />{" "}
+                      Download code
                     </p>
 
                     {product.name === "Starter" ? (

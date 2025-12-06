@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/tooltip";
 import { avatarApi } from "@/utils/config";
 import { getRelativeDate } from "@/utils/date";
+import { createClient } from "@/utils/supabase/server";
 
 import {
   getUser,
@@ -65,6 +66,9 @@ export default async function UserPage({
 }) {
   const { id } = await params;
   const user = await getUser(id);
+  const supabase = await createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  const isLoggedIn = !!userData.user;
 
   if (!user) {
     notFound();
@@ -232,27 +236,47 @@ export default async function UserPage({
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-6">
                 {latestComponents.length > 0 && (
                   <div className="sm:col-span-3">
-                    <ComponentCard chat={latestComponents[0]} isReverse />
+                    <ComponentCard
+                      chat={latestComponents[0]}
+                      isReverse
+                      isLoggedIn={isLoggedIn}
+                    />
                   </div>
                 )}
                 {latestComponents.length > 1 && (
                   <div className="sm:col-span-3">
-                    <ComponentCard chat={latestComponents[1]} isReverse />
+                    <ComponentCard
+                      chat={latestComponents[1]}
+                      isReverse
+                      isLoggedIn={isLoggedIn}
+                    />
                   </div>
                 )}
                 {latestComponents.length > 2 && (
                   <div className="sm:col-span-2">
-                    <ComponentCard chat={latestComponents[2]} isReverse />
+                    <ComponentCard
+                      chat={latestComponents[2]}
+                      isReverse
+                      isLoggedIn={isLoggedIn}
+                    />
                   </div>
                 )}
                 {latestComponents.length > 3 && (
                   <div className="sm:col-span-2">
-                    <ComponentCard chat={latestComponents[3]} isReverse />
+                    <ComponentCard
+                      chat={latestComponents[3]}
+                      isReverse
+                      isLoggedIn={isLoggedIn}
+                    />
                   </div>
                 )}
                 {latestComponents.length > 4 && (
                   <div className="sm:col-span-2">
-                    <ComponentCard chat={latestComponents[4]} isReverse />
+                    <ComponentCard
+                      chat={latestComponents[4]}
+                      isReverse
+                      isLoggedIn={isLoggedIn}
+                    />
                   </div>
                 )}
               </div>

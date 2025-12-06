@@ -31,7 +31,7 @@ export default async function AccountComponents({
   const initialChats = await getAllPublicChats(
     16,
     0,
-    false,
+    "newest",
     searchQuery,
     initialSelectedFrameworks,
     true,

@@ -4,7 +4,7 @@
 - `template.ts` génère la mise en page HTML partagée avec les highlights et le composant vedette.
 - `scenarios.ts` associe chaque événement produit aux métadonnées sujet/corps/CTA.
 - `send-email.ts` gère les identifiants Resend et construit la charge utile finale.
-- `showcase.ts` récupère les composants publics via la RPC `get_components` pour alimenter les cartes visuelles.
+- `showcase.ts` récupère les composants publics via la RPC `get_chats_with_details` pour alimenter les cartes visuelles.
 - `app/api/email/dispatch/route.ts` est l'API interne appelée par la file Postgres, les segments et les cron jobs.
 
 ## Transactionnel vs Marketing

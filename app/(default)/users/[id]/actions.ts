@@ -1,3 +1,4 @@
+import { GetComponentsReturnType } from "@/app/(default)/components/actions";
 import { MAX_SEARCH_LENGTH } from "@/utils/config";
 import { Framework } from "@/utils/config";
 import { createClient } from "@/utils/supabase/server";
@@ -37,7 +38,7 @@ export const getLatestComponentsByUserId = async (
     const { data: userData } = await supabase.auth.getUser();
     const user = userData.user;
 
-    let query = supabase.rpc("get_components");
+    let query = supabase.rpc("get_chats_with_details");
     // 🔒 Sécuriser la requête de recherche
     if (searchQuery) {
       const sanitizedQuery = searchQuery.trim().slice(0, MAX_SEARCH_LENGTH);
@@ -68,12 +69,120 @@ export const getLatestComponentsByUserId = async (
       console.error("Error fetching public chats:", error);
       return [];
     }
-    return (
-      data?.map((chat) => ({
-        ...chat,
-        screenshot: chat.last_assistant_message,
-      })) || []
-    );
+
+    if (!data || data.length === 0) {
+      return [];
+    }
+
+    if (user) {
+      const chatIds = data.map((chat) => chat.chat_id);
+      const { data: userLikes } = await supabase
+        .from("chat_likes")
+        .select("chat_id")
+        .eq("user_id", user.id)
+        .in("chat_id", chatIds);
+
+      const likedChatIds = userLikes
+        ? new Set(userLikes.map((like) => like.chat_id))
+        : new Set();
+
+      return data
+        .filter(
+          (chat): chat is typeof chat & { framework: string } =>
+            chat.framework !== null,
+        )
+        .map(
+          (chat): GetComponentsReturnType => ({
+            chat_id: chat.chat_id,
+            user_id: chat.user_id,
+            framework: chat.framework,
+            user_full_name: chat.user_full_name || "",
+            user_avatar_url: chat.user_avatar_url || "",
+            is_featured: chat.is_featured ?? false,
+            is_private: chat.is_private ?? false,
+            created_at: chat.created_at || "",
+            first_user_message: chat.first_user_message || "",
+            title: chat.title || "",
+            likes: chat.likes ?? 0,
+            last_assistant_message: chat.last_assistant_message || "",
+            last_assistant_message_theme:
+              chat.last_assistant_message_theme || "",
+            slug: chat.slug || "",
+            remix_chat_id: chat.remix_chat_id || "",
+            user_has_liked: likedChatIds.has(chat.chat_id),
+            screenshot: chat.last_assistant_message ?? undefined,
+            clone_url: chat.clone_url ?? undefined,
+            views: chat.views ?? undefined,
+            artifact_code: chat.artifact_code ?? undefined,
+            prompt_image: chat.prompt_image ?? undefined,
+            input_tokens: chat.input_tokens ?? undefined,
+            output_tokens: chat.output_tokens ?? undefined,
+            remix_from_version: chat.remix_from_version ?? undefined,
+            ...(chat.metadata &&
+            typeof chat.metadata === "object" &&
+            !Array.isArray(chat.metadata)
+              ? { metadata: chat.metadata }
+              : {}),
+            github_repo_url: chat.github_repo_url ?? undefined,
+            github_repo_name: chat.github_repo_name ?? undefined,
+            last_github_sync: chat.last_github_sync ?? undefined,
+            last_github_commit_sha: chat.last_github_commit_sha ?? undefined,
+            deploy_subdomain: chat.deploy_subdomain ?? undefined,
+            deployed_at: chat.deployed_at ?? undefined,
+            deployed_version: chat.deployed_version ?? undefined,
+            is_deployed: chat.is_deployed ?? undefined,
+            remixes_count: chat.remixes_count ?? undefined,
+          }),
+        );
+    }
+
+    return data
+      .filter(
+        (chat): chat is typeof chat & { framework: string } =>
+          chat.framework !== null,
+      )
+      .map(
+        (chat): GetComponentsReturnType => ({
+          chat_id: chat.chat_id,
+          user_id: chat.user_id,
+          framework: chat.framework,
+          user_full_name: chat.user_full_name || "",
+          user_avatar_url: chat.user_avatar_url || "",
+          is_featured: chat.is_featured ?? false,
+          is_private: chat.is_private ?? false,
+          created_at: chat.created_at || "",
+          first_user_message: chat.first_user_message || "",
+          title: chat.title || "",
+          likes: chat.likes ?? 0,
+          last_assistant_message: chat.last_assistant_message || "",
+          last_assistant_message_theme: chat.last_assistant_message_theme || "",
+          slug: chat.slug || "",
+          remix_chat_id: chat.remix_chat_id || "",
+          user_has_liked: false,
+          screenshot: chat.last_assistant_message ?? undefined,
+          clone_url: chat.clone_url ?? undefined,
+          views: chat.views ?? undefined,
+          artifact_code: chat.artifact_code ?? undefined,
+          prompt_image: chat.prompt_image ?? undefined,
+          input_tokens: chat.input_tokens ?? undefined,
+          output_tokens: chat.output_tokens ?? undefined,
+          remix_from_version: chat.remix_from_version ?? undefined,
+          ...(chat.metadata &&
+          typeof chat.metadata === "object" &&
+          !Array.isArray(chat.metadata)
+            ? { metadata: chat.metadata }
+            : {}),
+          github_repo_url: chat.github_repo_url ?? undefined,
+          github_repo_name: chat.github_repo_name ?? undefined,
+          last_github_sync: chat.last_github_sync ?? undefined,
+          last_github_commit_sha: chat.last_github_commit_sha ?? undefined,
+          deploy_subdomain: chat.deploy_subdomain ?? undefined,
+          deployed_at: chat.deployed_at ?? undefined,
+          deployed_version: chat.deployed_version ?? undefined,
+          is_deployed: chat.is_deployed ?? undefined,
+          remixes_count: chat.remixes_count ?? undefined,
+        }),
+      );
   } catch (err) {
     console.error("Unexpected error in getAllPublicChats:", err);
     return [];

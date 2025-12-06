@@ -87,7 +87,7 @@ import { promptEnhancer } from "@/utils/prompt-enhancer";
 import { createClient } from "@/utils/supabase/client";
 
 import { fetchUserIntegrations } from "./account/integrations/actions";
-import { createChat } from "./components/actions";
+import { createChat, type GetComponentsReturnType } from "./components/actions";
 
 // Types pour les thèmes
 export type ThemeType = "light" | "dark" | "system";
@@ -285,26 +285,15 @@ const frameworkConfig = {
   [Framework.HTML]: { icon: SiHtml5, badge: null, disabled: false },
 };
 
-interface PopularComponent {
-  chat_id: string;
-  title: string;
-  screenshot?: string | null;
-  framework: string;
-  created_at: string;
-  user_id: string;
-  user_full_name?: string;
-  user_avatar_url?: string;
-  slug: string;
-  likes: number;
-  user_has_liked: boolean;
-  clone_url?: string;
-}
-
 interface HeroProps {
-  popularComponents?: PopularComponent[];
+  popularComponents?: GetComponentsReturnType[];
+  initialIsLoggedIn?: boolean;
 }
 
-export default function Hero({ popularComponents = [] }: HeroProps) {
+export default function Hero({
+  popularComponents = [],
+  initialIsLoggedIn = false,
+}: HeroProps) {
   const supabase = createClient();
   const { toast } = useToast();
   const [prompt, setPrompt] = useState(() => {
@@ -389,17 +378,18 @@ export default function Hero({ popularComponents = [] }: HeroProps) {
             break;
           }
 
-          if (images.length >= maxImagesUpload) {
-            toast({
-              variant: "destructive",
-              title: "Too many files",
-              description: `Maximum ${maxImagesUpload} files allowed`,
-              duration: 4000,
-            });
-            break;
-          }
-
-          setImages((prev) => [...prev, file]);
+          setImages((prev) => {
+            if (prev.length >= maxImagesUpload) {
+              toast({
+                variant: "destructive",
+                title: "Too many files",
+                description: `Maximum ${maxImagesUpload} files allowed`,
+                duration: 4000,
+              });
+              return prev;
+            }
+            return [...prev, file];
+          });
           break;
         }
       }
@@ -418,12 +408,21 @@ export default function Hero({ popularComponents = [] }: HeroProps) {
   }, [inputRef, toast]);
 
   useEffect(() => {
+    setIsLoggedIn(initialIsLoggedIn);
+  }, [initialIsLoggedIn]);
+
+  useEffect(() => {
     const fetchSubscription = async () => {
       try {
         setIsLoadingSubscription(true);
+        if (!initialIsLoggedIn) {
+          setSubscription(null);
+          setUserIntegrations([]);
+          setSelectedIntegration(null);
+          return;
+        }
         const { data } = await supabase.auth.getUser();
         const userId = data?.user?.id;
-        setIsLoggedIn(!!userId);
 
         if (userId) {
           const sub = await getSubscription(userId);
@@ -498,7 +497,7 @@ export default function Hero({ popularComponents = [] }: HeroProps) {
     return () => {
       authListener?.subscription.unsubscribe();
     };
-  }, [supabase]);
+  }, [supabase, initialIsLoggedIn]);
 
   const handleImageChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -737,10 +736,19 @@ export default function Hero({ popularComponents = [] }: HeroProps) {
     return;
   };
 
-  const handleBadgeClick = (input: string) => {
+  const handleBadgeClick = (input: string, integration?: string) => {
     setPrompt(input);
     setGenerationMode("scratch");
     setShowPromptIdeasDialog(false);
+
+    if (integration === "supabase") {
+      const supabaseIntegrations = userIntegrations.filter(
+        (i) => i.integration_type === IntegrationType.SUPABASE && i.is_active,
+      );
+      if (supabaseIntegrations.length > 0) {
+        setSelectedIntegration(supabaseIntegrations[0].id);
+      }
+    }
   };
 
   const handleButtonClick = useCallback(() => {
@@ -1251,9 +1259,103 @@ export default function Hero({ popularComponents = [] }: HeroProps) {
                         }}
                         isReverse={true}
                         isUploading={loading && images.length > 0}
-                        label="Files"
                         subscription={subscription}
                         isLoggedIn={isLoggedIn}
+                        currentFilesCount={images.length}
+                        onFileSelectFromLibrary={async (libraryFile) => {
+                          try {
+                            const response = await fetch(libraryFile.publicUrl);
+                            const blob = await response.blob();
+                            const fileName =
+                              libraryFile.path.split("/").pop() ||
+                              libraryFile.path;
+                            const file = new File([blob], fileName, {
+                              type: libraryFile.mimeType,
+                            });
+                            (
+                              file as File & { __libraryPath?: string }
+                            ).__libraryPath = libraryFile.path;
+
+                            if (images.length >= maxImagesUpload) {
+                              toast({
+                                variant: "destructive",
+                                title: "Too many files",
+                                description: `Maximum ${maxImagesUpload} files allowed`,
+                                duration: 4000,
+                              });
+                              return;
+                            }
+
+                            const validation = validateFile(file);
+                            if (!validation.valid) {
+                              toast({
+                                variant: "destructive",
+                                title: "Invalid file",
+                                description: validation.error,
+                                duration: 4000,
+                              });
+                              return;
+                            }
+
+                            setImages((prev) => [...prev, file]);
+                          } catch (error) {
+                            console.error(
+                              "Error loading file from library:",
+                              error,
+                            );
+                            toast({
+                              variant: "destructive",
+                              title: "Error",
+                              description:
+                                "Failed to load file from library. Please try again.",
+                              duration: 4000,
+                            });
+                          }
+                        }}
+                        onFileDeleted={(deletedPath) => {
+                          setImages((prev) =>
+                            prev.filter(
+                              (file) =>
+                                (file as File & { __libraryPath?: string })
+                                  .__libraryPath !== deletedPath,
+                            ),
+                          );
+                        }}
+                        onFileUpload={(uploadedFiles) => {
+                          const validFiles: File[] = [];
+
+                          for (const file of uploadedFiles) {
+                            if (
+                              images.length + validFiles.length >=
+                              maxImagesUpload
+                            ) {
+                              toast({
+                                variant: "destructive",
+                                title: "Too many files",
+                                description: `Maximum ${maxImagesUpload} files allowed`,
+                                duration: 4000,
+                              });
+                              break;
+                            }
+
+                            const validation = validateFile(file);
+                            if (!validation.valid) {
+                              toast({
+                                variant: "destructive",
+                                title: "Invalid file",
+                                description: validation.error,
+                                duration: 4000,
+                              });
+                              continue;
+                            }
+
+                            validFiles.push(file);
+                          }
+
+                          if (validFiles.length > 0) {
+                            setImages((prev) => [...prev, ...validFiles]);
+                          }
+                        }}
                       />
                       <FigmaImportButton
                         disabled={loading}
@@ -1645,6 +1747,13 @@ export default function Hero({ popularComponents = [] }: HeroProps) {
           <div className="mt-4 grid gap-6 md:grid-cols-2">
             {promptCategories.map((category, categoryIndex) => {
               const IconComponent = category.icon;
+              const hasActiveSupabaseIntegration = userIntegrations.some(
+                (i) =>
+                  i.integration_type === IntegrationType.SUPABASE &&
+                  i.is_active,
+              );
+              const isIntegrationsCategory = category.title === "Integrations";
+
               return (
                 <div
                   key={categoryIndex}
@@ -1663,37 +1772,74 @@ export default function Hero({ popularComponents = [] }: HeroProps) {
                   </div>
 
                   <div className="space-y-2">
-                    {category.prompts.map((prompt, promptIndex) => (
-                      <button
-                        key={promptIndex}
-                        type="button"
-                        onClick={() => {
-                          if (loading) return;
-                          handleBadgeClick(prompt.input);
-                        }}
-                        disabled={loading}
-                        className={cn(
-                          "group/item border-border bg-card hover:border-primary hover:bg-accent relative w-full rounded-md border px-3 py-2 text-left text-sm transition-all",
-                          loading && "pointer-events-none opacity-50",
-                        )}
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="font-medium">{prompt.text}</span>
-                          {"integration" in prompt &&
-                            prompt.integration === "supabase" && (
-                              <SiSupabase className="text-muted-foreground size-3" />
-                            )}
-                          {"integration" in prompt &&
-                            prompt.integration === "database" && (
-                              <Database className="text-muted-foreground size-3" />
-                            )}
-                          {"integration" in prompt &&
-                            prompt.integration === "stripe" && (
-                              <CreditCard className="text-muted-foreground size-3" />
-                            )}
-                        </div>
-                      </button>
-                    ))}
+                    {category.prompts.map((prompt, promptIndex) => {
+                      const isSupabasePrompt =
+                        "integration" in prompt &&
+                        prompt.integration === "supabase";
+                      const isDisabled =
+                        loading ||
+                        (isIntegrationsCategory &&
+                          isSupabasePrompt &&
+                          !hasActiveSupabaseIntegration);
+
+                      const button = (
+                        <button
+                          key={promptIndex}
+                          type="button"
+                          onClick={() => {
+                            if (loading || isDisabled) return;
+                            const integration =
+                              "integration" in prompt
+                                ? prompt.integration
+                                : undefined;
+                            handleBadgeClick(prompt.input, integration);
+                          }}
+                          disabled={isDisabled}
+                          className={cn(
+                            "group/item border-border bg-card hover:border-primary hover:bg-accent relative w-full rounded-md border px-3 py-2 text-left text-sm transition-all",
+                            isDisabled && "pointer-events-none opacity-50",
+                          )}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="font-medium">{prompt.text}</span>
+                            {"integration" in prompt &&
+                              prompt.integration === "supabase" && (
+                                <SiSupabase className="text-muted-foreground size-3" />
+                              )}
+                            {"integration" in prompt &&
+                              prompt.integration === "database" && (
+                                <Database className="text-muted-foreground size-3" />
+                              )}
+                            {"integration" in prompt &&
+                              prompt.integration === "stripe" && (
+                                <CreditCard className="text-muted-foreground size-3" />
+                              )}
+                          </div>
+                        </button>
+                      );
+
+                      if (
+                        isIntegrationsCategory &&
+                        isSupabasePrompt &&
+                        !hasActiveSupabaseIntegration
+                      ) {
+                        return (
+                          <TooltipProvider key={promptIndex}>
+                            <Tooltip>
+                              <TooltipTrigger asChild>{button}</TooltipTrigger>
+                              <TooltipContent>
+                                <p>
+                                  Connect a Supabase integration to use this
+                                  prompt idea
+                                </p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        );
+                      }
+
+                      return button;
+                    })}
                   </div>
                 </div>
               );
@@ -1742,13 +1888,18 @@ export default function Hero({ popularComponents = [] }: HeroProps) {
                         : undefined,
                       href: `/components/${component.slug}`,
                       likes: component.likes || 0,
-                      isLiked: component.user_has_liked,
+                      isLiked: component.user_has_liked ?? false,
+                      remixesCount: component.remixes_count || 0,
                       user_avatar_url: component.user_avatar_url,
                       cloneUrl: component.clone_url,
                     };
 
                     return (
-                      <UnifiedCard key={component.chat_id} data={cardData} />
+                      <UnifiedCard
+                        key={component.chat_id}
+                        data={cardData}
+                        isLoggedIn={isLoggedIn}
+                      />
                     );
                   })}
                 </div>

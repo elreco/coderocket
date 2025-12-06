@@ -14,9 +14,13 @@ import { useCarousel } from "@/components/ui/carousel-hook";
 
 interface ComponentsSliderProps {
   components: GetComponentsReturnType[];
+  isLoggedIn?: boolean;
 }
 
-export function ComponentsSlider({ components }: ComponentsSliderProps) {
+export function ComponentsSlider({
+  components,
+  isLoggedIn = false,
+}: ComponentsSliderProps) {
   if (!components || components.length === 0) {
     return null;
   }
@@ -34,7 +38,7 @@ export function ComponentsSlider({ components }: ComponentsSliderProps) {
           {components.map((chat) => (
             <CarouselItem key={chat.chat_id} className="basis-auto pl-4">
               <div className="w-[280px]">
-                <ComponentCard chat={chat} />
+                <ComponentCard chat={chat} isLoggedIn={isLoggedIn} />
               </div>
             </CarouselItem>
           ))}

@@ -1,8 +1,25 @@
+import { createClient } from "@/utils/supabase/server";
+
 import { getAllPublicChats } from "./components/actions";
 import Hero from "./hero";
 
 export default async function Home() {
-  const popularComponents = await getAllPublicChats(24, 0, true);
+  const supabase = await createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  const user = userData.user;
 
-  return <Hero popularComponents={popularComponents} />;
+  const popularComponents = await getAllPublicChats(
+    24,
+    0,
+    "top",
+    undefined,
+    undefined,
+    false,
+    false,
+    user,
+  );
+
+  return (
+    <Hero popularComponents={popularComponents} initialIsLoggedIn={!!user} />
+  );
 }

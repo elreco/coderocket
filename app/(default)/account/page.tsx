@@ -10,6 +10,7 @@ import { PageTitle } from "@/components/page-title";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
+import { FILE_LIMITS_PER_PLAN } from "@/utils/config";
 import {
   tokensToRockets,
   getPlanRocketLimits,
@@ -177,7 +178,21 @@ export default async function Account() {
                   </li>
                   <li className="flex items-center text-sm">
                     <Check className="mr-2 size-4 text-emerald-500" />
+                    {subscription?.prices?.products?.name === "Starter"
+                      ? `${FILE_LIMITS_PER_PLAN.starter} files maximum`
+                      : subscription?.prices?.products?.name === "Pro"
+                        ? `${FILE_LIMITS_PER_PLAN.pro} files maximum`
+                        : subscription?.prices?.products?.name === "Enterprise"
+                          ? "Unlimited files"
+                          : "Generate with files"}
+                  </li>
+                  <li className="flex items-center text-sm">
+                    <Check className="mr-2 size-4 text-emerald-500" />
                     Improve prompt
+                  </li>
+                  <li className="flex items-center text-sm">
+                    <Check className="mr-2 size-4 text-emerald-500" />
+                    Download code
                   </li>
                   {subscription?.prices?.products?.name === "Pro" && (
                     <>
@@ -207,6 +222,10 @@ export default async function Account() {
                   <li className="flex items-center text-sm">
                     <XIcon className="text-border mr-2 size-4" />
                     Generate with files
+                  </li>
+                  <li className="flex items-center text-sm">
+                    <XIcon className="text-border mr-2 size-4" />
+                    Download code
                   </li>
                   <li className="flex items-center text-sm">
                     <XIcon className="text-border mr-2 size-4" />

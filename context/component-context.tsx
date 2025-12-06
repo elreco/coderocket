@@ -88,6 +88,7 @@ interface ComponentContextType {
   setIsScrapingWebsite: (value: boolean) => void;
   isContinuingFromLengthError: boolean;
   setIsContinuingFromLengthError: (value: boolean) => void;
+  connectedUser?: { id: string } | null;
 }
 
 export const ComponentContext = createContext<ComponentContextType | undefined>(
