@@ -12,46 +12,13 @@ export async function cloneWebsite(url: string) {
 
     const timeout = new Promise<never>((_, reject) => {
       setTimeout(
-        () => reject(new Error("Clone timeout after 2 minutes")),
-        120000,
+        () => reject(new Error("Clone timeout after 3 minutes")),
+        180000,
       );
     });
 
     const scraping = scrapeWebsiteSimple(url);
     const websiteData = await Promise.race([scraping, timeout]);
-
-    const contentToCheck = (
-      websiteData.markdown ||
-      websiteData.html ||
-      ""
-    ).toLowerCase();
-    const titleToCheck = (websiteData.title || "").toLowerCase();
-
-    const botProtectionIndicators = [
-      "failed to verify your browser",
-      "cloudflare",
-      "just a moment",
-      "checking your browser",
-      "enable javascript and cookies",
-      "please verify you are a human",
-      "ray id",
-      "security check",
-      "access denied",
-      "vercel",
-      "bot protection",
-      "challenge-platform",
-    ];
-
-    const hasProtection = botProtectionIndicators.some(
-      (indicator) =>
-        contentToCheck.includes(indicator) || titleToCheck.includes(indicator),
-    );
-
-    if (hasProtection) {
-      throw new Error(
-        "This website has anti-bot protection (Cloudflare/Vercel) that prevents automatic cloning.",
-      );
-    }
 
     console.log("✅ Scraping successful:", {
       title: websiteData.title,

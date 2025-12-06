@@ -7,7 +7,6 @@ import {
   TextPart,
 } from "ai";
 import { after } from "next/server";
-import sharp from "sharp";
 
 import { buildComponent } from "@/app/(default)/components/[slug]/actions";
 import { autoSyncToGithubAfterGeneration } from "@/app/(default)/components/[slug]/github-sync-actions";
@@ -1068,75 +1067,25 @@ ${optimizedMarkdown}${imagesList}
 **Instructions:** The screenshot shows the design. The content above provides the text and images.${animationInstructions} Combine both to create an accurate clone.`;
         }
 
-        // Handle screenshot with proper dimension validation and resizing
+        // Handle screenshot - already processed by builder, just upload
         if (cloneResult.data.screenshot) {
           try {
             const buffer = Buffer.from(cloneResult.data.screenshot, "base64");
-            console.log("Screenshot buffer size:", buffer.length, "bytes");
-
-            // Read metadata from original buffer first
-            const metadata = await sharp(buffer).metadata();
-
             console.log(
-              "Original image dimensions:",
-              metadata.width,
-              "x",
-              metadata.height,
+              "Screenshot buffer size (from builder):",
+              buffer.length,
+              "bytes",
             );
-            console.log("Original format:", metadata.format);
 
-            // Check if either dimension exceeds Anthropic's 8000px limit
-            const maxDimension = 8000;
-            const needsResize =
-              (metadata.width || 0) > maxDimension ||
-              (metadata.height || 0) > maxDimension;
-
-            let processedBuffer: Buffer;
-            if (needsResize && metadata.width && metadata.height) {
-              console.log("⚠️ Image exceeds 8000px limit, resizing...");
-
-              // Calculate new dimensions maintaining aspect ratio
-              const aspectRatio = metadata.width / metadata.height;
-              let newWidth = metadata.width;
-              let newHeight = metadata.height;
-
-              if (metadata.width > maxDimension) {
-                newWidth = maxDimension;
-                newHeight = Math.round(maxDimension / aspectRatio);
-              }
-
-              if (newHeight > maxDimension) {
-                newHeight = maxDimension;
-                newWidth = Math.round(maxDimension * aspectRatio);
-              }
-
-              console.log("Resizing to:", newWidth, "x", newHeight);
-              processedBuffer = await sharp(buffer)
-                .resize(newWidth, newHeight, {
-                  fit: "inside",
-                  withoutEnlargement: true,
-                })
-                .jpeg({ quality: 85 })
-                .toBuffer();
-
-              console.log(
-                "Resized buffer size:",
-                processedBuffer.length,
-                "bytes",
-              );
-            } else {
-              // Just convert to JPEG without resizing
-              console.log("Converting to JPEG...");
-              processedBuffer = await sharp(buffer)
-                .jpeg({ quality: 85 })
-                .toBuffer();
+            if (buffer.length < 100) {
+              throw new Error("Screenshot buffer is too small, likely invalid");
             }
 
             const screenshotFileName = `${Date.now()}-${user?.id}-screenshot.jpg`;
             const { data: imageData, error: imageError } =
               await supabase.storage
                 .from("images")
-                .upload(screenshotFileName, processedBuffer, {
+                .upload(screenshotFileName, buffer, {
                   contentType: "image/jpeg",
                   cacheControl: "3600",
                 });
@@ -1148,7 +1097,7 @@ ${optimizedMarkdown}${imagesList}
               console.error("❌ Failed to upload screenshot:", imageError);
             }
           } catch (screenshotError) {
-            console.error("Error processing screenshot:", screenshotError);
+            console.error("Error uploading screenshot:", screenshotError);
             console.log("Continuing without screenshot");
           }
         }

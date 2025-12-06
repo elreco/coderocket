@@ -41,7 +41,11 @@ export async function captureScreenshot(url: string) {
 
     return Buffer.from(base64Screenshot, "base64");
   } catch (error) {
-    console.error("Failed to capture screenshot remotely", error);
+    console.error("Failed to capture screenshot remotely:", error);
+    if (error instanceof Error) {
+      console.error("Error message:", error.message);
+      console.error("Error stack:", error.stack);
+    }
     return undefined;
   }
 }
