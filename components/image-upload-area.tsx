@@ -1,6 +1,6 @@
 "use client";
 
-import { Upload, FileUp, Loader2, Crown, FolderOpen } from "lucide-react";
+import { Upload, FileUp, Loader2, Crown } from "lucide-react";
 import { memo, useCallback, useState } from "react";
 
 import { toast } from "@/hooks/use-toast";
@@ -269,7 +269,7 @@ export const ImageUploadArea = memo(
                     disabled={disabled || isUploading}
                     onClick={handleLibraryClick}
                   >
-                    <FolderOpen className="size-3 shrink-0" />
+                    <FileUp className="size-3 shrink-0" />
                     {(!isLoggedIn || !isPremium) && (
                       <Crown className="size-3 shrink-0 text-amber-500" />
                     )}

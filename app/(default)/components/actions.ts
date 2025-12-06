@@ -5,6 +5,7 @@ import { nanoid } from "nanoid";
 import { after } from "next/server";
 
 import { getSubscription } from "@/app/supabase-server";
+import { Database } from "@/types_db";
 import {
   Framework,
   MAX_SEARCH_LENGTH,
@@ -22,6 +23,9 @@ import { createClient } from "@/utils/supabase/server";
 import { getUserTokenUsage } from "@/utils/token-pricing";
 
 import { buildComponent } from "./[slug]/actions";
+
+type GetChatsWithDetailsReturnType =
+  Database["public"]["Functions"]["get_chats_with_details"]["Returns"][number];
 
 export type GetComponentsReturnType = {
   chat_id: string;
@@ -59,6 +63,51 @@ export type GetComponentsReturnType = {
   is_deployed?: boolean;
   remixes_count?: number;
 };
+
+function transformRpcResultToComponentType(
+  chat: GetChatsWithDetailsReturnType,
+  userHasLiked: boolean = false,
+): GetComponentsReturnType {
+  return {
+    chat_id: chat.chat_id,
+    user_id: chat.user_id,
+    framework: chat.framework ?? "",
+    user_full_name: chat.user_full_name ?? "",
+    user_avatar_url: chat.user_avatar_url ?? "",
+    is_featured: chat.is_featured ?? false,
+    is_private: chat.is_private ?? false,
+    created_at: chat.created_at ?? "",
+    first_user_message: chat.first_user_message ?? "",
+    title: chat.title ?? "",
+    likes: chat.likes ?? 0,
+    last_assistant_message: chat.last_assistant_message ?? "",
+    last_assistant_message_theme: chat.last_assistant_message_theme ?? "",
+    slug: chat.slug ?? "",
+    remix_chat_id: chat.remix_chat_id ?? "",
+    clone_url: chat.clone_url ?? undefined,
+    user_has_liked: userHasLiked,
+    screenshot: chat.last_assistant_message ?? undefined,
+    views: chat.views ?? undefined,
+    artifact_code: chat.artifact_code ?? undefined,
+    prompt_image: chat.prompt_image ?? undefined,
+    input_tokens: chat.input_tokens ?? undefined,
+    output_tokens: chat.output_tokens ?? undefined,
+    remix_from_version: chat.remix_from_version ?? undefined,
+    metadata:
+      chat.metadata && typeof chat.metadata === "object"
+        ? (chat.metadata as Record<string, unknown>)
+        : undefined,
+    github_repo_url: chat.github_repo_url ?? undefined,
+    github_repo_name: chat.github_repo_name ?? undefined,
+    last_github_sync: chat.last_github_sync ?? undefined,
+    last_github_commit_sha: chat.last_github_commit_sha ?? undefined,
+    deploy_subdomain: chat.deploy_subdomain ?? undefined,
+    deployed_at: chat.deployed_at ?? undefined,
+    deployed_version: chat.deployed_version ?? undefined,
+    is_deployed: chat.is_deployed ?? undefined,
+    remixes_count: chat.remixes_count ?? undefined,
+  };
+}
 
 export const fetchChatById = async (idOrSlug: string) => {
   const supabase = await createClient();
@@ -536,7 +585,7 @@ export const getAllPublicChats = async (
   isAccountPage?: boolean,
   isLikedPage?: boolean,
   user?: { id: string } | null,
-) => {
+): Promise<GetComponentsReturnType[]> => {
   try {
     const supabase = await createClient();
     let currentUser = user;
@@ -611,18 +660,12 @@ export const getAllPublicChats = async (
         ? new Set(userLikes.map((like) => like.chat_id))
         : new Set();
 
-      return data.map((chat) => ({
-        ...chat,
-        user_has_liked: likedChatIds.has(chat.chat_id),
-        screenshot: chat.last_assistant_message,
-      }));
+      return data.map((chat) =>
+        transformRpcResultToComponentType(chat, likedChatIds.has(chat.chat_id)),
+      );
     }
 
-    return data.map((chat) => ({
-      ...chat,
-      user_has_liked: false,
-      screenshot: chat.last_assistant_message,
-    }));
+    return data.map((chat) => transformRpcResultToComponentType(chat, false));
   } catch (err) {
     console.error("Unexpected error in getAllPublicChats:", err);
     return [];
@@ -1027,7 +1070,7 @@ export const getComponentsByFramework = async (
   framework: Framework,
   limit: number = 10,
   user?: { id: string } | null,
-) => {
+): Promise<GetComponentsReturnType[]> => {
   try {
     const supabase = await createClient();
     let currentUser = user;
@@ -1067,18 +1110,12 @@ export const getComponentsByFramework = async (
         ? new Set(userLikes.map((like) => like.chat_id))
         : new Set();
 
-      return data.map((chat) => ({
-        ...chat,
-        user_has_liked: likedChatIds.has(chat.chat_id),
-        screenshot: chat.last_assistant_message,
-      }));
+      return data.map((chat) =>
+        transformRpcResultToComponentType(chat, likedChatIds.has(chat.chat_id)),
+      );
     }
 
-    return data.map((chat) => ({
-      ...chat,
-      user_has_liked: false,
-      screenshot: chat.last_assistant_message,
-    }));
+    return data.map((chat) => transformRpcResultToComponentType(chat, false));
   } catch (err) {
     console.error("Unexpected error in getComponentsByFramework:", err);
     return [];
@@ -1088,7 +1125,7 @@ export const getComponentsByFramework = async (
 export const getMostPopularComponents = async (
   limit: number = 10,
   user?: { id: string } | null,
-) => {
+): Promise<GetComponentsReturnType[]> => {
   try {
     const supabase = await createClient();
     let currentUser = user;
@@ -1129,18 +1166,12 @@ export const getMostPopularComponents = async (
         ? new Set(userLikes.map((like) => like.chat_id))
         : new Set();
 
-      return data.map((chat) => ({
-        ...chat,
-        user_has_liked: likedChatIds.has(chat.chat_id),
-        screenshot: chat.last_assistant_message,
-      }));
+      return data.map((chat) =>
+        transformRpcResultToComponentType(chat, likedChatIds.has(chat.chat_id)),
+      );
     }
 
-    return data.map((chat) => ({
-      ...chat,
-      user_has_liked: false,
-      screenshot: chat.last_assistant_message,
-    }));
+    return data.map((chat) => transformRpcResultToComponentType(chat, false));
   } catch (err) {
     console.error("Unexpected error in getMostPopularComponents:", err);
     return [];

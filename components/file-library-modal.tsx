@@ -236,10 +236,18 @@ export function FileLibraryModal({
 
     if (!isSelected && currentFilesCount + newSelectedCount > maxFilesLimit) {
       toast({
-        variant: "destructive",
-        title: "Too many files",
-        description: `Maximum ${maxFilesLimit === Infinity ? "unlimited" : maxFilesLimit} files allowed. You can select ${maxFilesLimit === Infinity ? "unlimited" : maxFilesLimit - currentFilesCount - selectedFiles.size} more file(s).`,
-        duration: 4000,
+        title: "Premium feature",
+        description:
+          "Upgrade to Premium to upload more files and unlock unlimited file storage!",
+        action: (
+          <a
+            href="/pricing"
+            className="bg-primary text-primary-foreground inline-flex h-8 items-center justify-center rounded-md px-3 text-xs font-medium"
+          >
+            Upgrade
+          </a>
+        ),
+        duration: 5000,
       });
       return;
     }
@@ -286,10 +294,18 @@ export function FileLibraryModal({
       currentFilesCount + filesToSelect.length > maxFilesLimit
     ) {
       toast({
-        variant: "destructive",
-        title: "Too many files",
-        description: `Maximum ${maxFilesLimit === Infinity ? "unlimited" : maxFilesLimit} files allowed. You can select ${maxFilesLimit === Infinity ? "unlimited" : maxFilesLimit - currentFilesCount} more file(s).`,
-        duration: 4000,
+        title: "Premium feature",
+        description:
+          "Upgrade to Premium to upload more files and unlock unlimited file storage!",
+        action: (
+          <a
+            href="/pricing"
+            className="bg-primary text-primary-foreground inline-flex h-8 items-center justify-center rounded-md px-3 text-xs font-medium"
+          >
+            Upgrade
+          </a>
+        ),
+        duration: 5000,
       });
       return;
     }
@@ -318,10 +334,18 @@ export function FileLibraryModal({
           currentFilesCount + validFiles.length >= maxFilesLimit
         ) {
           toast({
-            variant: "destructive",
-            title: "Too many files",
-            description: `Maximum ${maxFilesLimit} files allowed`,
-            duration: 4000,
+            title: "Premium feature",
+            description:
+              "Upgrade to Premium to upload more files and unlock unlimited file storage!",
+            action: (
+              <a
+                href="/pricing"
+                className="bg-primary text-primary-foreground inline-flex h-8 items-center justify-center rounded-md px-3 text-xs font-medium"
+              >
+                Upgrade
+              </a>
+            ),
+            duration: 5000,
           });
           break;
         }
@@ -634,7 +658,7 @@ export function FileLibraryModal({
         }}
       >
         <DialogContent
-          className="z-[9999] max-w-[98vw]! w-[98vw]! max-h-[95vh]! h-[95vh]! sm:max-w-[98vw]! flex flex-col p-8"
+          className="z-9999 max-w-[98vw]! w-[98vw]! max-h-[95vh]! h-[95vh]! sm:max-w-[98vw]! flex flex-col p-8"
           onPointerDownOutside={(e) => {
             const target = e.target as HTMLElement;
             if (

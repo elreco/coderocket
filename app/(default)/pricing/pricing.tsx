@@ -163,6 +163,9 @@ export default function Pricing({ user, products, subscription }: Props) {
                 <XIcon className="text-border mr-2 size-4" /> GitHub Sync
               </p>
               <p className="mt-4 flex items-center text-sm font-medium ">
+                <XIcon className="text-border mr-2 size-4" /> Download code
+              </p>
+              <p className="mt-4 flex items-center text-sm font-medium ">
                 <XIcon className="text-border mr-2 size-4" /> Support
               </p>
             </div>
@@ -272,6 +275,10 @@ export default function Pricing({ user, products, subscription }: Props) {
                     <p className="mt-4 flex items-center text-sm font-medium ">
                       <Check className="mr-2 size-4 text-emerald-500" /> GitHub
                       Sync
+                    </p>
+                    <p className="mt-4 flex items-center text-sm font-medium ">
+                      <Check className="mr-2 size-4 text-emerald-500" />{" "}
+                      Download code
                     </p>
 
                     {product.name === "Starter" ? (

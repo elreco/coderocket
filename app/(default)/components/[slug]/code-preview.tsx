@@ -16,12 +16,14 @@ import {
   Pencil,
   PanelLeftClose,
   PanelLeft,
+  Crown,
 } from "lucide-react";
 import { useRef, useEffect, useState, useCallback } from "react";
 import React from "react";
 import { useCopyToClipboard } from "usehooks-ts";
 
 import RenderComponent from "@/app/(default)/components/[slug]/component-preview";
+import { getSubscription } from "@/app/supabase-server";
 import RenderHtmlComponent from "@/components/renders/render-html-component";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -32,6 +34,7 @@ import {
 } from "@/context/component-context";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { Tables } from "@/types_db";
 import { ChatFile } from "@/utils/completion-parser";
 import { Framework } from "@/utils/config";
 import { getLanguageExtension } from "@/utils/file-extensions";
@@ -182,12 +185,78 @@ export default function CodePreview() {
     previewPath,
     breakpoint,
     syncPreviewPath,
+    connectedUser,
   } = useComponentContext();
   const { buildError } = useBuilder();
   const [, copy] = useCopyToClipboard();
   const codeMirrorRef = useRef<ReactCodeMirrorRef>(null);
   const [isFileTreeOpen, setIsFileTreeOpen] = useState(false);
+  const [subscription, setSubscription] = useState<
+    | (Tables<"subscriptions"> & {
+        prices: Partial<Tables<"prices">> | null;
+      })
+    | null
+  >(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const fetchSubscription = async () => {
+      try {
+        const userId = connectedUser?.id;
+        setIsLoggedIn(!!userId);
+
+        if (userId) {
+          const sub = await getSubscription(userId);
+          setSubscription(sub);
+        } else {
+          setSubscription(null);
+        }
+      } catch (error) {
+        console.error("Error fetching subscription:", error);
+      }
+    };
+
+    fetchSubscription();
+  }, [connectedUser]);
+
+  const isPremium = !!subscription;
+
   const downloadCode = async () => {
+    if (!isLoggedIn) {
+      toast({
+        title: "Login required",
+        description: "Sign in to download code and streamline your workflow!",
+        action: (
+          <a
+            href="/login"
+            className="bg-primary text-primary-foreground inline-flex h-8 items-center justify-center rounded-md px-3 text-xs font-medium"
+          >
+            Login
+          </a>
+        ),
+        duration: 5000,
+      });
+      return;
+    }
+
+    if (!isPremium) {
+      toast({
+        title: "Premium feature",
+        description:
+          "Upgrade to Premium to download code and unlock all features!",
+        action: (
+          <a
+            href="/pricing"
+            className="bg-primary text-primary-foreground inline-flex h-8 items-center justify-center rounded-md px-3 text-xs font-medium"
+          >
+            Upgrade
+          </a>
+        ),
+        duration: 5000,
+      });
+      return;
+    }
+
     if (!artifactFiles.length) return;
     const zip = new JSZip();
 
@@ -442,6 +511,9 @@ export default function CodePreview() {
                   >
                     <Download className="size-4" />
                     <span className="text-xs">Download</span>
+                    {(!isLoggedIn || !isPremium) && (
+                      <Crown className="size-3 shrink-0 text-amber-500" />
+                    )}
                   </Button>
                 </div>
               )}

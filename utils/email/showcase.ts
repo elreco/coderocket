@@ -7,7 +7,7 @@ type RpcComponent = {
   slug: string | null;
   framework: string | null;
   likes: number | null;
-  created_at: string;
+  created_at: string | null;
   title: string | null;
   user_full_name: string | null;
   last_assistant_message: string | null;
