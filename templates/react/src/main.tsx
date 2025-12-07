@@ -6,6 +6,7 @@ import App from "./App.tsx";
 import NotFound from "./NotFound.tsx";
 import "./globals.css";
 
+// CODEROCKET
 const setupRouteChangeBridge = () => {
   if (typeof window === "undefined") {
     return;
@@ -56,6 +57,7 @@ const setupRouteChangeBridge = () => {
 };
 
 setupRouteChangeBridge();
+// /CODEROCKET
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>

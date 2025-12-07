@@ -22,6 +22,7 @@ import { CloneAnotherPageButton } from "@/components/clone-another-page-button";
 import { FigmaImportButton } from "@/components/figma-import-button";
 import { FileBadge } from "@/components/file-badge";
 import { ImageUploadArea } from "@/components/image-upload-area";
+import { SelectedElementDisplay } from "@/components/selected-element-display";
 import { TextareaWithLimit } from "@/components/textarea-with-limit";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -99,6 +100,8 @@ export default function ComponentSidebar({
     setIsScrapingWebsite,
     setIsContinuingFromLengthError,
     connectedUser,
+    selectedElement,
+    clearSelectedElement,
   } = useComponentContext();
   const { buildError, loadingState } = useBuilder();
 
@@ -777,6 +780,9 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
                 userAvatarUrl={user?.avatar_url}
                 userFullName={user?.full_name}
               />
+              {selectedElement && (
+                <SelectedElementDisplay element={selectedElement} />
+              )}
               <Markdown>{input}</Markdown>
               <PromptFiles
                 files={files.length > 0 ? files : undefined}
@@ -1357,6 +1363,15 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
                         disabled={isLoading || isLengthError || !!buildError}
                       />
                     ))}
+                  </div>
+                )}
+                {selectedElement && !isLoading && (
+                  <div className="m-2">
+                    <SelectedElementDisplay
+                      element={selectedElement}
+                      showClearButton={true}
+                      onClear={clearSelectedElement}
+                    />
                   </div>
                 )}
                 <div className="flex w-full flex-col items-start space-y-1 p-2">

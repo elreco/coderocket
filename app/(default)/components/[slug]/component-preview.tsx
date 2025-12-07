@@ -3,6 +3,7 @@
 import { Loader2, AlertCircle, RefreshCw, WandSparkles } from "lucide-react";
 import React from "react";
 
+import { ElementSelector } from "@/components/element-selector";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { useBuilder } from "@/context/builder-context";
@@ -86,8 +87,11 @@ export default function ComponentPreview() {
     isLengthError,
     isScrapingWebsite,
     isContinuingFromLengthError,
+    isElementSelectionActive,
+    iframeKey,
   } = useComponentContext();
   const [iframeLoading, setIframeLoading] = React.useState(false);
+  const iframeRef = React.useRef<HTMLIFrameElement>(null);
 
   const getInitialDisplayVersion = () => {
     if (selectedVersion === undefined) return undefined;
@@ -345,13 +349,19 @@ export default function ComponentPreview() {
                   </div>
                 )}
               {displayVersion !== undefined && (
-                <iframe
-                  key={`iframe-${displayVersion}`}
-                  src={`https://${chatId}-${displayVersion}.webcontainer.coderocket.app${previewPathSuffix}`}
-                  className="size-full border-none"
-                  loading="eager"
-                  onLoad={() => setIframeLoading(false)}
-                />
+                <>
+                  <iframe
+                    ref={iframeRef}
+                    key={`iframe-${displayVersion}-${iframeKey}`}
+                    src={`https://${chatId}-${displayVersion}.webcontainer.coderocket.app${previewPathSuffix}`}
+                    className="size-full border-none"
+                    loading="eager"
+                    onLoad={() => setIframeLoading(false)}
+                  />
+                  {isElementSelectionActive && (
+                    <ElementSelector iframeRef={iframeRef} />
+                  )}
+                </>
               )}
             </div>
           </div>

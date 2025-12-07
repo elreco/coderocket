@@ -784,6 +784,7 @@ export type Database = {
           prompt_image: string | null;
           role: string;
           screenshot: string | null;
+          selected_element: Json | null;
           subscription_type: string | null;
           theme: string | null;
           version: number;
@@ -809,6 +810,7 @@ export type Database = {
           prompt_image?: string | null;
           role: string;
           screenshot?: string | null;
+          selected_element?: Json | null;
           subscription_type?: string | null;
           theme?: string | null;
           version: number;

@@ -25,6 +25,15 @@ export type WebcontainerLoadingState =
 
 export type BreakpointType = "desktop" | "tablet" | "mobile";
 
+export type SelectedElementData = {
+  html: string;
+  tagName: string;
+  classes: string[];
+  dataAttributes: Record<string, string>;
+  styles?: Record<string, string>;
+  filePath?: string;
+};
+
 interface ComponentContextType {
   isCanvas: boolean;
   setCanvas: (value: boolean) => void;
@@ -89,6 +98,11 @@ interface ComponentContextType {
   isContinuingFromLengthError: boolean;
   setIsContinuingFromLengthError: (value: boolean) => void;
   connectedUser?: { id: string } | null;
+  isElementSelectionActive: boolean;
+  setElementSelectionActive: (value: boolean) => void;
+  selectedElement: SelectedElementData | null;
+  setSelectedElement: (element: SelectedElementData | null) => void;
+  clearSelectedElement: () => void;
 }
 
 export const ComponentContext = createContext<ComponentContextType | undefined>(

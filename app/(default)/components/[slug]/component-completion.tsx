@@ -23,6 +23,7 @@ import {
   Smartphone,
   ArrowLeft,
   ArrowRight,
+  Crosshair,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState, useRef, FormEvent } from "react";
@@ -73,6 +74,7 @@ import {
   ComponentContext,
   WebcontainerLoadingState,
   BreakpointType,
+  SelectedElementData,
 } from "@/context/component-context";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -139,6 +141,10 @@ export default function ComponentCompletion({
   const [iframeKey, setIframeKey] = useState(0);
   const [breakpoint, setBreakpoint] = useState<BreakpointType>("desktop");
   const [previewPath, setPreviewPath] = useState("/");
+  const previousChatIdRef = useRef<string | null>(null);
+  const previousFrameworkRef = useRef<Framework | null>(null);
+  const ignoreNextRootRouteRef = useRef<boolean>(false);
+
   const [addressBarValue, setAddressBarValue] = useState("/");
   const [navigationHistory, setNavigationHistory] = useState<string[]>(["/"]);
   const [historyIndex, setHistoryIndex] = useState(0);
@@ -206,6 +212,11 @@ export default function ComponentCompletion({
   const syncPreviewPath = useCallback(
     (targetPath: string, options?: { pushHistory?: boolean }) => {
       const normalizedPath = normalizePreviewPath(targetPath);
+      if (normalizedPath === "/" && ignoreNextRootRouteRef.current) {
+        ignoreNextRootRouteRef.current = false;
+        return;
+      }
+      ignoreNextRootRouteRef.current = false;
       setAddressBarValue(normalizedPath);
       pushPathToHistory(normalizedPath, options?.pushHistory !== false);
     },
@@ -270,15 +281,48 @@ export default function ComponentCompletion({
     string | null
   >(null);
   const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
+  const [isElementSelectionActive, setIsElementSelectionActive] =
+    useState(false);
+  const [selectedElement, setSelectedElement] =
+    useState<SelectedElementData | null>(null);
+
+  const setElementSelectionActive = useCallback((value: boolean) => {
+    setIsElementSelectionActive(value);
+  }, []);
+
+  const clearSelectedElement = useCallback(() => {
+    setSelectedElement(null);
+  }, []);
 
   useEffect(() => {
-    const initialPath = "/";
-    setPreviewPath(initialPath);
-    setAddressBarValue(initialPath);
-    setNavigationHistory([initialPath]);
-    setHistoryIndex(0);
-    historyIndexRef.current = 0;
-  }, [chatId, selectedVersion, fetchedChat?.framework]);
+    if (addressBarValue !== "/") {
+      ignoreNextRootRouteRef.current = true;
+      setPreviewPath(addressBarValue);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedVersion]);
+
+  useEffect(() => {
+    const isChatIdChange =
+      previousChatIdRef.current !== null &&
+      previousChatIdRef.current !== chatId;
+    const isFrameworkChange =
+      previousFrameworkRef.current !== null &&
+      previousFrameworkRef.current !== (fetchedChat?.framework as Framework);
+    const isFirstLoad = previousChatIdRef.current === null;
+
+    if (isChatIdChange || isFrameworkChange || isFirstLoad) {
+      setPreviewPath("/");
+      setAddressBarValue("/");
+      setNavigationHistory(["/"]);
+      setHistoryIndex(0);
+      historyIndexRef.current = 0;
+    }
+
+    previousChatIdRef.current = chatId;
+    previousFrameworkRef.current =
+      (fetchedChat?.framework as Framework) || null;
+  }, [chatId, fetchedChat?.framework]);
 
   const isHtmlFrameworkSelected = fetchedChat?.framework === Framework.HTML;
   const previewPathSuffix = previewPath === "/" ? "" : previewPath;
@@ -502,6 +546,7 @@ export default function ComponentCompletion({
       setIsLoading(false);
     };
     loadInitialData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chatId]);
 
   const { completion, stop, complete, setCompletion, input, setInput } =
@@ -513,6 +558,15 @@ export default function ComponentCompletion({
 
         const currentFiles = uploadFilesRef.current;
 
+        let aiPrompt = promptValue;
+        if (selectedElement) {
+          const filePathInfo = selectedElement.filePath
+            ? `\nFile: ${selectedElement.filePath}`
+            : "";
+          const elementContext = `Selected element:${filePathInfo}\n\`\`\`html\n${selectedElement.html.substring(0, 1000)}${selectedElement.html.length > 1000 ? "\n... (truncated)" : ""}\n\`\`\`\n\nTag: ${selectedElement.tagName}\nClasses: ${selectedElement.classes.join(", ")}\n\nModify this element: ${promptValue}`;
+          aiPrompt = elementContext;
+        }
+
         const formData = new FormData();
         currentFiles.forEach((file) => {
           formData.append("files", file);
@@ -520,6 +574,10 @@ export default function ComponentCompletion({
         formData.append("id", chatId);
         formData.append("selectedVersion", String(selectedVersion));
         formData.append("prompt", promptValue);
+        formData.append("aiPrompt", aiPrompt);
+        if (selectedElement) {
+          formData.append("selectedElement", JSON.stringify(selectedElement));
+        }
 
         const response = await fetch(url, {
           method: "POST",
@@ -854,6 +912,7 @@ export default function ComponentCompletion({
     setChatFiles([]);
     setCanvas(true);
     setCurrentGeneratingFile(null);
+    clearSelectedElement();
 
     const previousVersion = selectedVersion ?? 0;
     const newVersion = previousVersion + 1;
@@ -1069,6 +1128,7 @@ export default function ComponentCompletion({
     }
 
     return refreshedChatMessages;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chatId, selectedVersion, supabase]);
 
   const handleChatFiles = (
@@ -1298,6 +1358,11 @@ export default function ComponentCompletion({
     isContinuingFromLengthError,
     setIsContinuingFromLengthError,
     connectedUser,
+    isElementSelectionActive,
+    setElementSelectionActive,
+    selectedElement,
+    setSelectedElement,
+    clearSelectedElement,
   };
 
   useEffect(() => {
@@ -1681,7 +1746,13 @@ export default function ComponentCompletion({
                           size="icon"
                           type="button"
                           className="size-8 shrink-0"
-                          onClick={() => setIframeKey((prev) => prev + 1)}
+                          onClick={() => {
+                            if (addressBarValue !== "/") {
+                              ignoreNextRootRouteRef.current = true;
+                            }
+                            setPreviewPath(addressBarValue);
+                            setIframeKey((prev) => prev + 1);
+                          }}
                           disabled={
                             isLoading ||
                             isLengthError ||
@@ -1779,6 +1850,47 @@ export default function ComponentCompletion({
                       </TooltipContent>
                     </Tooltip>
                   </div>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          setIsElementSelectionActive(!isElementSelectionActive)
+                        }
+                        className={cn(
+                          "relative flex h-8 items-center gap-1.5 px-2",
+                          isElementSelectionActive &&
+                            "bg-primary text-primary-foreground hover:bg-primary/90 border-primary",
+                        )}
+                        disabled={
+                          isLoading ||
+                          isLengthError ||
+                          !isWebcontainerReady ||
+                          loadingState === "processing" ||
+                          loadingState === "starting" ||
+                          loadingState === "error"
+                        }
+                      >
+                        <Crosshair className="h-4 w-4" />
+                        {!isElementSelectionActive && (
+                          <Badge
+                            variant="default"
+                            className="flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-semibold"
+                          >
+                            New
+                          </Badge>
+                        )}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>
+                        {isElementSelectionActive
+                          ? "Disable element selection"
+                          : "Enable element selection"}
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
                   <Dialog
                     open={isModalOpen}
                     onOpenChange={handleFullscreenToggle}

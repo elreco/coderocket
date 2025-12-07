@@ -3,6 +3,7 @@ import { bootstrapApplication } from '@angular/platform-browser';
 import { App } from './app/app';
 import { appConfig } from './app/app.config';
 
+// CODEROCKET
 const setupRouteChangeBridge = () => {
   if (typeof window === 'undefined') {
     return;
@@ -50,5 +51,6 @@ const setupRouteChangeBridge = () => {
 };
 
 setupRouteChangeBridge();
+// /CODEROCKET
 
 bootstrapApplication(App, appConfig).catch((err) => console.error(err));

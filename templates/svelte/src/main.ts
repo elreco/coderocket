@@ -3,6 +3,7 @@ import { mount } from "svelte";
 import "./app.css";
 import Router from "./Router.svelte";
 
+// CODEROCKET
 const setupRouteChangeBridge = () => {
   if (typeof window === "undefined") {
     return;
@@ -53,6 +54,7 @@ const setupRouteChangeBridge = () => {
 };
 
 setupRouteChangeBridge();
+// /CODEROCKET
 
 const app = mount(Router, {
   target: document.getElementById("app")!,

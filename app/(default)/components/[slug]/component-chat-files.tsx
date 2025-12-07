@@ -4,6 +4,7 @@ import { SiGithub } from "@icons-pack/react-simple-icons";
 import { Loader2, Trash2 } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 
+import { SelectedElementDisplay } from "@/components/selected-element-display";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,7 +20,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { UserWidget } from "@/components/user-widget";
-import { useComponentContext } from "@/context/component-context";
+import {
+  useComponentContext,
+  SelectedElementData,
+} from "@/context/component-context";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { Tables } from "@/types_db";
@@ -459,7 +463,19 @@ ${extractedFiles
               userAvatarUrl={message.chats.user.avatar_url}
               userFullName={message.chats.user.full_name}
             />
-            <Markdown>{message.content}</Markdown>
+            {(() => {
+              if (message.selected_element) {
+                const elementData =
+                  message.selected_element as SelectedElementData;
+                return (
+                  <>
+                    <SelectedElementDisplay element={elementData} />
+                    {message.content && <Markdown>{message.content}</Markdown>}
+                  </>
+                );
+              }
+              return <Markdown>{message.content}</Markdown>;
+            })()}
             <PromptFiles
               fileItems={(() => {
                 if (message.files && Array.isArray(message.files)) {

@@ -228,6 +228,17 @@ export async function POST(req: Request) {
     const files = formData.getAll("files") as File[];
     const prompt = formData.get("prompt") as string | null;
     const aiPrompt = formData.get("aiPrompt") as string | null;
+    const selectedElementStr = formData.get("selectedElement") as string | null;
+    const selectedElement = selectedElementStr
+      ? (JSON.parse(selectedElementStr) as {
+          html: string;
+          tagName: string;
+          classes: string[];
+          dataAttributes: Record<string, string>;
+          styles?: Record<string, string>;
+          filePath?: string;
+        })
+      : null;
 
     // Valider la requête et récupérer les messages, le framework, et le prompt mis à jour
     // Si un site est cloné, cette fonction va aussi capturer et enregistrer un screenshot
@@ -359,6 +370,7 @@ export async function POST(req: Request) {
         subscription_type: subscriptionType,
         cache_creation_input_tokens: 0,
         cache_read_input_tokens: 0,
+        selected_element: selectedElement,
       });
 
       if (insertError) {
@@ -383,6 +395,14 @@ export async function POST(req: Request) {
           source?: string;
         }[];
         subscription_type: string;
+        selected_element?: {
+          html: string;
+          tagName: string;
+          classes: string[];
+          dataAttributes: Record<string, string>;
+          styles?: Record<string, string>;
+          filePath?: string;
+        } | null;
       } = {
         version,
         prompt_image:
@@ -400,6 +420,7 @@ export async function POST(req: Request) {
                 source?: string;
               }[]) || [],
         subscription_type: subscriptionType,
+        selected_element: selectedElement,
       };
 
       const { error: updateError } = await supabase
@@ -1213,8 +1234,23 @@ Use standard Tailwind CSS classes and shadcn/ui components.`;
   let userPromptForDisplay = userDisplayPrompt || "";
 
   if (!enhancedPrompt) {
-    updatedPrompt = lastUserMessage.content || "";
-    userPromptForDisplay = lastUserMessage.content || "";
+    if (aiPrompt) {
+      updatedPrompt = aiPrompt;
+    } else {
+      updatedPrompt = lastUserMessage.content || "";
+    }
+    if (prompt) {
+      userPromptForDisplay = prompt;
+    } else {
+      userPromptForDisplay = lastUserMessage.content || "";
+    }
+  } else {
+    if (aiPrompt) {
+      updatedPrompt = aiPrompt;
+    }
+    if (prompt) {
+      userPromptForDisplay = prompt;
+    }
   }
 
   const updatedImages: string[] = [];
