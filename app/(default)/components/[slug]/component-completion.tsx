@@ -375,6 +375,12 @@ export default function ComponentCompletion({
   }, [connectedUser]);
 
   useEffect(() => {
+    if (!authorized && isElementSelectionActive) {
+      setIsElementSelectionActive(false);
+    }
+  }, [authorized, isElementSelectionActive]);
+
+  useEffect(() => {
     const loadInitialData = async () => {
       const [chatData, sub] = await Promise.all([
         fetchChatDataOptimized(chatId),
@@ -1850,47 +1856,51 @@ export default function ComponentCompletion({
                       </TooltipContent>
                     </Tooltip>
                   </div>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() =>
-                          setIsElementSelectionActive(!isElementSelectionActive)
-                        }
-                        className={cn(
-                          "relative flex h-8 items-center gap-1.5 px-2",
-                          isElementSelectionActive &&
-                            "bg-primary text-primary-foreground hover:bg-primary/90 border-primary",
-                        )}
-                        disabled={
-                          isLoading ||
-                          isLengthError ||
-                          !isWebcontainerReady ||
-                          loadingState === "processing" ||
-                          loadingState === "starting" ||
-                          loadingState === "error"
-                        }
-                      >
-                        <Crosshair className="h-4 w-4" />
-                        {!isElementSelectionActive && (
-                          <Badge
-                            variant="default"
-                            className="flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-semibold"
-                          >
-                            New
-                          </Badge>
-                        )}
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>
-                        {isElementSelectionActive
-                          ? "Disable element selection"
-                          : "Enable element selection"}
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
+                  {authorized && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            setIsElementSelectionActive(
+                              !isElementSelectionActive,
+                            )
+                          }
+                          className={cn(
+                            "relative flex h-8 items-center gap-1.5 px-2",
+                            isElementSelectionActive &&
+                              "bg-primary text-primary-foreground hover:bg-primary/90 border-primary",
+                          )}
+                          disabled={
+                            isLoading ||
+                            isLengthError ||
+                            !isWebcontainerReady ||
+                            loadingState === "processing" ||
+                            loadingState === "starting" ||
+                            loadingState === "error"
+                          }
+                        >
+                          <Crosshair className="h-4 w-4" />
+                          {!isElementSelectionActive && (
+                            <Badge
+                              variant="default"
+                              className="flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-semibold"
+                            >
+                              New
+                            </Badge>
+                          )}
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>
+                          {isElementSelectionActive
+                            ? "Disable element selection"
+                            : "Enable element selection"}
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
                   <Dialog
                     open={isModalOpen}
                     onOpenChange={handleFullscreenToggle}
