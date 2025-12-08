@@ -1219,33 +1219,6 @@ export const getDeployedSites = async (
     }
 
     const chatIds = chats.map((chat) => chat.id);
-    const { data: customDomains } = await supabase
-      .from("custom_domains")
-      .select("chat_id, domain, is_verified")
-      .in("chat_id", chatIds)
-      .eq("is_verified", true);
-
-    const domainMap = new Map<string, string>();
-    if (customDomains) {
-      customDomains.forEach((domain) => {
-        domainMap.set(domain.chat_id, domain.domain);
-      });
-    }
-
-    const chatIdsForRpc = chats.map((chat) => chat.id);
-    const { data: chatsWithDetails } = await supabase
-      .rpc("get_chats_with_details")
-      .in("chat_id", chatIdsForRpc);
-
-    if (!chatsWithDetails || chatsWithDetails.length === 0) {
-      return [];
-    }
-
-    const chatIdsSet = new Set(chatIdsForRpc);
-    const filteredChats = chatsWithDetails.filter((chat) =>
-      chatIdsSet.has(chat.chat_id),
-    );
-
     const chatVersionMap = new Map<string, number>();
     chats.forEach((chat) => {
       if (
@@ -1256,57 +1229,145 @@ export const getDeployedSites = async (
       }
     });
 
-    const likedChatIds = new Set<string>();
-    if (user) {
-      const { data: userLikes } = await supabase
-        .from("chat_likes")
-        .select("chat_id")
-        .eq("user_id", user.id)
-        .in("chat_id", chatIdsForRpc);
-
-      if (userLikes) {
-        userLikes.forEach((like) => likedChatIds.add(like.chat_id));
-      }
-    }
-
-    // Récupérer tous les screenshots en une seule requête Supabase optimisée
-    const chatIdsForScreenshots = Array.from(chatVersionMap.keys());
-    const screenshotMap = new Map<string, string | null>();
-
-    if (chatIdsForScreenshots.length > 0) {
-      // Construire les conditions OR pour chaque paire (chat_id, version)
-      const orConditions = Array.from(chatVersionMap.entries())
-        .map(
-          ([chatId, version]) =>
-            `and(chat_id.eq.${chatId},version.eq.${version})`,
-        )
-        .join(",");
-
-      const { data: screenshots } = await supabase
+    const [
+      { data: customDomains },
+      { data: userLikes },
+      { data: screenshots },
+      { data: firstMessages },
+      { data: remixesCounts },
+    ] = await Promise.all([
+      supabase
+        .from("custom_domains")
+        .select("chat_id, domain, is_verified")
+        .in("chat_id", chatIds)
+        .eq("is_verified", true),
+      user
+        ? supabase
+            .from("chat_likes")
+            .select("chat_id")
+            .eq("user_id", user.id)
+            .in("chat_id", chatIds)
+        : Promise.resolve({ data: [] }),
+      chatVersionMap.size > 0
+        ? (() => {
+            const orConditions = Array.from(chatVersionMap.entries())
+              .map(
+                ([chatId, version]) =>
+                  `and(chat_id.eq.${chatId},version.eq.${version})`,
+              )
+              .join(",");
+            return supabase
+              .from("messages")
+              .select("chat_id, screenshot")
+              .eq("role", "assistant")
+              .or(orConditions);
+          })()
+        : Promise.resolve({ data: [] }),
+      supabase
         .from("messages")
-        .select("chat_id, screenshot")
-        .eq("role", "assistant")
-        .or(orConditions);
+        .select("chat_id, content")
+        .eq("role", "user")
+        .in("chat_id", chatIds)
+        .order("created_at", { ascending: true }),
+      supabase
+        .from("chats")
+        .select("remix_chat_id")
+        .in("remix_chat_id", chatIds)
+        .not("remix_chat_id", "is", null),
+    ]);
 
-      if (screenshots) {
-        screenshots.forEach((msg) => {
-          if (msg.screenshot) {
-            screenshotMap.set(msg.chat_id, msg.screenshot);
-          }
-        });
-      }
+    const domainMap = new Map<string, string>();
+    if (customDomains) {
+      customDomains.forEach((domain) => {
+        domainMap.set(domain.chat_id, domain.domain);
+      });
     }
 
-    const deployedSitesWithScreenshots = filteredChats.map((chat) => {
-      const deployedScreenshot = screenshotMap.get(chat.chat_id) || null;
+    const likedChatIds = new Set<string>();
+    if (userLikes) {
+      userLikes.forEach((like) => likedChatIds.add(like.chat_id));
+    }
 
-      const component = transformRpcResultToComponentType(
-        chat,
-        likedChatIds.has(chat.chat_id),
-      );
+    const screenshotMap = new Map<string, string | null>();
+    if (screenshots) {
+      screenshots.forEach((msg) => {
+        if (msg.screenshot) {
+          screenshotMap.set(msg.chat_id, msg.screenshot);
+        }
+      });
+    }
+
+    const firstMessageMap = new Map<string, string>();
+    if (firstMessages) {
+      const seen = new Set<string>();
+      firstMessages.forEach((msg) => {
+        if (!seen.has(msg.chat_id)) {
+          firstMessageMap.set(msg.chat_id, msg.content);
+          seen.add(msg.chat_id);
+        }
+      });
+    }
+
+    const remixesCountMap = new Map<string, number>();
+    if (remixesCounts) {
+      remixesCounts.forEach((chat) => {
+        if (chat.remix_chat_id) {
+          remixesCountMap.set(
+            chat.remix_chat_id,
+            (remixesCountMap.get(chat.remix_chat_id) || 0) + 1,
+          );
+        }
+      });
+    }
+
+    const deployedSitesWithScreenshots = chats.map((chat) => {
+      const deployedScreenshot = screenshotMap.get(chat.id) || null;
+      const firstUserMessage = firstMessageMap.get(chat.id) || "";
+      const remixesCount = remixesCountMap.get(chat.id) || 0;
+
+      const component: GetComponentsReturnType = {
+        chat_id: chat.id,
+        user_id: chat.user?.id || chat.user_id,
+        framework: chat.framework || "",
+        user_full_name: chat.user?.full_name || "",
+        user_avatar_url: chat.user?.avatar_url || "",
+        is_featured: chat.is_featured || false,
+        is_private: chat.is_private || false,
+        created_at: chat.created_at || "",
+        first_user_message: firstUserMessage,
+        title: chat.title || "",
+        likes: chat.likes || 0,
+        last_assistant_message: deployedScreenshot || "",
+        last_assistant_message_theme: "",
+        slug: chat.slug || "",
+        remix_chat_id: chat.remix_chat_id || "",
+        clone_url: chat.clone_url || undefined,
+        user_has_liked: likedChatIds.has(chat.id),
+        screenshot: deployedScreenshot || undefined,
+        views: chat.views || undefined,
+        artifact_code: chat.artifact_code || undefined,
+        prompt_image: chat.prompt_image || undefined,
+        input_tokens: chat.input_tokens || undefined,
+        output_tokens: chat.output_tokens || undefined,
+        remix_from_version: chat.remix_from_version || undefined,
+        metadata:
+          chat.metadata && typeof chat.metadata === "object"
+            ? (chat.metadata as Record<string, unknown>)
+            : undefined,
+        github_repo_url: chat.github_repo_url || undefined,
+        github_repo_name: chat.github_repo_name || undefined,
+        last_github_sync: chat.last_github_sync || undefined,
+        last_github_commit_sha: chat.last_github_commit_sha || undefined,
+        deploy_subdomain: chat.deploy_subdomain || undefined,
+        deployed_at: chat.deployed_at || undefined,
+        deployed_version: chat.deployed_version || undefined,
+        is_deployed: chat.is_deployed || undefined,
+        remixes_count: remixesCount,
+      };
+
       return {
         ...component,
-        custom_domain: domainMap.get(chat.chat_id) || null,
+        custom_domain: domainMap.get(chat.id) || null,
         deployed_screenshot: deployedScreenshot,
       };
     });
