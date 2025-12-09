@@ -962,12 +962,13 @@ const validateRequest = async (
   let urlToClone: string | null = null;
   let isAdditionalPageClone = false;
 
-  if (chat.clone_url && !aiPrompt) {
-    if (prompt?.includes("Clone this website:")) {
-      urlToClone = chat.clone_url;
-    } else if (prompt?.includes("Clone another page:")) {
-      const anotherPageMatch = prompt.match(
-        /Clone another page: (https?:\/\/[^\s]+)/,
+  // Si chat.clone_url existe en base, c'est qu'on est dans un contexte de clonage
+  if (chat.clone_url) {
+    // Vérifier si c'est une demande de clonage d'une autre page
+    const promptToCheck = finalPrompt || prompt || aiPrompt || "";
+    if (promptToCheck.includes("Clone another page:")) {
+      const anotherPageMatch = promptToCheck.match(
+        /Clone another page:\s*(https?:\/\/[^\s]+)/,
       );
       if (anotherPageMatch && anotherPageMatch[1]) {
         const requestedUrl = anotherPageMatch[1];
@@ -981,6 +982,9 @@ const validateRequest = async (
           );
         }
       }
+    } else {
+      // Sinon, utiliser directement chat.clone_url de la base de données
+      urlToClone = chat.clone_url;
     }
   }
 
