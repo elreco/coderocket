@@ -6,7 +6,6 @@ import {
   Paintbrush,
   WandSparkles,
   RefreshCw,
-  CheckCircle,
   Loader,
   Loader2,
   Settings,
@@ -42,11 +41,7 @@ import { cn, truncateMiddle } from "@/lib/utils";
 import { Tables } from "@/types_db";
 import {
   ChatFile,
-  ContentChunk,
-  extractDirectFiles,
   extractFilesFromCompletion,
-  hasArtifacts,
-  splitContentIntoChunks,
   createContinuePrompt,
   categorizeFiles,
 } from "@/utils/completion-parser";
@@ -66,7 +61,6 @@ import GithubSync from "./(settings)/github-sync";
 import IntegrationsContent from "./(settings)/integrations-content";
 import SettingsContent from "./(settings)/settings-content";
 import { improvePromptByChatId } from "./actions";
-import { ChunkReader } from "./chunk-reader";
 import ComponentChatFiles from "./component-chat-files";
 import { ComponentSidebarSkeleton } from "./component-sidebar-skeleton";
 import { Markdown } from "./markdown";
@@ -97,6 +91,7 @@ export default function ComponentSidebar({
     fetchedChat,
     sidebarTab: activeTab,
     setSidebarTab: setActiveTab,
+    isScrapingWebsite,
     setIsScrapingWebsite,
     setIsContinuingFromLengthError,
     connectedUser,
@@ -108,10 +103,8 @@ export default function ComponentSidebar({
   const [isLoaderVisible, setLoaderVisible] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
   const currentVersionRef = useRef<HTMLDivElement | null>(null);
-  const [streamingChunks, setStreamingChunks] = useState<ContentChunk[]>([]);
   const [hasImproved, setHasImproved] = useState(false);
   const [isImprovingLoading, setIsImprovingLoading] = useState(false);
-  const [chatFiles, setChatFiles] = useState<ChatFile[]>([]);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
@@ -165,15 +158,6 @@ export default function ComponentSidebar({
     | null
   >(null);
   const [isLoadingSubscription, setIsLoadingSubscription] = useState(true);
-  const [scrapingStatus, setScrapingStatus] = useState<{
-    progress: number;
-    screenshot?: string | null;
-    error?: string | null;
-  }>({
-    progress: 0,
-    screenshot: null,
-    error: null,
-  });
   const [isCloneAnotherPageActive, setIsCloneAnotherPageActive] =
     useState(false);
   const [currentCloneUrl, setCurrentCloneUrl] = useState<string | null>(null);
@@ -210,6 +194,19 @@ export default function ComponentSidebar({
   }, [connectedUser]);
 
   const submitPrompt = (promptText: string) => {
+    // Activer isScrapingWebsite si le prompt contient "Clone this website" ou "Clone another page"
+    const isClonePrompt =
+      promptText.toLowerCase().includes("clone this website") ||
+      promptText.toLowerCase().includes("clone another page") ||
+      promptText.toLowerCase().includes("clone another page:");
+    if (isClonePrompt) {
+      setIsScrapingWebsite(true);
+      // Extraire l'URL du prompt si elle existe
+      const urlMatch = promptText.match(/https?:\/\/[^\s]+/);
+      if (urlMatch) {
+        setCurrentCloneUrl(urlMatch[0]);
+      }
+    }
     handleSubmitToAI(promptText);
     setActiveTab("chat");
   };
@@ -238,6 +235,21 @@ export default function ComponentSidebar({
     }
 
     setIsContinuingFromLengthError(false);
+
+    // Activer isScrapingWebsite si le prompt contient "Clone this website" ou "Clone another page"
+    const isClonePrompt =
+      input.toLowerCase().includes("clone this website") ||
+      input.toLowerCase().includes("clone another page") ||
+      input.toLowerCase().includes("clone another page:");
+    if (isClonePrompt) {
+      setIsScrapingWebsite(true);
+      // Extraire l'URL du prompt si elle existe
+      const urlMatch = input.match(/https?:\/\/[^\s]+/);
+      if (urlMatch) {
+        setCurrentCloneUrl(urlMatch[0]);
+      }
+    }
+
     submitPrompt(input);
   };
 
@@ -300,96 +312,8 @@ export default function ComponentSidebar({
     }
   };
 
-  const containsIncompleteTag = (text: string): boolean => {
-    const openingTags = ["<coderocketArtifact", "<coderocketFile"];
-    const closingTags = ["</coderocketArtifact>", "</coderocketFile>"];
-
-    for (let i = 0; i < openingTags.length; i++) {
-      const openTag = openingTags[i];
-      const closeTag = closingTags[i];
-
-      if (text.includes(openTag) && !text.includes(closeTag)) {
-        return true;
-      }
-
-      if (
-        text.includes("<") &&
-        text.includes("/") &&
-        closeTag.startsWith(text.substring(text.lastIndexOf("<")))
-      ) {
-        return true;
-      }
-    }
-
-    for (const tag of [...openingTags, ...closingTags]) {
-      for (let i = 3; i < tag.length; i++) {
-        const fragment = tag.substring(0, i);
-        if (text.endsWith(fragment)) {
-          return true;
-        }
-      }
-    }
-
-    return false;
-  };
-
-  useEffect(() => {
-    if (isLoading && completion) {
-      // Extraction unique des fichiers
-      let extractedFiles: ChatFile[] = [];
-      let newChunks: ContentChunk[] = [];
-
-      // Vérifier d'abord les balises coderocketFile directement
-      if (completion.includes("<coderocketFile")) {
-        extractedFiles = extractDirectFiles(completion);
-
-        // Si des fichiers ont été extraits directement sans artifact, créer un "faux" artifact
-        if (
-          extractedFiles.length > 0 &&
-          !completion.includes("<coderocketArtifact")
-        ) {
-          const artificialArtifact = `<coderocketArtifact title="Generated Files">
-${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}">${file.content}</coderocketFile>`).join("\n")}
-</coderocketArtifact>`;
-
-          newChunks = [
-            {
-              type: "artifact",
-              content: artificialArtifact,
-            },
-          ];
-        } else {
-          // Sinon utiliser le découpage standard
-          newChunks = splitContentIntoChunks(completion);
-        }
-      } else {
-        // Pas de balises coderocketFile, utiliser le découpage standard
-        newChunks = splitContentIntoChunks(completion);
-
-        // Vérifier les artifacts comme avant
-        const hasArtifactResult = hasArtifacts(completion);
-        if (hasArtifactResult) {
-          extractedFiles = extractFilesFromCompletion(completion);
-        }
-      }
-
-      // Filtrer les chunks pour ne garder que ceux qui ne sont pas des fichiers
-      newChunks = newChunks.filter((chunk) => {
-        if (chunk.type === "artifact") return true;
-        if (chunk.type !== "text") return true;
-        if (chunk.content.includes("<coderocketFile")) return false;
-        if (containsIncompleteTag(chunk.content)) return false;
-        return true;
-      });
-
-      // Mettre à jour les états ensemble pour éviter les sauts
-      setStreamingChunks(newChunks);
-      setChatFiles(extractedFiles);
-    } else if (!isLoading) {
-      setStreamingChunks([]);
-      setChatFiles([]);
-    }
-  }, [completion, isLoading]);
+  // Le parsing du contenu en streaming est maintenant géré par ComponentChatFiles
+  // Plus besoin de maintenir streamingChunks et chatFiles séparément
 
   const handleFileClick = (version: number) => {
     setActiveTab("chat");
@@ -489,49 +413,77 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
 
   const startScrapeSimulation = useCallback(() => {
     setIsScrapingWebsite(true);
-    setScrapingStatus({
-      progress: 5,
-      screenshot: null,
-      error: null,
-    });
-
-    let currentProgress = 5;
-    const intervalId = setInterval(() => {
-      currentProgress += Math.random() * 6 + 1;
-      if (currentProgress > 92) currentProgress = 92;
-      setScrapingStatus((prev) => ({
-        ...prev,
-        progress: currentProgress,
-        error: null,
-      }));
-    }, 900);
-
-    return intervalId;
+    // Plus besoin de simuler la progression, on affiche juste un message simple
+    return null;
   }, [setIsScrapingWebsite]);
 
+  // Détecter automatiquement les prompts de clonage et activer isScrapingWebsite
+  // Utiliser useRef pour éviter les boucles infinies
+  const hasActivatedScraping = useRef(false);
   useEffect(() => {
-    if (
-      fetchedChat?.clone_url &&
-      ((selectedVersion === -1 && isLoading) || isCloneAnotherPageActive) &&
-      isLoading
-    ) {
-      const intervalId = startScrapeSimulation();
+    // Activer immédiatement si c'est un prompt de clonage, même avant isLoading
+    if (input && !hasActivatedScraping.current) {
+      const isClonePrompt =
+        input.toLowerCase().includes("clone this website") ||
+        input.toLowerCase().includes("clone another page") ||
+        input.toLowerCase().includes("clone another page:");
+      if (isClonePrompt && !isScrapingWebsite) {
+        hasActivatedScraping.current = true;
+        setIsScrapingWebsite(true);
+        const urlMatch = input.match(/https?:\/\/[^\s]+/);
+        if (urlMatch) {
+          setCurrentCloneUrl(urlMatch[0]);
+        }
+      }
+    }
+    // Réinitialiser quand isLoading devient false
+    if (!isLoading) {
+      hasActivatedScraping.current = false;
+    }
+  }, [input, isLoading, isScrapingWebsite, setIsScrapingWebsite]);
+
+  useEffect(() => {
+    // Démarrer la simulation de scraping si isScrapingWebsite est activé
+    if (isScrapingWebsite && fetchedChat?.clone_url) {
+      startScrapeSimulation();
+
+      // Désactiver isScrapingWebsite après un délai raisonnable (scraping terminé)
+      // Le scraping côté serveur prend généralement 10-30 secondes
+      const scrapingTimeout = setTimeout(() => {
+        setIsScrapingWebsite(false);
+      }, 30000); // 30 secondes pour le scraping
 
       return () => {
-        if (intervalId) {
-          clearInterval(intervalId);
-          setIsScrapingWebsite(false);
-        }
+        clearTimeout(scrapingTimeout);
       };
     }
   }, [
+    isScrapingWebsite,
     fetchedChat?.clone_url,
-    selectedVersion,
-    isLoading,
     startScrapeSimulation,
-    isCloneAnotherPageActive,
     setIsScrapingWebsite,
   ]);
+
+  // Désactiver isScrapingWebsite dès qu'on a du contenu généré (le scraping est terminé)
+  // Utiliser useRef pour éviter les boucles infinies
+  const hasDeactivatedScraping = useRef(false);
+  useEffect(() => {
+    if (
+      isScrapingWebsite &&
+      isLoading &&
+      completion &&
+      completion.length > 50 &&
+      !hasDeactivatedScraping.current
+    ) {
+      // Si on a déjà du contenu généré (plus de 50 caractères), le scraping est terminé
+      hasDeactivatedScraping.current = true;
+      setIsScrapingWebsite(false);
+    }
+    // Réinitialiser quand isLoading devient false
+    if (!isLoading) {
+      hasDeactivatedScraping.current = false;
+    }
+  }, [isLoading, isScrapingWebsite, setIsScrapingWebsite, completion]);
 
   useEffect(() => {
     if (!isLoading && isCloneAnotherPageActive) {
@@ -540,17 +492,22 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
     }
   }, [isLoading, isCloneAnotherPageActive]);
 
-  useEffect(() => {
-    if (!isLoading) {
-      setIsScrapingWebsite(false);
-      setScrapingStatus((prev) => ({
-        progress: prev.progress >= 100 ? prev.progress : 100,
-        screenshot:
-          selectedAssistantMessage?.screenshot ?? prev.screenshot ?? null,
-        error: null,
-      }));
-    }
-  }, [isLoading, selectedAssistantMessage, setIsScrapingWebsite]);
+  // Ne pas désactiver isScrapingWebsite automatiquement quand isLoading devient false
+  // Il sera désactivé par les autres useEffect quand le scraping est vraiment terminé
+  // useEffect(() => {
+  //   if (!isLoading) {
+  //     setIsScrapingWebsite(false);
+  //   }
+  // }, [isLoading, setIsScrapingWebsite]);
+
+  console.log("🔍 SIDEBAR RENDER:", {
+    isScrapingWebsite,
+    isLoading,
+    selectedVersion,
+    completionLength: completion?.length || 0,
+    messagesCount: messages.length,
+    currentCloneUrl,
+  });
 
   return (
     <div
@@ -660,14 +617,204 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
               <ComponentSidebarSkeleton />
             </div>
           )}
-          {activeTab === "chat" &&
-            messages
-              .filter((m) => {
-                if (m.version !== selectedVersion) return false;
-                if (isLoading && m.role === "assistant") return false;
-                return true;
-              })
-              .map((m) => <ComponentChatFiles message={m} key={m.id} />)}
+          {activeTab === "chat" && (
+            <>
+              {messages
+                .filter((m) => {
+                  // Filtrer strictement par version - selectedVersion peut être 0, donc on doit vérifier explicitement
+                  if (selectedVersion === undefined || selectedVersion === null)
+                    return false;
+                  // S'assurer que les types correspondent (number vs number)
+                  const messageVersion = Number(m.version);
+                  const currentSelectedVersion = Number(selectedVersion);
+                  if (messageVersion !== currentSelectedVersion) return false;
+                  // Ne plus filtrer les messages assistant pendant le chargement
+                  // On va créer un message temporaire pour le streaming
+                  return true;
+                })
+                .map((m) => {
+                  // Si c'est un message assistant et qu'on a du contenu en streaming,
+                  // utiliser le contenu en streaming même après que isLoading devienne false
+                  // pour éviter d'afficher l'ancien message pendant la transition
+                  // On continue d'utiliser le streaming si:
+                  // 1. On est en train de charger (isLoading)
+                  // 2. Le completion est plus long que le contenu du message (nouveau contenu en streaming)
+                  // 3. Le contenu du message ne correspond pas au completion (ancien message)
+                  if (
+                    m.role === "assistant" &&
+                    Number(m.version) === Number(selectedVersion) &&
+                    completion &&
+                    completion.length > 0 &&
+                    (isLoading ||
+                      completion.length > (m.content?.length || 0) ||
+                      (m.content &&
+                        !completion.startsWith(m.content.substring(0, 100))))
+                  ) {
+                    // Créer un message temporaire avec le contenu en streaming
+                    // Ne pas inclure le screenshot et les tokens de l'ancien message pendant le streaming
+                    const streamingMessage = {
+                      ...m,
+                      content: completion,
+                      screenshot: null,
+                      input_tokens: null,
+                      output_tokens: null,
+                      version: selectedVersion ?? m.version,
+                    };
+                    return (
+                      <ComponentChatFiles
+                        message={streamingMessage}
+                        key={`streaming-${m.id}`}
+                      />
+                    );
+                  }
+
+                  // Ne pas afficher les messages assistant d'une autre version pendant le streaming
+                  if (
+                    m.role === "assistant" &&
+                    Number(m.version) !== Number(selectedVersion) &&
+                    isLoading &&
+                    completion &&
+                    completion.length > 0
+                  ) {
+                    return null;
+                  }
+
+                  // Ne pas afficher le message assistant pendant le scraping si on n'a pas encore de completion
+                  // Cela évite d'afficher l'ancien contenu pendant le scraping
+                  if (
+                    m.role === "assistant" &&
+                    isScrapingWebsite &&
+                    (!completion || completion.length === 0)
+                  ) {
+                    return null;
+                  }
+
+                  const result = <ComponentChatFiles message={m} key={m.id} />;
+
+                  const isClonePrompt =
+                    m.content?.toLowerCase().includes("clone this website") ||
+                    m.content?.toLowerCase().includes("clone another page");
+
+                  // Loader pour le clonage - s'affiche après le message utilisateur
+                  if (
+                    m.role === "user" &&
+                    isClonePrompt &&
+                    isScrapingWebsite &&
+                    (!completion || completion.length === 0)
+                  ) {
+                    return (
+                      <>
+                        {result}
+                        <div className="flex items-center justify-center py-8 px-3">
+                          <div className="flex flex-col items-center gap-3">
+                            <Loader className="text-primary size-6 animate-spin" />
+                            <p className="text-primary text-sm font-medium">
+                              Analyzing website...
+                            </p>
+                            {(currentCloneUrl ||
+                              fetchedChat?.clone_url ||
+                              (m.content &&
+                                (m.content.match(/https?:\/\/[^\s]+/) ||
+                                  [])[0])) && (
+                              <p className="text-muted-foreground text-xs">
+                                {truncateMiddle(
+                                  (
+                                    currentCloneUrl ||
+                                    fetchedChat?.clone_url ||
+                                    (m.content &&
+                                      (m.content.match(/https?:\/\/[^\s]+/) ||
+                                        [])[0]) ||
+                                    ""
+                                  )
+                                    .replace(/^https?:\/\/(www\.)?/i, "")
+                                    .replace(/\/$/, ""),
+                                  40,
+                                )}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </>
+                    );
+                  }
+
+                  // Loader pour les cas normaux (non-cloning)
+                  if (
+                    m.role === "user" &&
+                    !isClonePrompt &&
+                    isLoading &&
+                    (!completion || completion.length === 0)
+                  ) {
+                    return (
+                      <>
+                        {result}
+                        <div className="flex items-center justify-center py-8 px-3">
+                          <div className="flex flex-col items-center gap-3">
+                            <Loader className="text-primary size-6 animate-spin" />
+                            <p className="text-primary text-sm font-medium">
+                              Generating component...
+                            </p>
+                          </div>
+                        </div>
+                      </>
+                    );
+                  }
+
+                  return result;
+                })}
+              {/* Afficher un message temporaire si on génère mais qu'il n'y a pas encore de message assistant */}
+              {isLoading &&
+                completion &&
+                completion.length > 0 &&
+                !messages.some(
+                  (m) =>
+                    m.role === "assistant" &&
+                    Number(m.version) === Number(selectedVersion),
+                ) && (
+                  <ComponentChatFiles
+                    message={
+                      {
+                        id: 0,
+                        chat_id: chatId,
+                        version: selectedVersion || -1,
+                        role: "assistant",
+                        content: completion,
+                        created_at: new Date().toISOString(),
+                        input_tokens: null,
+                        output_tokens: null,
+                        screenshot: null,
+                        theme: null,
+                        artifact_code: null,
+                        build_error: null,
+                        selected_element: null,
+                        prompt_image: null,
+                        files: null,
+                        subscription_type: null,
+                        cache_creation_input_tokens: null,
+                        cache_read_input_tokens: null,
+                        cost_usd: null,
+                        model_used: null,
+                        migrations_executed: null,
+                        clone_another_page: null,
+                        is_built: false,
+                        is_github_pull: false,
+                        migration_executed_at: null,
+                        chats: {
+                          user: user as Tables<"users">,
+                          prompt_image: null,
+                        },
+                      } as Tables<"messages"> & {
+                        chats: {
+                          user: Tables<"users">;
+                          prompt_image: string | null;
+                        };
+                      }
+                    }
+                    key="streaming-temp"
+                  />
+                )}
+            </>
+          )}
           {activeTab === "history" && (
             <div className="flex flex-col gap-2 p-3">
               {!isLoading &&
@@ -715,7 +862,7 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
                                     {user?.full_name}
                                   </span>
                                   <span className="text-muted-foreground text-xs">
-                                    Version #{m.version}
+                                    Version #{m.version > -1 ? m.version : 0}
                                   </span>
                                 </div>
                               </div>
@@ -798,259 +945,9 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
             )}
           >
             <div className="flex w-full flex-col gap-2 overflow-x-auto p-3 text-sm wrap-break-word">
-              {input && (
-                <div className="flex items-center">
-                  <Avatar className="mr-2 size-10 rounded-none">
-                    <AvatarImage src="/logo-white.png" />
-                    <AvatarFallback>T</AvatarFallback>
-                  </Avatar>
-                  <div className="ml-2 flex flex-col items-start">
-                    <h2
-                      className={cn(
-                        "group-hover:text-primary text-lg font-semibold transition-all",
-                      )}
-                    >
-                      Generating version...
-                    </h2>
-                    <p className="text-muted-foreground text-xs">
-                      {getRelativeDate(new Date().toISOString())}
-                    </p>
-                  </div>
-                </div>
-              )}
-              {fetchedChat?.clone_url &&
-                ((selectedVersion === -1 && isLoading) ||
-                  isCloneAnotherPageActive) && (
-                  <div className="border-primary/30 bg-primary/10 mt-2 mb-4 flex flex-col gap-3 rounded-lg border p-4 text-sm">
-                    <div className="flex items-center">
-                      {!isLoading ? (
-                        <CheckCircle className="mr-2 size-5 text-green-500" />
-                      ) : (
-                        <Loader className="text-primary mr-2 size-5 animate-spin" />
-                      )}
-                      {!isLoading ? (
-                        <p className="font-medium text-green-600">
-                          Website{" "}
-                          {truncateMiddle(
-                            (currentCloneUrl || fetchedChat.clone_url)
-                              .replace(/^https?:\/\/(www\.)?/i, "")
-                              .replace(/\/$/, ""),
-                            35,
-                          )}{" "}
-                          analyzed
-                        </p>
-                      ) : (
-                        <p className="text-primary font-medium">
-                          Scraping{" "}
-                          {truncateMiddle(
-                            (currentCloneUrl || fetchedChat.clone_url)
-                              .replace(/^https?:\/\/(www\.)?/i, "")
-                              .replace(/\/$/, ""),
-                            35,
-                          )}
-                        </p>
-                      )}
-                    </div>
-                    {isLoading ? (
-                      <p className="ml-2 text-xs text-orange-500">
-                        This may take a while
-                      </p>
-                    ) : null}
-
-                    {scrapingStatus.error && (
-                      <div className="mt-2 rounded-lg border border-red-400/30 bg-red-500/10 p-2 text-xs">
-                        <p className="font-medium text-red-600">
-                          Analysis encountered an issue:
-                        </p>
-                        <p className="text-muted-foreground">
-                          {scrapingStatus.error}
-                        </p>
-                        <p className="mt-1 text-xs">
-                          Using fallback analysis methods instead.
-                        </p>
-                      </div>
-                    )}
-
-                    {!scrapingStatus.error && (
-                      <>
-                        <div className="bg-primary/10 relative h-2 w-full overflow-hidden rounded-full">
-                          <div
-                            className="from-primary to-primary/80 h-full bg-linear-to-r transition-all duration-1000 ease-in-out"
-                            style={{ width: `${scrapingStatus.progress}%` }}
-                          >
-                            <div className="absolute inset-0 animate-pulse bg-linear-to-r from-transparent via-white/20 to-transparent" />
-                          </div>
-                        </div>
-
-                        <div className="mt-3 flex flex-col gap-2">
-                          {[
-                            {
-                              progress: 0,
-                              label: "Initializing scraper",
-                              detail: "Connecting to website...",
-                              icon: "⚙️",
-                            },
-                            {
-                              progress: 20,
-                              label: "Loading page",
-                              detail: "Fetching HTML & assets...",
-                              icon: "🌐",
-                            },
-                            {
-                              progress: 40,
-                              label: "Extracting content",
-                              detail: "Analyzing structure & text...",
-                              icon: "📄",
-                            },
-                            {
-                              progress: 60,
-                              label: "Capturing design",
-                              detail: "Colors, fonts & layout...",
-                              icon: "🎨",
-                            },
-                            {
-                              progress: 80,
-                              label: "Taking screenshot",
-                              detail: "Visual reference...",
-                              icon: "📸",
-                            },
-                            {
-                              progress: 95,
-                              label: "Finalizing",
-                              detail: "Preparing for AI...",
-                              icon: "✨",
-                            },
-                          ].map((step, index) => {
-                            const nextStepProgress =
-                              [20, 40, 60, 80, 95, 100][index] || 100;
-                            const isActive =
-                              scrapingStatus.progress >= step.progress &&
-                              scrapingStatus.progress < nextStepProgress;
-                            const isCompleted =
-                              scrapingStatus.progress >= nextStepProgress;
-
-                            return (
-                              <div
-                                key={step.label}
-                                className={cn(
-                                  "flex items-start gap-3 rounded-lg border p-2.5 transition-all duration-700 ease-in-out",
-                                  isActive &&
-                                    "border-primary/40 bg-primary/5 scale-[1.01] shadow-xs",
-                                  isCompleted &&
-                                    "border-green-500/30 bg-green-500/5 opacity-70",
-                                  !isActive &&
-                                    !isCompleted &&
-                                    "border-border/50 opacity-50",
-                                )}
-                              >
-                                <div
-                                  className={cn(
-                                    "flex size-7 shrink-0 items-center justify-center rounded-full text-sm transition-all",
-                                    isActive && "bg-primary/20 animate-pulse",
-                                    isCompleted && "bg-primary/10",
-                                    !isActive && !isCompleted && "bg-muted/50",
-                                  )}
-                                >
-                                  {isCompleted ? (
-                                    <svg
-                                      className="text-primary size-4"
-                                      fill="none"
-                                      viewBox="0 0 24 24"
-                                      stroke="currentColor"
-                                    >
-                                      <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M5 13l4 4L19 7"
-                                      />
-                                    </svg>
-                                  ) : (
-                                    <span>{step.icon}</span>
-                                  )}
-                                </div>
-                                <div className="flex-1 pt-0.5">
-                                  <p
-                                    className={cn(
-                                      "text-xs font-medium transition-colors",
-                                      isActive && "text-foreground",
-                                      !isActive && "text-muted-foreground",
-                                    )}
-                                  >
-                                    {step.label}
-                                  </p>
-                                  <p
-                                    className={cn(
-                                      "text-xs transition-colors",
-                                      isActive && "text-muted-foreground",
-                                      !isActive && "text-muted-foreground/60",
-                                    )}
-                                  >
-                                    {step.detail}
-                                  </p>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </>
-                    )}
-
-                    {scrapingStatus.screenshot && !scrapingStatus.error && (
-                      <div className="border-primary/20 bg-primary/5 mt-4 overflow-hidden rounded-lg border p-3">
-                        <p className="text-foreground mb-2 flex items-center gap-2 text-xs font-semibold">
-                          <svg
-                            className="text-primary size-4"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                            />
-                          </svg>
-                          Visual Reference Captured
-                        </p>
-                        <div className="border-border overflow-hidden rounded-md border">
-                          <img
-                            src={
-                              scrapingStatus.screenshot.startsWith("http")
-                                ? scrapingStatus.screenshot
-                                : `data:image/jpeg;base64,${scrapingStatus.screenshot}`
-                            }
-                            alt="Website screenshot"
-                            className="h-auto w-full"
-                            onError={() => {
-                              console.error("Screenshot load error");
-                            }}
-                          />
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
+              {/* Le contenu du chat est maintenant géré dans la section activeTab === "chat" */}
             </div>
-            {isLoading && (
-              <div className="flex flex-col px-3 pb-1 transition-all">
-                <ChunkReader
-                  chunks={streamingChunks}
-                  files={chatFiles}
-                  handleFileClick={handleFileClick}
-                  chatId={chatId}
-                  messageId={0}
-                />
-              </div>
-            )}
-            <div className="flex flex-col px-3 pb-1">
-              <div className="mt-2 flex gap-1">
-                <span className="bg-foreground/50 size-2 animate-[typing_1s_ease-in-out_infinite] rounded-full"></span>
-                <span className="bg-foreground/50 size-2 animate-[typing_1s_ease-in-out_infinite] rounded-full delay-300"></span>
-                <span className="bg-foreground/50 size-2 animate-[typing_1s_ease-in-out_infinite] rounded-full delay-600"></span>
-              </div>
-            </div>
+            {/* Le loader de typing est maintenant géré par ComponentChatFiles */}
           </div>
         </div>
         {activeTab === "chat" && (
@@ -1179,7 +1076,9 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
                               isLoading ||
                               isLengthError ||
                               !!buildError ||
-                              files.length >= maxImagesUpload
+                              files.length >= maxImagesUpload ||
+                              (loadingState !== null &&
+                                loadingState !== "error")
                             }
                             handleButtonClick={handleButtonClick}
                             handleImageChange={handleFileChange}
@@ -1320,7 +1219,11 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
                           />
                           <FigmaImportButton
                             disabled={
-                              isLoading || isLengthError || !!buildError
+                              isLoading ||
+                              isLengthError ||
+                              !!buildError ||
+                              (loadingState !== null &&
+                                loadingState !== "error")
                             }
                             framework={selectedFramework}
                             subscription={subscription}
@@ -1333,18 +1236,19 @@ ${extractedFiles.map((file) => `<coderocketFile name="${file.name || "unnamed"}"
                             <CloneAnotherPageButton
                               originalUrl={fetchedChat.clone_url}
                               disabled={
-                                isLoading || isLengthError || !!buildError
+                                isLoading ||
+                                isLengthError ||
+                                !!buildError ||
+                                (loadingState !== null &&
+                                  loadingState !== "error")
                               }
                               onSubmit={(url) => {
                                 const clonePrompt = `Clone another page: ${url}`;
                                 setInput(clonePrompt);
                                 setIsCloneAnotherPageActive(true);
                                 setCurrentCloneUrl(url);
-                                setScrapingStatus({
-                                  progress: 0,
-                                  screenshot: null,
-                                  error: null,
-                                });
+                                // Activer immédiatement le scraping
+                                setIsScrapingWebsite(true);
                                 submitPrompt(clonePrompt);
                               }}
                             />

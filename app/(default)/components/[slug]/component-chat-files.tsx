@@ -20,6 +20,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { UserWidget } from "@/components/user-widget";
+import { useBuilder } from "@/context/builder-context";
 import {
   useComponentContext,
   SelectedElementData,
@@ -54,6 +55,7 @@ export default function ComponentChatFiles({
   };
 }) {
   const { toast } = useToast();
+  const { loadingState } = useBuilder();
   const {
     authorized,
     messages,
@@ -122,9 +124,17 @@ export default function ComponentChatFiles({
     // NOUVEAU: Fonction pour vérifier si un texte contient des balises incomplètes
     const containsIncompleteTag = (text: string): boolean => {
       // Vérifier s'il y a une balise ouvrante sans balise fermante correspondante
-      const openingTags = ["<coderocketArtifact", "<coderocketFile"];
+      const openingTags = [
+        "<coderocketArtifact",
+        "<coderocketFile",
+        "<thinking",
+      ];
 
-      const closingTags = ["</coderocketArtifact>", "</coderocketFile>"];
+      const closingTags = [
+        "</coderocketArtifact>",
+        "</coderocketFile>",
+        "</thinking>",
+      ];
 
       // Vérifier chaque paire de balises
       for (let i = 0; i < openingTags.length; i++) {
@@ -212,7 +222,59 @@ export default function ComponentChatFiles({
       return false;
     };
 
+    // D'abord nettoyer le contenu, puis filtrer
     contentChunks = contentChunks
+      .map((chunk) => {
+        if (chunk.type === "text") {
+          let cleanedContent = chunk.content;
+
+          // Supprimer les commentaires FINISH_REASON
+          if (cleanedContent.includes("<!-- FINISH_REASON:")) {
+            cleanedContent = cleanedContent
+              .replace(/<!--\s*FINISH_REASON:[^>]*-->/g, "")
+              .trim();
+          }
+
+          // Supprimer toutes les balises thinking (complètes ou incomplètes)
+          // et tous les fragments de balise thinking en cours d'écriture
+          cleanedContent = cleanedContent
+            .replace(/<thinking[^>]*>[\s\S]*?<\/thinking>/g, "")
+            .replace(/<thinking[^>]*>[\s\S]*$/g, "")
+            .replace(/<thinking[^>]*>/g, "")
+            .replace(/<\/thinking>/g, "")
+            .replace(/<thinking[\s\S]*$/g, "")
+            .replace(/<thinkin[\s\S]*$/g, "")
+            .replace(/<thinki[\s\S]*$/g, "")
+            .replace(/<think[\s\S]*$/g, "")
+            .replace(/<thin[\s\S]*$/g, "")
+            .replace(/<thi[\s\S]*$/g, "");
+
+          // Supprimer toutes les balises coderocket du texte (même incomplètes)
+          // et tous les fragments de balise coderocket en cours d'écriture
+          cleanedContent = cleanedContent
+            .replace(/<coderocket[^>]*>[\s\S]*?<\/coderocket[^>]*>/g, "")
+            .replace(/<coderocket[^>]*>[\s\S]*$/g, "")
+            .replace(/<coderocket[^>]*>/g, "")
+            .replace(/<\/coderocket[^>]*>/g, "")
+            .replace(/<coderocket[\s\S]*$/g, "")
+            .replace(/<coderocke[\s\S]*$/g, "")
+            .replace(/<coderock[\s\S]*$/g, "")
+            .replace(/<coderoc[\s\S]*$/g, "")
+            .replace(/<codero[\s\S]*$/g, "")
+            .replace(/<coder[\s\S]*$/g, "")
+            .replace(/<code[\s\S]*$/g, "")
+            .replace(/<cod[\s\S]*$/g, "")
+            .replace(/<co[\s\S]*$/g, "");
+
+          cleanedContent = cleanedContent.trim();
+
+          return {
+            ...chunk,
+            content: cleanedContent,
+          };
+        }
+        return chunk;
+      })
       .filter((chunk) => {
         if (chunk.type !== "text") {
           if (
@@ -224,11 +286,13 @@ export default function ComponentChatFiles({
           return true;
         }
 
-        if (chunk.content.includes("<!-- FINISH_REASON:")) {
+        // Filtrer les chunks de texte vides après nettoyage
+        if (!chunk.content || chunk.content.length === 0) {
           return false;
         }
 
-        if (isLoading && containsIncompleteTag(chunk.content)) {
+        // Filtrer si contient encore des balises incomplètes après nettoyage
+        if (containsIncompleteTag(chunk.content)) {
           return false;
         }
 
@@ -236,24 +300,6 @@ export default function ComponentChatFiles({
           return false;
         }
 
-        return true;
-      })
-      .map((chunk) => {
-        if (chunk.type === "text") {
-          const cleanedContent = chunk.content
-            .replace(/<thinking>[\s\S]*?<\/thinking>/g, "")
-            .trim();
-          return {
-            ...chunk,
-            content: cleanedContent,
-          };
-        }
-        return chunk;
-      })
-      .filter((chunk) => {
-        if (chunk.type === "text" && !chunk.content) {
-          return false;
-        }
         return true;
       });
 
@@ -496,7 +542,25 @@ ${extractedFiles
                       "order" in item &&
                       typeof item.order === "number",
                   );
-                  return fileItems.sort((a, b) => a.order - b.order);
+                  // Ne pas afficher le screenshot du clone original (version 0) pour les versions > 0
+                  // Mais afficher le screenshot d'une autre page clonée pour sa version
+                  const filteredItems = fileItems.filter((item) => {
+                    if (item.source === "clone") {
+                      // Si c'est la version 0, toujours afficher
+                      if (message.version === 0) {
+                        return true;
+                      }
+                      // Pour les versions > 0, vérifier si le message a clone_another_page
+                      // Si oui, c'est un nouveau clone et on doit l'afficher
+                      if (message.clone_another_page) {
+                        return true;
+                      }
+                      // Sinon, c'est le screenshot du clone original et on ne l'affiche pas
+                      return false;
+                    }
+                    return true;
+                  });
+                  return filteredItems.sort((a, b) => a.order - b.order);
                 }
                 return message.prompt_image
                   ? [{ url: message.prompt_image, order: 0 }]
@@ -522,7 +586,7 @@ ${extractedFiles
                 <div className="ml-2 flex flex-col items-start">
                   <div className="flex items-center gap-2">
                     <h2 className={cn("text-lg font-semibold")}>
-                      Version #{message.version}
+                      Version #{message.version > -1 ? message.version : 0}
                     </h2>
                     {message.is_github_pull && (
                       <Badge variant="outline" className="h-5 text-xs">
@@ -552,6 +616,16 @@ ${extractedFiles
                     return null;
                   }
 
+                  // Vérifier si cette version ou une version supérieure est en train d'être buildée
+                  const isVersionBeingBuilt =
+                    isLoading &&
+                    selectedVersion !== undefined &&
+                    message.version <= selectedVersion;
+                  const isBuilding =
+                    loadingState !== null && loadingState !== "error";
+                  const isDisabled =
+                    isVersionBeingBuilt || isBuilding || isLoading;
+
                   return (
                     <AlertDialog
                       open={isAlertOpen || isDeleting}
@@ -562,7 +636,7 @@ ${extractedFiles
                           variant="destructive"
                           className="mt-2 p-2 text-xs"
                           size="sm"
-                          disabled={isLoading}
+                          disabled={isDisabled}
                         >
                           <Trash2 className="size-3" />
                           Delete version

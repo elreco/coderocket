@@ -918,11 +918,48 @@ export default function ComponentCompletion({
     setChatFiles([]);
     setCanvas(true);
     setCurrentGeneratingFile(null);
-    clearSelectedElement();
 
     const previousVersion = selectedVersion ?? 0;
     const newVersion = previousVersion + 1;
     setSelectedVersion(newVersion);
+
+    if (user && fetchedChat) {
+      const optimisticMessage: ChatMessage = {
+        id: -Date.now(),
+        chat_id: chatId,
+        content: inputData,
+        role: "user",
+        version: newVersion,
+        created_at: new Date().toISOString(),
+        artifact_code: null,
+        build_error: null,
+        screenshot: null,
+        prompt_image: null,
+        files: null,
+        input_tokens: null,
+        output_tokens: null,
+        subscription_type: null,
+        cache_creation_input_tokens: null,
+        cache_read_input_tokens: null,
+        selected_element: selectedElement || null,
+        cost_usd: null,
+        is_built: null,
+        is_github_pull: null,
+        migration_executed_at: null,
+        migrations_executed: null,
+        model_used: null,
+        theme: null,
+        clone_another_page: null,
+        chats: {
+          user: user,
+          prompt_image: null,
+          remix_chat_id: null,
+        },
+      };
+      setMessages((prev) => [...prev, optimisticMessage]);
+    }
+
+    clearSelectedElement();
 
     complete(inputData);
     setIsLoading(true);

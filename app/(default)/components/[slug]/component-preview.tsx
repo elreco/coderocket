@@ -95,6 +95,11 @@ export default function ComponentPreview() {
 
   const getInitialDisplayVersion = () => {
     if (selectedVersion === undefined) return undefined;
+    // Pour la première version, ne pas définir displayVersion initialement
+    // Il sera défini plus tard quand la version sera prête
+    if (selectedVersion === 0) {
+      return undefined;
+    }
     const isGenerating =
       isLoading || (loadingState && loadingState !== "error");
     if (selectedVersion > 0 && isGenerating) {
@@ -109,14 +114,42 @@ export default function ComponentPreview() {
   const [previousVersionHasError, setPreviousVersionHasError] =
     React.useState(false);
 
+  // Réinitialiser displayVersion à undefined quand on commence le scraping de la première version
+  React.useEffect(() => {
+    if (
+      isScrapingWebsite &&
+      (selectedVersion === 0 ||
+        selectedVersion === -1 ||
+        selectedVersion === undefined)
+    ) {
+      setDisplayVersion(undefined);
+      setPreviousVersionHasError(false);
+    }
+  }, [isScrapingWebsite, selectedVersion]);
+
   React.useEffect(() => {
     if (selectedVersion === undefined) return;
 
     const isGenerating =
       isLoading || (loadingState && loadingState !== "error");
 
+    // Pour la première version pendant le scraping, forcer displayVersion à undefined
+    // pour que le loader s'affiche
+    if (
+      isScrapingWebsite &&
+      (selectedVersion === 0 ||
+        selectedVersion === -1 ||
+        selectedVersion === undefined)
+    ) {
+      if (displayVersion !== undefined) {
+        setDisplayVersion(undefined);
+      }
+      return;
+    }
+
+    // Pour les versions > 0 (y compris pendant le scraping), définir displayVersion à la version précédente
     if (displayVersion === undefined) {
-      if (selectedVersion > 0 && isGenerating) {
+      if (selectedVersion > 0 && (isGenerating || isScrapingWebsite)) {
         const prevVersion = selectedVersion - 1;
         setDisplayVersion(prevVersion);
         const supabase = createClient();
@@ -134,12 +167,13 @@ export default function ComponentPreview() {
               data?.content?.includes("<!-- FINISH_REASON: error -->");
             setPreviousVersionHasError(!!hasError);
           });
-      } else if (!isGenerating) {
+      } else if (!isGenerating && !isScrapingWebsite) {
         setDisplayVersion(selectedVersion);
         setPreviousVersionHasError(false);
       }
     } else if (
       !isGenerating &&
+      !isScrapingWebsite &&
       displayVersion !== selectedVersion &&
       isWebcontainerReady
     ) {
@@ -153,6 +187,7 @@ export default function ComponentPreview() {
     loadingState,
     isWebcontainerReady,
     chatId,
+    isScrapingWebsite,
   ]);
 
   React.useEffect(() => {
@@ -210,23 +245,85 @@ export default function ComponentPreview() {
   }, [syncPreviewPath]);
   const isFirstGeneration = selectedVersion === 0;
   const isGenerating = isLoading || (loadingState && loadingState !== "error");
+
+  // Pour la première version pendant le scraping, afficher le loader
+  // Pour les versions > 0, on affiche l'iframe de la version précédente (pas le loader)
+  const isScrapingFirstVersion =
+    isScrapingWebsite &&
+    (selectedVersion === 0 ||
+      selectedVersion === -1 ||
+      selectedVersion === undefined);
+
   const shouldShowLoader =
-    isScrapingWebsite ||
-    isContinuingFromLengthError ||
-    (isFirstGeneration && isLoading) ||
-    (isFirstGeneration && loadingState && loadingState !== "error") ||
-    (isLengthError && isGenerating) ||
-    (!isFirstGeneration && isGenerating && previousVersionHasError);
+    isScrapingFirstVersion ||
+    (!isScrapingWebsite && isContinuingFromLengthError) ||
+    (!isScrapingWebsite && isFirstGeneration && isLoading) ||
+    (!isScrapingWebsite &&
+      isFirstGeneration &&
+      loadingState &&
+      loadingState !== "error") ||
+    (!isScrapingWebsite && isLengthError && isGenerating) ||
+    (!isScrapingWebsite &&
+      !isFirstGeneration &&
+      isGenerating &&
+      previousVersionHasError);
+
+  // Debug logs
+  React.useEffect(() => {
+    console.log("🔍 PREVIEW EFFECT:", {
+      isScrapingWebsite,
+      selectedVersion,
+      isLoading,
+      displayVersion,
+      isScrapingFirstVersion,
+      shouldShowLoader,
+      buildError: !!buildError,
+    });
+  }, [
+    isScrapingWebsite,
+    selectedVersion,
+    isLoading,
+    displayVersion,
+    isScrapingFirstVersion,
+    shouldShowLoader,
+    buildError,
+  ]);
+
+  // Forcer displayVersion à undefined pendant le scraping de la première version
+  React.useEffect(() => {
+    if (
+      isScrapingWebsite &&
+      (selectedVersion === 0 ||
+        selectedVersion === -1 ||
+        selectedVersion === undefined) &&
+      displayVersion !== undefined
+    ) {
+      setDisplayVersion(undefined);
+      setPreviousVersionHasError(false);
+    }
+  }, [isScrapingWebsite, selectedVersion, displayVersion]);
   const isGeneratingNewVersion =
     !isFirstGeneration &&
     !isLengthError &&
     (isLoading || (loadingState && loadingState !== "error"));
   const previewPathSuffix = previewPath === "/" ? "" : previewPath;
 
+  console.log("🔍 PREVIEW RENDER:", {
+    isScrapingFirstVersion,
+    isScrapingWebsite,
+    selectedVersion,
+    isLoading,
+    displayVersion,
+    isFirstGeneration,
+    shouldShowLoader,
+  });
+
   return (
     <>
       {shouldShowLoader && !buildError && (
-        <LoadingStateComponent state={loadingState || "processing"} />
+        <div className="relative size-full z-50">
+          <LoadingStateComponent state={loadingState || "processing"} />
+        </div>
       )}
 
       {buildError && (

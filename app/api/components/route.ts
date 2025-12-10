@@ -357,6 +357,16 @@ export async function POST(req: Request) {
         subscription.prices?.products?.name?.toLowerCase() || "trial";
     }
 
+    // Déterminer si c'est un clonage d'une autre page
+    const isCloneAnotherPage = userPromptForDisplay.includes(
+      "Clone another page:",
+    );
+    const cloneAnotherPageUrl = isCloneAnotherPage
+      ? userPromptForDisplay.match(
+          /Clone another page:\s*(https?:\/\/[^\s]+)/,
+        )?.[1] || null
+      : null;
+
     if (version > 0) {
       const { error: insertError } = await supabase.from("messages").insert({
         chat_id: id,
@@ -371,6 +381,7 @@ export async function POST(req: Request) {
         cache_creation_input_tokens: 0,
         cache_read_input_tokens: 0,
         selected_element: selectedElement,
+        clone_another_page: cloneAnotherPageUrl,
       });
 
       if (insertError) {
@@ -403,6 +414,7 @@ export async function POST(req: Request) {
           styles?: Record<string, string>;
           filePath?: string;
         } | null;
+        clone_another_page?: string | null;
       } = {
         version,
         prompt_image:
@@ -421,6 +433,7 @@ export async function POST(req: Request) {
               }[]) || [],
         subscription_type: subscriptionType,
         selected_element: selectedElement,
+        clone_another_page: cloneAnotherPageUrl,
       };
 
       const { error: updateError } = await supabase
