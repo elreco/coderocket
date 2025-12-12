@@ -32,6 +32,7 @@ import {
 import { toast } from "@/hooks/use-toast";
 import { Tables } from "@/types_db";
 import { avatarApi } from "@/utils/config";
+import { createClient } from "@/utils/supabase/client";
 
 export function NavUser({
   user,
@@ -54,6 +55,8 @@ export function NavUser({
       return;
     }
     if (result.success) {
+      const supabase = createClient();
+      await supabase.auth.signOut();
       toast({
         title: "Success",
         description: "Logged out successfully!",

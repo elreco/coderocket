@@ -2,8 +2,8 @@
 
 import { LucideLogIn, LucideUserPlus } from "lucide-react";
 
-import { cn } from "@/lib/utils";
 import { useAuthModal } from "@/hooks/use-auth-modal";
+import { cn } from "@/lib/utils";
 
 import { Button } from "./ui/button";
 import { useSidebar } from "./ui/sidebar";

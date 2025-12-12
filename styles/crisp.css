@@ -1,6 +1,7 @@
-#crisp-chatbox > div > a {
-  right: 5px !important;
-  top: 5px !important;
-  bottom: 0px !important;
-  max-height: 0 !important;
+#crisp-chatbox {
+  z-index: 9999 !important;
+}
+
+#crisp-chatbox[data-hidden="true"] {
+  display: none !important;
 }

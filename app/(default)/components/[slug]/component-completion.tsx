@@ -2,7 +2,6 @@
 
 import { useCompletion } from "@ai-sdk/react";
 import { SiThreads } from "@icons-pack/react-simple-icons";
-import { Crisp } from "crisp-sdk-web";
 import { format } from "date-fns";
 import {
   Fullscreen,
@@ -86,7 +85,7 @@ import {
   extractFilesFromCompletion,
   getUpdatedArtifactCode,
 } from "@/utils/completion-parser";
-import { Framework, crispWebsiteId } from "@/utils/config";
+import { Framework } from "@/utils/config";
 import { defaultArtifactCode } from "@/utils/default-artifact-code";
 import { ROCKET_LIMITS_PER_PLAN } from "@/utils/rocket-conversion";
 import { getArtifactCodeByVersion } from "@/utils/supabase/artifact-helpers";
@@ -1265,10 +1264,8 @@ export default function ComponentCompletion({
   });
 
   useEffect(() => {
-    Crisp.configure(crispWebsiteId);
-
-    if (isModalOpen) {
-      Crisp.chat.hide();
+    if (isModalOpen && typeof window !== "undefined" && window.closeCrispChat) {
+      window.closeCrispChat();
     }
   }, [isModalOpen]);
 

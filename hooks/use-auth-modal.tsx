@@ -16,7 +16,9 @@ const AuthModalContext = createContext<AuthModalState | undefined>(undefined);
 
 export function AuthModalProvider({ children }: { children: ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [mode, setMode] = useState<"login" | "signup" | "magic-link" | null>(null);
+  const [mode, setMode] = useState<"login" | "signup" | "magic-link" | null>(
+    null,
+  );
   const [redirectTo, setRedirectTo] = useState<string | undefined>(undefined);
 
   const openLogin = (redirect?: string) => {
@@ -67,4 +69,3 @@ export function useAuthModal() {
   }
   return context;
 }
-

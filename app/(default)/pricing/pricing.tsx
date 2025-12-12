@@ -175,9 +175,7 @@ export default function Pricing({ user, products, subscription }: Props) {
               variant="default"
               type="button"
               disabled={false}
-              onClick={() =>
-                user ? router.push("/account") : openSignup()
-              }
+              onClick={() => (user ? router.push("/account") : openSignup())}
               className="mt-12 block w-full rounded-full text-white"
             >
               {user ? "Manage" : "Sign up"}

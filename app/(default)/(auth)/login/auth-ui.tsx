@@ -10,6 +10,8 @@ import { Label } from "@/components/ui/label";
 import { useAuthModal } from "@/hooks/use-auth-modal";
 import { toast } from "@/hooks/use-toast";
 
+import { broadcastAuthEvent } from "@/utils/auth-broadcast";
+
 import { login, signInWithOAuth } from "../actions";
 
 interface AuthUIProps {
@@ -47,15 +49,15 @@ export default function AuthUI({
       return;
     }
     if (result?.success || !result?.error) {
+      broadcastAuthEvent("SIGNED_IN");
       toast({
         title: "Success",
         description: "Logged in successfully!",
       });
       if (onSuccess) {
         onSuccess();
-      } else {
-        router.refresh();
       }
+      router.refresh();
       return;
     }
   };

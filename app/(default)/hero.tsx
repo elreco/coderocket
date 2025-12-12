@@ -336,6 +336,8 @@ export default function Hero({
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showCloneModal, setShowCloneModal] = useState(false);
   const [agreeToTerms, setAgreeToTerms] = useState(false);
+  const [showUrlInPromptModal, setShowUrlInPromptModal] = useState(false);
+  const [shouldContinueWithUrl, setShouldContinueWithUrl] = useState(false);
   const [userIntegrations, setUserIntegrations] = useState<UserIntegration[]>(
     [],
   );
@@ -468,8 +470,10 @@ export default function Hero({
           setUserIntegrations([]);
           setSelectedIntegration(null);
           setSubscription(null);
+          setIsLoadingSubscription(false);
         } else if (event === "SIGNED_IN" && session?.user) {
           setIsLoggedIn(true);
+          setIsLoadingSubscription(true);
           try {
             const sub = await getSubscription(session.user.id);
             setSubscription(sub);
@@ -492,6 +496,8 @@ export default function Hero({
             setSubscription(null);
             setUserIntegrations([]);
             setSelectedIntegration(null);
+          } finally {
+            setIsLoadingSubscription(false);
           }
         }
       },
@@ -568,18 +574,23 @@ export default function Hero({
     return null;
   };
 
+  const containsUrl = (text: string): boolean => {
+    const urlPattern =
+      /(https?:\/\/[^\s]+|www\.[^\s]+|[a-zA-Z0-9-]+\.[a-zA-Z]{2,}[^\s]*)/gi;
+    return urlPattern.test(text);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const { data } = await supabase.auth.getSession();
-    if (!data?.session?.user?.id) {
+    if (!isLoggedIn) {
       toast({
         title: "Login required",
         description:
           "Sign in to start generating amazing UI components with AI!",
         action: (
           <button
-            onClick={openLogin}
+            onClick={() => openLogin()}
             className="bg-primary text-primary-foreground inline-flex h-8 items-center justify-center rounded-md px-3 text-xs font-medium"
           >
             Login
@@ -597,9 +608,8 @@ export default function Hero({
       finalPrompt = `Clone this website: ${websiteUrl}`;
     }
 
-    const aiPrompt = finalPrompt; // Prompt complet pour l'IA avec les détails techniques
+    const aiPrompt = finalPrompt;
 
-    // Add validation for empty prompt or url in clone mode
     if (generationMode === "scratch" && !prompt.trim()) {
       toast({
         variant: "destructive",
@@ -608,6 +618,17 @@ export default function Hero({
         duration: 4000,
       });
       return;
+    }
+
+    if (
+      generationMode === "scratch" &&
+      containsUrl(prompt) &&
+      !shouldContinueWithUrl
+    ) {
+      if (!showUrlInPromptModal) {
+        setShowUrlInPromptModal(true);
+        return;
+      }
     }
 
     if (generationMode === "clone") {
@@ -735,6 +756,7 @@ export default function Hero({
       return;
     }
     localStorage.removeItem("lastPrompt");
+    setShouldContinueWithUrl(false);
     router.push(`/components/${slug}`);
     return;
   };
@@ -776,7 +798,7 @@ export default function Hero({
           "Sign in to manage your component visibility and share your creations!",
         action: (
           <button
-            onClick={openLogin}
+            onClick={() => openLogin()}
             className="bg-primary text-primary-foreground inline-flex h-8 items-center justify-center rounded-md px-3 text-xs font-medium"
           >
             Login
@@ -831,7 +853,7 @@ export default function Hero({
           "Sign in to use AI-powered prompt improvement and enhance your ideas!",
         action: (
           <button
-            onClick={openLogin}
+            onClick={() => openLogin()}
             className="bg-primary text-primary-foreground inline-flex h-8 items-center justify-center rounded-md px-3 text-xs font-medium"
           >
             Login
@@ -941,11 +963,12 @@ export default function Hero({
             onSubmit={handleSubmit}
           >
             <Tabs
-              defaultValue="scratch"
+              value={generationMode}
               className="w-full border-none"
               onValueChange={(value) => {
-                if (loading) return; // Prevent tab change when loading
+                if (loading) return;
                 setGenerationMode(value as "scratch" | "clone");
+                setShouldContinueWithUrl(false);
               }}
             >
               <TabsList className="bg-secondary mb-3 w-full border-none">
@@ -1455,7 +1478,7 @@ export default function Hero({
                                   "Sign in to connect your database and unlock powerful features!",
                                 action: (
                                   <button
-                                    onClick={openLogin}
+                                    onClick={() => openLogin()}
                                     className="bg-primary text-primary-foreground inline-flex h-8 items-center justify-center rounded-md px-3 text-xs font-medium"
                                   >
                                     Login
@@ -1726,6 +1749,75 @@ export default function Hero({
               disabled={!agreeToTerms || loading}
             >
               Agree & Continue
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={showUrlInPromptModal}
+        onOpenChange={(open) => {
+          if (!loading && !open) {
+            setShowUrlInPromptModal(false);
+            setShouldContinueWithUrl(false);
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>URL Detected in Prompt</DialogTitle>
+            <DialogDescription>
+              We detected a URL in your prompt. If you want to clone a website,
+              please use the &quot;Clone a website&quot; tab instead. Otherwise,
+              you can continue with the current generation.
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter className="mt-4">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowUrlInPromptModal(false);
+                setShouldContinueWithUrl(false);
+              }}
+              disabled={loading}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="default"
+              onClick={() => {
+                setShowUrlInPromptModal(false);
+                setShouldContinueWithUrl(false);
+                setGenerationMode("clone");
+                const urlMatch = prompt.match(
+                  /(https?:\/\/[^\s]+|www\.[^\s]+|[a-zA-Z0-9-]+\.[a-zA-Z]{2,}[^\s]*)/i,
+                );
+                if (urlMatch) {
+                  let url = urlMatch[0];
+                  if (!/^https?:\/\//i.test(url)) {
+                    url = "https://" + url;
+                  }
+                  setWebsiteUrl(url);
+                }
+              }}
+              disabled={loading}
+            >
+              Use Clone Mode
+            </Button>
+            <Button
+              onClick={() => {
+                setShowUrlInPromptModal(false);
+                setShouldContinueWithUrl(true);
+                setTimeout(() => {
+                  handleSubmit(
+                    new Event("submit") as unknown as React.FormEvent,
+                  );
+                }, 0);
+              }}
+              disabled={loading}
+            >
+              Continue as is
             </Button>
           </DialogFooter>
         </DialogContent>

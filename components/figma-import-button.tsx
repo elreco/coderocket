@@ -185,20 +185,20 @@ export function FigmaImportButton({
 
   const handleOpenDialog = () => {
     if (!isLoggedIn) {
-        toast({
-          title: "Login required",
-          description:
-            "Sign in to import Figma designs and streamline your workflow!",
-          action: (
-            <button
-              onClick={openLogin}
-              className="bg-primary text-primary-foreground inline-flex h-8 items-center justify-center rounded-md px-3 text-xs font-medium"
-            >
-              Login
-            </button>
-          ),
-          duration: 5000,
-        });
+      toast({
+        title: "Login required",
+        description:
+          "Sign in to import Figma designs and streamline your workflow!",
+        action: (
+          <button
+            onClick={openLogin}
+            className="bg-primary text-primary-foreground inline-flex h-8 items-center justify-center rounded-md px-3 text-xs font-medium"
+          >
+            Login
+          </button>
+        ),
+        duration: 5000,
+      });
       return;
     }
 

@@ -6,6 +6,7 @@ import { PropsWithChildren } from "react";
 
 import { AppSidebar } from "@/components/app-sidebar";
 import { AuthModal } from "@/components/auth-modal";
+import { AuthSyncProvider } from "@/components/auth-sync-provider";
 import { PluginWidget } from "@/components/plugin-widget";
 import "styles/main.css";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
@@ -229,17 +230,19 @@ export default async function RootLayout({ children }: PropsWithChildren) {
       </head>
       <body className="bg-background size-full overflow-x-hidden">
         <AuthModalProvider>
-          <SidebarProvider defaultOpen={defaultOpen} className="size-full">
-            <AppSidebar defaultUser={user} />
-            <main className="relative size-full overflow-x-hidden">
-              <SidebarTrigger className="fixed z-50 size-12 rounded-none border-none" />
-              <TooltipProvider>{children}</TooltipProvider>
-            </main>
-          </SidebarProvider>
-          <PluginWidget />
-          <AuthModal />
-          <Toaster />
-          <Analytics />
+          <AuthSyncProvider>
+            <SidebarProvider defaultOpen={defaultOpen} className="size-full">
+              <AppSidebar defaultUser={user} />
+              <main className="relative size-full overflow-x-hidden">
+                <SidebarTrigger className="fixed z-50 size-12 rounded-none border-none" />
+                <TooltipProvider>{children}</TooltipProvider>
+              </main>
+            </SidebarProvider>
+            <PluginWidget />
+            <AuthModal />
+            <Toaster />
+            <Analytics />
+          </AuthSyncProvider>
         </AuthModalProvider>
       </body>
       <GoogleAnalytics gaId={gaId} />

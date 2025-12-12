@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Tables } from "@/types_db";
 import { discordLink } from "@/utils/config";
+import { createClient } from "@/utils/supabase/client";
 
 import Logo from "./icons/logo";
 import { NavAuth } from "./nav-auth";
@@ -111,29 +112,13 @@ export function AppSidebar({
   const [user, setUser] = useState<
     (Tables<"users"> & { email: string | null }) | null
   >(defaultUser);
-  const [isLoading, setIsLoading] = useState(true);
   const pathname = usePathname();
   const [notification, setNotification] =
     useState<Tables<"notification"> | null>(null);
 
   useEffect(() => {
-    const fetchUserDetails = async () => {
-      try {
-        const userDetails = await getUserDetails();
-        if (userDetails) {
-          setUser(userDetails);
-        }
-      } catch (error) {
-        console.error(
-          "Erreur lors de la récupération de l'utilisateur:",
-          error,
-        );
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchUserDetails();
-  }, []);
+    setUser(defaultUser);
+  }, [defaultUser]);
 
   useEffect(() => {
     const fetchNotification = async () => {
@@ -144,10 +129,29 @@ export function AppSidebar({
   }, []);
 
   useEffect(() => {
-    if (defaultUser) {
-      setUser(defaultUser);
-    }
-  }, [defaultUser]);
+    const supabase = createClient();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (event) => {
+        if (event === "SIGNED_OUT") {
+          setUser(null);
+        } else if (event === "SIGNED_IN") {
+          try {
+            const userDetails = await getUserDetails();
+            if (userDetails) {
+              setUser(userDetails);
+            }
+          } catch (error) {
+            console.error("Error fetching user details:", error);
+          }
+        }
+      },
+    );
+
+    return () => {
+      authListener?.subscription.unsubscribe();
+    };
+  }, []);
 
   const navMainItems = data.navMain.map((item) => ({
     ...item,
@@ -229,7 +233,7 @@ export function AppSidebar({
             />
           </div>
         )}
-        {isLoading ? null : user ? (
+        {user ? (
           <NavUser user={user} onLogout={() => setUser(null)} />
         ) : (
           <NavAuth />
