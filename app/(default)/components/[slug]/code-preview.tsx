@@ -32,6 +32,7 @@ import {
   BreakpointType,
   useComponentContext,
 } from "@/context/component-context";
+import { useAuthModal } from "@/hooks/use-auth-modal";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { Tables } from "@/types_db";
@@ -188,6 +189,7 @@ export default function CodePreview() {
     connectedUser,
   } = useComponentContext();
   const { buildError } = useBuilder();
+  const { openLogin } = useAuthModal();
   const [, copy] = useCopyToClipboard();
   const codeMirrorRef = useRef<ReactCodeMirrorRef>(null);
   const [isFileTreeOpen, setIsFileTreeOpen] = useState(false);
@@ -227,12 +229,12 @@ export default function CodePreview() {
         title: "Login required",
         description: "Sign in to download code and streamline your workflow!",
         action: (
-          <a
-            href="/login"
+          <button
+            onClick={openLogin}
             className="bg-primary text-primary-foreground inline-flex h-8 items-center justify-center rounded-md px-3 text-xs font-medium"
           >
             Login
-          </a>
+          </button>
         ),
         duration: 5000,
       });

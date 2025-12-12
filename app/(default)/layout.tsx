@@ -5,11 +5,13 @@ import { cookies } from "next/headers";
 import { PropsWithChildren } from "react";
 
 import { AppSidebar } from "@/components/app-sidebar";
+import { AuthModal } from "@/components/auth-modal";
 import { PluginWidget } from "@/components/plugin-widget";
 import "styles/main.css";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { AuthModalProvider } from "@/hooks/use-auth-modal";
 import { cn } from "@/lib/utils";
 import { gaId } from "@/utils/config";
 
@@ -226,16 +228,19 @@ export default async function RootLayout({ children }: PropsWithChildren) {
         />
       </head>
       <body className="bg-background size-full overflow-x-hidden">
-        <SidebarProvider defaultOpen={defaultOpen} className="size-full">
-          <AppSidebar defaultUser={user} />
-          <main className="relative size-full overflow-x-hidden">
-            <SidebarTrigger className="fixed z-50 size-12 rounded-none border-none" />
-            <TooltipProvider>{children}</TooltipProvider>
-          </main>
-        </SidebarProvider>
-        <PluginWidget />
-        <Toaster />
-        <Analytics />
+        <AuthModalProvider>
+          <SidebarProvider defaultOpen={defaultOpen} className="size-full">
+            <AppSidebar defaultUser={user} />
+            <main className="relative size-full overflow-x-hidden">
+              <SidebarTrigger className="fixed z-50 size-12 rounded-none border-none" />
+              <TooltipProvider>{children}</TooltipProvider>
+            </main>
+          </SidebarProvider>
+          <PluginWidget />
+          <AuthModal />
+          <Toaster />
+          <Analytics />
+        </AuthModalProvider>
       </body>
       <GoogleAnalytics gaId={gaId} />
     </html>

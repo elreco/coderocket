@@ -3,6 +3,7 @@
 import { Upload, FileUp, Loader2, Crown } from "lucide-react";
 import { memo, useCallback, useState } from "react";
 
+import { useAuthModal } from "@/hooks/use-auth-modal";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { Tables } from "@/types_db";
@@ -60,6 +61,7 @@ export const ImageUploadArea = memo(
     currentFilesCount = 0,
     onFileDeleted,
   }: ImageUploadAreaProps) => {
+    const { openLogin } = useAuthModal();
     const [isDragOver, setIsDragOver] = useState(false);
     const [isLibraryOpen, setIsLibraryOpen] = useState(false);
     const isPremium = !!subscription;
@@ -70,12 +72,12 @@ export const ImageUploadArea = memo(
           title: "Login required",
           description: "Sign in to upload files and streamline your workflow!",
           action: (
-            <a
-              href="/login"
+            <button
+              onClick={openLogin}
               className="bg-primary text-primary-foreground inline-flex h-8 items-center justify-center rounded-md px-3 text-xs font-medium"
             >
               Login
-            </a>
+            </button>
           ),
           duration: 5000,
         });
@@ -145,12 +147,12 @@ export const ImageUploadArea = memo(
             description:
               "Sign in to upload files and streamline your workflow!",
             action: (
-              <a
-                href="/login"
+              <button
+                onClick={openLogin}
                 className="bg-primary text-primary-foreground inline-flex h-8 items-center justify-center rounded-md px-3 text-xs font-medium"
               >
                 Login
-              </a>
+              </button>
             ),
             duration: 5000,
           });
@@ -200,12 +202,12 @@ export const ImageUploadArea = memo(
           title: "Login required",
           description: "Sign in to access your file library!",
           action: (
-            <a
-              href="/login"
+            <button
+              onClick={openLogin}
               className="bg-primary text-primary-foreground inline-flex h-8 items-center justify-center rounded-md px-3 text-xs font-medium"
             >
               Login
-            </a>
+            </button>
           ),
           duration: 5000,
         });

@@ -51,15 +51,15 @@ export function NavUser({
         description: result.error,
         variant: "destructive",
       });
+      return;
     }
-    if (result.url) {
+    if (result.success) {
       toast({
         title: "Success",
         description: "Logged out successfully!",
       });
       onLogout();
-      router.push(result.url);
-      return;
+      router.refresh();
     }
     setOpenMobile(false);
   }

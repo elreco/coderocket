@@ -26,6 +26,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useAuthModal } from "@/hooks/use-auth-modal";
 import { toast } from "@/hooks/use-toast";
 import { Tables } from "@/types_db";
 
@@ -58,6 +59,7 @@ export function FigmaImportButton({
   isReverse = false,
   isUploading = false,
 }: FigmaImportButtonProps) {
+  const { openLogin } = useAuthModal();
   const [isOpen, setIsOpen] = useState(false);
   const [integrations, setIntegrations] = useState<FigmaIntegration[]>([]);
   const [selectedIntegration, setSelectedIntegration] = useState<string>("");
@@ -183,20 +185,20 @@ export function FigmaImportButton({
 
   const handleOpenDialog = () => {
     if (!isLoggedIn) {
-      toast({
-        title: "Login required",
-        description:
-          "Sign in to import Figma designs and streamline your workflow!",
-        action: (
-          <a
-            href="/login"
-            className="bg-primary text-primary-foreground inline-flex h-8 items-center justify-center rounded-md px-3 text-xs font-medium"
-          >
-            Login
-          </a>
-        ),
-        duration: 5000,
-      });
+        toast({
+          title: "Login required",
+          description:
+            "Sign in to import Figma designs and streamline your workflow!",
+          action: (
+            <button
+              onClick={openLogin}
+              className="bg-primary text-primary-foreground inline-flex h-8 items-center justify-center rounded-md px-3 text-xs font-medium"
+            >
+              Login
+            </button>
+          ),
+          duration: 5000,
+        });
       return;
     }
 

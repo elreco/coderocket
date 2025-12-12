@@ -7,15 +7,29 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useAuthModal } from "@/hooks/use-auth-modal";
 import { toast } from "@/hooks/use-toast";
 
 import { register, signInWithOAuth } from "../actions";
 
-export default function AuthUI() {
+interface AuthUIProps {
+  redirectTo?: string;
+  onSuccess?: () => void;
+  showTitle?: boolean;
+}
+
+export default function AuthUI({
+  redirectTo: propRedirectTo,
+  onSuccess,
+  showTitle = true,
+}: AuthUIProps = {}) {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectTo = searchParams.get("redirect");
+  const redirectTo =
+    propRedirectTo || searchParams.get("redirect") || undefined;
+  const { openLogin } = useAuthModal();
+  const isModal = !!onSuccess;
 
   const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -32,17 +46,18 @@ export default function AuthUI() {
       setIsLoading(false);
       return;
     }
-    if (result?.url) {
+    if (result?.success || !result?.error) {
       toast({
         title: "Registered successfully!",
         description: "An email has been sent to you to verify your account.",
       });
-      router.push(result.url);
-      router.refresh();
-      setIsLoading(false);
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        router.refresh();
+      }
       return;
     }
-    setIsLoading(false);
   };
 
   const handleGithubLogin = async () => {
@@ -57,11 +72,19 @@ export default function AuthUI() {
     await signInWithOAuth("facebook");
   };
 
+  const handleLoginClick = () => {
+    if (isModal) {
+      openLogin(redirectTo);
+    }
+  };
+
   return (
     <form onSubmit={handleRegister}>
-      <h1 className="mb-4 text-center text-lg font-medium  sm:text-2xl">
-        Register
-      </h1>
+      {showTitle && (
+        <h1 className="mb-4 text-center text-lg font-medium  sm:text-2xl">
+          Register
+        </h1>
+      )}
       {redirectTo && (
         <div className="mb-4 rounded-md bg-blue-50 p-3 text-sm text-blue-800">
           Create an account to continue.
@@ -127,9 +150,7 @@ export default function AuthUI() {
             <span className="w-full border-t" />
           </div>
           <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-secondary rounded-md px-2">
-              Or continue with
-            </span>
+            <span className="bg-background rounded-md px-2">Or</span>
           </div>
         </div>
         <Button
@@ -140,7 +161,7 @@ export default function AuthUI() {
           className="flex items-center space-x-2"
         >
           <SiGithub className="size-4" />
-          <span>GitHub</span>
+          <span>Continue with GitHub</span>
         </Button>
         <Button
           onClick={handleGoogleLogin}
@@ -150,7 +171,7 @@ export default function AuthUI() {
           className="flex items-center space-x-2"
         >
           <SiGoogle className="size-4" />
-          <span>Google</span>
+          <span>Continue with Google</span>
         </Button>
         <Button
           onClick={handleFacebookLogin}
@@ -160,29 +181,40 @@ export default function AuthUI() {
           className="flex items-center space-x-2"
         >
           <SiFacebook className="size-4" />
-          <span>Facebook</span>
+          <span>Continue with Facebook</span>
         </Button>
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
             <span className="w-full border-t" />
           </div>
           <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-secondary rounded-md px-2">
+            <span className="bg-background rounded-md px-2">
               You already have an account?
             </span>
           </div>
         </div>
-        <Link
-          href={`/login${redirectTo ? `?redirect=${encodeURIComponent(redirectTo)}` : ""}`}
-        >
+        {isModal ? (
           <Button
+            onClick={handleLoginClick}
             className="flex w-full items-center space-x-2"
             variant="secondary"
             type="button"
           >
             Login
           </Button>
-        </Link>
+        ) : (
+          <Link
+            href={`/login${redirectTo ? `?redirect=${encodeURIComponent(redirectTo)}` : ""}`}
+          >
+            <Button
+              className="flex w-full items-center space-x-2"
+              variant="secondary"
+              type="button"
+            >
+              Login
+            </Button>
+          </Link>
+        )}
       </div>
     </form>
   );

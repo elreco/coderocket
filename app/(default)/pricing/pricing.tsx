@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { useAuthModal } from "@/hooks/use-auth-modal";
 import { useToast } from "@/hooks/use-toast";
 import { Database } from "@/types_db";
 import {
@@ -39,6 +40,7 @@ export default function Pricing({ user, products, subscription }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
+  const { openLogin, openSignup } = useAuthModal();
   const error = searchParams.get("error");
 
   useEffect(() => {
@@ -57,7 +59,7 @@ export default function Pricing({ user, products, subscription }: Props) {
   const handleCheckout = async (price: Price) => {
     setPriceIdLoading(price.id);
     if (!user) {
-      return router.push("/login");
+      return openLogin();
     }
     if (subscription) {
       return router.push("/account");
@@ -174,7 +176,7 @@ export default function Pricing({ user, products, subscription }: Props) {
               type="button"
               disabled={false}
               onClick={() =>
-                user ? router.push("/account") : router.push("/register")
+                user ? router.push("/account") : openSignup()
               }
               className="mt-12 block w-full rounded-full text-white"
             >
@@ -345,7 +347,7 @@ export default function Pricing({ user, products, subscription }: Props) {
             <Button
               onClick={() => {
                 if (!user) {
-                  router.push("/login");
+                  openLogin();
                 } else {
                   router.push("/account?buy_rockets=true");
                 }

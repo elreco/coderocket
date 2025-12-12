@@ -77,6 +77,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { UnifiedCard, UnifiedCardData } from "@/components/unified-card";
+import { useAuthModal } from "@/hooks/use-auth-modal";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { Tables } from "@/types_db";
@@ -297,6 +298,7 @@ export default function Hero({
 }: HeroProps) {
   const supabase = createClient();
   const { toast } = useToast();
+  const { openLogin } = useAuthModal();
   const [prompt, setPrompt] = useState(() => {
     if (typeof window !== "undefined") {
       return localStorage.getItem("lastPrompt") || "";
@@ -576,12 +578,12 @@ export default function Hero({
         description:
           "Sign in to start generating amazing UI components with AI!",
         action: (
-          <a
-            href="/login"
+          <button
+            onClick={openLogin}
             className="bg-primary text-primary-foreground inline-flex h-8 items-center justify-center rounded-md px-3 text-xs font-medium"
           >
             Login
-          </a>
+          </button>
         ),
         duration: 5000,
       });
@@ -773,12 +775,12 @@ export default function Hero({
         description:
           "Sign in to manage your component visibility and share your creations!",
         action: (
-          <a
-            href="/login"
+          <button
+            onClick={openLogin}
             className="bg-primary text-primary-foreground inline-flex h-8 items-center justify-center rounded-md px-3 text-xs font-medium"
           >
             Login
-          </a>
+          </button>
         ),
         duration: 5000,
       });
@@ -828,12 +830,12 @@ export default function Hero({
         description:
           "Sign in to use AI-powered prompt improvement and enhance your ideas!",
         action: (
-          <a
-            href="/login"
+          <button
+            onClick={openLogin}
             className="bg-primary text-primary-foreground inline-flex h-8 items-center justify-center rounded-md px-3 text-xs font-medium"
           >
             Login
-          </a>
+          </button>
         ),
         duration: 5000,
       });
@@ -1452,12 +1454,12 @@ export default function Hero({
                                 description:
                                   "Sign in to connect your database and unlock powerful features!",
                                 action: (
-                                  <a
-                                    href="/login"
+                                  <button
+                                    onClick={openLogin}
                                     className="bg-primary text-primary-foreground inline-flex h-8 items-center justify-center rounded-md px-3 text-xs font-medium"
                                   >
                                     Login
-                                  </a>
+                                  </button>
                                 ),
                                 duration: 5000,
                               });

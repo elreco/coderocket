@@ -23,7 +23,7 @@ export async function login(formData: FormData, redirectTo?: string) {
     return { error: error.message };
   }
 
-  return { url: redirectTo || "/" };
+  return { success: true };
 }
 
 export async function register(formData: FormData, redirectTo?: string) {
@@ -115,10 +115,7 @@ export async function register(formData: FormData, redirectTo?: string) {
     });
   }
 
-  // After successful registration, redirect to login with redirect parameter preserved
-  return {
-    url: `/login${redirectTo ? `?redirect=${encodeURIComponent(redirectTo)}` : ""}`,
-  };
+  return { success: true };
 }
 
 export async function signInWithEmail(formData: FormData) {
@@ -133,7 +130,7 @@ export async function signInWithEmail(formData: FormData) {
   if (error?.status === 422) {
     return { error: "User with this email does not exist. Please sign up." };
   }
-  return { url: "/" };
+  return { success: true };
 }
 
 export async function signInWithOAuth(provider: Provider) {
@@ -181,5 +178,5 @@ export async function logout() {
   if (error) {
     return { error: error.message };
   }
-  return { url: "/" };
+  return { success: true };
 }
