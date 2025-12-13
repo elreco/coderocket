@@ -2,6 +2,7 @@ import { list } from "@vercel/blob";
 import mime from "mime-types";
 import { NextRequest, NextResponse } from "next/server";
 
+import { getSubscription } from "@/app/supabase-server";
 import { createClient } from "@/utils/supabase/server";
 
 export const revalidate = 0;
@@ -79,9 +80,98 @@ export async function GET(
         </html>
       `;
 
+  const premiumRequiredHtml = `
+        <!DOCTYPE html>
+        <html lang="en">
+          <head>
+            <title>Premium Required - CodeRocket</title>
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <link rel="preconnect" href="https://fonts.googleapis.com">
+            <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+            <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+            <style>
+              * { margin: 0; padding: 0; box-sizing: border-box; }
+              body {
+                font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 100vh;
+                background: hsl(240, 20%, 99%);
+                color: hsl(222.2, 84%, 4.9%);
+                padding: 1rem;
+              }
+              .container {
+                text-align: center;
+                max-width: 600px;
+                padding: 3rem 2rem;
+              }
+              .logo {
+                width: 120px;
+                height: auto;
+                margin: 0 auto 2rem;
+                display: block;
+              }
+              h1 {
+                font-size: clamp(1.75rem, 4vw, 2.5rem);
+                font-weight: 700;
+                margin-bottom: 1rem;
+                color: hsl(222.2, 84%, 4.9%);
+                line-height: 1.2;
+              }
+              p {
+                font-size: clamp(1rem, 2vw, 1.125rem);
+                color: hsl(240, 10%, 50%);
+                margin-bottom: 2rem;
+                line-height: 1.6;
+              }
+              .button {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                padding: 0.75rem 1.5rem;
+                background: hsl(239, 84%, 67%);
+                color: hsl(210, 40%, 98%);
+                text-decoration: none;
+                border-radius: 0.5rem;
+                font-weight: 600;
+                font-size: 1rem;
+                transition: all 0.2s ease;
+                border: none;
+                cursor: pointer;
+              }
+              .button:hover {
+                background: hsl(239, 84%, 60%);
+                transform: translateY(-1px);
+                box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+              }
+              .button:active {
+                transform: translateY(0);
+              }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <img src="https://www.coderocket.app/logo.png" alt="CodeRocket" class="logo" />
+              <h1>Premium Required</h1>
+              <p>This deployment requires an active premium subscription. The site owner needs to upgrade to keep this site online.</p>
+              <a href="https://www.coderocket.app/pricing" class="button">Upgrade to Premium</a>
+            </div>
+          </body>
+        </html>
+      `;
+
   const createNotFoundResponse = () =>
     new NextResponse(notFoundHtml, {
       status: 404,
+      headers: {
+        "Content-Type": "text/html",
+      },
+    });
+
+  const createPremiumRequiredResponse = () =>
+    new NextResponse(premiumRequiredHtml, {
+      status: 403,
       headers: {
         "Content-Type": "text/html",
       },
@@ -144,6 +234,11 @@ export async function GET(
       return createNotFoundResponse();
     }
 
+    const subscription = await getSubscription(chat.user_id);
+    if (!subscription) {
+      return createPremiumRequiredResponse();
+    }
+
     prefix = `${chat.id}-${chat.deployed_version}`;
     console.log("API Route: Custom domain resolved to prefix =", prefix);
   } else if (hostname.includes("coderocket.app")) {
@@ -166,6 +261,11 @@ export async function GET(
 
       if (error || !chat || chat.deployed_version === null) {
         return createNotFoundResponse();
+      }
+
+      const subscription = await getSubscription(chat.user_id);
+      if (!subscription) {
+        return createPremiumRequiredResponse();
       }
 
       prefix = `${chat.id}-${chat.deployed_version}`;

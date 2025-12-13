@@ -34,7 +34,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef, useState, useEffect, useCallback } from "react";
 
-import { getSubscription } from "@/app/supabase-server";
 import { AppFooter } from "@/components/app-footer";
 import { Container } from "@/components/container";
 import { FigmaImportButton } from "@/components/figma-import-button";
@@ -86,8 +85,8 @@ import { defaultTheme, maxImagesUpload, themes } from "@/utils/config";
 import { validateFile } from "@/utils/file-helper";
 import { IntegrationType, UserIntegration } from "@/utils/integrations";
 import { promptEnhancer } from "@/utils/prompt-enhancer";
+import { createClient } from "@/utils/supabase/client";
 
-import { getServerIntegrations } from "./account/integrations/actions";
 import { createChat, type GetComponentsReturnType } from "./components/actions";
 
 // Types pour les thèmes
@@ -354,6 +353,77 @@ export default function Hero({
   const [showPromptIdeasDialog, setShowPromptIdeasDialog] = useState(false);
 
   useEffect(() => {
+    const supabase = createClient();
+
+    const handleAuthChange = async () => {
+      const { data: userData } = await supabase.auth.getUser();
+      const user = userData?.user;
+
+      setIsLoggedIn(!!user);
+
+      if (user?.id) {
+        setIsLoadingSubscription(true);
+        try {
+          const [subData, integrationsData] = await Promise.all([
+            (async () => {
+              try {
+                const { data } = await supabase
+                  .from("subscriptions")
+                  .select("*, prices(*, products(*))")
+                  .in("status", ["trialing", "active"])
+                  .eq("user_id", user.id)
+                  .maybeSingle();
+                return data;
+              } catch {
+                return null;
+              }
+            })(),
+            (async () => {
+              try {
+                const { data: integrations } = await supabase
+                  .from("integrations")
+                  .select("*")
+                  .eq("user_id", user.id);
+                return integrations || [];
+              } catch {
+                return [];
+              }
+            })(),
+          ]);
+          setSubscription(subData);
+          setUserIntegrations(integrationsData as UserIntegration[]);
+        } catch (error) {
+          console.error("Error fetching subscription:", error);
+        } finally {
+          setIsLoadingSubscription(false);
+        }
+      } else {
+        setSubscription(null);
+        setUserIntegrations([]);
+      }
+    };
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event) => {
+      if (event === "SIGNED_IN" || event === "SIGNED_OUT") {
+        await handleAuthChange();
+        setTimeout(() => {
+          router.refresh();
+        }, 100);
+      } else if (event === "TOKEN_REFRESHED") {
+        await handleAuthChange();
+      }
+    });
+
+    handleAuthChange();
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [router]);
+
+  useEffect(() => {
     if (inputRef.current) {
       inputRef.current.focus();
       const length = inputRef.current.value.length;
@@ -420,17 +490,52 @@ export default function Hero({
 
   useEffect(() => {
     setIsLoggedIn(initialIsLoggedIn);
-  }, [initialIsLoggedIn]);
+    setSubscription(initialSubscription);
+    setUserIntegrations(initialIntegrations);
+  }, [initialIsLoggedIn, initialSubscription, initialIntegrations]);
 
   const loadUserData = useCallback(async () => {
     try {
+      const supabase = createClient();
+      const { data: userData } = await supabase.auth.getUser();
+      const user = userData?.user;
+
+      if (!user?.id) {
+        setSubscription(null);
+        setUserIntegrations([]);
+        setSelectedIntegration(null);
+        return;
+      }
+
       setIsLoadingSubscription(true);
       const [sub, integrations] = await Promise.all([
-        getSubscription(),
-        getServerIntegrations(),
+        (async () => {
+          try {
+            const { data } = await supabase
+              .from("subscriptions")
+              .select("*, prices(*, products(*))")
+              .in("status", ["trialing", "active"])
+              .eq("user_id", user.id)
+              .maybeSingle();
+            return data;
+          } catch {
+            return null;
+          }
+        })(),
+        (async () => {
+          try {
+            const { data: integrations } = await supabase
+              .from("integrations")
+              .select("*")
+              .eq("user_id", user.id);
+            return integrations || [];
+          } catch {
+            return [];
+          }
+        })(),
       ]);
       setSubscription(sub);
-      setUserIntegrations(integrations);
+      setUserIntegrations(integrations as UserIntegration[]);
       if (!sub) {
         setSelectedIntegration(null);
       }

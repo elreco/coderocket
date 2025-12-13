@@ -24,23 +24,31 @@ export async function getUserDetails() {
 export async function getSubscription(userId?: string) {
   const supabase = await createClient();
   try {
-    const { data } = await supabase.auth.getUser();
-    if (!data.user?.id) return null;
+    let targetUserId: string | undefined = userId;
+
+    if (!targetUserId) {
+      const { data } = await supabase.auth.getUser();
+      if (!data.user?.id) return null;
+      targetUserId = data.user.id;
+    }
+
+    if (!targetUserId) return null;
+
     const { data: subscription } = await supabase
       .from("subscriptions")
       .select("*, prices(*, products(*))")
       .in("status", ["trialing", "active"])
-      .eq("user_id", userId ?? data.user.id)
+      .eq("user_id", targetUserId)
       .maybeSingle()
       .throwOnError();
 
     if (subscription) {
       console.log(
-        `[getSubscription] User ${userId ?? data.user.id}: plan=${subscription.prices?.products?.name}, status=${subscription.status}`,
+        `[getSubscription] User ${targetUserId}: plan=${subscription.prices?.products?.name}, status=${subscription.status}`,
       );
     } else {
       console.log(
-        `[getSubscription] User ${userId ?? data.user.id}: No active subscription`,
+        `[getSubscription] User ${targetUserId}: No active subscription`,
       );
     }
 
