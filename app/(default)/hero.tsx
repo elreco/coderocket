@@ -86,9 +86,8 @@ import { defaultTheme, maxImagesUpload, themes } from "@/utils/config";
 import { validateFile } from "@/utils/file-helper";
 import { IntegrationType, UserIntegration } from "@/utils/integrations";
 import { promptEnhancer } from "@/utils/prompt-enhancer";
-import { createClient } from "@/utils/supabase/client";
 
-import { fetchUserIntegrations } from "./account/integrations/actions";
+import { getServerIntegrations } from "./account/integrations/actions";
 import { createChat, type GetComponentsReturnType } from "./components/actions";
 
 // Types pour les thèmes
@@ -290,21 +289,29 @@ const frameworkConfig = {
 interface HeroProps {
   popularComponents?: GetComponentsReturnType[];
   initialIsLoggedIn?: boolean;
+  initialSubscription?:
+    | (Tables<"subscriptions"> & {
+        prices: Partial<Tables<"prices">> | null;
+      })
+    | null;
+  initialIntegrations?: UserIntegration[];
 }
 
 export default function Hero({
   popularComponents = [],
   initialIsLoggedIn = false,
+  initialSubscription = null,
+  initialIntegrations = [],
 }: HeroProps) {
-  const supabase = createClient();
   const { toast } = useToast();
   const { openLogin } = useAuthModal();
-  const [prompt, setPrompt] = useState(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("lastPrompt") || "";
+  const [prompt, setPrompt] = useState("");
+  useEffect(() => {
+    const savedPrompt = localStorage.getItem("lastPrompt");
+    if (savedPrompt) {
+      setPrompt(savedPrompt);
     }
-    return "";
-  });
+  }, []);
 
   const [isVisible, setVisible] = useState(true);
   const [selectedTheme, setSelectedTheme] = useState(defaultTheme);
@@ -331,16 +338,15 @@ export default function Hero({
         prices: Partial<Tables<"prices">> | null;
       })
     | null
-  >(null);
-  const [isLoadingSubscription, setIsLoadingSubscription] = useState(true);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  >(initialSubscription);
+  const [isLoadingSubscription, setIsLoadingSubscription] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(initialIsLoggedIn);
   const [showCloneModal, setShowCloneModal] = useState(false);
   const [agreeToTerms, setAgreeToTerms] = useState(false);
   const [showUrlInPromptModal, setShowUrlInPromptModal] = useState(false);
   const [shouldContinueWithUrl, setShouldContinueWithUrl] = useState(false);
-  const [userIntegrations, setUserIntegrations] = useState<UserIntegration[]>(
-    [],
-  );
+  const [userIntegrations, setUserIntegrations] =
+    useState<UserIntegration[]>(initialIntegrations);
   const [selectedIntegration, setSelectedIntegration] = useState<string | null>(
     null,
   );
@@ -416,97 +422,41 @@ export default function Hero({
     setIsLoggedIn(initialIsLoggedIn);
   }, [initialIsLoggedIn]);
 
-  useEffect(() => {
-    const fetchSubscription = async () => {
-      try {
-        setIsLoadingSubscription(true);
-        if (!initialIsLoggedIn) {
-          setSubscription(null);
-          setUserIntegrations([]);
-          setSelectedIntegration(null);
-          return;
-        }
-        const { data } = await supabase.auth.getUser();
-        const userId = data?.user?.id;
-
-        if (userId) {
-          const sub = await getSubscription(userId);
-          setSubscription(sub);
-
-          if (sub) {
-            fetchUserIntegrations()
-              .then((integrations) => {
-                setUserIntegrations(integrations);
-              })
-              .catch((error) => {
-                console.error("Error fetching integrations:", error);
-                setUserIntegrations([]);
-              });
-          } else {
-            setUserIntegrations([]);
-            setSelectedIntegration(null);
-          }
-        } else {
-          setSubscription(null);
-          setUserIntegrations([]);
-          setSelectedIntegration(null);
-        }
-      } catch (error) {
-        console.error("Error fetching subscription:", error);
-        setSubscription(null);
-        setUserIntegrations([]);
+  const loadUserData = useCallback(async () => {
+    try {
+      setIsLoadingSubscription(true);
+      const [sub, integrations] = await Promise.all([
+        getSubscription(),
+        getServerIntegrations(),
+      ]);
+      setSubscription(sub);
+      setUserIntegrations(integrations);
+      if (!sub) {
         setSelectedIntegration(null);
-      } finally {
-        setIsLoadingSubscription(false);
       }
-    };
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+      setSubscription(null);
+      setUserIntegrations([]);
+      setSelectedIntegration(null);
+    } finally {
+      setIsLoadingSubscription(false);
+    }
+  }, []);
 
-    fetchSubscription();
-
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (event === "SIGNED_OUT") {
-          setIsLoggedIn(false);
-          setUserIntegrations([]);
-          setSelectedIntegration(null);
-          setSubscription(null);
-          setIsLoadingSubscription(false);
-        } else if (event === "SIGNED_IN" && session?.user) {
-          setIsLoggedIn(true);
-          setIsLoadingSubscription(true);
-          try {
-            const sub = await getSubscription(session.user.id);
-            setSubscription(sub);
-
-            if (sub) {
-              fetchUserIntegrations()
-                .then((integrations) => {
-                  setUserIntegrations(integrations);
-                })
-                .catch((error) => {
-                  console.error("Error fetching integrations:", error);
-                  setUserIntegrations([]);
-                });
-            } else {
-              setUserIntegrations([]);
-              setSelectedIntegration(null);
-            }
-          } catch (error) {
-            console.error("Error fetching subscription:", error);
-            setSubscription(null);
-            setUserIntegrations([]);
-            setSelectedIntegration(null);
-          } finally {
-            setIsLoadingSubscription(false);
-          }
-        }
-      },
-    );
-
-    return () => {
-      authListener?.subscription.unsubscribe();
-    };
-  }, [supabase, initialIsLoggedIn]);
+  useEffect(() => {
+    if (
+      initialIsLoggedIn &&
+      (!initialSubscription || initialIntegrations.length === 0)
+    ) {
+      loadUserData();
+    }
+  }, [
+    initialIsLoggedIn,
+    initialSubscription,
+    initialIntegrations.length,
+    loadUserData,
+  ]);
 
   const handleImageChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -790,8 +740,7 @@ export default function Hero({
   };
 
   const handleVisibility = async () => {
-    const { data } = await supabase.auth.getSession();
-    if (!data?.session?.user?.id) {
+    if (!isLoggedIn) {
       toast({
         title: "Login required",
         description:
@@ -808,12 +757,6 @@ export default function Hero({
       });
       return;
     }
-    const { data: subscription } = await supabase
-      .from("subscriptions")
-      .select("*, prices(*, products(*))")
-      .in("status", ["trialing", "active"])
-      .eq("user_id", data.session.user.id)
-      .maybeSingle();
 
     if (subscription) {
       setVisible(!isVisible);
@@ -845,8 +788,7 @@ export default function Hero({
       });
       return;
     }
-    const { data } = await supabase.auth.getSession();
-    if (!data?.session?.user?.id) {
+    if (!isLoggedIn) {
       toast({
         title: "Login required",
         description:
@@ -865,12 +807,6 @@ export default function Hero({
     }
     setLoading(true);
     setLoadingAction("improve");
-    const { data: subscription } = await supabase
-      .from("subscriptions")
-      .select("*, prices(*, products(*))")
-      .in("status", ["trialing", "active"])
-      .eq("user_id", data.session.user.id)
-      .maybeSingle();
 
     if (subscription) {
       try {
@@ -1809,11 +1745,7 @@ export default function Hero({
               onClick={() => {
                 setShowUrlInPromptModal(false);
                 setShouldContinueWithUrl(true);
-                setTimeout(() => {
-                  handleSubmit(
-                    new Event("submit") as unknown as React.FormEvent,
-                  );
-                }, 0);
+                handleSubmit(new Event("submit") as unknown as React.FormEvent);
               }}
               disabled={loading}
             >

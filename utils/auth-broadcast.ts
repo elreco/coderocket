@@ -10,7 +10,10 @@ export type AuthSyncMessage = {
 let channel: BroadcastChannel | null = null;
 
 function getChannel(): BroadcastChannel | null {
-  if (typeof window === "undefined" || typeof BroadcastChannel === "undefined") {
+  if (
+    typeof window === "undefined" ||
+    typeof BroadcastChannel === "undefined"
+  ) {
     return null;
   }
   if (!channel) {
@@ -52,4 +55,3 @@ export function onAuthBroadcast(
 export function getChannelName(): string {
   return BROADCAST_CHANNEL_NAME;
 }
-

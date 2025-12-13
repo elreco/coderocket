@@ -35,7 +35,7 @@ export default function AuthUI({
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     setIsLoading(true);
-    const result = await register(formData, redirectTo || undefined);
+    const result = await register(formData);
     if (result?.error) {
       toast({
         variant: "destructive",

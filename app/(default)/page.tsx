@@ -1,9 +1,13 @@
+import { UserIntegration } from "@/utils/integrations";
 import { createClient } from "@/utils/supabase/server";
 
+import { getSubscription } from "../supabase-server";
+
+import { getServerIntegrations } from "./account/integrations/actions";
 import { getAllPublicChats } from "./components/actions";
 import Hero from "./hero";
 
-export const revalidate = 60; // Revalidate every 60 seconds
+export const revalidate = 60;
 
 export default async function Home() {
   const supabase = await createClient();
@@ -21,7 +25,24 @@ export default async function Home() {
     user,
   );
 
+  let initialSubscription = null;
+  let initialIntegrations: UserIntegration[] = [];
+
+  if (user?.id) {
+    const [subscription, integrations] = await Promise.all([
+      getSubscription(user.id),
+      getServerIntegrations(),
+    ]);
+    initialSubscription = subscription;
+    initialIntegrations = integrations;
+  }
+
   return (
-    <Hero popularComponents={popularComponents} initialIsLoggedIn={!!user} />
+    <Hero
+      popularComponents={popularComponents}
+      initialIsLoggedIn={!!user}
+      initialSubscription={initialSubscription}
+      initialIntegrations={initialIntegrations}
+    />
   );
 }

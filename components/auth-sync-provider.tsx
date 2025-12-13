@@ -23,21 +23,24 @@ export function AuthSyncProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const supabase = createClient();
 
-    const { data: authListener } = supabase.auth.onAuthStateChange((event) => {
-      if (isBroadcasting.current) {
-        return;
-      }
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (event) => {
+        if (isBroadcasting.current) {
+          return;
+        }
 
-      if (event === "SIGNED_IN") {
-        broadcastAuthEvent("SIGNED_IN");
-        scheduleRefresh();
-      } else if (event === "SIGNED_OUT") {
-        broadcastAuthEvent("SIGNED_OUT");
-        scheduleRefresh();
-      } else if (event === "TOKEN_REFRESHED") {
-        broadcastAuthEvent("TOKEN_REFRESHED");
-      }
-    });
+        if (event === "SIGNED_IN") {
+          broadcastAuthEvent("SIGNED_IN");
+          scheduleRefresh();
+        } else if (event === "SIGNED_OUT") {
+          broadcastAuthEvent("SIGNED_OUT");
+          router.push("/");
+          scheduleRefresh();
+        } else if (event === "TOKEN_REFRESHED") {
+          broadcastAuthEvent("TOKEN_REFRESHED");
+        }
+      },
+    );
 
     const handleBroadcastMessage = async (message: AuthSyncMessage) => {
       const { type } = message;
@@ -47,6 +50,7 @@ export function AuthSyncProvider({ children }: { children: React.ReactNode }) {
       try {
         if (type === "SIGNED_OUT") {
           await supabase.auth.signOut({ scope: "local" });
+          router.push("/");
         }
         scheduleRefresh();
       } catch (error) {
@@ -73,7 +77,7 @@ export function AuthSyncProvider({ children }: { children: React.ReactNode }) {
       unsubscribeBroadcast();
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [scheduleRefresh]);
+  }, [scheduleRefresh, router]);
 
   return <>{children}</>;
 }

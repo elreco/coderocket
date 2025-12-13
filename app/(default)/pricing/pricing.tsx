@@ -148,27 +148,28 @@ export default function Pricing({ user, products, subscription }: Props) {
                 {FREE_CHAR_LIMIT} characters limit per prompt
               </p>
               <p className="mt-4 flex items-center text-sm font-medium ">
-                <XIcon className="text-border mr-2 size-4" /> Improve prompt
+                <XIcon className="text-destructive mr-2 size-4" /> Improve
+                prompt
               </p>
 
               <p className="mt-4 flex items-center text-sm font-medium ">
-                <XIcon className="text-border mr-2 size-4" /> Generate with
+                <XIcon className="text-destructive mr-2 size-4" /> Generate with
                 files
               </p>
               <p className="mt-4 flex items-center text-sm font-medium ">
-                <XIcon className="text-border mr-2 size-4" /> File library
+                <XIcon className="text-destructive mr-2 size-4" /> File library
               </p>
               <p className="mt-4 flex items-center text-sm font-medium ">
-                <XIcon className="text-border mr-2 size-4" /> AI Full Power
+                <XIcon className="text-destructive mr-2 size-4" /> AI Full Power
               </p>
               <p className="mt-4 flex items-center text-sm font-medium ">
-                <XIcon className="text-border mr-2 size-4" /> GitHub Sync
+                <XIcon className="text-destructive mr-2 size-4" /> GitHub Sync
               </p>
               <p className="mt-4 flex items-center text-sm font-medium ">
-                <XIcon className="text-border mr-2 size-4" /> Download code
+                <XIcon className="text-destructive mr-2 size-4" /> Download code
               </p>
               <p className="mt-4 flex items-center text-sm font-medium ">
-                <XIcon className="text-border mr-2 size-4" /> Support
+                <XIcon className="text-destructive mr-2 size-4" /> Support
               </p>
             </div>
             <Button
@@ -288,12 +289,12 @@ export default function Pricing({ user, products, subscription }: Props) {
                           Support
                         </p>
                         <p className="mt-4 flex items-center text-sm font-medium ">
-                          <XIcon className="text-border mr-2 size-4" /> AI Full
-                          Power
+                          <XIcon className="text-destructive mr-2 size-4" /> AI
+                          Full Power
                         </p>
                         <p className="mt-4 flex items-center text-sm font-medium ">
-                          <XIcon className="text-border mr-2 size-4" /> Extended
-                          support
+                          <XIcon className="text-destructive mr-2 size-4" />{" "}
+                          Extended support
                         </p>
                       </>
                     ) : (

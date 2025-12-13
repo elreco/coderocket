@@ -9,7 +9,7 @@ import { isTemporaryEmailDomain, normalizeEmail } from "@/utils/helpers";
 import { createClient } from "@/utils/supabase/server";
 import { createOrRetrieveCustomer } from "@/utils/supabase-admin";
 
-export async function login(formData: FormData, redirectTo?: string) {
+export async function login(formData: FormData) {
   const supabase = await createClient();
 
   const data = {
@@ -26,7 +26,7 @@ export async function login(formData: FormData, redirectTo?: string) {
   return { success: true };
 }
 
-export async function register(formData: FormData, redirectTo?: string) {
+export async function register(formData: FormData) {
   const supabase = await createClient();
 
   const email = formData.get("email") as string;

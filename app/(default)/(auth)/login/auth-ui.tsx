@@ -9,7 +9,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuthModal } from "@/hooks/use-auth-modal";
 import { toast } from "@/hooks/use-toast";
-
 import { broadcastAuthEvent } from "@/utils/auth-broadcast";
 
 import { login, signInWithOAuth } from "../actions";
@@ -37,7 +36,7 @@ export default function AuthUI({
     e.preventDefault();
     setIsLoading(true);
     const formData = new FormData(e.currentTarget);
-    const result = await login(formData, redirectTo || undefined);
+    const result = await login(formData);
     if (result?.error) {
       toast({
         variant: "destructive",

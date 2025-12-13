@@ -73,7 +73,7 @@ export const ImageUploadArea = memo(
           description: "Sign in to upload files and streamline your workflow!",
           action: (
             <button
-              onClick={openLogin}
+              onClick={() => openLogin()}
               className="bg-primary text-primary-foreground inline-flex h-8 items-center justify-center rounded-md px-3 text-xs font-medium"
             >
               Login
@@ -148,7 +148,7 @@ export const ImageUploadArea = memo(
               "Sign in to upload files and streamline your workflow!",
             action: (
               <button
-                onClick={openLogin}
+                onClick={() => openLogin()}
                 className="bg-primary text-primary-foreground inline-flex h-8 items-center justify-center rounded-md px-3 text-xs font-medium"
               >
                 Login
@@ -203,7 +203,7 @@ export const ImageUploadArea = memo(
           description: "Sign in to access your file library!",
           action: (
             <button
-              onClick={openLogin}
+              onClick={() => openLogin()}
               className="bg-primary text-primary-foreground inline-flex h-8 items-center justify-center rounded-md px-3 text-xs font-medium"
             >
               Login

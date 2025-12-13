@@ -230,7 +230,7 @@ export default function CodePreview() {
         description: "Sign in to download code and streamline your workflow!",
         action: (
           <button
-            onClick={openLogin}
+            onClick={() => openLogin()}
             className="bg-primary text-primary-foreground inline-flex h-8 items-center justify-center rounded-md px-3 text-xs font-medium"
           >
             Login
