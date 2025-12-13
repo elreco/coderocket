@@ -492,23 +492,6 @@ export default function ComponentSidebar({
     }
   }, [isLoading, isCloneAnotherPageActive]);
 
-  // Ne pas désactiver isScrapingWebsite automatiquement quand isLoading devient false
-  // Il sera désactivé par les autres useEffect quand le scraping est vraiment terminé
-  // useEffect(() => {
-  //   if (!isLoading) {
-  //     setIsScrapingWebsite(false);
-  //   }
-  // }, [isLoading, setIsScrapingWebsite]);
-
-  console.log("🔍 SIDEBAR RENDER:", {
-    isScrapingWebsite,
-    isLoading,
-    selectedVersion,
-    completionLength: completion?.length || 0,
-    messagesCount: messages.length,
-    currentCloneUrl,
-  });
-
   return (
     <div
       className={cn(

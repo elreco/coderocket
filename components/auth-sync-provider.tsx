@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 
 import {
   AuthSyncMessage,
@@ -14,12 +14,6 @@ export function AuthSyncProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const isBroadcasting = useRef<boolean>(false);
 
-  const scheduleRefresh = useCallback(() => {
-    setTimeout(() => {
-      router.refresh();
-    }, 50);
-  }, [router]);
-
   useEffect(() => {
     const supabase = createClient();
 
@@ -31,11 +25,11 @@ export function AuthSyncProvider({ children }: { children: React.ReactNode }) {
 
         if (event === "SIGNED_IN") {
           broadcastAuthEvent("SIGNED_IN");
-          scheduleRefresh();
+          router.refresh();
         } else if (event === "SIGNED_OUT") {
           broadcastAuthEvent("SIGNED_OUT");
           router.push("/");
-          scheduleRefresh();
+          router.refresh();
         } else if (event === "TOKEN_REFRESHED") {
           broadcastAuthEvent("TOKEN_REFRESHED");
         }
@@ -52,7 +46,7 @@ export function AuthSyncProvider({ children }: { children: React.ReactNode }) {
           await supabase.auth.signOut({ scope: "local" });
           router.push("/");
         }
-        scheduleRefresh();
+        router.refresh();
       } catch (error) {
         console.error("Error syncing auth state:", error);
       } finally {
@@ -64,20 +58,11 @@ export function AuthSyncProvider({ children }: { children: React.ReactNode }) {
 
     const unsubscribeBroadcast = onAuthBroadcast(handleBroadcastMessage);
 
-    const handleVisibilityChange = async () => {
-      if (document.visibilityState === "visible") {
-        scheduleRefresh();
-      }
-    };
-
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
     return () => {
       authListener?.subscription.unsubscribe();
       unsubscribeBroadcast();
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [scheduleRefresh, router]);
+  }, [router]);
 
   return <>{children}</>;
 }
