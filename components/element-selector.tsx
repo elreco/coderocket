@@ -248,7 +248,7 @@ export function ElementSelector({ iframeRef }: ElementSelectorProps) {
       <Button
         variant="default"
         size="sm"
-        className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20"
+        className="absolute bottom-4 left-1/2 -translate-x-1/2 z-9999"
         onClick={() => setElementSelectionActive(false)}
       >
         <X className="h-4 w-4" />

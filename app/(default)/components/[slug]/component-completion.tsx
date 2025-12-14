@@ -515,6 +515,9 @@ export default function ComponentCompletion({
           hasInitiatedRef.current[chatId] = true;
           setIsLoading(true);
           setIsSubmitting(true);
+          if (chat.clone_url) {
+            setIsScrapingWebsite(true);
+          }
           complete(userMsg.content || "");
         }
         return;
@@ -1453,7 +1456,15 @@ export default function ComponentCompletion({
                   : message,
               );
             } else {
-              return [...prevMessages, payload.new as ChatMessage];
+              const filteredMessages = prevMessages.filter(
+                (m) =>
+                  !(
+                    m.id < 0 &&
+                    m.role === payload.new.role &&
+                    m.version === payload.new.version
+                  ),
+              );
+              return [...filteredMessages, payload.new as ChatMessage];
             }
           });
 

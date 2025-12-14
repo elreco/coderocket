@@ -13,9 +13,7 @@ export function AuthSyncProvider({ children }: { children: React.ReactNode }) {
 
     const { data: authListener } = supabase.auth.onAuthStateChange((event) => {
       if (event === "SIGNED_IN" || event === "SIGNED_OUT") {
-        setTimeout(() => {
-          router.refresh();
-        }, 0);
+        router.refresh();
       }
     });
 

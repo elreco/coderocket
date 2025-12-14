@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuthModal } from "@/hooks/use-auth-modal";
 import { toast } from "@/hooks/use-toast";
+import { createClient } from "@/utils/supabase/client";
 
 import { login, signInWithOAuth } from "../actions";
 
@@ -47,6 +48,8 @@ export default function AuthUI({
       return;
     }
     if (result?.success || !result?.error) {
+      const supabase = createClient();
+      await supabase.auth.getSession();
       toast({
         title: "Success",
         description: "Logged in successfully!",
@@ -54,7 +57,11 @@ export default function AuthUI({
       if (onSuccess) {
         onSuccess();
       }
-      router.refresh();
+      if (redirectTo) {
+        router.push(redirectTo);
+      } else {
+        router.refresh();
+      }
       return;
     }
   };

@@ -74,8 +74,10 @@ const RenderContent = React.memo(
     breakpoint: BreakpointType;
     onRouteChange: (path: string) => void;
   }) => {
-    // La première génération est quand selectedVersion est 0
-    const isFirstGeneration = selectedVersion === 0;
+    const isFirstGeneration =
+      selectedVersion === 0 ||
+      selectedVersion === -1 ||
+      selectedVersion === undefined;
     const isPreviousVersionError =
       !isFirstGeneration &&
       !isLoading &&
