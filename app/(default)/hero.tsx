@@ -692,9 +692,21 @@ export default function Hero({
     setLoading(true);
     setLoadingAction("generate");
     const formData = new FormData();
+    const libraryPaths: string[] = [];
     images.forEach((image) => {
-      formData.append("files", image);
+      const libraryPath = (image as File & { __libraryPath?: string })
+        .__libraryPath;
+      if (libraryPath) {
+        // Fichier de la bibliothèque - envoyer juste le path
+        libraryPaths.push(libraryPath);
+      } else {
+        // Nouveau fichier - uploader
+        formData.append("files", image);
+      }
     });
+    if (libraryPaths.length > 0) {
+      formData.append("libraryPaths", JSON.stringify(libraryPaths));
+    }
     formData.append("isVisible", isVisible.toString());
     formData.append("theme", selectedTheme);
     formData.append("framework", selectedFramework);

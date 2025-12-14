@@ -902,6 +902,38 @@ export const hasFiles = (completion: string): boolean => {
   return /<coderocketFile/i.test(completion);
 };
 
+export const cleanThinkingTags = (content: string): string => {
+  if (!content) return content;
+
+  let cleaned = content;
+
+  cleaned = cleaned
+    .replace(/<thinking[^>]*>[\s\S]*?<\/thinking>/g, "")
+    .replace(/<thinking[^>]*>[\s\S]*$/g, "")
+    .replace(/<thinking[^>]*>/g, "")
+    .replace(/<\/thinking>/g, "");
+
+  const incompletePatterns = [
+    /<thinkin[\s\S]*$/g,
+    /<thinki[\s\S]*$/g,
+    /<think[\s\S]*$/g,
+    /<thin[\s\S]*$/g,
+    /<thi[\s\S]*$/g,
+  ];
+
+  for (const pattern of incompletePatterns) {
+    const match = cleaned.match(pattern);
+    if (match) {
+      const matchIndex = cleaned.lastIndexOf(match[0]);
+      if (matchIndex !== -1) {
+        cleaned = cleaned.substring(0, matchIndex);
+      }
+    }
+  }
+
+  return cleaned;
+};
+
 export function splitCompletedContentIntoChunks(
   content: string,
 ): ContentChunk[] {
@@ -1036,10 +1068,14 @@ export const splitContentIntoChunks = (completion: string): ContentChunk[] => {
     // Les segments pairs sont du texte normal, les segments impairs sont remplacés par les matches
     if (i % 2 === 0) {
       if (segments[i].trim()) {
-        chunks.push({
-          type: "text",
-          content: segments[i].trim(),
-        });
+        const cleanedText = segments[i].trim();
+
+        if (cleanedText) {
+          chunks.push({
+            type: "text",
+            content: cleanedText,
+          });
+        }
       }
     } else {
       const matchIndex = Math.floor(i / 2);

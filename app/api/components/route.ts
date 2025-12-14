@@ -226,6 +226,10 @@ export async function POST(req: Request) {
       Number(formData.get("selectedVersion")) || undefined;
     const image = formData.get("image") as File | null;
     const files = formData.getAll("files") as File[];
+    const libraryPathsStr = formData.get("libraryPaths") as string | null;
+    const libraryPaths: string[] = libraryPathsStr
+      ? JSON.parse(libraryPathsStr)
+      : [];
     const prompt = formData.get("prompt") as string | null;
     const aiPrompt = formData.get("aiPrompt") as string | null;
     const selectedElementStr = formData.get("selectedElement") as string | null;
@@ -260,6 +264,7 @@ export async function POST(req: Request) {
       prompt,
       aiPrompt,
       selectedVersion,
+      libraryPaths,
     );
 
     const supabase = await createClient();
@@ -879,6 +884,7 @@ const validateRequest = async (
   prompt: string | null,
   aiPrompt: string | null,
   selectedVersion?: number,
+  libraryPaths: string[] = [],
 ): Promise<{
   messagesFromDatabase: Tables<"messages">[];
   subscription: Tables<"subscriptions"> | null;
@@ -977,8 +983,9 @@ const validateRequest = async (
 
   // Si chat.clone_url existe en base, c'est qu'on est dans un contexte de clonage
   if (chat.clone_url) {
-    // Vérifier si c'est une demande de clonage d'une autre page
     const promptToCheck = finalPrompt || prompt || aiPrompt || "";
+
+    // Vérifier si c'est une demande de clonage d'une autre page
     if (promptToCheck.includes("Clone another page:")) {
       const anotherPageMatch = promptToCheck.match(
         /Clone another page:\s*(https?:\/\/[^\s]+)/,
@@ -995,10 +1002,18 @@ const validateRequest = async (
           );
         }
       }
-    } else {
-      // Sinon, utiliser directement chat.clone_url de la base de données
+    }
+    // Vérifier si c'est la première génération (selectedVersion 0 ou undefined)
+    // ou si le prompt contient explicitement "Clone this website"
+    else if (
+      selectedVersion === undefined ||
+      selectedVersion === 0 ||
+      promptToCheck.toLowerCase().includes("clone this website")
+    ) {
       urlToClone = chat.clone_url;
     }
+    // Pour les itérations normales (version > 0 sans demande de clone), ne pas scraper le site
+    // Les fichiers uploadés par l'utilisateur seront utilisés à la place
   }
 
   if (urlToClone) {
@@ -1292,6 +1307,44 @@ Use standard Tailwind CSS classes and shadcn/ui components.`;
       mimeType: "image/jpeg",
       source: "clone",
     });
+  }
+
+  // Support for files from library (already uploaded, just reference them)
+  if (libraryPaths.length > 0) {
+    for (const libraryPath of libraryPaths) {
+      const { data: publicUrlData } = supabase.storage
+        .from("images")
+        .getPublicUrl(libraryPath);
+
+      // Determine file type from path
+      const ext = libraryPath.split(".").pop()?.toLowerCase() || "";
+      let fileType: "image" | "pdf" | "text" = "image";
+      let mimeType = "image/png";
+      if (ext === "pdf") {
+        fileType = "pdf";
+        mimeType = "application/pdf";
+      } else if (ext === "txt") {
+        fileType = "text";
+        mimeType = "text/plain";
+      } else if (["jpg", "jpeg"].includes(ext)) {
+        mimeType = "image/jpeg";
+      } else if (ext === "gif") {
+        mimeType = "image/gif";
+      } else if (ext === "webp") {
+        mimeType = "image/webp";
+      }
+
+      const isFigmaFile = libraryPath.toLowerCase().includes("figma");
+
+      uploadedFilesInfo.push({
+        path: libraryPath,
+        publicUrl: publicUrlData.publicUrl,
+        type: fileType,
+        mimeType,
+        source: isFigmaFile ? "figma" : undefined,
+      });
+      updatedImages.push(libraryPath);
+    }
   }
 
   // Support for multiple files (images + PDFs)

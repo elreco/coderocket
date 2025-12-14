@@ -46,17 +46,18 @@ export function FileBadge({ file, onRemove, disabled }: FileBadgeProps) {
       <span className="text-foreground text-sm font-medium" title={file.name}>
         {file.name.length > 20 ? `${file.name.substring(0, 17)}...` : file.name}
       </span>
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          if (!disabled) onRemove();
-        }}
-        disabled={disabled}
-        className="hover:bg-muted ml-1 rounded-full p-0.5 transition-colors"
-      >
-        <X className="size-3.5" />
-      </button>
+      {!disabled && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onRemove();
+          }}
+          className="hover:bg-muted ml-1 rounded-full p-0.5 transition-colors"
+        >
+          <X className="size-3.5" />
+        </button>
+      )}
     </div>
   );
 

@@ -427,7 +427,7 @@ export const createChat = async (prompt: string, formData: FormData) => {
     }
   }
 
-  let imageUrl = null;
+  let imageUrl: string | null = null;
   const filesArray: {
     url: string;
     order: number;
@@ -436,14 +436,55 @@ export const createChat = async (prompt: string, formData: FormData) => {
     source?: string;
   }[] = [];
   const files = formData.getAll("files") as File[];
+  const libraryPathsStr = formData.get("libraryPaths") as string | null;
+  const libraryPaths: string[] = libraryPathsStr
+    ? JSON.parse(libraryPathsStr)
+    : [];
 
-  if (!subscription && files.length > 0) {
+  if (!subscription && (files.length > 0 || libraryPaths.length > 0)) {
     return {
       error: {
         title: "You can't upload files with a free plan",
         description: "Please upgrade to continue.",
       },
     };
+  }
+
+  // Handle files from library (already uploaded, just reference them)
+  if (libraryPaths.length > 0) {
+    libraryPaths.forEach((libraryPath, i) => {
+      const ext = libraryPath.split(".").pop()?.toLowerCase() || "";
+      let fileType = "image";
+      let mimeType = "image/png";
+      if (ext === "pdf") {
+        fileType = "pdf";
+        mimeType = "application/pdf";
+      } else if (ext === "txt") {
+        fileType = "text";
+        mimeType = "text/plain";
+      } else if (["jpg", "jpeg"].includes(ext)) {
+        mimeType = "image/jpeg";
+      } else if (ext === "gif") {
+        mimeType = "image/gif";
+      } else if (ext === "webp") {
+        mimeType = "image/webp";
+      }
+
+      const isFigmaFile = libraryPath.toLowerCase().includes("figma");
+
+      const fileData = {
+        url: libraryPath,
+        order: filesArray.length + i,
+        type: fileType,
+        mimeType,
+        ...(isFigmaFile && { source: "figma" }),
+      };
+
+      filesArray.push(fileData);
+      if (filesArray.length === 1) {
+        imageUrl = libraryPath;
+      }
+    });
   }
 
   if (files.length > 0) {
@@ -466,14 +507,14 @@ export const createChat = async (prompt: string, formData: FormData) => {
 
       const fileData = {
         url: fileInfo.path,
-        order: i,
+        order: filesArray.length + i,
         type: fileInfo.type,
         mimeType: fileInfo.mimeType,
         ...(isFigmaFile && { source: "figma" }),
       };
 
       filesArray.push(fileData);
-      if (i === 0) {
+      if (!imageUrl) {
         imageUrl = fileInfo.path;
       }
     });

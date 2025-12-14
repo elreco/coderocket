@@ -124,7 +124,7 @@ export default function ComponentSidebar({
     }
   }, [isLoading]);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const isLoggedIn = !!connectedUser?.id;
   const [inputIsValid, setInputIsValid] = useState(true);
   const hasAssistantMessage = useMemo(
     () => messages.some((m) => m.role === "assistant"),
@@ -181,11 +181,9 @@ export default function ComponentSidebar({
     const fetchSubscription = async () => {
       try {
         setIsLoadingSubscription(true);
-        const userId = connectedUser?.id;
-        setIsLoggedIn(!!userId);
 
-        if (userId) {
-          const sub = await getSubscription(userId);
+        if (connectedUser?.id) {
+          const sub = await getSubscription(connectedUser.id);
           setSubscription(sub);
         } else {
           setSubscription(null);
@@ -198,7 +196,7 @@ export default function ComponentSidebar({
     };
 
     fetchSubscription();
-  }, [connectedUser]);
+  }, [connectedUser?.id]);
 
   const submitPrompt = (promptText: string) => {
     // Activer isScrapingWebsite si le prompt contient "Clone this website" ou "Clone another page"
@@ -423,31 +421,6 @@ export default function ComponentSidebar({
     // Plus besoin de simuler la progression, on affiche juste un message simple
     return null;
   }, [setIsScrapingWebsite]);
-
-  // Détecter automatiquement les prompts de clonage et activer isScrapingWebsite
-  // Utiliser useRef pour éviter les boucles infinies
-  const hasActivatedScraping = useRef(false);
-  useEffect(() => {
-    // Activer immédiatement si c'est un prompt de clonage, même avant isLoading
-    if (input && !hasActivatedScraping.current) {
-      const isClonePrompt =
-        input.toLowerCase().includes("clone this website") ||
-        input.toLowerCase().includes("clone another page") ||
-        input.toLowerCase().includes("clone another page:");
-      if (isClonePrompt && !isScrapingWebsite) {
-        hasActivatedScraping.current = true;
-        setIsScrapingWebsite(true);
-        const urlMatch = input.match(/https?:\/\/[^\s]+/);
-        if (urlMatch) {
-          setCurrentCloneUrl(urlMatch[0]);
-        }
-      }
-    }
-    // Réinitialiser quand isLoading devient false
-    if (!isLoading) {
-      hasActivatedScraping.current = false;
-    }
-  }, [input, isLoading, isScrapingWebsite, setIsScrapingWebsite]);
 
   useEffect(() => {
     // Démarrer la simulation de scraping si isScrapingWebsite est activé
@@ -902,9 +875,11 @@ export default function ComponentSidebar({
               "transition-all duration-200",
               isLoading &&
                 input &&
-                (selectedVersion ?? 0) > 0 &&
                 !messages.some(
-                  (m) => m.version === selectedVersion && m.role === "user",
+                  (m) =>
+                    m.role === "user" &&
+                    m.version === selectedVersion &&
+                    m.content === input,
                 )
                 ? "block"
                 : "hidden",
@@ -1254,7 +1229,7 @@ export default function ComponentSidebar({
                         key={`${file.name}-${index}`}
                         file={file}
                         onRemove={() => handleFileRemove(index)}
-                        disabled={isLoading || isLengthError || !!buildError}
+                        disabled={isLengthError || !!buildError}
                       />
                     ))}
                   </div>

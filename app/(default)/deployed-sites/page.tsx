@@ -4,7 +4,7 @@ import { DeployedSiteCard } from "@/components/deployed-site-card";
 
 import { getDeployedSites } from "../components/actions";
 
-export const revalidate = 60; // Revalidate every 60 seconds
+export const dynamic = "force-dynamic"; // Force dynamic rendering because we use cookies
 
 export async function generateMetadata() {
   return {

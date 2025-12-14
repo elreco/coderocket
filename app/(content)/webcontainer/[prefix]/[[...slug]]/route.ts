@@ -635,7 +635,70 @@ export async function GET(
       <span>Built with CodeRocket 🚀</span>
     </a>
   </div>
-  <iframe src="${iframeSrc}"></iframe>
+  <iframe id="preview-iframe" src="${iframeSrc}"></iframe>
+  <script>
+    (function() {
+      const iframe = document.getElementById('preview-iframe');
+      const baseUrl = window.location.origin;
+
+      function updateUrl(path) {
+        const newUrl = baseUrl + (path === '/' ? '' : path);
+        window.history.pushState({ path: path }, '', newUrl);
+      }
+
+      function updateIframeSrc(path) {
+        const currentSrc = iframe.src;
+        const url = new URL(currentSrc);
+        url.pathname = path === '/' ? '' : path;
+        iframe.src = url.toString();
+      }
+
+      window.addEventListener('message', function(event) {
+        if (
+          !event.data ||
+          typeof event.data !== 'object' ||
+          event.data.type !== 'coderocket-route-change'
+        ) {
+          return;
+        }
+
+        const path = event.data.path;
+        if (typeof path !== 'string') {
+          return;
+        }
+
+        if (event.origin && event.origin !== 'null') {
+          try {
+            const originHost = new URL(event.origin).hostname;
+            const allowedHosts = [
+              'preview.coderocket.app',
+              'webcontainer.coderocket.app',
+            ];
+            const isAllowed = allowedHosts.some(
+              (host) => originHost === host || originHost.endsWith('.' + host),
+            );
+            if (!isAllowed) {
+              return;
+            }
+          } catch {
+            return;
+          }
+        }
+
+        updateUrl(path);
+      });
+
+      window.addEventListener('popstate', function(event) {
+        const path = window.location.pathname;
+        updateIframeSrc(path);
+      });
+
+      const initialPath = window.location.pathname;
+      if (initialPath !== '/' && initialPath !== '') {
+        updateIframeSrc(initialPath);
+      }
+    })();
+  </script>
 </body>
 </html>`;
 

@@ -243,6 +243,7 @@ export default function ComponentPreview() {
       window.removeEventListener("message", handleRouteMessage);
     };
   }, [syncPreviewPath]);
+  // La première génération est quand selectedVersion est 0
   const isFirstGeneration = selectedVersion === 0;
   const isGenerating = isLoading || (loadingState && loadingState !== "error");
 

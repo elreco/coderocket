@@ -74,6 +74,7 @@ const RenderContent = React.memo(
     breakpoint: BreakpointType;
     onRouteChange: (path: string) => void;
   }) => {
+    // La première génération est quand selectedVersion est 0
     const isFirstGeneration = selectedVersion === 0;
     const isPreviousVersionError =
       !isFirstGeneration &&
@@ -89,6 +90,7 @@ const RenderContent = React.memo(
         "w-[375px] h-full max-w-full max-h-full shadow-2xl",
     );
 
+    // Afficher le loader mockup pendant la première génération ou en cas d'erreur
     if (
       (isLoading && !isWebcontainerReady && isFirstGeneration) ||
       isPreviousVersionError
@@ -199,16 +201,13 @@ export default function CodePreview() {
       })
     | null
   >(null);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const isLoggedIn = !!connectedUser?.id;
 
   useEffect(() => {
     const fetchSubscription = async () => {
       try {
-        const userId = connectedUser?.id;
-        setIsLoggedIn(!!userId);
-
-        if (userId) {
-          const sub = await getSubscription(userId);
+        if (connectedUser?.id) {
+          const sub = await getSubscription(connectedUser.id);
           setSubscription(sub);
         } else {
           setSubscription(null);
@@ -219,7 +218,7 @@ export default function CodePreview() {
     };
 
     fetchSubscription();
-  }, [connectedUser]);
+  }, [connectedUser?.id]);
 
   const isPremium = !!subscription;
 

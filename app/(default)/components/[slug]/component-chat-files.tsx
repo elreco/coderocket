@@ -66,6 +66,7 @@ export default function ComponentChatFiles({
     setForceBuild,
     setWebcontainerReady,
     setSelectedVersion,
+    files: uploadedFiles,
   } = useComponentContext();
 
   const [files, setFiles] = useState<ChatFile[]>([]);
@@ -84,13 +85,16 @@ export default function ComponentChatFiles({
       return;
     }
 
+    // Utiliser le contenu tel quel pour préserver le streaming
+    const cleanedContent = message.content;
+
     // Extraire les fichiers une seule fois
-    const extractedFiles = extractDirectFiles(message.content);
+    const extractedFiles = extractDirectFiles(cleanedContent);
 
     // NOUVEAU: Extraire spécifiquement le texte avant le premier artifact ou balise coderocketFile
     let introText = "";
-    const firstArtifactIndex = message.content.indexOf("<coderocketArtifact");
-    const firstFileIndex = message.content.indexOf("<coderocketFile");
+    const firstArtifactIndex = cleanedContent.indexOf("<coderocketArtifact");
+    const firstFileIndex = cleanedContent.indexOf("<coderocketFile");
 
     // Si on a du texte avant les balises, l'extraire
     if (firstArtifactIndex > 0 || firstFileIndex > 0) {
@@ -101,24 +105,22 @@ export default function ComponentChatFiles({
       );
 
       if (cutIndex < Number.MAX_SAFE_INTEGER) {
-        introText = message.content.substring(0, cutIndex).trim();
+        introText = cleanedContent.substring(0, cutIndex).trim();
 
         if (introText.includes("<!-- FINISH_REASON:")) {
           introText = introText.split("<!-- FINISH_REASON:")[0].trim();
         }
 
-        introText = introText
-          .replace(/<thinking>[\s\S]*?<\/thinking>/g, "")
-          .trim();
+        introText = introText.trim();
       }
     }
 
     // Découper le contenu en chunks
     let contentChunks;
     if (isLoading) {
-      contentChunks = splitContentIntoChunks(message.content);
+      contentChunks = splitContentIntoChunks(cleanedContent);
     } else {
-      contentChunks = splitCompletedContentIntoChunks(message.content);
+      contentChunks = splitCompletedContentIntoChunks(cleanedContent);
     }
 
     // NOUVEAU: Fonction pour vérifier si un texte contient des balises incomplètes
@@ -234,20 +236,6 @@ export default function ComponentChatFiles({
               .replace(/<!--\s*FINISH_REASON:[^>]*-->/g, "")
               .trim();
           }
-
-          // Supprimer toutes les balises thinking (complètes ou incomplètes)
-          // et tous les fragments de balise thinking en cours d'écriture
-          cleanedContent = cleanedContent
-            .replace(/<thinking[^>]*>[\s\S]*?<\/thinking>/g, "")
-            .replace(/<thinking[^>]*>[\s\S]*$/g, "")
-            .replace(/<thinking[^>]*>/g, "")
-            .replace(/<\/thinking>/g, "")
-            .replace(/<thinking[\s\S]*$/g, "")
-            .replace(/<thinkin[\s\S]*$/g, "")
-            .replace(/<thinki[\s\S]*$/g, "")
-            .replace(/<think[\s\S]*$/g, "")
-            .replace(/<thin[\s\S]*$/g, "")
-            .replace(/<thi[\s\S]*$/g, "");
 
           // Supprimer toutes les balises coderocket du texte (même incomplètes)
           // et tous les fragments de balise coderocket en cours d'écriture
@@ -566,6 +554,18 @@ ${extractedFiles
                   ? [{ url: message.prompt_image, order: 0 }]
                   : [];
               })()}
+              files={
+                // Afficher les fichiers uploadés pour le message en cours de génération
+                // Ne pas afficher si le message a déjà des fichiers (pour éviter les doublons)
+                isLoading &&
+                message.version === selectedVersion &&
+                uploadedFiles.length > 0 &&
+                (!message.files ||
+                  !Array.isArray(message.files) ||
+                  message.files.length === 0)
+                  ? uploadedFiles
+                  : undefined
+              }
               storageUrl={storageUrl}
             />
           </div>

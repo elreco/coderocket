@@ -56,9 +56,24 @@ export function ChunkReader({
       artifactFiles = files;
     }
 
+    // Nettoyer les fragments incomplets de balises thinking avant affichage
+    let textContent = chunk.content;
+    if (chunk.type === "text") {
+      // Supprimer les fragments incomplets à la fin (comme "<thinkin", "<think", etc.)
+      textContent = textContent
+        .replace(/<thinkin[\s\S]*$/gi, "")
+        .replace(/<thinki[\s\S]*$/gi, "")
+        .replace(/<think[\s\S]*$/gi, "")
+        .replace(/<thin[\s\S]*$/gi, "")
+        .replace(/<thi[\s\S]*$/gi, "")
+        .trim();
+    }
+
     return (
       <div key={index} className="text-sm">
-        {chunk.type === "text" && <Markdown>{chunk.content}</Markdown>}
+        {chunk.type === "text" && textContent && (
+          <Markdown>{textContent}</Markdown>
+        )}
         {chunk.type === "thinking" && <ThinkingBlock content={chunk.content} />}
         {chunk.type === "artifact" && (
           <div className="w-full space-y-2">

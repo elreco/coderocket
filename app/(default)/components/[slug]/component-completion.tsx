@@ -279,7 +279,7 @@ export default function ComponentCompletion({
   const [currentGeneratingFile, setCurrentGeneratingFile] = useState<
     string | null
   >(null);
-  const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
+  const isUserLoggedIn = !!connectedUser;
   const [isElementSelectionActive, setIsElementSelectionActive] =
     useState(false);
   const [selectedElement, setSelectedElement] =
@@ -368,10 +368,6 @@ export default function ComponentCompletion({
     historyIndexRef.current = newIndex;
     navigatePreview(targetPath, { pushHistory: false });
   };
-
-  useEffect(() => {
-    setIsUserLoggedIn(!!connectedUser);
-  }, [connectedUser]);
 
   useEffect(() => {
     if (!authorized && isElementSelectionActive) {
@@ -573,9 +569,21 @@ export default function ComponentCompletion({
         }
 
         const formData = new FormData();
+        const libraryPaths: string[] = [];
         currentFiles.forEach((file) => {
-          formData.append("files", file);
+          const libraryPath = (file as File & { __libraryPath?: string })
+            .__libraryPath;
+          if (libraryPath) {
+            // Fichier de la bibliothèque - envoyer juste le path
+            libraryPaths.push(libraryPath);
+          } else {
+            // Nouveau fichier - uploader
+            formData.append("files", file);
+          }
         });
+        if (libraryPaths.length > 0) {
+          formData.append("libraryPaths", JSON.stringify(libraryPaths));
+        }
         formData.append("id", chatId);
         formData.append("selectedVersion", String(selectedVersion));
         formData.append("prompt", promptValue);
@@ -1097,7 +1105,7 @@ export default function ComponentCompletion({
     setLikesCount(refreshedChat.likes || 0);
   }, [chatId]);
 
-  const refreshChatData = async () => {
+  const refreshChatData = useCallback(async () => {
     const refreshedChatMessages = await fetchMessagesByChatId(chatId, false);
     if (!refreshedChatMessages) return;
     setMessages(refreshedChatMessages);
@@ -1105,7 +1113,6 @@ export default function ComponentCompletion({
     if (!refreshedChat) return;
     setFetchedChat(refreshedChat);
     setLikesCount(refreshedChat.likes || 0);
-    // Always get artifact code from the selected version, not from chats table
     const artifactCodeFromVersion = await getArtifactCodeByVersion(
       chatId,
       selectedVersion,
@@ -1170,7 +1177,7 @@ export default function ComponentCompletion({
     }
 
     return refreshedChatMessages;
-  };
+  }, [chatId, selectedVersion, connectedUser?.id, supabase]);
 
   const handleChatFiles = (
     _completion: string,
@@ -1412,7 +1419,7 @@ export default function ComponentCompletion({
 
   useEffect(() => {
     const channel = supabase
-      .channel("schema-db-changes")
+      .channel(`component-sync-${chatId}`)
       .on(
         "postgres_changes",
         {
@@ -1436,12 +1443,18 @@ export default function ComponentCompletion({
         },
         async (payload) => {
           setMessages((prevMessages) => {
-            const updatedMessages = prevMessages.map((message) =>
-              message.id === payload.new.id
-                ? { ...message, ...payload.new }
-                : message,
+            const existingIndex = prevMessages.findIndex(
+              (m) => m.id === payload.new.id,
             );
-            return updatedMessages;
+            if (existingIndex >= 0) {
+              return prevMessages.map((message) =>
+                message.id === payload.new.id
+                  ? { ...message, ...payload.new }
+                  : message,
+              );
+            } else {
+              return [...prevMessages, payload.new as ChatMessage];
+            }
           });
 
           if (
@@ -1470,12 +1483,196 @@ export default function ComponentCompletion({
           }
         },
       )
-      .subscribe();
+      .on(
+        "postgres_changes",
+        {
+          event: "DELETE",
+          schema: "public",
+          table: "messages",
+          filter: `chat_id=eq.${chatId}`,
+        },
+        async (payload) => {
+          setMessages((prevMessages) =>
+            prevMessages.filter((m) => m.id !== payload.old.id),
+          );
+          if (isLoading) return;
+          await refreshChatData();
+        },
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "chats",
+          filter: `id=eq.${chatId}`,
+        },
+        async (payload) => {
+          if (fetchedChat) {
+            const updatedChat = { ...fetchedChat, ...payload.new };
+            setFetchedChat(updatedChat as Tables<"chats">);
+
+            if (payload.new.likes !== undefined) {
+              setLikesCount(payload.new.likes as number);
+            }
+
+            if (
+              payload.new.title !== undefined &&
+              payload.new.title !== title
+            ) {
+              const newTitle =
+                (payload.new.title as string) ||
+                `Version #${selectedVersion ?? 0}`;
+              setTitle(newTitle);
+              document.title = `${newTitle} - CodeRocket`;
+            }
+
+            if (payload.new.is_private !== undefined) {
+              setVisible(!(payload.new.is_private as boolean));
+            }
+
+            if (
+              payload.new.is_deployed !== undefined &&
+              payload.new.is_deployed
+            ) {
+              try {
+                const { data: domainData } = await supabase
+                  .from("custom_domains")
+                  .select("*")
+                  .eq("chat_id", chatId)
+                  .maybeSingle();
+                if (domainData) {
+                  setCustomDomain(domainData);
+                }
+              } catch (error) {
+                console.error("Error fetching custom domain:", error);
+              }
+            }
+          }
+        },
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "custom_domains",
+          filter: `chat_id=eq.${chatId}`,
+        },
+        async (payload) => {
+          setCustomDomain(payload.new as CustomDomainData);
+        },
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "custom_domains",
+          filter: `chat_id=eq.${chatId}`,
+        },
+        async (payload) => {
+          setCustomDomain(payload.new as CustomDomainData);
+        },
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "DELETE",
+          schema: "public",
+          table: "custom_domains",
+          filter: `chat_id=eq.${chatId}`,
+        },
+        async () => {
+          setCustomDomain(null);
+        },
+      );
+
+    if (connectedUser?.id) {
+      channel
+        .on(
+          "postgres_changes",
+          {
+            event: "UPDATE",
+            schema: "public",
+            table: "subscriptions",
+            filter: `user_id=eq.${connectedUser.id}`,
+          },
+          async (payload) => {
+            if (
+              payload.new.status === "active" ||
+              payload.new.status === "trialing"
+            ) {
+              try {
+                const { data } = await supabase
+                  .from("subscriptions")
+                  .select("*, prices(*, products(*))")
+                  .eq("id", payload.new.id)
+                  .maybeSingle();
+                if (data) {
+                  setSubscription(data);
+                }
+              } catch (error) {
+                console.error("Error fetching subscription:", error);
+              }
+            } else {
+              setSubscription(null);
+            }
+          },
+        )
+        .on(
+          "postgres_changes",
+          {
+            event: "UPDATE",
+            schema: "public",
+            table: "github_connections",
+            filter: `user_id=eq.${connectedUser.id}`,
+          },
+          async (payload) => {
+            setGithubConnection(payload.new as Tables<"github_connections">);
+          },
+        )
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "github_connections",
+            filter: `user_id=eq.${connectedUser.id}`,
+          },
+          async (payload) => {
+            setGithubConnection(payload.new as Tables<"github_connections">);
+          },
+        )
+        .on(
+          "postgres_changes",
+          {
+            event: "DELETE",
+            schema: "public",
+            table: "github_connections",
+            filter: `user_id=eq.${connectedUser.id}`,
+          },
+          async () => {
+            setGithubConnection(null);
+          },
+        );
+    }
+
+    channel.subscribe();
 
     return () => {
       channel.unsubscribe();
     };
-  }, [chatId, selectedVersion, isLoading, supabase]);
+  }, [
+    chatId,
+    selectedVersion,
+    isLoading,
+    supabase,
+    fetchedChat,
+    title,
+    connectedUser?.id,
+    refreshChatData,
+  ]);
 
   return (
     <ComponentContext.Provider value={contextValue}>
