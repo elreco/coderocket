@@ -14,7 +14,14 @@ import {
   Rocket,
   Database,
 } from "lucide-react";
-import { useEffect, useState, useRef, useCallback, useMemo } from "react";
+import {
+  useEffect,
+  useState,
+  useRef,
+  useCallback,
+  useMemo,
+  Fragment,
+} from "react";
 
 import { getSubscription } from "@/app/supabase-server";
 import { CloneAnotherPageButton } from "@/components/clone-another-page-button";
@@ -686,7 +693,7 @@ export default function ComponentSidebar({
                     (!completion || completion.length === 0)
                   ) {
                     return (
-                      <>
+                      <Fragment key={`clone-loader-${m.id}`}>
                         {result}
                         <div className="flex items-center justify-center py-8 px-3">
                           <div className="flex flex-col items-center gap-3">
@@ -717,7 +724,7 @@ export default function ComponentSidebar({
                             )}
                           </div>
                         </div>
-                      </>
+                      </Fragment>
                     );
                   }
 
@@ -729,7 +736,7 @@ export default function ComponentSidebar({
                     (!completion || completion.length === 0)
                   ) {
                     return (
-                      <>
+                      <Fragment key={`loader-${m.id}`}>
                         {result}
                         <div className="flex items-center justify-center py-8 px-3">
                           <div className="flex flex-col items-center gap-3">
@@ -739,7 +746,7 @@ export default function ComponentSidebar({
                             </p>
                           </div>
                         </div>
-                      </>
+                      </Fragment>
                     );
                   }
 

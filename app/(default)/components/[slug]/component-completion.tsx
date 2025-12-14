@@ -1097,7 +1097,7 @@ export default function ComponentCompletion({
     setLikesCount(refreshedChat.likes || 0);
   }, [chatId]);
 
-  const refreshChatData = useCallback(async () => {
+  const refreshChatData = async () => {
     const refreshedChatMessages = await fetchMessagesByChatId(chatId, false);
     if (!refreshedChatMessages) return;
     setMessages(refreshedChatMessages);
@@ -1170,8 +1170,7 @@ export default function ComponentCompletion({
     }
 
     return refreshedChatMessages;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chatId, selectedVersion, supabase]);
+  };
 
   const handleChatFiles = (
     _completion: string,
@@ -1476,7 +1475,7 @@ export default function ComponentCompletion({
     return () => {
       channel.unsubscribe();
     };
-  }, [chatId, selectedVersion, isLoading, refreshChatData, supabase]);
+  }, [chatId, selectedVersion, isLoading, supabase]);
 
   return (
     <ComponentContext.Provider value={contextValue}>

@@ -1,3 +1,5 @@
+"use server";
+
 import {
   getUpdatedArtifactCode,
   extractFilesFromArtifact,
@@ -5,13 +7,13 @@ import {
 import { Framework } from "../config";
 import { defaultArtifactCode } from "../default-artifact-code";
 
-import { createClient } from "./client";
+import { createClient } from "./server";
 
 export const getCompleteArtifactCodeByVersion = async (
   chatId: string,
   version?: number,
 ): Promise<string | null> => {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   // Get chat framework for default files
   const { data: chat } = await supabase

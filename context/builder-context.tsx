@@ -5,6 +5,7 @@ import React, {
   useContext,
   useState,
   useEffect,
+  useCallback,
   ReactNode,
 } from "react";
 
@@ -43,37 +44,48 @@ export const BuilderProvider = ({ children }: { children: ReactNode }) => {
     if (selectedVersion === undefined) {
       setBuildError(null);
       setLoadingState(null);
+    }
+  }, [selectedVersion]);
+
+  const fetchBuildStatus = useCallback(async () => {
+    if (selectedVersion === undefined) {
       return;
     }
 
-    if (isLoading) {
+    const { data: message } = await supabase
+      .from("messages")
+      .select("build_error, is_built")
+      .eq("chat_id", chatId)
+      .eq("role", "assistant")
+      .eq("version", selectedVersion)
+      .single();
+
+    if (message?.build_error) {
+      setBuildError(message.build_error as BuildError);
+      setLoadingState("error");
+      setWebcontainerReady(false);
+    } else if (message && !message.is_built) {
+      setLoadingState("processing");
+      setWebcontainerReady(false);
+    } else if (message?.is_built) {
+      setBuildError(null);
+      setLoadingState(null);
+      setWebcontainerReady(true);
+    }
+  }, [chatId, selectedVersion, setWebcontainerReady, supabase]);
+
+  useEffect(() => {
+    if (selectedVersion === undefined || isLoading) {
       return;
     }
-
-    const fetchBuildStatus = async () => {
-      const { data: message } = await supabase
-        .from("messages")
-        .select("build_error, is_built")
-        .eq("chat_id", chatId)
-        .eq("role", "assistant")
-        .eq("version", selectedVersion)
-        .single();
-
-      if (message?.build_error) {
-        setBuildError(message.build_error as BuildError);
-        setLoadingState("error");
-        setWebcontainerReady(false);
-      } else if (message && !message.is_built) {
-        setLoadingState("processing");
-        setWebcontainerReady(false);
-      } else if (message?.is_built) {
-        setBuildError(null);
-        setLoadingState(null);
-        setWebcontainerReady(true);
-      }
-    };
 
     fetchBuildStatus();
+  }, [selectedVersion, isLoading, fetchBuildStatus]);
+
+  useEffect(() => {
+    if (selectedVersion === undefined || isLoading) {
+      return;
+    }
 
     const channel = supabase
       .channel(`selected-version-${chatId}-${selectedVersion}`)
@@ -103,7 +115,7 @@ export const BuilderProvider = ({ children }: { children: ReactNode }) => {
     return () => {
       channel.unsubscribe();
     };
-  }, [chatId, selectedVersion, isLoading, setWebcontainerReady, supabase]);
+  }, [chatId, selectedVersion, isLoading, fetchBuildStatus, supabase]);
 
   return (
     <BuilderContext.Provider

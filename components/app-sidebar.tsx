@@ -131,11 +131,11 @@ export function AppSidebar({
   useEffect(() => {
     const supabase = createClient();
 
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (event) => {
-        if (event === "SIGNED_OUT") {
-          setUser(null);
-        } else if (event === "SIGNED_IN") {
+    const { data: authListener } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_OUT") {
+        setUser(null);
+      } else if (event === "SIGNED_IN") {
+        setTimeout(async () => {
           try {
             const userDetails = await getUserDetails();
             if (userDetails) {
@@ -144,9 +144,9 @@ export function AppSidebar({
           } catch (error) {
             console.error("Error fetching user details:", error);
           }
-        }
-      },
-    );
+        }, 0);
+      }
+    });
 
     return () => {
       authListener?.subscription.unsubscribe();
