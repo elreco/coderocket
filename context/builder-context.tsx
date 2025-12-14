@@ -35,6 +35,7 @@ export const BuilderProvider = ({ children }: { children: ReactNode }) => {
   const [loadingState, setLoadingState] =
     useState<WebcontainerLoadingState>(null);
 
+  const supabase = createClient();
   const { selectedVersion, chatId, isLoading, setWebcontainerReady } =
     useComponentContext();
 
@@ -48,8 +49,6 @@ export const BuilderProvider = ({ children }: { children: ReactNode }) => {
     if (isLoading) {
       return;
     }
-
-    const supabase = createClient();
 
     const fetchBuildStatus = async () => {
       const { data: message } = await supabase
@@ -104,7 +103,7 @@ export const BuilderProvider = ({ children }: { children: ReactNode }) => {
     return () => {
       channel.unsubscribe();
     };
-  }, [chatId, selectedVersion, isLoading, setWebcontainerReady]);
+  }, [chatId, selectedVersion, isLoading, setWebcontainerReady, supabase]);
 
   return (
     <BuilderContext.Provider

@@ -14,9 +14,8 @@ export function AuthSyncProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const isBroadcasting = useRef<boolean>(false);
 
+  const supabase = createClient();
   useEffect(() => {
-    const supabase = createClient();
-
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event) => {
         if (isBroadcasting.current) {
@@ -62,7 +61,7 @@ export function AuthSyncProvider({ children }: { children: React.ReactNode }) {
       authListener?.subscription.unsubscribe();
       unsubscribeBroadcast();
     };
-  }, [router]);
+  }, []);
 
   return <>{children}</>;
 }

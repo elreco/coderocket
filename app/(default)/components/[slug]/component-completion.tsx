@@ -1423,6 +1423,7 @@ export default function ComponentCompletion({
           filter: `chat_id=eq.${chatId}`,
         },
         async () => {
+          if (isLoading) return;
           await refreshChatData();
         },
       )

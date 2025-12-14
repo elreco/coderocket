@@ -268,27 +268,6 @@ export default function ComponentPreview() {
       isGenerating &&
       previousVersionHasError);
 
-  // Debug logs
-  React.useEffect(() => {
-    console.log("🔍 PREVIEW EFFECT:", {
-      isScrapingWebsite,
-      selectedVersion,
-      isLoading,
-      displayVersion,
-      isScrapingFirstVersion,
-      shouldShowLoader,
-      buildError: !!buildError,
-    });
-  }, [
-    isScrapingWebsite,
-    selectedVersion,
-    isLoading,
-    displayVersion,
-    isScrapingFirstVersion,
-    shouldShowLoader,
-    buildError,
-  ]);
-
   // Forcer displayVersion à undefined pendant le scraping de la première version
   React.useEffect(() => {
     if (
@@ -307,16 +286,6 @@ export default function ComponentPreview() {
     !isLengthError &&
     (isLoading || (loadingState && loadingState !== "error"));
   const previewPathSuffix = previewPath === "/" ? "" : previewPath;
-
-  console.log("🔍 PREVIEW RENDER:", {
-    isScrapingFirstVersion,
-    isScrapingWebsite,
-    selectedVersion,
-    isLoading,
-    displayVersion,
-    isFirstGeneration,
-    shouldShowLoader,
-  });
 
   return (
     <>
