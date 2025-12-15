@@ -103,6 +103,152 @@ function optimizeMarkdownForWebsiteClone(markdown: string): string {
   return result.trim();
 }
 
+function filterJSLibrariesByFramework(
+  libraries: Array<{ name: string; type: string }>,
+  framework: Framework,
+): Array<{ name: string; type: string }> {
+  const frameworkNames: Record<Framework, string | null> = {
+    [Framework.REACT]: "React",
+    [Framework.VUE]: "Vue",
+    [Framework.SVELTE]: "Svelte",
+    [Framework.ANGULAR]: "Angular",
+    [Framework.HTML]: null,
+  };
+
+  const selectedFramework = frameworkNames[framework];
+
+  return libraries.filter((lib) => {
+    if (lib.type === "framework") {
+      if (framework === Framework.HTML) {
+        return false;
+      }
+      return lib.name === selectedFramework;
+    }
+    return true;
+  });
+}
+
+interface TypographyStyle {
+  fontSize: string;
+  lineHeight: string;
+  fontWeight: string;
+  letterSpacing: string;
+  fontFamily: string;
+}
+
+interface ComponentStyle {
+  padding?: string;
+  fontSize?: string;
+  fontWeight?: string;
+  borderRadius?: string;
+  backgroundColor?: string;
+  color?: string;
+  boxShadow?: string;
+}
+
+interface AdvancedMetadata {
+  spacing?: Array<{ value: string; frequency: number }>;
+  typography?: Record<string, TypographyStyle>;
+  colors?: Array<{ color: string; contexts: string[] }>;
+  layout?: {
+    usesGrid: boolean;
+    usesFlexbox: boolean;
+    containerWidths: string[];
+  };
+  components?: {
+    buttons: ComponentStyle[];
+    cards: ComponentStyle[];
+    navItems: ComponentStyle[];
+  };
+  jsLibraries?: Array<{ name: string; type: string }>;
+}
+
+function formatAdvancedMetadata(
+  metadata: AdvancedMetadata | null,
+  framework: Framework,
+): string {
+  if (!metadata) return "";
+
+  const sections: string[] = [];
+
+  if (metadata.spacing && metadata.spacing.length > 0) {
+    const spacingList = metadata.spacing
+      .slice(0, 30)
+      .map((s) => `${s.value} (used ${s.frequency}x)`)
+      .join(", ");
+    sections.push(`\n## SPACING SYSTEM\nCommon spacing values: ${spacingList}`);
+  }
+
+  if (metadata.typography && Object.keys(metadata.typography).length > 0) {
+    const typographyEntries = Object.entries(metadata.typography)
+      .slice(0, 10)
+      .map(([tag, styles]: [string, TypographyStyle]) => {
+        return `${tag}: ${styles.fontSize} / ${styles.lineHeight}, ${styles.fontWeight}, ${styles.fontFamily}`;
+      })
+      .join("\n");
+    sections.push(`\n## TYPOGRAPHY SCALE\n${typographyEntries}`);
+  }
+
+  if (metadata.colors && metadata.colors.length > 0) {
+    const colorList = metadata.colors
+      .slice(0, 20)
+      .map((c) => `${c.color} (${c.contexts.join(", ")})`)
+      .join("\n");
+    sections.push(`\n## COLOR PALETTE\n${colorList}`);
+  }
+
+  if (metadata.layout) {
+    const layoutInfo: string[] = [];
+    if (metadata.layout.usesGrid) layoutInfo.push("Grid");
+    if (metadata.layout.usesFlexbox) layoutInfo.push("Flexbox");
+    if (metadata.layout.containerWidths.length > 0) {
+      layoutInfo.push(
+        `Container widths: ${metadata.layout.containerWidths.slice(0, 10).join(", ")}`,
+      );
+    }
+    if (layoutInfo.length > 0) {
+      sections.push(`\n## LAYOUT PATTERNS\n${layoutInfo.join(", ")}`);
+    }
+  }
+
+  if (metadata.components) {
+    const componentInfo: string[] = [];
+    if (metadata.components.buttons.length > 0) {
+      componentInfo.push(
+        `Buttons: ${metadata.components.buttons.length} unique styles detected`,
+      );
+    }
+    if (metadata.components.cards.length > 0) {
+      componentInfo.push(
+        `Cards: ${metadata.components.cards.length} unique styles detected`,
+      );
+    }
+    if (metadata.components.navItems.length > 0) {
+      componentInfo.push(
+        `Nav items: ${metadata.components.navItems.length} unique styles detected`,
+      );
+    }
+    if (componentInfo.length > 0) {
+      sections.push(`\n## COMPONENT PATTERNS\n${componentInfo.join(", ")}`);
+    }
+  }
+
+  if (metadata.jsLibraries && metadata.jsLibraries.length > 0) {
+    const filteredLibs = filterJSLibrariesByFramework(
+      metadata.jsLibraries,
+      framework,
+    );
+    if (filteredLibs.length > 0) {
+      const libList = filteredLibs
+        .map((lib) => `${lib.name} (${lib.type})`)
+        .join(", ");
+      sections.push(`\n## JAVASCRIPT LIBRARIES\nDetected: ${libList}`);
+    }
+  }
+
+  return sections.join("\n");
+}
+
 const MAX_VERSION_HISTORY = 10;
 const MAX_INITIAL_VERSIONS = 3;
 const SUMMARY_PREVIEW_LENGTH = 80;
@@ -222,8 +368,9 @@ export async function POST(req: Request) {
   try {
     const formData = await req.formData();
     const id = formData.get("id") as string;
+    const selectedVersionRaw = formData.get("selectedVersion");
     const selectedVersion =
-      Number(formData.get("selectedVersion")) || undefined;
+      selectedVersionRaw !== null ? Number(selectedVersionRaw) : undefined;
     const image = formData.get("image") as File | null;
     const files = formData.getAll("files") as File[];
     const libraryPathsStr = formData.get("libraryPaths") as string | null;
@@ -983,7 +1130,9 @@ const validateRequest = async (
 
   // Si chat.clone_url existe en base, c'est qu'on est dans un contexte de clonage
   if (chat.clone_url) {
-    const promptToCheck = finalPrompt || prompt || aiPrompt || "";
+    // Pour décider si on doit scraper, on se base d'abord sur le prompt courant (iteration),
+    // puis, en fallback uniquement, sur le prompt enrichi initial.
+    const promptToCheck = prompt || finalPrompt || aiPrompt || "";
 
     // Vérifier si c'est une demande de clonage d'une autre page
     if (promptToCheck.includes("Clone another page:")) {
@@ -1017,11 +1166,27 @@ const validateRequest = async (
   }
 
   if (urlToClone) {
+    const currentFramework: Framework = (chat.framework ||
+      "react") as Framework;
     try {
       const cloneResult = await cloneWebsite(urlToClone);
 
       if (cloneResult.success && cloneResult.data) {
         const data = cloneResult.data;
+
+        const videosData =
+          (
+            data as {
+              videos?: Array<{
+                url: string;
+                type: string;
+                platform: string;
+                embedUrl?: string;
+                videoId?: string;
+                poster?: string | null;
+              }>;
+            }
+          ).videos || [];
 
         console.log("🧠 Scrape payload sent to AI:", {
           url: urlToClone,
@@ -1031,6 +1196,7 @@ const validateRequest = async (
           markdownLength: data.markdown?.length || 0,
           hasScreenshot: Boolean(data.screenshot),
           images: data.images || [],
+          videos: videosData,
           designMetadata: data.designMetadata || null,
         });
 
@@ -1072,52 +1238,99 @@ const validateRequest = async (
                 .join("\n")}`
             : "";
 
-        const designMetadata = (
+        const videos = (
           data as {
-            designMetadata?: {
-              colors: string[];
-              fonts: string[];
-              hasAnimations: boolean;
-              animationLibrary: string | null;
-            } | null;
+            videos?: Array<{
+              url: string;
+              type: string;
+              platform: string;
+              embedUrl?: string;
+              videoId?: string;
+              poster?: string | null;
+            }>;
           }
-        ).designMetadata;
+        ).videos;
+        const videosList =
+          videos && videos.length > 0
+            ? `\n\n# VIDEO ASSETS\nUse these videos in your implementation:\n${videos
+                .slice(0, 10)
+                .map((video, idx) => {
+                  if (video.platform === "youtube") {
+                    return `${idx + 1}. YouTube: ${video.url} (embed: ${video.embedUrl || video.url})`;
+                  } else if (video.platform === "vimeo") {
+                    return `${idx + 1}. Vimeo: ${video.url} (embed: ${video.embedUrl || video.url})`;
+                  } else {
+                    return `${idx + 1}. Video: ${video.url}${video.poster ? ` (poster: ${video.poster})` : ""}`;
+                  }
+                })
+                .join("\n")}`
+            : "";
 
-        const metadataSection = designMetadata
-          ? `\n\n# DESIGN METADATA
-${designMetadata.colors.length > 0 ? `- Colors detected: ${designMetadata.colors.join(", ")}` : ""}
-${designMetadata.fonts.length > 0 ? `- Fonts detected: ${designMetadata.fonts.join(", ")}` : ""}
-${designMetadata.hasAnimations ? `- Animation library detected: ${designMetadata.animationLibrary || "Unknown"}` : ""}`
-          : "";
+        const designMetadata = data.designMetadata as AdvancedMetadata | null;
+        const simplifiedHTML =
+          (data as { simplifiedHTML?: string }).simplifiedHTML || "";
 
-        const animationInstructions = designMetadata?.hasAnimations
-          ? ` This site uses ${designMetadata.animationLibrary || "animations"} - recreate similar scroll-triggered animations and transitions using framer-motion.`
-          : "";
+        const advancedMetadataSection = formatAdvancedMetadata(
+          designMetadata,
+          currentFramework,
+        );
+
+        const structureHTMLSection =
+          simplifiedHTML &&
+          simplifiedHTML.length > 0 &&
+          simplifiedHTML.length < 5000
+            ? `\n\n# HTML STRUCTURE\nUse this structure as reference for the page hierarchy:\n\`\`\`html\n${simplifiedHTML}\n\`\`\``
+            : "";
+
+        const filteredLibraries = designMetadata?.jsLibraries
+          ? filterJSLibrariesByFramework(
+              designMetadata.jsLibraries,
+              currentFramework,
+            )
+          : [];
+        const jsLibrariesSection =
+          filteredLibraries.length > 0
+            ? `\n\n# JAVASCRIPT LIBRARIES\nDetected libraries compatible with ${currentFramework}: ${filteredLibraries.map((lib) => lib.name).join(", ")}`
+            : "";
+
+        const frameworkInstruction = `IMPORTANT: Use ${currentFramework} (the selected framework) for the component structure. Use Tailwind CSS for all styling.${filteredLibraries.length > 0 ? ` Integrate the detected libraries (${filteredLibraries.map((lib) => lib.name).join(", ")}) for interactive features and animations, but ensure they are compatible with ${currentFramework}.` : ""}`;
+
+        const completenessInstruction = `CRITICAL: Do not omit any sections from the page. Carefully review the screenshot and structure HTML to ensure ALL sections are included: header, navigation, hero, main content sections, sidebar, footer, modals, popups, etc. Every visible element in the screenshot must be recreated in the code.`;
 
         if (isAdditionalPageClone) {
           enhancedPrompt = `Clone another page from the same website: ${urlToClone}
 
 # VISUAL REFERENCE
-A screenshot is attached - this is your PRIMARY reference. Study it carefully for layout, colors, fonts, spacing, and design.${metadataSection}
+A screenshot is attached - this is your PRIMARY reference. Study it carefully for layout, colors, fonts, spacing, and design.${advancedMetadataSection}${structureHTMLSection}${jsLibrariesSection}
 
 # CONTENT
 Use this content in your implementation:
 
-${optimizedMarkdown}${imagesList}
+${optimizedMarkdown}${imagesList}${videosList}
 
-**Instructions:** This is an additional page from the same website. Maintain consistency with the existing design system while incorporating the new content and layout from this page. The screenshot shows the design. The content above provides the text and images.${animationInstructions} Combine both to create an accurate clone.`;
+**Instructions:**
+${frameworkInstruction}
+
+${completenessInstruction}
+
+This is an additional page from the same website. Maintain consistency with the existing design system while incorporating the new content and layout from this page. The screenshot shows the design. The content above provides the text, images, and videos. Combine both to create an accurate clone.`;
         } else {
           enhancedPrompt = `Clone this website: ${urlToClone}
 
 # VISUAL REFERENCE
-A screenshot is attached - this is your PRIMARY reference. Study it carefully for layout, colors, fonts, spacing, and design.${metadataSection}
+A screenshot is attached - this is your PRIMARY reference. Study it carefully for layout, colors, fonts, spacing, and design.${advancedMetadataSection}${structureHTMLSection}${jsLibrariesSection}
 
 # CONTENT
 Use this content in your implementation:
 
-${optimizedMarkdown}${imagesList}
+${optimizedMarkdown}${imagesList}${videosList}
 
-**Instructions:** The screenshot shows the design. The content above provides the text and images.${animationInstructions} Combine both to create an accurate clone.`;
+**Instructions:**
+${frameworkInstruction}
+
+${completenessInstruction}
+
+The screenshot shows the design. The content above provides the text, images, and videos. Combine both to create an accurate clone.`;
         }
 
         // Handle screenshot - already processed by builder, just upload
@@ -1255,11 +1468,22 @@ Use standard Tailwind CSS classes and shadcn/ui components.`;
     throw new Error("payment-required-for-image");
   }
 
-  const lastUserMessage =
+  const fetchedLastUserMessage =
     selectedVersion !== undefined
       ? await fetchUserMessageByChatIdAndVersion(id, selectedVersion)
       : await fetchLastUserMessageByChatId(id);
-  if (!lastUserMessage) throw new Error("No last user message");
+
+  const lastUserMessage: Tables<"messages"> =
+    fetchedLastUserMessage ||
+    ({
+      id: -1,
+      chat_id: id,
+      content: prompt || aiPrompt || enhancedPrompt || "",
+      role: "user",
+      version: selectedVersion ?? 0,
+      prompt_image: null,
+      files: null,
+    } as Tables<"messages">);
 
   // Utiliser le prompt détaillé s'il est disponible, sinon utiliser le prompt existant
   let updatedPrompt = enhancedPrompt || "";

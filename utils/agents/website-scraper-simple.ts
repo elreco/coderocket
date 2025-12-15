@@ -14,6 +14,14 @@ interface WebsiteContent {
     alt: string;
     isLogo: boolean;
   }>;
+  videos?: Array<{
+    url: string;
+    type: string;
+    platform: string;
+    embedUrl?: string;
+    videoId?: string;
+    poster?: string | null;
+  }>;
   designMetadata?: {
     colors: string[];
     fonts: string[];
@@ -40,6 +48,7 @@ const emptyWebsiteData = (url: string): WebsiteContent => ({
   url: url,
   screenshot: "",
   images: [],
+  videos: [],
   designMetadata: null,
 });
 
@@ -92,6 +101,7 @@ export async function cloneWebsite(url: string): Promise<CloneWebsiteResult> {
       url: data.url ?? url,
       screenshot: data.screenshot ?? "",
       images: Array.isArray(data.images) ? data.images : [],
+      videos: Array.isArray(data.videos) ? data.videos : [],
       designMetadata: data.designMetadata ?? null,
       isProtected: data.isProtected ?? false,
     };
@@ -112,6 +122,7 @@ export async function cloneWebsite(url: string): Promise<CloneWebsiteResult> {
       hasMarkdown: !!websiteData.markdown,
       hasScreenshot: !!websiteData.screenshot,
       imagesFound: websiteData.images?.length || 0,
+      videosFound: websiteData.videos?.length || 0,
       hasDesignMetadata: !!websiteData.designMetadata,
       animationLibrary: websiteData.designMetadata?.animationLibrary || null,
     });

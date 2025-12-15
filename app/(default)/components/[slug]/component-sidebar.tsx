@@ -584,31 +584,37 @@ export default function ComponentSidebar({
             <>
               {messages
                 .filter((m) => {
+                  // Filtrer strictement par version - selectedVersion peut être 0, donc on doit vérifier explicitement
                   if (selectedVersion === undefined || selectedVersion === null)
                     return false;
+                  // S'assurer que les types correspondent (number vs number)
                   const messageVersion = Number(m.version);
                   const currentSelectedVersion = Number(selectedVersion);
                   if (messageVersion !== currentSelectedVersion) return false;
-                  if (m.id < 0) {
-                    const hasRealMessage = messages.some(
-                      (other) =>
-                        other.id > 0 &&
-                        other.role === m.role &&
-                        Number(other.version) === messageVersion,
-                    );
-                    if (hasRealMessage) return false;
-                  }
+                  // Ne plus filtrer les messages assistant pendant le chargement
+                  // On va créer un message temporaire pour le streaming
                   return true;
                 })
                 .map((m) => {
                   // Si c'est un message assistant et qu'on a du contenu en streaming,
+                  // utiliser le contenu en streaming même après que isLoading devienne false
+                  // pour éviter d'afficher l'ancien message pendant la transition
+                  // On continue d'utiliser le streaming si:
+                  // 1. On est en train de charger (isLoading)
+                  // 2. Le completion est plus long que le contenu du message (nouveau contenu en streaming)
+                  // 3. Le contenu du message ne correspond pas au completion (ancien message)
                   if (
                     m.role === "assistant" &&
                     Number(m.version) === Number(selectedVersion) &&
                     completion &&
                     completion.length > 0 &&
-                    isLoading
+                    (isLoading ||
+                      completion.length > (m.content?.length || 0) ||
+                      (m.content &&
+                        !completion.startsWith(m.content.substring(0, 100))))
                   ) {
+                    // Créer un message temporaire avec le contenu en streaming
+                    // Ne pas inclure le screenshot et les tokens de l'ancien message pendant le streaming
                     const streamingMessage = {
                       ...m,
                       content: completion,
@@ -869,12 +875,7 @@ export default function ComponentSidebar({
               "transition-all duration-200",
               isLoading &&
                 input &&
-                !messages.some(
-                  (m) =>
-                    m.role === "user" &&
-                    m.version === selectedVersion &&
-                    m.content === input,
-                )
+                !messages.some((m) => m.role === "user" && m.content === input)
                 ? "block"
                 : "hidden",
             )}

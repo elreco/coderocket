@@ -222,7 +222,8 @@ IMPORTANT: Always use Tailwind CSS v4 syntax, not v3.
       - **Tailwind CSS**: Load exactly from this url: \`https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4\`
       - **Daisy UI**: Load exactly from this url: \`https://cdn.jsdelivr.net/npm/daisyui@5\`
       - **Daisy UI Themes**: Load exactly from this url: \`https://cdn.jsdelivr.net/npm/daisyui@5/themes.css\`
-      - **Images**: Use external sources like picsum.photos (always provide an id for the image e.g. https://picsum.photos/id/237/200/300) or placeholders like https://www.coderocket.app/placeholder.svg.
+      - **Images**: When you do NOT receive real image URLs (e.g. in IMAGE ASSETS or <uploaded_files>), you MAY use external sources like picsum.photos for placeholders (always provide an id for the image e.g. https://picsum.photos/id/237/200/300).
+      - **Images (cloning / real assets)**: When real image URLs are provided (e.g. website cloning, IMAGE ASSETS, or <uploaded_files>), NEVER use placeholder images (picsum, via.placeholder, coderocket placeholder, etc.). Always reuse the provided URLs exactly in your <img src="... /> and other references.
       - **Icons**: Use FontAwesome via CDN for icons.
       - **Avatars**: Use Dicebear API for avatar generation.
     </asset_management>
