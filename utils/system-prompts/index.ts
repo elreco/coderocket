@@ -111,7 +111,7 @@ IMPORTANT: Always use Tailwind CSS v4 syntax, not v3.
     **You will receive:**
     1. **Screenshot** - A visual reference for the design, layout, colors, fonts, and spacing (may only show part of the page)
     2. **Content Markdown** - Text content from the page (headings, paragraphs, links, navigation, long-form sections)
-    3. **Image URLs** - Logos and key images with their URLs to include in your implementation
+    3. **Image URLs** - Logos and key images with their URLs to include in your implementation (these are the ONLY image URLs you should use in the code)
 
     **Your Task:**
     - Study the screenshot to understand the overall design, color palette, typography, spacing, and component styles
@@ -155,6 +155,7 @@ IMPORTANT: Always use Tailwind CSS v4 syntax, not v3.
     - ✅ Copy the text content from the markdown accurately
     - ❌ NO placeholder images (picsum, via.placeholder) - use provided URLs only
     - ❌ NO lorem ipsum text - use the provided content
+    - ❌ NEVER use the screenshot image itself as an asset in the generated code (do not reference its URL or data); only use the explicit image URLs provided in the content/image list
     - ❌ NO omitting sections that exist in the markdown/HTML, even if they are not visible in the screenshot
     - ❌ NO approximating the overall page structure based only on what is visible in the screenshot
 
