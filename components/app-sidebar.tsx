@@ -30,6 +30,7 @@ import {
   SidebarRail,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Tables } from "@/types_db";
 import { discordLink } from "@/utils/config";
 import { createClient } from "@/utils/supabase/client";
@@ -115,9 +116,11 @@ export function AppSidebar({
   const pathname = usePathname();
   const [notification, setNotification] =
     useState<Tables<"notification"> | null>(null);
+  const [isUserLoading, setIsUserLoading] = useState(false);
 
   useEffect(() => {
     setUser(defaultUser);
+    setIsUserLoading(false);
   }, [defaultUser]);
 
   useEffect(() => {
@@ -134,24 +137,30 @@ export function AppSidebar({
     const { data: authListener } = supabase.auth.onAuthStateChange((event) => {
       if (event === "SIGNED_OUT") {
         setUser(null);
+        setIsUserLoading(false);
       } else if (event === "SIGNED_IN") {
-        setTimeout(async () => {
-          try {
-            const userDetails = await getUserDetails();
-            if (userDetails) {
-              setUser(userDetails);
+        if (!user) {
+          setIsUserLoading(true);
+          setTimeout(async () => {
+            try {
+              const userDetails = await getUserDetails();
+              if (userDetails) {
+                setUser(userDetails);
+              }
+            } catch (error) {
+              console.error("Error fetching user details:", error);
+            } finally {
+              setIsUserLoading(false);
             }
-          } catch (error) {
-            console.error("Error fetching user details:", error);
-          }
-        }, 0);
+          }, 0);
+        }
       }
     });
 
     return () => {
       authListener?.subscription.unsubscribe();
     };
-  }, []);
+  }, [user]);
 
   const navMainItems = data.navMain.map((item) => ({
     ...item,
@@ -233,7 +242,24 @@ export function AppSidebar({
             />
           </div>
         )}
-        {user ? (
+        {isUserLoading && !user ? (
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                size="lg"
+                className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+              >
+                <Skeleton className="h-6 w-6 rounded-lg" />
+                {open && (
+                  <div className="flex-1 space-y-1">
+                    <Skeleton className="h-3 w-24" />
+                    <Skeleton className="h-3 w-32" />
+                  </div>
+                )}
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        ) : user ? (
           <NavUser user={user} onLogout={() => setUser(null)} />
         ) : (
           <NavAuth />

@@ -16,12 +16,14 @@ interface AuthUIProps {
   redirectTo?: string;
   onSuccess?: () => void;
   showTitle?: boolean;
+  onLoadingChange?: (loading: boolean) => void;
 }
 
 export default function AuthUI({
   redirectTo: propRedirectTo,
   onSuccess,
   showTitle = true,
+  onLoadingChange,
 }: AuthUIProps = {}) {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
@@ -34,6 +36,9 @@ export default function AuthUI({
   const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
+    if (onLoadingChange) {
+      onLoadingChange(true);
+    }
     setIsLoading(true);
     const result = await register(formData);
     if (result?.error) {
@@ -44,6 +49,9 @@ export default function AuthUI({
         duration: 4000,
       });
       setIsLoading(false);
+      if (onLoadingChange) {
+        onLoadingChange(false);
+      }
       return;
     }
     if (result?.success || !result?.error) {
@@ -55,6 +63,9 @@ export default function AuthUI({
         onSuccess();
       } else {
         router.refresh();
+      }
+      if (onLoadingChange) {
+        onLoadingChange(false);
       }
       return;
     }
