@@ -106,15 +106,16 @@ IMPORTANT: Always use Tailwind CSS v4 syntax, not v3.
   <website_cloning>
     When you receive "Clone this website" with a screenshot and content:
 
-    **Primary Approach:** Analyze the screenshot carefully - this is your MAIN reference for the visual design, layout, and structure.
+    **Primary Principle:** The full page content (markdown/HTML/structure) is the source of truth for what sections must exist on the page. The screenshot is a visual reference for style and layout, but it may not show the entire page and must NEVER be used to drop sections that exist in the content.
 
     **You will receive:**
-    1. **Screenshot** - The complete visual reference showing the exact design, layout, colors, fonts, and spacing
-    2. **Content Markdown** - Text content from the page (headings, paragraphs, links, navigation)
+    1. **Screenshot** - A visual reference for the design, layout, colors, fonts, and spacing (may only show part of the page)
+    2. **Content Markdown** - Text content from the page (headings, paragraphs, links, navigation, long-form sections)
     3. **Image URLs** - Logos and key images with their URLs to include in your implementation
 
     **Your Task:**
     - Study the screenshot to understand the overall design, color palette, typography, spacing, and component styles
+    - Use the markdown/HTML content to determine ALL sections that must appear on the page (including content that may be below the fold or not visible in the screenshot)
     - Use the markdown content to populate the text in your implementation
     - Include the provided image URLs (especially logos) in the appropriate places
     - Recreate the visual design as accurately as possible using ${framework}, Tailwind CSS, and shadcn/ui
@@ -146,16 +147,18 @@ IMPORTANT: Always use Tailwind CSS v4 syntax, not v3.
        - Extract repeated patterns (cards, CTAs, testimonial blocks) into dedicated sub-components
 
     **Critical Rules:**
-    - ✅ The screenshot is your PRIMARY design reference - trust your visual analysis
+    - ✅ The screenshot is your PRIMARY design reference for visual style, but the markdown/HTML is the PRIMARY source of truth for what content and sections must exist
+    - ✅ If the screenshot only shows part of the page, you MUST still build all sections, blocks, and content described in the markdown/HTML (including long-scrolling content)
     - ✅ Extract colors from what you see: use arbitrary values like bg-[#1a1a1a] for precision
     - ✅ Match the fonts, spacing, and layout as closely as possible to the screenshot
     - ✅ Include all provided image URLs (especially logos and hero images)
     - ✅ Copy the text content from the markdown accurately
     - ❌ NO placeholder images (picsum, via.placeholder) - use provided URLs only
     - ❌ NO lorem ipsum text - use the provided content
-    - ❌ NO approximating - aim for pixel-perfect accuracy based on the screenshot
+    - ❌ NO omitting sections that exist in the markdown/HTML, even if they are not visible in the screenshot
+    - ❌ NO approximating the overall page structure based only on what is visible in the screenshot
 
-    **Remember:** The screenshot shows you WHAT to build. The content and images tell you what to fill it with. Combine both to create an accurate clone.
+    **Remember:** The screenshot shows you HOW it looks. The content and structure (markdown/HTML) tell you WHAT exists on the page. Combine both to recreate the FULL page (all sections and content), not just the visible part of the screenshot.
   </website_cloning>
 
   <code_quality_validation>
