@@ -418,24 +418,12 @@ export default function ComponentSidebar({
 
   const startScrapeSimulation = useCallback(() => {
     setIsScrapingWebsite(true);
-    // Plus besoin de simuler la progression, on affiche juste un message simple
     return null;
   }, [setIsScrapingWebsite]);
 
   useEffect(() => {
-    // Démarrer la simulation de scraping si isScrapingWebsite est activé
     if (isScrapingWebsite && fetchedChat?.clone_url) {
       startScrapeSimulation();
-
-      // Désactiver isScrapingWebsite après un délai raisonnable (scraping terminé)
-      // Le scraping côté serveur prend généralement 10-30 secondes
-      const scrapingTimeout = setTimeout(() => {
-        setIsScrapingWebsite(false);
-      }, 30000); // 30 secondes pour le scraping
-
-      return () => {
-        clearTimeout(scrapingTimeout);
-      };
     }
   }, [
     isScrapingWebsite,
@@ -444,22 +432,17 @@ export default function ComponentSidebar({
     setIsScrapingWebsite,
   ]);
 
-  // Désactiver isScrapingWebsite dès qu'on a du contenu généré (le scraping est terminé)
-  // Utiliser useRef pour éviter les boucles infinies
   const hasDeactivatedScraping = useRef(false);
   useEffect(() => {
     if (
       isScrapingWebsite &&
-      isLoading &&
       completion &&
-      completion.length > 50 &&
+      completion.length > 0 &&
       !hasDeactivatedScraping.current
     ) {
-      // Si on a déjà du contenu généré (plus de 50 caractères), le scraping est terminé
       hasDeactivatedScraping.current = true;
       setIsScrapingWebsite(false);
     }
-    // Réinitialiser quand isLoading devient false
     if (!isLoading) {
       hasDeactivatedScraping.current = false;
     }
@@ -669,10 +652,14 @@ export default function ComponentSidebar({
                       <Fragment key={`clone-loader-${m.id}`}>
                         {result}
                         <div className="flex items-center justify-center py-8 px-3">
-                          <div className="flex flex-col items-center gap-3">
+                          <div className="flex flex-col items-center gap-3 text-center">
                             <Loader className="text-primary size-6 animate-spin" />
                             <p className="text-primary text-sm font-medium">
                               Analyzing website...
+                            </p>
+                            <p className="text-amber-600 text-xs font-medium">
+                              This process can take up to 1 minute. Please stay
+                              on this page and do not close your browser.
                             </p>
                             {(currentCloneUrl ||
                               fetchedChat?.clone_url ||

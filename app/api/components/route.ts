@@ -1295,13 +1295,13 @@ const validateRequest = async (
 
         const frameworkInstruction = `IMPORTANT: Use ${currentFramework} (the selected framework) for the component structure. Use Tailwind CSS for all styling.${filteredLibraries.length > 0 ? ` Integrate the detected libraries (${filteredLibraries.map((lib) => lib.name).join(", ")}) for interactive features and animations, but ensure they are compatible with ${currentFramework}.` : ""}`;
 
-        const completenessInstruction = `CRITICAL: Do not omit any sections from the page. Carefully review the screenshot and structure HTML to ensure ALL sections are included: header, navigation, hero, main content sections, sidebar, footer, modals, popups, etc. Every visible element in the screenshot must be recreated in the code.`;
+        const completenessInstruction = `CRITICAL: Recreate the ENTIRE page, not just what is visible in the screenshot. Use the markdown, HTML structure and all extracted content to rebuild every section: header, navigation, hero, all main content sections, sidebars, long-scrolling content, footer, modals, popups, and any repeated blocks. If the screenshot stops before the end of the page, still generate the full page layout and content based on the provided text and structure. Every visible element in the screenshot must be recreated, and no logical section from the content is allowed to be omitted.`;
 
         if (isAdditionalPageClone) {
           enhancedPrompt = `Clone another page from the same website: ${urlToClone}
 
 # VISUAL REFERENCE
-A screenshot is attached - this is your PRIMARY reference. Study it carefully for layout, colors, fonts, spacing, and design.${advancedMetadataSection}${structureHTMLSection}${jsLibrariesSection}
+A screenshot is attached. Use it as a visual reference for layout, colors, fonts, spacing, and design, but do not limit the implementation to only what is visible in the screenshot. Always combine it with the full content and structure provided below to recreate the complete page.${advancedMetadataSection}${structureHTMLSection}${jsLibrariesSection}
 
 # CONTENT
 Use this content in your implementation:
@@ -1318,7 +1318,7 @@ This is an additional page from the same website. Maintain consistency with the 
           enhancedPrompt = `Clone this website: ${urlToClone}
 
 # VISUAL REFERENCE
-A screenshot is attached - this is your PRIMARY reference. Study it carefully for layout, colors, fonts, spacing, and design.${advancedMetadataSection}${structureHTMLSection}${jsLibrariesSection}
+A screenshot is attached. Use it as a visual reference for layout, colors, fonts, spacing, and design, but do not limit the implementation to only what is visible in the screenshot. Always combine it with the full content and structure provided below to recreate the complete page.${advancedMetadataSection}${structureHTMLSection}${jsLibrariesSection}
 
 # CONTENT
 Use this content in your implementation:
