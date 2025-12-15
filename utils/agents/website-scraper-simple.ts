@@ -23,10 +23,7 @@ interface WebsiteContent {
     poster?: string | null;
   }>;
   designMetadata?: {
-    colors: string[];
-    fonts: string[];
-    hasAnimations: boolean;
-    animationLibrary: string | null;
+    [key: string]: unknown;
   } | null;
   isProtected?: boolean;
 }

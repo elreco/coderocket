@@ -154,6 +154,7 @@ interface AdvancedMetadata {
     usesGrid: boolean;
     usesFlexbox: boolean;
     containerWidths: string[];
+    breakpoints?: string[];
   };
   components?: {
     buttons: ComponentStyle[];
@@ -161,6 +162,20 @@ interface AdvancedMetadata {
     navItems: ComponentStyle[];
   };
   jsLibraries?: Array<{ name: string; type: string }>;
+  borderRadius?: Array<{ value: string; frequency: number }>;
+  boxShadows?: Array<{ value: string; frequency: number }>;
+  gradients?: Array<{ value: string; frequency: number }>;
+  cssVariables?: Array<{ name: string; value: string; contexts: string[] }>;
+  sections?: Array<{
+    id?: string | null;
+    tag: string;
+    title?: string | null;
+    selector: string;
+    order: number;
+    top: number;
+    height: number;
+    type?: string | null;
+  }>;
 }
 
 function formatAdvancedMetadata(
@@ -170,6 +185,37 @@ function formatAdvancedMetadata(
   if (!metadata) return "";
 
   const sections: string[] = [];
+
+  const overviewParts: string[] = [];
+  if (metadata.spacing && metadata.spacing.length > 0) {
+    overviewParts.push("spacing");
+  }
+  if (metadata.typography && Object.keys(metadata.typography).length > 0) {
+    overviewParts.push("typography");
+  }
+  if (metadata.colors && metadata.colors.length > 0) {
+    overviewParts.push("colors");
+  }
+  if (metadata.borderRadius && metadata.borderRadius.length > 0) {
+    overviewParts.push("border radius");
+  }
+  if (metadata.boxShadows && metadata.boxShadows.length > 0) {
+    overviewParts.push("shadows");
+  }
+  if (metadata.gradients && metadata.gradients.length > 0) {
+    overviewParts.push("gradients");
+  }
+  if (metadata.cssVariables && metadata.cssVariables.length > 0) {
+    overviewParts.push("CSS variables");
+  }
+
+  if (overviewParts.length > 0) {
+    sections.push(
+      `\n## DESIGN TOKENS OVERVIEW\nDetected design system aspects: ${overviewParts.join(
+        ", ",
+      )}. Reuse these consistently in the generated code.`,
+    );
+  }
 
   if (metadata.spacing && metadata.spacing.length > 0) {
     const spacingList = metadata.spacing
@@ -197,6 +243,47 @@ function formatAdvancedMetadata(
     sections.push(`\n## COLOR PALETTE\n${colorList}`);
   }
 
+  if (metadata.borderRadius && metadata.borderRadius.length > 0) {
+    const radiusList = metadata.borderRadius
+      .slice(0, 20)
+      .map((r) => `${r.value} (used ${r.frequency}x)`)
+      .join("\n");
+    sections.push(`\n## BORDER RADIUS\nCommon radii: ${radiusList}`);
+  }
+
+  if (metadata.boxShadows && metadata.boxShadows.length > 0) {
+    const shadowList = metadata.boxShadows
+      .slice(0, 20)
+      .map((s) => `${s.value} (used ${s.frequency}x)`)
+      .join("\n");
+    sections.push(
+      `\n## SHADOWS\nRepresentative box-shadow values:\n${shadowList}`,
+    );
+  }
+
+  if (metadata.gradients && metadata.gradients.length > 0) {
+    const gradientList = metadata.gradients
+      .slice(0, 10)
+      .map((g) => `${g.value} (used ${g.frequency}x)`)
+      .join("\n");
+    sections.push(
+      `\n## GRADIENT BACKGROUNDS\nRepresentative gradient backgrounds:\n${gradientList}`,
+    );
+  }
+
+  if (metadata.cssVariables && metadata.cssVariables.length > 0) {
+    const cssVarsList = metadata.cssVariables
+      .slice(0, 20)
+      .map(
+        (v) =>
+          `${v.name}: ${v.value} (contexts: ${Array.isArray(v.contexts) ? v.contexts.join(", ") : ""})`,
+      )
+      .join("\n");
+    sections.push(
+      `\n## CSS VARIABLES\nKey CSS custom properties that define the design system:\n${cssVarsList}`,
+    );
+  }
+
   if (metadata.layout) {
     const layoutInfo: string[] = [];
     if (metadata.layout.usesGrid) layoutInfo.push("Grid");
@@ -204,6 +291,13 @@ function formatAdvancedMetadata(
     if (metadata.layout.containerWidths.length > 0) {
       layoutInfo.push(
         `Container widths: ${metadata.layout.containerWidths.slice(0, 10).join(", ")}`,
+      );
+    }
+    if (metadata.layout.breakpoints && metadata.layout.breakpoints.length > 0) {
+      layoutInfo.push(
+        `Responsive breakpoints inferred from classes: ${metadata.layout.breakpoints.join(
+          ", ",
+        )}`,
       );
     }
     if (layoutInfo.length > 0) {
@@ -231,6 +325,25 @@ function formatAdvancedMetadata(
     if (componentInfo.length > 0) {
       sections.push(`\n## COMPONENT PATTERNS\n${componentInfo.join(", ")}`);
     }
+  }
+
+  if (metadata.sections && metadata.sections.length > 0) {
+    const sectionLines = metadata.sections
+      .slice(0, 20)
+      .map((section, index) => {
+        const labelParts: string[] = [];
+        labelParts.push(section.type || section.tag);
+        if (section.title) {
+          labelParts.push(`"${section.title}"`);
+        }
+        return `${index + 1}. ${labelParts.join(" ")} (selector: ${
+          section.selector
+        }, top: ${section.top}, height: ${section.height})`;
+      })
+      .join("\n");
+    sections.push(
+      `\n## SECTION MAP\nHigh-level sections in scroll order. Recreate all of them in the generated page:\n${sectionLines}`,
+    );
   }
 
   if (metadata.jsLibraries && metadata.jsLibraries.length > 0) {
@@ -1293,9 +1406,9 @@ const validateRequest = async (
             ? `\n\n# JAVASCRIPT LIBRARIES\nDetected libraries compatible with ${currentFramework}: ${filteredLibraries.map((lib) => lib.name).join(", ")}`
             : "";
 
-        const frameworkInstruction = `IMPORTANT: Use ${currentFramework} (the selected framework) for the component structure. Use Tailwind CSS for all styling.${filteredLibraries.length > 0 ? ` Integrate the detected libraries (${filteredLibraries.map((lib) => lib.name).join(", ")}) for interactive features and animations, but ensure they are compatible with ${currentFramework}.` : ""}`;
+        const frameworkInstruction = `IMPORTANT: Use ${currentFramework} (the selected framework) for the component structure. Use Tailwind CSS for all styling.${filteredLibraries.length > 0 ? ` Integrate the detected libraries (${filteredLibraries.map((lib) => lib.name).join(", ")}) for interactive features and animations, but ensure they are compatible with ${currentFramework}.` : ""} Match the responsive behavior implied by the detected layout patterns and breakpoints.`;
 
-        const completenessInstruction = `CRITICAL: Recreate the ENTIRE page, not just what is visible in the screenshot. Use the markdown, HTML structure and all extracted content to rebuild every section: header, navigation, hero, all main content sections, sidebars, long-scrolling content, footer, modals, popups, and any repeated blocks. If the screenshot stops before the end of the page, still generate the full page layout and content based on the provided text and structure. Every visible element in the screenshot must be recreated, and no logical section from the content is allowed to be omitted.`;
+        const completenessInstruction = `CRITICAL: Recreate the ENTIRE page, not just what is visible in the screenshot. Use the markdown, HTML structure, section map and all extracted content to rebuild every section: header, navigation, hero, all main content sections, sidebars, long-scrolling content, footer, modals, popups, and any repeated blocks. If the screenshot stops before the end of the page, still generate the full page layout and content based on the provided text and structure. Every visible element in the screenshot must be recreated, and no logical section from the content is allowed to be omitted. Preserve the order and relative visual importance of sections as described in the metadata.`;
 
         if (isAdditionalPageClone) {
           enhancedPrompt = `Clone another page from the same website: ${urlToClone}
@@ -1501,9 +1614,6 @@ Use standard Tailwind CSS classes and shadcn/ui components.`;
       userPromptForDisplay = lastUserMessage.content || "";
     }
   } else {
-    if (aiPrompt) {
-      updatedPrompt = aiPrompt;
-    }
     if (prompt) {
       userPromptForDisplay = prompt;
     }
