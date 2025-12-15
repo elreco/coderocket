@@ -26,55 +26,80 @@ export async function GET(
   const pathname = url.pathname;
   const notFoundHtml = `
         <!DOCTYPE html>
-        <html>
+        <html lang="en">
           <head>
             <title>Not Found - CodeRocket</title>
             <meta name="viewport" content="width=device-width, initial-scale=1">
+            <link rel="preconnect" href="https://fonts.googleapis.com">
+            <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+            <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
             <style>
               * { margin: 0; padding: 0; box-sizing: border-box; }
               body {
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+                font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
                 display: flex;
                 align-items: center;
                 justify-content: center;
                 min-height: 100vh;
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                color: white;
+                background: hsl(240, 20%, 99%);
+                color: hsl(222.2, 84%, 4.9%);
                 padding: 1rem;
               }
               .container {
                 text-align: center;
                 max-width: 600px;
+                padding: 3rem 2rem;
+              }
+              .logo {
+                width: 120px;
+                height: auto;
+                margin: 0 auto 2rem;
+                display: block;
               }
               h1 {
-                font-size: clamp(2rem, 5vw, 3rem);
+                font-size: clamp(1.75rem, 4vw, 2.5rem);
+                font-weight: 700;
                 margin-bottom: 1rem;
+                color: hsl(222.2, 84%, 4.9%);
+                line-height: 1.2;
               }
               p {
-                font-size: clamp(1rem, 2.5vw, 1.2rem);
-                opacity: 0.9;
+                font-size: clamp(1rem, 2vw, 1.125rem);
+                color: hsl(240, 10%, 50%);
                 margin-bottom: 2rem;
+                line-height: 1.6;
               }
-              a {
-                display: inline-block;
+              .button {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
                 padding: 0.75rem 1.5rem;
-                background: white;
-                color: #667eea;
+                background: hsl(239, 84%, 67%);
+                color: hsl(210, 40%, 98%);
                 text-decoration: none;
                 border-radius: 0.5rem;
                 font-weight: 600;
-                transition: transform 0.2s;
+                font-size: 1rem;
+                transition: all 0.2s ease;
+                border: none;
+                cursor: pointer;
               }
-              a:hover {
-                transform: translateY(-2px);
+              .button:hover {
+                background: hsl(239, 84%, 60%);
+                transform: translateY(-1px);
+                box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+              }
+              .button:active {
+                transform: translateY(0);
               }
             </style>
           </head>
           <body>
             <div class="container">
-              <h1>🚀 Not Found</h1>
+              <img src="https://www.coderocket.app/logo.png" alt="CodeRocket" class="logo" />
+              <h1>Application Not Found</h1>
               <p>This application is not deployed or doesn't exist.</p>
-              <a href="https://www.coderocket.app">Go to CodeRocket</a>
+              <a href="https://www.coderocket.app" class="button">Go to CodeRocket</a>
             </div>
           </body>
         </html>
