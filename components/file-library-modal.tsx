@@ -225,6 +225,56 @@ export function FileLibraryModal({
     }
   };
 
+  const handleBatchDelete = async () => {
+    if (selectedFiles.size === 0) return;
+
+    const pathsToDelete = Array.from(selectedFiles);
+    setDeletingPath("batch");
+    try {
+      // Delete files one by one using the API
+      const deletePromises = pathsToDelete.map((path) =>
+        fetch(`/api/files?path=${encodeURIComponent(path)}`, {
+          method: "DELETE",
+        }),
+      );
+
+      const results = await Promise.allSettled(deletePromises);
+      const failed = results.filter(
+        (r) =>
+          r.status === "rejected" || (r.status === "fulfilled" && !r.value.ok),
+      );
+
+      if (failed.length > 0) {
+        throw new Error(`Failed to delete ${failed.length} file(s)`);
+      }
+
+      toast({
+        title: "Files deleted",
+        description: `${pathsToDelete.length} file(s) have been successfully deleted.`,
+      });
+
+      if (onFileDeleted) {
+        pathsToDelete.forEach((path) => onFileDeleted(path));
+      }
+
+      setSelectedFiles(new Set());
+      if (files.length <= pathsToDelete.length && page > 1) {
+        setPage(page - 1);
+      } else {
+        fetchFiles(page);
+      }
+    } catch (error) {
+      console.error("Error deleting files:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to delete some files. Please try again.",
+      });
+    } finally {
+      setDeletingPath(null);
+    }
+  };
+
   const handleFileToggle = (file: FileLibraryItem, e?: React.MouseEvent) => {
     if (e) {
       e.stopPropagation();
@@ -734,7 +784,7 @@ export function FileLibraryModal({
                   return (
                     <div
                       key={file.path}
-                      className={`group relative border-2 rounded-xl p-5 hover:border-primary hover:shadow-xl transition-all bg-background cursor-pointer ${
+                      className={`group relative border-2 rounded-xl p-5 hover:border-primary transition-all bg-background cursor-pointer ${
                         isSelected ? "border-primary bg-primary/5" : ""
                       }`}
                       onClick={(e) => handleFileToggle(file, e)}
@@ -742,7 +792,7 @@ export function FileLibraryModal({
                       <div className="flex flex-col gap-4">
                         <div className="relative">
                           {file.type === "image" ? (
-                            <div className="w-full aspect-square overflow-hidden rounded-xl bg-muted border-2 border-border shadow-sm relative">
+                            <div className="w-full aspect-square overflow-hidden rounded-xl bg-muted border-2 border-border relative">
                               <Image
                                 src={file.publicUrl}
                                 alt={file.path}
@@ -755,7 +805,7 @@ export function FileLibraryModal({
                               />
                             </div>
                           ) : (
-                            <div className="w-full aspect-square flex flex-col items-center justify-center gap-2 bg-muted rounded-xl border-2 border-border shadow-sm p-4">
+                            <div className="w-full aspect-square flex flex-col items-center justify-center gap-2 bg-muted rounded-xl border-2 border-border p-4">
                               {getFileIcon(file.type)}
                               <span className="text-xs text-muted-foreground font-medium capitalize">
                                 {file.type}
@@ -763,7 +813,7 @@ export function FileLibraryModal({
                             </div>
                           )}
                           {isSelected && (
-                            <div className="absolute top-2 right-2 bg-primary text-primary-foreground rounded-full p-1.5 shadow-lg">
+                            <div className="absolute top-2 right-2 bg-primary text-primary-foreground rounded-full p-1.5">
                               <svg
                                 className="size-4"
                                 fill="none"
@@ -804,7 +854,10 @@ export function FileLibraryModal({
                             setFileToDelete(file);
                             setShowDeleteDialog(true);
                           }}
-                          disabled={deletingPath === file.path}
+                          disabled={
+                            deletingPath === file.path ||
+                            deletingPath === "batch"
+                          }
                         >
                           {deletingPath === file.path ? (
                             <>
@@ -862,6 +915,32 @@ export function FileLibraryModal({
                   </>
                 )}
               </Button>
+              {selectedFiles.size > 0 && (
+                <Button
+                  variant="destructive"
+                  size="default"
+                  className="h-10 px-4"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleBatchDelete();
+                  }}
+                  disabled={deletingPath === "batch"}
+                >
+                  {deletingPath === "batch" ? (
+                    <>
+                      <Loader2 className="size-4 mr-2 animate-spin" />
+                      Deleting...
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="size-4 mr-2" />
+                      Delete Selected ({
+                        selectedFiles.size
+                      })
+                    </>
+                  )}
+                </Button>
+              )}
             </div>
 
             <div className="flex items-center gap-3 flex-1 justify-center">
