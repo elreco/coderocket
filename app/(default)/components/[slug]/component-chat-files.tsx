@@ -33,6 +33,7 @@ import {
   extractDirectFiles,
   splitCompletedContentIntoChunks,
   splitContentIntoChunks,
+  extractFilesFromArtifact,
   ChatFile,
 } from "@/utils/completion-parser";
 import { storageUrl } from "@/utils/config";
@@ -70,6 +71,7 @@ export default function ComponentChatFiles({
   } = useComponentContext();
 
   const [files, setFiles] = useState<ChatFile[]>([]);
+  const [versionFiles, setVersionFiles] = useState<ChatFile[]>([]);
   const [chunks, setChunks] = useState<ContentChunk[]>([]);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isAlertOpen, setIsAlertOpen] = useState(false);
@@ -85,11 +87,14 @@ export default function ComponentChatFiles({
       return;
     }
 
-    // Utiliser le contenu tel quel pour préserver le streaming
     const cleanedContent = message.content;
 
-    // Extraire les fichiers une seule fois
-    const extractedFiles = extractDirectFiles(cleanedContent);
+    const artifactFiles =
+      message.role === "assistant" && message.artifact_code
+        ? extractFilesFromArtifact(message.artifact_code)
+        : extractDirectFiles(cleanedContent);
+
+    const changedFiles = extractDirectFiles(cleanedContent);
 
     // NOUVEAU: Extraire spécifiquement le texte avant le premier artifact ou balise coderocketFile
     let introText = "";
@@ -325,12 +330,12 @@ export default function ComponentChatFiles({
     );
 
     // Créer un artifact avec les fichiers (complets ou incomplets)
-    if (extractedFiles.length > 0) {
+    if (artifactFiles.length > 0) {
       const artifactTitle = isLoading
         ? "Generating Files..."
         : "Generated Files";
       const artificialArtifact = `<coderocketArtifact title="${artifactTitle}">
-${extractedFiles
+${artifactFiles
   .map((file) => {
     const isIncompleteAttr =
       isLoading && file.isIncomplete ? ' isIncomplete="true"' : "";
@@ -391,7 +396,8 @@ ${extractedFiles
       setChunks(contentChunks);
     }
 
-    setFiles(extractedFiles);
+    setFiles(artifactFiles);
+    setVersionFiles(changedFiles);
   }, [message.content, isLoading]);
 
   const isSelectedVersion = selectedVersion === message.version && !isLoading;
@@ -682,6 +688,7 @@ ${extractedFiles
             <ChunkReader
               chunks={chunks}
               files={files}
+              versionFiles={versionFiles}
               handleFileClick={handleFileClick}
               isSelectedVersion={isSelectedVersion}
               version={message.version}

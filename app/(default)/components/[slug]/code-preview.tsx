@@ -1,4 +1,11 @@
-import { EditorView } from "@codemirror/view";
+import { RangeSetBuilder, type Extension } from "@codemirror/state";
+import {
+  EditorView,
+  Decoration,
+  ViewPlugin,
+  ViewUpdate,
+  WidgetType,
+} from "@codemirror/view";
 import {
   SiHtml5,
   SiReact,
@@ -17,6 +24,7 @@ import {
   PanelLeftClose,
   PanelLeft,
   Crown,
+  GitCompare,
 } from "lucide-react";
 import { useRef, useEffect, useState, useCallback } from "react";
 import React from "react";
@@ -178,6 +186,7 @@ export default function CodePreview() {
     activeTab,
     editorValue,
     artifactFiles,
+    previousArtifactFiles,
     selectedFramework,
     isLengthError,
     setSidebarTab,
@@ -204,6 +213,30 @@ export default function CodePreview() {
     | null
   >(null);
   const isLoggedIn = !!connectedUser?.id;
+  const [showDiff, setShowDiff] = useState(true);
+  const [diffContent, setDiffContent] = useState<string | null>(null);
+  const diffCacheRef = useRef<Map<string, string>>(new Map());
+
+  class DiffSignWidget extends WidgetType {
+    sign: string;
+
+    constructor(sign: string) {
+      super();
+      this.sign = sign;
+    }
+
+    toDOM() {
+      const span = document.createElement("span");
+      span.textContent = this.sign;
+      span.style.color = this.sign === "+" ? "#22c55e" : "#ef4444";
+      span.style.fontWeight = "600";
+      return span;
+    }
+
+    ignoreEvent() {
+      return true;
+    }
+  }
 
   useEffect(() => {
     const fetchSubscription = async () => {
@@ -223,6 +256,100 @@ export default function CodePreview() {
   }, [connectedUser?.id]);
 
   const isPremium = !!subscription;
+
+  const buildDiff = useCallback(
+    (previousText: string, currentText: string, cacheKey: string) => {
+      if (previousText === currentText) {
+        return previousText
+          .split("\n")
+          .map((line) => `  ${line}`)
+          .join("\n");
+      }
+
+      const cached = diffCacheRef.current.get(cacheKey);
+      if (cached) {
+        return cached;
+      }
+
+      const oldLines = previousText.split("\n");
+      const newLines = currentText.split("\n");
+      const m = oldLines.length;
+      const n = newLines.length;
+      const dp: number[][] = Array.from({ length: m + 1 }, () =>
+        Array(n + 1).fill(0),
+      );
+      for (let i = m - 1; i >= 0; i -= 1) {
+        for (let j = n - 1; j >= 0; j -= 1) {
+          if (oldLines[i] === newLines[j]) {
+            dp[i][j] = dp[i + 1][j + 1] + 1;
+          } else {
+            dp[i][j] = Math.max(dp[i + 1][j], dp[i][j + 1]);
+          }
+        }
+      }
+      const diffLines: string[] = [];
+      let i = 0;
+      let j = 0;
+      while (i < m && j < n) {
+        if (oldLines[i] === newLines[j]) {
+          diffLines.push(`  ${oldLines[i]}`);
+          i += 1;
+          j += 1;
+        } else if (dp[i + 1][j] >= dp[i][j + 1]) {
+          diffLines.push(`- ${oldLines[i]}`);
+          i += 1;
+        } else {
+          diffLines.push(`+ ${newLines[j]}`);
+          j += 1;
+        }
+      }
+      while (i < m) {
+        diffLines.push(`- ${oldLines[i]}`);
+        i += 1;
+      }
+      while (j < n) {
+        diffLines.push(`+ ${newLines[j]}`);
+        j += 1;
+      }
+      const result = diffLines.join("\n");
+      diffCacheRef.current.set(cacheKey, result);
+      return result;
+    },
+    [],
+  );
+
+  useEffect(() => {
+    if (
+      !showDiff ||
+      selectedVersion === undefined ||
+      selectedVersion <= 0 ||
+      !activeTab ||
+      !previousArtifactFiles.length
+    ) {
+      setDiffContent(null);
+      return;
+    }
+    const currentFile = artifactFiles.find((file) => file.name === activeTab);
+    if (!currentFile) {
+      setDiffContent(null);
+      return;
+    }
+    const previousFile = previousArtifactFiles.find(
+      (file) => file.name === activeTab,
+    );
+    const previousText = previousFile ? previousFile.content : "";
+    const currentText = currentFile.content;
+    const cacheKey = `${selectedVersion ?? "?"}|${activeTab}|${previousText.length}|${currentText.length}`;
+    const diffText = buildDiff(previousText, currentText, cacheKey);
+    setDiffContent(diffText);
+  }, [
+    showDiff,
+    activeTab,
+    artifactFiles,
+    previousArtifactFiles,
+    buildDiff,
+    selectedVersion,
+  ]);
 
   const downloadCode = async () => {
     if (!isLoggedIn) {
@@ -273,8 +400,9 @@ export default function CodePreview() {
   };
 
   const copyRawHTML = () => {
-    if (!editorValue) return;
-    copy(editorValue);
+    const valueToCopy = showDiff && diffContent ? diffContent : editorValue;
+    if (!valueToCopy) return;
+    copy(valueToCopy);
     toast({
       variant: "default",
       title: "Successfully copied",
@@ -286,6 +414,72 @@ export default function CodePreview() {
 
   const scrollIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const lastContentLengthRef = useRef<number>(0);
+
+  const diffExtensions = React.useMemo<Extension[]>(() => {
+    if (!showDiff || !diffContent) {
+      return [];
+    }
+    const plugin = ViewPlugin.fromClass(
+      class {
+        decorations;
+        constructor(view: EditorView) {
+          this.decorations = this.buildDecorations(view);
+        }
+        update(update: ViewUpdate) {
+          if (update.docChanged || update.viewportChanged) {
+            this.decorations = this.buildDecorations(update.view);
+          }
+        }
+        buildDecorations(view: EditorView) {
+          const builder = new RangeSetBuilder<Decoration>();
+          for (const { from, to } of view.visibleRanges) {
+            let line = view.state.doc.lineAt(from);
+            while (line.from <= to) {
+              const text = view.state.doc.sliceString(line.from, line.to);
+              const firstNonSpace = text.search(/\S/);
+              if (firstNonSpace !== -1) {
+                const ch = text.charAt(firstNonSpace);
+                let deco: Decoration | null = null;
+                if (ch === "+") {
+                  deco = Decoration.line({ class: "cr-diff-added" });
+                } else if (ch === "-") {
+                  deco = Decoration.line({ class: "cr-diff-removed" });
+                }
+                if (deco) {
+                  const signFrom = line.from + firstNonSpace;
+                  const signTo = Math.min(signFrom + 1, line.to);
+                  builder.add(line.from, line.from, deco);
+                  builder.add(
+                    signFrom,
+                    signTo,
+                    Decoration.replace({ widget: new DiffSignWidget(ch) }),
+                  );
+                }
+              }
+              if (line.to >= to) break;
+              if (line.number >= view.state.doc.lines) break;
+              line = view.state.doc.line(line.number + 1);
+            }
+          }
+          return builder.finish();
+        }
+      },
+      {
+        decorations: (v) => v.decorations,
+      },
+    );
+
+    const theme = EditorView.baseTheme({
+      ".cm-line.cr-diff-added": {
+        backgroundColor: "rgba(22, 163, 74, 0.15)",
+      },
+      ".cm-line.cr-diff-removed": {
+        backgroundColor: "rgba(220, 38, 38, 0.15)",
+      },
+    });
+
+    return [plugin, theme];
+  }, [showDiff, diffContent]);
 
   useEffect(() => {
     if (scrollIntervalRef.current) {
@@ -446,14 +640,17 @@ export default function CodePreview() {
                     gutterBackground: "hsl(var(--secondary))",
                   },
                 })}
-                value={editorValue}
+                value={showDiff && diffContent ? diffContent : editorValue}
                 lang={activeTab.split(".").pop() || Framework.HTML}
                 height="100%"
                 width="100%"
                 className={`size-full rounded-bl-lg ${
                   isLoading ? "pointer-events-none" : ""
                 }`}
-                extensions={getLanguageExtension(activeTab, selectedFramework)}
+                extensions={[
+                  ...getLanguageExtension(activeTab, selectedFramework),
+                  ...diffExtensions,
+                ]}
                 readOnly
                 basicSetup={{
                   lineNumbers: true,
@@ -484,6 +681,22 @@ export default function CodePreview() {
               </Badge>
               {!isLoading && !isLengthError && !buildError && (
                 <div className="flex shrink-0 items-center gap-1">
+                  <Button
+                    variant={showDiff ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => setShowDiff((prev) => !prev)}
+                    className="h-8 gap-1.5"
+                    disabled={
+                      !activeTab ||
+                      selectedVersion === undefined ||
+                      selectedVersion <= 0
+                    }
+                  >
+                    <GitCompare className="size-4" />
+                    <span className="text-xs">
+                      {showDiff ? "Hide diff" : "Show diff"}
+                    </span>
+                  </Button>
                   <Button
                     variant="ghost"
                     size="sm"

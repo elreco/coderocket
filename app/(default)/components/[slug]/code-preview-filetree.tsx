@@ -49,6 +49,7 @@ interface FolderContentProps {
   allFiles: File[];
   savingFiles: Set<string>;
   authorized: boolean;
+  fileStatuses: Record<string, string>;
 }
 
 const FolderContent = ({
@@ -68,6 +69,7 @@ const FolderContent = ({
   allFiles,
   savingFiles,
   authorized,
+  fileStatuses,
 }: FolderContentProps) => {
   const sortFiles = React.useCallback((a: File, b: File) => {
     return (a.name || "").localeCompare(b.name || "");
@@ -202,6 +204,7 @@ const FolderContent = ({
                 allFiles={allFiles}
                 savingFiles={savingFiles}
                 authorized={authorized}
+                fileStatuses={fileStatuses}
               />
             )}
           </div>
@@ -215,6 +218,7 @@ const FolderContent = ({
         );
         const FileIcon = fileConfig.icon;
         const fullPath = path ? `${path}/${file.name}` : file.name || undefined;
+        const status = fullPath ? fileStatuses[fullPath] : undefined;
         const isActive = activeTab === fullPath;
         return (
           <div key={fullPath} className="group relative flex items-center">
@@ -233,6 +237,16 @@ const FolderContent = ({
               style={{ paddingLeft: `${depth * 12 + 22}px` }}
             >
               <FileIcon className={cn("size-4 shrink-0", fileConfig.color)} />
+              {status && (
+                <span
+                  className={cn(
+                    "ml-1 size-2 rounded-full",
+                    status === "added" && "bg-emerald-400",
+                    status === "modified" && "bg-amber-400",
+                    status === "deleted" && "bg-red-400",
+                  )}
+                />
+              )}
               <span className="flex-1 truncate text-left">{file.name}</span>
             </button>
             {authorized && (
@@ -333,14 +347,54 @@ export function CodePreviewFileTree({
     setArtifactCode,
     chatId,
     authorized,
+    previousArtifactFiles,
   } = useComponentContext();
 
   const [localFiles, setLocalFiles] = React.useState(artifactFiles);
   const [savingFiles, setSavingFiles] = React.useState<Set<string>>(new Set());
+  const [fileStatuses, setFileStatuses] = React.useState<
+    Record<string, string>
+  >({});
 
   React.useEffect(() => {
     setLocalFiles(artifactFiles);
-  }, [artifactFiles]);
+  }, [artifactFiles, previousArtifactFiles]);
+
+  React.useEffect(() => {
+    const statusMap: Record<string, string> = {};
+    const previousMap = new Map<string | null, File>();
+    const currentMap = new Map<string | null, File>();
+    artifactFiles.forEach((file) => {
+      currentMap.set(file.name, file);
+    });
+    previousArtifactFiles.forEach((file) => {
+      previousMap.set(file.name, file);
+    });
+    artifactFiles.forEach((file) => {
+      const name = file.name;
+      if (!name) {
+        return;
+      }
+      const previous = previousMap.get(name);
+      if (!previous) {
+        statusMap[name] = "added";
+      } else if (previous.content !== file.content) {
+        statusMap[name] = "modified";
+      } else {
+        statusMap[name] = "unchanged";
+      }
+    });
+    previousArtifactFiles.forEach((file) => {
+      const name = file.name;
+      if (!name) {
+        return;
+      }
+      if (!currentMap.has(name)) {
+        statusMap[name] = "deleted";
+      }
+    });
+    setFileStatuses(statusMap);
+  }, [artifactFiles, previousArtifactFiles]);
 
   const [openFolders, setOpenFolders] = React.useState<Record<string, boolean>>(
     {},
@@ -473,6 +527,7 @@ export function CodePreviewFileTree({
         allFiles={localFiles}
         savingFiles={savingFiles}
         authorized={authorized}
+        fileStatuses={fileStatuses}
       />
     </div>
   );

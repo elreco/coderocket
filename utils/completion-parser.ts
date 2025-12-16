@@ -1,6 +1,7 @@
 import { Tables } from "@/types_db";
 
 import { defaultTheme } from "./config";
+import { applyPatchToContent, isPatchFormat } from "./patch-applier";
 
 const TAILWIND_SCRIPT_CDN =
   '<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>';
@@ -238,6 +239,13 @@ export const getUpdatedArtifactCode = (
         allFiles.set(normalizedFileName, content);
       }
     } else if (content) {
+      const isPatch = isPatchFormat(content);
+      if (isPatch) {
+        const existing = allFiles.get(fileName) || "";
+        const patched = applyPatchToContent(existing, content);
+        allFiles.set(fileName, patched);
+        continue;
+      }
       // Si le fichier existe déjà et ne contient pas de marqueur FINISH_REASON,
       // on concatène le nouveau contenu au contenu existant
       if (allFiles.has(fileName)) {

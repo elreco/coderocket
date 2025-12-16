@@ -68,6 +68,8 @@ interface ComponentContextType {
   isWebcontainerReady: boolean;
   setWebcontainerReady: (value: boolean) => void;
   artifactFiles: ChatFile[];
+  previousArtifactFiles: ChatFile[];
+  setPreviousArtifactFiles: (files: ChatFile[]) => void;
   chatId: string;
   selectedFramework: Framework;
   files: File[];

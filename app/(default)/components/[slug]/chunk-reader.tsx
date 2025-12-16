@@ -25,6 +25,7 @@ import { ThinkingBlock } from "./thinking-block";
 export function ChunkReader({
   chunks,
   files,
+  versionFiles,
   handleFileClick,
   isSelectedVersion,
   version,
@@ -34,6 +35,7 @@ export function ChunkReader({
 }: {
   chunks: { type: string; content: string }[];
   files: ChatFile[];
+  versionFiles?: ChatFile[];
   handleFileClick: (version: number, file: ChatFile) => void;
   isSelectedVersion?: boolean;
   version?: number;
@@ -44,16 +46,41 @@ export function ChunkReader({
   const { isCanvas, activeTab, selectedFramework, isLoading } =
     useComponentContext();
 
+  const effectiveFiles = useMemo(() => {
+    if (!versionFiles || versionFiles.length === 0) {
+      return files;
+    }
+    const fullByName = new Map<string, ChatFile>();
+    files.forEach((file) => {
+      if (file.name) {
+        fullByName.set(file.name, file);
+      }
+    });
+    return versionFiles.map((file) => {
+      if (!file.name) {
+        return file;
+      }
+      const full = fullByName.get(file.name);
+      if (!full) {
+        return file;
+      }
+      return {
+        ...file,
+        content: full.content,
+      };
+    });
+  }, [files, versionFiles]);
+
   const migrationFiles = useMemo(() => {
-    const categorized = categorizeFiles(files);
+    const categorized = categorizeFiles(effectiveFiles);
     return categorized.migrations;
-  }, [files]);
+  }, [effectiveFiles]);
 
   return chunks.map((chunk, index) => {
     // Pour les chunks de type "artifact", utiliser directement les fichiers fournis
     let artifactFiles: ChatFile[] = [];
     if (chunk.type === "artifact") {
-      artifactFiles = files;
+      artifactFiles = effectiveFiles;
     }
 
     // Nettoyer les fragments incomplets de balises thinking avant affichage

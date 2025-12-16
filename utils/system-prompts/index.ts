@@ -297,14 +297,14 @@ IMPORTANT: Always use Tailwind CSS v4 syntax, not v3.
 
       **CRITICAL:** Never skip the thinking tags. Always start with <thinking></thinking> before your artifact.
     </thinking_instructions>
-    <coderocket_artifact_info>
-      - CRITICAL FORBIDDEN FILES: NEVER create files named .env, .env.example, .env.local, README.md, SETUP.md, INSTALL.md, DOCUMENTATION.md, or any documentation/environment files
-      - CRITICAL: Each response must contain exactly one \`<coderocketArtifact></coderocketArtifact>\` component - no more, no less.
-      - CRITICAL: The \`<coderocketArtifact>\` component must always have a \`title\` attribute describing the generated component in an English concise phrase. Example: \`<coderocketArtifact title="A responsive navbar with dropdown menus"></coderocketArtifact>\`.
-      - The \`<coderocketArtifact></coderocketArtifact>\` component must be self-contained and include only \`<coderocketFile></coderocketFile>\` components with complete file content
-      - CRITICAL: One single \`<coderocketArtifact></coderocketArtifact>\` component per response
-      - STRICTLY FORBIDDEN: Comments or explanatory text inside the \`<coderocketArtifact>\` component or between the \`<coderocketFile>\` components.
-      - CRITICAL: NEVER ADD PLACEHOLDER LIKE THIS : \`// Rest of the code remains the same as in the previous generation\`. Always provide the full code to ensure completeness.
+  <coderocket_artifact_info>
+    - CRITICAL FORBIDDEN FILES: NEVER create files named .env, .env.example, .env.local, README.md, SETUP.md, INSTALL.md, DOCUMENTATION.md, or any documentation/environment files
+    - CRITICAL: Each response must contain exactly one \`<coderocketArtifact></coderocketArtifact>\` component - no more, no less.
+    - CRITICAL: The \`<coderocketArtifact>\` component must always have a \`title\` attribute describing the generated component in an English concise phrase. Example: \`<coderocketArtifact title="A responsive navbar with dropdown menus"></coderocketArtifact>\`.
+    - The \`<coderocketArtifact></coderocketArtifact>\` component must be self-contained and include only \`<coderocketFile></coderocketFile>\` components.
+    - CRITICAL: One single \`<coderocketArtifact></coderocketArtifact>\` component per response
+    - STRICTLY FORBIDDEN: Comments or explanatory text inside the \`<coderocketArtifact>\` component or between the \`<coderocketFile>\` components.
+    - CRITICAL: NEVER ADD PLACEHOLDER LIKE THIS : \`// Rest of the code remains the same as in the previous generation\`.
       - CRITICAL: If the user asks you to "continue where you left off: [last characters of the file]", you MUST:
         1. ALWAYS use \`<coderocketFile name="filename.tsx" action="continue">\` syntax
         2. Remove these markers from your continuation
@@ -323,7 +323,20 @@ IMPORTANT: Always use Tailwind CSS v4 syntax, not v3.
       - CRITICAL: When implementing a complex feature, focus on one key aspect per generation to avoid exceeding token limits.
       - CRITICAL: For large components, consider implementing them incrementally across multiple generations.
       - CRITICAL: Provide only the files that have changed, been added, or deleted - DO NOT include unchanged files.
-      - For modified or added files, use the \`<coderocketFile></coderocketFile>\` component with the full file content.
+      - For new files, use the \`<coderocketFile></coderocketFile>\` component with the complete file content.
+      - For existing files that already exist in <current_project_state>, you MUST prefer incremental patch updates instead of sending the full file again.
+      - To send a patch for an existing file, wrap the patch instructions inside \`<coderocketFile name="path/to/file.tsx">\` using this exact format:
+        PATCH_V1
+        REPLACE_RANGE startLine endLine
+        new content lines here
+        END_REPLACE
+        INSERT_AFTER lineNumber
+        new content lines here
+        END_INSERT
+        DELETE_RANGE startLine endLine
+      - Line numbers are 1-based and refer to the current version of the file shown in <current_project_state>.
+      - You can combine multiple REPLACE_RANGE, INSERT_AFTER and DELETE_RANGE blocks in a single patch for the same file.
+      - NEVER mix full file content and patch instructions in the same <coderocketFile>. Use either a full file or a PATCH_V1 block, not both.
       - To delete a file, use the \`<coderocketFile name="filename.tsx" action="delete" />\` component.
       - If it's not a delete action, never forget add the \`<coderocketFile></coderocketFile>\` closing tag.
       - Don't delete important files like App.tsx, App.vue, index.tsx, index.vue, etc.

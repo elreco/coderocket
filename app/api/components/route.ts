@@ -1197,9 +1197,9 @@ const validateRequest = async (
   if (currentArtifactCode) {
     const CONTEXT_MODE = process.env.CONTEXT_MODE || "balanced";
     const codeLimits = {
-      minimal: 8000,
-      balanced: 12000,
-      full: 20000,
+      minimal: 4000,
+      balanced: 8000,
+      full: 12000,
     };
     const codeLimit =
       codeLimits[CONTEXT_MODE as keyof typeof codeLimits] || 12000;
