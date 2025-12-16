@@ -83,9 +83,6 @@ export function ElementSelector({ iframeRef }: ElementSelectorProps) {
     const handleWheel = (e: WheelEvent) => {
       if (!iframeRef.current) return;
 
-      e.preventDefault();
-      e.stopPropagation();
-
       try {
         const iframeWindow = iframeRef.current.contentWindow;
         if (iframeWindow) {
@@ -111,7 +108,7 @@ export function ElementSelector({ iframeRef }: ElementSelectorProps) {
 
     overlay.addEventListener("mousemove", handleMouseMove);
     overlay.addEventListener("click", handleClick);
-    overlay.addEventListener("wheel", handleWheel, { passive: false });
+    overlay.addEventListener("wheel", handleWheel, { passive: true });
 
     const sendSelectionMode = () => {
       try {

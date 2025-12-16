@@ -25,6 +25,7 @@ interface File {
   name: string | null;
   content: string;
   isLocked?: boolean;
+  isDeleted?: boolean;
 }
 
 interface Folder {
@@ -219,18 +220,21 @@ const FolderContent = ({
         const FileIcon = fileConfig.icon;
         const fullPath = path ? `${path}/${file.name}` : file.name || undefined;
         const status = fullPath ? fileStatuses[fullPath] : undefined;
+        const isDeleted = status === "deleted" || file.isDeleted;
         const isActive = activeTab === fullPath;
         return (
           <div key={fullPath} className="group relative flex items-center">
             <button
               onClick={() => {
-                handleVersionSelect(selectedVersion, fullPath);
-                onFileSelect?.();
+                if (!isDeleted) {
+                  handleVersionSelect(selectedVersion, fullPath);
+                  onFileSelect?.();
+                }
               }}
-              disabled={isLoading}
+              disabled={isLoading || isDeleted}
               className={cn(
                 "flex w-full items-center gap-1.5 rounded px-2 py-1 text-sm disabled:cursor-not-allowed disabled:opacity-50",
-                isActive
+                isActive && !isDeleted
                   ? "bg-accent text-accent-foreground"
                   : "hover:bg-accent/50",
               )}
@@ -247,7 +251,14 @@ const FolderContent = ({
                   )}
                 />
               )}
-              <span className="flex-1 truncate text-left">{file.name}</span>
+              <span
+                className={cn(
+                  "flex-1 truncate text-left",
+                  isDeleted && "text-muted-foreground line-through",
+                )}
+              >
+                {file.name}
+              </span>
             </button>
             {authorized && (
               <TooltipProvider>
@@ -497,8 +508,22 @@ export function CodePreviewFileTree({
   );
 
   const organizedFiles = React.useMemo(() => {
-    return organizeFilesByFolder(localFiles);
-  }, [localFiles]);
+    const existingNames = new Set(localFiles.map((file) => file.name));
+    const deletedFiles: File[] = [];
+
+    Object.entries(fileStatuses).forEach(([name, status]) => {
+      if (status === "deleted" && !existingNames.has(name)) {
+        deletedFiles.push({
+          name,
+          content: "",
+          isLocked: false,
+          isDeleted: true,
+        });
+      }
+    });
+
+    return organizeFilesByFolder([...localFiles, ...deletedFiles]);
+  }, [localFiles, fileStatuses]);
 
   if (artifactFiles.length === 0) {
     return (
