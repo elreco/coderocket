@@ -33,6 +33,14 @@ import { TextareaWithLimit } from "@/components/textarea-with-limit";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Tooltip,
@@ -60,6 +68,7 @@ import {
   storageUrl,
 } from "@/utils/config";
 import { getRelativeDate } from "@/utils/date";
+import { isSameDomain } from "@/utils/domain-helper";
 import { validateFile } from "@/utils/file-helper";
 
 import ComponentTheme from "./(settings)/component-theme";
@@ -168,6 +177,16 @@ export default function ComponentSidebar({
   const [isCloneAnotherPageActive, setIsCloneAnotherPageActive] =
     useState(false);
   const [currentCloneUrl, setCurrentCloneUrl] = useState<string | null>(null);
+  const [showUrlInPromptModal, setShowUrlInPromptModal] = useState(false);
+  const [pendingPromptWithUrl, setPendingPromptWithUrl] = useState<
+    string | null
+  >(null);
+
+  const containsUrl = (text: string): boolean => {
+    const urlPattern =
+      /(https?:\/\/[^\s]+|www\.[^\s]+|[a-zA-Z0-9-]+\.[a-zA-Z]{2,}[^\s]*)/gi;
+    return urlPattern.test(text);
+  };
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -199,19 +218,33 @@ export default function ComponentSidebar({
   }, [connectedUser?.id]);
 
   const submitPrompt = (promptText: string) => {
-    // Activer isScrapingWebsite si le prompt contient "Clone this website" ou "Clone another page"
+    const lower = promptText.toLowerCase();
     const isClonePrompt =
-      promptText.toLowerCase().includes("clone this website") ||
-      promptText.toLowerCase().includes("clone another page") ||
-      promptText.toLowerCase().includes("clone another page:");
-    if (isClonePrompt) {
-      setIsScrapingWebsite(true);
-      // Extraire l'URL du prompt si elle existe
-      const urlMatch = promptText.match(/https?:\/\/[^\s]+/);
-      if (urlMatch) {
-        setCurrentCloneUrl(urlMatch[0]);
-      }
+      lower.includes("clone this website") ||
+      lower.includes("clone another page") ||
+      lower.includes("clone another page:");
+
+    let normalizedUrl: string | null = null;
+    const urlMatch = promptText.match(/https?:\/\/[^\s]+/);
+    if (urlMatch) {
+      normalizedUrl = urlMatch[0];
     }
+
+    if (isClonePrompt && fetchedChat?.clone_url && normalizedUrl) {
+      if (!isSameDomain(fetchedChat.clone_url, normalizedUrl)) {
+        toast({
+          variant: "destructive",
+          title: "Different domain",
+          description:
+            "You can only clone pages from the same domain as the original website.",
+          duration: 4000,
+        });
+        return;
+      }
+      setIsScrapingWebsite(true);
+      setCurrentCloneUrl(normalizedUrl);
+    }
+
     handleSubmitToAI(promptText);
     setActiveTab("chat");
   };
@@ -241,18 +274,14 @@ export default function ComponentSidebar({
 
     setIsContinuingFromLengthError(false);
 
-    // Activer isScrapingWebsite si le prompt contient "Clone this website" ou "Clone another page"
-    const isClonePrompt =
-      input.toLowerCase().includes("clone this website") ||
-      input.toLowerCase().includes("clone another page") ||
-      input.toLowerCase().includes("clone another page:");
-    if (isClonePrompt) {
-      setIsScrapingWebsite(true);
-      // Extraire l'URL du prompt si elle existe
-      const urlMatch = input.match(/https?:\/\/[^\s]+/);
-      if (urlMatch) {
-        setCurrentCloneUrl(urlMatch[0]);
-      }
+    if (
+      fetchedChat?.clone_url &&
+      containsUrl(input) &&
+      !input.toLowerCase().includes("clone another page:")
+    ) {
+      setPendingPromptWithUrl(input);
+      setShowUrlInPromptModal(true);
+      return;
     }
 
     submitPrompt(input);
@@ -456,732 +485,735 @@ export default function ComponentSidebar({
   }, [isLoading, isCloneAnotherPageActive]);
 
   return (
-    <div
-      className={cn(
-        "bg-secondary relative flex size-full flex-col overflow-hidden border-l-0 xl:flex-row xl:border-l",
-        className,
-      )}
-    >
-      <Tabs
-        value={activeTab}
-        onValueChange={(value) => {
-          if (!isLoading) {
-            handleTabChange(value);
-          }
-        }}
-        className="w-full xl:hidden"
+    <>
+      <div
+        className={cn(
+          "bg-secondary relative flex size-full flex-col overflow-hidden border-l-0 xl:flex-row xl:border-l",
+          className,
+        )}
       >
-        <TabsList
-          className={cn(
-            "grid w-full rounded-none",
-            authorized
-              ? selectedFramework === Framework.HTML
-                ? "grid-cols-5"
-                : "grid-cols-6"
-              : "grid-cols-2",
-          )}
+        <Tabs
+          value={activeTab}
+          onValueChange={(value) => {
+            if (!isLoading) {
+              handleTabChange(value);
+            }
+          }}
+          className="w-full xl:hidden"
         >
-          <TabsTrigger value="chat" disabled={isLoading}>
-            <MessageSquare className="size-4" />
-          </TabsTrigger>
-          <TabsTrigger value="history" disabled={isLoading}>
-            <BookOpen className="size-4" />
-          </TabsTrigger>
-          {authorized && (
-            <TabsTrigger value="github" disabled={isLoading}>
-              <Github className="size-4" />
+          <TabsList
+            className={cn(
+              "grid w-full rounded-none",
+              authorized
+                ? selectedFramework === Framework.HTML
+                  ? "grid-cols-5"
+                  : "grid-cols-6"
+                : "grid-cols-2",
+            )}
+          >
+            <TabsTrigger value="chat" disabled={isLoading}>
+              <MessageSquare className="size-4" />
             </TabsTrigger>
-          )}
-          {authorized && selectedFramework !== Framework.HTML && (
-            <TabsTrigger value="integrations" disabled={isLoading}>
-              <Plug2 className="size-4" />
+            <TabsTrigger value="history" disabled={isLoading}>
+              <BookOpen className="size-4" />
             </TabsTrigger>
-          )}
-          {authorized && (
-            <TabsTrigger value="deployment" disabled={isLoading}>
-              <Rocket className="size-4" />
-            </TabsTrigger>
-          )}
-          {authorized && (
-            <TabsTrigger value="settings" disabled={isLoading}>
-              <Settings className="size-4" />
-            </TabsTrigger>
-          )}
-        </TabsList>
-      </Tabs>
+            {authorized && (
+              <TabsTrigger value="github" disabled={isLoading}>
+                <Github className="size-4" />
+              </TabsTrigger>
+            )}
+            {authorized && selectedFramework !== Framework.HTML && (
+              <TabsTrigger value="integrations" disabled={isLoading}>
+                <Plug2 className="size-4" />
+              </TabsTrigger>
+            )}
+            {authorized && (
+              <TabsTrigger value="deployment" disabled={isLoading}>
+                <Rocket className="size-4" />
+              </TabsTrigger>
+            )}
+            {authorized && (
+              <TabsTrigger value="settings" disabled={isLoading}>
+                <Settings className="size-4" />
+              </TabsTrigger>
+            )}
+          </TabsList>
+        </Tabs>
 
-      <div className="bg-background flex flex-1 flex-col overflow-hidden">
-        {activeTab === "chat" && (
-          <div className="bg-background flex h-12 items-center gap-2 px-4 py-1.5">
-            <MessageSquare className="size-4" />
-            <h3 className="text-base font-medium">Chat</h3>
-          </div>
-        )}
-        {activeTab === "history" && (
-          <div className="bg-background flex h-12 items-center gap-2 px-4 py-1.5">
-            <BookOpen className="size-4" />
-            <h3 className="text-base font-medium">History</h3>
-          </div>
-        )}
-        {authorized && activeTab === "github" && (
-          <div className="bg-background flex h-12 items-center gap-2 px-4 py-1.5">
-            <Github className="size-4" />
-            <h3 className="text-base font-medium">GitHub Sync</h3>
-          </div>
-        )}
-        {authorized &&
-          selectedFramework !== Framework.HTML &&
-          activeTab === "integrations" && (
-            <div className="bg-background flex h-12 items-center gap-2 px-4 py-1.5">
-              <Plug2 className="size-4" />
-              <h3 className="text-base font-medium">Integrations</h3>
-            </div>
-          )}
-        {authorized && activeTab === "deployment" && (
-          <div className="bg-background flex h-12 items-center gap-2 px-4 py-1.5">
-            <Rocket className="size-4" />
-            <h3 className="text-base font-medium">Deployment</h3>
-          </div>
-        )}
-        {authorized && activeTab === "settings" && (
-          <div className="bg-background flex h-12 items-center gap-2 px-4 py-1.5">
-            <Settings className="size-4" />
-            <h3 className="text-base font-medium">Settings</h3>
-          </div>
-        )}
-
-        <div
-          ref={containerRef}
-          className={cn(
-            "border-border bg-secondary flex flex-1 flex-col overflow-x-hidden overflow-y-auto scroll-smooth border-r",
-            activeTab === "chat" && "rounded-r-lg border-y",
-            activeTab !== "chat" && "rounded-tr-lg border-t",
-          )}
-        >
-          {isLoaderVisible && (
-            <div className="bg-secondary absolute inset-0 z-10 flex size-full flex-col items-start p-4">
-              <ComponentSidebarSkeleton />
-            </div>
-          )}
+        <div className="bg-background flex flex-1 flex-col overflow-hidden">
           {activeTab === "chat" && (
-            <>
-              {messages
-                .filter((m) => {
-                  // Filtrer strictement par version - selectedVersion peut être 0, donc on doit vérifier explicitement
-                  if (selectedVersion === undefined || selectedVersion === null)
-                    return false;
-                  // S'assurer que les types correspondent (number vs number)
-                  const messageVersion = Number(m.version);
-                  const currentSelectedVersion = Number(selectedVersion);
-                  if (messageVersion !== currentSelectedVersion) return false;
-                  // Ne plus filtrer les messages assistant pendant le chargement
-                  // On va créer un message temporaire pour le streaming
-                  return true;
-                })
-                .map((m) => {
-                  // Si c'est un message assistant et qu'on a du contenu en streaming,
-                  // utiliser le contenu en streaming même après que isLoading devienne false
-                  // pour éviter d'afficher l'ancien message pendant la transition
-                  // On continue d'utiliser le streaming si:
-                  // 1. On est en train de charger (isLoading)
-                  // 2. Le completion est plus long que le contenu du message (nouveau contenu en streaming)
-                  // 3. Le contenu du message ne correspond pas au completion (ancien message)
-                  if (
-                    m.role === "assistant" &&
-                    Number(m.version) === Number(selectedVersion) &&
-                    completion &&
-                    completion.length > 0 &&
-                    (isLoading ||
-                      completion.length > (m.content?.length || 0) ||
-                      (m.content &&
-                        !completion.startsWith(m.content.substring(0, 100))))
-                  ) {
-                    // Créer un message temporaire avec le contenu en streaming
-                    // Ne pas inclure le screenshot et les tokens de l'ancien message pendant le streaming
-                    const streamingMessage = {
-                      ...m,
-                      content: completion,
-                      screenshot: null,
-                      input_tokens: null,
-                      output_tokens: null,
-                      version: selectedVersion ?? m.version,
-                    };
-                    return (
-                      <ComponentChatFiles
-                        message={streamingMessage}
-                        key={`streaming-${m.id}`}
-                      />
-                    );
-                  }
-
-                  // Ne pas afficher les messages assistant d'une autre version pendant le streaming
-                  if (
-                    m.role === "assistant" &&
-                    Number(m.version) !== Number(selectedVersion) &&
-                    isLoading &&
-                    completion &&
-                    completion.length > 0
-                  ) {
-                    return null;
-                  }
-
-                  // Ne pas afficher le message assistant pendant le scraping si on n'a pas encore de completion
-                  // Cela évite d'afficher l'ancien contenu pendant le scraping
-                  if (
-                    m.role === "assistant" &&
-                    isScrapingWebsite &&
-                    (!completion || completion.length === 0)
-                  ) {
-                    return null;
-                  }
-
-                  const result = <ComponentChatFiles message={m} key={m.id} />;
-
-                  const isClonePrompt =
-                    m.content?.toLowerCase().includes("clone this website") ||
-                    m.content?.toLowerCase().includes("clone another page");
-
-                  // Loader pour le clonage - s'affiche après le message utilisateur
-                  if (
-                    m.role === "user" &&
-                    isClonePrompt &&
-                    isScrapingWebsite &&
-                    (!completion || completion.length === 0)
-                  ) {
-                    return (
-                      <Fragment key={`clone-loader-${m.id}`}>
-                        {result}
-                        <div className="flex items-center justify-center py-8 px-3">
-                          <div className="flex flex-col items-center gap-3 text-center">
-                            <Loader className="text-primary size-6 animate-spin" />
-                            <p className="text-primary text-sm font-medium">
-                              Analyzing website...
-                            </p>
-                            <p className="text-amber-600 text-xs font-medium">
-                              This process can take up to 1 minute. Please stay
-                              on this page and do not close your browser.
-                            </p>
-                            {(currentCloneUrl ||
-                              fetchedChat?.clone_url ||
-                              (m.content &&
-                                (m.content.match(/https?:\/\/[^\s]+/) ||
-                                  [])[0])) && (
-                              <p className="text-muted-foreground text-xs">
-                                {truncateMiddle(
-                                  (
-                                    currentCloneUrl ||
-                                    fetchedChat?.clone_url ||
-                                    (m.content &&
-                                      (m.content.match(/https?:\/\/[^\s]+/) ||
-                                        [])[0]) ||
-                                    ""
-                                  )
-                                    .replace(/^https?:\/\/(www\.)?/i, "")
-                                    .replace(/\/$/, ""),
-                                  40,
-                                )}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      </Fragment>
-                    );
-                  }
-
-                  // Loader pour les cas normaux (non-cloning)
-                  if (
-                    m.role === "user" &&
-                    !isClonePrompt &&
-                    isLoading &&
-                    (!completion || completion.length === 0)
-                  ) {
-                    return (
-                      <Fragment key={`loader-${m.id}`}>
-                        {result}
-                        <div className="flex items-center justify-center py-8 px-3">
-                          <div className="flex flex-col items-center gap-3">
-                            <Loader className="text-primary size-6 animate-spin" />
-                            <p className="text-primary text-sm font-medium">
-                              Generating component...
-                            </p>
-                          </div>
-                        </div>
-                      </Fragment>
-                    );
-                  }
-
-                  return result;
-                })}
-              {/* Afficher un message temporaire si on génère mais qu'il n'y a pas encore de message assistant */}
-              {isLoading &&
-                completion &&
-                completion.length > 0 &&
-                !messages.some(
-                  (m) =>
-                    m.role === "assistant" &&
-                    Number(m.version) === Number(selectedVersion),
-                ) && (
-                  <ComponentChatFiles
-                    message={
-                      {
-                        id: 0,
-                        chat_id: chatId,
-                        version: selectedVersion || -1,
-                        role: "assistant",
-                        content: completion,
-                        created_at: new Date().toISOString(),
-                        input_tokens: null,
-                        output_tokens: null,
-                        screenshot: null,
-                        theme: null,
-                        artifact_code: null,
-                        build_error: null,
-                        selected_element: null,
-                        prompt_image: null,
-                        files: null,
-                        subscription_type: null,
-                        cache_creation_input_tokens: null,
-                        cache_read_input_tokens: null,
-                        cost_usd: null,
-                        model_used: null,
-                        migrations_executed: null,
-                        clone_another_page: null,
-                        is_built: false,
-                        is_github_pull: false,
-                        migration_executed_at: null,
-                        chats: {
-                          user: user as Tables<"users">,
-                          prompt_image: null,
-                        },
-                      } as Tables<"messages"> & {
-                        chats: {
-                          user: Tables<"users">;
-                          prompt_image: string | null;
-                        };
-                      }
-                    }
-                    key="streaming-temp"
-                  />
-                )}
-            </>
+            <div className="bg-background flex h-12 items-center gap-2 px-4 py-1.5">
+              <MessageSquare className="size-4" />
+              <h3 className="text-base font-medium">Chat</h3>
+            </div>
           )}
           {activeTab === "history" && (
-            <div className="flex flex-col gap-2 p-3">
-              {!isLoading &&
-                messages
-                  .filter((m) => m.role === "user")
-                  .map((m) => (
-                    <TooltipProvider key={m.id}>
-                      <Tooltip delayDuration={150}>
-                        <TooltipTrigger asChild>
-                          <div
-                            ref={
-                              m.version === selectedVersion
-                                ? currentVersionRef
-                                : null
-                            }
-                            onClick={() =>
-                              m.version !== selectedVersion &&
-                              handleFileClick(m.version)
-                            }
-                            className={cn(
-                              "border-primary/20 bg-primary/5 rounded-lg border p-2 transition-all",
-                              m.version === selectedVersion
-                                ? "border-primary/30 cursor-default"
-                                : isLoading
-                                  ? "cursor-not-allowed opacity-70"
-                                  : "hover:border-primary/30 cursor-pointer",
-                            )}
-                          >
-                            <div className="flex w-full items-center justify-between gap-2 p-1">
-                              <div className="flex w-full items-center gap-2">
-                                <Avatar className="border-primary size-8 border">
-                                  <AvatarImage
-                                    src={user?.avatar_url || undefined}
-                                  />
-                                  <AvatarFallback>
-                                    <img
-                                      src={`${avatarApi}${user?.full_name}`}
-                                      alt="logo"
-                                      className="size-full"
-                                    />
-                                  </AvatarFallback>
-                                </Avatar>
-                                <div className="flex flex-col">
-                                  <span className="text-sm font-semibold">
-                                    {user?.full_name}
-                                  </span>
-                                  <span className="text-muted-foreground text-xs">
-                                    Version #{m.version > -1 ? m.version : 0}
-                                  </span>
-                                </div>
-                              </div>
-                              {m.version === selectedVersion ? (
-                                <Badge className="rounded-full">Current</Badge>
-                              ) : (
-                                <ChevronsRight className="size-4" />
+            <div className="bg-background flex h-12 items-center gap-2 px-4 py-1.5">
+              <BookOpen className="size-4" />
+              <h3 className="text-base font-medium">History</h3>
+            </div>
+          )}
+          {authorized && activeTab === "github" && (
+            <div className="bg-background flex h-12 items-center gap-2 px-4 py-1.5">
+              <Github className="size-4" />
+              <h3 className="text-base font-medium">GitHub Sync</h3>
+            </div>
+          )}
+          {authorized &&
+            selectedFramework !== Framework.HTML &&
+            activeTab === "integrations" && (
+              <div className="bg-background flex h-12 items-center gap-2 px-4 py-1.5">
+                <Plug2 className="size-4" />
+                <h3 className="text-base font-medium">Integrations</h3>
+              </div>
+            )}
+          {authorized && activeTab === "deployment" && (
+            <div className="bg-background flex h-12 items-center gap-2 px-4 py-1.5">
+              <Rocket className="size-4" />
+              <h3 className="text-base font-medium">Deployment</h3>
+            </div>
+          )}
+          {authorized && activeTab === "settings" && (
+            <div className="bg-background flex h-12 items-center gap-2 px-4 py-1.5">
+              <Settings className="size-4" />
+              <h3 className="text-base font-medium">Settings</h3>
+            </div>
+          )}
+
+          <div
+            ref={containerRef}
+            className={cn(
+              "border-border bg-secondary flex flex-1 flex-col overflow-x-hidden overflow-y-auto scroll-smooth border-r",
+              activeTab === "chat" && "rounded-r-lg border-y",
+              activeTab !== "chat" && "rounded-tr-lg border-t",
+            )}
+          >
+            {isLoaderVisible && (
+              <div className="bg-secondary absolute inset-0 z-10 flex size-full flex-col items-start p-4">
+                <ComponentSidebarSkeleton />
+              </div>
+            )}
+            {activeTab === "chat" && (
+              <>
+                {messages
+                  .filter((m) => {
+                    // Filtrer strictement par version - selectedVersion peut être 0, donc on doit vérifier explicitement
+                    if (
+                      selectedVersion === undefined ||
+                      selectedVersion === null
+                    )
+                      return false;
+                    // S'assurer que les types correspondent (number vs number)
+                    const messageVersion = Number(m.version);
+                    const currentSelectedVersion = Number(selectedVersion);
+                    if (messageVersion !== currentSelectedVersion) return false;
+                    // Ne plus filtrer les messages assistant pendant le chargement
+                    // On va créer un message temporaire pour le streaming
+                    return true;
+                  })
+                  .map((m) => {
+                    // Si c'est un message assistant et qu'on a du contenu en streaming,
+                    // utiliser le contenu en streaming même après que isLoading devienne false
+                    // pour éviter d'afficher l'ancien message pendant la transition
+                    // On continue d'utiliser le streaming si:
+                    // 1. On est en train de charger (isLoading)
+                    // 2. Le completion est plus long que le contenu du message (nouveau contenu en streaming)
+                    // 3. Le contenu du message ne correspond pas au completion (ancien message)
+                    if (
+                      m.role === "assistant" &&
+                      Number(m.version) === Number(selectedVersion) &&
+                      completion &&
+                      completion.length > 0 &&
+                      (isLoading ||
+                        completion.length > (m.content?.length || 0) ||
+                        (m.content &&
+                          !completion.startsWith(m.content.substring(0, 100))))
+                    ) {
+                      // Créer un message temporaire avec le contenu en streaming
+                      // Ne pas inclure le screenshot et les tokens de l'ancien message pendant le streaming
+                      const streamingMessage = {
+                        ...m,
+                        content: completion,
+                        screenshot: null,
+                        input_tokens: null,
+                        output_tokens: null,
+                        version: selectedVersion ?? m.version,
+                      };
+                      return (
+                        <ComponentChatFiles
+                          message={streamingMessage}
+                          key={`streaming-${m.id}`}
+                        />
+                      );
+                    }
+
+                    // Ne pas afficher les messages assistant d'une autre version pendant le streaming
+                    if (
+                      m.role === "assistant" &&
+                      Number(m.version) !== Number(selectedVersion) &&
+                      isLoading &&
+                      completion &&
+                      completion.length > 0
+                    ) {
+                      return null;
+                    }
+
+                    // Ne pas afficher le message assistant pendant le scraping si on n'a pas encore de completion
+                    // Cela évite d'afficher l'ancien contenu pendant le scraping
+                    if (
+                      m.role === "assistant" &&
+                      isScrapingWebsite &&
+                      (!completion || completion.length === 0)
+                    ) {
+                      return null;
+                    }
+
+                    const result = (
+                      <ComponentChatFiles message={m} key={m.id} />
+                    );
+
+                    const isClonePrompt =
+                      m.content?.toLowerCase().includes("clone this website") ||
+                      m.content?.toLowerCase().includes("clone another page");
+
+                    // Loader pour le clonage - s'affiche après le message utilisateur
+                    if (
+                      m.role === "user" &&
+                      isClonePrompt &&
+                      isScrapingWebsite &&
+                      (!completion || completion.length === 0)
+                    ) {
+                      return (
+                        <Fragment key={`clone-loader-${m.id}`}>
+                          {result}
+                          <div className="flex items-center justify-center py-8 px-3">
+                            <div className="flex flex-col items-center gap-3 text-center">
+                              <Loader className="text-primary size-6 animate-spin" />
+                              <p className="text-primary text-sm font-medium">
+                                Analyzing website...
+                              </p>
+                              <p className="text-amber-600 text-xs font-medium">
+                                This process can take up to 1 minute. Please
+                                stay on this page and do not close your browser.
+                              </p>
+                              {(currentCloneUrl ||
+                                fetchedChat?.clone_url ||
+                                (m.content &&
+                                  (m.content.match(/https?:\/\/[^\s]+/) ||
+                                    [])[0])) && (
+                                <p className="text-muted-foreground text-xs">
+                                  {truncateMiddle(
+                                    (
+                                      currentCloneUrl ||
+                                      fetchedChat?.clone_url ||
+                                      (m.content &&
+                                        (m.content.match(/https?:\/\/[^\s]+/) ||
+                                          [])[0]) ||
+                                      ""
+                                    )
+                                      .replace(/^https?:\/\/(www\.)?/i, "")
+                                      .replace(/\/$/, ""),
+                                    40,
+                                  )}
+                                </p>
                               )}
                             </div>
-                            <p className="mt-2 truncate text-sm">{m.content}</p>
-                            <p className="text-muted-foreground mt-2 text-right text-xs">
-                              {getRelativeDate(m.created_at)}
-                            </p>
                           </div>
-                        </TooltipTrigger>
-                        {isLoading && (
-                          <TooltipContent side="top">
-                            <p>
-                              Please wait for the component to load before
-                              changing versions
-                            </p>
-                          </TooltipContent>
-                        )}
-                      </Tooltip>
-                    </TooltipProvider>
-                  ))}
-            </div>
-          )}
-          {!isLoading && authorized && activeTab === "github" && (
-            <div className="p-4">
-              <GithubSync closeSheet={() => {}} />
-            </div>
-          )}
-          {!isLoading &&
-            authorized &&
-            selectedFramework !== Framework.HTML &&
-            activeTab === "integrations" && <IntegrationsContent />}
-          {!isLoading && authorized && activeTab === "deployment" && (
-            <DeploymentContent />
-          )}
-          {!isLoading && authorized && activeTab === "settings" && (
-            <SettingsContent />
-          )}
-          <div
-            className={cn(
-              "flex flex-col p-3",
-              "transition-all duration-200",
-              isLoading &&
-                input &&
-                !messages.some((m) => m.role === "user" && m.content === input)
-                ? "block"
-                : "hidden",
+                        </Fragment>
+                      );
+                    }
+
+                    // Loader pour les cas normaux (non-cloning)
+                    if (
+                      m.role === "user" &&
+                      !isClonePrompt &&
+                      isLoading &&
+                      (!completion || completion.length === 0)
+                    ) {
+                      return (
+                        <Fragment key={`loader-${m.id}`}>
+                          {result}
+                          <div className="flex items-center justify-center py-8 px-3">
+                            <div className="flex flex-col items-center gap-3">
+                              <Loader className="text-primary size-6 animate-spin" />
+                              <p className="text-primary text-sm font-medium">
+                                Generating component...
+                              </p>
+                            </div>
+                          </div>
+                        </Fragment>
+                      );
+                    }
+
+                    return result;
+                  })}
+                {/* Afficher un message temporaire si on génère mais qu'il n'y a pas encore de message assistant */}
+                {isLoading &&
+                  completion &&
+                  completion.length > 0 &&
+                  !messages.some(
+                    (m) =>
+                      m.role === "assistant" &&
+                      Number(m.version) === Number(selectedVersion),
+                  ) && (
+                    <ComponentChatFiles
+                      message={
+                        {
+                          id: 0,
+                          chat_id: chatId,
+                          version: selectedVersion || -1,
+                          role: "assistant",
+                          content: completion,
+                          created_at: new Date().toISOString(),
+                          input_tokens: null,
+                          output_tokens: null,
+                          screenshot: null,
+                          theme: null,
+                          artifact_code: null,
+                          build_error: null,
+                          selected_element: null,
+                          prompt_image: null,
+                          files: null,
+                          subscription_type: null,
+                          cache_creation_input_tokens: null,
+                          cache_read_input_tokens: null,
+                          cost_usd: null,
+                          model_used: null,
+                          migrations_executed: null,
+                          clone_another_page: null,
+                          is_built: false,
+                          is_github_pull: false,
+                          migration_executed_at: null,
+                          chats: {
+                            user: user as Tables<"users">,
+                            prompt_image: null,
+                          },
+                        } as Tables<"messages"> & {
+                          chats: {
+                            user: Tables<"users">;
+                            prompt_image: string | null;
+                          };
+                        }
+                      }
+                      key="streaming-temp"
+                    />
+                  )}
+              </>
             )}
-          >
-            <div className="border-primary/20 bg-primary/5 flex flex-col gap-3 rounded-lg border p-2 transition-all">
-              <UserWidget
-                id={user?.id}
-                createdAt={new Date().toISOString()}
-                userAvatarUrl={user?.avatar_url}
-                userFullName={user?.full_name}
-              />
-              {selectedElement && (
-                <SelectedElementDisplay element={selectedElement} />
+            {activeTab === "history" && (
+              <div className="flex flex-col gap-2 p-3">
+                {!isLoading &&
+                  messages
+                    .filter((m) => m.role === "user")
+                    .map((m) => (
+                      <TooltipProvider key={m.id}>
+                        <Tooltip delayDuration={150}>
+                          <TooltipTrigger asChild>
+                            <div
+                              ref={
+                                m.version === selectedVersion
+                                  ? currentVersionRef
+                                  : null
+                              }
+                              onClick={() =>
+                                m.version !== selectedVersion &&
+                                handleFileClick(m.version)
+                              }
+                              className={cn(
+                                "border-primary/20 bg-primary/5 rounded-lg border p-2 transition-all",
+                                m.version === selectedVersion
+                                  ? "border-primary/30 cursor-default"
+                                  : isLoading
+                                    ? "cursor-not-allowed opacity-70"
+                                    : "hover:border-primary/30 cursor-pointer",
+                              )}
+                            >
+                              <div className="flex w-full items-center justify-between gap-2 p-1">
+                                <div className="flex w-full items-center gap-2">
+                                  <Avatar className="border-primary size-8 border">
+                                    <AvatarImage
+                                      src={user?.avatar_url || undefined}
+                                    />
+                                    <AvatarFallback>
+                                      <img
+                                        src={`${avatarApi}${user?.full_name}`}
+                                        alt="logo"
+                                        className="size-full"
+                                      />
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <div className="flex flex-col">
+                                    <span className="text-sm font-semibold">
+                                      {user?.full_name}
+                                    </span>
+                                    <span className="text-muted-foreground text-xs">
+                                      Version #{m.version > -1 ? m.version : 0}
+                                    </span>
+                                  </div>
+                                </div>
+                                {m.version === selectedVersion ? (
+                                  <Badge className="rounded-full">
+                                    Current
+                                  </Badge>
+                                ) : (
+                                  <ChevronsRight className="size-4" />
+                                )}
+                              </div>
+                              <p className="mt-2 truncate text-sm">
+                                {m.content}
+                              </p>
+                              <p className="text-muted-foreground mt-2 text-right text-xs">
+                                {getRelativeDate(m.created_at)}
+                              </p>
+                            </div>
+                          </TooltipTrigger>
+                          {isLoading && (
+                            <TooltipContent side="top">
+                              <p>
+                                Please wait for the component to load before
+                                changing versions
+                              </p>
+                            </TooltipContent>
+                          )}
+                        </Tooltip>
+                      </TooltipProvider>
+                    ))}
+              </div>
+            )}
+            {!isLoading && authorized && activeTab === "github" && (
+              <div className="p-4">
+                <GithubSync closeSheet={() => {}} />
+              </div>
+            )}
+            {!isLoading &&
+              authorized &&
+              selectedFramework !== Framework.HTML &&
+              activeTab === "integrations" && <IntegrationsContent />}
+            {!isLoading && authorized && activeTab === "deployment" && (
+              <DeploymentContent />
+            )}
+            {!isLoading && authorized && activeTab === "settings" && (
+              <SettingsContent />
+            )}
+            <div
+              className={cn(
+                "flex flex-col p-3",
+                "transition-all duration-200",
+                isLoading &&
+                  input &&
+                  !messages.some(
+                    (m) => m.role === "user" && m.content === input,
+                  )
+                  ? "block"
+                  : "hidden",
               )}
-              <Markdown>{input}</Markdown>
-              <PromptFiles
-                files={files.length > 0 ? files : undefined}
-                storageUrl={storageUrl}
-              />
+            >
+              <div className="border-primary/20 bg-primary/5 flex flex-col gap-3 rounded-lg border p-2 transition-all">
+                <UserWidget
+                  id={user?.id}
+                  createdAt={new Date().toISOString()}
+                  userAvatarUrl={user?.avatar_url}
+                  userFullName={user?.full_name}
+                />
+                {selectedElement && (
+                  <SelectedElementDisplay element={selectedElement} />
+                )}
+                <Markdown>{input}</Markdown>
+                <PromptFiles
+                  files={files.length > 0 ? files : undefined}
+                  storageUrl={storageUrl}
+                />
+              </div>
+            </div>
+            <div
+              className={cn(
+                "flex flex-col",
+                "transition-all duration-200",
+                isLoading ? "block" : "hidden",
+              )}
+            >
+              <div className="flex w-full flex-col gap-2 overflow-x-auto p-3 text-sm wrap-break-word">
+                {/* Le contenu du chat est maintenant géré dans la section activeTab === "chat" */}
+              </div>
+              {/* Le loader de typing est maintenant géré par ComponentChatFiles */}
             </div>
           </div>
-          <div
-            className={cn(
-              "flex flex-col",
-              "transition-all duration-200",
-              isLoading ? "block" : "hidden",
-            )}
-          >
-            <div className="flex w-full flex-col gap-2 overflow-x-auto p-3 text-sm wrap-break-word">
-              {/* Le contenu du chat est maintenant géré dans la section activeTab === "chat" */}
-            </div>
-            {/* Le loader de typing est maintenant géré par ComponentChatFiles */}
-          </div>
-        </div>
-        {activeTab === "chat" && (
-          <form
-            className="flex w-full items-center"
-            onSubmit={(e) => handleSubmit(e)}
-          >
-            {authorized && (
-              <div className="bg-background flex w-full flex-col">
-                <div className="flex w-full items-center justify-between space-x-1 px-2 pt-2">
-                  <div className="flex items-center gap-2">
-                    {/* Continue your work button */}
-                    {!isLoading && isLengthError && (
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              type="button"
-                              size="sm"
-                              className="mr-2"
-                              onClick={() => {
-                                setIsContinuingFromLengthError(true);
-                                const continuePrompt =
-                                  createContinuePrompt(messages);
-                                setInput(continuePrompt);
-                                submitPrompt(continuePrompt);
+          {activeTab === "chat" && (
+            <form
+              className="flex w-full items-center"
+              onSubmit={(e) => handleSubmit(e)}
+            >
+              {authorized && (
+                <div className="bg-background flex w-full flex-col">
+                  <div className="flex w-full items-center justify-between space-x-1 px-2 pt-2">
+                    <div className="flex items-center gap-2">
+                      {/* Continue your work button */}
+                      {!isLoading && isLengthError && (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                type="button"
+                                size="sm"
+                                className="mr-2"
+                                onClick={() => {
+                                  setIsContinuingFromLengthError(true);
+                                  const continuePrompt =
+                                    createContinuePrompt(messages);
+                                  setInput(continuePrompt);
+                                  submitPrompt(continuePrompt);
+                                }}
+                              >
+                                <RefreshCw className="size-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Continue generation</TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
+                      {!isLoading && loadingState === "error" && buildError && (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                type="button"
+                                size="sm"
+                                className="mr-2"
+                                onClick={() => {
+                                  const errorContent =
+                                    buildError.errors?.join("\n\n") || "";
+                                  const truncatedContent =
+                                    errorContent.length > FREE_CHAR_LIMIT
+                                      ? errorContent.substring(
+                                          0,
+                                          FREE_CHAR_LIMIT,
+                                        )
+                                      : errorContent;
+                                  const continuePrompt =
+                                    "Fix the following error: " +
+                                    truncatedContent;
+                                  setInput(continuePrompt);
+                                  handleSubmitToAI(continuePrompt);
+                                }}
+                              >
+                                <WandSparkles className="size-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Fix errors</TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
+                      {!isLoading && hasUnexecutedMigration && (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                type="button"
+                                size="sm"
+                                className="mr-2"
+                                onClick={() => {
+                                  const migrationSection =
+                                    document.querySelector(
+                                      "[data-migration-runner]",
+                                    );
+                                  if (migrationSection) {
+                                    migrationSection.scrollIntoView({
+                                      behavior: "smooth",
+                                      block: "center",
+                                    });
+                                  }
+                                }}
+                              >
+                                <Database className="size-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Run Migration</TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      {selectedFramework === Framework.HTML &&
+                        !isLengthError && (
+                          <div className="text-sm font-semibold">
+                            <ComponentTheme>
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      type="button"
+                                      variant="secondary"
+                                      size="sm"
+                                      className="flex items-center"
+                                      disabled={isLoading}
+                                    >
+                                      <Paintbrush className="size-4 shrink-0" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Theme</TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            </ComponentTheme>
+                          </div>
+                        )}
+                      {!isLoadingSubscription &&
+                        !(
+                          buildError &&
+                          buildError.errors &&
+                          buildError.errors.length > 0
+                        ) && (
+                          <>
+                            <ImageUploadArea
+                              fileInputRef={fileInputRef}
+                              disabled={
+                                isLoading ||
+                                isLengthError ||
+                                !!buildError ||
+                                files.length >= maxImagesUpload ||
+                                (loadingState !== null &&
+                                  loadingState !== "error")
+                              }
+                              handleButtonClick={handleButtonClick}
+                              handleImageChange={handleFileChange}
+                              onDrop={(droppedFiles) => {
+                                const validFiles: File[] = [];
+
+                                for (const file of droppedFiles) {
+                                  if (
+                                    files.length + validFiles.length >=
+                                    maxImagesUpload
+                                  ) {
+                                    toast({
+                                      variant: "destructive",
+                                      title: "Too many files",
+                                      description: `Maximum ${maxImagesUpload} files allowed`,
+                                      duration: 4000,
+                                    });
+                                    break;
+                                  }
+
+                                  const validation = validateFile(file);
+                                  if (!validation.valid) {
+                                    toast({
+                                      variant: "destructive",
+                                      title: "Invalid file",
+                                      description: validation.error,
+                                      duration: 4000,
+                                    });
+                                    continue;
+                                  }
+
+                                  validFiles.push(file);
+                                }
+
+                                if (validFiles.length > 0) {
+                                  setFiles((prev) => [...prev, ...validFiles]);
+                                }
                               }}
-                            >
-                              <RefreshCw className="size-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>Continue generation</TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    )}
-                    {!isLoading && loadingState === "error" && buildError && (
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              type="button"
-                              size="sm"
-                              className="mr-2"
-                              onClick={() => {
-                                const errorContent =
-                                  buildError.errors?.join("\n\n") || "";
-                                const truncatedContent =
-                                  errorContent.length > FREE_CHAR_LIMIT
-                                    ? errorContent.substring(0, FREE_CHAR_LIMIT)
-                                    : errorContent;
-                                const continuePrompt =
-                                  "Fix the following error: " +
-                                  truncatedContent;
-                                setInput(continuePrompt);
-                                handleSubmitToAI(continuePrompt);
+                              subscription={subscription}
+                              isLoggedIn={isLoggedIn}
+                              currentFilesCount={files.length}
+                              onFileSelectFromLibrary={async (libraryFile) => {
+                                try {
+                                  const response = await fetch(
+                                    libraryFile.publicUrl,
+                                  );
+                                  const blob = await response.blob();
+                                  const fileName =
+                                    libraryFile.path.split("/").pop() ||
+                                    libraryFile.path;
+                                  const file = new File([blob], fileName, {
+                                    type: libraryFile.mimeType,
+                                  });
+                                  (
+                                    file as File & { __libraryPath?: string }
+                                  ).__libraryPath = libraryFile.path;
+
+                                  if (files.length >= maxImagesUpload) {
+                                    toast({
+                                      variant: "destructive",
+                                      title: "Too many files",
+                                      description: `Maximum ${maxImagesUpload} files allowed`,
+                                      duration: 4000,
+                                    });
+                                    return;
+                                  }
+
+                                  const validation = validateFile(file);
+                                  if (!validation.valid) {
+                                    toast({
+                                      variant: "destructive",
+                                      title: "Invalid file",
+                                      description: validation.error,
+                                      duration: 4000,
+                                    });
+                                    return;
+                                  }
+
+                                  setFiles((prev) => [...prev, file]);
+                                } catch (error) {
+                                  console.error(
+                                    "Error loading file from library:",
+                                    error,
+                                  );
+                                  toast({
+                                    variant: "destructive",
+                                    title: "Error loading file",
+                                    description:
+                                      "Failed to load file from library",
+                                    duration: 4000,
+                                  });
+                                }
                               }}
-                            >
-                              <WandSparkles className="size-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>Fix errors</TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    )}
-                    {!isLoading && hasUnexecutedMigration && (
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              type="button"
-                              size="sm"
-                              className="mr-2"
-                              onClick={() => {
-                                const migrationSection = document.querySelector(
-                                  "[data-migration-runner]",
+                              onFileDeleted={(deletedPath) => {
+                                setFiles((prev) =>
+                                  prev.filter(
+                                    (file) =>
+                                      (
+                                        file as File & {
+                                          __libraryPath?: string;
+                                        }
+                                      ).__libraryPath !== deletedPath,
+                                  ),
                                 );
-                                if (migrationSection) {
-                                  migrationSection.scrollIntoView({
-                                    behavior: "smooth",
-                                    block: "center",
-                                  });
+                              }}
+                              onFileUpload={(uploadedFiles) => {
+                                const validFiles: File[] = [];
+
+                                for (const file of uploadedFiles) {
+                                  if (
+                                    files.length + validFiles.length >=
+                                    maxImagesUpload
+                                  ) {
+                                    toast({
+                                      variant: "destructive",
+                                      title: "Too many files",
+                                      description: `Maximum ${maxImagesUpload} files allowed`,
+                                      duration: 4000,
+                                    });
+                                    break;
+                                  }
+
+                                  const validation = validateFile(file);
+                                  if (!validation.valid) {
+                                    toast({
+                                      variant: "destructive",
+                                      title: "Invalid file",
+                                      description: validation.error,
+                                      duration: 4000,
+                                    });
+                                    continue;
+                                  }
+
+                                  validFiles.push(file);
+                                }
+
+                                if (validFiles.length > 0) {
+                                  setFiles((prev) => [...prev, ...validFiles]);
                                 }
                               }}
-                            >
-                              <Database className="size-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>Run Migration</TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    )}
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    {selectedFramework === Framework.HTML && !isLengthError && (
-                      <div className="text-sm font-semibold">
-                        <ComponentTheme>
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  type="button"
-                                  variant="secondary"
-                                  size="sm"
-                                  className="flex items-center"
-                                  disabled={isLoading}
-                                >
-                                  <Paintbrush className="size-4 shrink-0" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>Theme</TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        </ComponentTheme>
-                      </div>
-                    )}
-                    {!isLoadingSubscription &&
-                      !(
-                        buildError &&
-                        buildError.errors &&
-                        buildError.errors.length > 0
-                      ) && (
-                        <>
-                          <ImageUploadArea
-                            fileInputRef={fileInputRef}
-                            disabled={
-                              isLoading ||
-                              isLengthError ||
-                              !!buildError ||
-                              files.length >= maxImagesUpload ||
-                              (loadingState !== null &&
-                                loadingState !== "error")
-                            }
-                            handleButtonClick={handleButtonClick}
-                            handleImageChange={handleFileChange}
-                            onDrop={(droppedFiles) => {
-                              const validFiles: File[] = [];
-
-                              for (const file of droppedFiles) {
-                                if (
-                                  files.length + validFiles.length >=
-                                  maxImagesUpload
-                                ) {
-                                  toast({
-                                    variant: "destructive",
-                                    title: "Too many files",
-                                    description: `Maximum ${maxImagesUpload} files allowed`,
-                                    duration: 4000,
-                                  });
-                                  break;
-                                }
-
-                                const validation = validateFile(file);
-                                if (!validation.valid) {
-                                  toast({
-                                    variant: "destructive",
-                                    title: "Invalid file",
-                                    description: validation.error,
-                                    duration: 4000,
-                                  });
-                                  continue;
-                                }
-
-                                validFiles.push(file);
-                              }
-
-                              if (validFiles.length > 0) {
-                                setFiles((prev) => [...prev, ...validFiles]);
-                              }
-                            }}
-                            subscription={subscription}
-                            isLoggedIn={isLoggedIn}
-                            currentFilesCount={files.length}
-                            onFileSelectFromLibrary={async (libraryFile) => {
-                              try {
-                                const response = await fetch(
-                                  libraryFile.publicUrl,
-                                );
-                                const blob = await response.blob();
-                                const fileName =
-                                  libraryFile.path.split("/").pop() ||
-                                  libraryFile.path;
-                                const file = new File([blob], fileName, {
-                                  type: libraryFile.mimeType,
-                                });
-                                (
-                                  file as File & { __libraryPath?: string }
-                                ).__libraryPath = libraryFile.path;
-
-                                if (files.length >= maxImagesUpload) {
-                                  toast({
-                                    variant: "destructive",
-                                    title: "Too many files",
-                                    description: `Maximum ${maxImagesUpload} files allowed`,
-                                    duration: 4000,
-                                  });
-                                  return;
-                                }
-
-                                const validation = validateFile(file);
-                                if (!validation.valid) {
-                                  toast({
-                                    variant: "destructive",
-                                    title: "Invalid file",
-                                    description: validation.error,
-                                    duration: 4000,
-                                  });
-                                  return;
-                                }
-
-                                setFiles((prev) => [...prev, file]);
-                              } catch (error) {
-                                console.error(
-                                  "Error loading file from library:",
-                                  error,
-                                );
-                                toast({
-                                  variant: "destructive",
-                                  title: "Error loading file",
-                                  description:
-                                    "Failed to load file from library",
-                                  duration: 4000,
-                                });
-                              }
-                            }}
-                            onFileDeleted={(deletedPath) => {
-                              setFiles((prev) =>
-                                prev.filter(
-                                  (file) =>
-                                    (file as File & { __libraryPath?: string })
-                                      .__libraryPath !== deletedPath,
-                                ),
-                              );
-                            }}
-                            onFileUpload={(uploadedFiles) => {
-                              const validFiles: File[] = [];
-
-                              for (const file of uploadedFiles) {
-                                if (
-                                  files.length + validFiles.length >=
-                                  maxImagesUpload
-                                ) {
-                                  toast({
-                                    variant: "destructive",
-                                    title: "Too many files",
-                                    description: `Maximum ${maxImagesUpload} files allowed`,
-                                    duration: 4000,
-                                  });
-                                  break;
-                                }
-
-                                const validation = validateFile(file);
-                                if (!validation.valid) {
-                                  toast({
-                                    variant: "destructive",
-                                    title: "Invalid file",
-                                    description: validation.error,
-                                    duration: 4000,
-                                  });
-                                  continue;
-                                }
-
-                                validFiles.push(file);
-                              }
-
-                              if (validFiles.length > 0) {
-                                setFiles((prev) => [...prev, ...validFiles]);
-                              }
-                            }}
-                          />
-                          <FigmaImportButton
-                            disabled={
-                              isLoading ||
-                              isLengthError ||
-                              !!buildError ||
-                              (loadingState !== null &&
-                                loadingState !== "error")
-                            }
-                            framework={selectedFramework}
-                            subscription={subscription}
-                            isLoggedIn={isLoggedIn}
-                            onFileImport={(file) => {
-                              setFiles((prev) => [...prev, file]);
-                            }}
-                          />
-                          {fetchedChat?.clone_url && (
-                            <CloneAnotherPageButton
-                              originalUrl={fetchedChat.clone_url}
+                            />
+                            <FigmaImportButton
                               disabled={
                                 isLoading ||
                                 isLengthError ||
@@ -1189,227 +1221,336 @@ export default function ComponentSidebar({
                                 (loadingState !== null &&
                                   loadingState !== "error")
                               }
-                              onSubmit={(url) => {
-                                const clonePrompt = `Clone another page: ${url}`;
-                                setInput(clonePrompt);
-                                setIsCloneAnotherPageActive(true);
-                                setCurrentCloneUrl(url);
-                                // Activer immédiatement le scraping
-                                setIsScrapingWebsite(true);
-                                submitPrompt(clonePrompt);
+                              framework={selectedFramework}
+                              subscription={subscription}
+                              isLoggedIn={isLoggedIn}
+                              onFileImport={(file) => {
+                                setFiles((prev) => [...prev, file]);
                               }}
                             />
-                          )}
-                        </>
-                      )}
-                  </div>
-                </div>
-                {!isLoading && files.length > 0 && (
-                  <div className="flex gap-2 overflow-x-auto p-2">
-                    {files.map((file, index) => (
-                      <FileBadge
-                        key={`${file.name}-${index}`}
-                        file={file}
-                        onRemove={() => handleFileRemove(index)}
-                        disabled={isLengthError || !!buildError}
-                      />
-                    ))}
-                  </div>
-                )}
-                {selectedElement && !isLoading && (
-                  <div className="m-2">
-                    <SelectedElementDisplay
-                      element={selectedElement}
-                      showClearButton={true}
-                      onClear={clearSelectedElement}
-                    />
-                  </div>
-                )}
-                <div className="flex w-full flex-col items-start space-y-1 p-2">
-                  <TextareaWithLimit
-                    ref={inputRef}
-                    autoFocus
-                    disabled={
-                      isLoading ||
-                      isLengthError ||
-                      (!isWebcontainerReady && hasAssistantMessage)
-                    }
-                    isLoading={isLoading}
-                    value={input}
-                    onChange={(value, isValid) => {
-                      setInput(value);
-                      setInputIsValid(isValid);
-                    }}
-                    displayMessage={false}
-                    subscription={subscription}
-                    isLoadingSubscription={isLoadingSubscription}
-                    isLoggedIn={isLoggedIn}
-                    showCounter={true}
-                    minLength={2}
-                    placeholder="Add a button, modify a div..."
-                    required
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter") {
-                        if (event.shiftKey) {
-                          return;
-                        }
-
-                        event.preventDefault();
-
-                        handleSubmit(event);
-                      }
-                    }}
-                    className="bg-background max-h-[400px] min-h-[76px] border-none pl-1 focus-visible:ring-0 focus-visible:ring-offset-0"
-                  />
-                  <div
-                    className={cn(
-                      "text-foreground my-0.5 text-xs transition-opacity",
-                      input.length <= 3 && "opacity-0",
-                    )}
-                  >
-                    Use <kbd className="bg-secondary rounded-md p-1">Shift</kbd>{" "}
-                    + <kbd className="bg-secondary rounded-md p-1">Return</kbd>{" "}
-                    for a new line
-                  </div>
-                  <div className="flex w-full items-center space-x-1">
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="ghost"
-                            className="hover:bg-background size-9 p-0"
-                            disabled={
-                              isLoading || isImprovingLoading || hasImproved
-                            }
-                            onClick={handleImprovePrompt}
-                          >
-                            {isImprovingLoading ? (
-                              <Loader2 className="size-4 animate-spin" />
-                            ) : (
-                              <WandSparkles
-                                className={cn(
-                                  "size-4",
-                                  hasImproved && "text-primary",
-                                )}
+                            {fetchedChat?.clone_url && (
+                              <CloneAnotherPageButton
+                                originalUrl={fetchedChat.clone_url}
+                                disabled={
+                                  isLoading ||
+                                  isLengthError ||
+                                  !!buildError ||
+                                  (loadingState !== null &&
+                                    loadingState !== "error")
+                                }
+                                onSubmit={(url) => {
+                                  const clonePrompt = `Clone another page: ${url}`;
+                                  setInput(clonePrompt);
+                                  setIsCloneAnotherPageActive(true);
+                                  setCurrentCloneUrl(url);
+                                  // Activer immédiatement le scraping
+                                  setIsScrapingWebsite(true);
+                                  submitPrompt(clonePrompt);
+                                }}
                               />
                             )}
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          {isImprovingLoading
-                            ? "Improving prompt..."
-                            : hasImproved
-                              ? "Prompt improved"
-                              : "Improve prompt"}
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                    <Button
-                      size="sm"
-                      loading={isLoading}
+                          </>
+                        )}
+                    </div>
+                  </div>
+                  {!isLoading && files.length > 0 && (
+                    <div className="flex gap-2 overflow-x-auto p-2">
+                      {files.map((file, index) => (
+                        <FileBadge
+                          key={`${file.name}-${index}`}
+                          file={file}
+                          onRemove={() => handleFileRemove(index)}
+                          disabled={isLengthError || !!buildError}
+                        />
+                      ))}
+                    </div>
+                  )}
+                  {selectedElement && !isLoading && (
+                    <div className="m-2">
+                      <SelectedElementDisplay
+                        element={selectedElement}
+                        showClearButton={true}
+                        onClear={clearSelectedElement}
+                      />
+                    </div>
+                  )}
+                  <div className="flex w-full flex-col items-start space-y-1 p-2">
+                    <TextareaWithLimit
+                      ref={inputRef}
+                      autoFocus
                       disabled={
                         isLoading ||
-                        (!isWebcontainerReady && hasAssistantMessage) ||
-                        isLengthError
+                        isLengthError ||
+                        (!isWebcontainerReady && hasAssistantMessage)
                       }
-                      type="submit"
-                      className="flex w-full items-center"
+                      isLoading={isLoading}
+                      value={input}
+                      onChange={(value, isValid) => {
+                        setInput(value);
+                        setInputIsValid(isValid);
+                      }}
+                      displayMessage={false}
+                      subscription={subscription}
+                      isLoadingSubscription={isLoadingSubscription}
+                      isLoggedIn={isLoggedIn}
+                      showCounter={true}
+                      minLength={2}
+                      placeholder="Add a button, modify a div..."
+                      required
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter") {
+                          if (event.shiftKey) {
+                            return;
+                          }
+
+                          event.preventDefault();
+
+                          handleSubmit(event);
+                        }
+                      }}
+                      className="bg-background max-h-[400px] min-h-[76px] border-none pl-1 focus-visible:ring-0 focus-visible:ring-offset-0"
+                    />
+                    <div
+                      className={cn(
+                        "text-foreground my-0.5 text-xs transition-opacity",
+                        input.length <= 3 && "opacity-0",
+                      )}
                     >
-                      <CircleFadingArrowUp className="size-3" />
-                      <span>Iterate</span>
-                    </Button>
+                      Use{" "}
+                      <kbd className="bg-secondary rounded-md p-1">Shift</kbd> +{" "}
+                      <kbd className="bg-secondary rounded-md p-1">Return</kbd>{" "}
+                      for a new line
+                    </div>
+                    <div className="flex w-full items-center space-x-1">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="ghost"
+                              className="hover:bg-background size-9 p-0"
+                              disabled={
+                                isLoading || isImprovingLoading || hasImproved
+                              }
+                              onClick={handleImprovePrompt}
+                            >
+                              {isImprovingLoading ? (
+                                <Loader2 className="size-4 animate-spin" />
+                              ) : (
+                                <WandSparkles
+                                  className={cn(
+                                    "size-4",
+                                    hasImproved && "text-primary",
+                                  )}
+                                />
+                              )}
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            {isImprovingLoading
+                              ? "Improving prompt..."
+                              : hasImproved
+                                ? "Prompt improved"
+                                : "Improve prompt"}
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                      <Button
+                        size="sm"
+                        loading={isLoading}
+                        disabled={
+                          isLoading ||
+                          (!isWebcontainerReady && hasAssistantMessage) ||
+                          isLengthError
+                        }
+                        type="submit"
+                        className="flex w-full items-center"
+                      >
+                        <CircleFadingArrowUp className="size-3" />
+                        <span>Iterate</span>
+                      </Button>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
+            </form>
+          )}
+        </div>
+
+        <div className="bg-background hidden h-full w-14 flex-col space-y-4 p-2 xl:flex">
+          <Button
+            variant="ghost"
+            size="icon"
+            className={cn(
+              "h-10 w-full rounded-lg",
+              activeTab === "chat" && "bg-secondary text-primary",
             )}
-          </form>
-        )}
+            onClick={() => !isLoading && handleTabChange("chat")}
+            disabled={isLoading}
+          >
+            <MessageSquare className="size-5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className={cn(
+              "h-10 w-full rounded-lg",
+              activeTab === "history" && "bg-secondary text-primary",
+            )}
+            onClick={() => !isLoading && handleTabChange("history")}
+            disabled={isLoading}
+          >
+            <BookOpen className="size-5" />
+          </Button>
+          {authorized && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className={cn(
+                "h-10 w-full rounded-lg",
+                activeTab === "github" && "bg-secondary text-primary",
+              )}
+              onClick={() => !isLoading && handleTabChange("github")}
+              disabled={isLoading}
+            >
+              <Github className="size-5" />
+            </Button>
+          )}
+          {authorized && selectedFramework !== Framework.HTML && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className={cn(
+                "h-10 w-full rounded-lg",
+                activeTab === "integrations" && "bg-secondary text-primary",
+              )}
+              onClick={() => !isLoading && handleTabChange("integrations")}
+              disabled={isLoading}
+            >
+              <Plug2 className="size-5" />
+            </Button>
+          )}
+          {authorized && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className={cn(
+                "h-10 w-full rounded-lg",
+                activeTab === "deployment" && "bg-secondary text-primary",
+              )}
+              onClick={() => !isLoading && handleTabChange("deployment")}
+              disabled={isLoading}
+            >
+              <Rocket className="size-5" />
+            </Button>
+          )}
+          {authorized && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className={cn(
+                "h-10 w-full rounded-lg",
+                activeTab === "settings" && "bg-secondary text-primary",
+              )}
+              onClick={() => !isLoading && handleTabChange("settings")}
+              disabled={isLoading}
+            >
+              <Settings className="size-5" />
+            </Button>
+          )}
+        </div>
       </div>
 
-      <div className="bg-background hidden h-full w-14 flex-col space-y-4 p-2 xl:flex">
-        <Button
-          variant="ghost"
-          size="icon"
-          className={cn(
-            "h-10 w-full rounded-lg",
-            activeTab === "chat" && "bg-secondary text-primary",
-          )}
-          onClick={() => !isLoading && handleTabChange("chat")}
-          disabled={isLoading}
-        >
-          <MessageSquare className="size-5" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className={cn(
-            "h-10 w-full rounded-lg",
-            activeTab === "history" && "bg-secondary text-primary",
-          )}
-          onClick={() => !isLoading && handleTabChange("history")}
-          disabled={isLoading}
-        >
-          <BookOpen className="size-5" />
-        </Button>
-        {authorized && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className={cn(
-              "h-10 w-full rounded-lg",
-              activeTab === "github" && "bg-secondary text-primary",
-            )}
-            onClick={() => !isLoading && handleTabChange("github")}
-            disabled={isLoading}
-          >
-            <Github className="size-5" />
-          </Button>
-        )}
-        {authorized && selectedFramework !== Framework.HTML && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className={cn(
-              "h-10 w-full rounded-lg",
-              activeTab === "integrations" && "bg-secondary text-primary",
-            )}
-            onClick={() => !isLoading && handleTabChange("integrations")}
-            disabled={isLoading}
-          >
-            <Plug2 className="size-5" />
-          </Button>
-        )}
-        {authorized && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className={cn(
-              "h-10 w-full rounded-lg",
-              activeTab === "deployment" && "bg-secondary text-primary",
-            )}
-            onClick={() => !isLoading && handleTabChange("deployment")}
-            disabled={isLoading}
-          >
-            <Rocket className="size-5" />
-          </Button>
-        )}
-        {authorized && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className={cn(
-              "h-10 w-full rounded-lg",
-              activeTab === "settings" && "bg-secondary text-primary",
-            )}
-            onClick={() => !isLoading && handleTabChange("settings")}
-            disabled={isLoading}
-          >
-            <Settings className="size-5" />
-          </Button>
-        )}
-      </div>
-    </div>
+      <Dialog
+        open={showUrlInPromptModal}
+        onOpenChange={(open) => {
+          if (!isLoading && !open) {
+            setShowUrlInPromptModal(false);
+            setPendingPromptWithUrl(null);
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>URL detected in prompt</DialogTitle>
+            <DialogDescription>
+              An URL was detected in your prompt. You can clone another page
+              from the same website or continue with a normal modification.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-4">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowUrlInPromptModal(false);
+                setPendingPromptWithUrl(null);
+              }}
+              disabled={isLoading}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="default"
+              onClick={() => {
+                if (!pendingPromptWithUrl) {
+                  setShowUrlInPromptModal(false);
+                  return;
+                }
+                const urlMatch = pendingPromptWithUrl.match(
+                  /(https?:\/\/[^\s]+|www\.[^\s]+|[a-zA-Z0-9-]+\.[a-zA-Z]{2,}[^\s]*)/i,
+                );
+                if (!urlMatch) {
+                  setShowUrlInPromptModal(false);
+                  setPendingPromptWithUrl(null);
+                  return;
+                }
+                let url = urlMatch[0];
+                if (!/^https?:\/\//i.test(url)) {
+                  url = "https://" + url;
+                }
+                if (
+                  fetchedChat?.clone_url &&
+                  !isSameDomain(fetchedChat.clone_url, url)
+                ) {
+                  toast({
+                    variant: "destructive",
+                    title: "Different domain",
+                    description:
+                      "You can only clone pages from the same domain as the original website.",
+                    duration: 4000,
+                  });
+                  setShowUrlInPromptModal(false);
+                  setPendingPromptWithUrl(null);
+                  return;
+                }
+                const clonePrompt = `Clone another page: ${url}`;
+                setInput(clonePrompt);
+                setIsCloneAnotherPageActive(true);
+                setCurrentCloneUrl(url);
+                setIsScrapingWebsite(true);
+                setShowUrlInPromptModal(false);
+                setPendingPromptWithUrl(null);
+                submitPrompt(clonePrompt);
+              }}
+              disabled={isLoading}
+            >
+              Use &quot;Clone another page&quot;
+            </Button>
+            <Button
+              onClick={() => {
+                const promptToUse = pendingPromptWithUrl || input;
+                setShowUrlInPromptModal(false);
+                setPendingPromptWithUrl(null);
+                submitPrompt(promptToUse);
+              }}
+              disabled={isLoading}
+            >
+              Continue as normal
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
