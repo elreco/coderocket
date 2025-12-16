@@ -43,8 +43,13 @@ export function ChunkReader({
   messageId: number;
   migrationsExecuted?: Array<{ name: string; executed_at: string }> | null;
 }) {
-  const { isCanvas, activeTab, selectedFramework, isLoading } =
-    useComponentContext();
+  const {
+    isCanvas,
+    activeTab,
+    selectedFramework,
+    isLoading,
+    previousArtifactFiles,
+  } = useComponentContext();
 
   const effectiveFiles = useMemo(() => {
     if (!versionFiles || versionFiles.length === 0) {
@@ -75,6 +80,37 @@ export function ChunkReader({
     const categorized = categorizeFiles(effectiveFiles);
     return categorized.migrations;
   }, [effectiveFiles]);
+
+  const statusByName = useMemo(() => {
+    const statusMap: Record<
+      string,
+      "added" | "modified" | "deleted" | "unchanged"
+    > = {};
+    const previousMap = new Map<string, ChatFile>();
+    previousArtifactFiles.forEach((file) => {
+      if (file.name) {
+        previousMap.set(file.name, file);
+      }
+    });
+
+    effectiveFiles.forEach((file) => {
+      if (!file.name) return;
+      if (file.isDelete) {
+        statusMap[file.name] = "deleted";
+        return;
+      }
+      const previous = previousMap.get(file.name);
+      if (!previous) {
+        statusMap[file.name] = "added";
+      } else if (previous.content !== file.content) {
+        statusMap[file.name] = "modified";
+      } else {
+        statusMap[file.name] = "unchanged";
+      }
+    });
+
+    return statusMap;
+  }, [effectiveFiles, previousArtifactFiles]);
 
   return chunks.map((chunk, index) => {
     // Pour les chunks de type "artifact", utiliser directement les fichiers fournis
@@ -193,6 +229,19 @@ export function ChunkReader({
                             ) : file.isIncomplete ? (
                               <Loader className="mr-1 size-4 animate-spin" />
                             ) : null}
+                            {file.name && statusByName[file.name] && (
+                              <span
+                                className={cn(
+                                  "mr-1 size-2 rounded-full",
+                                  statusByName[file.name] === "added" &&
+                                    "bg-emerald-400",
+                                  statusByName[file.name] === "modified" &&
+                                    "bg-amber-400",
+                                  statusByName[file.name] === "deleted" &&
+                                    "bg-red-400",
+                                )}
+                              />
+                            )}
                             <span>
                               {file.name
                                 ? file.name.split("/").pop()
