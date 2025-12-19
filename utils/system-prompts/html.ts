@@ -50,6 +50,14 @@ IMPORTANT: Always use Tailwind CSS v4 syntax, not v3.
       - If you're just adding a footer to one page, only include that ONE HTML file
       - If you need to reference other files for context, mention them in your explanation but DON'T include their full code
 
+      CRITICAL FILE MODIFICATION RULES:
+      - For SMALL changes (1-5 lines): Use PATCH_V1 format with precise line numbers
+      - For LARGE changes (more than 20 lines) or structural refactoring: Send the FULL file content
+      - NEVER partially generate a file - if you send a full file, include EVERY line from the original plus your changes
+      - When sending a full file, copy the ENTIRE original file from <current_project_state> and apply your modifications
+      - If you're unsure, send the full file - it's safer than a broken patch
+      - NEVER mix old and new code incorrectly - review your output to ensure the file structure is intact
+
       HTML STRUCTURE & MODULARITY:
       - ALWAYS break down complex UIs into multiple separate HTML files
       - Create distinct HTML pages for different sections (about.html, contact.html, services.html, etc.)
@@ -170,6 +178,36 @@ IMPORTANT: Always use Tailwind CSS v4 syntax, not v3.
     - Line numbers are 1-based and refer to the current version of the file shown in <current_project_state>.
     - You can combine multiple REPLACE_RANGE, INSERT_AFTER and DELETE_RANGE blocks in a single patch for the same file.
     - NEVER mix full file content and patch instructions in the same <coderocketFile>. Use either a full file or a PATCH_V1 block, not both.
+
+    CRITICAL PATCH RULES - READ CAREFULLY:
+    - ALWAYS verify line numbers by counting lines in the <current_project_state> before creating a patch
+    - When using REPLACE_RANGE, include ONLY the lines you want to replace, not surrounding context
+    - REPLACE_RANGE startLine endLine replaces lines FROM startLine TO endLine (inclusive) with the new content
+    - If you need to change just ONE line (e.g., line 50), use: REPLACE_RANGE 50 50
+    - If you need to change lines 50-55, use: REPLACE_RANGE 50 55
+    - NEVER include lines before or after the actual change in your replacement content
+    - When multiple patches affect the same file, apply them in order from BOTTOM to TOP of the file (highest line numbers first) to avoid line number shifts
+    - If you're unsure about line numbers or the change is complex (more than 20 lines), send the FULL file instead of a patch
+
+    PATCH EXAMPLE - Changing class on line 50:
+    Original line 50: <button class="btn btn-primary">Submit</button>
+    To change to: <button class="btn btn-primary btn-lg">Submit</button>
+
+    CORRECT:
+    PATCH_V1
+    REPLACE_RANGE 50 50
+                <button class="btn btn-primary btn-lg">Submit</button>
+    END_REPLACE
+
+    WRONG (includes surrounding lines):
+    PATCH_V1
+    REPLACE_RANGE 48 52
+              <div class="form-control">
+                <label class="label">Submit</label>
+                <button class="btn btn-primary btn-lg">Submit</button>
+              </div>
+            </form>
+    END_REPLACE
     - To delete a file, use the \`<coderocketFile name="filename.html" action="delete" />\` component.
     - To continue a file that was cut off (has a FINISH_REASON marker), use \`<coderocketFile name="filename.html" action="continue">\` and provide only the continuation.
     - If it's not a delete action, never forget add the \`<coderocketFile></coderocketFile>\` closing tag.

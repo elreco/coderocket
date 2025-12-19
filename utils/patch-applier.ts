@@ -147,6 +147,12 @@ export function applyPatchToContent(
   }
   const originalLines = originalContent.split("\n");
   let lines = originalLines.slice();
+
+  if (parsed.operations.length === 0) {
+    console.warn("[Patch] No valid operations found in patch");
+    return originalContent;
+  }
+
   const ops = parsed.operations.slice().sort((a, b) => {
     const aLine = a.startLine;
     const bLine = b.startLine;
@@ -164,17 +170,56 @@ export function applyPatchToContent(
     }
     return aLine - bLine;
   });
+
   for (let i = ops.length - 1; i >= 0; i -= 1) {
     const operation = ops[i];
+
+    if (operation.startLine < 1) {
+      console.warn(
+        `[Patch] Invalid startLine ${operation.startLine}, skipping operation`,
+      );
+      continue;
+    }
+
     if (operation.type === "REPLACE_RANGE") {
       const startIndex = Math.max(0, operation.startLine - 1);
       const endIndex = Math.max(
         0,
         (operation.endLine ?? operation.startLine) - 1,
       );
+
+      if (startIndex >= lines.length) {
+        console.warn(
+          `[Patch] REPLACE_RANGE startLine ${operation.startLine} exceeds file length ${lines.length}, appending instead`,
+        );
+        const replacement = operation.contentLines ?? [];
+        lines = [...lines, ...replacement];
+        continue;
+      }
+
+      if (endIndex < startIndex) {
+        console.warn(
+          `[Patch] REPLACE_RANGE endLine ${operation.endLine} is less than startLine ${operation.startLine}, skipping`,
+        );
+        continue;
+      }
+
       const clampedStart = Math.min(startIndex, lines.length);
       const clampedEnd = Math.min(endIndex, lines.length - 1);
       const replacement = operation.contentLines ?? [];
+
+      const rangeSize = clampedEnd - clampedStart + 1;
+      const replacementSize = replacement.length;
+      if (
+        rangeSize > 0 &&
+        replacementSize > 0 &&
+        Math.abs(rangeSize - replacementSize) > rangeSize * 2
+      ) {
+        console.warn(
+          `[Patch] Large size difference in REPLACE_RANGE: replacing ${rangeSize} lines with ${replacementSize} lines`,
+        );
+      }
+
       lines = [
         ...lines.slice(0, clampedStart),
         ...replacement,
@@ -199,6 +244,21 @@ export function applyPatchToContent(
         0,
         (operation.endLine ?? operation.startLine) - 1,
       );
+
+      if (startIndex >= lines.length) {
+        console.warn(
+          `[Patch] DELETE_RANGE startLine ${operation.startLine} exceeds file length ${lines.length}, skipping`,
+        );
+        continue;
+      }
+
+      if (endIndex < startIndex) {
+        console.warn(
+          `[Patch] DELETE_RANGE endLine ${operation.endLine} is less than startLine ${operation.startLine}, skipping`,
+        );
+        continue;
+      }
+
       const clampedStart = Math.min(startIndex, lines.length);
       const clampedEnd = Math.min(endIndex, lines.length - 1);
       lines = [...lines.slice(0, clampedStart), ...lines.slice(clampedEnd + 1)];

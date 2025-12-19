@@ -482,8 +482,13 @@ export async function POST(req: Request) {
     const formData = await req.formData();
     const id = formData.get("id") as string;
     const selectedVersionRaw = formData.get("selectedVersion");
-    const selectedVersion =
-      selectedVersionRaw !== null ? Number(selectedVersionRaw) : undefined;
+    const parsedVersion =
+      selectedVersionRaw !== null && selectedVersionRaw !== "undefined"
+        ? Number(selectedVersionRaw)
+        : undefined;
+    const selectedVersion = Number.isNaN(parsedVersion)
+      ? undefined
+      : parsedVersion;
     const image = formData.get("image") as File | null;
     const files = formData.getAll("files") as File[];
     const libraryPathsStr = formData.get("libraryPaths") as string | null;
@@ -555,7 +560,7 @@ export async function POST(req: Request) {
     const version = latestVersion + 1;
 
     let filesData;
-    if (uploadedFilesInfo.length > 0) {
+    if (uploadedFilesInfo.length > 0 || updatedImages.length > 0) {
       filesData = updatedImages.map((url, index) => {
         const fileInfo = uploadedFilesInfo.find((f) => f.path === url);
         const existingFile = Array.isArray(lastUserMessage.files)
@@ -606,13 +611,31 @@ export async function POST(req: Request) {
         return { url, order: index };
       });
     } else {
-      filesData = [] as {
-        url: string;
-        order: number;
-        type: string;
-        mimeType: string;
-        source?: string;
-      }[];
+      const isFirstGeneration = lastUserMessage.version === -1;
+      if (
+        isFirstGeneration &&
+        lastUserMessage.files &&
+        Array.isArray(lastUserMessage.files)
+      ) {
+        filesData = parseFileItems(lastUserMessage.files);
+      } else if (isFirstGeneration && lastUserMessage.prompt_image) {
+        filesData = [
+          {
+            url: lastUserMessage.prompt_image,
+            order: 0,
+            type: "image",
+            mimeType: "image/jpeg",
+          },
+        ];
+      } else {
+        filesData = [] as {
+          url: string;
+          order: number;
+          type: string;
+          mimeType: string;
+          source?: string;
+        }[];
+      }
     }
 
     const subscription = await getSubscription();
@@ -1507,6 +1530,10 @@ Use standard Tailwind CSS classes and shadcn/ui components.`;
   const messagesFromDatabase = await fetchMessagesByChatId(id);
   if (!messagesFromDatabase) throw new Error("Could not get chat messages");
 
+  const initialUserMessage = messagesFromDatabase.find(
+    (m) => m.role === "user" && m.version === -1,
+  ) as Tables<"messages"> | undefined;
+
   // Check subscription
   const subscription = await getSubscription();
 
@@ -1712,24 +1739,63 @@ Use standard Tailwind CSS classes and shadcn/ui components.`;
     }
   }
 
-  // Legacy support: use existing files if version -1
-  if (lastUserMessage.version === -1) {
+  const isFirstIterationTarget =
+    selectedVersion === 0 || selectedVersion === undefined;
+  if (isFirstIterationTarget && initialUserMessage) {
+    if (initialUserMessage.files && Array.isArray(initialUserMessage.files)) {
+      const parsedFiles = parseFileItems(initialUserMessage.files);
+      parsedFiles.forEach((file) => {
+        if (!updatedImages.includes(file.url)) {
+          updatedImages.push(file.url);
+          const { data: publicUrlData } = supabase.storage
+            .from("images")
+            .getPublicUrl(file.url);
+          uploadedFilesInfo.push({
+            path: file.url,
+            publicUrl: publicUrlData.publicUrl,
+            type: (file.type as "image" | "pdf" | "text") || "image",
+            mimeType: file.mimeType || "application/octet-stream",
+            source: file.source,
+          });
+        }
+      });
+    } else if (
+      initialUserMessage.prompt_image &&
+      !updatedImages.includes(initialUserMessage.prompt_image)
+    ) {
+      updatedImages.push(initialUserMessage.prompt_image);
+      const { data: publicUrlData } = supabase.storage
+        .from("images")
+        .getPublicUrl(initialUserMessage.prompt_image);
+      uploadedFilesInfo.push({
+        path: initialUserMessage.prompt_image,
+        publicUrl: publicUrlData.publicUrl,
+        type: "image",
+        mimeType: "image/jpeg",
+      });
+    }
+  } else if (updatedImages.length === 0) {
     if (lastUserMessage.files && Array.isArray(lastUserMessage.files)) {
       const parsedFiles = parseFileItems(lastUserMessage.files);
       parsedFiles.forEach((file) => {
-        updatedImages.push(file.url);
-        const { data: publicUrlData } = supabase.storage
-          .from("images")
-          .getPublicUrl(file.url);
-        uploadedFilesInfo.push({
-          path: file.url,
-          publicUrl: publicUrlData.publicUrl,
-          type: (file.type as "image" | "pdf" | "text") || "image",
-          mimeType: file.mimeType || "application/octet-stream",
-          source: file.source,
-        });
+        if (!updatedImages.includes(file.url)) {
+          updatedImages.push(file.url);
+          const { data: publicUrlData } = supabase.storage
+            .from("images")
+            .getPublicUrl(file.url);
+          uploadedFilesInfo.push({
+            path: file.url,
+            publicUrl: publicUrlData.publicUrl,
+            type: (file.type as "image" | "pdf" | "text") || "image",
+            mimeType: file.mimeType || "application/octet-stream",
+            source: file.source,
+          });
+        }
       });
-    } else if (lastUserMessage.prompt_image) {
+    } else if (
+      lastUserMessage.prompt_image &&
+      !updatedImages.includes(lastUserMessage.prompt_image)
+    ) {
       updatedImages.push(lastUserMessage.prompt_image);
       const { data: publicUrlData } = supabase.storage
         .from("images")

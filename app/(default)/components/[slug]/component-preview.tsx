@@ -336,7 +336,7 @@ export default function ComponentPreview() {
                     <p className="mb-2 font-mono text-xs font-semibold">
                       Build Output:
                     </p>
-                    <pre className="max-h-96 overflow-auto font-mono text-xs wrap-break-word whitespace-pre-wrap text-red-600 dark:text-red-400">
+                    <pre className="max-h-[600px] overflow-auto font-mono text-xs wrap-break-word whitespace-pre-wrap text-red-600 dark:text-red-400">
                       {buildError.errors.join("\n\n---\n\n")}
                     </pre>
                   </div>

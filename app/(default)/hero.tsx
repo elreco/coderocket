@@ -367,55 +367,13 @@ export default function Hero({
   }, [prompt]);
 
   useEffect(() => {
-    const handlePaste = (event: ClipboardEvent) => {
-      const clipboardItems = event.clipboardData?.items;
-      if (!clipboardItems) return;
-
-      for (let i = 0; i < clipboardItems.length; i++) {
-        const item = clipboardItems[i];
-        if (item.type.startsWith("image/")) {
-          const file = item.getAsFile();
-          if (!file) continue;
-
-          const validation = validateFile(file);
-          if (!validation.valid) {
-            toast({
-              variant: "destructive",
-              title: "Invalid file",
-              description: validation.error,
-              duration: 4000,
-            });
-            break;
-          }
-
-          setImages((prev) => {
-            if (prev.length >= maxImagesUpload) {
-              toast({
-                variant: "destructive",
-                title: "Too many files",
-                description: `Maximum ${maxImagesUpload} files allowed`,
-                duration: 4000,
-              });
-              return prev;
-            }
-            return [...prev, file];
-          });
-          break;
-        }
-      }
-    };
-
     const textarea = inputRef.current;
-    if (textarea) {
-      textarea.addEventListener("paste", handlePaste);
-    }
-
     return () => {
       if (textarea) {
-        textarea.removeEventListener("paste", handlePaste);
+        textarea.onpaste = null;
       }
     };
-  }, [inputRef, toast]);
+  }, [inputRef]);
 
   useEffect(() => {
     setIsLoggedIn(initialIsLoggedIn);

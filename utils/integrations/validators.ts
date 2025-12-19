@@ -42,10 +42,20 @@ export async function validateSupabaseCredentials(
     });
 
     const startTime = Date.now();
-    const { error } = await supabase.from("_migrations").select("id").limit(1);
+    const { error } = await supabase
+      .from("_coderocket_test")
+      .select("id")
+      .limit(1);
     const latency = Date.now() - startTime;
 
-    if (error && error.code !== "42P01") {
+    const tableNotFoundCodes = ["42P01", "PGRST116", "PGRST204"];
+    const isTableNotFoundError =
+      error && tableNotFoundCodes.includes(error.code);
+    const isSchemaNotFoundError =
+      error?.message?.includes("schema cache") ||
+      error?.message?.includes("Could not find");
+
+    if (error && !isTableNotFoundError && !isSchemaNotFoundError) {
       return {
         valid: false,
         error: `Connection failed: ${error.message}`,

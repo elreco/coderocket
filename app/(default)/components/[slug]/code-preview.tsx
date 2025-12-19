@@ -35,7 +35,6 @@ import { getSubscription } from "@/app/supabase-server";
 import RenderHtmlComponent from "@/components/renders/render-html-component";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useBuilder } from "@/context/builder-context";
 import {
   BreakpointType,
   useComponentContext,
@@ -201,7 +200,6 @@ export default function CodePreview() {
     syncPreviewPath,
     connectedUser,
   } = useComponentContext();
-  const { buildError } = useBuilder();
   const { openLogin } = useAuthModal();
   const [, copy] = useCopyToClipboard();
   const codeMirrorRef = useRef<ReactCodeMirrorRef>(null);
@@ -679,7 +677,7 @@ export default function CodePreview() {
                   {selectedFramework}
                 </span>
               </Badge>
-              {!isLoading && !isLengthError && !buildError && (
+              {!isLoading && !isLengthError && (
                 <div className="flex shrink-0 items-center gap-1">
                   <Button
                     variant={showDiff ? "default" : "ghost"}

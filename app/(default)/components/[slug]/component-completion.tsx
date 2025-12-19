@@ -1001,6 +1001,7 @@ export default function ComponentCompletion({
 
     if (!isTabChangeOnly) {
       setSelectedVersion(version);
+      setUploadFiles([]);
     }
 
     const selectedMessages = messages.filter((m) => m.version == version);

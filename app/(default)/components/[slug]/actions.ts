@@ -377,18 +377,14 @@ export const buildComponent = async (
         errorText,
       );
       throw new Error(
-        `Builder API returned ${builderResponse.status}: ${errorText.substring(0, 200)}`,
+        `Builder API returned ${builderResponse.status}: ${errorText}`,
       );
     }
 
-    // Vérifier que c'est bien du JSON
     const contentType = builderResponse.headers.get("content-type");
     if (!contentType || !contentType.includes("application/json")) {
       const responseText = await builderResponse.text();
-      console.error(
-        "Builder API did not return JSON:",
-        responseText.substring(0, 500),
-      );
+      console.error("Builder API did not return JSON:", responseText);
       throw new Error("Builder API returned non-JSON response");
     }
 

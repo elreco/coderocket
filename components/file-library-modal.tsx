@@ -602,6 +602,53 @@ export function FileLibraryModal({
     }
   };
 
+  const handlePaste = useCallback(
+    (e: ClipboardEvent) => {
+      if (!open || uploading || !isPremium || !isLoggedIn) return;
+
+      const clipboardItems = e.clipboardData?.items;
+      if (!clipboardItems) return;
+
+      const filesToProcess: File[] = [];
+
+      for (let i = 0; i < clipboardItems.length; i++) {
+        const item = clipboardItems[i];
+
+        if (item.kind === "file") {
+          const file = item.getAsFile();
+          if (file) {
+            const validation = validateFile(file);
+            if (validation.valid) {
+              filesToProcess.push(file);
+            } else {
+              toast({
+                variant: "destructive",
+                title: "Invalid file",
+                description: validation.error,
+                duration: 4000,
+              });
+            }
+          }
+        }
+      }
+
+      if (filesToProcess.length > 0) {
+        e.preventDefault();
+        processFiles(filesToProcess);
+      }
+    },
+    [open, uploading, isPremium, isLoggedIn, processFiles],
+  );
+
+  useEffect(() => {
+    if (open && isPremium && isLoggedIn) {
+      document.addEventListener("paste", handlePaste);
+      return () => {
+        document.removeEventListener("paste", handlePaste);
+      };
+    }
+  }, [open, isPremium, isLoggedIn, handlePaste]);
+
   const handleDragEnter = useCallback(
     (e: React.DragEvent) => {
       e.preventDefault();
@@ -754,6 +801,18 @@ export function FileLibraryModal({
                 </div>
               </div>
             )}
+            {!isDragOver && !loading && files.length > 0 && (
+              <div className="absolute bottom-2 right-2 text-xs text-muted-foreground bg-background/80 backdrop-blur-sm px-2 py-1 rounded-md border">
+                <kbd className="px-1 py-0.5 text-xs font-semibold bg-muted rounded border">
+                  Ctrl
+                </kbd>{" "}
+                +{" "}
+                <kbd className="px-1 py-0.5 text-xs font-semibold bg-muted rounded border">
+                  V
+                </kbd>{" "}
+                to paste
+              </div>
+            )}
             {loading ? (
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-5">
                 {[...Array(20)].map((_, i) => (
@@ -770,6 +829,17 @@ export function FileLibraryModal({
                 <FolderOpen className="size-20 text-muted-foreground mb-4" />
                 <p className="text-muted-foreground text-lg">
                   No files found. Upload your first file to get started.
+                </p>
+                <p className="text-muted-foreground text-sm mt-2">
+                  Drag & drop files here or press{" "}
+                  <kbd className="px-1.5 py-0.5 text-xs font-semibold bg-muted rounded border">
+                    Ctrl
+                  </kbd>{" "}
+                  +{" "}
+                  <kbd className="px-1.5 py-0.5 text-xs font-semibold bg-muted rounded border">
+                    V
+                  </kbd>{" "}
+                  to paste from clipboard
                 </p>
               </div>
             ) : (
