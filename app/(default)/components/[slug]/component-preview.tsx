@@ -90,7 +90,8 @@ export default function ComponentPreview() {
     isElementSelectionActive,
     iframeKey,
   } = useComponentContext();
-  const [iframeLoading, setIframeLoading] = React.useState(false);
+  const [iframeLoading, setIframeLoading] = React.useState(true);
+  const [hasEverLoaded, setHasEverLoaded] = React.useState(false);
   const iframeRef = React.useRef<HTMLIFrameElement>(null);
 
   const getInitialDisplayVersion = () => {
@@ -197,10 +198,8 @@ export default function ComponentPreview() {
         setIframeLoading(false);
       }, 3000);
       return () => clearTimeout(timeout);
-    } else {
-      setIframeLoading(false);
     }
-  }, [chatId, selectedVersion, isWebcontainerReady]);
+  }, [chatId, displayVersion, isWebcontainerReady]);
 
   React.useEffect(() => {
     const handleRouteMessage = (event: MessageEvent) => {
@@ -287,7 +286,9 @@ export default function ComponentPreview() {
   const isGeneratingNewVersion =
     !isFirstGeneration &&
     !isLengthError &&
-    (isLoading || (loadingState && loadingState !== "error"));
+    (isLoading ||
+      loadingState === "processing" ||
+      loadingState === "deploying");
   const isCorrectionInProgress =
     buildError &&
     (isLoading ||
@@ -387,33 +388,32 @@ export default function ComponentPreview() {
                   "w-[375px] h-full max-w-full max-h-full shadow-2xl",
               )}
             >
-              {(isGeneratingNewVersion || isCorrectionInProgress) && (
-                <div className="border-primary bg-background absolute top-4 right-4 z-20 flex items-center gap-2 rounded-full border px-4 py-2 shadow-xl">
-                  <Loader2 className="text-primary size-4 animate-spin" />
-                  <span className="text-primary text-sm font-medium">
-                    {isCorrectionInProgress
-                      ? isLoading
-                        ? `Fixing version ${selectedVersion}...`
+              {(isGeneratingNewVersion || isCorrectionInProgress) &&
+                hasEverLoaded && (
+                  <div className="border-primary bg-background absolute top-4 right-4 z-20 flex items-center gap-2 rounded-full border px-4 py-2 shadow-xl">
+                    <Loader2 className="text-primary size-4 animate-spin" />
+                    <span className="text-primary text-sm font-medium">
+                      {isCorrectionInProgress
+                        ? isLoading
+                          ? `Fixing version ${selectedVersion}...`
+                          : loadingState === "processing"
+                            ? `Building version ${selectedVersion}...`
+                            : loadingState === "deploying"
+                              ? `Deploying version ${selectedVersion}...`
+                              : `Fixing version ${selectedVersion}...`
                         : loadingState === "processing"
                           ? `Building version ${selectedVersion}...`
                           : loadingState === "deploying"
                             ? `Deploying version ${selectedVersion}...`
-                            : `Fixing version ${selectedVersion}...`
-                      : loadingState === "processing"
-                        ? `Building version ${selectedVersion}...`
-                        : loadingState === "deploying"
-                          ? `Deploying version ${selectedVersion}...`
-                          : `Generating version ${selectedVersion}...`}
-                  </span>
-                </div>
-              )}
-              {iframeLoading &&
-                isWebcontainerReady &&
-                !isGeneratingNewVersion && (
-                  <div className="bg-background absolute inset-0 z-10 flex items-center justify-center">
-                    <LoadingStateComponent state="starting" />
+                            : `Generating version ${selectedVersion}...`}
+                    </span>
                   </div>
                 )}
+              {iframeLoading && isWebcontainerReady && (
+                <div className="bg-background absolute inset-0 z-30 flex items-center justify-center">
+                  <LoadingStateComponent state="starting" />
+                </div>
+              )}
               {displayVersion !== undefined && (
                 <>
                   <iframe
@@ -422,7 +422,10 @@ export default function ComponentPreview() {
                     src={`https://${chatId}-${displayVersion}.webcontainer.coderocket.app${previewPathSuffix}`}
                     className="size-full border-none"
                     loading="eager"
-                    onLoad={() => setIframeLoading(false)}
+                    onLoad={() => {
+                      setIframeLoading(false);
+                      setHasEverLoaded(true);
+                    }}
                   />
                   {isElementSelectionActive && (
                     <ElementSelector iframeRef={iframeRef} />

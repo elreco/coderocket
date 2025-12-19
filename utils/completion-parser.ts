@@ -1,7 +1,13 @@
 import { Tables } from "@/types_db";
 
 import { defaultTheme } from "./config";
-import { applyPatchToContent, isPatchFormat } from "./patch-applier";
+import {
+  applyPatchToContent,
+  isPatchFormat,
+  isUnifiedDiffFormat,
+  cleanUnifiedDiffContent,
+  detectAndCleanMalformedDiff,
+} from "./patch-applier";
 
 const TAILWIND_SCRIPT_CDN =
   '<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>';
@@ -246,6 +252,17 @@ export const getUpdatedArtifactCode = (
         allFiles.set(fileName, patched);
         continue;
       }
+
+      if (isUnifiedDiffFormat(content)) {
+        const existing = allFiles.get(fileName) || "";
+        if (existing) {
+          const cleanedContent = cleanUnifiedDiffContent(content);
+          allFiles.set(fileName, cleanedContent);
+          continue;
+        }
+      }
+
+      content = detectAndCleanMalformedDiff(content);
       // Si le fichier existe déjà et ne contient pas de marqueur FINISH_REASON,
       // on concatène le nouveau contenu au contenu existant
       if (allFiles.has(fileName)) {

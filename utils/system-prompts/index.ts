@@ -81,6 +81,13 @@ IMPORTANT: Always use Tailwind CSS v4 syntax, not v3.
     - If you're unsure, send the full file - it's safer than a broken patch
     - NEVER mix old and new code incorrectly - review your output to ensure the file structure is intact
 
+    FORBIDDEN OUTPUT FORMAT - UNIFIED DIFF:
+    - NEVER output code in unified diff format with lines starting with + or - to indicate additions/deletions
+    - NEVER output git-style diffs like: +  newLine or -  oldLine
+    - This format BREAKS the parser and corrupts files
+    - Instead: Use PATCH_V1 format for small changes OR send the complete file content
+    - If you find yourself wanting to show "before/after" with +/- prefixes, STOP and use PATCH_V1 or full file instead
+
     COMPONENT ARCHITECTURE:
     - ALWAYS break down your code into small, reusable components
     - Create separate component files for distinct UI elements (Button, Card, Header, Footer, etc.)
