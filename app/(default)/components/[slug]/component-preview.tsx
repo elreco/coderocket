@@ -288,33 +288,22 @@ export default function ComponentPreview() {
     !isFirstGeneration &&
     !isLengthError &&
     (isLoading || (loadingState && loadingState !== "error"));
+  const isCorrectionInProgress =
+    buildError &&
+    (isLoading ||
+      (loadingState && loadingState !== "error" && loadingState !== null));
   const previewPathSuffix = previewPath === "/" ? "" : previewPath;
 
   return (
     <>
-      {shouldShowLoader && !buildError && (
+      {shouldShowLoader && !isCorrectionInProgress && (
         <div className="relative size-full z-50">
           <LoadingStateComponent state={loadingState || "processing"} />
         </div>
       )}
 
-      {buildError && (
+      {buildError && !isCorrectionInProgress && (
         <div className="relative flex size-full h-full items-center justify-center px-4">
-          {(isLoading || (loadingState && loadingState !== "error")) &&
-            !isFirstGeneration && (
-              <div className="border-primary bg-background absolute top-4 z-20 flex items-center gap-2 rounded-full border px-4 py-2 shadow-xl right-4">
-                <Loader2 className="text-primary size-4 animate-spin" />
-                <span className="text-primary text-sm font-medium">
-                  {isLoading
-                    ? `Fixing version ${selectedVersion}...`
-                    : loadingState === "processing"
-                      ? `Building version ${selectedVersion}...`
-                      : loadingState === "deploying"
-                        ? `Deploying version ${selectedVersion}...`
-                        : `Fixing version ${selectedVersion}...`}
-                </span>
-              </div>
-            )}
           <Alert
             variant="default"
             className="bg-secondary text-foreground h-2/3 max-h-[80vh] w-full items-center justify-center"
@@ -379,7 +368,7 @@ export default function ComponentPreview() {
       )}
       {chatId &&
         displayVersion !== undefined &&
-        !buildError &&
+        (!buildError || isCorrectionInProgress) &&
         !shouldShowLoader && (
           <div
             className={cn(
@@ -398,15 +387,23 @@ export default function ComponentPreview() {
                   "w-[375px] h-full max-w-full max-h-full shadow-2xl",
               )}
             >
-              {isGeneratingNewVersion && (
+              {(isGeneratingNewVersion || isCorrectionInProgress) && (
                 <div className="border-primary bg-background absolute top-4 right-4 z-20 flex items-center gap-2 rounded-full border px-4 py-2 shadow-xl">
                   <Loader2 className="text-primary size-4 animate-spin" />
                   <span className="text-primary text-sm font-medium">
-                    {loadingState === "processing"
-                      ? `Building version ${selectedVersion}...`
-                      : loadingState === "deploying"
-                        ? `Deploying version ${selectedVersion}...`
-                        : `Generating version ${selectedVersion}...`}
+                    {isCorrectionInProgress
+                      ? isLoading
+                        ? `Fixing version ${selectedVersion}...`
+                        : loadingState === "processing"
+                          ? `Building version ${selectedVersion}...`
+                          : loadingState === "deploying"
+                            ? `Deploying version ${selectedVersion}...`
+                            : `Fixing version ${selectedVersion}...`
+                      : loadingState === "processing"
+                        ? `Building version ${selectedVersion}...`
+                        : loadingState === "deploying"
+                          ? `Deploying version ${selectedVersion}...`
+                          : `Generating version ${selectedVersion}...`}
                   </span>
                 </div>
               )}

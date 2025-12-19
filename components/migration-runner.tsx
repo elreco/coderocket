@@ -8,6 +8,7 @@ import {
   FileCode,
   Play,
   Loader2,
+  WandSparkles,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -20,6 +21,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { ToastAction } from "@/components/ui/toast";
+import { useComponentContext } from "@/context/component-context";
 import { useToast } from "@/hooks/use-toast";
 
 interface ExecutedMigration {
@@ -52,6 +55,7 @@ export function MigrationRunner({
     ExecutedMigration[] | null | undefined
   >(initialMigrationsExecuted);
   const { toast } = useToast();
+  const { handleSubmitToAI, setInput, authorized } = useComponentContext();
 
   const executedMigration = (migrationsExecuted || []).find(
     (m) => m.name === migrationFile.name,
@@ -126,11 +130,26 @@ export function MigrationRunner({
         description: `Successfully created ${tables.length} table${tables.length !== 1 ? "s" : ""} in your Supabase database`,
       });
     } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to run migration";
       toast({
         variant: "destructive",
         title: "Migration Failed",
-        description:
-          error instanceof Error ? error.message : "Failed to run migration",
+        description: errorMessage,
+        duration: 10000,
+        action: authorized ? (
+          <ToastAction
+            altText="Fix with AI"
+            onClick={() => {
+              const fixPrompt = `Fix the following SQL migration error:\n\nMigration file: ${migrationFile.name}\n\nError: ${errorMessage}\n\nSQL content:\n${migrationFile.content}`;
+              setInput(fixPrompt);
+              handleSubmitToAI(fixPrompt);
+            }}
+          >
+            <WandSparkles className="mr-1 size-3" />
+            Fix with AI
+          </ToastAction>
+        ) : undefined,
       });
     } finally {
       setIsRunning(false);

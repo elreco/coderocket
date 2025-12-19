@@ -1774,7 +1774,7 @@ Use standard Tailwind CSS classes and shadcn/ui components.`;
         mimeType: "image/jpeg",
       });
     }
-  } else if (updatedImages.length === 0) {
+  } else if (updatedImages.length === 0 && lastUserMessage.version === -1) {
     if (lastUserMessage.files && Array.isArray(lastUserMessage.files)) {
       const parsedFiles = parseFileItems(lastUserMessage.files);
       parsedFiles.forEach((file) => {
