@@ -1211,9 +1211,13 @@ const validateRequest = async (
     throw new Error("User is not authorized to modify chat");
   }
 
+  const previousVersion =
+    selectedVersion !== undefined && selectedVersion > 0
+      ? selectedVersion - 1
+      : selectedVersion;
   const currentArtifactCode =
-    selectedVersion !== undefined
-      ? await getArtifactCodeByVersion(id, selectedVersion)
+    previousVersion !== undefined
+      ? await getArtifactCodeByVersion(id, previousVersion)
       : chat.artifact_code || "";
 
   let currentFilesContext = "";
@@ -1287,18 +1291,13 @@ const validateRequest = async (
           );
         }
       }
-    }
-    // Vérifier si c'est la première génération (selectedVersion 0 ou undefined)
-    // ou si le prompt contient explicitement "Clone this website"
-    else if (
+    } else if (
       selectedVersion === undefined ||
       selectedVersion === 0 ||
-      promptToCheck.toLowerCase().includes("clone this website")
+      selectedVersion === -1
     ) {
       urlToClone = chat.clone_url;
     }
-    // Pour les itérations normales (version > 0 sans demande de clone), ne pas scraper le site
-    // Les fichiers uploadés par l'utilisateur seront utilisés à la place
   }
 
   if (urlToClone) {

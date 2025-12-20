@@ -196,6 +196,61 @@ IMPORTANT: Always use Tailwind CSS v4 syntax, not v3.
     - Wrong file extensions (.ts vs .tsx, .js vs .jsx)
   </code_quality_validation>
 
+  <element_modification>
+    When you receive an <element_modification_request>, you MUST follow these critical rules:
+
+    **LOCATING THE ELEMENT:**
+    1. Read the <file_content> section carefully - this is the current state of the file
+    2. Find the EXACT element from <target_element> within the file content
+    3. Use the tag name, classes, and data-attributes to identify the correct element
+    4. If multiple similar elements exist, use unique identifiers (classes, IDs, data-attributes, or surrounding context) to target the right one
+
+    **APPLYING MODIFICATIONS:**
+    1. PREFERRED: Use PATCH_V1 format for precise, surgical modifications:
+       - Specify exact line numbers
+       - Include context lines before/after for accurate matching
+       - This prevents accidental changes to surrounding code
+    2. ALTERNATIVE: If sending the full file, ensure:
+       - ALL existing content is preserved except the modified element
+       - Parent elements remain properly opened AND closed
+       - Sibling elements are untouched
+       - No HTML structure is broken
+
+    **HTML STRUCTURE VALIDATION:**
+    Before sending your response, VERIFY:
+    ✅ Every opened tag has a corresponding closing tag
+    ✅ Tags are properly nested (no overlapping: <div><span></div></span> is WRONG)
+    ✅ The parent container of the modified element is intact
+    ✅ No orphaned closing tags (</div> without matching <div>)
+    ✅ Indentation is consistent with the rest of the file
+
+    **COMMON MISTAKES TO AVOID:**
+    ❌ Modifying the wrong element (similar but not the target)
+    ❌ Deleting parent or sibling elements accidentally
+    ❌ Leaving unclosed tags after modification
+    ❌ Breaking the document structure by mismatched tags
+    ❌ Changing element nesting levels incorrectly
+    ❌ Forgetting to close self-modified wrapper elements
+
+    **EXAMPLE - CORRECT APPROACH:**
+    If asked to "add a border to this button" where the element is:
+    \`<button class="px-4 py-2 bg-blue-500">Click me</button>\`
+
+    Use PATCH_V1:
+    \`\`\`
+    PATCH_V1
+    REPLACE_RANGE 15 15
+    <button class="px-4 py-2 bg-blue-500 border-2 border-blue-700">Click me</button>
+    \`\`\`
+
+    NOT this (wrong - sending partial file that breaks structure):
+    \`\`\`
+    <div class="container">
+      <button class="px-4 py-2 bg-blue-500 border-2 border-blue-700">Click me</button>
+    // ... rest missing, structure broken
+    \`\`\`
+  </element_modification>
+
   <advanced_animations_and_3d>
     When creating high-quality websites, website clones, or when the user explicitly requests advanced animations or 3D elements, you can use these powerful libraries:
 

@@ -365,7 +365,6 @@ export const getUpdatedArtifactCode = (
     }
   }
 
-  // Construction du nouvel artifact avec le titre
   let mergedArtifact = `<coderocketArtifact title="${artifactTitle}">\n`;
   allFiles.forEach((content, fileName) => {
     if (!filesToDelete.has(fileName)) {

@@ -247,16 +247,84 @@ export function parsePatch(content: string): ParsedPatch | null {
   };
 }
 
+function findBestMatchingLine(
+  lines: string[],
+  targetLine: string,
+  hintLineNum: number,
+  searchRadius: number = 20,
+): number {
+  const normalizedTarget = targetLine.trim();
+  if (!normalizedTarget) {
+    return hintLineNum;
+  }
+
+  const startSearch = Math.max(0, hintLineNum - searchRadius);
+  const endSearch = Math.min(lines.length - 1, hintLineNum + searchRadius);
+
+  for (let i = hintLineNum; i >= startSearch; i--) {
+    if (lines[i]?.trim() === normalizedTarget) {
+      return i;
+    }
+  }
+  for (let i = hintLineNum + 1; i <= endSearch; i++) {
+    if (lines[i]?.trim() === normalizedTarget) {
+      return i;
+    }
+  }
+
+  let bestMatch = hintLineNum;
+  let bestScore = 0;
+
+  for (let i = startSearch; i <= endSearch; i++) {
+    const lineContent = lines[i]?.trim() || "";
+    if (!lineContent) continue;
+
+    const score = calculateSimilarity(lineContent, normalizedTarget);
+    if (score > bestScore && score > 0.7) {
+      bestScore = score;
+      bestMatch = i;
+    }
+  }
+
+  return bestMatch;
+}
+
+function calculateSimilarity(str1: string, str2: string): number {
+  if (str1 === str2) return 1;
+  if (!str1 || !str2) return 0;
+
+  const len1 = str1.length;
+  const len2 = str2.length;
+
+  if (Math.abs(len1 - len2) > Math.max(len1, len2) * 0.5) {
+    return 0;
+  }
+
+  let matches = 0;
+  const minLen = Math.min(len1, len2);
+
+  for (let i = 0; i < minLen; i++) {
+    if (str1[i] === str2[i]) matches++;
+  }
+
+  return matches / Math.max(len1, len2);
+}
+
 export function applyPatchToContent(
   originalContent: string,
   patchContent: string,
 ): string {
   const parsed = parsePatch(patchContent);
   if (!parsed) {
+    console.log("[Patch] Failed to parse patch content");
     return originalContent;
   }
   const originalLines = originalContent.split("\n");
   let lines = originalLines.slice();
+
+  console.log(
+    `[Patch] Applying ${parsed.operations.length} operations to file with ${lines.length} lines`,
+  );
 
   if (parsed.operations.length === 0) {
     console.warn("[Patch] No valid operations found in patch");
@@ -284,6 +352,10 @@ export function applyPatchToContent(
   for (let i = ops.length - 1; i >= 0; i -= 1) {
     const operation = ops[i];
 
+    console.log(
+      `[Patch] Applying ${operation.type} at line ${operation.startLine}${operation.endLine ? `-${operation.endLine}` : ""}`,
+    );
+
     if (operation.startLine < 1) {
       console.warn(
         `[Patch] Invalid startLine ${operation.startLine}, skipping operation`,
@@ -292,8 +364,8 @@ export function applyPatchToContent(
     }
 
     if (operation.type === "REPLACE_RANGE") {
-      const startIndex = Math.max(0, operation.startLine - 1);
-      const endIndex = Math.max(
+      let startIndex = Math.max(0, operation.startLine - 1);
+      let endIndex = Math.max(
         0,
         (operation.endLine ?? operation.startLine) - 1,
       );
@@ -314,12 +386,42 @@ export function applyPatchToContent(
         continue;
       }
 
+      const replacement = operation.contentLines ?? [];
+      if (replacement.length > 0) {
+        const firstReplacementLine = replacement[0];
+        const originalLineAtStart = lines[startIndex];
+
+        if (
+          originalLineAtStart &&
+          firstReplacementLine &&
+          originalLineAtStart.trim() !== firstReplacementLine.trim()
+        ) {
+          const betterStart = findBestMatchingLine(
+            lines,
+            firstReplacementLine,
+            startIndex,
+          );
+          if (betterStart !== startIndex) {
+            console.log(
+              `[Patch] Context mismatch detected. Adjusting start from line ${startIndex + 1} to ${betterStart + 1}`,
+            );
+            const offset = betterStart - startIndex;
+            startIndex = betterStart;
+            endIndex = Math.min(endIndex + offset, lines.length - 1);
+          }
+        }
+      }
+
       const clampedStart = Math.min(startIndex, lines.length);
       const clampedEnd = Math.min(endIndex, lines.length - 1);
-      const replacement = operation.contentLines ?? [];
 
       const rangeSize = clampedEnd - clampedStart + 1;
       const replacementSize = replacement.length;
+
+      console.log(
+        `[Patch] REPLACE_RANGE: lines ${clampedStart + 1}-${clampedEnd + 1} (${rangeSize} lines) -> ${replacementSize} new lines`,
+      );
+
       if (
         rangeSize > 0 &&
         replacementSize > 0 &&
@@ -341,6 +443,11 @@ export function applyPatchToContent(
       const insertIndex = Math.max(0, operation.startLine);
       const clampedIndex = Math.min(insertIndex, lines.length);
       const insertion = operation.contentLines ?? [];
+
+      console.log(
+        `[Patch] INSERT_AFTER: inserting ${insertion.length} lines after line ${clampedIndex}`,
+      );
+
       lines = [
         ...lines.slice(0, clampedIndex),
         ...insertion,
@@ -371,9 +478,18 @@ export function applyPatchToContent(
 
       const clampedStart = Math.min(startIndex, lines.length);
       const clampedEnd = Math.min(endIndex, lines.length - 1);
+
+      console.log(
+        `[Patch] DELETE_RANGE: removing lines ${clampedStart + 1}-${clampedEnd + 1}`,
+      );
+
       lines = [...lines.slice(0, clampedStart), ...lines.slice(clampedEnd + 1)];
       continue;
     }
   }
+
+  console.log(
+    `[Patch] Completed. File now has ${lines.length} lines (was ${originalLines.length})`,
+  );
   return lines.join("\n");
 }

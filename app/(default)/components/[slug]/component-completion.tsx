@@ -129,6 +129,7 @@ export default function ComponentCompletion({
   const [selectedVersion, setSelectedVersion] = useState<number | undefined>(
     undefined,
   );
+  const selectedVersionRef = useRef<number | undefined>(undefined);
   const [title, setTitle] = useState<string>("");
   const [isCanvas, setCanvas] = useState(true);
   const [isVisible, setVisible] = useState(true);
@@ -419,6 +420,7 @@ export default function ComponentCompletion({
       setLastAssistantMessage(assistantMsg || null);
       setMessages(msgs as ChatMessage[]);
       setSelectedVersion(userMsg?.version || 0);
+      selectedVersionRef.current = userMsg?.version || 0;
 
       const baseVersion = userMsg?.version ?? 0;
       if (baseVersion > 0) {
@@ -627,7 +629,10 @@ export default function ComponentCompletion({
           formData.append("libraryPaths", JSON.stringify(libraryPaths));
         }
         formData.append("id", chatId);
-        formData.append("selectedVersion", String(selectedVersion));
+        formData.append(
+          "selectedVersion",
+          String(selectedVersionRef.current ?? selectedVersion),
+        );
         formData.append("prompt", promptValue);
         formData.append("aiPrompt", aiPrompt);
         if (selectedElement) {
@@ -714,6 +719,7 @@ export default function ComponentCompletion({
               ? selectedVersion - 1
               : (selectedVersion ?? 0);
           setSelectedVersion(restoredVersion);
+          selectedVersionRef.current = restoredVersion;
 
           const subscription = await getSubscription();
           if (!subscription) {
@@ -982,6 +988,7 @@ export default function ComponentCompletion({
     const newVersion = previousVersion + 1;
     setPreviousArtifactFiles(artifactFiles);
     setSelectedVersion(newVersion);
+    selectedVersionRef.current = newVersion;
 
     if (user && fetchedChat) {
       const optimisticMessage: ChatMessage = {
@@ -1031,6 +1038,7 @@ export default function ComponentCompletion({
 
     if (!isTabChangeOnly) {
       setSelectedVersion(version);
+      selectedVersionRef.current = version;
       setUploadFiles([]);
     }
 
@@ -1545,6 +1553,7 @@ export default function ComponentCompletion({
             payload.new.version === 0
           ) {
             setSelectedVersion(0);
+            selectedVersionRef.current = 0;
           }
 
           if (
