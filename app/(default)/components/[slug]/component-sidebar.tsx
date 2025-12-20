@@ -230,6 +230,11 @@ export default function ComponentSidebar({
       normalizedUrl = urlMatch[0];
     }
 
+    const isIteration = (selectedVersion ?? 0) > 0;
+    const isCloneAnotherPage =
+      lower.includes("clone another page") ||
+      lower.includes("clone another page:");
+
     if (isClonePrompt && fetchedChat?.clone_url && normalizedUrl) {
       if (!isSameDomain(fetchedChat.clone_url, normalizedUrl)) {
         toast({
@@ -241,8 +246,10 @@ export default function ComponentSidebar({
         });
         return;
       }
-      setIsScrapingWebsite(true);
-      setCurrentCloneUrl(normalizedUrl);
+      if (!isIteration || isCloneAnotherPage) {
+        setIsScrapingWebsite(true);
+        setCurrentCloneUrl(normalizedUrl);
+      }
     }
 
     handleSubmitToAI(promptText);

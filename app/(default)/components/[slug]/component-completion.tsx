@@ -381,6 +381,7 @@ export default function ComponentCompletion({
   }, [authorized, isElementSelectionActive]);
 
   useEffect(() => {
+    hasInitiatedRef.current = {};
     const loadInitialData = async () => {
       const [chatData, sub] = await Promise.all([
         fetchChatDataOptimized(chatId),
@@ -517,6 +518,22 @@ export default function ComponentCompletion({
         setIsLengthError(false);
       }
 
+      const isGenerationIncomplete =
+        assistantMsg?.content &&
+        !assistantMsg.content.includes("<!-- FINISH_REASON:") &&
+        userMsg &&
+        msgs &&
+        msgs.length >= 2 &&
+        msgs[msgs.length - 1]?.role === "assistant";
+
+      if (isGenerationIncomplete) {
+        setIsLoading(false);
+        setIsSubmitting(false);
+        setLoadingState(null);
+        setIsScrapingWebsite(false);
+        setCompletion(assistantMsg.content);
+      }
+
       if (msgs?.length === 1 && userMsg && !assistantMsg) {
         setCanvas(true);
         setInput(userMsg?.content || "");
@@ -536,7 +553,8 @@ export default function ComponentCompletion({
           hasInitiatedRef.current[chatId] = true;
           setIsLoading(true);
           setIsSubmitting(true);
-          if (chat.clone_url) {
+          const isFirstVersion = (userMsg?.version ?? 0) <= 0;
+          if (chat.clone_url && isFirstVersion) {
             setIsScrapingWebsite(true);
           }
           complete(userMsg.content || "");
@@ -949,6 +967,16 @@ export default function ComponentCompletion({
     setChatFiles([]);
     setCanvas(true);
     setCurrentGeneratingFile(null);
+
+    const isIteration = (selectedVersion ?? 0) > 0;
+    const lower = inputData.toLowerCase();
+    const isCloneAnotherPage =
+      lower.includes("clone another page") ||
+      lower.includes("clone another page:");
+
+    if (isIteration && !isCloneAnotherPage) {
+      setIsScrapingWebsite(false);
+    }
 
     const previousVersion = selectedVersion ?? 0;
     const newVersion = previousVersion + 1;
