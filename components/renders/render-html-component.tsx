@@ -66,10 +66,13 @@ export default function RenderHtmlComponent({
     if (route.includes("?")) {
       route = route.split("?")[0];
     }
-    if (route.includes("#")) {
-      route = route.split("#")[0];
+    const hashIndex = route.indexOf("#");
+    const hash = hashIndex !== -1 ? route.substring(hashIndex) : "";
+    if (hashIndex !== -1) {
+      route = route.substring(0, hashIndex);
     }
-    return route === "" ? "/" : route.replace(/\/+/g, "/");
+    route = route === "" ? "/" : route.replace(/\/+/g, "/");
+    return route + hash;
   }, []);
 
   const resolveFileFromRoute = useCallback(
@@ -103,7 +106,12 @@ export default function RenderHtmlComponent({
       options?: { pushHistory?: boolean; notifyParent?: boolean },
     ) => {
       const normalizedRoute = normalizeRoute(target);
-      const file = resolveFileFromRoute(normalizedRoute);
+      const hashIndex = normalizedRoute.indexOf("#");
+      const routeWithoutHash =
+        hashIndex !== -1
+          ? normalizedRoute.substring(0, hashIndex)
+          : normalizedRoute;
+      const file = resolveFileFromRoute(routeWithoutHash);
       if (!file) {
         return;
       }
@@ -125,12 +133,29 @@ export default function RenderHtmlComponent({
       if (event.data && event.data.type === "linkClick") {
         const href = event.data.href;
         if (href.startsWith("#")) {
+          const iframe = document.querySelector(
+            "iframe[srcDoc]",
+          ) as HTMLIFrameElement;
+          if (iframe?.contentWindow) {
+            try {
+              const targetElement = iframe.contentDocument?.querySelector(href);
+              if (targetElement) {
+                targetElement.scrollIntoView({ behavior: "smooth" });
+                const currentRouteWithHash = currentRoute.split("#")[0] + href;
+                setCurrentRoute(currentRouteWithHash);
+                onNavigation?.(currentRouteWithHash, { pushHistory: true });
+                onRouteChange?.(currentRouteWithHash);
+              }
+            } catch (e) {
+              console.error("Error scrolling to anchor:", e);
+            }
+          }
           return;
         }
         handleInternalNavigation(href, { pushHistory: true });
       }
     },
-    [handleInternalNavigation],
+    [handleInternalNavigation, currentRoute, onNavigation, onRouteChange],
   );
 
   useEffect(() => {
@@ -144,54 +169,73 @@ export default function RenderHtmlComponent({
     if (!navigationTarget) {
       return;
     }
+    const hashIndex = navigationTarget.indexOf("#");
+    const hash = hashIndex !== -1 ? navigationTarget.substring(hashIndex) : "";
     handleInternalNavigation(navigationTarget, {
       pushHistory: false,
       notifyParent: false,
     });
+    if (hash) {
+      const iframe = document.querySelector(
+        "iframe[srcDoc]",
+      ) as HTMLIFrameElement;
+      if (iframe?.contentWindow) {
+        setTimeout(() => {
+          try {
+            const targetElement = iframe.contentDocument?.querySelector(hash);
+            if (targetElement) {
+              targetElement.scrollIntoView({ behavior: "smooth" });
+            }
+          } catch (e) {
+            console.error("Error scrolling to anchor:", e);
+          }
+        }, 100);
+      }
+    }
   }, [handleInternalNavigation, navigationTarget]);
 
   const injectLinkInterceptor = (content: string): string => {
     const script = `
       <script>
         document.addEventListener('click', function(e) {
-          // Find closest anchor element
           let target = e.target;
           while (target && target.tagName !== 'A') {
             target = target.parentElement;
           }
 
-          // If we found an anchor with href
           if (target && target.href) {
             const href = target.getAttribute('href');
 
-            // Don't intercept anchor links (let browser handle them)
             if (href && href.startsWith('#')) {
+              e.preventDefault();
+              const targetElement = document.querySelector(href);
+              if (targetElement) {
+                targetElement.scrollIntoView({ behavior: 'smooth' });
+                window.parent.postMessage({
+                  type: 'linkClick',
+                  href: href
+                }, '*');
+              }
               return;
             }
 
-            // Always prevent default navigation
             e.preventDefault();
 
-            // Only send message for relative links (internal navigation)
             if (href && !href.startsWith('http://') && !href.startsWith('https://') && !href.startsWith('//')) {
-              // Send message to parent for internal links
               window.parent.postMessage({
                 type: 'linkClick',
                 href: href
               }, '*');
             }
-            // For external links, do nothing (navigation is blocked)
           }
         }, true);
       </script>
     `;
 
-    // Insert script before closing body tag
     if (content.includes("</body>")) {
       return content.replace("</body>", `${script}</body>`);
     }
 
-    // If no body tag, append to the end
     return content + script;
   };
 
@@ -200,6 +244,36 @@ export default function RenderHtmlComponent({
     if (!currentFile) return "";
     return injectLinkInterceptor(currentFile.content);
   };
+
+  useEffect(() => {
+    const hashIndex = currentRoute.indexOf("#");
+    const hash = hashIndex !== -1 ? currentRoute.substring(hashIndex) : "";
+    if (hash) {
+      const iframe = document.querySelector(
+        "iframe[srcDoc]",
+      ) as HTMLIFrameElement;
+      if (iframe?.contentWindow) {
+        const handleLoad = () => {
+          setTimeout(() => {
+            try {
+              const targetElement = iframe.contentDocument?.querySelector(hash);
+              if (targetElement) {
+                targetElement.scrollIntoView({ behavior: "smooth" });
+              }
+            } catch (e) {
+              console.error("Error scrolling to anchor:", e);
+            }
+          }, 100);
+        };
+        if (iframe.contentDocument?.readyState === "complete") {
+          handleLoad();
+        } else {
+          iframe.addEventListener("load", handleLoad);
+          return () => iframe.removeEventListener("load", handleLoad);
+        }
+      }
+    }
+  }, [currentRoute]);
 
   return (
     <iframe
@@ -212,6 +286,28 @@ export default function RenderHtmlComponent({
       }}
       className="bg-white"
       loading="eager"
+      onLoad={() => {
+        const hashIndex = currentRoute.indexOf("#");
+        const hash = hashIndex !== -1 ? currentRoute.substring(hashIndex) : "";
+        if (hash) {
+          setTimeout(() => {
+            const iframe = document.querySelector(
+              "iframe[srcDoc]",
+            ) as HTMLIFrameElement;
+            if (iframe?.contentWindow) {
+              try {
+                const targetElement =
+                  iframe.contentDocument?.querySelector(hash);
+                if (targetElement) {
+                  targetElement.scrollIntoView({ behavior: "smooth" });
+                }
+              } catch (e) {
+                console.error("Error scrolling to anchor:", e);
+              }
+            }
+          }, 100);
+        }
+      }}
     />
   );
 }

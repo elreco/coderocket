@@ -168,7 +168,7 @@ export function UnifiedCard({
               className="flex translate-y-4 items-center gap-2 transition-transform duration-300 ease-in-out group-hover:translate-y-0"
             >
               <Eye className="size-8 text-white" />
-              <span>View Component</span>
+              <span>View Details</span>
             </Button>
             {isLoggedIn && (
               <Button

@@ -163,14 +163,16 @@ export default function ComponentCompletion({
     if (nextPath.includes("?")) {
       nextPath = nextPath.split("?")[0];
     }
-    if (nextPath.includes("#")) {
-      nextPath = nextPath.split("#")[0];
+    const hashIndex = nextPath.indexOf("#");
+    const hash = hashIndex !== -1 ? nextPath.substring(hashIndex) : "";
+    if (hashIndex !== -1) {
+      nextPath = nextPath.substring(0, hashIndex);
     }
     nextPath = nextPath.replace(/\/+/g, "/");
     if (nextPath.length > 1 && nextPath.endsWith("/")) {
       nextPath = nextPath.slice(0, -1);
     }
-    return nextPath || "/";
+    return (nextPath || "/") + hash;
   }, []);
 
   const pushPathToHistory = useCallback(

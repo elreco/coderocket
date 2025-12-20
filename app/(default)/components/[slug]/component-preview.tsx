@@ -425,6 +425,28 @@ export default function ComponentPreview() {
                     onLoad={() => {
                       setIframeLoading(false);
                       setHasEverLoaded(true);
+                      const hashIndex = previewPathSuffix.indexOf("#");
+                      const hash =
+                        hashIndex !== -1
+                          ? previewPathSuffix.substring(hashIndex)
+                          : "";
+                      if (hash && iframeRef.current?.contentWindow) {
+                        setTimeout(() => {
+                          try {
+                            const targetElement =
+                              iframeRef.current?.contentDocument?.querySelector(
+                                hash,
+                              );
+                            if (targetElement) {
+                              targetElement.scrollIntoView({
+                                behavior: "smooth",
+                              });
+                            }
+                          } catch (e) {
+                            console.error("Error scrolling to anchor:", e);
+                          }
+                        }, 100);
+                      }
                     }}
                   />
                   {isElementSelectionActive && (
