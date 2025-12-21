@@ -51,19 +51,22 @@ IMPORTANT: Always use Tailwind CSS v4 syntax, not v3.
       - If you need to reference other files for context, mention them in your explanation but DON'T include their full code
 
       CRITICAL FILE MODIFICATION RULES:
-      - For SMALL changes (1-5 lines): Use PATCH_V1 format with precise line numbers
-      - For LARGE changes (more than 20 lines) or structural refactoring: Send the FULL file content
-      - NEVER partially generate a file - if you send a full file, include EVERY line from the original plus your changes
-      - When sending a full file, copy the ENTIRE original file from <current_project_state> and apply your modifications
-      - If you're unsure, send the full file - it's safer than a broken patch
-      - NEVER mix old and new code incorrectly - review your output to ensure the file structure is intact
+      - ALWAYS send the COMPLETE file content when modifying a file
+      - NEVER partially generate a file - include EVERY line from the original plus your changes
+      - When modifying a file, copy the ENTIRE original file from <current_project_state> and apply your modifications
+      - Review your output to ensure the file structure is intact and complete
+      - If you're modifying just one line, you still need to send the complete file
 
-      FORBIDDEN OUTPUT FORMAT - UNIFIED DIFF:
+      ❌ FORBIDDEN OUTPUT FORMATS (CRITICAL):
       - NEVER output code in unified diff format with lines starting with + or - to indicate additions/deletions
-      - NEVER output git-style diffs like: +  newLine or -  oldLine
-      - This format BREAKS the parser and corrupts files
-      - Instead: Use PATCH_V1 format for small changes OR send the complete file content
-      - If you find yourself wanting to show "before/after" with +/- prefixes, STOP and use PATCH_V1 or full file instead
+      - NEVER output git-style diffs like:
+        -  oldLine
+        +  newLine
+      - NEVER use PATCH_V1, REPLACE_RANGE, INSERT_AFTER, DELETE_RANGE or any patch format
+      - This format BREAKS the parser, corrupts files, and creates invalid code
+      - If you see yourself generating lines with - or + prefixes (except in string literals), STOP IMMEDIATELY
+      - ALWAYS send the COMPLETE file content with your changes applied
+      - REMEMBER: The parser expects COMPLETE file content only, NEVER diff or patch format
 
       HTML STRUCTURE & MODULARITY:
       - ALWAYS break down complex UIs into multiple separate HTML files
@@ -172,49 +175,9 @@ IMPORTANT: Always use Tailwind CSS v4 syntax, not v3.
     - CRITICAL: For large components, consider implementing them incrementally across multiple generations.
     - CRITICAL: Provide only the files that have changed, been added, or deleted - DO NOT include unchanged files.
     - For new files, use the \`<coderocketFile></coderocketFile>\` component with the complete file content.
-    - For existing HTML files that already exist in <current_project_state>, you MUST prefer incremental patch updates instead of sending the full file again.
-    - To send a patch for an existing HTML file, wrap the patch instructions inside \`<coderocketFile name="path/to/file.html">\` using this exact format:
-      PATCH_V1
-      REPLACE_RANGE startLine endLine
-      new content lines here
-      END_REPLACE
-      INSERT_AFTER lineNumber
-      new content lines here
-      END_INSERT
-      DELETE_RANGE startLine endLine
-    - Line numbers are 1-based and refer to the current version of the file shown in <current_project_state>.
-    - You can combine multiple REPLACE_RANGE, INSERT_AFTER and DELETE_RANGE blocks in a single patch for the same file.
-    - NEVER mix full file content and patch instructions in the same <coderocketFile>. Use either a full file or a PATCH_V1 block, not both.
-
-    CRITICAL PATCH RULES - READ CAREFULLY:
-    - ALWAYS verify line numbers by counting lines in the <current_project_state> before creating a patch
-    - When using REPLACE_RANGE, include ONLY the lines you want to replace, not surrounding context
-    - REPLACE_RANGE startLine endLine replaces lines FROM startLine TO endLine (inclusive) with the new content
-    - If you need to change just ONE line (e.g., line 50), use: REPLACE_RANGE 50 50
-    - If you need to change lines 50-55, use: REPLACE_RANGE 50 55
-    - NEVER include lines before or after the actual change in your replacement content
-    - When multiple patches affect the same file, apply them in order from BOTTOM to TOP of the file (highest line numbers first) to avoid line number shifts
-    - If you're unsure about line numbers or the change is complex (more than 20 lines), send the FULL file instead of a patch
-
-    PATCH EXAMPLE - Changing class on line 50:
-    Original line 50: <button class="btn btn-primary">Submit</button>
-    To change to: <button class="btn btn-primary btn-lg">Submit</button>
-
-    CORRECT:
-    PATCH_V1
-    REPLACE_RANGE 50 50
-                <button class="btn btn-primary btn-lg">Submit</button>
-    END_REPLACE
-
-    WRONG (includes surrounding lines):
-    PATCH_V1
-    REPLACE_RANGE 48 52
-              <div class="form-control">
-                <label class="label">Submit</label>
-                <button class="btn btn-primary btn-lg">Submit</button>
-              </div>
-            </form>
-    END_REPLACE
+    - For existing HTML files, ALWAYS send the COMPLETE file content with your modifications applied.
+    - NEVER use patch format, diff format, or any incremental update format.
+    - Copy the entire file from <current_project_state>, apply your changes, and send the complete result.
     - To delete a file, use the \`<coderocketFile name="filename.html" action="delete" />\` component.
     - To continue a file that was cut off (has a FINISH_REASON marker), use \`<coderocketFile name="filename.html" action="continue">\` and provide only the continuation.
     - If it's not a delete action, never forget add the \`<coderocketFile></coderocketFile>\` closing tag.
@@ -232,15 +195,12 @@ IMPORTANT: Always use Tailwind CSS v4 syntax, not v3.
   4. If multiple similar elements exist, use unique identifiers (classes, IDs, data-attributes, or surrounding context) to target the right one
 
   **APPLYING MODIFICATIONS:**
-  1. PREFERRED: Use PATCH_V1 format for precise, surgical modifications:
-     - Specify exact line numbers
-     - Include context lines before/after for accurate matching
-     - This prevents accidental changes to surrounding code
-  2. ALTERNATIVE: If sending the full file, ensure:
-     - ALL existing content is preserved except the modified element
-     - Parent elements remain properly opened AND closed
-     - Sibling elements are untouched
-     - No HTML structure is broken
+  - ALWAYS send the COMPLETE file with your modifications applied
+  - Copy the entire file from <current_project_state> and modify the target element
+  - Ensure ALL existing content is preserved except the modified element
+  - Parent elements must remain properly opened AND closed
+  - Sibling elements must be untouched
+  - No structure should be broken
 
   **HTML STRUCTURE VALIDATION:**
   Before sending your response, VERIFY:
@@ -249,6 +209,7 @@ IMPORTANT: Always use Tailwind CSS v4 syntax, not v3.
   ✅ The parent container of the modified element is intact
   ✅ No orphaned closing tags (</div> without matching <div>)
   ✅ Indentation is consistent with the rest of the file
+  ✅ The COMPLETE file is included, not just a snippet
 
   **COMMON MISTAKES TO AVOID:**
   ❌ Modifying the wrong element (similar but not the target)
@@ -257,25 +218,7 @@ IMPORTANT: Always use Tailwind CSS v4 syntax, not v3.
   ❌ Breaking the document structure by mismatched tags
   ❌ Changing element nesting levels incorrectly
   ❌ Forgetting to close self-modified wrapper elements
-
-  **EXAMPLE - CORRECT APPROACH:**
-  If asked to "add a border to this button" where the element is:
-  \`<button class="btn btn-primary">Click me</button>\`
-
-  Use PATCH_V1:
-  \`\`\`
-  PATCH_V1
-  REPLACE_RANGE 15 15
-  <button class="btn btn-primary border-2 border-blue-700">Click me</button>
-  END_REPLACE
-  \`\`\`
-
-  NOT this (wrong - sending partial file that breaks structure):
-  \`\`\`
-  <div class="container">
-    <button class="btn btn-primary border-2 border-blue-700">Click me</button>
-  // ... rest missing, structure broken
-  \`\`\`
+  ❌ Sending only a partial file instead of the complete file
 </element_modification>
 
 <artifact_rules>

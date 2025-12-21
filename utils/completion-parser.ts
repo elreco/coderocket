@@ -2,7 +2,6 @@ import { Tables } from "@/types_db";
 
 import { defaultTheme } from "./config";
 import {
-  applyPatchToContent,
   isPatchFormat,
   isUnifiedDiffFormat,
   cleanUnifiedDiffContent,
@@ -245,28 +244,63 @@ export const getUpdatedArtifactCode = (
         allFiles.set(normalizedFileName, content);
       }
     } else if (content) {
-      const isPatch = isPatchFormat(content);
-      if (isPatch) {
-        const existing = allFiles.get(fileName) || "";
-        const patched = applyPatchToContent(existing, content);
-        allFiles.set(fileName, patched);
+      if (isPatchFormat(content)) {
+        console.warn(
+          `[Parser] PATCH_V1 format detected for "${fileName}" but patches are no longer supported. The AI should send complete file content instead. Ignoring patch.`,
+        );
         continue;
       }
 
       if (isUnifiedDiffFormat(content)) {
-        const existing = allFiles.get(fileName) || "";
-        if (existing) {
-          const cleanedContent = cleanUnifiedDiffContent(content);
-          allFiles.set(fileName, cleanedContent);
+        console.warn(
+          `[Parser] Unified diff format detected for "${fileName}". Attempting to clean and extract content.`,
+        );
+        const cleanedContent = cleanUnifiedDiffContent(content);
+        if (cleanedContent && cleanedContent.trim() !== "") {
+          content = cleanedContent;
+        } else {
+          console.warn(
+            `[Parser] Could not extract valid content from unified diff for "${fileName}". Ignoring.`,
+          );
           continue;
         }
       }
 
-      content = detectAndCleanMalformedDiff(content);
+      const hasDiffMarkers =
+        content.includes("\n- ") ||
+        content.includes("\n+ ") ||
+        content
+          .split("\n")
+          .some(
+            (line) =>
+              (line.startsWith("-") && !line.startsWith("--")) ||
+              (line.startsWith("+") && !line.startsWith("++")),
+          );
+
+      if (hasDiffMarkers) {
+        console.warn(
+          `[Parser] Detected diff-like markers in "${fileName}". Attempting to clean malformed diff format.`,
+        );
+        content = detectAndCleanMalformedDiff(content);
+      }
       // Si le fichier existe déjà et ne contient pas de marqueur FINISH_REASON,
       // on concatène le nouveau contenu au contenu existant
-      if (allFiles.has(fileName)) {
-        const existingContent = allFiles.get(fileName);
+      const normalizedFileName = fileName.trim();
+      const existingFileKey =
+        Array.from(allFiles.keys()).find((key) => key === normalizedFileName) ||
+        Array.from(allFiles.keys()).find(
+          (key) => key.toLowerCase() === normalizedFileName.toLowerCase(),
+        );
+
+      if (existingFileKey) {
+        if (lockedFiles.has(existingFileKey)) {
+          console.warn(
+            `[Patch] Cannot modify locked file "${existingFileKey}". Content update will be ignored to protect locked content.`,
+          );
+          continue;
+        }
+
+        const existingContent = allFiles.get(existingFileKey);
         // Vérifier si le contenu existant se terminait par un marqueur FINISH_REASON
         const hadFinishReason = existingContent.includes("<!-- FINISH_REASON:");
 
@@ -353,14 +387,14 @@ export const getUpdatedArtifactCode = (
             }
           }
 
-          allFiles.set(fileName, newContent);
+          allFiles.set(existingFileKey, newContent);
         } else {
           // Sinon, on remplace par le nouveau contenu
-          allFiles.set(fileName, content);
+          allFiles.set(existingFileKey, content);
         }
       } else {
         // Nouveau fichier
-        allFiles.set(fileName, content);
+        allFiles.set(normalizedFileName, content);
       }
     }
   }
@@ -368,11 +402,32 @@ export const getUpdatedArtifactCode = (
   let mergedArtifact = `<coderocketArtifact title="${artifactTitle}">\n`;
   allFiles.forEach((content, fileName) => {
     if (!filesToDelete.has(fileName)) {
+      if (!fileName || fileName.trim() === "") {
+        console.warn(
+          `[Patch] Skipping file with empty or invalid name in artifact code`,
+        );
+        return;
+      }
+
+      const sanitizedFileName = fileName.replace(/["'<>]/g, "").trim();
+      if (sanitizedFileName !== fileName) {
+        console.warn(
+          `[Patch] Sanitized file name "${fileName}" to "${sanitizedFileName}"`,
+        );
+      }
+
+      const sanitizedContent = content || "";
       const lockedAttr = lockedFiles.has(fileName) ? ' locked="true"' : "";
-      mergedArtifact += `<coderocketFile name="${fileName}"${lockedAttr}>\n${content}\n</coderocketFile>\n`;
+      mergedArtifact += `<coderocketFile name="${sanitizedFileName}"${lockedAttr}>\n${sanitizedContent}\n</coderocketFile>\n`;
     }
   });
   mergedArtifact += "</coderocketArtifact>";
+
+  if (!mergedArtifact.includes("<coderocketFile")) {
+    console.warn(
+      `[Patch] Generated artifact code has no files. This may indicate a problem.`,
+    );
+  }
 
   return mergedArtifact;
 };

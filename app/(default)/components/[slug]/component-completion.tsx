@@ -930,32 +930,59 @@ export default function ComponentCompletion({
           }
 
           setArtifactCode((prevArtifactCode) => {
-            const newArtifactCode = getUpdatedArtifactCode(
-              completion,
-              prevArtifactCode,
-            );
-            const newFiles = extractFilesFromArtifact(
-              newArtifactCode,
-              prevArtifactCode,
-              completion,
-            );
+            try {
+              const newArtifactCode = getUpdatedArtifactCode(
+                completion,
+                prevArtifactCode,
+              );
 
-            if (newFiles.length > 0) {
-              setArtifactFiles((prevFiles) => {
-                const fileMap = new Map(prevFiles.map((f) => [f.name, f]));
-                newFiles.forEach((file) => {
-                  fileMap.set(file.name, file);
-                });
-                return Array.from(fileMap.values());
-              });
-
-              const activeFile = newFiles.find((f) => f.name === lastFileName);
-              if (activeFile) {
-                setEditorValue(activeFile.content);
+              if (
+                !newArtifactCode ||
+                newArtifactCode.trim() === "" ||
+                !newArtifactCode.includes("<coderocketArtifact")
+              ) {
+                console.error(
+                  "[Patch] Generated invalid artifact code in frontend. Preserving previous state.",
+                );
+                return prevArtifactCode;
               }
-            }
 
-            return newArtifactCode;
+              const newFiles = extractFilesFromArtifact(
+                newArtifactCode,
+                prevArtifactCode,
+                completion,
+              );
+
+              if (newFiles.length > 0) {
+                setArtifactFiles((prevFiles) => {
+                  const fileMap = new Map(prevFiles.map((f) => [f.name, f]));
+                  newFiles.forEach((file) => {
+                    if (file.name && file.content !== undefined) {
+                      fileMap.set(file.name, file);
+                    }
+                  });
+                  return Array.from(fileMap.values());
+                });
+
+                const activeFile = newFiles.find(
+                  (f) => f.name === lastFileName,
+                );
+                if (activeFile && activeFile.content !== undefined) {
+                  setEditorValue(activeFile.content);
+                }
+              }
+
+              return newArtifactCode;
+            } catch (error) {
+              console.error(
+                "[Patch] Error updating artifact code in frontend:",
+                error instanceof Error ? error.message : String(error),
+              );
+              console.error(
+                "[Patch] Preserving previous artifact code to prevent corruption.",
+              );
+              return prevArtifactCode;
+            }
           });
         }
       }

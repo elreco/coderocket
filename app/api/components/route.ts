@@ -1861,7 +1861,34 @@ const updateDataAfterCompletion = async (
     // FIXED: Use previous artifact code from messages instead of chats table
     const previousArtifactCode =
       (await getPreviousArtifactCode(chatId, version)) || "";
-    const artifactCode = getUpdatedArtifactCode(text, previousArtifactCode);
+
+    let artifactCode: string;
+    try {
+      artifactCode = getUpdatedArtifactCode(text, previousArtifactCode);
+
+      if (!artifactCode || artifactCode.trim() === "") {
+        console.error(
+          `[Patch] Generated artifact code is empty. Using previous artifact code to prevent corruption.`,
+        );
+        artifactCode = previousArtifactCode || chat.artifact_code || "";
+      }
+
+      if (!artifactCode.includes("<coderocketArtifact")) {
+        console.error(
+          `[Patch] Generated artifact code is malformed. Using previous artifact code to prevent corruption.`,
+        );
+        artifactCode = previousArtifactCode || chat.artifact_code || "";
+      }
+    } catch (error) {
+      console.error(
+        `[Patch] Error generating artifact code:`,
+        error instanceof Error ? error.message : String(error),
+      );
+      console.error(
+        `[Patch] Using previous artifact code to prevent corruption.`,
+      );
+      artifactCode = previousArtifactCode || chat.artifact_code || "";
+    }
 
     // Fetch current tokens
     const { data: currentChatData, error } = await supabase
