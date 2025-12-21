@@ -199,6 +199,7 @@ export default function CodePreview() {
     breakpoint,
     syncPreviewPath,
     connectedUser,
+    isStreamingComplete,
   } = useComponentContext();
   const { openLogin } = useAuthModal();
   const [, copy] = useCopyToClipboard();
@@ -214,6 +215,30 @@ export default function CodePreview() {
   const [showDiff, setShowDiff] = useState(true);
   const [diffContent, setDiffContent] = useState<string | null>(null);
   const diffCacheRef = useRef<Map<string, string>>(new Map());
+  const previousDiffStateRef = useRef<boolean>(true);
+  const showDiffRef = useRef(showDiff);
+
+  // Synchroniser le ref avec l'état
+  useEffect(() => {
+    showDiffRef.current = showDiff;
+  }, [showDiff]);
+
+  // Désactiver le diff pendant le streaming et le réactiver à la fin
+  useEffect(() => {
+    if (isLoading && !isStreamingComplete) {
+      // Sauvegarder l'état actuel du diff avant de le désactiver
+      if (showDiffRef.current) {
+        previousDiffStateRef.current = true;
+        setShowDiff(false);
+      }
+    } else if (!isLoading && isStreamingComplete) {
+      // Réactiver le diff à la fin du streaming si il était activé avant
+      // On attend que isStreamingComplete soit true pour être sûr que le streaming est vraiment terminé
+      if (previousDiffStateRef.current && !showDiffRef.current) {
+        setShowDiff(true);
+      }
+    }
+  }, [isLoading, isStreamingComplete]);
 
   class DiffSignWidget extends WidgetType {
     sign: string;
@@ -682,12 +707,17 @@ export default function CodePreview() {
                   <Button
                     variant={showDiff ? "default" : "ghost"}
                     size="sm"
-                    onClick={() => setShowDiff((prev) => !prev)}
+                    onClick={() => {
+                      const newState = !showDiff;
+                      setShowDiff(newState);
+                      previousDiffStateRef.current = newState;
+                    }}
                     className="h-8 gap-1.5"
                     disabled={
                       !activeTab ||
                       selectedVersion === undefined ||
-                      selectedVersion <= 0
+                      selectedVersion <= 0 ||
+                      isLoading
                     }
                   >
                     <GitCompare className="size-4" />

@@ -99,6 +99,7 @@ interface ComponentContextType {
   setIsScrapingWebsite: (value: boolean) => void;
   isContinuingFromLengthError: boolean;
   setIsContinuingFromLengthError: (value: boolean) => void;
+  isStreamingComplete: boolean;
   connectedUser?: { id: string } | null;
   isElementSelectionActive: boolean;
   setElementSelectionActive: (value: boolean) => void;

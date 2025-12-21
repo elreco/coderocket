@@ -110,6 +110,7 @@ export default function ComponentSidebar({
     isScrapingWebsite,
     setIsScrapingWebsite,
     setIsContinuingFromLengthError,
+    isStreamingComplete,
     connectedUser,
     selectedElement,
     clearSelectedElement,
@@ -619,23 +620,16 @@ export default function ComponentSidebar({
                     return true;
                   })
                   .map((m) => {
-                    // Si c'est un message assistant et qu'on a du contenu en streaming,
-                    // utiliser le contenu en streaming même après que isLoading devienne false
-                    // pour éviter d'afficher l'ancien message pendant la transition
-                    // On continue d'utiliser le streaming si:
-                    // 1. On est en train de charger (isLoading)
-                    // 2. Le completion est plus long que le contenu du message (nouveau contenu en streaming)
-                    // 3. Le contenu du message ne correspond pas au completion (ancien message)
-                    if (
+                    // Utiliser le streaming seulement si on est en cours de chargement ET qu'on n'a pas terminé
+                    const shouldUseStreaming =
                       m.role === "assistant" &&
                       Number(m.version) === Number(selectedVersion) &&
+                      isLoading &&
+                      !isStreamingComplete &&
                       completion &&
-                      completion.length > 0 &&
-                      (isLoading ||
-                        completion.length > (m.content?.length || 0) ||
-                        (m.content &&
-                          !completion.startsWith(m.content.substring(0, 100))))
-                    ) {
+                      completion.length > 0;
+
+                    if (shouldUseStreaming) {
                       // Créer un message temporaire avec le contenu en streaming
                       // Ne pas inclure le screenshot et les tokens de l'ancien message pendant le streaming
                       const streamingMessage = {

@@ -245,6 +245,7 @@ export default function ComponentCompletion({
   const [isContinuingFromLengthError, setIsContinuingFromLengthError] =
     useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isStreamingComplete, setIsStreamingComplete] = useState(false);
 
   const [fetchedChat, setFetchedChat] = useState<Tables<"chats"> | null>(null);
   const [lastAssistantMessage, setLastAssistantMessage] =
@@ -839,6 +840,8 @@ export default function ComponentCompletion({
       },
       onFinish: async () => {
         try {
+          // Marquer la fin du streaming AVANT de rafraîchir les données
+          setIsStreamingComplete(true);
           setIsSubmitting(false);
           setIsContinuingFromLengthError(false);
           await refreshChatData();
@@ -898,13 +901,16 @@ export default function ComponentCompletion({
             });
           }
 
+          // Vider le completion APRES le refresh pour éviter le flash
+          setCompletion("");
+          setIsStreamingComplete(false);
           setInput("");
-          await new Promise((resolve) => setTimeout(resolve, 500));
           setIsLoading(false);
           setCanvas(true);
           setUploadFiles([]);
         } catch (error) {
           console.error("Error in onFinish:", error);
+          setIsStreamingComplete(false);
           setIsLoading(false);
           setIsSubmitting(false);
           setCanvas(true);
@@ -1513,6 +1519,7 @@ export default function ComponentCompletion({
     setIsScrapingWebsite,
     isContinuingFromLengthError,
     setIsContinuingFromLengthError,
+    isStreamingComplete,
     connectedUser,
     isElementSelectionActive,
     setElementSelectionActive,
