@@ -5,8 +5,10 @@ import {
   streamText,
   ImagePart,
   TextPart,
+  generateId,
 } from "ai";
 import { after } from "next/server";
+import { createResumableStreamContext } from "resumable-stream/ioredis";
 
 import { buildComponent } from "@/app/(default)/components/[slug]/actions";
 import { autoSyncToGithubAfterGeneration } from "@/app/(default)/components/[slug]/github-sync-actions";
@@ -40,6 +42,7 @@ import {
   buildIntegrationContext,
   getActiveChatIntegrations,
 } from "@/utils/integrations/chat-integrations-helpers";
+import { getPublisher, getSubscriber, isRedisConfigured } from "@/utils/redis";
 import {
   tokensToRockets,
   getPlanRocketLimits,
@@ -447,14 +450,12 @@ const saveContextToDatabase = async (
   try {
     const supabase = await createClient();
 
-    // Get existing metadata
     const { data: existingChat } = await supabase
       .from("chats")
       .select("metadata")
       .eq("id", chatId)
       .single();
 
-    // Safely handle metadata using Object.assign to avoid TypeScript spread issues
     const existingMetadata = existingChat?.metadata || {};
     const newContextHistory = {
       lastSaved: new Date().toISOString(),
@@ -462,7 +463,6 @@ const saveContextToDatabase = async (
       contextSummary,
     };
 
-    // Update metadata with context information
     const updatedMetadata = Object.assign({}, existingMetadata, {
       contextHistory: newContextHistory,
     });
@@ -473,8 +473,30 @@ const saveContextToDatabase = async (
       .eq("id", chatId);
   } catch (error) {
     console.error("Failed to save context to database:", error);
-    // Non-critical error, continue execution
   }
+};
+
+const setActiveStreamId = async (
+  chatId: string,
+  streamId: string | null,
+): Promise<void> => {
+  const supabase = await createClient();
+  const updateData: Record<string, unknown> = {
+    active_stream_id: streamId,
+    active_stream_started_at: streamId ? new Date().toISOString() : null,
+  };
+  await supabase.from("chats").update(updateData).eq("id", chatId);
+};
+
+const getResumableStreamContext = () => {
+  if (!isRedisConfigured()) {
+    return null;
+  }
+  return createResumableStreamContext({
+    waitUntil: after,
+    publisher: getPublisher(),
+    subscriber: getSubscriber(),
+  });
 };
 
 export async function POST(req: Request) {
@@ -843,6 +865,8 @@ export async function POST(req: Request) {
 
     console.log("Final max_tokens:", dynamicMaxTokens);
 
+    await setActiveStreamId(id, null);
+
     const stream = streamText({
       messages: [
         {
@@ -878,6 +902,8 @@ export async function POST(req: Request) {
           );
         }
 
+        await setActiveStreamId(id, null);
+
         await updateDataAfterCompletion(
           id,
           finalText,
@@ -889,15 +915,37 @@ export async function POST(req: Request) {
           version,
         );
       },
-      onError: (error) => {
+      onError: async (error) => {
         console.error("=== AI Generation Error ===");
         console.error("Error details:", error);
         if (error instanceof Error) {
           console.error("Error message:", error.message);
           console.error("Error stack:", error.stack);
         }
+        await setActiveStreamId(id, null);
       },
     });
+
+    const streamContext = getResumableStreamContext();
+
+    if (streamContext) {
+      const streamId = generateId();
+      await setActiveStreamId(id, streamId);
+
+      const resumableStream = await streamContext.createNewResumableStream(
+        streamId,
+        () => stream.textStream,
+      );
+
+      if (resumableStream) {
+        return new Response(resumableStream, {
+          headers: {
+            "Content-Type": "text/plain; charset=utf-8",
+            "X-Stream-Id": streamId,
+          },
+        });
+      }
+    }
 
     return stream.toTextStreamResponse();
   } catch (error: unknown) {
