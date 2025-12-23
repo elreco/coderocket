@@ -1,4 +1,12 @@
-<!-- 79892313-23b7-4ca4-87e6-2dc57b1a617d b26e9640-17fb-4abe-9756-9d305ba9f1f0 -->
+---
+name: File Library Modal Feature
+overview: ""
+todos:
+  - id: 378c64fd-d484-4bf6-9c7c-a8c871fd0819
+    content: Test file library modal with premium user, pagination, file selection, and new uploads
+    status: pending
+---
+
 # File Library Modal Feature
 
 ## Overview
@@ -76,12 +84,3 @@ Modify `app/(default)/components/[slug]/component-sidebar.tsx`:
 - **File Types**: Support images (png, jpg, jpeg, gif, webp) and PDFs
 - **Storage**: Files stored in Supabase "images" bucket
 - **UI**: Use existing Dialog, Button, AlertDialog (for delete confirmation), and other UI components for consistency
-- **Delete Confirmation**: Use AlertDialog to confirm file deletion before proceeding
-
-### To-dos
-
-- [ ] Create API route at app/api/files/route.ts for listing user files with pagination from Supabase storage
-- [ ] Create file-library-modal.tsx component with file grid, pagination, and upload functionality
-- [ ] Update ImageUploadArea component to add library button and integrate modal
-- [ ] Update component-sidebar.tsx to handle file selection from library modal
-- [ ] Test file library modal with premium user, pagination, file selection, and new uploads
