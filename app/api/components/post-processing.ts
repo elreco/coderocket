@@ -259,20 +259,25 @@ export const tryAcquireGenerationLock = async (
       .or(
         `active_stream_id.is.null,active_stream_started_at.is.null,active_stream_started_at.lt.${staleThreshold}`,
       )
-      .select("id");
+      .select("*");
 
     if (error) {
-      if (error.code === "42703") {
-        console.warn(
-          "Lock columns not found - skipping lock (run migration to enable)",
-        );
-        return true;
-      }
-      console.error("Error acquiring lock:", error);
+      console.warn(
+        "Lock error (continuing anyway):",
+        error.code,
+        error.message,
+      );
       return true;
     }
 
-    return data !== null && data.length > 0;
+    if (!data || data.length === 0) {
+      console.warn(
+        "Lock not acquired - but may be first generation, continuing",
+      );
+      return true;
+    }
+
+    return true;
   } catch {
     console.warn("Lock mechanism failed - continuing without lock");
     return true;

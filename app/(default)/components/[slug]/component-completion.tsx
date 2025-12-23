@@ -638,10 +638,7 @@ export default function ComponentCompletion({
           if (response.status === 409) {
             const errorData = await response.json();
             if (errorData.code === "GENERATION_IN_PROGRESS") {
-              setTimeout(() => {
-                joinStreamRef.current(true);
-              }, 500);
-              return new Response("", { status: 200 });
+              throw new Error("generation-in-progress");
             }
           }
           try {
@@ -710,6 +707,14 @@ export default function ComponentCompletion({
               "The selected version does not exist. Please select another version.",
             duration: 4000,
           });
+          return;
+        }
+        if (error.message === "generation-in-progress") {
+          setIsLoading(false);
+          setIsSubmitting(false);
+          setTimeout(() => {
+            joinStreamRef.current(true);
+          }, 500);
           return;
         }
         if (error.message === "limit-exceeded") {
