@@ -283,3 +283,138 @@ export const tryAcquireGenerationLock = async (
     return true;
   }
 };
+
+export const tryAcquireBuildLock = async (
+  chatId: string,
+  version: number,
+  lockId: string,
+): Promise<boolean> => {
+  try {
+    const supabase = await createClient();
+
+    const BUILD_LOCK_TIMEOUT_MS = 3 * 60 * 1000;
+
+    const { data: message, error: fetchError } = await supabase
+      .from("messages")
+      .select("is_built, build_error")
+      .eq("chat_id", chatId)
+      .eq("version", version)
+      .eq("role", "assistant")
+      .single();
+
+    if (fetchError || !message) {
+      console.warn("Could not fetch message for build lock:", fetchError);
+      return false;
+    }
+
+    if (message.is_built === true) {
+      return false;
+    }
+
+    const buildError = message.build_error as {
+      building?: boolean;
+      lock_id?: string;
+      lock_started_at?: string;
+    } | null;
+
+    if (buildError?.building && buildError?.lock_started_at) {
+      const lockAge =
+        Date.now() - new Date(buildError.lock_started_at).getTime();
+      if (lockAge < BUILD_LOCK_TIMEOUT_MS) {
+        console.log(
+          `Build lock held by ${buildError.lock_id}, age: ${lockAge}ms`,
+        );
+        return false;
+      }
+      console.log(
+        `Stale build lock detected (age: ${lockAge}ms), acquiring...`,
+      );
+    }
+
+    const { data, error } = await supabase
+      .from("messages")
+      .update({
+        build_error: {
+          building: true,
+          lock_id: lockId,
+          lock_started_at: new Date().toISOString(),
+        },
+      })
+      .eq("chat_id", chatId)
+      .eq("version", version)
+      .eq("role", "assistant")
+      .is("is_built", null)
+      .select("id");
+
+    if (error) {
+      console.warn("Build lock error:", error.code, error.message);
+      return false;
+    }
+
+    if (!data || data.length === 0) {
+      const { data: checkData } = await supabase
+        .from("messages")
+        .select("is_built")
+        .eq("chat_id", chatId)
+        .eq("version", version)
+        .eq("role", "assistant")
+        .single();
+
+      if (checkData?.is_built === true) {
+        return false;
+      }
+
+      const retryResult = await supabase
+        .from("messages")
+        .update({
+          build_error: {
+            building: true,
+            lock_id: lockId,
+            lock_started_at: new Date().toISOString(),
+          },
+        })
+        .eq("chat_id", chatId)
+        .eq("version", version)
+        .eq("role", "assistant")
+        .eq("is_built", false)
+        .select("id");
+
+      if (!retryResult.data || retryResult.data.length === 0) {
+        return false;
+      }
+    }
+
+    return true;
+  } catch (error) {
+    console.error("Build lock mechanism failed:", error);
+    return false;
+  }
+};
+
+export const releaseBuildLock = async (
+  chatId: string,
+  version: number,
+  success: boolean,
+  buildError?: {
+    title: string;
+    description: string;
+    errors: string[];
+    exitCode?: number;
+  },
+): Promise<void> => {
+  try {
+    const supabase = await createClient();
+
+    await supabase
+      .from("messages")
+      .update({
+        is_built: success,
+        build_error: buildError || null,
+      })
+      .eq("chat_id", chatId)
+      .eq("version", version)
+      .eq("role", "assistant");
+  } catch (error) {
+    console.error("Failed to release build lock:", error);
+  }
+};

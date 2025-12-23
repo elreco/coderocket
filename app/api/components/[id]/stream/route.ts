@@ -39,13 +39,19 @@ const clearActiveStream = async (
     .eq("id", chatId);
 };
 
+const BUILD_LOCK_TIMEOUT_MS = 3 * 60 * 1000;
+
 const checkIfBuildNeeded = async (
   supabase: Awaited<ReturnType<typeof createClient>>,
   chatId: string,
-): Promise<{ needsBuild: boolean; version: number | null }> => {
+): Promise<{
+  needsBuild: boolean;
+  version: number | null;
+  buildInProgress: boolean;
+}> => {
   const { data: lastAssistantMessage } = await supabase
     .from("messages")
-    .select("version, is_built, content")
+    .select("version, is_built, content, build_error")
     .eq("chat_id", chatId)
     .eq("role", "assistant")
     .order("version", { ascending: false })
@@ -53,7 +59,7 @@ const checkIfBuildNeeded = async (
     .single();
 
   if (!lastAssistantMessage) {
-    return { needsBuild: false, version: null };
+    return { needsBuild: false, version: null, buildInProgress: false };
   }
 
   const hasContent =
@@ -62,9 +68,21 @@ const checkIfBuildNeeded = async (
     lastAssistantMessage.is_built === false ||
     lastAssistantMessage.is_built === null;
 
+  const buildError = lastAssistantMessage.build_error as {
+    building?: boolean;
+    lock_started_at?: string;
+  } | null;
+
+  let buildInProgress = false;
+  if (buildError?.building && buildError?.lock_started_at) {
+    const lockAge = Date.now() - new Date(buildError.lock_started_at).getTime();
+    buildInProgress = lockAge < BUILD_LOCK_TIMEOUT_MS;
+  }
+
   return {
-    needsBuild: hasContent && notBuilt,
+    needsBuild: hasContent && notBuilt && !buildInProgress,
     version: lastAssistantMessage.version,
+    buildInProgress,
   };
 };
 
@@ -122,6 +140,7 @@ export async function GET(
         status: "no_active_stream",
         needsBuild: buildStatus.needsBuild,
         version: buildStatus.version,
+        buildInProgress: buildStatus.buildInProgress,
       }),
       {
         status: 200,
@@ -138,6 +157,7 @@ export async function GET(
         status: "stream_stale",
         needsBuild: buildStatus.needsBuild,
         version: buildStatus.version,
+        buildInProgress: buildStatus.buildInProgress,
       }),
       {
         status: 200,
@@ -155,6 +175,7 @@ export async function GET(
         status: "redis_not_configured",
         needsBuild: buildStatus.needsBuild,
         version: buildStatus.version,
+        buildInProgress: buildStatus.buildInProgress,
       }),
       {
         status: 200,
@@ -176,6 +197,7 @@ export async function GET(
           status: "stream_not_found",
           needsBuild: buildStatus.needsBuild,
           version: buildStatus.version,
+          buildInProgress: buildStatus.buildInProgress,
         }),
         {
           status: 200,
@@ -200,6 +222,7 @@ export async function GET(
         status: "stream_error",
         needsBuild: buildStatus.needsBuild,
         version: buildStatus.version,
+        buildInProgress: buildStatus.buildInProgress,
       }),
       {
         status: 200,

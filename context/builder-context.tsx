@@ -60,11 +60,19 @@ export const BuilderProvider = ({ children }: { children: ReactNode }) => {
       .eq("version", selectedVersion)
       .single();
 
-    if (message?.build_error) {
+    const buildErrorData = message?.build_error as {
+      building?: boolean;
+      title?: string;
+    } | null;
+
+    const isBuildLock = buildErrorData?.building === true;
+
+    if (message?.build_error && !isBuildLock && buildErrorData?.title) {
       setBuildError(message.build_error as BuildError);
       setLoadingState("error");
       setWebcontainerReady(false);
     } else if (message && !message.is_built) {
+      setBuildError(null);
       setLoadingState("processing");
       setWebcontainerReady(false);
     } else if (message?.is_built) {

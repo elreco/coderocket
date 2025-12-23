@@ -431,14 +431,39 @@ export default function ComponentCompletion({
           const data = await response.json();
           isJoiningStreamRef.current = false;
 
+          if (data.buildInProgress) {
+            console.log(
+              `[joinStream] Build already in progress for version ${data.version}, waiting for real-time updates`,
+            );
+            if (refreshChatDataRef.current) {
+              await refreshChatDataRef.current();
+            }
+            return false;
+          }
+
           if (data.needsBuild && data.version !== null) {
+            console.log(
+              `[joinStream] Build needed for version ${data.version}, attempting...`,
+            );
             try {
-              await buildComponent(chatId, data.version, true);
+              const buildResult = await buildComponent(chatId, data.version);
+              if (buildResult.lockNotAcquired) {
+                console.log(
+                  `[joinStream] Build lock not acquired - another process is building`,
+                );
+              } else if (buildResult.alreadyBuilt) {
+                console.log(`[joinStream] Component already built`);
+              } else if (buildResult.success) {
+                console.log(`[joinStream] Build completed successfully`);
+              } else {
+                console.log(`[joinStream] Build completed with issues`);
+              }
               if (refreshChatDataRef.current) {
                 await refreshChatDataRef.current();
               }
               return true;
-            } catch {
+            } catch (error) {
+              console.error(`[joinStream] Build error:`, error);
               return false;
             }
           }
@@ -499,17 +524,33 @@ export default function ComponentCompletion({
               .sort((a, b) => b.version - a.version)[0];
 
             if (lastAssistant && !lastAssistant.is_built) {
+              console.log(
+                `[joinStream] Stream ended, attempting build for version ${lastAssistant.version}...`,
+              );
               try {
-                await buildComponent(chatId, lastAssistant.version, true);
-              } catch {
-                // Build failed silently
+                const buildResult = await buildComponent(
+                  chatId,
+                  lastAssistant.version,
+                );
+                if (buildResult.lockNotAcquired) {
+                  console.log(
+                    `[joinStream] Build lock not acquired - server or another tab is building`,
+                  );
+                } else if (buildResult.success) {
+                  console.log(`[joinStream] Build completed successfully`);
+                } else {
+                  console.log(`[joinStream] Build completed with issues`);
+                }
+              } catch (error) {
+                console.error(`[joinStream] Build error:`, error);
               }
             }
           }
         }
 
         return true;
-      } catch {
+      } catch (error) {
+        console.error(`[joinStream] Error:`, error);
         setCurrentStreamId(null);
         setIsResuming(false);
         isJoiningStreamRef.current = false;

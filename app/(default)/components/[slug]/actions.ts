@@ -309,36 +309,69 @@ export const buildComponent = async (
   chatId: string,
   version: number,
   forceBuild?: boolean,
-) => {
+): Promise<{
+  success: boolean;
+  alreadyBuilt?: boolean;
+  lockNotAcquired?: boolean;
+}> => {
+  const { tryAcquireBuildLock, releaseBuildLock } = await import(
+    "@/app/api/components/post-processing"
+  );
+
+  const lockId = `build-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+
   try {
     const lastAssistantMessage = await fetchAssistantMessageByChatIdAndVersion(
       chatId,
       version,
     );
     if (!lastAssistantMessage) {
-      throw new Error("No last assistant message found");
+      console.error(
+        `buildComponent: No assistant message found for chat ${chatId} version ${version}`,
+      );
+      return { success: false };
     }
 
     if (lastAssistantMessage.is_built && !forceBuild) {
-      return;
+      return { success: true, alreadyBuilt: true };
     }
 
     const chat = await fetchChatById(chatId);
     if (!chat) {
-      throw new Error("No chat found");
+      console.error(`buildComponent: No chat found for ${chatId}`);
+      return { success: false };
     }
 
     if (chat.framework === Framework.HTML) {
-      return;
+      return { success: true };
     }
+
+    const lockAcquired = await tryAcquireBuildLock(chatId, version, lockId);
+    if (!lockAcquired) {
+      console.log(
+        `buildComponent: Lock not acquired for chat ${chatId} version ${version} - build may be in progress or already complete`,
+      );
+      return { success: false, lockNotAcquired: true };
+    }
+
+    console.log(
+      `buildComponent: Lock acquired (${lockId}) for chat ${chatId} version ${version}`,
+    );
 
     const newArtifactFiles = extractFilesFromArtifact(
       lastAssistantMessage.artifact_code || "",
     );
 
     if (!newArtifactFiles.length) {
-      console.warn("No files found in completion - skipping build");
-      return;
+      console.warn(
+        `buildComponent: No files found in completion for chat ${chatId} version ${version} - skipping build`,
+      );
+      await releaseBuildLock(chatId, version, false, {
+        title: "No Files",
+        description: "No files found to build",
+        errors: [],
+      });
+      return { success: false };
     }
 
     const chatIntegrations = await getChatIntegrations(chatId);
@@ -369,27 +402,36 @@ export const buildComponent = async (
       }),
     });
 
-    // Vérifier d'abord si la réponse est OK
     if (!builderResponse.ok) {
       const errorText = await builderResponse.text();
       console.error(
-        `Builder API error (${builderResponse.status}):`,
+        `buildComponent: Builder API error (${builderResponse.status}) for chat ${chatId}:`,
         errorText,
       );
-      throw new Error(
-        `Builder API returned ${builderResponse.status}: ${errorText}`,
-      );
+      await releaseBuildLock(chatId, version, false, {
+        title: "Build Failed",
+        description: `Builder API returned ${builderResponse.status}`,
+        errors: [errorText],
+      });
+      return { success: false };
     }
 
     const contentType = builderResponse.headers.get("content-type");
     if (!contentType || !contentType.includes("application/json")) {
       const responseText = await builderResponse.text();
-      console.error("Builder API did not return JSON:", responseText);
-      throw new Error("Builder API returned non-JSON response");
+      console.error(
+        `buildComponent: Builder API did not return JSON for chat ${chatId}:`,
+        responseText,
+      );
+      await releaseBuildLock(chatId, version, false, {
+        title: "Build Failed",
+        description: "Builder API returned non-JSON response",
+        errors: [responseText.substring(0, 500)],
+      });
+      return { success: false };
     }
 
     const responseData = await builderResponse.json();
-    const supabase = await createClient();
 
     if (responseData.errors || responseData.event === "error") {
       const buildError = {
@@ -399,29 +441,19 @@ export const buildComponent = async (
         errors: responseData.errors || [],
         exitCode: responseData.exitCode,
       };
-
-      await supabase
-        .from("messages")
-        .update({
-          is_built: false,
-          build_error: buildError,
-        })
-        .eq("chat_id", chatId)
-        .eq("role", "assistant")
-        .eq("version", version);
-
-      return;
+      console.error(
+        `buildComponent: Build failed for chat ${chatId}:`,
+        buildError,
+      );
+      await releaseBuildLock(chatId, version, false, buildError);
+      return { success: false };
     }
 
-    await supabase
-      .from("messages")
-      .update({
-        is_built: responseData.event === "success",
-        build_error: null,
-      })
-      .eq("chat_id", chatId)
-      .eq("role", "assistant")
-      .eq("version", version);
+    const buildSuccess = responseData.event === "success";
+    await releaseBuildLock(chatId, version, buildSuccess);
+    console.log(
+      `buildComponent: Build ${buildSuccess ? "succeeded" : "completed"} for chat ${chatId} version ${version}`,
+    );
 
     try {
       let buildExists = false;
@@ -442,28 +474,28 @@ export const buildComponent = async (
         );
       } else {
         console.warn(
-          `Build ${chatId}-${version} not available on Vercel Blob after 3 attempts, skipping screenshot`,
+          `buildComponent: Build ${chatId}-${version} not available on Vercel Blob after 3 attempts, skipping screenshot`,
         );
       }
     } catch (screenshotError) {
-      console.error("Screenshot error (non-blocking):", screenshotError);
+      console.error(
+        "buildComponent: Screenshot error (non-blocking):",
+        screenshotError,
+      );
     }
+
+    return { success: buildSuccess };
   } catch (error) {
-    console.error("Build API error:", error);
-    const supabase = await createClient();
-    await supabase
-      .from("messages")
-      .update({
-        is_built: false,
-        build_error: {
-          title: "Build Error",
-          description: "An unexpected error occurred during the build process.",
-          errors: [error instanceof Error ? error.message : String(error)],
-        },
-      })
-      .eq("chat_id", chatId)
-      .eq("role", "assistant")
-      .eq("version", version);
+    console.error(
+      `buildComponent: Unexpected error for chat ${chatId}:`,
+      error,
+    );
+    await releaseBuildLock(chatId, version, false, {
+      title: "Build Error",
+      description: "An unexpected error occurred during the build process.",
+      errors: [error instanceof Error ? error.message : String(error)],
+    });
+    return { success: false };
   }
 };
 
