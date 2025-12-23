@@ -41,7 +41,7 @@ interface PreviewToolbarProps {
   isNavigationEnabled: boolean;
   navigationPlaceholder: string;
   addressFocused: boolean;
-  addressInputRef: RefObject<HTMLInputElement | null>;
+  addressInputRef: RefObject<HTMLInputElement>;
   isModalOpen: boolean;
   loadingState: WebcontainerLoadingState;
   onSetAddressFocused: (focused: boolean) => void;

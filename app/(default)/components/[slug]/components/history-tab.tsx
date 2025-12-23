@@ -21,7 +21,7 @@ interface HistoryTabProps {
   selectedVersion: number | undefined;
   isLoading: boolean;
   user: Tables<"users"> | null;
-  currentVersionRef: RefObject<HTMLDivElement | null>;
+  currentVersionRef: RefObject<HTMLDivElement>;
   onVersionSelect: (version: number) => void;
 }
 
