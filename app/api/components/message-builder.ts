@@ -1,4 +1,6 @@
 import { ModelMessage, ImagePart, TextPart } from "ai";
+
+import { UploadedFileInfo } from "@/types/api";
 import { Tables } from "@/types_db";
 import { storageUrl } from "@/utils/config";
 import { createClient } from "@/utils/supabase/server";
@@ -11,13 +13,7 @@ interface PromptFileItem {
   source?: string;
 }
 
-export interface UploadedFileInfo {
-  path: string;
-  publicUrl?: string;
-  type: "image" | "pdf" | "text";
-  mimeType: string;
-  source?: string;
-}
+export type { UploadedFileInfo } from "@/types/api";
 
 interface ContextResult {
   limitedMessages: Tables<"messages">[];

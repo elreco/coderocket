@@ -1,3 +1,4 @@
+import { CloneResult } from "@/types/api";
 import { cloneWebsite } from "@/utils/agents/website-scraper-simple";
 import { Framework } from "@/utils/config";
 import { isSameDomain } from "@/utils/domain-helper";
@@ -21,7 +22,7 @@ interface ComponentStyle {
   boxShadow?: string;
 }
 
-interface AdvancedMetadata {
+export interface AdvancedMetadata {
   spacing?: Array<{ value: string; frequency: number }>;
   typography?: Record<string, TypographyStyle>;
   colors?: Array<{ color: string; contexts: string[] }>;
@@ -125,7 +126,6 @@ export function filterJSLibrariesByFramework(
 
 export function formatAdvancedMetadata(
   metadata: AdvancedMetadata | null,
-  framework: Framework,
 ): string {
   if (!metadata) return "";
 
@@ -335,11 +335,7 @@ export function detectCloneUrl(
   return { urlToClone: null, isAdditionalPageClone: false };
 }
 
-export interface CloneResult {
-  enhancedPrompt: string;
-  userDisplayPrompt: string;
-  cloneScreenshot: string | null;
-}
+export type { CloneResult } from "@/types/api";
 
 export async function processWebsiteClone(
   urlToClone: string,
@@ -349,7 +345,7 @@ export async function processWebsiteClone(
 ): Promise<CloneResult> {
   const supabase = await createClient();
   let enhancedPrompt = "";
-  let userDisplayPrompt = isAdditionalPageClone
+  const userDisplayPrompt = isAdditionalPageClone
     ? `Clone another page: ${urlToClone}`
     : "";
   let cloneScreenshot: string | null = null;
@@ -455,10 +451,7 @@ export async function processWebsiteClone(
       const simplifiedHTML =
         (data as { simplifiedHTML?: string }).simplifiedHTML || "";
 
-      const advancedMetadataSection = formatAdvancedMetadata(
-        designMetadata,
-        framework,
-      );
+      const advancedMetadataSection = formatAdvancedMetadata(designMetadata);
 
       const structureHTMLSection =
         simplifiedHTML &&
@@ -468,10 +461,7 @@ export async function processWebsiteClone(
           : "";
 
       const filteredLibraries = designMetadata?.jsLibraries
-        ? filterJSLibrariesByFramework(
-            designMetadata.jsLibraries,
-            framework,
-          )
+        ? filterJSLibrariesByFramework(designMetadata.jsLibraries, framework)
         : [];
       const jsLibrariesSection =
         filteredLibraries.length > 0
@@ -532,13 +522,12 @@ The screenshot shows the design. The content above provides the text, images, an
           }
 
           const screenshotFileName = `${Date.now()}-${userId}-screenshot.jpg`;
-          const { data: imageData, error: imageError } =
-            await supabase.storage
-              .from("images")
-              .upload(screenshotFileName, buffer, {
-                contentType: "image/jpeg",
-                cacheControl: "3600",
-              });
+          const { data: imageData, error: imageError } = await supabase.storage
+            .from("images")
+            .upload(screenshotFileName, buffer, {
+              contentType: "image/jpeg",
+              cacheControl: "3600",
+            });
 
           if (!imageError && imageData?.path) {
             cloneScreenshot = imageData.path;
@@ -561,10 +550,7 @@ Use standard Tailwind CSS classes and shadcn/ui components.`;
     }
   } catch (error) {
     console.error("Error during website cloning:", error);
-    if (
-      error instanceof Error &&
-      error.message.includes("different domain")
-    ) {
+    if (error instanceof Error && error.message.includes("different domain")) {
       throw error;
     }
     const action = isAdditionalPageClone ? "another page" : "this website";

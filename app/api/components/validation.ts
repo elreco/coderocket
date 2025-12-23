@@ -6,9 +6,14 @@ import {
 import { getSubscription } from "@/app/supabase-server";
 import { Tables } from "@/types_db";
 import { PREMIUM_CHAR_LIMIT, MAX_TOKENS_PER_REQUEST } from "@/utils/config";
-import { tokensToRockets, getPlanRocketLimits } from "@/utils/rocket-conversion";
+import {
+  tokensToRockets,
+  getPlanRocketLimits,
+} from "@/utils/rocket-conversion";
 import { createClient } from "@/utils/supabase/server";
 import { getUserTokenUsage } from "@/utils/token-pricing";
+
+type SubscriptionWithPrices = Awaited<ReturnType<typeof getSubscription>>;
 
 export interface ValidatedUser {
   user: { id: string; email?: string };
@@ -16,7 +21,7 @@ export interface ValidatedUser {
 }
 
 export interface UsageLimitsResult {
-  subscription: Tables<"subscriptions"> | null;
+  subscription: SubscriptionWithPrices;
   withinLimits: boolean;
 }
 
@@ -60,7 +65,7 @@ export function validatePromptLength(prompt: string | null): void {
 
 export async function checkUsageLimits(
   userId: string,
-  subscription: Tables<"subscriptions"> | null,
+  subscription: SubscriptionWithPrices,
 ): Promise<void> {
   const extraMessages = await getExtraMessagesCount(userId);
 
@@ -103,7 +108,7 @@ export async function checkUsageLimits(
 }
 
 export function validateFileUploadPermission(
-  subscription: Tables<"subscriptions"> | null,
+  subscription: SubscriptionWithPrices,
   hasFiles: boolean,
 ): void {
   if (!subscription && hasFiles) {
@@ -111,13 +116,7 @@ export function validateFileUploadPermission(
   }
 }
 
-export interface UploadedFileInfo {
-  path: string;
-  publicUrl?: string;
-  type: "image" | "pdf" | "text";
-  mimeType: string;
-  source?: string;
-}
+export type { UploadedFileInfo } from "@/types/api";
 
 export function getFileTypeFromPath(filePath: string): {
   type: "image" | "pdf" | "text";

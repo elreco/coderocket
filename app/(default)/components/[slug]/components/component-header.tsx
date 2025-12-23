@@ -21,7 +21,6 @@ import {
 import { useComponentContext } from "@/context/component-context";
 import { cn } from "@/lib/utils";
 import type { CustomDomainData } from "@/types/custom-domain";
-import { Tables } from "@/types_db";
 
 import ComponentSidebar from "../component-sidebar";
 

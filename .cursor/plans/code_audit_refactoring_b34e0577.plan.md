@@ -260,5 +260,3 @@ Regrouper les server actions par domaine:
 - Garder les exports existants pour compatibilite
 
 4. **Phase 4 - Ameliorations transversales**
-
-- Types partages

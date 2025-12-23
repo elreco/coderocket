@@ -153,7 +153,10 @@ export const getUpdatedArtifactCode = (
             /\n\n<!-- FINISH_REASON: (?:length|error) -->$/,
             "",
           );
-          const newContent = concatenateContent(cleanedExistingContent, content);
+          const newContent = concatenateContent(
+            cleanedExistingContent,
+            content,
+          );
           allFiles.set(existingFileKey, newContent);
         } else {
           allFiles.set(existingFileKey, content);
@@ -197,7 +200,10 @@ export const getUpdatedArtifactCode = (
   return mergedArtifact;
 };
 
-function concatenateContent(existingContent: string, newContent: string): string {
+function concatenateContent(
+  existingContent: string,
+  newContent: string,
+): string {
   const lastCharExisting = existingContent.charAt(existingContent.length - 1);
   const firstCharNew = newContent.charAt(0);
 

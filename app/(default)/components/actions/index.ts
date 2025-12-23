@@ -3,9 +3,9 @@ export {
   fetchChatsByUserId,
   fetchChatDataOptimized,
   generateUniqueNanoid,
-} from "./actions/chat-queries";
+} from "./chat-queries";
 
-export { createChat, remixChat } from "./actions/chat-mutations";
+export { createChat, remixChat } from "./chat-mutations";
 
 export {
   fetchMessagesByChatId,
@@ -14,14 +14,14 @@ export {
   fetchLastUserMessageByChatId,
   fetchAssistantMessageByChatIdAndVersion,
   fetchUserMessageByChatIdAndVersion,
-} from "./actions/message-queries";
+} from "./message-queries";
 
-export { toggleChatLike, hasUserLikedChat } from "./actions/like-actions";
+export { toggleChatLike, hasUserLikedChat } from "./like-actions";
 
 export {
   getExtraMessagesCount,
   decrementExtraMessagesCount,
-} from "./actions/extra-messages";
+} from "./extra-messages";
 
 export {
   getAllPublicChats,
@@ -30,4 +30,4 @@ export {
   getDeployedSites,
   type GetComponentsReturnType,
   type GetDeployedSitesReturnType,
-} from "./actions/public-queries";
+} from "./public-queries";

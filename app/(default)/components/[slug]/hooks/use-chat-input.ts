@@ -1,7 +1,8 @@
 import { useState, useCallback } from "react";
+
 import { toast } from "@/hooks/use-toast";
-import { isSameDomain } from "@/utils/domain-helper";
 import { Tables } from "@/types_db";
+import { isSameDomain } from "@/utils/domain-helper";
 
 interface UseChatInputProps {
   input: string;
@@ -32,8 +33,11 @@ export function useChatInput({
   const [hasImproved, setHasImproved] = useState(false);
   const [isImprovingLoading, setIsImprovingLoading] = useState(false);
   const [showUrlInPromptModal, setShowUrlInPromptModal] = useState(false);
-  const [pendingPromptWithUrl, setPendingPromptWithUrl] = useState<string | null>(null);
-  const [isCloneAnotherPageActive, setIsCloneAnotherPageActive] = useState(false);
+  const [pendingPromptWithUrl, setPendingPromptWithUrl] = useState<
+    string | null
+  >(null);
+  const [isCloneAnotherPageActive, setIsCloneAnotherPageActive] =
+    useState(false);
   const [currentCloneUrl, setCurrentCloneUrl] = useState<string | null>(null);
 
   const containsUrl = useCallback((text: string): boolean => {
@@ -81,7 +85,13 @@ export function useChatInput({
       handleSubmitToAI(promptText);
       setActiveTab("chat");
     },
-    [selectedVersion, fetchedChat?.clone_url, handleSubmitToAI, setActiveTab, setIsScrapingWebsite],
+    [
+      selectedVersion,
+      fetchedChat?.clone_url,
+      handleSubmitToAI,
+      setActiveTab,
+      setIsScrapingWebsite,
+    ],
   );
 
   const handleSubmit = useCallback(
@@ -122,7 +132,14 @@ export function useChatInput({
 
       submitPrompt(input);
     },
-    [input, inputIsValid, fetchedChat?.clone_url, containsUrl, setIsContinuingFromLengthError, submitPrompt],
+    [
+      input,
+      inputIsValid,
+      fetchedChat?.clone_url,
+      containsUrl,
+      setIsContinuingFromLengthError,
+      submitPrompt,
+    ],
   );
 
   const handleImprovePrompt = useCallback(async () => {

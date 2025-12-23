@@ -405,95 +405,136 @@ export default function ComponentCompletion({
   const refreshChatDataRef = useRef<
     (() => Promise<ChatMessage[] | undefined>) | null
   >(null);
-  const tryResumeStream = useCallback(async (): Promise<boolean> => {
-    if (hasAttemptedResumeRef.current[chatId]) {
-      return false;
-    }
-    hasAttemptedResumeRef.current[chatId] = true;
+  const [currentStreamId, setCurrentStreamId] = useState<string | null>(null);
+  const isJoiningStreamRef = useRef(false);
 
-    try {
-      const response = await fetch(`/api/components/${chatId}/stream`);
-      const contentType = response.headers.get("Content-Type") || "";
-
-      if (contentType.includes("application/json")) {
-        const data = await response.json();
-
-        if (data.needsBuild && data.version !== null) {
-          try {
-            await buildComponent(chatId, data.version, true);
-            if (refreshChatDataRef.current) {
-              await refreshChatDataRef.current();
-            }
-            return true;
-          } catch {
-            return false;
-          }
-        }
+  const joinStream = useCallback(
+    async (skipAttemptCheck = false): Promise<boolean> => {
+      if (!skipAttemptCheck && hasAttemptedResumeRef.current[chatId]) {
         return false;
       }
+      if (!skipAttemptCheck) {
+        hasAttemptedResumeRef.current[chatId] = true;
+      }
 
-      if (!response.ok) {
+      if (isJoiningStreamRef.current) {
         return false;
       }
+      isJoiningStreamRef.current = true;
 
-      setIsResuming(true);
-      setIsLoading(true);
-      setCanvas(true);
+      try {
+        const response = await fetch(`/api/components/${chatId}/stream`);
+        const contentType = response.headers.get("Content-Type") || "";
+        const streamId = response.headers.get("X-Stream-Id");
 
-      const reader = response.body?.getReader();
-      if (!reader) {
-        setIsResuming(false);
-        return false;
-      }
+        if (contentType.includes("application/json")) {
+          const data = await response.json();
+          isJoiningStreamRef.current = false;
 
-      const decoder = new TextDecoder();
-      let accumulatedText = "";
-
-      while (true) {
-        const { done, value } = await reader.read();
-
-        if (done) {
-          break;
-        }
-
-        const chunk = decoder.decode(value, { stream: true });
-        accumulatedText += chunk;
-        if (setCompletionRef.current) {
-          setCompletionRef.current(accumulatedText);
-        }
-      }
-
-      setIsResuming(false);
-      setIsLoading(false);
-      setIsSubmitting(false);
-      if (setInputRef.current) {
-        setInputRef.current("");
-      }
-
-      if (refreshChatDataRef.current) {
-        const refreshedMessages = await refreshChatDataRef.current();
-
-        if (refreshedMessages) {
-          const lastAssistant = refreshedMessages
-            .filter((m) => m.role === "assistant")
-            .sort((a, b) => b.version - a.version)[0];
-
-          if (lastAssistant && !lastAssistant.is_built) {
+          if (data.needsBuild && data.version !== null) {
             try {
-              await buildComponent(chatId, lastAssistant.version, true);
+              await buildComponent(chatId, data.version, true);
+              if (refreshChatDataRef.current) {
+                await refreshChatDataRef.current();
+              }
+              return true;
             } catch {
-              // Build failed silently
+              return false;
+            }
+          }
+          return false;
+        }
+
+        if (!response.ok) {
+          isJoiningStreamRef.current = false;
+          return false;
+        }
+
+        if (streamId) {
+          setCurrentStreamId(streamId);
+        }
+        setIsResuming(true);
+        setIsLoading(true);
+        setCanvas(true);
+
+        const reader = response.body?.getReader();
+        if (!reader) {
+          setIsResuming(false);
+          isJoiningStreamRef.current = false;
+          return false;
+        }
+
+        const decoder = new TextDecoder();
+        let accumulatedText = "";
+
+        while (true) {
+          const { done, value } = await reader.read();
+
+          if (done) {
+            break;
+          }
+
+          const chunk = decoder.decode(value, { stream: true });
+          accumulatedText += chunk;
+          if (setCompletionRef.current) {
+            setCompletionRef.current(accumulatedText);
+          }
+        }
+
+        setCurrentStreamId(null);
+        setIsResuming(false);
+        setIsLoading(false);
+        setIsSubmitting(false);
+        isJoiningStreamRef.current = false;
+        if (setInputRef.current) {
+          setInputRef.current("");
+        }
+
+        if (refreshChatDataRef.current) {
+          const refreshedMessages = await refreshChatDataRef.current();
+
+          if (refreshedMessages) {
+            const lastAssistant = refreshedMessages
+              .filter((m) => m.role === "assistant")
+              .sort((a, b) => b.version - a.version)[0];
+
+            if (lastAssistant && !lastAssistant.is_built) {
+              try {
+                await buildComponent(chatId, lastAssistant.version, true);
+              } catch {
+                // Build failed silently
+              }
             }
           }
         }
-      }
 
-      return true;
-    } catch {
-      setIsResuming(false);
-      return false;
-    }
-  }, [chatId]);
+        return true;
+      } catch {
+        setCurrentStreamId(null);
+        setIsResuming(false);
+        isJoiningStreamRef.current = false;
+        return false;
+      }
+    },
+    [chatId],
+  );
+
+  const handleExternalStreamDetected = useCallback(
+    async (streamId: string | null) => {
+      if (streamId && !isLoading && !isJoiningStreamRef.current) {
+        await joinStream(true);
+      } else if (!streamId && isResuming) {
+        if (refreshChatDataRef.current) {
+          await refreshChatDataRef.current();
+        }
+      }
+    },
+    [isLoading, isResuming, joinStream],
+  );
+
+  const tryResumeStream = useCallback(async (): Promise<boolean> => {
+    return joinStream(false);
+  }, [joinStream]);
 
   const startInitialGenerationRef = useRef<((prompt: string) => void) | null>(
     null,
@@ -1431,6 +1472,7 @@ export default function ComponentCompletion({
     connectedUserId: connectedUser?.id,
     selectedVersion,
     isLoading,
+    currentStreamId,
     fetchedChat,
     title,
     selectedVersionRef,
@@ -1447,6 +1489,7 @@ export default function ComponentCompletion({
     onWebcontainerReadyUpdate: setWebcontainerReady,
     onForceBuildUpdate: setForceBuild,
     onLastAssistantMessageUpdate: setLastAssistantMessage,
+    onExternalStreamDetected: handleExternalStreamDetected,
   });
 
   const contextValue = {

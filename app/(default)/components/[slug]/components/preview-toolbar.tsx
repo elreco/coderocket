@@ -27,12 +27,10 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import {
-  BreakpointType,
   useComponentContext,
   WebcontainerLoadingState,
 } from "@/context/component-context";
 import { cn } from "@/lib/utils";
-import { ChatFile } from "@/utils/completion-parser";
 
 interface PreviewToolbarProps {
   isHtmlFrameworkSelected: boolean;

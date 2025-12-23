@@ -1,5 +1,5 @@
-import { ChatFile, CategorizedFiles } from "./types";
 import { ensureCDNsPresent } from "./artifact-parser";
+import { ChatFile, CategorizedFiles } from "./types";
 
 export function extractDirectFiles(content: string): ChatFile[] {
   if (!content || !content.includes("<coderocketFile")) {

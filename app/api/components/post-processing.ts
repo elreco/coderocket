@@ -5,23 +5,19 @@ import { buildComponent } from "@/app/(default)/components/[slug]/actions";
 import { autoSyncToGithubAfterGeneration } from "@/app/(default)/components/[slug]/github-sync-actions";
 import { fetchChatById } from "@/app/(default)/components/actions";
 import { getSubscription } from "@/app/supabase-server";
+import { UploadedFileInfo } from "@/types/api";
+import { takeScreenshot } from "@/utils/capture-screenshot";
 import {
   extractDataTheme,
   extractTitle,
   getUpdatedArtifactCode,
 } from "@/utils/completion-parser";
 import { Framework } from "@/utils/config";
-import { takeScreenshot } from "@/utils/capture-screenshot";
 import { getPreviousArtifactCode } from "@/utils/supabase/artifact-helpers";
 import { createClient } from "@/utils/supabase/server";
 import { calculateTokenCost } from "@/utils/token-pricing";
 
-export interface UploadedFileInfo {
-  path: string;
-  type: "image" | "pdf" | "text";
-  mimeType: string;
-  source?: string;
-}
+export type { UploadedFileInfo } from "@/types/api";
 
 export const updateDataAfterCompletion = async (
   chatId: string,

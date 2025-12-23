@@ -1,8 +1,9 @@
 import { Tables } from "@/types_db";
 
 import { defaultTheme } from "../config";
-import { ContentChunk } from "./types";
+
 import { extractDirectFiles } from "./file-parser";
+import { ContentChunk } from "./types";
 
 export const extractContent = (completion: string) => {
   const withoutPartialArtifact = completion.replace(/<coderocket[^>]*$/g, "");

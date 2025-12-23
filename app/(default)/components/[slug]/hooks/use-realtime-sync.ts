@@ -10,12 +10,11 @@ interface UseRealtimeSyncOptions {
   connectedUserId: string | null | undefined;
   selectedVersion: number | undefined;
   isLoading: boolean;
+  currentStreamId: string | null;
   fetchedChat: Tables<"chats"> | null;
   title: string;
   selectedVersionRef: React.MutableRefObject<number | undefined>;
-  onMessagesUpdate: (
-    updater: (prev: ChatMessage[]) => ChatMessage[],
-  ) => void;
+  onMessagesUpdate: (updater: (prev: ChatMessage[]) => ChatMessage[]) => void;
   onMessagesDelete: (messageId: number) => void;
   onChatUpdate: (chat: Tables<"chats">) => void;
   onLikesCountUpdate: (count: number) => void;
@@ -30,6 +29,7 @@ interface UseRealtimeSyncOptions {
   onWebcontainerReadyUpdate: (ready: boolean) => void;
   onForceBuildUpdate: (force: boolean) => void;
   onLastAssistantMessageUpdate: (message: Tables<"messages">) => void;
+  onExternalStreamDetected: (streamId: string | null) => void;
 }
 
 export function useRealtimeSync({
@@ -37,6 +37,7 @@ export function useRealtimeSync({
   connectedUserId,
   selectedVersion,
   isLoading,
+  currentStreamId,
   fetchedChat,
   title,
   selectedVersionRef,
@@ -53,10 +54,12 @@ export function useRealtimeSync({
   onWebcontainerReadyUpdate,
   onForceBuildUpdate,
   onLastAssistantMessageUpdate,
+  onExternalStreamDetected,
 }: UseRealtimeSyncOptions) {
   const supabase = createClient();
 
   const isLoadingRef = useRef(isLoading);
+  const currentStreamIdRef = useRef(currentStreamId);
   const selectedVersionStateRef = useRef(selectedVersion);
   const fetchedChatRef = useRef(fetchedChat);
   const titleRef = useRef(title);
@@ -64,6 +67,10 @@ export function useRealtimeSync({
   useEffect(() => {
     isLoadingRef.current = isLoading;
   }, [isLoading]);
+
+  useEffect(() => {
+    currentStreamIdRef.current = currentStreamId;
+  }, [currentStreamId]);
 
   useEffect(() => {
     selectedVersionStateRef.current = selectedVersion;
@@ -89,11 +96,18 @@ export function useRealtimeSync({
           filter: `chat_id=eq.${chatId}`,
         },
         async (payload) => {
-          if (isLoadingRef.current) return;
           onMessagesUpdate((prev) => {
             const exists = prev.some((m) => m.id === payload.new.id);
             if (exists) return prev;
-            return [...prev, payload.new as ChatMessage];
+            const filteredMessages = prev.filter(
+              (m) =>
+                !(
+                  m.id < 0 &&
+                  m.role === payload.new.role &&
+                  m.version === payload.new.version
+                ),
+            );
+            return [...filteredMessages, payload.new as ChatMessage];
           });
         },
       )
@@ -148,9 +162,7 @@ export function useRealtimeSync({
 
           if (
             payload.new.role === "assistant" &&
-            payload.new.version === selectedVersionStateRef.current &&
-            payload.new.screenshot &&
-            payload.new.screenshot !== payload.old?.screenshot
+            payload.new.version === selectedVersionStateRef.current
           ) {
             onLastAssistantMessageUpdate(payload.new as Tables<"messages">);
           }
@@ -216,6 +228,23 @@ export function useRealtimeSync({
                 }
               } catch (error) {
                 console.error("Error fetching custom domain:", error);
+              }
+            }
+
+            const newStreamId = payload.new.active_stream_id as string | null;
+            const oldStreamId = payload.old?.active_stream_id as
+              | string
+              | null
+              | undefined;
+            if (newStreamId !== oldStreamId) {
+              if (
+                newStreamId &&
+                newStreamId !== currentStreamIdRef.current &&
+                !isLoadingRef.current
+              ) {
+                onExternalStreamDetected(newStreamId);
+              } else if (!newStreamId && oldStreamId) {
+                onExternalStreamDetected(null);
               }
             }
           }
@@ -355,5 +384,6 @@ export function useRealtimeSync({
     onWebcontainerReadyUpdate,
     onForceBuildUpdate,
     onLastAssistantMessageUpdate,
+    onExternalStreamDetected,
   ]);
 }

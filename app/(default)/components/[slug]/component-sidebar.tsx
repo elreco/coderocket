@@ -1,18 +1,11 @@
 import {
-  BookOpen,
-  ChevronsRight,
   CircleFadingArrowUp,
-  MessageSquare,
-  Paintbrush,
-  WandSparkles,
-  RefreshCw,
   Loader,
   Loader2,
-  Settings,
-  Github,
-  Plug2,
-  Rocket,
   Database,
+  Paintbrush,
+  RefreshCw,
+  WandSparkles,
 } from "lucide-react";
 import {
   useEffect,
@@ -30,8 +23,6 @@ import { FileBadge } from "@/components/file-badge";
 import { ImageUploadArea } from "@/components/image-upload-area";
 import { SelectedElementDisplay } from "@/components/selected-element-display";
 import { TextareaWithLimit } from "@/components/textarea-with-limit";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -41,7 +32,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Tooltip,
   TooltipContent,
@@ -61,13 +51,11 @@ import {
   categorizeFiles,
 } from "@/utils/completion-parser";
 import {
-  avatarApi,
   Framework,
   FREE_CHAR_LIMIT,
   maxImagesUpload,
   storageUrl,
 } from "@/utils/config";
-import { getRelativeDate } from "@/utils/date";
 import { isSameDomain } from "@/utils/domain-helper";
 import { validateFile } from "@/utils/file-helper";
 
@@ -79,6 +67,12 @@ import SettingsContent from "./(settings)/settings-content";
 import { improvePromptByChatId } from "./actions";
 import ComponentChatFiles from "./component-chat-files";
 import { ComponentSidebarSkeleton } from "./component-sidebar-skeleton";
+import {
+  HistoryTab,
+  SidebarTabsDesktop,
+  SidebarTabsMobile,
+  TabHeader,
+} from "./components";
 import { Markdown } from "./markdown";
 import { PromptFiles } from "./prompt-file";
 
@@ -500,93 +494,20 @@ export default function ComponentSidebar({
           className,
         )}
       >
-        <Tabs
-          value={activeTab}
-          onValueChange={(value) => {
-            if (!isLoading) {
-              handleTabChange(value);
-            }
-          }}
-          className="w-full xl:hidden"
-        >
-          <TabsList
-            className={cn(
-              "grid w-full rounded-none",
-              authorized
-                ? selectedFramework === Framework.HTML
-                  ? "grid-cols-5"
-                  : "grid-cols-6"
-                : "grid-cols-2",
-            )}
-          >
-            <TabsTrigger value="chat" disabled={isLoading}>
-              <MessageSquare className="size-4" />
-            </TabsTrigger>
-            <TabsTrigger value="history" disabled={isLoading}>
-              <BookOpen className="size-4" />
-            </TabsTrigger>
-            {authorized && (
-              <TabsTrigger value="github" disabled={isLoading}>
-                <Github className="size-4" />
-              </TabsTrigger>
-            )}
-            {authorized && selectedFramework !== Framework.HTML && (
-              <TabsTrigger value="integrations" disabled={isLoading}>
-                <Plug2 className="size-4" />
-              </TabsTrigger>
-            )}
-            {authorized && (
-              <TabsTrigger value="deployment" disabled={isLoading}>
-                <Rocket className="size-4" />
-              </TabsTrigger>
-            )}
-            {authorized && (
-              <TabsTrigger value="settings" disabled={isLoading}>
-                <Settings className="size-4" />
-              </TabsTrigger>
-            )}
-          </TabsList>
-        </Tabs>
+        <SidebarTabsMobile
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
+          isLoading={isLoading}
+          authorized={authorized}
+          selectedFramework={selectedFramework}
+        />
 
         <div className="bg-background flex flex-1 flex-col overflow-hidden">
-          {activeTab === "chat" && (
-            <div className="bg-background flex h-12 items-center gap-2 px-4 py-1.5">
-              <MessageSquare className="size-4" />
-              <h3 className="text-base font-medium">Chat</h3>
-            </div>
-          )}
-          {activeTab === "history" && (
-            <div className="bg-background flex h-12 items-center gap-2 px-4 py-1.5">
-              <BookOpen className="size-4" />
-              <h3 className="text-base font-medium">History</h3>
-            </div>
-          )}
-          {authorized && activeTab === "github" && (
-            <div className="bg-background flex h-12 items-center gap-2 px-4 py-1.5">
-              <Github className="size-4" />
-              <h3 className="text-base font-medium">GitHub Sync</h3>
-            </div>
-          )}
-          {authorized &&
-            selectedFramework !== Framework.HTML &&
-            activeTab === "integrations" && (
-              <div className="bg-background flex h-12 items-center gap-2 px-4 py-1.5">
-                <Plug2 className="size-4" />
-                <h3 className="text-base font-medium">Integrations</h3>
-              </div>
-            )}
-          {authorized && activeTab === "deployment" && (
-            <div className="bg-background flex h-12 items-center gap-2 px-4 py-1.5">
-              <Rocket className="size-4" />
-              <h3 className="text-base font-medium">Deployment</h3>
-            </div>
-          )}
-          {authorized && activeTab === "settings" && (
-            <div className="bg-background flex h-12 items-center gap-2 px-4 py-1.5">
-              <Settings className="size-4" />
-              <h3 className="text-base font-medium">Settings</h3>
-            </div>
-          )}
+          <TabHeader
+            activeTab={activeTab}
+            authorized={authorized}
+            selectedFramework={selectedFramework}
+          />
 
           <div
             ref={containerRef}
@@ -802,84 +723,14 @@ export default function ComponentSidebar({
               </>
             )}
             {activeTab === "history" && (
-              <div className="flex flex-col gap-2 p-3">
-                {!isLoading &&
-                  messages
-                    .filter((m) => m.role === "user")
-                    .map((m) => (
-                      <TooltipProvider key={m.id}>
-                        <Tooltip delayDuration={150}>
-                          <TooltipTrigger asChild>
-                            <div
-                              ref={
-                                m.version === selectedVersion
-                                  ? currentVersionRef
-                                  : null
-                              }
-                              onClick={() =>
-                                m.version !== selectedVersion &&
-                                handleFileClick(m.version)
-                              }
-                              className={cn(
-                                "border-primary/20 bg-primary/5 rounded-lg border p-2 transition-all",
-                                m.version === selectedVersion
-                                  ? "border-primary/30 cursor-default"
-                                  : isLoading
-                                    ? "cursor-not-allowed opacity-70"
-                                    : "hover:border-primary/30 cursor-pointer",
-                              )}
-                            >
-                              <div className="flex w-full items-center justify-between gap-2 p-1">
-                                <div className="flex w-full items-center gap-2">
-                                  <Avatar className="border-primary size-8 border">
-                                    <AvatarImage
-                                      src={user?.avatar_url || undefined}
-                                    />
-                                    <AvatarFallback>
-                                      <img
-                                        src={`${avatarApi}${user?.full_name}`}
-                                        alt="logo"
-                                        className="size-full"
-                                      />
-                                    </AvatarFallback>
-                                  </Avatar>
-                                  <div className="flex flex-col">
-                                    <span className="text-sm font-semibold">
-                                      {user?.full_name}
-                                    </span>
-                                    <span className="text-muted-foreground text-xs">
-                                      Version #{m.version > -1 ? m.version : 0}
-                                    </span>
-                                  </div>
-                                </div>
-                                {m.version === selectedVersion ? (
-                                  <Badge className="rounded-full">
-                                    Current
-                                  </Badge>
-                                ) : (
-                                  <ChevronsRight className="size-4" />
-                                )}
-                              </div>
-                              <p className="mt-2 truncate text-sm">
-                                {m.content}
-                              </p>
-                              <p className="text-muted-foreground mt-2 text-right text-xs">
-                                {getRelativeDate(m.created_at)}
-                              </p>
-                            </div>
-                          </TooltipTrigger>
-                          {isLoading && (
-                            <TooltipContent side="top">
-                              <p>
-                                Please wait for the component to load before
-                                changing versions
-                              </p>
-                            </TooltipContent>
-                          )}
-                        </Tooltip>
-                      </TooltipProvider>
-                    ))}
-              </div>
+              <HistoryTab
+                messages={messages}
+                selectedVersion={selectedVersion}
+                isLoading={isLoading}
+                user={user}
+                currentVersionRef={currentVersionRef}
+                onVersionSelect={handleFileClick}
+              />
             )}
             {!isLoading && authorized && activeTab === "github" && (
               <div className="p-4">
@@ -1379,88 +1230,13 @@ export default function ComponentSidebar({
           )}
         </div>
 
-        <div className="bg-background hidden h-full w-14 flex-col space-y-4 p-2 xl:flex">
-          <Button
-            variant="ghost"
-            size="icon"
-            className={cn(
-              "h-10 w-full rounded-lg",
-              activeTab === "chat" && "bg-secondary text-primary",
-            )}
-            onClick={() => !isLoading && handleTabChange("chat")}
-            disabled={isLoading}
-          >
-            <MessageSquare className="size-5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className={cn(
-              "h-10 w-full rounded-lg",
-              activeTab === "history" && "bg-secondary text-primary",
-            )}
-            onClick={() => !isLoading && handleTabChange("history")}
-            disabled={isLoading}
-          >
-            <BookOpen className="size-5" />
-          </Button>
-          {authorized && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className={cn(
-                "h-10 w-full rounded-lg",
-                activeTab === "github" && "bg-secondary text-primary",
-              )}
-              onClick={() => !isLoading && handleTabChange("github")}
-              disabled={isLoading}
-            >
-              <Github className="size-5" />
-            </Button>
-          )}
-          {authorized && selectedFramework !== Framework.HTML && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className={cn(
-                "h-10 w-full rounded-lg",
-                activeTab === "integrations" && "bg-secondary text-primary",
-              )}
-              onClick={() => !isLoading && handleTabChange("integrations")}
-              disabled={isLoading}
-            >
-              <Plug2 className="size-5" />
-            </Button>
-          )}
-          {authorized && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className={cn(
-                "h-10 w-full rounded-lg",
-                activeTab === "deployment" && "bg-secondary text-primary",
-              )}
-              onClick={() => !isLoading && handleTabChange("deployment")}
-              disabled={isLoading}
-            >
-              <Rocket className="size-5" />
-            </Button>
-          )}
-          {authorized && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className={cn(
-                "h-10 w-full rounded-lg",
-                activeTab === "settings" && "bg-secondary text-primary",
-              )}
-              onClick={() => !isLoading && handleTabChange("settings")}
-              disabled={isLoading}
-            >
-              <Settings className="size-5" />
-            </Button>
-          )}
-        </div>
+        <SidebarTabsDesktop
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
+          isLoading={isLoading}
+          authorized={authorized}
+          selectedFramework={selectedFramework}
+        />
       </div>
 
       <Dialog

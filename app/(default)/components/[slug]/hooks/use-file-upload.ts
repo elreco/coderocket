@@ -1,4 +1,5 @@
 import { useCallback, useRef, useEffect } from "react";
+
 import { toast } from "@/hooks/use-toast";
 import { maxImagesUpload } from "@/utils/config";
 import { validateFile } from "@/utils/file-helper";
@@ -9,7 +10,11 @@ interface UseFileUploadProps {
   inputRef: React.RefObject<HTMLTextAreaElement | null>;
 }
 
-export function useFileUpload({ files, setFiles, inputRef }: UseFileUploadProps) {
+export function useFileUpload({
+  files,
+  setFiles,
+  inputRef,
+}: UseFileUploadProps) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const handleButtonClick = useCallback(() => {

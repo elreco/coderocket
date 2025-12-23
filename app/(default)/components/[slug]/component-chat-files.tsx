@@ -498,10 +498,10 @@ ${artifactFiles
         {message.role === "user" ? (
           <div className="border-primary/20 bg-primary/5 flex w-full flex-col gap-1 rounded-lg border p-2 transition-all">
             <UserWidget
-              id={message.chats.user.id}
+              id={message.chats?.user?.id ?? ""}
               createdAt={message.created_at}
-              userAvatarUrl={message.chats.user.avatar_url}
-              userFullName={message.chats.user.full_name}
+              userAvatarUrl={message.chats?.user?.avatar_url ?? null}
+              userFullName={message.chats?.user?.full_name ?? null}
             />
             {(() => {
               if (message.selected_element) {
