@@ -49,7 +49,7 @@ import { htmlSystemPrompt } from "@/utils/system-prompts/html";
 import { getUserTokenUsage, calculateTokenCost } from "@/utils/token-pricing";
 
 import { buildMessagesToOpenAi, parseFileItems } from "./message-builder";
-import { setActiveStreamId } from "./post-processing";
+import { setActiveStreamId, tryAcquireGenerationLock } from "./post-processing";
 import {
   optimizeMarkdownForWebsiteClone,
   filterJSLibrariesByFramework,
@@ -99,6 +99,21 @@ export async function POST(req: Request) {
           filePath?: string;
         })
       : null;
+
+    const lockId = generateId();
+    const lockAcquired = await tryAcquireGenerationLock(id, lockId);
+    if (!lockAcquired) {
+      return new Response(
+        JSON.stringify({
+          error: "Generation already in progress",
+          code: "GENERATION_IN_PROGRESS",
+        }),
+        {
+          status: 409,
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+    }
 
     // Valider la requête et récupérer les messages, le framework, et le prompt mis à jour
     // Si un site est cloné, cette fonction va aussi capturer et enregistrer un screenshot
@@ -476,11 +491,8 @@ export async function POST(req: Request) {
         await updateDataAfterCompletion(
           id,
           finalText,
-          updatedPrompt,
           usage,
-          updatedImages,
           finalFinishReason,
-          uploadedFilesInfo,
           version,
         );
       },
@@ -1197,16 +1209,8 @@ Use standard Tailwind CSS classes and shadcn/ui components.`;
 const updateDataAfterCompletion = async (
   chatId: string,
   text: string,
-  updatedPrompt: string,
   usage: LanguageModelUsage,
-  updatedImages: string[],
   finishReason: string | null,
-  uploadedFilesInfo: {
-    path: string;
-    type: "image" | "pdf" | "text";
-    mimeType: string;
-    source?: string;
-  }[],
   version: number,
 ) => {
   try {

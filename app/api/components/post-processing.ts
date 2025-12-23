@@ -5,7 +5,6 @@ import { buildComponent } from "@/app/(default)/components/[slug]/actions";
 import { autoSyncToGithubAfterGeneration } from "@/app/(default)/components/[slug]/github-sync-actions";
 import { fetchChatById } from "@/app/(default)/components/actions";
 import { getSubscription } from "@/app/supabase-server";
-import { UploadedFileInfo } from "@/types/api";
 import { takeScreenshot } from "@/utils/capture-screenshot";
 import {
   extractDataTheme,
@@ -22,11 +21,8 @@ export type { UploadedFileInfo } from "@/types/api";
 export const updateDataAfterCompletion = async (
   chatId: string,
   text: string,
-  updatedPrompt: string,
   usage: LanguageModelUsage,
-  updatedImages: string[],
   finishReason: string | null,
-  uploadedFilesInfo: UploadedFileInfo[],
   version: number,
 ) => {
   try {
@@ -239,4 +235,46 @@ export const setActiveStreamId = async (
     active_stream_started_at: streamId ? new Date().toISOString() : null,
   };
   await supabase.from("chats").update(updateData).eq("id", chatId);
+};
+
+export const tryAcquireGenerationLock = async (
+  chatId: string,
+  lockId: string,
+): Promise<boolean> => {
+  try {
+    const supabase = await createClient();
+
+    const STALE_THRESHOLD_MS = 5 * 60 * 1000;
+    const staleThreshold = new Date(
+      Date.now() - STALE_THRESHOLD_MS,
+    ).toISOString();
+
+    const { data, error } = await supabase
+      .from("chats")
+      .update({
+        active_stream_id: lockId,
+        active_stream_started_at: new Date().toISOString(),
+      } as Record<string, unknown>)
+      .eq("id", chatId)
+      .or(
+        `active_stream_id.is.null,active_stream_started_at.is.null,active_stream_started_at.lt.${staleThreshold}`,
+      )
+      .select("id");
+
+    if (error) {
+      if (error.code === "42703") {
+        console.warn(
+          "Lock columns not found - skipping lock (run migration to enable)",
+        );
+        return true;
+      }
+      console.error("Error acquiring lock:", error);
+      return true;
+    }
+
+    return data !== null && data.length > 0;
+  } catch {
+    console.warn("Lock mechanism failed - continuing without lock");
+    return true;
+  }
 };

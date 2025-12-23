@@ -70,8 +70,8 @@ interface ChatInputFormProps {
   selectedElement: SelectedElement | null;
   hasImproved: boolean;
   isImprovingLoading: boolean;
-  inputRef: RefObject<HTMLTextAreaElement | null>;
-  fileInputRef: RefObject<HTMLInputElement | null>;
+  inputRef: RefObject<HTMLTextAreaElement>;
+  fileInputRef: RefObject<HTMLInputElement>;
   handleSubmit: (e: React.FormEvent) => void;
   handleImprovePrompt: () => void;
   handleButtonClick: () => void;

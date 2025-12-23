@@ -171,6 +171,8 @@ export type Database = {
       };
       chats: {
         Row: {
+          active_stream_id: string | null;
+          active_stream_started_at: string | null;
           artifact_code: string | null;
           clone_url: string | null;
           created_at: string | null;
@@ -199,6 +201,8 @@ export type Database = {
           views: number | null;
         };
         Insert: {
+          active_stream_id?: string | null;
+          active_stream_started_at?: string | null;
           artifact_code?: string | null;
           clone_url?: string | null;
           created_at?: string | null;
@@ -227,6 +231,8 @@ export type Database = {
           views?: number | null;
         };
         Update: {
+          active_stream_id?: string | null;
+          active_stream_started_at?: string | null;
           artifact_code?: string | null;
           clone_url?: string | null;
           created_at?: string | null;
@@ -546,215 +552,7 @@ export type Database = {
         };
         Relationships: [
           {
-            foreignKeyName: "marketplace_earnings_purchase_id_fkey";
-            columns: ["purchase_id"];
-            isOneToOne: false;
-            referencedRelation: "marketplace_purchases";
-            referencedColumns: ["id"];
-          },
-          {
             foreignKeyName: "marketplace_earnings_seller_id_fkey";
-            columns: ["seller_id"];
-            isOneToOne: false;
-            referencedRelation: "users";
-            referencedColumns: ["id"];
-          },
-        ];
-      };
-      marketplace_listings: {
-        Row: {
-          category_id: number;
-          chat_id: string;
-          created_at: string;
-          currency: string;
-          description: string;
-          id: string;
-          is_active: boolean | null;
-          preview_image_url: string | null;
-          price_cents: number;
-          seller_id: string;
-          title: string;
-          total_sales: number | null;
-          updated_at: string;
-          version: number;
-        };
-        Insert: {
-          category_id: number;
-          chat_id: string;
-          created_at?: string;
-          currency?: string;
-          description: string;
-          id?: string;
-          is_active?: boolean | null;
-          preview_image_url?: string | null;
-          price_cents: number;
-          seller_id: string;
-          title: string;
-          total_sales?: number | null;
-          updated_at?: string;
-          version?: number;
-        };
-        Update: {
-          category_id?: number;
-          chat_id?: string;
-          created_at?: string;
-          currency?: string;
-          description?: string;
-          id?: string;
-          is_active?: boolean | null;
-          preview_image_url?: string | null;
-          price_cents?: number;
-          seller_id?: string;
-          title?: string;
-          total_sales?: number | null;
-          updated_at?: string;
-          version?: number;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "marketplace_listings_category_id_fkey";
-            columns: ["category_id"];
-            isOneToOne: false;
-            referencedRelation: "marketplace_categories";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "marketplace_listings_chat_id_fkey";
-            columns: ["chat_id"];
-            isOneToOne: false;
-            referencedRelation: "chats";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "marketplace_listings_seller_id_fkey";
-            columns: ["seller_id"];
-            isOneToOne: false;
-            referencedRelation: "users";
-            referencedColumns: ["id"];
-          },
-        ];
-      };
-      marketplace_payouts: {
-        Row: {
-          amount_cents: number;
-          arrival_date: string | null;
-          created_at: string;
-          currency: string;
-          earnings_ids: string[];
-          failure_reason: string | null;
-          id: string;
-          seller_id: string;
-          status: string | null;
-          stripe_payout_id: string | null;
-        };
-        Insert: {
-          amount_cents: number;
-          arrival_date?: string | null;
-          created_at?: string;
-          currency?: string;
-          earnings_ids: string[];
-          failure_reason?: string | null;
-          id?: string;
-          seller_id: string;
-          status?: string | null;
-          stripe_payout_id?: string | null;
-        };
-        Update: {
-          amount_cents?: number;
-          arrival_date?: string | null;
-          created_at?: string;
-          currency?: string;
-          earnings_ids?: string[];
-          failure_reason?: string | null;
-          id?: string;
-          seller_id?: string;
-          status?: string | null;
-          stripe_payout_id?: string | null;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "marketplace_payouts_seller_id_fkey";
-            columns: ["seller_id"];
-            isOneToOne: false;
-            referencedRelation: "users";
-            referencedColumns: ["id"];
-          },
-        ];
-      };
-      marketplace_purchases: {
-        Row: {
-          buyer_id: string;
-          chat_id: string;
-          created_at: string;
-          currency: string;
-          id: string;
-          listing_id: string;
-          platform_commission_cents: number;
-          price_paid_cents: number;
-          purchased_chat_id: string | null;
-          seller_earning_cents: number;
-          seller_id: string;
-          stripe_payment_intent_id: string | null;
-        };
-        Insert: {
-          buyer_id: string;
-          chat_id: string;
-          created_at?: string;
-          currency?: string;
-          id?: string;
-          listing_id: string;
-          platform_commission_cents: number;
-          price_paid_cents: number;
-          purchased_chat_id?: string | null;
-          seller_earning_cents: number;
-          seller_id: string;
-          stripe_payment_intent_id?: string | null;
-        };
-        Update: {
-          buyer_id?: string;
-          chat_id?: string;
-          created_at?: string;
-          currency?: string;
-          id?: string;
-          listing_id?: string;
-          platform_commission_cents?: number;
-          price_paid_cents?: number;
-          purchased_chat_id?: string | null;
-          seller_earning_cents?: number;
-          seller_id?: string;
-          stripe_payment_intent_id?: string | null;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "marketplace_purchases_buyer_id_fkey";
-            columns: ["buyer_id"];
-            isOneToOne: false;
-            referencedRelation: "users";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "marketplace_purchases_chat_id_fkey";
-            columns: ["chat_id"];
-            isOneToOne: false;
-            referencedRelation: "chats";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "marketplace_purchases_listing_id_fkey";
-            columns: ["listing_id"];
-            isOneToOne: false;
-            referencedRelation: "marketplace_listings";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "marketplace_purchases_purchased_chat_id_fkey";
-            columns: ["purchased_chat_id"];
-            isOneToOne: false;
-            referencedRelation: "chats";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "marketplace_purchases_seller_id_fkey";
             columns: ["seller_id"];
             isOneToOne: false;
             referencedRelation: "users";
@@ -778,6 +576,7 @@ export type Database = {
           input_tokens: number | null;
           is_built: boolean | null;
           is_github_pull: boolean | null;
+          is_streaming: boolean | null;
           migration_executed_at: string | null;
           migrations_executed: Json | null;
           model_used: string | null;
@@ -805,6 +604,7 @@ export type Database = {
           input_tokens?: number | null;
           is_built?: boolean | null;
           is_github_pull?: boolean | null;
+          is_streaming?: boolean | null;
           migration_executed_at?: string | null;
           migrations_executed?: Json | null;
           model_used?: string | null;
@@ -832,6 +632,7 @@ export type Database = {
           input_tokens?: number | null;
           is_built?: boolean | null;
           is_github_pull?: boolean | null;
+          is_streaming?: boolean | null;
           migration_executed_at?: string | null;
           migrations_executed?: Json | null;
           model_used?: string | null;

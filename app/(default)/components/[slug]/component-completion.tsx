@@ -536,6 +536,11 @@ export default function ComponentCompletion({
     return joinStream(false);
   }, [joinStream]);
 
+  const joinStreamRef = useRef(joinStream);
+  useEffect(() => {
+    joinStreamRef.current = joinStream;
+  }, [joinStream]);
+
   const startInitialGenerationRef = useRef<((prompt: string) => void) | null>(
     null,
   );
@@ -630,6 +635,15 @@ export default function ComponentCompletion({
         });
 
         if (!response.ok) {
+          if (response.status === 409) {
+            const errorData = await response.json();
+            if (errorData.code === "GENERATION_IN_PROGRESS") {
+              setTimeout(() => {
+                joinStreamRef.current(true);
+              }, 500);
+              return new Response("", { status: 200 });
+            }
+          }
           try {
             const errorData = await response.json();
             throw new Error(errorData.error || "An unknown error occurred");
@@ -1040,6 +1054,7 @@ export default function ComponentCompletion({
         model_used: null,
         theme: null,
         clone_another_page: null,
+        is_streaming: null,
         chats: {
           user: user,
           prompt_image: null,
