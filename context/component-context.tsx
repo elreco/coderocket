@@ -100,6 +100,7 @@ interface ComponentContextType {
   isContinuingFromLengthError: boolean;
   setIsContinuingFromLengthError: (value: boolean) => void;
   isStreamingComplete: boolean;
+  isResuming: boolean;
   connectedUser?: { id: string } | null;
   isElementSelectionActive: boolean;
   setElementSelectionActive: (value: boolean) => void;

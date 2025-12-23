@@ -1,82 +1,25 @@
 "use client";
 
 import { useCompletion } from "@ai-sdk/react";
-import { SiThreads } from "@icons-pack/react-simple-icons";
 import { format } from "date-fns";
-import {
-  Fullscreen,
-  Layers,
-  Loader,
-  ExternalLink,
-  RefreshCw,
-  Copy,
-  GitFork,
-  Eye,
-  Code as CodeIcon,
-  Heart,
-  Info,
-  Share,
-  Rocket,
-  Monitor,
-  Tablet,
-  Smartphone,
-  ArrowLeft,
-  ArrowRight,
-  Crosshair,
-} from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState, useRef, FormEvent } from "react";
-import {
-  FacebookShareButton,
-  TwitterShareButton,
-  LinkedinShareButton,
-  RedditShareButton,
-  TelegramShareButton,
-  WhatsappShareButton,
-  EmailShareButton,
-  FacebookIcon,
-  XIcon,
-  LinkedinIcon,
-  RedditIcon,
-  TelegramIcon,
-  WhatsappIcon,
-  EmailIcon,
-} from "react-share";
+import { useCallback, useEffect, useState, useRef } from "react";
 import { useCopyToClipboard } from "usehooks-ts";
 
 import { getSubscription } from "@/app/supabase-server";
 import { ClonedUrlBadge } from "@/components/cloned-url-badge";
 import { Container } from "@/components/container";
 import { RemixOriginalBadge } from "@/components/remix-original-badge";
-import RenderHtmlComponent from "@/components/renders/render-html-component";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useSidebar } from "@/components/ui/sidebar";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { BuilderProvider } from "@/context/builder-context";
 import {
   ChatMessage,
   ComponentContext,
   WebcontainerLoadingState,
-  BreakpointType,
   SelectedElementData,
 } from "@/context/component-context";
 import { useToast } from "@/hooks/use-toast";
-import { cn } from "@/lib/utils";
 import type { CustomDomainData } from "@/types/custom-domain";
 import { Tables } from "@/types_db";
 import {
@@ -100,8 +43,15 @@ import {
   remixChat,
 } from "../actions";
 
+import { buildComponent } from "./actions";
 import CodePreview from "./code-preview";
 import ComponentSidebar from "./component-sidebar";
+import { ComponentHeader } from "./components/component-header";
+import { PreviewToolbar } from "./components/preview-toolbar";
+import { RemixModal } from "./components/remix-modal";
+import { ShareModal } from "./components/share-modal";
+import { usePreviewNavigation } from "./hooks/use-preview-navigation";
+import { useRealtimeSync } from "./hooks/use-realtime-sync";
 
 interface Props {
   chatId: string;
@@ -139,95 +89,7 @@ export default function ComponentCompletion({
   const [loadingState, setLoadingState] =
     useState<WebcontainerLoadingState>(null);
   const [iframeKey, setIframeKey] = useState(0);
-  const [breakpoint, setBreakpoint] = useState<BreakpointType>("desktop");
-  const [previewPath, setPreviewPath] = useState("/");
-  const previousChatIdRef = useRef<string | null>(null);
-  const previousFrameworkRef = useRef<Framework | null>(null);
-  const ignoreNextRootRouteRef = useRef<boolean>(false);
-
-  const [addressBarValue, setAddressBarValue] = useState("/");
-  const [navigationHistory, setNavigationHistory] = useState<string[]>(["/"]);
-  const [historyIndex, setHistoryIndex] = useState(0);
-  const historyIndexRef = useRef(0);
-  const addressInputRef = useRef<HTMLInputElement | null>(null);
-  const [addressFocused, setAddressFocused] = useState(false);
   const [isScrapingWebsite, setIsScrapingWebsite] = useState(false);
-
-  const normalizePreviewPath = useCallback((value: string) => {
-    if (!value) {
-      return "/";
-    }
-    let nextPath = value.trim();
-    if (!nextPath.startsWith("/")) {
-      nextPath = `/${nextPath}`;
-    }
-    if (nextPath.includes("?")) {
-      nextPath = nextPath.split("?")[0];
-    }
-    const hashIndex = nextPath.indexOf("#");
-    const hash = hashIndex !== -1 ? nextPath.substring(hashIndex) : "";
-    if (hashIndex !== -1) {
-      nextPath = nextPath.substring(0, hashIndex);
-    }
-    nextPath = nextPath.replace(/\/+/g, "/");
-    if (nextPath.length > 1 && nextPath.endsWith("/")) {
-      nextPath = nextPath.slice(0, -1);
-    }
-    return (nextPath || "/") + hash;
-  }, []);
-
-  const pushPathToHistory = useCallback(
-    (normalizedPath: string, shouldPushHistory: boolean) => {
-      if (!shouldPushHistory) {
-        return;
-      }
-      setNavigationHistory((prev) => {
-        const activeIndex = historyIndexRef.current;
-        const trimmedHistory =
-          activeIndex < prev.length - 1 ? prev.slice(0, activeIndex + 1) : prev;
-        if (trimmedHistory[trimmedHistory.length - 1] === normalizedPath) {
-          const currentIndex = trimmedHistory.length - 1;
-          setHistoryIndex(currentIndex);
-          historyIndexRef.current = currentIndex;
-          return trimmedHistory;
-        }
-        const updatedHistory = [...trimmedHistory, normalizedPath];
-        const newIndex = updatedHistory.length - 1;
-        setHistoryIndex(newIndex);
-        historyIndexRef.current = newIndex;
-        return updatedHistory;
-      });
-    },
-    [setNavigationHistory, setHistoryIndex],
-  );
-
-  const navigatePreview = useCallback(
-    (targetPath: string, options?: { pushHistory?: boolean }) => {
-      const normalizedPath = normalizePreviewPath(targetPath);
-      setPreviewPath(normalizedPath);
-      setAddressBarValue(normalizedPath);
-      pushPathToHistory(normalizedPath, options?.pushHistory !== false);
-    },
-    [normalizePreviewPath, pushPathToHistory],
-  );
-
-  const syncPreviewPath = useCallback(
-    (targetPath: string, options?: { pushHistory?: boolean }) => {
-      const normalizedPath = normalizePreviewPath(targetPath);
-      if (normalizedPath === "/" && ignoreNextRootRouteRef.current) {
-        ignoreNextRootRouteRef.current = false;
-        return;
-      }
-      ignoreNextRootRouteRef.current = false;
-      setAddressBarValue(normalizedPath);
-      pushPathToHistory(normalizedPath, options?.pushHistory !== false);
-    },
-    [normalizePreviewPath, pushPathToHistory],
-  );
-
-  useEffect(() => {
-    historyIndexRef.current = historyIndex;
-  }, [historyIndex]);
 
   const [chatFiles, setChatFiles] = useState<ChatFile[]>([]);
   const [artifactFiles, setArtifactFiles] = useState<ChatFile[]>([]);
@@ -264,6 +126,8 @@ export default function ComponentCompletion({
   const [defaultFiles, setDefaultFiles] = useState<string[]>([]);
   const [sidebarTab, setSidebarTab] = useState("chat");
   const hasInitiatedRef = useRef<Record<string, boolean>>({});
+  const [isResuming, setIsResuming] = useState(false);
+  const hasAttemptedResumeRef = useRef<Record<string, boolean>>({});
 
   useEffect(() => {
     uploadFilesRef.current = uploadFiles;
@@ -286,7 +150,6 @@ export default function ComponentCompletion({
   const [currentGeneratingFile, setCurrentGeneratingFile] = useState<
     string | null
   >(null);
-  const isUserLoggedIn = !!connectedUser;
   const [isElementSelectionActive, setIsElementSelectionActive] =
     useState(false);
   const [selectedElement, setSelectedElement] =
@@ -300,81 +163,38 @@ export default function ComponentCompletion({
     setSelectedElement(null);
   }, []);
 
-  useEffect(() => {
-    if (addressBarValue !== "/") {
-      ignoreNextRootRouteRef.current = true;
-      setPreviewPath(addressBarValue);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedVersion]);
-
-  useEffect(() => {
-    const isChatIdChange =
-      previousChatIdRef.current !== null &&
-      previousChatIdRef.current !== chatId;
-    const isFrameworkChange =
-      previousFrameworkRef.current !== null &&
-      previousFrameworkRef.current !== (fetchedChat?.framework as Framework);
-    const isFirstLoad = previousChatIdRef.current === null;
-
-    if (isChatIdChange || isFrameworkChange || isFirstLoad) {
-      setPreviewPath("/");
-      setAddressBarValue("/");
-      setNavigationHistory(["/"]);
-      setHistoryIndex(0);
-      historyIndexRef.current = 0;
-    }
-
-    previousChatIdRef.current = chatId;
-    previousFrameworkRef.current =
-      (fetchedChat?.framework as Framework) || null;
-  }, [chatId, fetchedChat?.framework]);
-
-  const isHtmlFrameworkSelected = fetchedChat?.framework === Framework.HTML;
-  const previewPathSuffix = previewPath === "/" ? "" : previewPath;
-  const sharePathSuffix = addressBarValue === "/" ? "" : addressBarValue;
-  const canGoBack = historyIndex > 0;
-  const canGoForward = historyIndex < navigationHistory.length - 1;
-  const canUseSpaNavigation =
-    !isHtmlFrameworkSelected &&
-    isWebcontainerReady &&
-    selectedVersion !== undefined &&
-    !isLoading;
-  const canUseHtmlNavigation =
-    isHtmlFrameworkSelected && artifactFiles.length > 0 && !isLengthError;
-  const isNavigationEnabled = canUseSpaNavigation || canUseHtmlNavigation;
-  const navigationPlaceholder = isHtmlFrameworkSelected ? "/index.html" : "/";
-
-  const handleAddressSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!isNavigationEnabled) {
-      return;
-    }
-    navigatePreview(addressBarValue);
-    addressInputRef.current?.blur();
-  };
-
-  const handleGoBack = () => {
-    if (!canGoBack) {
-      return;
-    }
-    const newIndex = historyIndex - 1;
-    const targetPath = navigationHistory[newIndex] || "/";
-    setHistoryIndex(newIndex);
-    historyIndexRef.current = newIndex;
-    navigatePreview(targetPath, { pushHistory: false });
-  };
-
-  const handleGoForward = () => {
-    if (!canGoForward) {
-      return;
-    }
-    const newIndex = historyIndex + 1;
-    const targetPath = navigationHistory[newIndex] || "/";
-    setHistoryIndex(newIndex);
-    historyIndexRef.current = newIndex;
-    navigatePreview(targetPath, { pushHistory: false });
-  };
+  const {
+    previewPath,
+    setPreviewPath,
+    addressBarValue,
+    setAddressBarValue,
+    addressFocused,
+    setAddressFocused,
+    breakpoint,
+    setBreakpoint,
+    addressInputRef,
+    isHtmlFrameworkSelected,
+    previewPathSuffix,
+    sharePathSuffix,
+    canGoBack,
+    canGoForward,
+    isNavigationEnabled,
+    navigationPlaceholder,
+    navigatePreview,
+    syncPreviewPath,
+    handleGoBack,
+    handleGoForward,
+    handleAddressSubmit,
+    setIgnoreNextRootRoute,
+  } = usePreviewNavigation({
+    chatId,
+    framework: (fetchedChat?.framework as Framework) || null,
+    selectedVersion,
+    isWebcontainerReady,
+    isLoading,
+    isLengthError,
+    artifactFilesCount: artifactFiles.length,
+  });
 
   useEffect(() => {
     if (!authorized && isElementSelectionActive) {
@@ -439,7 +259,7 @@ export default function ComponentCompletion({
         setPreviousArtifactFiles([]);
       }
 
-      const loadInitialData = async () => {
+      const loadAdditionalData = async () => {
         try {
           const domainPromise = chat.is_deployed
             ? supabase
@@ -473,15 +293,10 @@ export default function ComponentCompletion({
               if (!connectedUser?.id) {
                 return null;
               }
-              const loggedInUserId = connectedUser.id;
-
-              if (!loggedInUserId) {
-                return null;
-              }
               const { data } = await supabase
                 .from("github_connections")
                 .select("*")
-                .eq("user_id", loggedInUserId)
+                .eq("user_id", connectedUser.id)
                 .maybeSingle();
               return data;
             } catch {
@@ -499,11 +314,11 @@ export default function ComponentCompletion({
           setSubscription(subData);
           setGithubConnection(githubData);
         } catch (error) {
-          console.error("Error loading initial data:", error);
+          console.error("Error loading additional data:", error);
         }
       };
 
-      loadInitialData();
+      loadAdditionalData();
 
       setTitle(
         chat.title ||
@@ -552,16 +367,6 @@ export default function ComponentCompletion({
             : [];
         setDefaultFiles(filesFromMsg);
 
-        if (!hasInitiatedRef.current[chatId]) {
-          hasInitiatedRef.current[chatId] = true;
-          setIsLoading(true);
-          setIsSubmitting(true);
-          const isFirstVersion = (userMsg?.version ?? 0) <= 0;
-          if (chat.clone_url && isFirstVersion) {
-            setIsScrapingWebsite(true);
-          }
-          complete(userMsg.content || "");
-        }
         return;
       }
       if (chat?.framework !== Framework.HTML && chat.framework) {
@@ -594,6 +399,185 @@ export default function ComponentCompletion({
     loadInitialData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chatId]);
+
+  const setCompletionRef = useRef<((value: string) => void) | null>(null);
+  const setInputRef = useRef<((value: string) => void) | null>(null);
+  const refreshChatDataRef = useRef<
+    (() => Promise<ChatMessage[] | undefined>) | null
+  >(null);
+  const [currentStreamId, setCurrentStreamId] = useState<string | null>(null);
+  const isJoiningStreamRef = useRef(false);
+
+  const joinStream = useCallback(
+    async (skipAttemptCheck = false): Promise<boolean> => {
+      if (!skipAttemptCheck && hasAttemptedResumeRef.current[chatId]) {
+        return false;
+      }
+      if (!skipAttemptCheck) {
+        hasAttemptedResumeRef.current[chatId] = true;
+      }
+
+      if (isJoiningStreamRef.current) {
+        return false;
+      }
+      isJoiningStreamRef.current = true;
+
+      try {
+        const response = await fetch(`/api/components/${chatId}/stream`);
+        const contentType = response.headers.get("Content-Type") || "";
+        const streamId = response.headers.get("X-Stream-Id");
+
+        if (contentType.includes("application/json")) {
+          const data = await response.json();
+          isJoiningStreamRef.current = false;
+
+          if (data.needsBuild && data.version !== null) {
+            try {
+              await buildComponent(chatId, data.version, true);
+              if (refreshChatDataRef.current) {
+                await refreshChatDataRef.current();
+              }
+              return true;
+            } catch {
+              return false;
+            }
+          }
+          return false;
+        }
+
+        if (!response.ok) {
+          isJoiningStreamRef.current = false;
+          return false;
+        }
+
+        if (streamId) {
+          setCurrentStreamId(streamId);
+        }
+        setIsResuming(true);
+        setIsLoading(true);
+        setCanvas(true);
+
+        const reader = response.body?.getReader();
+        if (!reader) {
+          setIsResuming(false);
+          isJoiningStreamRef.current = false;
+          return false;
+        }
+
+        const decoder = new TextDecoder();
+        let accumulatedText = "";
+
+        while (true) {
+          const { done, value } = await reader.read();
+
+          if (done) {
+            break;
+          }
+
+          const chunk = decoder.decode(value, { stream: true });
+          accumulatedText += chunk;
+          if (setCompletionRef.current) {
+            setCompletionRef.current(accumulatedText);
+          }
+        }
+
+        setCurrentStreamId(null);
+        setIsResuming(false);
+        setIsLoading(false);
+        setIsSubmitting(false);
+        isJoiningStreamRef.current = false;
+        if (setInputRef.current) {
+          setInputRef.current("");
+        }
+
+        if (refreshChatDataRef.current) {
+          const refreshedMessages = await refreshChatDataRef.current();
+
+          if (refreshedMessages) {
+            const lastAssistant = refreshedMessages
+              .filter((m) => m.role === "assistant")
+              .sort((a, b) => b.version - a.version)[0];
+
+            if (lastAssistant && !lastAssistant.is_built) {
+              try {
+                await buildComponent(chatId, lastAssistant.version, true);
+              } catch {
+                // Build failed silently
+              }
+            }
+          }
+        }
+
+        return true;
+      } catch {
+        setCurrentStreamId(null);
+        setIsResuming(false);
+        isJoiningStreamRef.current = false;
+        return false;
+      }
+    },
+    [chatId],
+  );
+
+  const handleExternalStreamDetected = useCallback(
+    async (streamId: string | null) => {
+      if (streamId && !isLoading && !isJoiningStreamRef.current) {
+        await joinStream(true);
+      } else if (!streamId && isResuming) {
+        if (refreshChatDataRef.current) {
+          await refreshChatDataRef.current();
+        }
+      }
+    },
+    [isLoading, isResuming, joinStream],
+  );
+
+  const tryResumeStream = useCallback(async (): Promise<boolean> => {
+    return joinStream(false);
+  }, [joinStream]);
+
+  const startInitialGenerationRef = useRef<((prompt: string) => void) | null>(
+    null,
+  );
+
+  useEffect(() => {
+    if (!fetchedChat || !messages.length) return;
+
+    const lastUserMsg = messages.find(
+      (m) => m.role === "user" && m.version === selectedVersion,
+    );
+    const lastAssistantMsg = messages.find(
+      (m) => m.role === "assistant" && m.version === selectedVersion,
+    );
+
+    const needsGeneration =
+      messages.length === 1 && lastUserMsg && !lastAssistantMsg;
+
+    const isIncomplete =
+      lastAssistantMsg?.content &&
+      !lastAssistantMsg.content.includes("<!-- FINISH_REASON:");
+
+    if (!needsGeneration && !isIncomplete) return;
+    if (hasInitiatedRef.current[chatId]) return;
+
+    hasInitiatedRef.current[chatId] = true;
+
+    const attemptResumeOrStart = async () => {
+      const resumed = await tryResumeStream();
+
+      if (!resumed && needsGeneration && startInitialGenerationRef.current) {
+        setIsLoading(true);
+        setIsSubmitting(true);
+        const isFirstVersion = (lastUserMsg?.version ?? 0) <= 0;
+        if (fetchedChat.clone_url && isFirstVersion) {
+          setIsScrapingWebsite(true);
+        }
+        startInitialGenerationRef.current(lastUserMsg?.content || "");
+      }
+    };
+
+    attemptResumeOrStart();
+  }, [chatId, fetchedChat, messages, selectedVersion, tryResumeStream]);
 
   const { completion, stop, complete, setCompletion, input, setInput } =
     useCompletion({
@@ -917,6 +901,12 @@ export default function ComponentCompletion({
         }
       },
     });
+
+  useEffect(() => {
+    startInitialGenerationRef.current = complete;
+    setCompletionRef.current = setCompletion;
+    setInputRef.current = setInput;
+  }, [complete, setCompletion, setInput]);
 
   useEffect(() => {
     if (completion && isLoading) {
@@ -1293,6 +1283,10 @@ export default function ComponentCompletion({
     return refreshedChatMessages;
   }, [chatId, selectedVersion, connectedUser?.id, supabase]);
 
+  useEffect(() => {
+    refreshChatDataRef.current = refreshChatData;
+  }, [refreshChatData]);
+
   const handleChatFiles = (
     _completion: string,
     isFirstRun?: boolean,
@@ -1458,6 +1452,46 @@ export default function ComponentCompletion({
     }
   };
 
+  const handleMessagesUpdate = useCallback(
+    (updater: (prev: ChatMessage[]) => ChatMessage[]) => {
+      setMessages(updater);
+    },
+    [],
+  );
+
+  const handleMessagesDelete = useCallback((messageId: number) => {
+    setMessages((prev) => prev.filter((m) => m.id !== messageId));
+  }, []);
+
+  const handleTitleUpdate = useCallback((newTitle: string) => {
+    setTitle(newTitle);
+  }, []);
+
+  useRealtimeSync({
+    chatId,
+    connectedUserId: connectedUser?.id,
+    selectedVersion,
+    isLoading,
+    currentStreamId,
+    fetchedChat,
+    title,
+    selectedVersionRef,
+    onMessagesUpdate: handleMessagesUpdate,
+    onMessagesDelete: handleMessagesDelete,
+    onChatUpdate: setFetchedChat,
+    onLikesCountUpdate: setLikesCount,
+    onTitleUpdate: handleTitleUpdate,
+    onVisibilityUpdate: setVisible,
+    onCustomDomainUpdate: setCustomDomain,
+    onSubscriptionUpdate: setSubscription,
+    onGithubConnectionUpdate: setGithubConnection,
+    onSelectedVersionUpdate: setSelectedVersion,
+    onWebcontainerReadyUpdate: setWebcontainerReady,
+    onForceBuildUpdate: setForceBuild,
+    onLastAssistantMessageUpdate: setLastAssistantMessage,
+    onExternalStreamDetected: handleExternalStreamDetected,
+  });
+
   const contextValue = {
     isCanvas,
     setCanvas,
@@ -1520,6 +1554,7 @@ export default function ComponentCompletion({
     isContinuingFromLengthError,
     setIsContinuingFromLengthError,
     isStreamingComplete,
+    isResuming,
     connectedUser,
     isElementSelectionActive,
     setElementSelectionActive,
@@ -1534,779 +1569,45 @@ export default function ComponentCompletion({
     }
   }, [fetchedChat?.likes]);
 
-  useEffect(() => {
-    const channel = supabase
-      .channel(`component-sync-${chatId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "messages",
-          filter: `chat_id=eq.${chatId}`,
-        },
-        async () => {
-          if (isLoading) return;
-          await refreshChatData();
-        },
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "messages",
-          filter: `chat_id=eq.${chatId}`,
-        },
-        async (payload) => {
-          setMessages((prevMessages) => {
-            const existingIndex = prevMessages.findIndex(
-              (m) => m.id === payload.new.id,
-            );
-            if (existingIndex >= 0) {
-              return prevMessages.map((message) =>
-                message.id === payload.new.id
-                  ? { ...message, ...payload.new }
-                  : message,
-              );
-            } else {
-              const filteredMessages = prevMessages.filter(
-                (m) =>
-                  !(
-                    m.id < 0 &&
-                    m.role === payload.new.role &&
-                    m.version === payload.new.version
-                  ),
-              );
-              return [...filteredMessages, payload.new as ChatMessage];
-            }
-          });
-
-          if (
-            (payload.old.version === -1 || payload.old.version === undefined) &&
-            payload.new.version === 0
-          ) {
-            setSelectedVersion(0);
-            selectedVersionRef.current = 0;
-          }
-
-          if (
-            payload.new.version === selectedVersion &&
-            payload.new.is_built === true &&
-            !isLoading
-          ) {
-            setWebcontainerReady(true);
-            setForceBuild(false);
-          }
-
-          if (
-            payload.new.role === "assistant" &&
-            payload.new.version === selectedVersion &&
-            payload.new.screenshot &&
-            payload.new.screenshot !== payload.old?.screenshot
-          ) {
-            setLastAssistantMessage(payload.new as Tables<"messages">);
-          }
-        },
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "DELETE",
-          schema: "public",
-          table: "messages",
-          filter: `chat_id=eq.${chatId}`,
-        },
-        async (payload) => {
-          setMessages((prevMessages) =>
-            prevMessages.filter((m) => m.id !== payload.old.id),
-          );
-          if (isLoading) return;
-          await refreshChatData();
-        },
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "chats",
-          filter: `id=eq.${chatId}`,
-        },
-        async (payload) => {
-          if (fetchedChat) {
-            const updatedChat = { ...fetchedChat, ...payload.new };
-            setFetchedChat(updatedChat as Tables<"chats">);
-
-            if (payload.new.likes !== undefined) {
-              setLikesCount(payload.new.likes as number);
-            }
-
-            if (
-              payload.new.title !== undefined &&
-              payload.new.title !== title
-            ) {
-              const newTitle =
-                (payload.new.title as string) ||
-                `Version #${selectedVersion ?? 0}`;
-              setTitle(newTitle);
-              document.title = `${newTitle} - CodeRocket`;
-            }
-
-            if (payload.new.is_private !== undefined) {
-              setVisible(!(payload.new.is_private as boolean));
-            }
-
-            if (
-              payload.new.is_deployed !== undefined &&
-              payload.new.is_deployed
-            ) {
-              try {
-                const { data: domainData } = await supabase
-                  .from("custom_domains")
-                  .select("*")
-                  .eq("chat_id", chatId)
-                  .maybeSingle();
-                if (domainData) {
-                  setCustomDomain(domainData);
-                }
-              } catch (error) {
-                console.error("Error fetching custom domain:", error);
-              }
-            }
-          }
-        },
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "custom_domains",
-          filter: `chat_id=eq.${chatId}`,
-        },
-        async (payload) => {
-          setCustomDomain(payload.new as CustomDomainData);
-        },
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "custom_domains",
-          filter: `chat_id=eq.${chatId}`,
-        },
-        async (payload) => {
-          setCustomDomain(payload.new as CustomDomainData);
-        },
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "DELETE",
-          schema: "public",
-          table: "custom_domains",
-          filter: `chat_id=eq.${chatId}`,
-        },
-        async () => {
-          setCustomDomain(null);
-        },
-      );
-
-    if (connectedUser?.id) {
-      channel
-        .on(
-          "postgres_changes",
-          {
-            event: "UPDATE",
-            schema: "public",
-            table: "subscriptions",
-            filter: `user_id=eq.${connectedUser.id}`,
-          },
-          async (payload) => {
-            if (
-              payload.new.status === "active" ||
-              payload.new.status === "trialing"
-            ) {
-              try {
-                const { data } = await supabase
-                  .from("subscriptions")
-                  .select("*, prices(*, products(*))")
-                  .eq("id", payload.new.id)
-                  .maybeSingle();
-                if (data) {
-                  setSubscription(data);
-                }
-              } catch (error) {
-                console.error("Error fetching subscription:", error);
-              }
-            } else {
-              setSubscription(null);
-            }
-          },
-        )
-        .on(
-          "postgres_changes",
-          {
-            event: "UPDATE",
-            schema: "public",
-            table: "github_connections",
-            filter: `user_id=eq.${connectedUser.id}`,
-          },
-          async (payload) => {
-            setGithubConnection(payload.new as Tables<"github_connections">);
-          },
-        )
-        .on(
-          "postgres_changes",
-          {
-            event: "INSERT",
-            schema: "public",
-            table: "github_connections",
-            filter: `user_id=eq.${connectedUser.id}`,
-          },
-          async (payload) => {
-            setGithubConnection(payload.new as Tables<"github_connections">);
-          },
-        )
-        .on(
-          "postgres_changes",
-          {
-            event: "DELETE",
-            schema: "public",
-            table: "github_connections",
-            filter: `user_id=eq.${connectedUser.id}`,
-          },
-          async () => {
-            setGithubConnection(null);
-          },
-        );
-    }
-
-    channel.subscribe();
-
-    return () => {
-      channel.unsubscribe();
-    };
-  }, [
-    chatId,
-    selectedVersion,
-    isLoading,
-    supabase,
-    fetchedChat,
-    title,
-    connectedUser?.id,
-    refreshChatData,
-  ]);
-
   return (
     <ComponentContext.Provider value={contextValue}>
       <BuilderProvider>
         <Container className="p-0! lg:overflow-hidden">
           <div className="grid size-full max-h-full grid-cols-1 justify-center xl:grid-cols-4 xl:flex-row">
             <div className="col-span-1 flex size-full min-h-full flex-col xl:col-span-3 xl:mb-0">
-              <div className="relative flex h-auto flex-col items-center justify-start py-1.5 pr-2 xl:h-12 xl:flex-row xl:justify-between xl:pl-14">
-                <h1 className="mb-2 flex max-w-full min-w-0 flex-1 items-center gap-2 font-medium lg:mb-0">
-                  {title ||
-                  fetchedChat?.title ||
-                  selectedVersion !== undefined ? (
-                    <>
-                      <p className="mx-10 max-w-full min-w-0 xl:mx-0">
-                        <span className="block truncate text-center first-letter:uppercase">
-                          {title ||
-                            fetchedChat?.title ||
-                            `Version #${selectedVersion}`}
-                        </span>
-                      </p>
-                      {fetchedChat?.is_deployed &&
-                        fetchedChat?.deploy_subdomain &&
-                        fetchedChat?.deployed_version !== undefined && (
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <a
-                                href={`https://${
-                                  customDomain?.is_verified &&
-                                  customDomain?.domain
-                                    ? customDomain.domain
-                                    : `${fetchedChat.deploy_subdomain}.coderocket.app`
-                                }`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex items-center gap-1.5 rounded-full border border-green-500/30 bg-green-500/10 px-2 py-1 text-xs font-medium text-green-700 transition-colors hover:bg-green-500/20 dark:text-green-400"
-                              >
-                                <Rocket className="size-3" />
-                                <span className="hidden sm:inline">
-                                  Deployed v{fetchedChat.deployed_version}
-                                </span>
-                                <span className="sm:hidden">
-                                  v{fetchedChat.deployed_version}
-                                </span>
-                              </a>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>
-                                Live at{" "}
-                                {customDomain?.is_verified &&
-                                customDomain?.domain
-                                  ? customDomain.domain
-                                  : `${fetchedChat.deploy_subdomain}.coderocket.app`}
-                              </p>
-                              <p className="text-xs">
-                                Version #{fetchedChat.deployed_version}
-                              </p>
-                            </TooltipContent>
-                          </Tooltip>
-                        )}
-                    </>
-                  ) : (
-                    <span className="flex items-center">
-                      <Loader className="mr-2 size-4 animate-spin" />
-                      Loading
-                    </span>
-                  )}
-                </h1>
-                <div className="ml-2 flex items-center gap-2">
-                  <Tabs
-                    value={isCanvas ? "canvas" : "code"}
-                    className="w-full"
-                    onValueChange={(value) => setCanvas(value === "canvas")}
-                  >
-                    <TabsList className="grid w-fit grid-cols-2 text-xs">
-                      <TabsTrigger
-                        value="canvas"
-                        className="flex items-center justify-center"
-                      >
-                        <Eye className="size-4 md:hidden" />
-                        <span className="hidden text-xs md:inline">
-                          Preview
-                        </span>
-                      </TabsTrigger>
-                      <TabsTrigger
-                        value="code"
-                        className="flex items-center justify-center"
-                      >
-                        <CodeIcon className="size-4 md:hidden" />
-                        <span className="hidden text-xs md:inline">Code</span>
-                      </TabsTrigger>
-                    </TabsList>
-                  </Tabs>
-
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={() => {
-                          if (isLoading || isLengthError) {
-                            return;
-                          }
-                          if (!isVisible) {
-                            setIsShareModalOpen(true);
-                            return;
-                          }
-                          share();
-                        }}
-                        disabled={isLoading || isLengthError}
-                        className="relative flex items-center gap-1.5"
-                      >
-                        <Share className="w-5" />
-                        <Badge
-                          variant="default"
-                          className="flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-semibold"
-                        >
-                          New
-                        </Badge>
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Share</p>
-                    </TooltipContent>
-                  </Tooltip>
-                  {isUserLoggedIn && (
-                    <>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            onClick={() => {
-                              if (isRemixing || isLoading) {
-                                return;
-                              }
-                              setIsRemixModalOpen(true);
-                            }}
-                            disabled={isRemixing || isLoading}
-                            className="flex items-center"
-                          >
-                            <GitFork className="w-5" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Remix</p>
-                        </TooltipContent>
-                      </Tooltip>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            onClick={handleLikeClick}
-                            disabled={isLoading}
-                            className={cn(
-                              "flex items-center gap-1",
-                              isLiked && "text-primary",
-                            )}
-                          >
-                            <Heart
-                              className={cn(
-                                "w-5",
-                                isLiked && "text-primary fill-primary",
-                              )}
-                              fill={isLiked ? "currentColor" : "none"}
-                            />
-                            {likesCount > 0 && (
-                              <span
-                                className={cn(
-                                  "font-medium",
-                                  isLiked && "text-primary",
-                                )}
-                              >
-                                {likesCount}
-                              </span>
-                            )}
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>
-                            {isLiked
-                              ? "Remove from liked components"
-                              : "Add to liked components"}
-                          </p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </>
-                  )}
-                  <Sheet>
-                    <SheetTrigger asChild>
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        className="block xl:hidden"
-                      >
-                        <Layers className="size-5" />
-                      </Button>
-                    </SheetTrigger>
-                    <SheetContent className="h-full p-0">
-                      <ComponentSidebar className="flex xl:hidden" />
-                    </SheetContent>
-                  </Sheet>
-                </div>
-              </div>
+              <ComponentHeader
+                title={title}
+                isLiked={isLiked}
+                likesCount={likesCount}
+                isRemixing={isRemixing}
+                customDomain={customDomain}
+                onShare={share}
+                onRemixClick={() => setIsRemixModalOpen(true)}
+                onLikeClick={handleLikeClick}
+                onShareModalOpen={() => setIsShareModalOpen(true)}
+              />
               {isCanvas && (
-                <div className="border-border bg-secondary flex items-center gap-2 overflow-x-auto border-t p-2">
-                  <div className="flex shrink-0 items-center gap-2">
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setIsModalOpen(true)}
-                          className="flex items-center"
-                          disabled={
-                            isLoading ||
-                            isLengthError ||
-                            !isWebcontainerReady ||
-                            loadingState === "processing" ||
-                            loadingState === "starting" ||
-                            loadingState === "error"
-                          }
-                        >
-                          <Fullscreen className="w-5" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        {isLengthError ? (
-                          <p>The component has an error</p>
-                        ) : (
-                          <p>Display in fullscreen</p>
-                        )}
-                      </TooltipContent>
-                    </Tooltip>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            if (isLengthError) {
-                              return;
-                            }
-                            const url =
-                              fetchedChat?.framework === Framework.HTML
-                                ? `https://www.coderocket.app/content/${chatId}/${selectedVersion}`
-                                : `https://${chatId}-${selectedVersion}.preview.coderocket.app${sharePathSuffix}`;
-                            window.open(url, "_blank");
-                          }}
-                          className="flex items-center"
-                          disabled={
-                            isLoading || isLengthError || !isWebcontainerReady
-                          }
-                        >
-                          <ExternalLink className="w-5" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>
-                          {isLengthError
-                            ? "The component has an error"
-                            : "Open in a new tab"}
-                        </p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </div>
-                  <div className="border-border bg-background flex min-w-0 flex-1 items-center gap-2 rounded-md border p-0">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      type="button"
-                      className="size-8 shrink-0"
-                      onClick={handleGoBack}
-                      disabled={!canGoBack || !isNavigationEnabled}
-                    >
-                      <ArrowLeft className="size-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      type="button"
-                      className="size-8 shrink-0"
-                      onClick={handleGoForward}
-                      disabled={!canGoForward || !isNavigationEnabled}
-                    >
-                      <ArrowRight className="size-4" />
-                    </Button>
-                    <form
-                      onSubmit={handleAddressSubmit}
-                      className="min-w-0 flex-1"
-                    >
-                      <Input
-                        ref={addressInputRef}
-                        value={addressBarValue}
-                        onChange={(event) =>
-                          setAddressBarValue(event.target.value)
-                        }
-                        onFocus={() => setAddressFocused(true)}
-                        onBlur={() => setAddressFocused(false)}
-                        disabled={!isNavigationEnabled}
-                        placeholder={navigationPlaceholder}
-                        className={cn(
-                          "h-8 border-0 bg-transparent p-0 text-sm focus-visible:ring-0 focus-visible:ring-offset-0",
-                          !addressFocused && "text-muted-foreground",
-                        )}
-                      />
-                    </form>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          type="button"
-                          className="size-8 shrink-0"
-                          onClick={() => {
-                            if (addressBarValue !== "/") {
-                              ignoreNextRootRouteRef.current = true;
-                            }
-                            setPreviewPath(addressBarValue);
-                            setIframeKey((prev) => prev + 1);
-                          }}
-                          disabled={
-                            isLoading ||
-                            isLengthError ||
-                            !isWebcontainerReady ||
-                            loadingState === "processing" ||
-                            loadingState === "starting" ||
-                            loadingState === "error"
-                          }
-                        >
-                          <RefreshCw className="size-4" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Reload preview</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </div>
-                  <div className="border-border bg-background flex shrink-0 items-center rounded-md border">
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setBreakpoint("desktop")}
-                          className={cn(
-                            "h-8 rounded-r-none px-2",
-                            breakpoint === "desktop" && "bg-secondary",
-                          )}
-                          disabled={
-                            isLoading ||
-                            isLengthError ||
-                            !isWebcontainerReady ||
-                            loadingState === "processing" ||
-                            loadingState === "starting" ||
-                            loadingState === "error"
-                          }
-                        >
-                          <Monitor className="h-4 w-4" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Desktop</p>
-                      </TooltipContent>
-                    </Tooltip>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setBreakpoint("tablet")}
-                          className={cn(
-                            "h-8 rounded-none px-2",
-                            breakpoint === "tablet" && "bg-secondary",
-                          )}
-                          disabled={
-                            isLoading ||
-                            isLengthError ||
-                            !isWebcontainerReady ||
-                            loadingState === "processing" ||
-                            loadingState === "starting" ||
-                            loadingState === "error"
-                          }
-                        >
-                          <Tablet className="h-4 w-4" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Tablet</p>
-                      </TooltipContent>
-                    </Tooltip>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setBreakpoint("mobile")}
-                          className={cn(
-                            "h-8 rounded-l-none px-2",
-                            breakpoint === "mobile" && "bg-secondary",
-                          )}
-                          disabled={
-                            isLoading ||
-                            isLengthError ||
-                            !isWebcontainerReady ||
-                            loadingState === "processing" ||
-                            loadingState === "starting" ||
-                            loadingState === "error"
-                          }
-                        >
-                          <Smartphone className="h-4 w-4" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Mobile</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </div>
-                  {authorized && (
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() =>
-                            setIsElementSelectionActive(
-                              !isElementSelectionActive,
-                            )
-                          }
-                          className={cn(
-                            "relative flex h-8 items-center gap-1.5 px-2",
-                            isElementSelectionActive &&
-                              "bg-primary text-primary-foreground hover:bg-primary/90 border-primary",
-                          )}
-                          disabled={
-                            isLoading ||
-                            isLengthError ||
-                            !isWebcontainerReady ||
-                            loadingState === "processing" ||
-                            loadingState === "starting" ||
-                            loadingState === "error"
-                          }
-                        >
-                          <Crosshair className="h-4 w-4" />
-                          {!isElementSelectionActive && (
-                            <Badge
-                              variant="default"
-                              className="flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-semibold"
-                            >
-                              New
-                            </Badge>
-                          )}
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>
-                          {isElementSelectionActive
-                            ? "Disable element selection"
-                            : "Enable element selection"}
-                        </p>
-                      </TooltipContent>
-                    </Tooltip>
-                  )}
-                  <Dialog
-                    open={isModalOpen}
-                    onOpenChange={handleFullscreenToggle}
-                  >
-                    <DialogContent className="z-9999 h-full w-full max-w-full! rounded-none p-10">
-                      <DialogTitle className="hidden">Fullscreen</DialogTitle>
-                      <DialogDescription
-                        className={cn(
-                          "z-50 flex items-center justify-center",
-                          breakpoint === "tablet" && "bg-muted",
-                          breakpoint === "mobile" && "bg-muted",
-                        )}
-                      >
-                        <div
-                          className={cn(
-                            "relative transition-all duration-300",
-                            breakpoint === "desktop" && "size-full",
-                            breakpoint === "tablet" &&
-                              "w-[768px] h-[1024px] max-w-full max-h-full shadow-2xl",
-                            breakpoint === "mobile" &&
-                              "w-[375px] h-[667px] max-w-full max-h-full shadow-2xl",
-                          )}
-                        >
-                          {fetchedChat?.framework !== Framework.HTML &&
-                          isWebcontainerReady ? (
-                            <iframe
-                              key={iframeKey}
-                              className="size-full rounded-md border-none"
-                              src={`https://${chatId}-${selectedVersion}.webcontainer.coderocket.app${previewPathSuffix}`}
-                              loading="eager"
-                            />
-                          ) : (
-                            <RenderHtmlComponent
-                              key={iframeKey}
-                              files={artifactFiles}
-                              navigationTarget={previewPath}
-                              onNavigation={(path) => navigatePreview(path)}
-                              onRouteChange={(path) => syncPreviewPath(path)}
-                            />
-                          )}
-                        </div>
-                      </DialogDescription>
-                    </DialogContent>
-                  </Dialog>
-                </div>
+                <PreviewToolbar
+                  isHtmlFrameworkSelected={isHtmlFrameworkSelected}
+                  sharePathSuffix={sharePathSuffix}
+                  previewPathSuffix={previewPathSuffix}
+                  canGoBack={canGoBack}
+                  canGoForward={canGoForward}
+                  isNavigationEnabled={isNavigationEnabled}
+                  navigationPlaceholder={navigationPlaceholder}
+                  addressFocused={addressFocused}
+                  addressInputRef={addressInputRef}
+                  isModalOpen={isModalOpen}
+                  loadingState={loadingState}
+                  onSetAddressFocused={setAddressFocused}
+                  onHandleGoBack={handleGoBack}
+                  onHandleGoForward={handleGoForward}
+                  onHandleAddressSubmit={handleAddressSubmit}
+                  onSetIgnoreNextRootRoute={setIgnoreNextRootRoute}
+                  onSetIframeKey={setIframeKey}
+                  onSetIsModalOpen={setIsModalOpen}
+                  onHandleFullscreenToggle={handleFullscreenToggle}
+                />
               )}
               <div className="relative m-0 flex h-full max-h-full flex-1 flex-col border-t lg:border-b-0">
                 {!isLoading && isCanvas && (
@@ -2330,279 +1631,24 @@ export default function ComponentCompletion({
             </div>
             <ComponentSidebar className="hidden xl:flex" />
           </div>
-          <Dialog open={isShareModalOpen} onOpenChange={setIsShareModalOpen}>
-            <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto sm:max-w-5xl">
-              <div className="mb-6 flex flex-col items-center justify-center text-center">
-                <Share className="text-primary mb-2 size-12" />
-                <DialogTitle className="text-xl font-semibold text-white">
-                  Share Your Component
-                </DialogTitle>
-                <p className="text-muted-foreground">
-                  Let the world see your awesome creation! ✨
-                </p>
-              </div>
-              <DialogDescription>
-                {!isVisible ? (
-                  <div className="space-y-3 text-center">
-                    <p className="text-sm text-muted-foreground">
-                      This component is currently private and cannot be shared.
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      To share it, change its visibility to public in the
-                      settings.
-                    </p>
-                  </div>
-                ) : (
-                  <div
-                    className={cn(
-                      "grid gap-6",
-                      lastAssistantMessage?.screenshot
-                        ? "grid-cols-1 lg:grid-cols-2"
-                        : "grid-cols-1",
-                    )}
-                  >
-                    <div className="space-y-6">
-                      <div>
-                        <p className="mb-3 text-sm font-medium text-white">
-                          Share on social media:
-                        </p>
-                        <div className="grid grid-cols-4 gap-x-3 gap-y-4">
-                          <div className="flex flex-col items-center gap-2">
-                            <TwitterShareButton
-                              url={shareLink}
-                              title={
-                                fetchedChat?.title
-                                  ? `${fetchedChat.title} - Built with CodeRocket 🚀`
-                                  : "Check out this awesome component built with CodeRocket! 🚀"
-                              }
-                              hashtags={["CodeRocket", "TailwindCSS", "WebDev"]}
-                              className="flex items-center justify-center rounded-full transition-transform hover:scale-110"
-                            >
-                              <XIcon size={48} round />
-                            </TwitterShareButton>
-                            <span className="text-xs text-white">X</span>
-                          </div>
-                          <div className="flex flex-col items-center gap-2">
-                            <FacebookShareButton
-                              url={shareLink}
-                              className="flex items-center justify-center rounded-full transition-transform hover:scale-110"
-                            >
-                              <FacebookIcon size={48} round />
-                            </FacebookShareButton>
-                            <span className="text-xs text-white">Facebook</span>
-                          </div>
-                          <div className="flex flex-col items-center gap-2">
-                            <LinkedinShareButton
-                              url={shareLink}
-                              title={
-                                fetchedChat?.title
-                                  ? `${fetchedChat.title} - Built with CodeRocket`
-                                  : "Component built with CodeRocket"
-                              }
-                              summary="Check out this awesome component built with CodeRocket!"
-                              className="flex items-center justify-center rounded-full transition-transform hover:scale-110"
-                            >
-                              <LinkedinIcon size={48} round />
-                            </LinkedinShareButton>
-                            <span className="text-xs text-white">LinkedIn</span>
-                          </div>
-                          <div className="flex flex-col items-center gap-2">
-                            <RedditShareButton
-                              url={shareLink}
-                              title={
-                                fetchedChat?.title
-                                  ? `${fetchedChat.title} - Built with CodeRocket 🚀`
-                                  : "Check out this awesome component!"
-                              }
-                              className="flex items-center justify-center rounded-full transition-transform hover:scale-110"
-                            >
-                              <RedditIcon size={48} round />
-                            </RedditShareButton>
-                            <span className="text-xs text-white">Reddit</span>
-                          </div>
-                          <div className="flex flex-col items-center gap-2">
-                            <TelegramShareButton
-                              url={shareLink}
-                              title={
-                                fetchedChat?.title
-                                  ? `${fetchedChat.title} - Built with CodeRocket 🚀`
-                                  : "Check out this awesome component!"
-                              }
-                              className="flex items-center justify-center rounded-full transition-transform hover:scale-110"
-                            >
-                              <TelegramIcon size={48} round />
-                            </TelegramShareButton>
-                            <span className="text-xs text-white">Telegram</span>
-                          </div>
-                          <div className="flex flex-col items-center gap-2">
-                            <WhatsappShareButton
-                              url={shareLink}
-                              title={
-                                fetchedChat?.title
-                                  ? `${fetchedChat.title} - Built with CodeRocket 🚀`
-                                  : "Check out this awesome component!"
-                              }
-                              className="flex items-center justify-center rounded-full transition-transform hover:scale-110"
-                            >
-                              <WhatsappIcon size={48} round />
-                            </WhatsappShareButton>
-                            <span className="text-xs text-white">WhatsApp</span>
-                          </div>
-                          <div className="flex flex-col items-center gap-2">
-                            <EmailShareButton
-                              url={shareLink}
-                              subject={
-                                fetchedChat?.title
-                                  ? `Check out ${fetchedChat.title} on CodeRocket!`
-                                  : "Check out this component on CodeRocket!"
-                              }
-                              body="I found this awesome component built with CodeRocket. Check it out!"
-                              className="flex items-center justify-center rounded-full transition-transform hover:scale-110"
-                            >
-                              <EmailIcon size={48} round />
-                            </EmailShareButton>
-                            <span className="text-xs text-white">Email</span>
-                          </div>
-                          <div className="flex flex-col items-center gap-2">
-                            <button
-                              onClick={() => {
-                                const text = fetchedChat?.title
-                                  ? `${fetchedChat.title} - Built with CodeRocket 🚀\n${shareLink}`
-                                  : `Check out this awesome component built with CodeRocket! 🚀\n${shareLink}`;
-                                const threadsUrl = `https://www.threads.net/intent/post?text=${encodeURIComponent(text)}`;
-                                window.open(threadsUrl, "_blank");
-                              }}
-                              className="flex h-12 w-12 items-center justify-center rounded-full bg-black transition-transform hover:scale-110"
-                              aria-label="Share on Threads"
-                            >
-                              <SiThreads className="h-6 w-6 text-white" />
-                            </button>
-                            <span className="text-xs text-white">Threads</span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="border-border border-t pt-4">
-                        <p className="mb-3 text-sm font-medium text-white">
-                          Or copy the link:
-                        </p>
-                        <div className="flex items-center space-x-2">
-                          <Input
-                            type="text"
-                            value={shareLink}
-                            readOnly
-                            className="flex-1"
-                          />
-                          <Button
-                            onClick={() => {
-                              copy(shareLink);
-                              toast({
-                                variant: "default",
-                                title: "Link copied",
-                                description:
-                                  "The URL has been successfully copied to your clipboard",
-                                duration: 3000,
-                              });
-                            }}
-                            size="sm"
-                          >
-                            <Copy className="size-4" />
-                            <span className="sr-only">Copy</span>
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                    {lastAssistantMessage?.screenshot && (
-                      <img
-                        src={lastAssistantMessage.screenshot}
-                        alt={
-                          fetchedChat?.title
-                            ? `${fetchedChat.title} preview`
-                            : "Component preview"
-                        }
-                        className="border-border flex items-center rounded-lg border h-auto w-full"
-                      />
-                    )}
-                  </div>
-                )}
-              </DialogDescription>
-            </DialogContent>
-          </Dialog>
-          <Dialog open={isRemixModalOpen} onOpenChange={setIsRemixModalOpen}>
-            <DialogContent className="max-w-md sm:max-w-2xl">
-              <div className="mb-6 flex flex-col items-center justify-center text-center">
-                <GitFork className="text-primary mb-2 size-12" />
-                <DialogTitle className="text-xl font-semibold">
-                  Remix This Component
-                </DialogTitle>
-                <p className="text-muted-foreground">
-                  Create your own version of this component! 🚀
-                </p>
-              </div>
-              <DialogDescription>
-                <>
-                  <p className="mb-4">
-                    Remixing will create a copy of this component that you can
-                    modify and customize. This feature is available for
-                    subscribers only.
-                  </p>
-                  {hasAlreadyRemixed && remixOriginalChat && (
-                    <Alert className="mb-4">
-                      <AlertTitle className="mb-2 flex items-center gap-2">
-                        <Info className="size-4" />
-                        <p>This is a remix</p>
-                      </AlertTitle>
-                      <AlertDescription>
-                        This component is a remix of{" "}
-                        <a
-                          href={`/components/${remixOriginalChat.slug}`}
-                          className="text-primary font-medium hover:underline"
-                        >
-                          {remixOriginalChat.title ||
-                            `Component ${remixOriginalChat.slug}`}
-                        </a>
-                        . You can remix it again to create your own version.
-                      </AlertDescription>
-                    </Alert>
-                  )}
-                  <Alert className="mb-4">
-                    <AlertTitle className="mb-2 flex items-center gap-2">
-                      <Info className="size-4" />{" "}
-                      <p>Remixing from selected version</p>
-                    </AlertTitle>
-                    <AlertDescription>
-                      You selected{" "}
-                      <Badge variant="outline">
-                        version #{selectedVersion}
-                      </Badge>{" "}
-                      as the base of your remix. You can change this by
-                      selecting a different version in the sidebar.
-                    </AlertDescription>
-                  </Alert>
-                </>
-                <div className="flex justify-center">
-                  <Button
-                    onClick={() => {
-                      handleRemixClick();
-                    }}
-                    disabled={isRemixing}
-                    className="flex w-full max-w-xs items-center justify-center"
-                  >
-                    {isRemixing ? (
-                      <>
-                        <Loader className="size-4 animate-spin" />
-                        Creating Remix...
-                      </>
-                    ) : (
-                      <>
-                        <GitFork className="size-4" />
-                        Remix Component
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </DialogDescription>
-            </DialogContent>
-          </Dialog>
+          <ShareModal
+            isOpen={isShareModalOpen}
+            onOpenChange={setIsShareModalOpen}
+            isVisible={isVisible}
+            shareLink={shareLink}
+            fetchedChat={fetchedChat}
+            lastAssistantMessage={lastAssistantMessage}
+            onCopy={copy}
+          />
+          <RemixModal
+            isOpen={isRemixModalOpen}
+            onOpenChange={setIsRemixModalOpen}
+            selectedVersion={selectedVersion}
+            isRemixing={isRemixing}
+            hasAlreadyRemixed={hasAlreadyRemixed}
+            remixOriginalChat={remixOriginalChat}
+            onRemixClick={handleRemixClick}
+          />
         </Container>
       </BuilderProvider>
     </ComponentContext.Provider>

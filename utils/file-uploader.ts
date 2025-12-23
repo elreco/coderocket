@@ -1,16 +1,11 @@
 import { getSubscription } from "@/app/supabase-server";
+import { UploadedFileInfo } from "@/types/api";
 
 import { getMaxFilesLimit } from "./config";
 import { getFileType } from "./file-helper";
 import { createClient } from "./supabase/server";
 
-export interface UploadedFileInfo {
-  path: string;
-  publicUrl: string;
-  type: "image" | "pdf" | "text";
-  mimeType: string;
-  source?: string;
-}
+export type { UploadedFileInfo } from "@/types/api";
 
 export async function uploadFiles(
   files: File[],
