@@ -100,6 +100,26 @@ export async function POST(req: Request) {
         })
       : null;
 
+    // Early validation: Prevent website cloning with HTML framework
+    const frameworkFromForm = formData.get("framework") as Framework | null;
+    const isCloneRequest =
+      prompt?.includes("Clone this website:") ||
+      prompt?.includes("Clone another page:");
+
+    if (isCloneRequest && frameworkFromForm === Framework.HTML) {
+      return new Response(
+        JSON.stringify({
+          error: "Invalid framework for cloning",
+          message:
+            "Website cloning is not available with the HTML framework. Please select React, Vue, Angular, or Svelte.",
+        }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+    }
+
     const lockId = generateId();
     const lockAcquired = await tryAcquireGenerationLock(id, lockId);
     if (!lockAcquired) {
@@ -685,6 +705,18 @@ const validateRequest = async (
       selectedVersion === -1
     ) {
       urlToClone = chat.clone_url;
+    }
+  }
+
+  // Validation: HTML framework cannot be used for cloning
+  if (urlToClone) {
+    const currentFramework: Framework = (chat.framework ||
+      "react") as Framework;
+
+    if (currentFramework === Framework.HTML) {
+      throw new Error(
+        "Website cloning is not available with the HTML framework. Please select React, Vue, Angular, or Svelte for cloning functionality.",
+      );
     }
   }
 

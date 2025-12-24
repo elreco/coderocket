@@ -301,6 +301,17 @@ export const createChat = async (prompt: string, formData: FormData) => {
   );
   if (cloneWebsiteMatch && cloneWebsiteMatch[1]) {
     cloneUrl = cloneWebsiteMatch[1];
+
+    // Validation: HTML framework cannot be used for cloning
+    if (framework === Framework.HTML) {
+      return {
+        error: {
+          title: "Invalid framework for cloning",
+          description:
+            "Website cloning is not available with the HTML framework. Please select React, Vue, Angular, or Svelte.",
+        },
+      };
+    }
   }
 
   const { data } = await supabase
