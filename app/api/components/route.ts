@@ -469,7 +469,10 @@ export async function POST(req: Request) {
 
     console.log("Final max_tokens:", dynamicMaxTokens);
 
-    await setActiveStreamId(id, null);
+    // NOTE: Do NOT clear the lock here! The lock must remain active until
+    // the stream completes (onStepFinish) or errors (onError).
+    // Clearing it here creates a race condition window where another request
+    // can slip through.
 
     const stream = streamText({
       messages: [

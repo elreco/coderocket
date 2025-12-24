@@ -1,0 +1,5 @@
+---
+alwaysApply: true
+---
+
+Il faut tout le temps faire un npm run lint à la fin d'une génération et corriger les erreurs si il y en a, ne corriger que les erreurs pas les warning

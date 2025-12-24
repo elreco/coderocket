@@ -230,6 +230,12 @@ export const setActiveStreamId = async (
   streamId: string | null,
 ): Promise<void> => {
   const supabase = await createClient();
+
+  if (streamId === null) {
+    // Release the generation lock when clearing the stream ID
+    await supabase.from("generation_locks").delete().eq("chat_id", chatId);
+  }
+
   const updateData: Record<string, unknown> = {
     active_stream_id: streamId,
     active_stream_started_at: streamId ? new Date().toISOString() : null,
@@ -244,43 +250,34 @@ export const tryAcquireGenerationLock = async (
   try {
     const supabase = await createClient();
 
-    const STALE_THRESHOLD_MS = 5 * 60 * 1000;
-    const staleThreshold = new Date(
-      Date.now() - STALE_THRESHOLD_MS,
-    ).toISOString();
+    // Use the PostgreSQL function for atomic lock acquisition
+    // The function uses INSERT with unique constraint for true atomicity
+    const { data: lockAcquired, error: rpcError } = await supabase.rpc(
+      "try_acquire_generation_lock",
+      {
+        p_chat_id: chatId,
+        p_lock_id: lockId,
+        p_stale_threshold_minutes: 5,
+      },
+    );
 
-    const { data, error } = await supabase
-      .from("chats")
-      .update({
-        active_stream_id: lockId,
-        active_stream_started_at: new Date().toISOString(),
-      } as Record<string, unknown>)
-      .eq("id", chatId)
-      .or(
-        `active_stream_id.is.null,active_stream_started_at.is.null,active_stream_started_at.lt.${staleThreshold}`,
-      )
-      .select("*");
-
-    if (error) {
-      console.warn(
-        "Lock error (continuing anyway):",
-        error.code,
-        error.message,
-      );
-      return true;
+    if (rpcError) {
+      console.warn("Lock RPC error:", rpcError.code, rpcError.message);
+      return false;
     }
 
-    if (!data || data.length === 0) {
-      console.warn(
-        "Lock not acquired - but may be first generation, continuing",
+    if (!lockAcquired) {
+      console.log(
+        `Generation lock not acquired for chat ${chatId} - another generation is in progress`,
       );
-      return true;
+      return false;
     }
 
+    console.log(`Generation lock acquired (${lockId}) for chat ${chatId}`);
     return true;
-  } catch {
-    console.warn("Lock mechanism failed - continuing without lock");
-    return true;
+  } catch (error) {
+    console.error("Lock mechanism failed:", error);
+    return false;
   }
 };
 
@@ -344,7 +341,7 @@ export const tryAcquireBuildLock = async (
       .eq("version", version)
       .eq("role", "assistant")
       .is("is_built", null)
-      .select("id");
+      .select("id, build_error");
 
     if (error) {
       console.warn("Build lock error:", error.code, error.message);

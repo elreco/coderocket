@@ -149,13 +149,16 @@ export function useRealtimeSync({
           ) {
             onSelectedVersionUpdate(0);
             selectedVersionRef.current = 0;
+            // Also update the internal ref synchronously to ensure build check works
+            selectedVersionStateRef.current = 0;
           }
 
-          if (
+          const shouldUpdateBuild =
             payload.new.version === selectedVersionStateRef.current &&
             payload.new.is_built === true &&
-            !isLoadingRef.current
-          ) {
+            !isLoadingRef.current;
+
+          if (shouldUpdateBuild) {
             onWebcontainerReadyUpdate(true);
             onForceBuildUpdate(false);
           }

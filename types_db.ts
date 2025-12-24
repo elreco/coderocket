@@ -417,6 +417,32 @@ export type Database = {
         };
         Relationships: [];
       };
+      generation_locks: {
+        Row: {
+          chat_id: string;
+          created_at: string;
+          lock_id: string;
+        };
+        Insert: {
+          chat_id: string;
+          created_at?: string;
+          lock_id: string;
+        };
+        Update: {
+          chat_id?: string;
+          created_at?: string;
+          lock_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "generation_locks_chat_id_fkey";
+            columns: ["chat_id"];
+            isOneToOne: true;
+            referencedRelation: "chats";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       github_connections: {
         Row: {
           access_token: string | null;
@@ -1233,6 +1259,18 @@ export type Database = {
         }[];
       };
       migrate_prompt_image_to_files: { Args: never; Returns: undefined };
+      release_generation_lock: {
+        Args: { p_chat_id: string; p_lock_id: string };
+        Returns: undefined;
+      };
+      try_acquire_generation_lock: {
+        Args: {
+          p_chat_id: string;
+          p_lock_id: string;
+          p_stale_threshold_minutes?: number;
+        };
+        Returns: boolean;
+      };
       verify_rls_enabled: {
         Args: never;
         Returns: {
