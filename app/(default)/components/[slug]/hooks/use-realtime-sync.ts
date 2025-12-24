@@ -5,6 +5,8 @@ import type { CustomDomainData } from "@/types/custom-domain";
 import { Tables } from "@/types_db";
 import { createClient } from "@/utils/supabase/client";
 
+import { getDisplayTitle, updateDocumentTitle } from "../utils/title-utils";
+
 interface UseRealtimeSyncOptions {
   chatId: string;
   connectedUserId: string | null | undefined;
@@ -205,11 +207,17 @@ export function useRealtimeSync({
               payload.new.title !== undefined &&
               payload.new.title !== titleRef.current
             ) {
-              const newTitle =
-                (payload.new.title as string) ||
-                `Version #${selectedVersionStateRef.current ?? 0}`;
+              const newTitle = getDisplayTitle(
+                payload.new.title as string,
+                selectedVersionStateRef.current,
+                fetchedChatRef.current?.framework,
+              );
               onTitleUpdate(newTitle);
-              document.title = `${newTitle} - CodeRocket`;
+              updateDocumentTitle(
+                payload.new.title as string,
+                selectedVersionStateRef.current,
+                fetchedChatRef.current?.framework,
+              );
             }
 
             if (payload.new.is_private !== undefined) {

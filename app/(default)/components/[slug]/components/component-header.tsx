@@ -23,6 +23,7 @@ import { cn } from "@/lib/utils";
 import type { CustomDomainData } from "@/types/custom-domain";
 
 import ComponentSidebar from "../component-sidebar";
+import { getDisplayTitle } from "../utils/title-utils";
 
 interface ComponentHeaderProps {
   title: string;
@@ -60,14 +61,30 @@ export function ComponentHeader({
 
   const isUserLoggedIn = !!connectedUser;
 
+  // Show "Loading..." when generating the first version
+  const isFirstGeneration =
+    isLoading &&
+    (selectedVersion === undefined ||
+      selectedVersion === -1 ||
+      selectedVersion === 0);
+
   return (
     <div className="relative flex h-auto flex-col items-center justify-start py-1.5 pr-2 xl:h-12 xl:flex-row xl:justify-between xl:pl-14">
       <h1 className="mb-2 flex max-w-full min-w-0 flex-1 items-center gap-2 font-medium lg:mb-0">
-        {title || fetchedChat?.title || selectedVersion !== undefined ? (
+        {isFirstGeneration ? (
+          <span className="flex items-center">
+            <Loader className="mr-2 size-4 animate-spin" />
+            Loading...
+          </span>
+        ) : (
           <>
             <p className="mx-10 max-w-full min-w-0 xl:mx-0">
               <span className="block truncate text-center first-letter:uppercase">
-                {title || fetchedChat?.title || `Version #${selectedVersion}`}
+                {getDisplayTitle(
+                  title || fetchedChat?.title,
+                  selectedVersion,
+                  fetchedChat?.framework,
+                )}
               </span>
             </p>
             {fetchedChat?.is_deployed &&
@@ -108,11 +125,6 @@ export function ComponentHeader({
                 </Tooltip>
               )}
           </>
-        ) : (
-          <span className="flex items-center">
-            <Loader className="mr-2 size-4 animate-spin" />
-            Loading
-          </span>
         )}
       </h1>
       <div className="ml-2 flex items-center gap-2">

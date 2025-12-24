@@ -13,6 +13,7 @@ import {
   fetchChatDataOptimized,
   fetchMessagesByChatId,
 } from "../../actions";
+import { getDisplayTitle, updateDocumentTitle } from "../utils/title-utils";
 
 interface UseChatDataOptions {
   chatId: string;
@@ -262,9 +263,7 @@ export function useChatData({
         customDomain: additionalData.customDomain,
         subscription: sub || additionalData.subscription,
         githubConnection: additionalData.githubConnection,
-        title:
-          chat.title ||
-          `Version #${userMsg?.version && userMsg.version > -1 ? userMsg.version : 0}`,
+        title: getDisplayTitle(chat.title, userMsg?.version, chat.framework),
         isVisible: !chat.is_private,
         artifactCode: chat.artifact_code || "",
         isWebcontainerReady: assistantMsg?.is_built || false,
@@ -307,8 +306,16 @@ export function useChatData({
       ? await fetchAdditionalData(refreshedChat)
       : { customDomain: null, subscription: null, githubConnection: null };
 
-    const title = refreshedChat.title || `Version #${selectedVersion}`;
-    document.title = `${title} - CodeRocket`;
+    const displayTitle = getDisplayTitle(
+      refreshedChat.title,
+      selectedVersion,
+      refreshedChat.framework,
+    );
+    updateDocumentTitle(
+      refreshedChat.title,
+      selectedVersion,
+      refreshedChat.framework,
+    );
 
     setState((prev) => ({
       ...prev,
@@ -316,7 +323,7 @@ export function useChatData({
       fetchedChat: refreshedChat,
       likesCount: refreshedChat.likes || 0,
       artifactCode: artifactCodeFromVersion || "",
-      title,
+      title: displayTitle,
       customDomain: additionalData.customDomain ?? prev.customDomain,
       subscription: additionalData.subscription ?? prev.subscription,
       githubConnection:

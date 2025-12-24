@@ -52,6 +52,7 @@ import { RemixModal } from "./components/remix-modal";
 import { ShareModal } from "./components/share-modal";
 import { usePreviewNavigation } from "./hooks/use-preview-navigation";
 import { useRealtimeSync } from "./hooks/use-realtime-sync";
+import { getDisplayTitle, updateDocumentTitle } from "./utils/title-utils";
 
 interface Props {
   chatId: string;
@@ -320,10 +321,7 @@ export default function ComponentCompletion({
 
       loadAdditionalData();
 
-      setTitle(
-        chat.title ||
-          `Version #${userMsg?.version && userMsg.version > -1 ? userMsg.version : 0}`,
-      );
+      setTitle(getDisplayTitle(chat.title, userMsg?.version, chat.framework));
       setVisible(!chat.is_private);
       setArtifactCode(chat.artifact_code || "");
       setWebcontainerReady(assistantMsg?.is_built || false);
@@ -1283,9 +1281,17 @@ export default function ComponentCompletion({
       selectedVersion,
     );
     setArtifactCode(artifactCodeFromVersion || "");
-    const title = refreshedChat.title || `Version #${selectedVersion}`;
-    setTitle(title);
-    document.title = `${title} - CodeRocket`;
+    const displayTitle = getDisplayTitle(
+      refreshedChat.title,
+      selectedVersion,
+      refreshedChat.framework,
+    );
+    setTitle(displayTitle);
+    updateDocumentTitle(
+      refreshedChat.title,
+      selectedVersion,
+      refreshedChat.framework,
+    );
 
     if (refreshedChat.is_deployed) {
       try {
