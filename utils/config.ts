@@ -12,7 +12,7 @@ export const discordLink = "https://discord.gg/t7dQgcYJ5t";
 
 export const maxImageSize = 10 * 1024 * 1024; // 10 Mo
 export const maxPdfSize = 32 * 1024 * 1024; // 32 Mo (Anthropic limit)
-export const maxImagesUpload = 5;
+export const maxImagesUpload = 20;
 
 export const supportedImageTypes = [
   "image/png",

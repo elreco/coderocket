@@ -80,11 +80,7 @@ export function ComponentHeader({
           <>
             <p className="mx-10 max-w-full min-w-0 xl:mx-0">
               <span className="block truncate text-center first-letter:uppercase">
-                {getDisplayTitle(
-                  title || fetchedChat?.title,
-                  selectedVersion,
-                  fetchedChat?.framework,
-                )}
+                {getDisplayTitle(title || fetchedChat?.title, selectedVersion)}
               </span>
             </p>
             {fetchedChat?.is_deployed &&

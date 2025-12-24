@@ -210,13 +210,11 @@ export function useRealtimeSync({
               const newTitle = getDisplayTitle(
                 payload.new.title as string,
                 selectedVersionStateRef.current,
-                fetchedChatRef.current?.framework,
               );
               onTitleUpdate(newTitle);
               updateDocumentTitle(
                 payload.new.title as string,
                 selectedVersionStateRef.current,
-                fetchedChatRef.current?.framework,
               );
             }
 

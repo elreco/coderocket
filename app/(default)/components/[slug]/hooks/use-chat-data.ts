@@ -263,7 +263,7 @@ export function useChatData({
         customDomain: additionalData.customDomain,
         subscription: sub || additionalData.subscription,
         githubConnection: additionalData.githubConnection,
-        title: getDisplayTitle(chat.title, userMsg?.version, chat.framework),
+        title: getDisplayTitle(chat.title, userMsg?.version),
         isVisible: !chat.is_private,
         artifactCode: chat.artifact_code || "",
         isWebcontainerReady: assistantMsg?.is_built || false,
@@ -306,16 +306,8 @@ export function useChatData({
       ? await fetchAdditionalData(refreshedChat)
       : { customDomain: null, subscription: null, githubConnection: null };
 
-    const displayTitle = getDisplayTitle(
-      refreshedChat.title,
-      selectedVersion,
-      refreshedChat.framework,
-    );
-    updateDocumentTitle(
-      refreshedChat.title,
-      selectedVersion,
-      refreshedChat.framework,
-    );
+    const displayTitle = getDisplayTitle(refreshedChat.title, selectedVersion);
+    updateDocumentTitle(refreshedChat.title, selectedVersion);
 
     setState((prev) => ({
       ...prev,

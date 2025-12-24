@@ -321,7 +321,7 @@ export default function ComponentCompletion({
 
       loadAdditionalData();
 
-      setTitle(getDisplayTitle(chat.title, userMsg?.version, chat.framework));
+      setTitle(getDisplayTitle(chat.title, userMsg?.version));
       setVisible(!chat.is_private);
       setArtifactCode(chat.artifact_code || "");
       setWebcontainerReady(assistantMsg?.is_built || false);
@@ -1281,17 +1281,9 @@ export default function ComponentCompletion({
       selectedVersion,
     );
     setArtifactCode(artifactCodeFromVersion || "");
-    const displayTitle = getDisplayTitle(
-      refreshedChat.title,
-      selectedVersion,
-      refreshedChat.framework,
-    );
+    const displayTitle = getDisplayTitle(refreshedChat.title, selectedVersion);
     setTitle(displayTitle);
-    updateDocumentTitle(
-      refreshedChat.title,
-      selectedVersion,
-      refreshedChat.framework,
-    );
+    updateDocumentTitle(refreshedChat.title, selectedVersion);
 
     if (refreshedChat.is_deployed) {
       try {
