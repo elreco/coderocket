@@ -19,16 +19,6 @@ import { getMaxFilesLimit } from "@/utils/config";
 import { validateFile, getFileType } from "@/utils/file-helper";
 import { createClient } from "@/utils/supabase/client";
 
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "./ui/alert-dialog";
 import { Button } from "./ui/button";
 import {
   Dialog,
@@ -78,10 +68,8 @@ export function FileLibraryModal({
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [deletingPath, setDeletingPath] = useState<string | null>(null);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [fileToDelete, setFileToDelete] = useState<FileLibraryItem | null>(
-    null,
-  );
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+
   const [uploading, setUploading] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
   const [selectedFilesData, setSelectedFilesData] = useState<
@@ -178,53 +166,6 @@ export function FileLibraryModal({
     }
   }, [open, isPremium, isLoggedIn]);
 
-  const handleDelete = async (e?: React.MouseEvent) => {
-    if (e) {
-      e.stopPropagation();
-    }
-    if (!fileToDelete) return;
-
-    setDeletingPath(fileToDelete.path);
-    try {
-      const response = await fetch(
-        `/api/files?path=${encodeURIComponent(fileToDelete.path)}`,
-        {
-          method: "DELETE",
-        },
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to delete file");
-      }
-
-      toast({
-        title: "File deleted",
-        description: "The file has been successfully deleted.",
-      });
-
-      if (onFileDeleted) {
-        onFileDeleted(fileToDelete.path);
-      }
-
-      if (files.length === 1 && page > 1) {
-        setPage(page - 1);
-      } else {
-        fetchFiles(page);
-      }
-    } catch (error) {
-      console.error("Error deleting file:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to delete file. Please try again.",
-      });
-    } finally {
-      setDeletingPath(null);
-      setShowDeleteDialog(false);
-      setFileToDelete(null);
-    }
-  };
-
   const handleBatchDelete = async () => {
     if (selectedFiles.size === 0) return;
 
@@ -272,6 +213,7 @@ export function FileLibraryModal({
       });
     } finally {
       setDeletingPath(null);
+      setShowDeleteConfirmation(false);
     }
   };
 
@@ -749,9 +691,7 @@ export function FileLibraryModal({
       <Dialog
         open={open}
         onOpenChange={(newOpen) => {
-          if (!showDeleteDialog) {
-            onOpenChange(newOpen);
-          }
+          onOpenChange(newOpen);
         }}
       >
         <DialogContent
@@ -759,7 +699,6 @@ export function FileLibraryModal({
           onPointerDownOutside={(e) => {
             const target = e.target as HTMLElement;
             if (
-              showDeleteDialog ||
               target.closest('[data-slot="toast"]') ||
               target.closest("[toast-close]")
             ) {
@@ -769,7 +708,6 @@ export function FileLibraryModal({
           onInteractOutside={(e) => {
             const target = e.target as HTMLElement;
             if (
-              showDeleteDialog ||
               target.closest('[data-slot="toast"]') ||
               target.closest("[toast-close]")
             ) {
@@ -801,18 +739,7 @@ export function FileLibraryModal({
                 </div>
               </div>
             )}
-            {!isDragOver && !loading && files.length > 0 && (
-              <div className="absolute bottom-2 right-2 text-xs text-muted-foreground bg-background/80 backdrop-blur-sm px-2 py-1 rounded-md border">
-                <kbd className="px-1 py-0.5 text-xs font-semibold bg-muted rounded border">
-                  Ctrl
-                </kbd>{" "}
-                +{" "}
-                <kbd className="px-1 py-0.5 text-xs font-semibold bg-muted rounded border">
-                  V
-                </kbd>{" "}
-                to paste
-              </div>
-            )}
+
             {loading ? (
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-5">
                 {[...Array(20)].map((_, i) => (
@@ -914,33 +841,6 @@ export function FileLibraryModal({
                             </span>
                           </div>
                         </div>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          className="h-9 w-full"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            e.preventDefault();
-                            setFileToDelete(file);
-                            setShowDeleteDialog(true);
-                          }}
-                          disabled={
-                            deletingPath === file.path ||
-                            deletingPath === "batch"
-                          }
-                        >
-                          {deletingPath === file.path ? (
-                            <>
-                              <Loader2 className="size-4 mr-2 animate-spin" />
-                              Deleting...
-                            </>
-                          ) : (
-                            <>
-                              <Trash2 className="size-4 mr-2" />
-                              Delete
-                            </>
-                          )}
-                        </Button>
                       </div>
                     </div>
                   );
@@ -985,32 +885,58 @@ export function FileLibraryModal({
                   </>
                 )}
               </Button>
-              {selectedFiles.size > 0 && (
-                <Button
-                  variant="destructive"
-                  size="default"
-                  className="h-10 px-4"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleBatchDelete();
-                  }}
-                  disabled={deletingPath === "batch"}
-                >
-                  {deletingPath === "batch" ? (
-                    <>
-                      <Loader2 className="size-4 mr-2 animate-spin" />
-                      Deleting...
-                    </>
-                  ) : (
-                    <>
-                      <Trash2 className="size-4 mr-2" />
-                      Delete Selected ({
-                        selectedFiles.size
-                      })
-                    </>
-                  )}
-                </Button>
-              )}
+              {selectedFiles.size > 0 &&
+                (showDeleteConfirmation ? (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="default"
+                      className="h-10 px-4"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowDeleteConfirmation(false);
+                      }}
+                      disabled={deletingPath === "batch"}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="default"
+                      className="h-10 px-4"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleBatchDelete();
+                      }}
+                      disabled={deletingPath === "batch"}
+                    >
+                      {deletingPath === "batch" ? (
+                        <>
+                          <Loader2 className="size-4 mr-2 animate-spin" />
+                          Deleting...
+                        </>
+                      ) : (
+                        "Confirm"
+                      )}
+                    </Button>
+                  </>
+                ) : (
+                  <Button
+                    variant="destructive"
+                    size="default"
+                    className="h-10 px-4"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowDeleteConfirmation(true);
+                    }}
+                    disabled={deletingPath === "batch"}
+                  >
+                    <Trash2 className="size-4 mr-2" />
+                    Delete Selected ({
+                      selectedFiles.size
+                    })
+                  </Button>
+                ))}
             </div>
 
             <div className="flex items-center gap-3 flex-1 justify-center">
@@ -1041,6 +967,16 @@ export function FileLibraryModal({
               >
                 <ChevronRight className="size-5" />
               </Button>
+              <div className="hidden md:flex items-center gap-1.5 text-xs text-muted-foreground ml-4">
+                <kbd className="px-1.5 py-0.5 text-[10px] font-bold bg-muted border rounded-md">
+                  Ctrl
+                </kbd>
+                +
+                <kbd className="px-1.5 py-0.5 text-[10px] font-bold bg-muted border rounded-md">
+                  V
+                </kbd>
+                <span>to paste</span>
+              </div>
             </div>
 
             {selectedFiles.size > 0 && (
@@ -1068,54 +1004,6 @@ export function FileLibraryModal({
           </div>
         </DialogContent>
       </Dialog>
-
-      <AlertDialog
-        open={showDeleteDialog}
-        onOpenChange={(open) => {
-          if (!open) {
-            setShowDeleteDialog(false);
-            setFileToDelete(null);
-          }
-        }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete File</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete this file? This action cannot be
-              undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel
-              onClick={(e: React.MouseEvent) => {
-                e.stopPropagation();
-                setShowDeleteDialog(false);
-                setFileToDelete(null);
-              }}
-            >
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              variant="destructive"
-              onClick={(e: React.MouseEvent) => {
-                e.stopPropagation();
-                handleDelete(e);
-              }}
-              disabled={deletingPath !== null}
-            >
-              {deletingPath ? (
-                <>
-                  <Loader2 className="size-4 mr-2 animate-spin" />
-                  Deleting...
-                </>
-              ) : (
-                "Delete"
-              )}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 }
