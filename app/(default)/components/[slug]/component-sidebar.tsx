@@ -754,7 +754,9 @@ export default function ComponentSidebar({
                 isLoading &&
                   input &&
                   !messages.some(
-                    (m) => m.role === "user" && m.content === input,
+                    (m) =>
+                      m.role === "user" &&
+                      Number(m.version) === Number(selectedVersion),
                   )
                   ? "block"
                   : "hidden",

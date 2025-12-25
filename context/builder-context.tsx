@@ -114,7 +114,7 @@ export const BuilderProvider = ({
       .eq("chat_id", chatId)
       .eq("role", "assistant")
       .eq("version", selectedVersion)
-      .single();
+      .maybeSingle();
 
     if (message) {
       processBuildStatus(message.is_built, message.build_error);
