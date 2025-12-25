@@ -188,7 +188,6 @@ export default function ComponentCompletion({
     handleGoBack,
     handleGoForward,
     handleAddressSubmit,
-    setIgnoreNextRootRoute,
   } = usePreviewNavigation({
     chatId,
     framework: (fetchedChat?.framework as Framework) || null,
@@ -1683,7 +1682,6 @@ export default function ComponentCompletion({
                   onHandleGoBack={handleGoBack}
                   onHandleGoForward={handleGoForward}
                   onHandleAddressSubmit={handleAddressSubmit}
-                  onSetIgnoreNextRootRoute={setIgnoreNextRootRoute}
                   onSetIframeKey={setIframeKey}
                   onSetIsModalOpen={setIsModalOpen}
                   onHandleFullscreenToggle={handleFullscreenToggle}

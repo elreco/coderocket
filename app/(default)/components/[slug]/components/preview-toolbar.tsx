@@ -48,7 +48,6 @@ interface PreviewToolbarProps {
   onHandleGoBack: () => void;
   onHandleGoForward: () => void;
   onHandleAddressSubmit: (event: FormEvent<HTMLFormElement>) => void;
-  onSetIgnoreNextRootRoute: (value: boolean) => void;
   onSetIframeKey: (updater: (prev: number) => number) => void;
   onSetIsModalOpen: (open: boolean) => void;
   onHandleFullscreenToggle: (open: boolean) => void;
@@ -70,7 +69,6 @@ export function PreviewToolbar({
   onHandleGoBack,
   onHandleGoForward,
   onHandleAddressSubmit,
-  onSetIgnoreNextRootRoute,
   onSetIframeKey,
   onSetIsModalOpen,
   onHandleFullscreenToggle,
@@ -200,9 +198,6 @@ export function PreviewToolbar({
               type="button"
               className="size-8 shrink-0"
               onClick={() => {
-                if (addressBarValue !== "/") {
-                  onSetIgnoreNextRootRoute(true);
-                }
                 setPreviewPath(addressBarValue);
                 onSetIframeKey((prev) => prev + 1);
               }}

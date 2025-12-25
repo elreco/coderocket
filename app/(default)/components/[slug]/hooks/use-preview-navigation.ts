@@ -31,7 +31,6 @@ export function usePreviewNavigation({
 
   const historyIndexRef = useRef(0);
   const addressInputRef = useRef<HTMLInputElement | null>(null);
-  const ignoreNextRootRouteRef = useRef<boolean>(false);
   const previousChatIdRef = useRef<string | null>(null);
   const previousFrameworkRef = useRef<Framework | null>(null);
 
@@ -75,13 +74,6 @@ export function usePreviewNavigation({
     previousChatIdRef.current = chatId;
     previousFrameworkRef.current = framework || null;
   }, [chatId, framework]);
-
-  useEffect(() => {
-    if (addressBarValue !== "/") {
-      ignoreNextRootRouteRef.current = true;
-      setPreviewPath(addressBarValue);
-    }
-  }, [selectedVersion, addressBarValue]);
 
   const normalizePreviewPath = useCallback((value: string) => {
     if (!value) {
@@ -144,11 +136,6 @@ export function usePreviewNavigation({
   const syncPreviewPath = useCallback(
     (targetPath: string, options?: { pushHistory?: boolean }) => {
       const normalizedPath = normalizePreviewPath(targetPath);
-      if (normalizedPath === "/" && ignoreNextRootRouteRef.current) {
-        ignoreNextRootRouteRef.current = false;
-        return;
-      }
-      ignoreNextRootRouteRef.current = false;
       setAddressBarValue(normalizedPath);
       pushPathToHistory(normalizedPath, options?.pushHistory !== false);
     },
@@ -189,10 +176,6 @@ export function usePreviewNavigation({
     [isNavigationEnabled, navigatePreview, addressBarValue],
   );
 
-  const setIgnoreNextRootRoute = useCallback((value: boolean) => {
-    ignoreNextRootRouteRef.current = value;
-  }, []);
-
   return {
     previewPath,
     setPreviewPath,
@@ -219,6 +202,5 @@ export function usePreviewNavigation({
     handleGoBack,
     handleGoForward,
     handleAddressSubmit,
-    setIgnoreNextRootRoute,
   };
 }
