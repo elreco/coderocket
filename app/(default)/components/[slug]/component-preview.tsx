@@ -89,6 +89,7 @@ export default function ComponentPreview() {
     isContinuingFromLengthError,
     isElementSelectionActive,
     iframeKey,
+    completion,
   } = useComponentContext();
   const [iframeLoading, setIframeLoading] = React.useState(true);
   const [hasEverLoaded, setHasEverLoaded] = React.useState(false);
@@ -283,9 +284,13 @@ export default function ComponentPreview() {
       setPreviousVersionHasError(false);
     }
   }, [isScrapingWebsite, selectedVersion, displayVersion]);
+  // Only show "Generating version" if there's actual generation activity
+  // (completion is non-empty), not just during initial page load
+  const hasActiveGeneration = completion.length > 0;
   const isGeneratingNewVersion =
     !isFirstGeneration &&
     !isLengthError &&
+    hasActiveGeneration &&
     (isLoading ||
       loadingState === "processing" ||
       loadingState === "deploying");

@@ -1,5 +1,17 @@
+import { Loader2, Trash2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,7 +25,11 @@ import {
 import { useComponentContext } from "@/context/component-context";
 import { toast } from "@/hooks/use-toast";
 
-import { changeVisibilityByChatId, updateTitleByChatId } from "../actions";
+import {
+  changeVisibilityByChatId,
+  deleteChatByChatId,
+  updateTitleByChatId,
+} from "../actions";
 
 export default function SettingsContent() {
   const {
@@ -24,10 +40,13 @@ export default function SettingsContent() {
     fetchedChat,
     refreshChatData,
   } = useComponentContext();
+  const router = useRouter();
   const [isVisibilityLoading, setIsVisibilityLoading] = useState(false);
   const [title, setTitle] = useState("");
   const [isTitleLoading, setIsTitleLoading] = useState(false);
   const [hasTitleChanged, setHasTitleChanged] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const isPremium = !!subscription;
   const isCheckingPremium = false;
@@ -119,6 +138,30 @@ export default function SettingsContent() {
     }
   };
 
+  const handleDeleteChat = async () => {
+    if (isDeleting) return;
+
+    try {
+      setIsDeleting(true);
+      await deleteChatByChatId(chatId);
+      toast({
+        title: "Chat deleted",
+        description: "Your component has been permanently deleted.",
+      });
+      router.push("/");
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      toast({
+        variant: "destructive",
+        title: "Failed to delete chat",
+        description: errorMessage,
+      });
+      setIsDeleting(false);
+      setIsDeleteModalOpen(false);
+    }
+  };
+
   return (
     <div className="space-y-6 p-3">
       <div>
@@ -198,6 +241,62 @@ export default function SettingsContent() {
           </div>
         </div>
       </div>
+
+      <div>
+        <h4 className="mb-4 text-base font-semibold text-red-600">
+          Danger zone
+        </h4>
+        <div className="space-y-4">
+          <div className="mb-5 flex flex-col gap-3 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-900 dark:bg-red-950/30">
+            <div className="space-y-0.5">
+              <Label className="text-red-700 dark:text-red-400">
+                Delete this component
+              </Label>
+              <p className="text-sm text-red-600 dark:text-red-400">
+                Once deleted, this component and all its versions will be
+                permanently removed. This action cannot be undone.
+              </p>
+            </div>
+            <Button
+              variant="destructive"
+              onClick={() => setIsDeleteModalOpen(true)}
+              className="w-full"
+            >
+              <Trash2 className="mr-2 size-4" />
+              Delete component
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <AlertDialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete your
+              component, all its versions, messages, and associated builds.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteChat}
+              disabled={isDeleting}
+              variant="destructive"
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="mr-2 size-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                "Delete permanently"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

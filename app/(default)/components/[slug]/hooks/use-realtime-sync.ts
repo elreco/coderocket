@@ -267,7 +267,10 @@ export function useRealtimeSync({
             const maxVersion =
               availableVersions.length > 0 ? Math.max(...availableVersions) : 0;
 
-            if (maxVersion !== currentVersion || availableVersions.length === 0) {
+            if (
+              maxVersion !== currentVersion ||
+              availableVersions.length === 0
+            ) {
               onSelectedVersionUpdate(maxVersion);
               selectedVersionRef.current = maxVersion;
               selectedVersionStateRef.current = maxVersion;
