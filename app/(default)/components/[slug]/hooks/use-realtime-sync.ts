@@ -257,17 +257,20 @@ export function useRealtimeSync({
             );
 
             // Find the highest available version
-            const availableVersions = [
-              ...new Set(
+            const availableVersions = Array.from(
+              new Set(
                 currentMessages
                   .filter((m) => m.version >= 0)
                   .map((m) => m.version),
               ),
-            ];
+            );
             const maxVersion =
               availableVersions.length > 0 ? Math.max(...availableVersions) : 0;
 
-            if (maxVersion !== currentVersion || availableVersions.length === 0) {
+            if (
+              maxVersion !== currentVersion ||
+              availableVersions.length === 0
+            ) {
               onSelectedVersionUpdate(maxVersion);
               selectedVersionRef.current = maxVersion;
               selectedVersionStateRef.current = maxVersion;

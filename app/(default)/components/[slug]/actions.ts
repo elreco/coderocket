@@ -1049,3 +1049,138 @@ export const refreshSSLStatus = async (domainId: string) => {
     );
   }
 };
+
+export const deleteChatByChatId = async (chatId: string) => {
+  const supabase = await createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  const user = userData?.user;
+
+  if (!user) throw new Error("User not authenticated");
+
+  // 1. Verify the user owns this chat
+  const { data: chat, error: chatError } = await supabase
+    .from("chats")
+    .select("id, user_id")
+    .eq("id", chatId)
+    .single();
+
+  if (chatError || !chat) {
+    throw new Error("Chat not found");
+  }
+
+  if (chat.user_id !== user.id) {
+    throw new Error("Unauthorized - you do not own this chat");
+  }
+
+  // 2. Delete related data in correct order (foreign key constraints)
+  // Note: We do NOT delete token_usage_tracking and version_usage_tracking
+  // as they track usage for billing purposes
+
+  // Delete chat_integrations
+  const { error: integrationsError } = await supabase
+    .from("chat_integrations")
+    .delete()
+    .eq("chat_id", chatId);
+
+  if (integrationsError) {
+    console.error("Error deleting chat_integrations:", integrationsError);
+  }
+
+  // Delete chat_likes
+  const { error: likesError } = await supabase
+    .from("chat_likes")
+    .delete()
+    .eq("chat_id", chatId);
+
+  if (likesError) {
+    console.error("Error deleting chat_likes:", likesError);
+  }
+
+  // Delete custom_domains (and remove from Vercel if verified)
+  const { data: customDomain } = await supabase
+    .from("custom_domains")
+    .select("domain, is_verified")
+    .eq("chat_id", chatId)
+    .maybeSingle();
+
+  if (customDomain?.is_verified) {
+    try {
+      await removeDomainFromVercel(customDomain.domain);
+    } catch (error) {
+      console.error("Error removing domain from Vercel:", error);
+    }
+  }
+
+  const { error: domainsError } = await supabase
+    .from("custom_domains")
+    .delete()
+    .eq("chat_id", chatId);
+
+  if (domainsError) {
+    console.error("Error deleting custom_domains:", domainsError);
+  }
+
+  // Delete generation_locks
+  const { error: locksError } = await supabase
+    .from("generation_locks")
+    .delete()
+    .eq("chat_id", chatId);
+
+  if (locksError) {
+    console.error("Error deleting generation_locks:", locksError);
+  }
+
+  // Delete integration_schemas
+  const { error: schemasError } = await supabase
+    .from("integration_schemas")
+    .delete()
+    .eq("chat_id", chatId);
+
+  if (schemasError) {
+    console.error("Error deleting integration_schemas:", schemasError);
+  }
+
+  // Delete messages
+  const { error: messagesError } = await supabase
+    .from("messages")
+    .delete()
+    .eq("chat_id", chatId);
+
+  if (messagesError) {
+    console.error("Error deleting messages:", messagesError);
+    throw new Error("Failed to delete messages");
+  }
+
+  // Delete the chat itself
+  const { error: deleteError } = await supabase
+    .from("chats")
+    .delete()
+    .eq("id", chatId);
+
+  if (deleteError) {
+    console.error("Error deleting chat:", deleteError);
+    throw new Error("Failed to delete chat");
+  }
+
+  // 3. Delete builds from Vercel Blob in background (after responding)
+  // Using after() to run this in the background
+  after(async () => {
+    try {
+      const response = await fetch(`${builderApiUrl}/builds/${chatId}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        console.error(
+          `Failed to delete builds from Vercel Blob: ${response.status}`,
+        );
+      } else {
+        console.log(`Successfully deleted builds for chat ${chatId}`);
+      }
+    } catch (error) {
+      console.error("Error deleting builds from Vercel Blob:", error);
+    }
+  });
+
+  return { success: true };
+};
