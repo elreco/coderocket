@@ -578,8 +578,6 @@ export default function ComponentCompletion({
 
   const handleExternalStreamDetected = useCallback(
     async (streamId: string | null) => {
-      // Permettre de rejoindre le stream même si l'utilisateur n'est pas autorisé (lecture seule)
-      // Le build ne sera pas tenté si !authorized (géré dans joinStream)
       if (streamId && !isLoading && !isJoiningStreamRef.current) {
         await joinStream(true);
       } else if (!streamId && isResuming) {
@@ -621,8 +619,6 @@ export default function ComponentCompletion({
       lastAssistantMsg?.content &&
       !lastAssistantMsg.content.includes("<!-- FINISH_REASON:");
 
-    // Permettre de rejoindre le stream même si !authorized (lecture seule)
-    // Mais bloquer la génération initiale si !authorized
     if (!needsGeneration && !isIncomplete) return;
     if (hasInitiatedRef.current[chatId]) return;
 
@@ -631,7 +627,6 @@ export default function ComponentCompletion({
     const attemptResumeOrStart = async () => {
       const resumed = await tryResumeStream();
 
-      // Ne pas démarrer une nouvelle génération si l'utilisateur n'est pas autorisé
       if (
         !resumed &&
         needsGeneration &&

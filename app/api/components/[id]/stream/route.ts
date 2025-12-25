@@ -98,13 +98,6 @@ export async function GET(
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401,
-      headers: { "Content-Type": "application/json" },
-    });
-  }
-
   const { data: chat } = await supabase
     .from("chats")
     .select("user_id, is_private")
@@ -118,9 +111,8 @@ export async function GET(
     });
   }
 
-  // Check if user can view the chat (owner or public chat)
-  const isOwner = chat.user_id === user.id;
   const isPublic = chat.is_private === false;
+  const isOwner = user && chat.user_id === user.id;
   const canView = isOwner || isPublic;
 
   if (!canView) {

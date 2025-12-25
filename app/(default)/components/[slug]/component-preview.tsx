@@ -423,6 +423,7 @@ export default function ComponentPreview() {
     // "Starting version #" quand le build est terminé et l'iframe commence
     if (
       isFirstGeneration &&
+      !isLoading &&
       (loadingState === "starting" ||
         (loadingState === null && isWebcontainerReady)) &&
       displayVersion === undefined &&
@@ -443,6 +444,7 @@ export default function ComponentPreview() {
     if (
       isCorrectionInProgress &&
       !previousVersionIsBuilt &&
+      !isLoading &&
       loadingState === "starting"
     ) {
       return `Starting version ${selectedVersion}...`;
@@ -593,13 +595,17 @@ export default function ComponentPreview() {
                 (loadingState === "starting" ||
                   (loadingState === null && isWebcontainerReady)) &&
                 displayVersion === undefined &&
-                !hasEverLoaded) ||
+                !hasEverLoaded &&
+                !isLoading) ||
                 (!isFirstGeneration &&
                   previousVersionIsBuilt &&
                   displayVersion !== undefined &&
                   loadingState === "starting" &&
-                  !hasEverLoaded) ||
-                (isCorrectionInProgress && loadingState === "starting")) &&
+                  !hasEverLoaded &&
+                  !isLoading) ||
+                (isCorrectionInProgress &&
+                  loadingState === "starting" &&
+                  !isLoading)) &&
                 !buildError && (
                   <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
                     <LoadingStateComponent
