@@ -10,8 +10,15 @@ import {
   ChatIntegrationWithDetails,
   IntegrationConfig,
   IntegrationType,
+  SupabaseIntegrationConfig,
   UserIntegration,
 } from "./types";
+
+const SUPABASE_OAUTH_CLIENT_ID = process.env.SUPABASE_OAUTH_CLIENT_ID;
+const SUPABASE_OAUTH_CLIENT_SECRET = process.env.SUPABASE_OAUTH_CLIENT_SECRET;
+
+// Token refresh buffer: refresh 5 minutes before expiry
+const TOKEN_REFRESH_BUFFER_MS = 5 * 60 * 1000;
 
 export async function getUserIntegrations(
   userId: string,
@@ -288,4 +295,111 @@ export async function getActiveIntegration(
 ): Promise<UserIntegration | null> {
   const integrations = await getIntegrationsByType(userId, type);
   return integrations.find((i) => i.is_active) || null;
+}
+
+/**
+ * Refreshes a Supabase OAuth access token if it's expired or about to expire.
+ * Returns the valid access token (either existing or newly refreshed).
+ */
+export async function getValidSupabaseAccessToken(
+  integrationId: string,
+  config: SupabaseIntegrationConfig,
+): Promise<{ accessToken: string; error?: string }> {
+  const { accessToken, refreshToken, expiresAt } = config;
+
+  // If no access token at all, return error
+  if (!accessToken) {
+    return { accessToken: "", error: "No access token configured" };
+  }
+
+  // If no refresh token or expiry info, just return current token (legacy integrations)
+  if (!refreshToken || !expiresAt) {
+    return { accessToken };
+  }
+
+  // Check if token is still valid (with buffer)
+  const now = Date.now();
+  if (expiresAt > now + TOKEN_REFRESH_BUFFER_MS) {
+    // Token is still valid
+    return { accessToken };
+  }
+
+  // Token is expired or about to expire, refresh it
+  console.log("[integration-helpers] Refreshing Supabase access token...");
+
+  if (!SUPABASE_OAUTH_CLIENT_ID || !SUPABASE_OAUTH_CLIENT_SECRET) {
+    return {
+      accessToken,
+      error: "OAuth credentials not configured for token refresh",
+    };
+  }
+
+  try {
+    const tokenResponse = await fetch(
+      "https://api.supabase.com/v1/oauth/token",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({
+          client_id: SUPABASE_OAUTH_CLIENT_ID,
+          client_secret: SUPABASE_OAUTH_CLIENT_SECRET,
+          refresh_token: refreshToken,
+          grant_type: "refresh_token",
+        }),
+      },
+    );
+
+    if (!tokenResponse.ok) {
+      const errorText = await tokenResponse.text();
+      console.error("[integration-helpers] Token refresh failed:", errorText);
+      return {
+        accessToken,
+        error: `Token refresh failed: ${errorText}`,
+      };
+    }
+
+    const tokenData = await tokenResponse.json();
+    const {
+      access_token: newAccessToken,
+      refresh_token: newRefreshToken,
+      expires_in,
+    } = tokenData;
+
+    // Calculate new expiration timestamp
+    const newExpiresAt = expires_in
+      ? Date.now() + expires_in * 1000
+      : undefined;
+
+    // Update the integration config in the database
+    const updatedConfig: SupabaseIntegrationConfig = {
+      ...config,
+      accessToken: newAccessToken,
+      refreshToken: newRefreshToken || refreshToken, // Some OAuth servers return a new refresh token
+      expiresAt: newExpiresAt,
+    };
+
+    const updateResult = await updateUserIntegration(integrationId, {
+      config: updatedConfig,
+    });
+
+    if (!updateResult.success) {
+      console.error(
+        "[integration-helpers] Failed to save refreshed token:",
+        updateResult.error,
+      );
+      // Still return the new token even if save failed
+    } else {
+      console.log("[integration-helpers] Token refreshed successfully");
+    }
+
+    return { accessToken: newAccessToken };
+  } catch (error) {
+    console.error("[integration-helpers] Error refreshing token:", error);
+    return {
+      accessToken,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
 }

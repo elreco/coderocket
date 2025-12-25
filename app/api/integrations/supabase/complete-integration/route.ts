@@ -10,7 +10,7 @@ import { createClient } from "@/utils/supabase/server";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { projectId, accessToken, userId } = body;
+    const { projectId, accessToken, refreshToken, expiresAt, userId } = body;
 
     if (!projectId || !accessToken || !userId) {
       return NextResponse.json(
@@ -105,6 +105,8 @@ export async function POST(request: NextRequest) {
       projectUrl: `https://${projectId}.supabase.co`,
       anonKey: anonKey,
       accessToken: accessToken,
+      refreshToken: refreshToken,
+      expiresAt: expiresAt,
       projectId: projectId,
     };
 

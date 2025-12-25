@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import {
   getChatIntegrations,
+  getValidSupabaseAccessToken,
   IntegrationType,
   SupabaseIntegrationConfig,
 } from "@/utils/integrations";
@@ -73,13 +74,34 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Get a valid access token (refreshes automatically if expired)
+    const { accessToken, error: tokenError } =
+      await getValidSupabaseAccessToken(
+        supabaseIntegration.user_integrations.id,
+        config,
+      );
+
+    if (tokenError) {
+      console.warn("[run-migration] Token refresh warning:", tokenError);
+    }
+
+    if (!accessToken) {
+      return NextResponse.json(
+        {
+          error:
+            "Failed to get valid Supabase access token. Please reconnect your Supabase integration.",
+        },
+        { status: 401 },
+      );
+    }
+
     try {
       const response = await fetch(
         `https://api.supabase.com/v1/projects/${config.projectId}/database/query`,
         {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${config.accessToken}`,
+            Authorization: `Bearer ${accessToken}`,
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ query: sql }),

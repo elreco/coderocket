@@ -81,7 +81,9 @@ export async function GET(request: NextRequest) {
     }
 
     const tokenData = await tokenResponse.json();
-    const { access_token } = tokenData;
+    const { access_token, refresh_token, expires_in } = tokenData;
+    // Calculate expiration timestamp (expires_in is in seconds)
+    const expiresAt = expires_in ? Date.now() + expires_in * 1000 : undefined;
 
     const projectsResponse = await fetch(
       "https://api.supabase.com/v1/projects",
@@ -170,6 +172,8 @@ export async function GET(request: NextRequest) {
         projectUrl: `https://${projectRef}.supabase.co`,
         anonKey: anonKey,
         accessToken: access_token,
+        refreshToken: refresh_token,
+        expiresAt: expiresAt,
         projectId: projectRef,
       };
 
@@ -202,6 +206,8 @@ export async function GET(request: NextRequest) {
     const tempData = {
       projects: availableProjects,
       access_token,
+      refresh_token,
+      expiresAt,
       userId: user.id,
       timestamp: Date.now(),
     };
