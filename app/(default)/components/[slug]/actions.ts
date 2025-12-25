@@ -455,6 +455,18 @@ export const buildComponent = async (
       `buildComponent: Build ${buildSuccess ? "succeeded" : "completed"} for chat ${chatId} version ${version}`,
     );
 
+    // Auto-deploy if enabled and build was successful
+    if (buildSuccess) {
+      try {
+        await autoDeployAfterBuild(chatId, version);
+      } catch (autoDeployError) {
+        console.error(
+          "buildComponent: Auto-deploy error (non-blocking):",
+          autoDeployError,
+        );
+      }
+    }
+
     try {
       let buildExists = false;
       for (let attempt = 0; attempt < 3; attempt++) {
@@ -744,6 +756,115 @@ export const updateDeploymentSubdomain = async (
   }
 
   return { success: true, subdomain: normalizedSubdomain };
+};
+
+export const updateAutoDeploySettings = async (
+  chatId: string,
+  autoDeploy: boolean,
+) => {
+  const supabase = await createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  const user = userData?.user;
+
+  if (!user) throw new Error("User not authenticated");
+
+  const subscription = await getSubscription();
+  if (!subscription) {
+    throw new Error("payment-required");
+  }
+
+  const { data: chat } = await supabase
+    .from("chats")
+    .select("user_id, is_deployed")
+    .eq("id", chatId)
+    .single();
+
+  if (!chat || chat.user_id !== user.id) {
+    throw new Error("Unauthorized");
+  }
+
+  if (!chat.is_deployed) {
+    throw new Error("Application must be deployed to enable auto-deploy");
+  }
+
+  const { error } = await supabase
+    .from("chats")
+    .update({ auto_deploy: autoDeploy })
+    .eq("id", chatId);
+
+  if (error) {
+    console.error("Error updating auto-deploy settings:", error);
+    throw new Error(error.message || "Failed to update auto-deploy settings");
+  }
+
+  return { success: true, autoDeploy };
+};
+
+export const autoDeployAfterBuild = async (
+  chatId: string,
+  version: number,
+): Promise<void> => {
+  try {
+    const supabase = await createClient();
+
+    // Fetch chat to check if auto-deploy is enabled
+    const { data: chat, error: chatError } = await supabase
+      .from("chats")
+      .select("is_deployed, auto_deploy, deployed_version")
+      .eq("id", chatId)
+      .single();
+
+    if (chatError || !chat) {
+      console.log(
+        `autoDeployAfterBuild: Could not fetch chat ${chatId}:`,
+        chatError,
+      );
+      return;
+    }
+
+    // Check if chat is deployed and auto-deploy is enabled
+    if (!chat.is_deployed) {
+      console.log(
+        `autoDeployAfterBuild: Chat ${chatId} is not deployed, skipping auto-deploy`,
+      );
+      return;
+    }
+
+    // auto_deploy defaults to true if null (for backward compatibility)
+    const autoDeployEnabled = chat.auto_deploy !== false;
+    if (!autoDeployEnabled) {
+      console.log(
+        `autoDeployAfterBuild: Auto-deploy is disabled for chat ${chatId}, skipping`,
+      );
+      return;
+    }
+
+    // Update deployed_version to the newly built version
+    const { error: updateError } = await supabase
+      .from("chats")
+      .update({
+        deployed_version: version,
+        deployed_at: new Date().toISOString(),
+      })
+      .eq("id", chatId);
+
+    if (updateError) {
+      console.error(
+        `autoDeployAfterBuild: Failed to update deployed version for chat ${chatId}:`,
+        updateError,
+      );
+      return;
+    }
+
+    console.log(
+      `autoDeployAfterBuild: Successfully auto-deployed version ${version} for chat ${chatId}`,
+    );
+  } catch (error) {
+    console.error(
+      `autoDeployAfterBuild: Unexpected error for chat ${chatId}:`,
+      error,
+    );
+  }
 };
 
 export const addCustomDomain = async (chatId: string, domain: string) => {

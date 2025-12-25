@@ -174,6 +174,7 @@ export type Database = {
           active_stream_id: string | null;
           active_stream_started_at: string | null;
           artifact_code: string | null;
+          auto_deploy: boolean | null;
           clone_url: string | null;
           created_at: string | null;
           deploy_subdomain: string | null;
@@ -204,6 +205,7 @@ export type Database = {
           active_stream_id?: string | null;
           active_stream_started_at?: string | null;
           artifact_code?: string | null;
+          auto_deploy?: boolean | null;
           clone_url?: string | null;
           created_at?: string | null;
           deploy_subdomain?: string | null;
@@ -234,6 +236,7 @@ export type Database = {
           active_stream_id?: string | null;
           active_stream_started_at?: string | null;
           artifact_code?: string | null;
+          auto_deploy?: boolean | null;
           clone_url?: string | null;
           created_at?: string | null;
           deploy_subdomain?: string | null;

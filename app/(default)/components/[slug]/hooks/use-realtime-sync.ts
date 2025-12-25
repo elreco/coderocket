@@ -76,6 +76,59 @@ export function useRealtimeSync({
   const titleRef = useRef(title);
   const messagesRef = useRef(messages);
   const onRefreshDataRef = useRef(onRefreshData);
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+
+  // Store callbacks in refs to avoid re-subscribing when they change
+  const onMessagesUpdateRef = useRef(onMessagesUpdate);
+  const onMessagesDeleteRef = useRef(onMessagesDelete);
+  const onChatUpdateRef = useRef(onChatUpdate);
+  const onLikesCountUpdateRef = useRef(onLikesCountUpdate);
+  const onTitleUpdateRef = useRef(onTitleUpdate);
+  const onVisibilityUpdateRef = useRef(onVisibilityUpdate);
+  const onCustomDomainUpdateRef = useRef(onCustomDomainUpdate);
+  const onSubscriptionUpdateRef = useRef(onSubscriptionUpdate);
+  const onGithubConnectionUpdateRef = useRef(onGithubConnectionUpdate);
+  const onSelectedVersionUpdateRef = useRef(onSelectedVersionUpdate);
+  const onWebcontainerReadyUpdateRef = useRef(onWebcontainerReadyUpdate);
+  const onForceBuildUpdateRef = useRef(onForceBuildUpdate);
+  const onLastAssistantMessageUpdateRef = useRef(onLastAssistantMessageUpdate);
+  const onExternalStreamDetectedRef = useRef(onExternalStreamDetected);
+  const onBuildStatusChangeRef = useRef(onBuildStatusChange);
+
+  // Update refs when callbacks change
+  useEffect(() => {
+    onMessagesUpdateRef.current = onMessagesUpdate;
+    onMessagesDeleteRef.current = onMessagesDelete;
+    onChatUpdateRef.current = onChatUpdate;
+    onLikesCountUpdateRef.current = onLikesCountUpdate;
+    onTitleUpdateRef.current = onTitleUpdate;
+    onVisibilityUpdateRef.current = onVisibilityUpdate;
+    onCustomDomainUpdateRef.current = onCustomDomainUpdate;
+    onSubscriptionUpdateRef.current = onSubscriptionUpdate;
+    onGithubConnectionUpdateRef.current = onGithubConnectionUpdate;
+    onSelectedVersionUpdateRef.current = onSelectedVersionUpdate;
+    onWebcontainerReadyUpdateRef.current = onWebcontainerReadyUpdate;
+    onForceBuildUpdateRef.current = onForceBuildUpdate;
+    onLastAssistantMessageUpdateRef.current = onLastAssistantMessageUpdate;
+    onExternalStreamDetectedRef.current = onExternalStreamDetected;
+    onBuildStatusChangeRef.current = onBuildStatusChange;
+  }, [
+    onMessagesUpdate,
+    onMessagesDelete,
+    onChatUpdate,
+    onLikesCountUpdate,
+    onTitleUpdate,
+    onVisibilityUpdate,
+    onCustomDomainUpdate,
+    onSubscriptionUpdate,
+    onGithubConnectionUpdate,
+    onSelectedVersionUpdate,
+    onWebcontainerReadyUpdate,
+    onForceBuildUpdate,
+    onLastAssistantMessageUpdate,
+    onExternalStreamDetected,
+    onBuildStatusChange,
+  ]);
 
   useEffect(() => {
     isLoadingRef.current = isLoading;
@@ -123,6 +176,12 @@ export function useRealtimeSync({
   }, [handleVisibilityChange]);
 
   useEffect(() => {
+    // Unsubscribe from previous channel if it exists
+    if (channelRef.current) {
+      channelRef.current.unsubscribe();
+      channelRef.current = null;
+    }
+
     const channel = supabase
       .channel(`component-sync-${chatId}`)
       .on(
@@ -142,14 +201,14 @@ export function useRealtimeSync({
             newVersion > (selectedVersionStateRef.current ?? -1) &&
             !isLoadingRef.current
           ) {
-            onSelectedVersionUpdate(newVersion);
+            onSelectedVersionUpdateRef.current(newVersion);
             selectedVersionRef.current = newVersion;
             selectedVersionStateRef.current = newVersion;
             // Reset webcontainer ready state since new version is not built yet
-            onWebcontainerReadyUpdate(false);
+            onWebcontainerReadyUpdateRef.current(false);
           }
 
-          onMessagesUpdate((prev) => {
+          onMessagesUpdateRef.current((prev) => {
             const exists = prev.some((m) => m.id === payload.new.id);
             if (exists) return prev;
             const filteredMessages = prev.filter(
@@ -173,7 +232,7 @@ export function useRealtimeSync({
           filter: `chat_id=eq.${chatId}`,
         },
         async (payload) => {
-          onMessagesUpdate((prevMessages) => {
+          onMessagesUpdateRef.current((prevMessages) => {
             const existingIndex = prevMessages.findIndex(
               (m) => m.id === payload.new.id,
             );
@@ -200,7 +259,7 @@ export function useRealtimeSync({
             (payload.old.version === -1 || payload.old.version === undefined) &&
             payload.new.version === 0
           ) {
-            onSelectedVersionUpdate(0);
+            onSelectedVersionUpdateRef.current(0);
             selectedVersionRef.current = 0;
             // Also update the internal ref synchronously to ensure build check works
             selectedVersionStateRef.current = 0;
@@ -212,19 +271,21 @@ export function useRealtimeSync({
             !isLoadingRef.current;
 
           if (shouldUpdateBuild) {
-            onWebcontainerReadyUpdate(true);
-            onForceBuildUpdate(false);
+            onWebcontainerReadyUpdateRef.current(true);
+            onForceBuildUpdateRef.current(false);
           }
 
           if (
             payload.new.role === "assistant" &&
             payload.new.version === selectedVersionStateRef.current
           ) {
-            onLastAssistantMessageUpdate(payload.new as Tables<"messages">);
+            onLastAssistantMessageUpdateRef.current(
+              payload.new as Tables<"messages">,
+            );
 
             // Notify build status changes
-            if (onBuildStatusChange) {
-              onBuildStatusChange({
+            if (onBuildStatusChangeRef.current) {
+              onBuildStatusChangeRef.current({
                 isBuilt: payload.new.is_built,
                 buildError: payload.new.build_error,
                 version: payload.new.version,
@@ -247,7 +308,7 @@ export function useRealtimeSync({
           const currentVersion = selectedVersionStateRef.current ?? 0;
 
           // First, delete the message from the list
-          onMessagesDelete(deletedMessageId);
+          onMessagesDeleteRef.current(deletedMessageId);
 
           // If the deleted message was from the current version, switch to previous version
           if (deletedVersion === currentVersion) {
@@ -271,11 +332,11 @@ export function useRealtimeSync({
               maxVersion !== currentVersion ||
               availableVersions.length === 0
             ) {
-              onSelectedVersionUpdate(maxVersion);
+              onSelectedVersionUpdateRef.current(maxVersion);
               selectedVersionRef.current = maxVersion;
               selectedVersionStateRef.current = maxVersion;
               // Reset webcontainer since we're changing version
-              onWebcontainerReadyUpdate(false);
+              onWebcontainerReadyUpdateRef.current(false);
 
               // Refresh data to load the new version's files
               if (onRefreshDataRef.current) {
@@ -299,10 +360,10 @@ export function useRealtimeSync({
           const currentChat = fetchedChatRef.current;
           if (currentChat) {
             const updatedChat = { ...currentChat, ...payload.new };
-            onChatUpdate(updatedChat as Tables<"chats">);
+            onChatUpdateRef.current(updatedChat as Tables<"chats">);
 
             if (payload.new.likes !== undefined) {
-              onLikesCountUpdate(payload.new.likes as number);
+              onLikesCountUpdateRef.current(payload.new.likes as number);
             }
 
             if (
@@ -313,7 +374,7 @@ export function useRealtimeSync({
                 payload.new.title as string,
                 selectedVersionStateRef.current,
               );
-              onTitleUpdate(newTitle);
+              onTitleUpdateRef.current(newTitle);
               updateDocumentTitle(
                 payload.new.title as string,
                 selectedVersionStateRef.current,
@@ -321,7 +382,9 @@ export function useRealtimeSync({
             }
 
             if (payload.new.is_private !== undefined) {
-              onVisibilityUpdate(!(payload.new.is_private as boolean));
+              onVisibilityUpdateRef.current(
+                !(payload.new.is_private as boolean),
+              );
             }
 
             if (
@@ -335,7 +398,7 @@ export function useRealtimeSync({
                   .eq("chat_id", chatId)
                   .maybeSingle();
                 if (domainData) {
-                  onCustomDomainUpdate(domainData);
+                  onCustomDomainUpdateRef.current(domainData);
                 }
               } catch (error) {
                 console.error("Error fetching custom domain:", error);
@@ -353,9 +416,9 @@ export function useRealtimeSync({
                 newStreamId !== currentStreamIdRef.current &&
                 !isLoadingRef.current
               ) {
-                onExternalStreamDetected(newStreamId);
+                onExternalStreamDetectedRef.current(newStreamId);
               } else if (!newStreamId && oldStreamId) {
-                onExternalStreamDetected(null);
+                onExternalStreamDetectedRef.current(null);
               }
             }
           }
@@ -370,7 +433,7 @@ export function useRealtimeSync({
           filter: `chat_id=eq.${chatId}`,
         },
         async (payload) => {
-          onCustomDomainUpdate(payload.new as CustomDomainData);
+          onCustomDomainUpdateRef.current(payload.new as CustomDomainData);
         },
       )
       .on(
@@ -382,7 +445,7 @@ export function useRealtimeSync({
           filter: `chat_id=eq.${chatId}`,
         },
         async (payload) => {
-          onCustomDomainUpdate(payload.new as CustomDomainData);
+          onCustomDomainUpdateRef.current(payload.new as CustomDomainData);
         },
       )
       .on(
@@ -394,7 +457,7 @@ export function useRealtimeSync({
           filter: `chat_id=eq.${chatId}`,
         },
         async () => {
-          onCustomDomainUpdate(null);
+          onCustomDomainUpdateRef.current(null);
         },
       );
 
@@ -420,13 +483,13 @@ export function useRealtimeSync({
                   .eq("id", payload.new.id)
                   .maybeSingle();
                 if (data) {
-                  onSubscriptionUpdate(data);
+                  onSubscriptionUpdateRef.current(data);
                 }
               } catch (error) {
                 console.error("Error fetching subscription:", error);
               }
             } else {
-              onSubscriptionUpdate(null);
+              onSubscriptionUpdateRef.current(null);
             }
           },
         )
@@ -439,7 +502,7 @@ export function useRealtimeSync({
             filter: `user_id=eq.${connectedUserId}`,
           },
           async (payload) => {
-            onGithubConnectionUpdate(
+            onGithubConnectionUpdateRef.current(
               payload.new as Tables<"github_connections">,
             );
           },
@@ -453,7 +516,7 @@ export function useRealtimeSync({
             filter: `user_id=eq.${connectedUserId}`,
           },
           async (payload) => {
-            onGithubConnectionUpdate(
+            onGithubConnectionUpdateRef.current(
               payload.new as Tables<"github_connections">,
             );
           },
@@ -467,10 +530,12 @@ export function useRealtimeSync({
             filter: `user_id=eq.${connectedUserId}`,
           },
           async () => {
-            onGithubConnectionUpdate(null);
+            onGithubConnectionUpdateRef.current(null);
           },
         );
     }
+
+    channelRef.current = channel;
 
     channel.subscribe((status) => {
       if (status === "SUBSCRIBED") {
@@ -491,27 +556,13 @@ export function useRealtimeSync({
     });
 
     return () => {
-      channel.unsubscribe();
+      if (channelRef.current) {
+        channelRef.current.unsubscribe();
+        channelRef.current = null;
+      }
     };
+    // Only re-subscribe when chatId or connectedUserId changes
+    // All callbacks are stored in refs to avoid re-subscriptions
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    chatId,
-    connectedUserId,
-    selectedVersionRef,
-    onMessagesUpdate,
-    onMessagesDelete,
-    onChatUpdate,
-    onLikesCountUpdate,
-    onTitleUpdate,
-    onVisibilityUpdate,
-    onCustomDomainUpdate,
-    onSubscriptionUpdate,
-    onGithubConnectionUpdate,
-    onSelectedVersionUpdate,
-    onWebcontainerReadyUpdate,
-    onForceBuildUpdate,
-    onLastAssistantMessageUpdate,
-    onExternalStreamDetected,
-    onBuildStatusChange,
-  ]);
+  }, [chatId, connectedUserId]);
 }

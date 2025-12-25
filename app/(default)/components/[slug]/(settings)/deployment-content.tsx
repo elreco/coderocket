@@ -10,6 +10,7 @@ import {
   Zap,
   Layers,
   Copy,
+  RefreshCw,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 
@@ -24,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { useComponentContext } from "@/context/component-context";
 import { toast } from "@/hooks/use-toast";
 import { CustomDomainData } from "@/types/custom-domain";
@@ -34,6 +36,7 @@ import {
   updateDeploymentSubdomain,
   checkSubdomainAvailability,
   getCustomDomain,
+  updateAutoDeploySettings,
 } from "../actions";
 
 import CustomDomainSection from "./custom-domain-section";
@@ -59,6 +62,8 @@ export default function DeploymentContent() {
   const [customDomain, setCustomDomain] = useState<CustomDomainData | null>(
     null,
   );
+  const [autoDeploy, setAutoDeploy] = useState<boolean>(true);
+  const [isUpdatingAutoDeploy, setIsUpdatingAutoDeploy] = useState(false);
 
   const subscription = contextSubscription;
 
@@ -129,6 +134,13 @@ export default function DeploymentContent() {
       setSelectedVersion(latestVersion);
     }
   }, [currentSubdomain, currentDeployedVersion, latestVersion]);
+
+  // Initialize autoDeploy from fetchedChat (defaults to true if null)
+  useEffect(() => {
+    if (fetchedChat?.auto_deploy !== undefined) {
+      setAutoDeploy(fetchedChat.auto_deploy !== false);
+    }
+  }, [fetchedChat?.auto_deploy]);
 
   const validateSubdomain = (value: string): boolean => {
     const regex = /^[a-z0-9][a-z0-9-]*[a-z0-9]$/;
@@ -380,6 +392,59 @@ export default function DeploymentContent() {
     }
   };
 
+  const handleAutoDeployToggle = async (enabled: boolean) => {
+    if (!isOwner) {
+      toast({
+        variant: "destructive",
+        title: "Unauthorized",
+        description: "Only the owner can change auto-deploy settings.",
+        duration: 4000,
+      });
+      return;
+    }
+
+    setIsUpdatingAutoDeploy(true);
+    // Optimistically update the UI
+    setAutoDeploy(enabled);
+
+    try {
+      await updateAutoDeploySettings(chatId, enabled);
+
+      toast({
+        variant: "default",
+        title: enabled ? "Auto-deploy enabled" : "Auto-deploy disabled",
+        description: enabled
+          ? "New versions will be automatically deployed when built."
+          : "New versions will not be automatically deployed.",
+        duration: 4000,
+      });
+    } catch (error) {
+      // Revert on error
+      setAutoDeploy(!enabled);
+
+      if (error instanceof Error && error.message === "payment-required") {
+        toast({
+          variant: "destructive",
+          title: "Premium required",
+          description: "Auto-deploy is a premium feature.",
+          duration: 4000,
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Failed to update settings",
+          description:
+            error instanceof Error
+              ? error.message
+              : "Failed to update auto-deploy settings",
+          duration: 4000,
+        });
+      }
+    } finally {
+      setIsUpdatingAutoDeploy(false);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-6 p-4">
       <div className="flex items-center">
@@ -469,6 +534,30 @@ export default function DeploymentContent() {
                 <ExternalLink className="size-3 shrink-0" />
               </a>
             )}
+          </div>
+
+          {/* Auto-deploy toggle */}
+          <div className="flex items-center justify-between rounded-lg border border-border bg-background p-4">
+            <div className="flex items-start gap-3">
+              <RefreshCw className="size-5 mt-0.5 shrink-0 text-muted-foreground" />
+              <div className="space-y-1">
+                <Label
+                  htmlFor="auto-deploy"
+                  className="text-sm font-medium cursor-pointer"
+                >
+                  Auto-deploy new versions
+                </Label>
+                <p className="text-muted-foreground text-xs">
+                  Automatically deploy new versions when they are built.
+                </p>
+              </div>
+            </div>
+            <Switch
+              id="auto-deploy"
+              checked={autoDeploy}
+              onCheckedChange={handleAutoDeployToggle}
+              disabled={!isOwner || isUpdatingAutoDeploy}
+            />
           </div>
         </>
       )}

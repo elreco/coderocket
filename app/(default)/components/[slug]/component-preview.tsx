@@ -16,7 +16,17 @@ import { createContinuePrompt } from "@/utils/completion-parser";
 import { FREE_CHAR_LIMIT } from "@/utils/config";
 import { createClient } from "@/utils/supabase/client";
 
-function LoadingStateComponent({ state }: { state: WebcontainerLoadingState }) {
+import { ComponentLoadingMockup } from "./component-loading-mockup";
+
+function LoadingStateComponent({
+  state,
+  customTitle,
+  customDescription,
+}: {
+  state: WebcontainerLoadingState;
+  customTitle?: string;
+  customDescription?: string;
+}) {
   const { setInput, handleSubmitToAI, authorized, messages } =
     useComponentContext();
 
@@ -50,29 +60,37 @@ function LoadingStateComponent({ state }: { state: WebcontainerLoadingState }) {
     );
   }
 
+  const title =
+    customTitle ||
+    (state === "initializing" && "Initializing WebContainer...") ||
+    (state === "deploying" && "Deploying application...") ||
+    (state === "processing" && "Processing application...") ||
+    (state === "starting" && "Starting application...") ||
+    "";
+
+  const description =
+    customDescription ||
+    (state === "initializing" && "Setting up development environment.") ||
+    (state === "deploying" && "It may take a few minutes.") ||
+    (state === "processing" && "Analyzing and generating component.") ||
+    (state === "starting" && "One moment, application is starting.") ||
+    "";
+
   return (
     <div className="flex size-full flex-col items-center justify-center space-y-4 p-8 text-center">
       <Loader2 className="text-primary size-8 animate-spin" />
       <div className="space-y-2">
-        <h3 className="font-semibold">
-          {state === "initializing" && "Initializing WebContainer..."}
-          {state === "deploying" && "Deploying application..."}
-          {state === "processing" && "Processing application..."}
-          {state === "starting" && "Starting application..."}
-        </h3>
-        <p className="text-muted-foreground text-sm">
-          {state === "initializing" && "Setting up development environment."}
-          {state === "deploying" && "It may take a few minutes."}
-          {state === "processing" && "Analyzing and generating component."}
-          {state === "starting" && "One moment, application is starting."}
-        </p>
+        {title && <h3 className="font-semibold">{title}</h3>}
+        {description && (
+          <p className="text-muted-foreground text-sm">{description}</p>
+        )}
       </div>
     </div>
   );
 }
 
 export default function ComponentPreview() {
-  const { loadingState, buildError } = useBuilder();
+  const { loadingState, buildError, setLoadingState } = useBuilder();
   const {
     chatId,
     selectedVersion,
@@ -90,8 +108,8 @@ export default function ComponentPreview() {
     isElementSelectionActive,
     iframeKey,
     completion,
+    isStreamingComplete,
   } = useComponentContext();
-  const [iframeLoading, setIframeLoading] = React.useState(true);
   const [hasEverLoaded, setHasEverLoaded] = React.useState(false);
   const iframeRef = React.useRef<HTMLIFrameElement>(null);
 
@@ -102,11 +120,8 @@ export default function ComponentPreview() {
     if (selectedVersion === 0) {
       return undefined;
     }
-    const isGenerating =
-      isLoading || (loadingState && loadingState !== "error");
-    if (selectedVersion > 0 && isGenerating) {
-      return selectedVersion - 1;
-    }
+    // On initialise toujours à selectedVersion au chargement pour éviter le flickering
+    // L'effet se chargera de le changer si nécessaire
     return selectedVersion;
   };
 
@@ -115,6 +130,19 @@ export default function ComponentPreview() {
   >(getInitialDisplayVersion);
   const [previousVersionHasError, setPreviousVersionHasError] =
     React.useState(false);
+  const [previousVersionIsBuilt, setPreviousVersionIsBuilt] =
+    React.useState(false);
+
+  // Calculer isFirstGeneration avant les useEffects
+  const isFirstGeneration =
+    selectedVersion === 0 ||
+    selectedVersion === -1 ||
+    selectedVersion === undefined;
+
+  // Reset hasEverLoaded when selectedVersion changes (not displayVersion to avoid flickering)
+  React.useEffect(() => {
+    setHasEverLoaded(false);
+  }, [selectedVersion]);
 
   // Réinitialiser displayVersion à undefined quand on commence le scraping de la première version
   React.useEffect(() => {
@@ -126,8 +154,34 @@ export default function ComponentPreview() {
     ) {
       setDisplayVersion(undefined);
       setPreviousVersionHasError(false);
+      setPreviousVersionIsBuilt(false);
     }
   }, [isScrapingWebsite, selectedVersion]);
+
+  // Vérifier si la version précédente est buildée quand selectedVersion change
+  React.useEffect(() => {
+    if (selectedVersion === undefined || selectedVersion <= 0) {
+      setPreviousVersionIsBuilt(false);
+      return;
+    }
+
+    const prevVersion = selectedVersion - 1;
+    const supabase = createClient();
+    void (async () => {
+      try {
+        const { data } = await supabase
+          .from("messages")
+          .select("is_built")
+          .eq("chat_id", chatId)
+          .eq("role", "assistant")
+          .eq("version", prevVersion)
+          .single();
+        setPreviousVersionIsBuilt(data?.is_built === true);
+      } catch {
+        setPreviousVersionIsBuilt(false);
+      }
+    })();
+  }, [selectedVersion, chatId]);
 
   React.useEffect(() => {
     if (selectedVersion === undefined) return;
@@ -150,14 +204,14 @@ export default function ComponentPreview() {
     }
 
     // Pour les versions > 0 (y compris pendant le scraping), définir displayVersion à la version précédente
+    // MAIS seulement si la version précédente est buildée
     if (displayVersion === undefined) {
       if (selectedVersion > 0 && (isGenerating || isScrapingWebsite)) {
         const prevVersion = selectedVersion - 1;
-        setDisplayVersion(prevVersion);
         const supabase = createClient();
         supabase
           .from("messages")
-          .select("build_error, content")
+          .select("build_error, content, is_built")
           .eq("chat_id", chatId)
           .eq("role", "assistant")
           .eq("version", prevVersion)
@@ -168,17 +222,31 @@ export default function ComponentPreview() {
               data?.content?.includes("<!-- FINISH_REASON: length -->") ||
               data?.content?.includes("<!-- FINISH_REASON: error -->");
             setPreviousVersionHasError(!!hasError);
+            const isBuilt = data?.is_built === true;
+            setPreviousVersionIsBuilt(isBuilt);
+
+            // Ne définir displayVersion que si la version précédente est buildée
+            // Sinon, displayVersion reste undefined, donc le loader fullscreen s'affichera
+            if (isBuilt) {
+              setDisplayVersion(prevVersion);
+            }
           });
-      } else if (!isGenerating && !isScrapingWebsite) {
-        setDisplayVersion(selectedVersion);
-        setPreviousVersionHasError(false);
       }
+      // Pour la première génération, on ne définit PAS displayVersion ici
+      // Il sera défini dans le onLoad de l'iframe pour permettre "Starting version #" de s'afficher
     } else if (
-      !isGenerating &&
+      !isLoading &&
       !isScrapingWebsite &&
       displayVersion !== selectedVersion &&
-      isWebcontainerReady
+      !isFirstGeneration && // Ne pas définir displayVersion pour la première génération ici
+      isWebcontainerReady &&
+      loadingState !== "error" &&
+      (loadingState === null || loadingState === "starting")
     ) {
+      // Only update displayVersion when build is complete, webcontainer is ready, and no active loading
+      // This prevents flickering on page load
+      // Use !isLoading instead of !isGenerating to allow "starting" state
+      // Exclure la première génération pour permettre l'affichage du loader "Building version #"
       setDisplayVersion(selectedVersion);
       setPreviousVersionHasError(false);
     }
@@ -190,17 +258,8 @@ export default function ComponentPreview() {
     isWebcontainerReady,
     chatId,
     isScrapingWebsite,
+    isFirstGeneration,
   ]);
-
-  React.useEffect(() => {
-    if (isWebcontainerReady) {
-      setIframeLoading(true);
-      const timeout = setTimeout(() => {
-        setIframeLoading(false);
-      }, 3000);
-      return () => clearTimeout(timeout);
-    }
-  }, [chatId, displayVersion, isWebcontainerReady]);
 
   React.useEffect(() => {
     const handleRouteMessage = (event: MessageEvent) => {
@@ -243,11 +302,11 @@ export default function ComponentPreview() {
       window.removeEventListener("message", handleRouteMessage);
     };
   }, [syncPreviewPath]);
-  const isFirstGeneration =
-    selectedVersion === 0 ||
-    selectedVersion === -1 ||
-    selectedVersion === undefined;
   const isGenerating = isLoading || (loadingState && loadingState !== "error");
+  const isCorrectionInProgress =
+    buildError &&
+    (isLoading ||
+      (loadingState && loadingState !== "error" && loadingState !== null));
 
   // Pour la première version pendant le scraping, afficher le loader
   // Pour les versions > 0, on affiche l'iframe de la version précédente (pas le loader)
@@ -257,19 +316,67 @@ export default function ComponentPreview() {
       selectedVersion === -1 ||
       selectedVersion === undefined);
 
-  const shouldShowLoader =
+  // Cas 1 - Première génération
+  const shouldShowLoaderFirstGen =
     isScrapingFirstVersion ||
     (!isScrapingWebsite && isContinuingFromLengthError) ||
-    (!isScrapingWebsite && isFirstGeneration && isLoading) ||
     (!isScrapingWebsite &&
       isFirstGeneration &&
-      loadingState &&
-      loadingState !== "error") ||
-    (!isScrapingWebsite && isLengthError && isGenerating) ||
+      isLoading &&
+      !isStreamingComplete) || // Pendant le stream
+    // Pour la version 0, afficher le loader si displayVersion est undefined et qu'on n'est plus en train de charger
+    // (peu importe l'état exact de isStreamingComplete ou loadingState)
     (!isScrapingWebsite &&
-      !isFirstGeneration &&
+      isFirstGeneration &&
+      !isLoading &&
+      displayVersion === undefined &&
+      loadingState !== "error") || // Après stream, avant build
+    (!isScrapingWebsite &&
+      isFirstGeneration &&
+      (loadingState === "starting" ||
+        (loadingState === null && isWebcontainerReady)) &&
+      displayVersion === undefined &&
+      !hasEverLoaded) || // Build terminé, iframe commence (mais pas encore chargée)
+    (!isScrapingWebsite && isLengthError && isGenerating);
+
+  // Cas 2 - Générations suivantes
+  // Seulement si pas de version précédente buildée
+  const shouldShowLoaderSubsequentGen =
+    !isScrapingWebsite &&
+    !isFirstGeneration &&
+    isGenerating &&
+    !previousVersionIsBuilt &&
+    (previousVersionHasError || displayVersion === undefined);
+
+  // Cas 3 - Fix sans version précédente buildée
+  // Se comporte comme une première génération (loader fullscreen)
+  const shouldShowLoaderFix =
+    isCorrectionInProgress &&
+    !previousVersionIsBuilt &&
+    displayVersion === undefined;
+
+  const shouldShowLoader =
+    shouldShowLoaderFirstGen ||
+    shouldShowLoaderSubsequentGen ||
+    shouldShowLoaderFix;
+
+  // Déterminer si on doit utiliser le mockup loader (génération) ou LoadingStateComponent (build/start)
+  // Le mockup loader s'affiche UNIQUEMENT pendant le stream actif
+  const shouldUseMockupLoader =
+    (isFirstGeneration && isLoading && !isStreamingComplete) ||
+    isScrapingFirstVersion ||
+    (!isFirstGeneration &&
       isGenerating &&
-      previousVersionHasError);
+      !previousVersionIsBuilt &&
+      (previousVersionHasError || displayVersion === undefined) &&
+      isLoading &&
+      !isStreamingComplete) ||
+    (isCorrectionInProgress &&
+      !previousVersionIsBuilt &&
+      isLoading &&
+      !isStreamingComplete) ||
+    (isLengthError && isGenerating && isLoading && !isStreamingComplete) ||
+    (isContinuingFromLengthError && isLoading && !isStreamingComplete);
 
   // Forcer displayVersion à undefined pendant le scraping de la première version
   React.useEffect(() => {
@@ -282,31 +389,89 @@ export default function ComponentPreview() {
     ) {
       setDisplayVersion(undefined);
       setPreviousVersionHasError(false);
+      setPreviousVersionIsBuilt(false);
     }
   }, [isScrapingWebsite, selectedVersion, displayVersion]);
-  // Only show "Generating version" if there's actual generation activity
-  // (completion is non-empty), not just during initial page load
+  // Unified badge logic - show only one badge at a time
+  // Cas 2.2 - Générations suivantes avec version précédente buildée uniquement
   const hasActiveGeneration = completion.length > 0;
-  const isGeneratingNewVersion =
+
+  // Badge uniquement si version précédente est buildée (iframe disponible)
+  const shouldShowBadge =
     !isFirstGeneration &&
     !isLengthError &&
-    hasActiveGeneration &&
-    (isLoading ||
-      loadingState === "processing" ||
-      loadingState === "deploying");
-  const isCorrectionInProgress =
-    buildError &&
-    (isLoading ||
-      (loadingState && loadingState !== "error" && loadingState !== null));
+    !buildError &&
+    previousVersionIsBuilt &&
+    displayVersion !== undefined &&
+    ((isLoading && hasActiveGeneration) || // Pendant le stream
+      loadingState === "processing" || // Pendant le build
+      (loadingState === "starting" && !hasEverLoaded)); // Pendant le chargement iframe
   const previewPathSuffix = previewPath === "/" ? "" : previewPath;
+
+  // Déterminer le message personnalisé pour le loader fullscreen
+  const getLoaderCustomTitle = () => {
+    // Cas 1 - Première génération
+    // "Building version #" après le stream, avant ou pendant le build
+    if (
+      isFirstGeneration &&
+      !isLoading &&
+      displayVersion === undefined &&
+      (loadingState === "processing" || loadingState === null)
+    ) {
+      return `Building version ${selectedVersion}...`;
+    }
+    // "Starting version #" quand le build est terminé et l'iframe commence
+    if (
+      isFirstGeneration &&
+      (loadingState === "starting" ||
+        (loadingState === null && isWebcontainerReady)) &&
+      displayVersion === undefined &&
+      !hasEverLoaded
+    ) {
+      return `Starting version ${selectedVersion}...`;
+    }
+    // Cas 3 - Fix sans version précédente buildée (se comporte comme première génération)
+    if (
+      isCorrectionInProgress &&
+      !previousVersionIsBuilt &&
+      !isLoading &&
+      isStreamingComplete &&
+      loadingState === "processing"
+    ) {
+      return `Building version ${selectedVersion}...`;
+    }
+    if (
+      isCorrectionInProgress &&
+      !previousVersionIsBuilt &&
+      loadingState === "starting"
+    ) {
+      return `Starting version ${selectedVersion}...`;
+    }
+    return undefined;
+  };
 
   return (
     <>
-      {shouldShowLoader && !isCorrectionInProgress && (
-        <div className="relative size-full z-50">
-          <LoadingStateComponent state={loadingState || "processing"} />
-        </div>
-      )}
+      {shouldShowLoader &&
+        !isCorrectionInProgress &&
+        !(
+          isFirstGeneration &&
+          (loadingState === "starting" ||
+            (loadingState === null && isWebcontainerReady)) &&
+          displayVersion === undefined &&
+          !hasEverLoaded
+        ) && (
+          <div className="relative size-full z-50">
+            {shouldUseMockupLoader ? (
+              <ComponentLoadingMockup fileName={undefined} />
+            ) : (
+              <LoadingStateComponent
+                state={loadingState || "processing"}
+                customTitle={getLoaderCustomTitle()}
+              />
+            )}
+          </div>
+        )}
 
       {buildError && !isCorrectionInProgress && (
         <div className="relative flex size-full h-full items-center justify-center px-4">
@@ -373,9 +538,18 @@ export default function ComponentPreview() {
         </div>
       )}
       {chatId &&
-        displayVersion !== undefined &&
+        (displayVersion !== undefined ||
+          (isFirstGeneration &&
+            (loadingState === "starting" ||
+              (loadingState === null && isWebcontainerReady)) &&
+            !hasEverLoaded)) &&
         (!buildError || isCorrectionInProgress) &&
-        !shouldShowLoader && (
+        (!shouldShowLoader ||
+          (isFirstGeneration &&
+            (loadingState === "starting" ||
+              (loadingState === null && isWebcontainerReady)) &&
+            displayVersion === undefined &&
+            !hasEverLoaded)) && (
           <div
             className={cn(
               "relative size-full flex items-center justify-center",
@@ -393,43 +567,66 @@ export default function ComponentPreview() {
                   "w-[375px] h-full max-w-full max-h-full shadow-2xl",
               )}
             >
-              {(isGeneratingNewVersion || isCorrectionInProgress) &&
-                hasEverLoaded && (
-                  <div className="border-primary bg-background absolute top-4 right-4 z-20 flex items-center gap-2 rounded-full border px-4 py-2 shadow-xl">
-                    <Loader2 className="text-primary size-4 animate-spin" />
-                    <span className="text-primary text-sm font-medium">
-                      {isCorrectionInProgress
-                        ? isLoading
-                          ? `Fixing version ${selectedVersion}...`
-                          : loadingState === "processing"
-                            ? `Building version ${selectedVersion}...`
-                            : loadingState === "deploying"
-                              ? `Deploying version ${selectedVersion}...`
-                              : `Fixing version ${selectedVersion}...`
+              {shouldShowBadge || isCorrectionInProgress ? (
+                <div className="border-primary bg-background absolute top-4 right-4 z-20 flex items-center gap-2 rounded-full border px-4 py-2 shadow-xl">
+                  <Loader2 className="text-primary size-4 animate-spin" />
+                  <span className="text-primary text-sm font-medium">
+                    {isCorrectionInProgress
+                      ? isLoading
+                        ? `Fixing version ${selectedVersion}...`
                         : loadingState === "processing"
                           ? `Building version ${selectedVersion}...`
                           : loadingState === "deploying"
                             ? `Deploying version ${selectedVersion}...`
+                            : loadingState === "starting"
+                              ? `Starting version ${selectedVersion}...`
+                              : `Fixing version ${selectedVersion}...`
+                      : isLoading && hasActiveGeneration
+                        ? `Generating version ${selectedVersion}...`
+                        : loadingState === "processing"
+                          ? `Building version ${selectedVersion}...`
+                          : loadingState === "starting"
+                            ? `Starting version ${selectedVersion}...`
                             : `Generating version ${selectedVersion}...`}
-                    </span>
+                  </span>
+                </div>
+              ) : null}
+              {/* Afficher le loader "Starting version #" par-dessus l'iframe qui charge */}
+              {isFirstGeneration &&
+                (loadingState === "starting" ||
+                  (loadingState === null && isWebcontainerReady)) &&
+                displayVersion === undefined &&
+                !hasEverLoaded &&
+                !buildError && (
+                  <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+                    <LoadingStateComponent
+                      state="starting"
+                      customTitle={`Starting version ${selectedVersion}...`}
+                    />
                   </div>
                 )}
-              {iframeLoading && isWebcontainerReady && (
-                <div className="bg-background absolute inset-0 z-30 flex items-center justify-center">
-                  <LoadingStateComponent state="starting" />
-                </div>
-              )}
-              {displayVersion !== undefined && (
+              {(displayVersion !== undefined ||
+                (isFirstGeneration &&
+                  (loadingState === "starting" ||
+                    (loadingState === null && isWebcontainerReady)) &&
+                  !hasEverLoaded)) && (
                 <>
                   <iframe
                     ref={iframeRef}
-                    key={`iframe-${displayVersion}-${iframeKey}`}
-                    src={`https://${chatId}-${displayVersion}.webcontainer.coderocket.app`}
+                    key={`iframe-${displayVersion ?? selectedVersion}-${iframeKey}`}
+                    src={`https://${chatId}-${displayVersion ?? selectedVersion}.webcontainer.coderocket.app`}
                     className="size-full border-none"
                     loading="eager"
                     onLoad={() => {
-                      setIframeLoading(false);
+                      // Pour la première génération, définir displayVersion et hasEverLoaded en premier
+                      // pour que shouldShowLoader devienne false immédiatement
+                      if (isFirstGeneration && displayVersion === undefined) {
+                        setDisplayVersion(selectedVersion);
+                        setPreviousVersionHasError(false);
+                      }
                       setHasEverLoaded(true);
+                      // Always clear loading state when iframe is ready
+                      setLoadingState(null);
                       const hashIndex = previewPathSuffix.indexOf("#");
                       const hash =
                         hashIndex !== -1

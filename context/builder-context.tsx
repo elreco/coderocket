@@ -51,7 +51,7 @@ export const BuilderProvider = ({
     useState<WebcontainerLoadingState>(null);
 
   const supabase = createClient();
-  const { selectedVersion, chatId, isLoading, setWebcontainerReady } =
+  const { selectedVersion, chatId, setWebcontainerReady } =
     useComponentContext();
 
   useEffect(() => {
@@ -71,17 +71,20 @@ export const BuilderProvider = ({
 
       const isBuildLock = errorData?.building === true;
 
+      // If there's a build error with a title (not just a lock), show error
       if (buildErrorData && !isBuildLock && errorData?.title) {
         setBuildError(buildErrorData as BuildError);
         setLoadingState("error");
         setWebcontainerReady(false);
-      } else if (!isBuilt) {
+      } else if (isBuildLock || !isBuilt) {
+        // Build is in progress (either locked or not built yet)
         setBuildError(null);
         setLoadingState("processing");
         setWebcontainerReady(false);
       } else if (isBuilt) {
+        // Build is complete
         setBuildError(null);
-        setLoadingState(null);
+        setLoadingState("starting");
         setWebcontainerReady(true);
       }
     },
@@ -89,18 +92,15 @@ export const BuilderProvider = ({
   );
 
   // React to build status changes from realtime sync
+  // Allow processing even during isLoading to catch build state changes
   useEffect(() => {
-    if (
-      buildStatusPayload &&
-      buildStatusPayload.version === selectedVersion &&
-      !isLoading
-    ) {
+    if (buildStatusPayload && buildStatusPayload.version === selectedVersion) {
       processBuildStatus(
         buildStatusPayload.isBuilt,
         buildStatusPayload.buildError,
       );
     }
-  }, [buildStatusPayload, selectedVersion, isLoading, processBuildStatus]);
+  }, [buildStatusPayload, selectedVersion, processBuildStatus]);
 
   // Initial fetch on mount or version change
   const fetchBuildStatus = useCallback(async () => {
@@ -122,12 +122,13 @@ export const BuilderProvider = ({
   }, [chatId, selectedVersion, supabase, processBuildStatus]);
 
   useEffect(() => {
-    if (selectedVersion === undefined || isLoading) {
+    if (selectedVersion === undefined) {
       return;
     }
 
+    // Fetch build status even during isLoading to catch build state changes
     fetchBuildStatus();
-  }, [selectedVersion, isLoading, fetchBuildStatus]);
+  }, [selectedVersion, fetchBuildStatus]);
 
   return (
     <BuilderContext.Provider
