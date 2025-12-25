@@ -424,7 +424,7 @@ export default function ComponentPreview() {
                   <iframe
                     ref={iframeRef}
                     key={`iframe-${displayVersion}-${iframeKey}`}
-                    src={`https://${chatId}-${displayVersion}.webcontainer.coderocket.app${previewPathSuffix}`}
+                    src={`https://${chatId}-${displayVersion}.webcontainer.coderocket.app`}
                     className="size-full border-none"
                     loading="eager"
                     onLoad={() => {
