@@ -397,6 +397,7 @@ export default function ComponentPreview() {
   const hasActiveGeneration = completion.length > 0;
 
   // Badge uniquement si version précédente est buildée (iframe disponible)
+  // Exclure "starting" car on utilise le loader fullscreen à la place
   const shouldShowBadge =
     !isFirstGeneration &&
     !isLengthError &&
@@ -404,8 +405,7 @@ export default function ComponentPreview() {
     previousVersionIsBuilt &&
     displayVersion !== undefined &&
     ((isLoading && hasActiveGeneration) || // Pendant le stream
-      loadingState === "processing" || // Pendant le build
-      (loadingState === "starting" && !hasEverLoaded)); // Pendant le chargement iframe
+      loadingState === "processing"); // Pendant le build
   const previewPathSuffix = previewPath === "/" ? "" : previewPath;
 
   // Déterminer le message personnalisé pour le loader fullscreen
@@ -567,7 +567,8 @@ export default function ComponentPreview() {
                   "w-[375px] h-full max-w-full max-h-full shadow-2xl",
               )}
             >
-              {shouldShowBadge || isCorrectionInProgress ? (
+              {shouldShowBadge ||
+              (isCorrectionInProgress && loadingState !== "starting") ? (
                 <div className="border-primary bg-background absolute top-4 right-4 z-20 flex items-center gap-2 rounded-full border px-4 py-2 shadow-xl">
                   <Loader2 className="text-primary size-4 animate-spin" />
                   <span className="text-primary text-sm font-medium">
@@ -578,25 +579,27 @@ export default function ComponentPreview() {
                           ? `Building version ${selectedVersion}...`
                           : loadingState === "deploying"
                             ? `Deploying version ${selectedVersion}...`
-                            : loadingState === "starting"
-                              ? `Starting version ${selectedVersion}...`
-                              : `Fixing version ${selectedVersion}...`
+                            : `Fixing version ${selectedVersion}...`
                       : isLoading && hasActiveGeneration
                         ? `Generating version ${selectedVersion}...`
                         : loadingState === "processing"
                           ? `Building version ${selectedVersion}...`
-                          : loadingState === "starting"
-                            ? `Starting version ${selectedVersion}...`
-                            : `Generating version ${selectedVersion}...`}
+                          : `Generating version ${selectedVersion}...`}
                   </span>
                 </div>
               ) : null}
               {/* Afficher le loader "Starting version #" par-dessus l'iframe qui charge */}
-              {isFirstGeneration &&
+              {((isFirstGeneration &&
                 (loadingState === "starting" ||
                   (loadingState === null && isWebcontainerReady)) &&
                 displayVersion === undefined &&
-                !hasEverLoaded &&
+                !hasEverLoaded) ||
+                (!isFirstGeneration &&
+                  previousVersionIsBuilt &&
+                  displayVersion !== undefined &&
+                  loadingState === "starting" &&
+                  !hasEverLoaded) ||
+                (isCorrectionInProgress && loadingState === "starting")) &&
                 !buildError && (
                   <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
                     <LoadingStateComponent
