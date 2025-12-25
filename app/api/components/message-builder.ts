@@ -147,6 +147,11 @@ export const buildIntelligentContext = async (
   };
 };
 
+export interface DomainInfo {
+  subdomain?: string | null;
+  customDomain?: string | null;
+}
+
 export const buildMessagesToOpenAi = async (
   messages: Tables<"messages">[],
   updatedPrompt: string,
@@ -155,6 +160,7 @@ export const buildMessagesToOpenAi = async (
   uploadedFilesInfo?: UploadedFileInfo[],
   currentFilesContext?: string,
   componentTitle?: string | null,
+  domainInfo?: DomainInfo | null,
 ): Promise<{ messagesToOpenAI: ModelMessage[] }> => {
   const getMessageFiles = (
     message: Tables<"messages">,
@@ -280,9 +286,25 @@ export const buildMessagesToOpenAi = async (
     titleContext = `\n\n<component_title>\nThe component title is: "${componentTitle}"\nIMPORTANT: Use this exact title in the <coderocketArtifact title="${componentTitle}"> tag.\n</component_title>\n\n`;
   }
 
+  let domainContext = "";
+  if (domainInfo && (domainInfo.subdomain || domainInfo.customDomain)) {
+    domainContext = `\n\n<deployment_domain>\nThis project is configured with the following deployment domains:\n`;
+    if (domainInfo.subdomain) {
+      domainContext += `- Subdomain: ${domainInfo.subdomain}.coderocket.app\n`;
+    }
+    if (domainInfo.customDomain) {
+      domainContext += `- Custom domain: ${domainInfo.customDomain}\n`;
+    }
+    domainContext += `\nYou can use this information if the user needs to reference the deployed URL in their application (e.g., for sharing links, meta tags, or API endpoints).\n</deployment_domain>\n\n`;
+  }
+
   const finalPromptText = currentFilesContext
-    ? currentFilesContext + titleContext + uploadedFilesContext + updatedPrompt
-    : titleContext + uploadedFilesContext + updatedPrompt;
+    ? currentFilesContext +
+      titleContext +
+      domainContext +
+      uploadedFilesContext +
+      updatedPrompt
+    : titleContext + domainContext + uploadedFilesContext + updatedPrompt;
 
   finalMessageContent.push({
     type: "text",

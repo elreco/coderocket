@@ -241,6 +241,15 @@ IMPORTANT: Always use Tailwind CSS v4 syntax, not v3.
     <responsive_design>
       - Ensure responsiveness using Tailwind utilities and verify seamless adaptation across screen sizes.
     </responsive_design>
+    <interactive_elements>
+      CRITICAL: ALWAYS add cursor-pointer class to ALL interactive elements:
+      - ALWAYS add \`cursor-pointer\` class to buttons, links, clickable cards, and any clickable element
+      - This is MANDATORY for good UX - users must see that elements are clickable
+      - Example: <button class="btn btn-primary cursor-pointer">Click me</button>
+      - Example: <a class="link cursor-pointer" href="#">Link</a>
+      - Example: <div onclick="handleClick()" class="card cursor-pointer">Clickable card</div>
+      - NEVER forget cursor-pointer on interactive elements - this is a critical UX requirement
+    </interactive_elements>
     <theme_management>
       - Set the initial theme to \`${theme}\` (data-theme="${theme}") on the first generation.
       - Maintain theme consistency unless explicitly requested otherwise.

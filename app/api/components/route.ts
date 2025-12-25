@@ -48,7 +48,11 @@ import { systemPrompt } from "@/utils/system-prompts";
 import { htmlSystemPrompt } from "@/utils/system-prompts/html";
 import { getUserTokenUsage, calculateTokenCost } from "@/utils/token-pricing";
 
-import { buildMessagesToOpenAi, parseFileItems } from "./message-builder";
+import {
+  buildMessagesToOpenAi,
+  parseFileItems,
+  DomainInfo,
+} from "./message-builder";
 import { setActiveStreamId, tryAcquireGenerationLock } from "./post-processing";
 import {
   optimizeMarkdownForWebsiteClone,
@@ -171,10 +175,31 @@ export async function POST(req: Request) {
 
     const { data: chatData } = await supabase
       .from("chats")
-      .select("title")
+      .select("title, deploy_subdomain")
       .eq("id", id)
       .single();
     const componentTitle = chatData?.title;
+
+    // Fetch domain info for AI context
+    let domainInfo: DomainInfo | null = null;
+    if (chatData?.deploy_subdomain) {
+      domainInfo = {
+        subdomain: chatData.deploy_subdomain,
+        customDomain: null,
+      };
+
+      // Also check for custom domain
+      const { data: customDomainData } = await supabase
+        .from("custom_domains")
+        .select("domain, is_verified")
+        .eq("chat_id", id)
+        .eq("is_verified", true)
+        .maybeSingle();
+
+      if (customDomainData?.domain) {
+        domainInfo.customDomain = customDomainData.domain;
+      }
+    }
 
     const latestVersion = messagesFromDatabase.reduce((max, message) => {
       if (typeof message.version !== "number") {
@@ -376,6 +401,7 @@ export async function POST(req: Request) {
       uploadedFilesInfo,
       currentFilesContext,
       componentTitle,
+      domainInfo,
     );
 
     // Add detailed logging for debugging
