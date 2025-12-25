@@ -1121,6 +1121,27 @@ export default function ComponentCompletion({
     setIsLoading(true);
   };
 
+  // Fonction pour mettre à jour previousArtifactFiles
+  const updatePreviousArtifactFiles = useCallback(
+    async (version: number) => {
+      if (version > 0) {
+        const previousCode = await getArtifactCodeByVersion(
+          chatId,
+          version - 1,
+        );
+        if (previousCode) {
+          const previousFiles = extractFilesFromArtifact(previousCode);
+          setPreviousArtifactFiles(previousFiles);
+        } else {
+          setPreviousArtifactFiles([]);
+        }
+      } else {
+        setPreviousArtifactFiles([]);
+      }
+    },
+    [chatId],
+  );
+
   const handleVersionSelect = (version: number, tabName?: string) => {
     // If we're just changing tabs on the same version, don't trigger a rebuild
     const isTabChangeOnly = version === selectedVersion && tabName;
@@ -1144,22 +1165,7 @@ export default function ComponentCompletion({
     }
 
     if (!isTabChangeOnly) {
-      if (version > 0) {
-        void (async () => {
-          const previousCode = await getArtifactCodeByVersion(
-            chatId,
-            version - 1,
-          );
-          if (previousCode) {
-            const previousFiles = extractFilesFromArtifact(previousCode);
-            setPreviousArtifactFiles(previousFiles);
-          } else {
-            setPreviousArtifactFiles([]);
-          }
-        })();
-      } else {
-        setPreviousArtifactFiles([]);
-      }
+      void updatePreviousArtifactFiles(version);
     }
 
     // Only update these states if version actually changed
@@ -1569,6 +1575,7 @@ export default function ComponentCompletion({
     onExternalStreamDetected: handleExternalStreamDetected,
     onBuildStatusChange: handleBuildStatusChange,
     onRefreshData: handleRefreshData,
+    onPreviousArtifactFilesUpdate: updatePreviousArtifactFiles,
   });
 
   const contextValue = {

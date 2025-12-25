@@ -36,6 +36,7 @@ interface UseRealtimeSyncOptions {
   onExternalStreamDetected: (streamId: string | null) => void;
   onBuildStatusChange?: (payload: BuildStatusPayload) => void;
   onRefreshData?: () => Promise<void>;
+  onPreviousArtifactFilesUpdate?: (version: number) => Promise<void>;
 }
 
 export function useRealtimeSync({
@@ -64,6 +65,7 @@ export function useRealtimeSync({
   onExternalStreamDetected,
   onBuildStatusChange,
   onRefreshData,
+  onPreviousArtifactFilesUpdate,
 }: UseRealtimeSyncOptions) {
   // Use useMemo to ensure stable reference - createClient is now a singleton
 
@@ -94,8 +96,15 @@ export function useRealtimeSync({
   const onLastAssistantMessageUpdateRef = useRef(onLastAssistantMessageUpdate);
   const onExternalStreamDetectedRef = useRef(onExternalStreamDetected);
   const onBuildStatusChangeRef = useRef(onBuildStatusChange);
+  const onPreviousArtifactFilesUpdateRef = useRef(
+    onPreviousArtifactFilesUpdate,
+  );
 
   // Update refs when callbacks change
+  useEffect(() => {
+    onPreviousArtifactFilesUpdateRef.current = onPreviousArtifactFilesUpdate;
+  }, [onPreviousArtifactFilesUpdate]);
+
   useEffect(() => {
     onMessagesUpdateRef.current = onMessagesUpdate;
     onMessagesDeleteRef.current = onMessagesDelete;
@@ -206,6 +215,10 @@ export function useRealtimeSync({
             selectedVersionStateRef.current = newVersion;
             // Reset webcontainer ready state since new version is not built yet
             onWebcontainerReadyUpdateRef.current(false);
+            // Update previousArtifactFiles for diff calculation
+            if (onPreviousArtifactFilesUpdateRef.current && newVersion > 0) {
+              void onPreviousArtifactFilesUpdateRef.current(newVersion);
+            }
           }
 
           onMessagesUpdateRef.current((prev) => {
@@ -263,6 +276,10 @@ export function useRealtimeSync({
             selectedVersionRef.current = 0;
             // Also update the internal ref synchronously to ensure build check works
             selectedVersionStateRef.current = 0;
+            // Update previousArtifactFiles for diff calculation (version 0 has no previous)
+            if (onPreviousArtifactFilesUpdateRef.current) {
+              void onPreviousArtifactFilesUpdateRef.current(0);
+            }
           }
 
           const shouldUpdateBuild =
