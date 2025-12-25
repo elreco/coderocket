@@ -16,11 +16,17 @@ import {
   WebcontainerLoadingState,
 } from "./component-context";
 
-type BuildError = {
+export type BuildError = {
   title: string;
   description: string;
   errors?: string[];
   exitCode?: number;
+};
+
+export type BuildStatusPayload = {
+  isBuilt: boolean;
+  buildError: unknown;
+  version: number;
 };
 
 interface BuilderContextType {
@@ -29,9 +35,17 @@ interface BuilderContextType {
   buildError: BuildError | null;
 }
 
+interface BuilderProviderProps {
+  children: ReactNode;
+  buildStatusPayload?: BuildStatusPayload | null;
+}
+
 const BuilderContext = createContext<BuilderContextType | undefined>(undefined);
 
-export const BuilderProvider = ({ children }: { children: ReactNode }) => {
+export const BuilderProvider = ({
+  children,
+  buildStatusPayload,
+}: BuilderProviderProps) => {
   const [buildError, setBuildError] = useState<BuildError | null>(null);
   const [loadingState, setLoadingState] =
     useState<WebcontainerLoadingState>(null);
@@ -47,6 +61,48 @@ export const BuilderProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [selectedVersion]);
 
+  // Process build status from realtime updates (via props from parent)
+  const processBuildStatus = useCallback(
+    (isBuilt: boolean, buildErrorData: unknown) => {
+      const errorData = buildErrorData as {
+        building?: boolean;
+        title?: string;
+      } | null;
+
+      const isBuildLock = errorData?.building === true;
+
+      if (buildErrorData && !isBuildLock && errorData?.title) {
+        setBuildError(buildErrorData as BuildError);
+        setLoadingState("error");
+        setWebcontainerReady(false);
+      } else if (!isBuilt) {
+        setBuildError(null);
+        setLoadingState("processing");
+        setWebcontainerReady(false);
+      } else if (isBuilt) {
+        setBuildError(null);
+        setLoadingState(null);
+        setWebcontainerReady(true);
+      }
+    },
+    [setWebcontainerReady],
+  );
+
+  // React to build status changes from realtime sync
+  useEffect(() => {
+    if (
+      buildStatusPayload &&
+      buildStatusPayload.version === selectedVersion &&
+      !isLoading
+    ) {
+      processBuildStatus(
+        buildStatusPayload.isBuilt,
+        buildStatusPayload.buildError,
+      );
+    }
+  }, [buildStatusPayload, selectedVersion, isLoading, processBuildStatus]);
+
+  // Initial fetch on mount or version change
   const fetchBuildStatus = useCallback(async () => {
     if (selectedVersion === undefined) {
       return;
@@ -60,27 +116,10 @@ export const BuilderProvider = ({ children }: { children: ReactNode }) => {
       .eq("version", selectedVersion)
       .single();
 
-    const buildErrorData = message?.build_error as {
-      building?: boolean;
-      title?: string;
-    } | null;
-
-    const isBuildLock = buildErrorData?.building === true;
-
-    if (message?.build_error && !isBuildLock && buildErrorData?.title) {
-      setBuildError(message.build_error as BuildError);
-      setLoadingState("error");
-      setWebcontainerReady(false);
-    } else if (message && !message.is_built) {
-      setBuildError(null);
-      setLoadingState("processing");
-      setWebcontainerReady(false);
-    } else if (message?.is_built) {
-      setBuildError(null);
-      setLoadingState(null);
-      setWebcontainerReady(true);
+    if (message) {
+      processBuildStatus(message.is_built, message.build_error);
     }
-  }, [chatId, selectedVersion, setWebcontainerReady, supabase]);
+  }, [chatId, selectedVersion, supabase, processBuildStatus]);
 
   useEffect(() => {
     if (selectedVersion === undefined || isLoading) {
@@ -89,41 +128,6 @@ export const BuilderProvider = ({ children }: { children: ReactNode }) => {
 
     fetchBuildStatus();
   }, [selectedVersion, isLoading, fetchBuildStatus]);
-
-  useEffect(() => {
-    if (selectedVersion === undefined || isLoading) {
-      return;
-    }
-
-    const channel = supabase
-      .channel(`selected-version-${chatId}-${selectedVersion}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "messages",
-          filter: `chat_id=eq.${chatId}`,
-        },
-        async (payload) => {
-          const newMessage = payload.new as {
-            role: string;
-            is_built: boolean;
-            build_error: unknown;
-            version: number;
-          };
-
-          if (newMessage.version === selectedVersion) {
-            await fetchBuildStatus();
-          }
-        },
-      )
-      .subscribe();
-
-    return () => {
-      channel.unsubscribe();
-    };
-  }, [chatId, selectedVersion, isLoading, fetchBuildStatus, supabase]);
 
   return (
     <BuilderContext.Provider

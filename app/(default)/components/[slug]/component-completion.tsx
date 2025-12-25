@@ -12,7 +12,7 @@ import { Container } from "@/components/container";
 import { RemixOriginalBadge } from "@/components/remix-original-badge";
 import { Button } from "@/components/ui/button";
 import { useSidebar } from "@/components/ui/sidebar";
-import { BuilderProvider } from "@/context/builder-context";
+import { BuilderProvider, BuildStatusPayload } from "@/context/builder-context";
 import {
   ChatMessage,
   ComponentContext,
@@ -113,6 +113,8 @@ export default function ComponentCompletion({
   const [fetchedChat, setFetchedChat] = useState<Tables<"chats"> | null>(null);
   const [lastAssistantMessage, setLastAssistantMessage] =
     useState<Tables<"messages"> | null>(null);
+  const [buildStatusPayload, setBuildStatusPayload] =
+    useState<BuildStatusPayload | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
 
   const [isLiked, setIsLiked] = useState(false);
@@ -520,6 +522,12 @@ export default function ComponentCompletion({
             const lastAssistant = refreshedMessages
               .filter((m) => m.role === "assistant")
               .sort((a, b) => b.version - a.version)[0];
+
+            // Update selected version to the latest one from the external stream
+            if (lastAssistant) {
+              setSelectedVersion(lastAssistant.version);
+              selectedVersionRef.current = lastAssistant.version;
+            }
 
             if (lastAssistant && !lastAssistant.is_built) {
               console.log(
@@ -1526,6 +1534,16 @@ export default function ComponentCompletion({
     setTitle(newTitle);
   }, []);
 
+  const handleBuildStatusChange = useCallback((payload: BuildStatusPayload) => {
+    setBuildStatusPayload(payload);
+  }, []);
+
+  const handleRefreshData = useCallback(async () => {
+    if (refreshChatDataRef.current) {
+      await refreshChatDataRef.current();
+    }
+  }, []);
+
   useRealtimeSync({
     chatId,
     connectedUserId: connectedUser?.id,
@@ -1534,6 +1552,7 @@ export default function ComponentCompletion({
     currentStreamId,
     fetchedChat,
     title,
+    messages,
     selectedVersionRef,
     onMessagesUpdate: handleMessagesUpdate,
     onMessagesDelete: handleMessagesDelete,
@@ -1549,6 +1568,8 @@ export default function ComponentCompletion({
     onForceBuildUpdate: setForceBuild,
     onLastAssistantMessageUpdate: setLastAssistantMessage,
     onExternalStreamDetected: handleExternalStreamDetected,
+    onBuildStatusChange: handleBuildStatusChange,
+    onRefreshData: handleRefreshData,
   });
 
   const contextValue = {
@@ -1630,7 +1651,7 @@ export default function ComponentCompletion({
 
   return (
     <ComponentContext.Provider value={contextValue}>
-      <BuilderProvider>
+      <BuilderProvider buildStatusPayload={buildStatusPayload}>
         <Container className="p-0! lg:overflow-hidden">
           <div className="grid size-full max-h-full grid-cols-1 justify-center xl:grid-cols-4 xl:flex-row">
             <div className="col-span-1 flex size-full min-h-full flex-col xl:col-span-3 xl:mb-0">

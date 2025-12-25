@@ -56,7 +56,6 @@ export function useChatData({
   user,
   connectedUser,
 }: UseChatDataOptions) {
-  const supabase = createClient();
   const selectedVersionRef = useRef<number | undefined>(undefined);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
 
@@ -92,6 +91,7 @@ export function useChatData({
 
   const fetchAdditionalData = useCallback(
     async (chat: Tables<"chats">) => {
+      const supabase = createClient();
       try {
         const domainPromise = chat.is_deployed
           ? supabase
@@ -155,7 +155,7 @@ export function useChatData({
         };
       }
     },
-    [chatId, connectedUser?.id, supabase],
+    [chatId, connectedUser?.id],
   );
 
   useEffect(() => {

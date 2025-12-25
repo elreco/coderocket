@@ -1,5 +1,6 @@
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 
+import { BuildStatusPayload } from "@/context/builder-context";
 import { ChatMessage } from "@/context/component-context";
 import type { CustomDomainData } from "@/types/custom-domain";
 import { Tables } from "@/types_db";
@@ -15,6 +16,7 @@ interface UseRealtimeSyncOptions {
   currentStreamId: string | null;
   fetchedChat: Tables<"chats"> | null;
   title: string;
+  messages: ChatMessage[];
   selectedVersionRef: React.MutableRefObject<number | undefined>;
   onMessagesUpdate: (updater: (prev: ChatMessage[]) => ChatMessage[]) => void;
   onMessagesDelete: (messageId: number) => void;
@@ -32,6 +34,8 @@ interface UseRealtimeSyncOptions {
   onForceBuildUpdate: (force: boolean) => void;
   onLastAssistantMessageUpdate: (message: Tables<"messages">) => void;
   onExternalStreamDetected: (streamId: string | null) => void;
+  onBuildStatusChange?: (payload: BuildStatusPayload) => void;
+  onRefreshData?: () => Promise<void>;
 }
 
 export function useRealtimeSync({
@@ -42,6 +46,7 @@ export function useRealtimeSync({
   currentStreamId,
   fetchedChat,
   title,
+  messages,
   selectedVersionRef,
   onMessagesUpdate,
   onMessagesDelete,
@@ -57,14 +62,20 @@ export function useRealtimeSync({
   onForceBuildUpdate,
   onLastAssistantMessageUpdate,
   onExternalStreamDetected,
+  onBuildStatusChange,
+  onRefreshData,
 }: UseRealtimeSyncOptions) {
-  const supabase = createClient();
+  // Use useMemo to ensure stable reference - createClient is now a singleton
+
+  const supabase = useMemo(() => createClient(), []);
 
   const isLoadingRef = useRef(isLoading);
   const currentStreamIdRef = useRef(currentStreamId);
   const selectedVersionStateRef = useRef(selectedVersion);
   const fetchedChatRef = useRef(fetchedChat);
   const titleRef = useRef(title);
+  const messagesRef = useRef(messages);
+  const onRefreshDataRef = useRef(onRefreshData);
 
   useEffect(() => {
     isLoadingRef.current = isLoading;
@@ -87,6 +98,31 @@ export function useRealtimeSync({
   }, [title]);
 
   useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
+
+  useEffect(() => {
+    onRefreshDataRef.current = onRefreshData;
+  }, [onRefreshData]);
+
+  // Visibility change handler - refresh data when tab becomes visible
+  const handleVisibilityChange = useCallback(() => {
+    if (document.visibilityState === "visible" && onRefreshDataRef.current) {
+      // Small delay to avoid race conditions
+      setTimeout(() => {
+        onRefreshDataRef.current?.();
+      }, 100);
+    }
+  }, []);
+
+  useEffect(() => {
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [handleVisibilityChange]);
+
+  useEffect(() => {
     const channel = supabase
       .channel(`component-sync-${chatId}`)
       .on(
@@ -98,6 +134,21 @@ export function useRealtimeSync({
           filter: `chat_id=eq.${chatId}`,
         },
         async (payload) => {
+          const newVersion = payload.new.version as number;
+
+          // If a new message comes in with a higher version, update selectedVersion
+          // This ensures all tabs follow the active generation
+          if (
+            newVersion > (selectedVersionStateRef.current ?? -1) &&
+            !isLoadingRef.current
+          ) {
+            onSelectedVersionUpdate(newVersion);
+            selectedVersionRef.current = newVersion;
+            selectedVersionStateRef.current = newVersion;
+            // Reset webcontainer ready state since new version is not built yet
+            onWebcontainerReadyUpdate(false);
+          }
+
           onMessagesUpdate((prev) => {
             const exists = prev.some((m) => m.id === payload.new.id);
             if (exists) return prev;
@@ -170,6 +221,15 @@ export function useRealtimeSync({
             payload.new.version === selectedVersionStateRef.current
           ) {
             onLastAssistantMessageUpdate(payload.new as Tables<"messages">);
+
+            // Notify build status changes
+            if (onBuildStatusChange) {
+              onBuildStatusChange({
+                isBuilt: payload.new.is_built,
+                buildError: payload.new.build_error,
+                version: payload.new.version,
+              });
+            }
           }
         },
       )
@@ -182,7 +242,46 @@ export function useRealtimeSync({
           filter: `chat_id=eq.${chatId}`,
         },
         async (payload) => {
-          onMessagesDelete(payload.old.id);
+          const deletedVersion = payload.old.version as number;
+          const deletedMessageId = payload.old.id as number;
+          const currentVersion = selectedVersionStateRef.current ?? 0;
+
+          // First, delete the message from the list
+          onMessagesDelete(deletedMessageId);
+
+          // If the deleted message was from the current version, switch to previous version
+          if (deletedVersion === currentVersion) {
+            // Get current messages and filter out the deleted one and any from deleted version
+            const currentMessages = messagesRef.current.filter(
+              (m) => m.id !== deletedMessageId && m.version !== deletedVersion,
+            );
+
+            // Find the highest available version
+            const availableVersions = [
+              ...new Set(
+                currentMessages
+                  .filter((m) => m.version >= 0)
+                  .map((m) => m.version),
+              ),
+            ];
+            const maxVersion =
+              availableVersions.length > 0 ? Math.max(...availableVersions) : 0;
+
+            if (maxVersion !== currentVersion || availableVersions.length === 0) {
+              onSelectedVersionUpdate(maxVersion);
+              selectedVersionRef.current = maxVersion;
+              selectedVersionStateRef.current = maxVersion;
+              // Reset webcontainer since we're changing version
+              onWebcontainerReadyUpdate(false);
+
+              // Refresh data to load the new version's files
+              if (onRefreshDataRef.current) {
+                setTimeout(() => {
+                  onRefreshDataRef.current?.();
+                }, 200);
+              }
+            }
+          }
         },
       )
       .on(
@@ -370,15 +469,31 @@ export function useRealtimeSync({
         );
     }
 
-    channel.subscribe();
+    channel.subscribe((status) => {
+      if (status === "SUBSCRIBED") {
+        console.log(`[RealtimeSync] Channel subscribed for chat ${chatId}`);
+      } else if (status === "CHANNEL_ERROR") {
+        console.error(`[RealtimeSync] Channel error for chat ${chatId}`);
+        // On error, try to refresh data
+        if (onRefreshDataRef.current) {
+          onRefreshDataRef.current();
+        }
+      } else if (status === "TIMED_OUT") {
+        console.warn(`[RealtimeSync] Channel timed out for chat ${chatId}`);
+        // On timeout, refresh data to ensure we're in sync
+        if (onRefreshDataRef.current) {
+          onRefreshDataRef.current();
+        }
+      }
+    });
 
     return () => {
       channel.unsubscribe();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     chatId,
     connectedUserId,
-    supabase,
     selectedVersionRef,
     onMessagesUpdate,
     onMessagesDelete,
@@ -394,5 +509,6 @@ export function useRealtimeSync({
     onForceBuildUpdate,
     onLastAssistantMessageUpdate,
     onExternalStreamDetected,
+    onBuildStatusChange,
   ]);
 }
