@@ -112,6 +112,24 @@ export default function ComponentPreview() {
   } = useComponentContext();
   const [hasEverLoaded, setHasEverLoaded] = React.useState(false);
   const iframeRef = React.useRef<HTMLIFrameElement>(null);
+  const startingTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+
+  React.useEffect(() => {
+    if (loadingState === "starting" && !hasEverLoaded) {
+      startingTimeoutRef.current = setTimeout(() => {
+        if (!hasEverLoaded) {
+          setLoadingState(null);
+        }
+      }, 10000);
+    }
+
+    return () => {
+      if (startingTimeoutRef.current) {
+        clearTimeout(startingTimeoutRef.current);
+        startingTimeoutRef.current = null;
+      }
+    };
+  }, [loadingState, hasEverLoaded, setLoadingState, selectedVersion]);
 
   const getInitialDisplayVersion = () => {
     if (selectedVersion === undefined) return undefined;
