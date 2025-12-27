@@ -132,6 +132,8 @@ export default function ComponentPreview() {
     React.useState(false);
   const [previousVersionIsBuilt, setPreviousVersionIsBuilt] =
     React.useState(false);
+  const [currentVersionIsBuilt, setCurrentVersionIsBuilt] =
+    React.useState(false);
 
   // Calculer isFirstGeneration avant les useEffects
   const isFirstGeneration =
@@ -139,9 +141,10 @@ export default function ComponentPreview() {
     selectedVersion === -1 ||
     selectedVersion === undefined;
 
-  // Reset hasEverLoaded when selectedVersion changes (not displayVersion to avoid flickering)
+  // Reset hasEverLoaded when selectedVersion changes
   React.useEffect(() => {
     setHasEverLoaded(false);
+    setCurrentVersionIsBuilt(false);
   }, [selectedVersion]);
 
   // Réinitialiser displayVersion à undefined quand on commence le scraping de la première version
@@ -203,32 +206,55 @@ export default function ComponentPreview() {
       return;
     }
 
-    // Pour les versions > 0 (y compris pendant le scraping), définir displayVersion à la version précédente
-    // MAIS seulement si la version précédente est buildée
-    if (displayVersion === undefined) {
-      if (selectedVersion > 0 && (isGenerating || isScrapingWebsite)) {
-        const prevVersion = selectedVersion - 1;
+    // Pour les versions > 0, vérifier d'abord si la version actuelle est buildée
+    // Si oui, l'afficher directement. Sinon, afficher la version précédente si elle est buildée
+    if (
+      displayVersion === undefined ||
+      (selectedVersion > 0 &&
+        displayVersion !== selectedVersion &&
+        displayVersion !== selectedVersion - 1) ||
+      (selectedVersion > 0 && displayVersion === selectedVersion && isLoading)
+    ) {
+      if (selectedVersion > 0) {
         const supabase = createClient();
         supabase
           .from("messages")
-          .select("build_error, content, is_built")
+          .select("is_built")
           .eq("chat_id", chatId)
           .eq("role", "assistant")
-          .eq("version", prevVersion)
+          .eq("version", selectedVersion)
           .single()
-          .then(({ data }) => {
-            const hasError =
-              data?.build_error ||
-              data?.content?.includes("<!-- FINISH_REASON: length -->") ||
-              data?.content?.includes("<!-- FINISH_REASON: error -->");
-            setPreviousVersionHasError(!!hasError);
-            const isBuilt = data?.is_built === true;
-            setPreviousVersionIsBuilt(isBuilt);
+          .then(({ data: currentData }) => {
+            const currentIsBuilt = currentData?.is_built === true;
+            setCurrentVersionIsBuilt(currentIsBuilt);
 
-            // Ne définir displayVersion que si la version précédente est buildée
-            // Sinon, displayVersion reste undefined, donc le loader fullscreen s'affichera
-            if (isBuilt) {
-              setDisplayVersion(prevVersion);
+            if (currentIsBuilt && !isGenerating) {
+              setDisplayVersion(selectedVersion);
+              setPreviousVersionHasError(false);
+            } else {
+              const prevVersion = selectedVersion - 1;
+              supabase
+                .from("messages")
+                .select("build_error, content, is_built")
+                .eq("chat_id", chatId)
+                .eq("role", "assistant")
+                .eq("version", prevVersion)
+                .single()
+                .then(({ data }) => {
+                  const hasError =
+                    data?.build_error ||
+                    data?.content?.includes("<!-- FINISH_REASON: length -->") ||
+                    data?.content?.includes("<!-- FINISH_REASON: error -->");
+                  setPreviousVersionHasError(!!hasError);
+                  const isBuilt = data?.is_built === true;
+                  setPreviousVersionIsBuilt(isBuilt);
+
+                  if (isBuilt) {
+                    setDisplayVersion(prevVersion);
+                  } else if (currentIsBuilt) {
+                    setDisplayVersion(selectedVersion);
+                  }
+                });
             }
           });
       }
@@ -403,7 +429,9 @@ export default function ComponentPreview() {
     !isLengthError &&
     !buildError &&
     previousVersionIsBuilt &&
+    !currentVersionIsBuilt &&
     displayVersion !== undefined &&
+    displayVersion !== selectedVersion &&
     ((isLoading && hasActiveGeneration) || // Pendant le stream
       loadingState === "processing"); // Pendant le build
   const previewPathSuffix = previewPath === "/" ? "" : previewPath;

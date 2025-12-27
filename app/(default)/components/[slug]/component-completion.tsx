@@ -404,6 +404,13 @@ export default function ComponentCompletion({
   const refreshChatDataRef = useRef<
     (() => Promise<ChatMessage[] | undefined>) | null
   >(null);
+  const updatePreviousArtifactFilesRef = useRef<
+    ((version: number) => Promise<void>) | null
+  >(null);
+  const handleChatFilesRef = useRef<
+    | ((_completion: string, isFirstRun?: boolean, tabName?: string) => void)
+    | null
+  >(null);
   const [currentStreamId, setCurrentStreamId] = useState<string | null>(null);
   const isJoiningStreamRef = useRef(false);
 
@@ -519,7 +526,6 @@ export default function ComponentCompletion({
         setIsResuming(false);
         setIsLoading(false);
         setIsSubmitting(false);
-        isJoiningStreamRef.current = false;
         if (setInputRef.current) {
           setInputRef.current("");
         }
@@ -532,36 +538,92 @@ export default function ComponentCompletion({
               .filter((m) => m.role === "assistant")
               .sort((a, b) => b.version - a.version)[0];
 
-            // Update selected version to the latest one from the external stream
             if (lastAssistant) {
-              setSelectedVersion(lastAssistant.version);
-              selectedVersionRef.current = lastAssistant.version;
-            }
+              const streamVersion = lastAssistant.version;
 
-            // Ne pas essayer de build si l'utilisateur n'est pas autorisé (lecture seule)
-            if (lastAssistant && !lastAssistant.is_built && authorized) {
-              console.log(
-                `[joinStream] Stream ended, attempting build for version ${lastAssistant.version}...`,
-              );
-              try {
-                const buildResult = await buildComponent(
-                  chatId,
-                  lastAssistant.version,
-                );
-                if (buildResult.lockNotAcquired) {
-                  console.log(
-                    `[joinStream] Build lock not acquired - server or another tab is building`,
-                  );
-                } else if (buildResult.success) {
-                  console.log(`[joinStream] Build completed successfully`);
-                } else {
-                  console.log(`[joinStream] Build completed with issues`);
+              if (streamVersion > 0) {
+                if (updatePreviousArtifactFilesRef.current) {
+                  await updatePreviousArtifactFilesRef.current(streamVersion);
                 }
-              } catch (error) {
-                console.error(`[joinStream] Build error:`, error);
+
+                const previousArtifactCode = await getArtifactCodeByVersion(
+                  chatId,
+                  streamVersion - 1,
+                );
+                if (previousArtifactCode) {
+                  setArtifactCode(previousArtifactCode);
+                  const previousFiles =
+                    extractFilesFromArtifact(previousArtifactCode);
+                  setPreviousArtifactFiles(previousFiles);
+                } else {
+                  setArtifactCode("");
+                  setPreviousArtifactFiles([]);
+                }
+              } else {
+                setArtifactCode("");
+                setPreviousArtifactFiles([]);
               }
+
+              isJoiningStreamRef.current = false;
+
+              setSelectedVersion(streamVersion);
+              selectedVersionRef.current = streamVersion;
+
+              const contentToProcess =
+                accumulatedText && accumulatedText.trim()
+                  ? accumulatedText
+                  : lastAssistant.content || "";
+
+              if (contentToProcess && handleChatFilesRef.current) {
+                handleChatFilesRef.current(contentToProcess, false);
+              }
+
+              if (lastAssistant.content) {
+                const hasLengthError =
+                  lastAssistant.content.includes(
+                    "<!-- FINISH_REASON: length -->",
+                  ) ||
+                  lastAssistant.content.includes(
+                    "<!-- FINISH_REASON: error -->",
+                  );
+                setIsLengthError(hasLengthError);
+              }
+
+              if (lastAssistant.is_built) {
+                setWebcontainerReady(true);
+              } else {
+                setWebcontainerReady(false);
+                if (authorized) {
+                  console.log(
+                    `[joinStream] Stream ended, attempting build for version ${streamVersion}...`,
+                  );
+                  try {
+                    const buildResult = await buildComponent(
+                      chatId,
+                      streamVersion,
+                    );
+                    if (buildResult.lockNotAcquired) {
+                      console.log(
+                        `[joinStream] Build lock not acquired - server or another tab is building`,
+                      );
+                    } else if (buildResult.success) {
+                      console.log(`[joinStream] Build completed successfully`);
+                    } else {
+                      console.log(`[joinStream] Build completed with issues`);
+                    }
+                  } catch (error) {
+                    console.error(`[joinStream] Build error:`, error);
+                  }
+                }
+              }
+            } else {
+              isJoiningStreamRef.current = false;
             }
+          } else {
+            isJoiningStreamRef.current = false;
           }
+        } else {
+          isJoiningStreamRef.current = false;
         }
 
         return true;
@@ -569,6 +631,7 @@ export default function ComponentCompletion({
         console.error(`[joinStream] Error:`, error);
         setCurrentStreamId(null);
         setIsResuming(false);
+        setIsLoading(false);
         isJoiningStreamRef.current = false;
         return false;
       }
@@ -601,6 +664,21 @@ export default function ComponentCompletion({
   const startInitialGenerationRef = useRef<((prompt: string) => void) | null>(
     null,
   );
+
+  useEffect(() => {
+    if (
+      fetchedChat?.active_stream_id &&
+      !isLoading &&
+      !isJoiningStreamRef.current &&
+      !currentStreamId
+    ) {
+      setTimeout(() => {
+        if (joinStreamRef.current && !isJoiningStreamRef.current) {
+          joinStreamRef.current(true);
+        }
+      }, 300);
+    }
+  }, [fetchedChat?.active_stream_id, isLoading, currentStreamId]);
 
   useEffect(() => {
     if (!fetchedChat || !messages.length) return;
@@ -728,7 +806,6 @@ export default function ComponentCompletion({
       },
       streamProtocol: "text",
       initialCompletion: lastAssistantMessage?.content,
-      experimental_throttle: 500,
       onError: async (error: Error) => {
         setIsSubmitting(false);
         setIsContinuingFromLengthError(false);
@@ -1382,81 +1459,88 @@ export default function ComponentCompletion({
     refreshChatDataRef.current = refreshChatData;
   }, [refreshChatData]);
 
-  const handleChatFiles = (
-    _completion: string,
-    isFirstRun?: boolean,
-    tabName?: string,
-  ) => {
-    setArtifactCode((prevArtifactCode) => {
-      const newArtifactCode = getUpdatedArtifactCode(
-        _completion,
-        prevArtifactCode,
-      );
-      const newArtifactFiles = extractFilesFromArtifact(
-        newArtifactCode,
-        prevArtifactCode,
-        _completion,
-      );
+  useEffect(() => {
+    updatePreviousArtifactFilesRef.current = updatePreviousArtifactFiles;
+  }, [updatePreviousArtifactFiles]);
 
-      // Merge new files with existing files to keep all project files
-      setArtifactFiles((prevFiles) => {
-        const fileMap = new Map(prevFiles.map((f) => [f.name, f]));
-        newArtifactFiles.forEach((file) => {
-          fileMap.set(file.name, file);
+  const handleChatFiles = useCallback(
+    (_completion: string, isFirstRun?: boolean, tabName?: string) => {
+      setArtifactCode((prevArtifactCode) => {
+        const newArtifactCode = getUpdatedArtifactCode(
+          _completion,
+          prevArtifactCode,
+        );
+        const newArtifactFiles = extractFilesFromArtifact(
+          newArtifactCode,
+          prevArtifactCode,
+          _completion,
+        );
+
+        // Merge new files with existing files to keep all project files
+        setArtifactFiles((prevFiles) => {
+          const fileMap = new Map(prevFiles.map((f) => [f.name, f]));
+          newArtifactFiles.forEach((file) => {
+            fileMap.set(file.name, file);
+          });
+          return Array.from(fileMap.values());
         });
-        return Array.from(fileMap.values());
+
+        const files = extractFilesFromCompletion(_completion);
+
+        if (files.length > 0) {
+          setChatFiles(files);
+        } else {
+          setChatFiles([]);
+        }
+        if (tabName) {
+          const file = newArtifactFiles.find((file) => file.name === tabName);
+
+          if (!file) {
+            setEditorValue("");
+            setActiveTab("");
+            return newArtifactCode;
+          }
+          setEditorValue(file.content);
+          setActiveTab(tabName);
+          setCanvas(false);
+          return newArtifactCode;
+        }
+
+        if (isFirstRun) {
+          const firstFile = newArtifactFiles[0];
+          if (!firstFile) {
+            setEditorValue("");
+            setActiveTab("");
+            return newArtifactCode;
+          }
+          setEditorValue(firstFile.content);
+          setActiveTab(firstFile.name || "");
+          setCanvas(true);
+          return newArtifactCode;
+        }
+        if (!newArtifactFiles.length) {
+          return newArtifactCode;
+        }
+        const activeFile = newArtifactFiles.find((file) => file.isActive);
+
+        if (!activeFile) {
+          return newArtifactCode;
+        }
+        setEditorValue(activeFile.content);
+        setActiveTab(activeFile.name || "");
+        if (!isLoading) {
+          setCanvas(true);
+        }
+
+        return newArtifactCode;
       });
+    },
+    [isLoading],
+  );
 
-      const files = extractFilesFromCompletion(_completion);
-
-      if (files.length > 0) {
-        setChatFiles(files);
-      } else {
-        setChatFiles([]);
-      }
-      if (tabName) {
-        const file = newArtifactFiles.find((file) => file.name === tabName);
-
-        if (!file) {
-          setEditorValue("");
-          setActiveTab("");
-          return newArtifactCode;
-        }
-        setEditorValue(file.content);
-        setActiveTab(tabName);
-        setCanvas(false);
-        return newArtifactCode;
-      }
-
-      if (isFirstRun) {
-        const firstFile = newArtifactFiles[0];
-        if (!firstFile) {
-          setEditorValue("");
-          setActiveTab("");
-          return newArtifactCode;
-        }
-        setEditorValue(firstFile.content);
-        setActiveTab(firstFile.name || "");
-        setCanvas(true);
-        return newArtifactCode;
-      }
-      if (!newArtifactFiles.length) {
-        return newArtifactCode;
-      }
-      const activeFile = newArtifactFiles.find((file) => file.isActive);
-
-      if (!activeFile) {
-        return newArtifactCode;
-      }
-      setEditorValue(activeFile.content);
-      setActiveTab(activeFile.name || "");
-      if (!isLoading) {
-        setCanvas(true);
-      }
-
-      return newArtifactCode;
-    });
-  };
+  useEffect(() => {
+    handleChatFilesRef.current = handleChatFiles;
+  }, [handleChatFiles]);
 
   useEffect(() => {
     const {
@@ -1582,6 +1666,7 @@ export default function ComponentCompletion({
     title,
     messages,
     selectedVersionRef,
+    isJoiningStreamRef,
     onMessagesUpdate: handleMessagesUpdate,
     onMessagesDelete: handleMessagesDelete,
     onChatUpdate: setFetchedChat,
@@ -1599,6 +1684,7 @@ export default function ComponentCompletion({
     onBuildStatusChange: handleBuildStatusChange,
     onRefreshData: handleRefreshData,
     onPreviousArtifactFilesUpdate: updatePreviousArtifactFiles,
+    onInputClear: () => setInput(""),
   });
 
   const contextValue = {
