@@ -349,18 +349,33 @@ const loadMore = async () => {
 - Upload progress tracking
 - Preview before upload
 - Error handling
-- Storage bucket configuration
+- Storage bucket and policies (via SQL migration)
 
+**SQL Migration Generated:**
+```sql
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('avatars', 'avatars', true, 5242880, array['image/png', 'image/jpeg', 'image/webp']);
+
+create policy "Users can upload avatars"
+  on storage.objects for insert
+  with check (bucket_id = 'avatars' and auth.role() = 'authenticated');
+
+create policy "Public avatar access"
+  on storage.objects for select
+  using (bucket_id = 'avatars');
+```
+
+**Upload Service Generated:**
 ```typescript
 const uploadAvatar = async (file: File) => {
+  const fileExt = file.name.split('.').pop()
+  const fileName = `${user.id}/${Date.now()}.${fileExt}`
+
   const { data, error } = await supabase.storage
     .from('avatars')
-    .upload(`${user.id}/${Date.now()}.${ext}`, file, {
+    .upload(fileName, file, {
       cacheControl: '3600',
-      upsert: false,
-      onUploadProgress: (progress) => {
-        setUploadProgress((progress.loaded / progress.total) * 100)
-      }
+      upsert: false
     })
 
   if (error) throw error
@@ -370,6 +385,107 @@ const uploadAvatar = async (file: File) => {
     .getPublicUrl(data.path)
 
   return publicUrl
+}
+```
+
+---
+
+### Pattern 4: Media Gallery with Multiple File Types
+
+**Prompt:**
+```
+"Create a media gallery where users can upload images and videos"
+```
+
+**Generated Features:**
+- Multi-file upload support
+- Image and video preview
+- File type detection and validation
+- Grid display with thumbnails
+- Delete functionality
+
+**SQL Migration Generated:**
+```sql
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values (
+  'media',
+  'media',
+  true,
+  104857600,
+  array['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'video/mp4', 'video/webm']
+);
+
+create table public.media_items (
+  id uuid primary key default uuid_generate_v4(),
+  user_id uuid references auth.users not null,
+  storage_path text not null,
+  public_url text not null,
+  file_type text not null,
+  file_name text,
+  file_size bigint,
+  created_at timestamptz default now()
+);
+
+alter table public.media_items enable row level security;
+
+create policy "Users can view all media"
+  on public.media_items for select using (true);
+
+create policy "Users can upload their own media"
+  on public.media_items for insert
+  with check (auth.uid() = user_id);
+
+create policy "Users can delete their own media"
+  on public.media_items for delete
+  using (auth.uid() = user_id);
+```
+
+**Upload Component Generated:**
+```tsx
+export function MediaUpload({ onUpload }) {
+  const [uploading, setUploading] = useState(false)
+
+  const handleFiles = async (e) => {
+    const files = Array.from(e.target.files || [])
+    setUploading(true)
+
+    for (const file of files) {
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`
+
+      const { data, error } = await supabase.storage
+        .from('media')
+        .upload(fileName, file)
+
+      if (!error) {
+        const { data: { publicUrl } } = supabase.storage
+          .from('media')
+          .getPublicUrl(data.path)
+
+        await supabase.from('media_items').insert({
+          user_id: user.id,
+          storage_path: data.path,
+          public_url: publicUrl,
+          file_type: file.type.startsWith('video') ? 'video' : 'image',
+          file_name: file.name,
+          file_size: file.size
+        })
+
+        onUpload({ path: data.path, publicUrl, type: file.type })
+      }
+    }
+    setUploading(false)
+  }
+
+  return (
+    <input
+      type="file"
+      multiple
+      accept="image/*,video/*"
+      onChange={handleFiles}
+      disabled={uploading}
+    />
+  )
 }
 ```
 

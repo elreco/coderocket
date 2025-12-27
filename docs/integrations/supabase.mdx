@@ -299,18 +299,141 @@ useEffect(() => {
 
 ## Storage Integration
 
-For file uploads, Supabase Storage is automatically configured:
+Supabase Storage allows your users to upload and manage files directly from the browser. No additional backend required!
 
-**Prompt:**
+### Supported File Types
+
+- **Images**: PNG, JPEG, GIF, WebP
+- **Videos**: MP4, WebM
+- **Documents**: PDF, TXT, and more
+- **Any file type** you configure
+
+### Example Prompts
+
+**Simple image upload:**
 ```
-"Add image upload functionality for post cover images"
+"Add profile picture upload for users"
 ```
 
-**Generated:**
-- File upload component
-- Storage bucket configuration
-- Image preview
-- Public URL generation
+**Gallery or media library:**
+```
+"Create a photo gallery where users can upload and view images"
+```
+
+**Document management:**
+```
+"Build a document manager where users can upload and organize PDF files"
+```
+
+**E-commerce product images:**
+```
+"Add multiple image upload for product listings"
+```
+
+### What Gets Generated
+
+When you request file upload functionality, CodeRocket generates:
+
+**1. SQL Migration for Storage Bucket:**
+
+```sql
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values (
+  'uploads',
+  'uploads',
+  true,
+  52428800,
+  array['image/png', 'image/jpeg', 'image/gif', 'video/mp4', 'application/pdf']
+);
+
+create policy "Authenticated users can upload"
+  on storage.objects for insert
+  with check (bucket_id = 'uploads' and auth.role() = 'authenticated');
+
+create policy "Public read access"
+  on storage.objects for select
+  using (bucket_id = 'uploads');
+```
+
+**2. Upload Service:**
+
+```typescript
+import { supabase } from '@/lib/supabase'
+
+export async function uploadFile(file: File, folder: string = 'public') {
+  const fileExt = file.name.split('.').pop()
+  const fileName = `${folder}/${Date.now()}.${fileExt}`
+
+  const { data, error } = await supabase.storage
+    .from('uploads')
+    .upload(fileName, file)
+
+  if (error) throw error
+
+  const { data: { publicUrl } } = supabase.storage
+    .from('uploads')
+    .getPublicUrl(data.path)
+
+  return { path: data.path, publicUrl }
+}
+```
+
+**3. React Upload Component:**
+
+```tsx
+export function FileUpload({ onUpload }) {
+  const [uploading, setUploading] = useState(false)
+
+  const handleUpload = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setUploading(true)
+    try {
+      const { publicUrl } = await uploadFile(file)
+      onUpload(publicUrl)
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  return (
+    <input type="file" onChange={handleUpload} disabled={uploading} />
+  )
+}
+```
+
+### Storage Configuration Options
+
+| Option | Description | Example |
+|--------|-------------|---------|
+| `public` | Files accessible without auth | `true` for public galleries |
+| `file_size_limit` | Max file size in bytes | `52428800` (50MB) |
+| `allowed_mime_types` | Restrict file types | `['image/png', 'video/mp4']` |
+
+### Common Storage Patterns
+
+<AccordionGroup>
+  <Accordion title="Profile Avatars">
+    Public bucket, 5MB limit, images only. Files organized by user ID.
+  </Accordion>
+
+  <Accordion title="Private Documents">
+    Private bucket with signed URLs, 50MB limit, PDFs and images.
+  </Accordion>
+
+  <Accordion title="Media Gallery">
+    Public bucket, 100MB limit, images and videos with thumbnail generation.
+  </Accordion>
+
+  <Accordion title="E-commerce Products">
+    Public bucket, 10MB limit, multiple images per product with ordering.
+  </Accordion>
+</AccordionGroup>
+
+<Note>
+  Storage buckets and policies are created via SQL migrations. Just copy the generated SQL to your Supabase dashboard.
+</Note>
 
 ## Best Practices
 

@@ -113,6 +113,23 @@ async function buildSupabaseContext(
     - If they just say "create a dashboard", proactively add database-backed data instead of mock data
   </database_context>
 
+  <storage_context>
+    ⚠️ IMPORTANT: Supabase Storage is AVAILABLE for file uploads!
+    When the user needs file upload functionality (images, videos, PDFs, documents, etc.), use Supabase Storage.
+
+    📦 STORAGE CAPABILITIES:
+    - Upload ANY file type: images (PNG, JPG, GIF, WebP), videos (MP4, WebM), PDFs, documents, etc.
+    - Files are stored securely and accessible via public URLs
+    - Supports large files (up to 50MB by default, configurable)
+    - Built-in CDN for fast delivery
+    - Works 100% from the client-side (no backend needed)
+
+    💡 PROACTIVE USAGE:
+    - When user asks for: "upload images", "file upload", "profile picture", "gallery", "media library" → USE Storage
+    - When user creates apps like: social media, e-commerce, portfolio, blog with images → INCLUDE Storage
+    - Don't ask if they want file upload - implement it directly if it makes sense for the feature
+  </storage_context>
+
   <backend_generation_rules>
     1. **CRITICAL - Credentials Management**:
        ⚠️ ABSOLUTE RULES - NO EXCEPTIONS:
@@ -396,6 +413,129 @@ async function buildSupabaseContext(
         // Sign out
         await supabase.auth.signOut()
         \`\`\`
+
+    13. **File Storage & Uploads**:
+        When the user needs file upload functionality, generate:
+
+        a) **Migration to create storage bucket and policies**:
+        \`\`\`sql
+        -- Create storage bucket for uploads
+        insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+        values (
+          'uploads',
+          'uploads',
+          true,
+          52428800, -- 50MB limit
+          array['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'video/mp4', 'video/webm', 'application/pdf']
+        );
+
+        -- Allow authenticated users to upload files
+        create policy "Authenticated users can upload files"
+          on storage.objects for insert
+          with check (
+            bucket_id = 'uploads'
+            and auth.role() = 'authenticated'
+          );
+
+        -- Allow public read access to files
+        create policy "Public read access"
+          on storage.objects for select
+          using (bucket_id = 'uploads');
+
+        -- Allow users to delete their own files
+        create policy "Users can delete own files"
+          on storage.objects for delete
+          using (
+            bucket_id = 'uploads'
+            and auth.uid()::text = (storage.foldername(name))[1]
+          );
+        \`\`\`
+
+        b) **Upload service** (src/services/storage.ts):
+        \`\`\`typescript
+        import { supabase } from '@/lib/supabase'
+
+        export async function uploadFile(file: File, folder: string = 'public') {
+          const fileExt = file.name.split('.').pop()
+          const fileName = \`\${folder}/\${Date.now()}-\${Math.random().toString(36).substring(7)}.\${fileExt}\`
+
+          const { data, error } = await supabase.storage
+            .from('uploads')
+            .upload(fileName, file, {
+              cacheControl: '3600',
+              upsert: false
+            })
+
+          if (error) throw error
+
+          const { data: { publicUrl } } = supabase.storage
+            .from('uploads')
+            .getPublicUrl(data.path)
+
+          return { path: data.path, publicUrl }
+        }
+
+        export async function deleteFile(path: string) {
+          const { error } = await supabase.storage
+            .from('uploads')
+            .remove([path])
+
+          if (error) throw error
+        }
+
+        export function getPublicUrl(path: string) {
+          const { data: { publicUrl } } = supabase.storage
+            .from('uploads')
+            .getPublicUrl(path)
+          return publicUrl
+        }
+        \`\`\`
+
+        c) **React upload component example**:
+        \`\`\`tsx
+        import { useState } from 'react'
+        import { uploadFile } from '@/services/storage'
+
+        export function FileUpload({ onUpload }: { onUpload: (url: string) => void }) {
+          const [uploading, setUploading] = useState(false)
+
+          const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+            const file = e.target.files?.[0]
+            if (!file) return
+
+            setUploading(true)
+            try {
+              const { publicUrl } = await uploadFile(file)
+              onUpload(publicUrl)
+            } catch (error) {
+              console.error('Upload failed:', error)
+            } finally {
+              setUploading(false)
+            }
+          }
+
+          return (
+            <input
+              type="file"
+              onChange={handleUpload}
+              disabled={uploading}
+              accept="image/*,video/*,.pdf"
+            />
+          )
+        }
+        \`\`\`
+
+        📋 BUCKET CONFIGURATION OPTIONS:
+        - \`public: true\` → Files are publicly accessible via URL
+        - \`public: false\` → Files require signed URLs (more secure)
+        - \`file_size_limit\` → Max file size in bytes (default 50MB = 52428800)
+        - \`allowed_mime_types\` → Restrict file types (array of MIME types)
+
+        🎯 COMMON BUCKET CONFIGURATIONS:
+        - Profile avatars: public, 5MB limit, images only
+        - User documents: private, 50MB limit, PDFs and images
+        - Media gallery: public, 100MB limit, images and videos
+        - Product images: public, 10MB limit, images only
   </backend_generation_rules>
 
   <coderocket_artifact_backend>
@@ -406,21 +546,24 @@ async function buildSupabaseContext(
     **React/Vue/Svelte**:
     - Use <coderocketFile name="src/lib/supabase.ts"> for Supabase client
     - Use <coderocketFile name="src/services/[resource].ts"> for service layers
+    - Use <coderocketFile name="src/services/storage.ts"> for file upload service
     - For React: Use <coderocketFile name="src/vite-env.d.ts"> to declare env types
 
     **Angular**:
     - Use <coderocketFile name="src/app/services/supabase.service.ts"> for Supabase service
     - Use <coderocketFile name="src/app/services/[resource].service.ts"> for service layers
+    - Use <coderocketFile name="src/app/services/storage.service.ts"> for file upload service
 
     ⚠️ CRITICAL RULES:
     - The user will copy the migration SQL and run it in their Supabase dashboard
     - Make sure migrations are complete, well-documented, and include all necessary RLS policies
+    - For file uploads, ALWAYS include the storage bucket creation and policies in the migration
     - NEVER create .env files or documentation files (README, SETUP, etc.)
     - NEVER mention "setup", "configure", or "add credentials" in your response
     - The application is ready to use immediately - credentials are auto-injected
 
     In your response text, simply say something like:
-    "The application is ready with Supabase integration. Copy the migration SQL to your Supabase dashboard to create the database tables."
+    "The application is ready with Supabase integration. Copy the migration SQL to your Supabase dashboard to create the database tables and storage buckets."
   </coderocket_artifact_backend>
 
   <best_practices>
