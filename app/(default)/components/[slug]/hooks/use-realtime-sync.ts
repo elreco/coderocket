@@ -18,6 +18,7 @@ interface UseRealtimeSyncOptions {
   title: string;
   messages: ChatMessage[];
   selectedVersionRef: React.MutableRefObject<number | undefined>;
+  isJoiningStreamRef: React.MutableRefObject<boolean>;
   onMessagesUpdate: (updater: (prev: ChatMessage[]) => ChatMessage[]) => void;
   onMessagesDelete: (messageId: number) => void;
   onChatUpdate: (chat: Tables<"chats">) => void;
@@ -37,6 +38,7 @@ interface UseRealtimeSyncOptions {
   onBuildStatusChange?: (payload: BuildStatusPayload) => void;
   onRefreshData?: () => Promise<void>;
   onPreviousArtifactFilesUpdate?: (version: number) => Promise<void>;
+  onInputClear?: () => void;
 }
 
 export function useRealtimeSync({
@@ -49,6 +51,7 @@ export function useRealtimeSync({
   title,
   messages,
   selectedVersionRef,
+  isJoiningStreamRef,
   onMessagesUpdate,
   onMessagesDelete,
   onChatUpdate,
@@ -66,6 +69,7 @@ export function useRealtimeSync({
   onBuildStatusChange,
   onRefreshData,
   onPreviousArtifactFilesUpdate,
+  onInputClear,
 }: UseRealtimeSyncOptions) {
   // Use useMemo to ensure stable reference - createClient is now a singleton
 
@@ -73,7 +77,6 @@ export function useRealtimeSync({
 
   const isLoadingRef = useRef(isLoading);
   const currentStreamIdRef = useRef(currentStreamId);
-  const selectedVersionStateRef = useRef(selectedVersion);
   const fetchedChatRef = useRef(fetchedChat);
   const titleRef = useRef(title);
   const messagesRef = useRef(messages);
@@ -99,11 +102,16 @@ export function useRealtimeSync({
   const onPreviousArtifactFilesUpdateRef = useRef(
     onPreviousArtifactFilesUpdate,
   );
+  const onInputClearRef = useRef(onInputClear);
 
   // Update refs when callbacks change
   useEffect(() => {
     onPreviousArtifactFilesUpdateRef.current = onPreviousArtifactFilesUpdate;
   }, [onPreviousArtifactFilesUpdate]);
+
+  useEffect(() => {
+    onInputClearRef.current = onInputClear;
+  }, [onInputClear]);
 
   useEffect(() => {
     onMessagesUpdateRef.current = onMessagesUpdate;
@@ -148,8 +156,13 @@ export function useRealtimeSync({
   }, [currentStreamId]);
 
   useEffect(() => {
-    selectedVersionStateRef.current = selectedVersion;
-  }, [selectedVersion]);
+    if (
+      selectedVersion !== undefined &&
+      selectedVersion !== selectedVersionRef.current
+    ) {
+      selectedVersionRef.current = selectedVersion;
+    }
+  }, [selectedVersion, selectedVersionRef]);
 
   useEffect(() => {
     fetchedChatRef.current = fetchedChat;
@@ -204,23 +217,6 @@ export function useRealtimeSync({
         async (payload) => {
           const newVersion = payload.new.version as number;
 
-          // If a new message comes in with a higher version, update selectedVersion
-          // This ensures all tabs follow the active generation
-          if (
-            newVersion > (selectedVersionStateRef.current ?? -1) &&
-            !isLoadingRef.current
-          ) {
-            onSelectedVersionUpdateRef.current(newVersion);
-            selectedVersionRef.current = newVersion;
-            selectedVersionStateRef.current = newVersion;
-            // Reset webcontainer ready state since new version is not built yet
-            onWebcontainerReadyUpdateRef.current(false);
-            // Update previousArtifactFiles for diff calculation
-            if (onPreviousArtifactFilesUpdateRef.current && newVersion > 0) {
-              void onPreviousArtifactFilesUpdateRef.current(newVersion);
-            }
-          }
-
           onMessagesUpdateRef.current((prev) => {
             const exists = prev.some((m) => m.id === payload.new.id);
             if (exists) return prev;
@@ -234,6 +230,23 @@ export function useRealtimeSync({
             );
             return [...filteredMessages, payload.new as ChatMessage];
           });
+
+          if (payload.new.role === "user" && onInputClearRef.current) {
+            onInputClearRef.current();
+          }
+
+          if (
+            newVersion > (selectedVersionRef.current ?? -1) &&
+            !isLoadingRef.current &&
+            !isJoiningStreamRef.current
+          ) {
+            onSelectedVersionUpdateRef.current(newVersion);
+            selectedVersionRef.current = newVersion;
+            onWebcontainerReadyUpdateRef.current(false);
+            if (onPreviousArtifactFilesUpdateRef.current && newVersion > 0) {
+              void onPreviousArtifactFilesUpdateRef.current(newVersion);
+            }
+          }
         },
       )
       .on(
@@ -274,16 +287,13 @@ export function useRealtimeSync({
           ) {
             onSelectedVersionUpdateRef.current(0);
             selectedVersionRef.current = 0;
-            // Also update the internal ref synchronously to ensure build check works
-            selectedVersionStateRef.current = 0;
-            // Update previousArtifactFiles for diff calculation (version 0 has no previous)
             if (onPreviousArtifactFilesUpdateRef.current) {
               void onPreviousArtifactFilesUpdateRef.current(0);
             }
           }
 
           const shouldUpdateBuild =
-            payload.new.version === selectedVersionStateRef.current &&
+            payload.new.version === selectedVersionRef.current &&
             payload.new.is_built === true &&
             !isLoadingRef.current;
 
@@ -294,7 +304,7 @@ export function useRealtimeSync({
 
           if (
             payload.new.role === "assistant" &&
-            payload.new.version === selectedVersionStateRef.current
+            payload.new.version === selectedVersionRef.current
           ) {
             onLastAssistantMessageUpdateRef.current(
               payload.new as Tables<"messages">,
@@ -322,19 +332,15 @@ export function useRealtimeSync({
         async (payload) => {
           const deletedVersion = payload.old.version as number;
           const deletedMessageId = payload.old.id as number;
-          const currentVersion = selectedVersionStateRef.current ?? 0;
+          const currentVersion = selectedVersionRef.current ?? 0;
 
-          // First, delete the message from the list
           onMessagesDeleteRef.current(deletedMessageId);
 
-          // If the deleted message was from the current version, switch to previous version
           if (deletedVersion === currentVersion) {
-            // Get current messages and filter out the deleted one and any from deleted version
             const currentMessages = messagesRef.current.filter(
               (m) => m.id !== deletedMessageId && m.version !== deletedVersion,
             );
 
-            // Find the highest available version
             const availableVersions = Array.from(
               new Set(
                 currentMessages
@@ -351,11 +357,8 @@ export function useRealtimeSync({
             ) {
               onSelectedVersionUpdateRef.current(maxVersion);
               selectedVersionRef.current = maxVersion;
-              selectedVersionStateRef.current = maxVersion;
-              // Reset webcontainer since we're changing version
               onWebcontainerReadyUpdateRef.current(false);
 
-              // Refresh data to load the new version's files
               if (onRefreshDataRef.current) {
                 setTimeout(() => {
                   onRefreshDataRef.current?.();
@@ -389,12 +392,12 @@ export function useRealtimeSync({
             ) {
               const newTitle = getDisplayTitle(
                 payload.new.title as string,
-                selectedVersionStateRef.current,
+                selectedVersionRef.current,
               );
               onTitleUpdateRef.current(newTitle);
               updateDocumentTitle(
                 payload.new.title as string,
-                selectedVersionStateRef.current,
+                selectedVersionRef.current,
               );
             }
 

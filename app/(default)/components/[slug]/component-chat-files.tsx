@@ -628,7 +628,9 @@ ${artifactFiles
                     selectedVersion !== undefined &&
                     message.version <= selectedVersion;
                   const isBuilding =
-                    loadingState !== null && loadingState !== "error";
+                    loadingState !== null &&
+                    loadingState !== "error" &&
+                    loadingState !== "starting";
                   const isDisabled =
                     isVersionBeingBuilt || isBuilding || isLoading;
 

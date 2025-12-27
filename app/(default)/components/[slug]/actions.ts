@@ -249,17 +249,6 @@ export const deleteVersionByMessageId = async (messageId: number) => {
     throw new Error(`Failed to delete messages: ${deleteError.message}`);
   }
 
-  try {
-    await fetch(
-      `${builderApiUrl}/build/${message.chat_id}/${message.version}`,
-      {
-        method: "DELETE",
-      },
-    );
-  } catch (error) {
-    console.error("Failed to delete build from Vercel Blob:", error);
-  }
-
   const latestArtifactCode = await getLatestArtifactCode(message.chat_id);
 
   await supabase
@@ -330,10 +319,6 @@ export const buildComponent = async (
         `buildComponent: No assistant message found for chat ${chatId} version ${version}`,
       );
       return { success: false };
-    }
-
-    if (lastAssistantMessage.is_built && !forceBuild) {
-      return { success: true, alreadyBuilt: true };
     }
 
     const chat = await fetchChatById(chatId);
