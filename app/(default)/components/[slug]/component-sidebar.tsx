@@ -130,6 +130,11 @@ export default function ComponentSidebar({
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
   const isLoggedIn = !!connectedUser?.id;
   const [inputIsValid, setInputIsValid] = useState(true);
+  const [localInput, setLocalInput] = useState(input);
+
+  useEffect(() => {
+    setLocalInput(input);
+  }, [input]);
   const hasAssistantMessage = useMemo(
     () => messages.some((m) => m.role === "assistant"),
     [messages],
@@ -247,6 +252,7 @@ export default function ComponentSidebar({
       }
     }
 
+    setInput(promptText);
     handleSubmitToAI(promptText);
     setActiveTab("chat");
   };
@@ -254,7 +260,7 @@ export default function ComponentSidebar({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!input.trim()) {
+    if (!localInput.trim()) {
       toast({
         variant: "destructive",
         title: "Empty input",
@@ -278,15 +284,15 @@ export default function ComponentSidebar({
 
     if (
       fetchedChat?.clone_url &&
-      containsUrl(input) &&
-      !input.toLowerCase().includes("clone another page:")
+      containsUrl(localInput) &&
+      !localInput.toLowerCase().includes("clone another page:")
     ) {
-      setPendingPromptWithUrl(input);
+      setPendingPromptWithUrl(localInput);
       setShowUrlInPromptModal(true);
       return;
     }
 
-    submitPrompt(input);
+    submitPrompt(localInput);
   };
 
   const handleTabChange = (value: string) => {
@@ -320,7 +326,7 @@ export default function ComponentSidebar({
 
   const handleImprovePrompt = async () => {
     if (isImprovingLoading) return;
-    if (!input) {
+    if (!localInput) {
       toast({
         variant: "destructive",
         title: "Prompt is empty",
@@ -332,8 +338,8 @@ export default function ComponentSidebar({
     }
     try {
       setIsImprovingLoading(true);
-      const improvedPrompt = await improvePromptByChatId(chatId, input);
-      setInput(improvedPrompt);
+      const improvedPrompt = await improvePromptByChatId(chatId, localInput);
+      setLocalInput(improvedPrompt);
       setHasImproved(true);
       setIsImprovingLoading(false);
     } catch {
@@ -1138,9 +1144,9 @@ export default function ComponentSidebar({
                         (!isWebcontainerReady && hasAssistantMessage)
                       }
                       isLoading={isLoading}
-                      value={input}
+                      value={localInput}
                       onChange={(value, isValid) => {
-                        setInput(value);
+                        setLocalInput(value);
                         setInputIsValid(isValid);
                       }}
                       displayMessage={false}
@@ -1167,7 +1173,7 @@ export default function ComponentSidebar({
                     <div
                       className={cn(
                         "text-foreground my-0.5 text-xs transition-opacity",
-                        input.length <= 3 && "opacity-0",
+                        localInput.length <= 3 && "opacity-0",
                       )}
                     >
                       Use{" "}
@@ -1318,7 +1324,7 @@ export default function ComponentSidebar({
             </Button>
             <Button
               onClick={() => {
-                const promptToUse = pendingPromptWithUrl || input;
+                const promptToUse = pendingPromptWithUrl || localInput;
                 setShowUrlInPromptModal(false);
                 setPendingPromptWithUrl(null);
                 submitPrompt(promptToUse);

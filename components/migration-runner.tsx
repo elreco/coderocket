@@ -127,7 +127,10 @@ export function MigrationRunner({
       setMigrationsExecuted(result.migrationsExecuted || []);
       toast({
         title: "Migration Successful! 🎉",
-        description: `Successfully created ${tables.length} table${tables.length !== 1 ? "s" : ""} in your Supabase database`,
+        description:
+          tables.length > 0
+            ? `Successfully created ${tables.length} table${tables.length !== 1 ? "s" : ""} in your Supabase database`
+            : "Migration applied successfully to your Supabase database",
       });
     } catch (error) {
       const errorMessage =

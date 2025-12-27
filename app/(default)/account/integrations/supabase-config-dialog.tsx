@@ -176,11 +176,13 @@ export function SupabaseConfigDialog({
             <SiSupabase className="size-5 text-green-600" />
             {isEditing
               ? "Edit"
-              : "Add"} Supabase Integration
+              : "Set up"} App Data
           </DialogTitle>
           <DialogDescription>
-            Connect your Supabase project to enable backend functionality in
-            your generated apps.
+            Save data, upload files, and add user accounts to your app.
+            <span className="text-muted-foreground mt-1 block text-xs">
+              Powered by Supabase
+            </span>
           </DialogDescription>
         </DialogHeader>
 
@@ -356,7 +358,7 @@ export function SupabaseConfigDialog({
             disabled={isLoading || !name || !projectUrl || !anonKey}
           >
             {isLoading && <Loader2 className="mr-2 size-4 animate-spin" />}
-            {isEditing ? "Update" : "Create"} Integration
+            {isEditing ? "Update" : "Save"}
           </Button>
         </DialogFooter>
       </DialogContent>

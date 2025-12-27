@@ -1,66 +1,59 @@
 ---
-title: Supabase
-description: 'Complete guide to using Supabase with CodeRocket'
+title: App Data
+description: 'Save data, upload files, and add user accounts to your apps'
 icon: "database"
 ---
 
-## What is Supabase?
+## What is App Data?
 
-Supabase is an open-source Firebase alternative that provides:
-- **PostgreSQL Database** - Powerful relational database
-- **Authentication** - User management and auth
-- **Storage** - File uploads and CDN
-- **Real-time** - Database subscriptions
-- **Edge Functions** - Serverless functions
+App Data lets your apps do more than just display information. With App Data enabled, your apps can:
 
-## Getting Your Supabase Credentials
-
-### Step 1: Create a Supabase Project
-
-1. Go to [supabase.com](https://supabase.com)
-2. Sign in or create an account
-3. Click **New Project**
-4. Fill in your project details:
-   - Project name
-   - Database password
-   - Region (choose closest to your users)
+- **Save your data** - Store and retrieve information that persists between sessions
+- **Upload files** - Let users upload images, videos, PDFs, and more
+- **User accounts** - Allow users to sign up, log in, and have their own private data
+- **Real-time updates** - Data syncs instantly across all users
 
 <Note>
-  Save your database password securely - you'll need it for direct database access.
+  App Data is powered by [Supabase](https://supabase.com), an open-source cloud platform.
 </Note>
 
-### Step 2: Get Your API Keys
+## Getting Started
+
+### Step 1: Create a Supabase Account
+
+1. Go to [supabase.com](https://supabase.com)
+2. Sign in or create a free account
+3. Click **New Project**
+4. Fill in your project details:
+   - Project name (e.g., "My App")
+   - Database password (save this somewhere safe)
+   - Region (choose the one closest to your users)
+
+### Step 2: Get Your Keys
 
 Once your project is created:
 
 1. Go to **Project Settings** (⚙️ icon in sidebar)
-2. Navigate to **API** section
-3. You'll find:
+2. Click on **API**
+3. Copy these two values:
    - **Project URL**: `https://xxxxx.supabase.co`
-   - **Anon Key**: Public API key (safe to use in client-side code)
+   - **Anon Key**: A long string starting with `eyJ...`
 
-## Configuring Supabase in CodeRocket
+### Step 3: Connect to CodeRocket
 
-### Adding the Integration
+1. Go to **Account → Integrations** in CodeRocket
+2. Click **Add Integration** on App Data
+3. Paste your Project URL and Anon Key
+4. Click **Test Connection** to make sure it works
+5. Click **Save**
 
-1. Go to **Account → Integrations**
-2. Click **Add Integration** on Supabase
-3. Fill in the form:
-
-```
-Integration Name: My Blog Database
-Project URL: https://xxxxx.supabase.co
-Anon Key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-```
-
-4. Click **Test Connection** to verify
-5. Click **Create Integration**
+That's it! Your apps can now save data, upload files, and manage user accounts.
 
 ## What Gets Generated
 
-When you enable Supabase for a project and generate code, CodeRocket automatically creates:
+When you enable App Data for a project and ask for features that need to save data, CodeRocket automatically creates:
 
-### 1. Supabase Client Configuration
+### 1. Connection Code
 
 ```typescript src/lib/supabase.ts
 import { createClient } from '@supabase/supabase-js'
@@ -102,439 +95,207 @@ export type Database = {
 }
 ```
 
-### 3. React Hooks (for React projects)
+### 3. Data Hooks (for React projects)
+
+Code to load and save data from your components:
 
 ```typescript src/hooks/usePosts.ts
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
-import { Database } from '@/types/database.types'
-
-type Post = Database['public']['Tables']['posts']['Row']
 
 export function usePosts() {
-  const [posts, setPosts] = useState<Post[]>([])
+  const [posts, setPosts] = useState([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     const fetchPosts = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('posts')
-          .select('*')
-          .order('created_at', { ascending: false })
+      const { data } = await supabase
+        .from('posts')
+        .select('*')
+        .order('created_at', { ascending: false })
 
-        if (error) throw error
-        setPosts(data)
-      } catch (err) {
-        setError(err.message)
-      } finally {
-        setLoading(false)
-      }
+      setPosts(data || [])
+      setLoading(false)
     }
 
     fetchPosts()
   }, [])
 
-  return { posts, loading, error }
+  return { posts, loading }
 }
 ```
 
-### 4. Environment Variables
+<Tip>
+  You don't need to worry about environment variables - CodeRocket automatically injects your credentials.
+</Tip>
 
-```bash .env.example
-VITE_SUPABASE_URL=https://xxxxx.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-key-here
+## Example Prompts
+
+Here are some things you can ask CodeRocket to build:
+
+### Save Data
+
+```
+"Create a blog where I can write and save posts"
 ```
 
-## Common Use Cases
-
-### Example 1: Simple Blog
-
-**Prompt:**
 ```
-Create a blog with posts that have title, content, and author.
-Users should be able to create, read, update, and delete posts.
+"Build a todo app where tasks are saved between sessions"
 ```
 
-**Generated Structure:**
-- `posts` table schema
-- CRUD API routes
-- Post list component
-- Post creation form
-- Post editing interface
-
-### Example 2: Todo App
-
-**Prompt:**
 ```
-Build a todo application with tasks that can be marked as complete.
-Each todo should have a title, description, and due date.
+"Make a contacts app where I can add and manage contacts"
 ```
 
-**Generated:**
-- `todos` table
-- Task components
-- Complete/incomplete toggle
-- Date picker for due dates
-- Filter by status
+### User Accounts
 
-### Example 3: User Authentication
-
-**Prompt:**
 ```
-Add user authentication with login and signup forms.
-Users should only see their own data.
+"Add login and signup so users can have their own data"
 ```
 
-**Generated:**
-- Auth context and hooks
-- Login/signup components
-- Protected routes
-- Row Level Security policies
-
-## Setting Up Your Database Schema
-
-Before generating code, you may want to set up your database schema in Supabase:
-
-### Option 1: Let the AI Design It
-
-Simply describe what you want:
 ```
-"Create a blog with posts, comments, and categories"
+"Let users create accounts and save their preferences"
 ```
 
-The AI will infer a suitable schema and suggest table structures.
+### File Uploads
 
-### Option 2: Pre-define Your Schema
-
-Create tables manually in Supabase first:
-
-1. Go to **Table Editor** in Supabase dashboard
-2. Click **New Table**
-3. Define columns and relationships
-4. Set up RLS policies
-
-Then tell CodeRocket:
 ```
-"Build a UI for my existing posts table in Supabase"
+"Add profile picture upload for users"
 ```
 
-### Option 3: Provide Schema in Integration Config
-
-When creating the integration, you can optionally provide your database schema:
-
-```json
-{
-  "tables": [
-    {
-      "name": "posts",
-      "columns": [
-        { "name": "id", "type": "uuid", "isPrimaryKey": true },
-        { "name": "title", "type": "text" },
-        { "name": "content", "type": "text" },
-        { "name": "author_id", "type": "uuid" },
-        { "name": "created_at", "type": "timestamptz" }
-      ]
-    }
-  ]
-}
+```
+"Create a photo gallery where users can upload images"
 ```
 
-<Info>
-  Providing the schema helps the AI generate more accurate types and queries.
-</Info>
-
-## Row Level Security (RLS)
-
-Supabase uses RLS to secure your data. The AI-generated code respects RLS policies.
-
-### Example RLS Policy
-
-```sql
--- Enable RLS
-ALTER TABLE posts ENABLE ROW LEVEL SECURITY;
-
--- Users can only read their own posts
-CREATE POLICY "Users can view own posts"
-  ON posts FOR SELECT
-  USING (auth.uid() = author_id);
-
--- Users can insert their own posts
-CREATE POLICY "Users can create posts"
-  ON posts FOR INSERT
-  WITH CHECK (auth.uid() = author_id);
+```
+"Build a document manager for uploading PDFs"
 ```
 
-When you ask for authenticated features, the AI will generate code that works with these policies.
+## Running SQL Migrations
 
-## Real-time Subscriptions
+When CodeRocket generates features that need to save data, it creates SQL code that you need to run in Supabase:
 
-The AI can generate real-time features using Supabase subscriptions:
+1. Copy the SQL code from CodeRocket
+2. Go to your [Supabase Dashboard](https://supabase.com/dashboard)
+3. Click **SQL Editor** in the sidebar
+4. Paste the SQL code
+5. Click **Run**
 
-**Prompt:**
+That's it! Your app is now ready to save data.
+
+<Tip>
+  CodeRocket generates all the necessary security rules (called RLS policies) automatically. Your data is protected by default.
+</Tip>
+
+## Real-time Updates
+
+Want data to sync instantly across all users? Just ask:
+
 ```
 "Make the posts list update in real-time when new posts are added"
 ```
 
-**Generated Code:**
-```typescript
-useEffect(() => {
-  const subscription = supabase
-    .channel('posts')
-    .on('postgres_changes', {
-      event: 'INSERT',
-      schema: 'public',
-      table: 'posts'
-    }, (payload) => {
-      setPosts(prev => [payload.new, ...prev])
-    })
-    .subscribe()
+CodeRocket will generate code that automatically updates the UI when data changes - no page refresh needed!
 
-  return () => {
-    subscription.unsubscribe()
-  }
-}, [])
+## File Uploads
+
+Your apps can let users upload images, videos, documents, and more. Just describe what you need:
+
+```
+"Add profile picture upload for users"
 ```
 
-## Storage Integration
+```
+"Create a photo gallery where users can upload images"
+```
 
-Supabase Storage allows your users to upload and manage files directly from the browser. No additional backend required!
+```
+"Build a document manager for PDF files"
+```
 
 ### Supported File Types
 
 - **Images**: PNG, JPEG, GIF, WebP
 - **Videos**: MP4, WebM
 - **Documents**: PDF, TXT, and more
-- **Any file type** you configure
 
-### Example Prompts
+### How It Works
 
-**Simple image upload:**
-```
-"Add profile picture upload for users"
-```
+CodeRocket generates everything you need:
 
-**Gallery or media library:**
-```
-"Create a photo gallery where users can upload and view images"
-```
+1. **SQL migration** - Creates a storage bucket in Supabase
+2. **Upload code** - Handles the file upload process
+3. **UI component** - File picker with upload progress
 
-**Document management:**
-```
-"Build a document manager where users can upload and organize PDF files"
-```
-
-**E-commerce product images:**
-```
-"Add multiple image upload for product listings"
-```
-
-### What Gets Generated
-
-When you request file upload functionality, CodeRocket generates:
-
-**1. SQL Migration for Storage Bucket:**
-
-```sql
-insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-values (
-  'uploads',
-  'uploads',
-  true,
-  52428800,
-  array['image/png', 'image/jpeg', 'image/gif', 'video/mp4', 'application/pdf']
-);
-
-create policy "Authenticated users can upload"
-  on storage.objects for insert
-  with check (bucket_id = 'uploads' and auth.role() = 'authenticated');
-
-create policy "Public read access"
-  on storage.objects for select
-  using (bucket_id = 'uploads');
-```
-
-**2. Upload Service:**
-
-```typescript
-import { supabase } from '@/lib/supabase'
-
-export async function uploadFile(file: File, folder: string = 'public') {
-  const fileExt = file.name.split('.').pop()
-  const fileName = `${folder}/${Date.now()}.${fileExt}`
-
-  const { data, error } = await supabase.storage
-    .from('uploads')
-    .upload(fileName, file)
-
-  if (error) throw error
-
-  const { data: { publicUrl } } = supabase.storage
-    .from('uploads')
-    .getPublicUrl(data.path)
-
-  return { path: data.path, publicUrl }
-}
-```
-
-**3. React Upload Component:**
-
-```tsx
-export function FileUpload({ onUpload }) {
-  const [uploading, setUploading] = useState(false)
-
-  const handleUpload = async (e) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    setUploading(true)
-    try {
-      const { publicUrl } = await uploadFile(file)
-      onUpload(publicUrl)
-    } finally {
-      setUploading(false)
-    }
-  }
-
-  return (
-    <input type="file" onChange={handleUpload} disabled={uploading} />
-  )
-}
-```
-
-### Storage Configuration Options
-
-| Option | Description | Example |
-|--------|-------------|---------|
-| `public` | Files accessible without auth | `true` for public galleries |
-| `file_size_limit` | Max file size in bytes | `52428800` (50MB) |
-| `allowed_mime_types` | Restrict file types | `['image/png', 'video/mp4']` |
-
-### Common Storage Patterns
-
-<AccordionGroup>
-  <Accordion title="Profile Avatars">
-    Public bucket, 5MB limit, images only. Files organized by user ID.
-  </Accordion>
-
-  <Accordion title="Private Documents">
-    Private bucket with signed URLs, 50MB limit, PDFs and images.
-  </Accordion>
-
-  <Accordion title="Media Gallery">
-    Public bucket, 100MB limit, images and videos with thumbnail generation.
-  </Accordion>
-
-  <Accordion title="E-commerce Products">
-    Public bucket, 10MB limit, multiple images per product with ordering.
-  </Accordion>
-</AccordionGroup>
+Just run the SQL migration in your Supabase dashboard and your app can accept file uploads!
 
 <Note>
-  Storage buckets and policies are created via SQL migrations. Just copy the generated SQL to your Supabase dashboard.
+  Files are stored securely in the cloud and delivered fast via CDN. Default limit is 50MB per file.
 </Note>
 
-## Best Practices
+## Tips
 
 <AccordionGroup>
-  <Accordion title="Use Environment Variables">
-    Never hardcode credentials. The AI generates `.env.example` files with all required variables.
+  <Accordion title="Test with a free project first">
+    Create a free Supabase project for testing. Once everything works, you can switch to your production project.
   </Accordion>
 
-  <Accordion title="Implement RLS">
-    Always enable Row Level Security for user data. The AI respects RLS in generated code.
+  <Accordion title="Your data is secure">
+    CodeRocket automatically generates security rules (RLS policies) that protect your data. Users can only access their own data by default.
   </Accordion>
 
-  <Accordion title="Handle Errors Gracefully">
-    Generated code includes try-catch blocks and error states. Review and enhance as needed.
-  </Accordion>
-
-  <Accordion title="Type Everything">
-    Use the generated TypeScript types for better developer experience and fewer bugs.
-  </Accordion>
-
-  <Accordion title="Test Locally First">
-    Use a development Supabase project for testing before pointing to production.
+  <Accordion title="No extra configuration needed">
+    CodeRocket automatically injects your Supabase credentials. You don't need to set up environment variables manually.
   </Accordion>
 </AccordionGroup>
 
 ## Troubleshooting
 
-### "Failed to connect to Supabase"
+### "Failed to connect"
 
 <Steps>
-  <Step title="Check Project URL">
-    Ensure the URL is in the format: `https://xxxxx.supabase.co`
+  <Step title="Check your Project URL">
+    Make sure it looks like: `https://xxxxx.supabase.co`
   </Step>
-  <Step title="Verify Anon Key">
-    Copy the key from Supabase dashboard → Settings → API
+  <Step title="Check your Anon Key">
+    Copy it fresh from Supabase dashboard → Settings → API
   </Step>
-  <Step title="Check Project Status">
-    Make sure your Supabase project is active and not paused
-  </Step>
-  <Step title="Test in Supabase Dashboard">
-    Try running a query in the Supabase SQL Editor to confirm the project is working
+  <Step title="Make sure your project is running">
+    Free Supabase projects pause after 1 week of inactivity. Go to your dashboard and restart if needed.
   </Step>
 </Steps>
 
-### "RLS policy prevents access"
+### "Data not showing up"
 
-If generated code can't access data:
-1. Check your RLS policies in Supabase
-2. Ensure the user is authenticated if required
-3. Verify the policy allows the operation (SELECT, INSERT, etc.)
-4. Consider temporarily disabling RLS for testing
+1. Make sure you ran the SQL migration in Supabase
+2. Check if you're logged in (if the app requires it)
+3. Try refreshing the page
 
-### "TypeScript errors in generated code"
+## For Developers
 
-- Make sure to install `@supabase/supabase-js`
-- Run `npm install` to ensure dependencies are installed
-- Check that environment variables are properly set
+<Accordion title="Technical Details (Click to expand)">
 
-## Migration from Other Databases
+App Data is powered by Supabase, which provides:
 
-If you're migrating from another database to Supabase:
+- **PostgreSQL Database** - Powerful relational database
+- **Row Level Security** - Data access rules at the database level
+- **Real-time Subscriptions** - Live data sync via WebSockets
+- **Storage** - S3-compatible file storage with CDN
+- **Edge Functions** - Serverless functions (Deno)
 
-1. Export your existing schema
-2. Import into Supabase using the SQL Editor
-3. Update your CodeRocket integration
-4. Regenerate components with the new integration
+The generated code uses the `@supabase/supabase-js` client library.
 
-<Tip>
-  Supabase provides migration tools for Firebase, MongoDB, and other databases.
-</Tip>
+For advanced use cases like custom RLS policies, database functions, or edge functions, you can access your Supabase dashboard directly.
 
-## Advanced Features
-
-### Edge Functions
-
-Ask the AI to generate Edge Functions:
-```
-"Create a Supabase Edge Function to send welcome emails"
-```
-
-### Database Functions
-
-Request stored procedures:
-```
-"Create a database function to calculate post statistics"
-```
-
-### Webhooks
-
-Integrate webhooks:
-```
-"Set up a webhook to notify Slack when new posts are created"
-```
+</Accordion>
 
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="Usage Examples" icon="code" href="/integrations/usage">
-    See more practical examples
+  <Card title="See Examples" icon="code" href="/integrations/usage">
+    More example prompts and patterns
   </Card>
-  <Card title="Troubleshooting" icon="wrench" href="/integrations/troubleshooting">
+  <Card title="Get Help" icon="wrench" href="/integrations/troubleshooting">
     Common issues and solutions
   </Card>
 </CardGroup>

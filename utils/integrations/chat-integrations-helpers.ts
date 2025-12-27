@@ -94,39 +94,40 @@ async function buildSupabaseContext(
   return `
 <backend_integration type="supabase" status="active">
   <database_context>
-    ⚠️ IMPORTANT: The user has ACTIVELY ENABLED Supabase integration for this project.
-    This means they WANT to use database features and expect you to implement them.
+    ⚠️ IMPORTANT: The user has enabled "App Data" for this project.
+    This means they WANT their app to save data, upload files, and manage user accounts.
 
-    You have access to a Supabase backend with the following configuration:
-    - Database: PostgreSQL with Row Level Security (RLS)
-    - Real-time subscriptions available
-    - Built-in authentication system
-    - The integration is READY and CONFIGURED - use it proactively!
+    You have access to a cloud backend (powered by Supabase) with:
+    - Save your data: Store and retrieve any data your app needs
+    - Upload files: Images, videos, PDFs, documents - any file type
+    - User accounts: Let users sign up, log in, and have their own data
+    - Real-time updates: Data syncs instantly across all users
+    - The backend is READY and CONFIGURED - use it proactively!
 
     ${schemaInfo}
 
     💡 PROACTIVE USAGE:
-    - When the user requests ANY feature that could benefit from data persistence, USE Supabase
-    - Don't ask if they want database functionality - they already enabled it by selecting the integration
+    - When the user requests ANY feature that could benefit from saving data, implement it!
+    - Don't ask if they want to save data - they already enabled App Data
     - Examples: todo lists, user profiles, product catalogs, comments, posts, settings, etc.
-    - Even for simple features, consider adding database persistence to make the app more complete
-    - If they just say "create a dashboard", proactively add database-backed data instead of mock data
+    - Even for simple features, save the data so it persists between sessions
+    - If they just say "create a dashboard", proactively save data instead of using fake/mock data
   </database_context>
 
   <storage_context>
-    ⚠️ IMPORTANT: Supabase Storage is AVAILABLE for file uploads!
-    When the user needs file upload functionality (images, videos, PDFs, documents, etc.), use Supabase Storage.
+    ⚠️ IMPORTANT: File uploads are AVAILABLE!
+    When the user needs to upload files (images, videos, PDFs, documents, etc.), implement it directly.
 
-    📦 STORAGE CAPABILITIES:
+    📦 FILE UPLOAD CAPABILITIES:
     - Upload ANY file type: images (PNG, JPG, GIF, WebP), videos (MP4, WebM), PDFs, documents, etc.
     - Files are stored securely and accessible via public URLs
     - Supports large files (up to 50MB by default, configurable)
     - Built-in CDN for fast delivery
-    - Works 100% from the client-side (no backend needed)
+    - Works 100% from the browser (no extra server needed)
 
     💡 PROACTIVE USAGE:
-    - When user asks for: "upload images", "file upload", "profile picture", "gallery", "media library" → USE Storage
-    - When user creates apps like: social media, e-commerce, portfolio, blog with images → INCLUDE Storage
+    - When user asks for: "upload images", "file upload", "profile picture", "gallery", "media library" → Implement file uploads
+    - When user creates apps like: social media, e-commerce, portfolio, blog with images → Include file uploads
     - Don't ask if they want file upload - implement it directly if it makes sense for the feature
   </storage_context>
 
@@ -142,7 +143,8 @@ async function buildSupabaseContext(
        - Simply use import.meta.env.VITE_SUPABASE_URL and import.meta.env.VITE_SUPABASE_ANON_KEY in your code
        - The credentials are ALREADY configured and AUTOMATICALLY injected by the platform
        - The code you generate will work IMMEDIATELY without any configuration
-       - If you mention Supabase in your response, say: "The application is ready to use with Supabase integration"
+       - In your response, say something simple like: "Your app is ready! Data will be saved automatically." or "Your app can now save data and upload files."
+       - AVOID technical jargon like "Supabase", "database", "PostgreSQL", "backend" - use simple terms like "save data", "your app's data", "upload files"
 
        🔍 Environment Variables Injection:
        - In the PREVIEW (webcontainer): credentials are automatically injected as environment variables via .env.local
@@ -562,8 +564,25 @@ async function buildSupabaseContext(
     - NEVER mention "setup", "configure", or "add credentials" in your response
     - The application is ready to use immediately - credentials are auto-injected
 
-    In your response text, simply say something like:
-    "The application is ready with Supabase integration. Copy the migration SQL to your Supabase dashboard to create the database tables and storage buckets."
+    📝 USER-FRIENDLY RESPONSE GUIDELINES:
+    In your response text, use SIMPLE language that non-developers understand:
+
+    ✅ GOOD (simple, user-friendly):
+    - "Your app is ready! Data will be saved automatically."
+    - "Your app can now save data, upload files, and manage user accounts."
+    - "To finish setup, copy the SQL code below to your Supabase dashboard."
+    - "Users can now create accounts and their data will be saved."
+    - "Files uploaded by users will be stored securely."
+
+    ❌ AVOID (too technical):
+    - "Supabase integration configured"
+    - "Database operations are ready"
+    - "PostgreSQL backend is connected"
+    - "RLS policies have been applied"
+    - "The migration creates tables with foreign keys"
+
+    When you need to mention technical details (like running migrations), keep it minimal:
+    "To complete the setup, copy the SQL code to your Supabase dashboard → SQL Editor → New query → Run."
   </coderocket_artifact_backend>
 
   <best_practices>

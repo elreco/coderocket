@@ -30,10 +30,11 @@ import { SupabaseConfigDialog } from "./supabase-config-dialog";
 const availableIntegrations = [
   {
     type: IntegrationType.SUPABASE,
-    name: "Supabase",
-    description: "PostgreSQL database, authentication, and storage",
+    name: "App Data",
+    description: "Save your data, upload files, and manage user accounts",
     icon: <SiSupabase className="size-6 text-green-600" />,
     available: true,
+    poweredBy: "Supabase",
   },
   {
     type: IntegrationType.FIGMA,
@@ -130,7 +131,7 @@ export default function IntegrationsClient({
       router.replace("/account/integrations");
     } else if (success) {
       const successMessages: Record<string, string> = {
-        supabase_connected: "Supabase integration connected successfully!",
+        supabase_connected: "App Data connected successfully!",
         figma_connected: "Figma integration connected successfully!",
       };
 
@@ -236,7 +237,14 @@ export default function IntegrationsClient({
                   )}
                 </div>
                 <CardTitle className="mt-4">{integration.name}</CardTitle>
-                <CardDescription>{integration.description}</CardDescription>
+                <CardDescription>
+                  {integration.description}
+                  {"poweredBy" in integration && integration.poweredBy && (
+                    <span className="text-muted-foreground mt-1 block text-xs">
+                      Powered by {integration.poweredBy}
+                    </span>
+                  )}
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <Button

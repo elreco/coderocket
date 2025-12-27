@@ -1067,11 +1067,14 @@ export default function ComponentCompletion({
       },
     });
 
+  const stopRef = useRef(stop);
+
   useEffect(() => {
     startInitialGenerationRef.current = complete;
     setCompletionRef.current = setCompletion;
     setInputRef.current = setInput;
-  }, [complete, setCompletion, setInput]);
+    stopRef.current = stop;
+  }, [complete, setCompletion, setInput, stop]);
 
   useEffect(() => {
     if (completion && isLoading) {
@@ -1547,14 +1550,14 @@ export default function ComponentCompletion({
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event) => {
       if (event === "SIGNED_OUT") {
-        stop();
+        stopRef.current();
       }
     });
 
     return () => {
       subscription.unsubscribe();
     };
-  });
+  }, [supabase]);
 
   useEffect(() => {
     if (isModalOpen && typeof window !== "undefined" && window.closeCrispChat) {

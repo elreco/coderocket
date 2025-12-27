@@ -179,15 +179,16 @@ export default function ComponentPreview() {
     }
   }, [isScrapingWebsite, selectedVersion]);
 
-  // Vérifier si la version précédente est buildée quand selectedVersion change
   React.useEffect(() => {
     if (selectedVersion === undefined || selectedVersion <= 0) {
       setPreviousVersionIsBuilt(false);
       return;
     }
 
+    let isMounted = true;
     const prevVersion = selectedVersion - 1;
     const supabase = createClient();
+
     void (async () => {
       try {
         const { data } = await supabase
@@ -197,21 +198,28 @@ export default function ComponentPreview() {
           .eq("role", "assistant")
           .eq("version", prevVersion)
           .single();
-        setPreviousVersionIsBuilt(data?.is_built === true);
+        if (isMounted) {
+          setPreviousVersionIsBuilt(data?.is_built === true);
+        }
       } catch {
-        setPreviousVersionIsBuilt(false);
+        if (isMounted) {
+          setPreviousVersionIsBuilt(false);
+        }
       }
     })();
+
+    return () => {
+      isMounted = false;
+    };
   }, [selectedVersion, chatId]);
 
   React.useEffect(() => {
     if (selectedVersion === undefined) return;
 
+    let isMounted = true;
     const isGenerating =
       isLoading || (loadingState && loadingState !== "error");
 
-    // Pour la première version pendant le scraping, forcer displayVersion à undefined
-    // pour que le loader s'affiche
     if (
       isScrapingWebsite &&
       (selectedVersion === 0 ||
@@ -224,8 +232,6 @@ export default function ComponentPreview() {
       return;
     }
 
-    // Pour les versions > 0, vérifier d'abord si la version actuelle est buildée
-    // Si oui, l'afficher directement. Sinon, afficher la version précédente si elle est buildée
     if (
       displayVersion === undefined ||
       (selectedVersion > 0 &&
@@ -243,6 +249,8 @@ export default function ComponentPreview() {
           .eq("version", selectedVersion)
           .single()
           .then(({ data: currentData }) => {
+            if (!isMounted) return;
+
             const currentIsBuilt = currentData?.is_built === true;
             setCurrentVersionIsBuilt(currentIsBuilt);
 
@@ -259,6 +267,8 @@ export default function ComponentPreview() {
                 .eq("version", prevVersion)
                 .single()
                 .then(({ data }) => {
+                  if (!isMounted) return;
+
                   const hasError =
                     data?.build_error ||
                     data?.content?.includes("<!-- FINISH_REASON: length -->") ||
@@ -276,24 +286,22 @@ export default function ComponentPreview() {
             }
           });
       }
-      // Pour la première génération, on ne définit PAS displayVersion ici
-      // Il sera défini dans le onLoad de l'iframe pour permettre "Starting version #" de s'afficher
     } else if (
       !isLoading &&
       !isScrapingWebsite &&
       displayVersion !== selectedVersion &&
-      !isFirstGeneration && // Ne pas définir displayVersion pour la première génération ici
+      !isFirstGeneration &&
       isWebcontainerReady &&
       loadingState !== "error" &&
       (loadingState === null || loadingState === "starting")
     ) {
-      // Only update displayVersion when build is complete, webcontainer is ready, and no active loading
-      // This prevents flickering on page load
-      // Use !isLoading instead of !isGenerating to allow "starting" state
-      // Exclure la première génération pour permettre l'affichage du loader "Building version #"
       setDisplayVersion(selectedVersion);
       setPreviousVersionHasError(false);
     }
+
+    return () => {
+      isMounted = false;
+    };
   }, [
     isLoading,
     selectedVersion,
@@ -352,75 +360,118 @@ export default function ComponentPreview() {
     (isLoading ||
       (loadingState && loadingState !== "error" && loadingState !== null));
 
-  // Pour la première version pendant le scraping, afficher le loader
-  // Pour les versions > 0, on affiche l'iframe de la version précédente (pas le loader)
-  const isScrapingFirstVersion =
-    isScrapingWebsite &&
-    (selectedVersion === 0 ||
-      selectedVersion === -1 ||
-      selectedVersion === undefined);
+  const isScrapingFirstVersion = React.useMemo(
+    () =>
+      isScrapingWebsite &&
+      (selectedVersion === 0 ||
+        selectedVersion === -1 ||
+        selectedVersion === undefined),
+    [isScrapingWebsite, selectedVersion],
+  );
 
-  // Cas 1 - Première génération
-  const shouldShowLoaderFirstGen =
-    isScrapingFirstVersion ||
-    (!isScrapingWebsite && isContinuingFromLengthError) ||
-    (!isScrapingWebsite &&
-      isFirstGeneration &&
-      isLoading &&
-      !isStreamingComplete) || // Pendant le stream
-    // Pour la version 0, afficher le loader si displayVersion est undefined et qu'on n'est plus en train de charger
-    // (peu importe l'état exact de isStreamingComplete ou loadingState)
-    (!isScrapingWebsite &&
-      isFirstGeneration &&
-      !isLoading &&
-      displayVersion === undefined &&
-      loadingState !== "error") || // Après stream, avant build
-    (!isScrapingWebsite &&
-      isFirstGeneration &&
-      (loadingState === "starting" ||
-        (loadingState === null && isWebcontainerReady)) &&
-      displayVersion === undefined &&
-      !hasEverLoaded) || // Build terminé, iframe commence (mais pas encore chargée)
-    (!isScrapingWebsite && isLengthError && isGenerating);
+  const shouldShowLoaderFirstGen = React.useMemo(
+    () =>
+      isScrapingFirstVersion ||
+      (!isScrapingWebsite && isContinuingFromLengthError) ||
+      (!isScrapingWebsite &&
+        isFirstGeneration &&
+        isLoading &&
+        !isStreamingComplete) ||
+      (!isScrapingWebsite &&
+        isFirstGeneration &&
+        !isLoading &&
+        displayVersion === undefined &&
+        loadingState !== "error") ||
+      (!isScrapingWebsite &&
+        isFirstGeneration &&
+        (loadingState === "starting" ||
+          (loadingState === null && isWebcontainerReady)) &&
+        displayVersion === undefined &&
+        !hasEverLoaded) ||
+      (!isScrapingWebsite && isLengthError && isGenerating),
+    [
+      isScrapingFirstVersion,
+      isScrapingWebsite,
+      isContinuingFromLengthError,
+      isFirstGeneration,
+      isLoading,
+      isStreamingComplete,
+      displayVersion,
+      loadingState,
+      isWebcontainerReady,
+      hasEverLoaded,
+      isLengthError,
+      isGenerating,
+    ],
+  );
 
-  // Cas 2 - Générations suivantes
-  // Seulement si pas de version précédente buildée
-  const shouldShowLoaderSubsequentGen =
-    !isScrapingWebsite &&
-    !isFirstGeneration &&
-    isGenerating &&
-    !previousVersionIsBuilt &&
-    (previousVersionHasError || displayVersion === undefined);
-
-  // Cas 3 - Fix sans version précédente buildée
-  // Se comporte comme une première génération (loader fullscreen)
-  const shouldShowLoaderFix =
-    isCorrectionInProgress &&
-    !previousVersionIsBuilt &&
-    displayVersion === undefined;
-
-  const shouldShowLoader =
-    shouldShowLoaderFirstGen ||
-    shouldShowLoaderSubsequentGen ||
-    shouldShowLoaderFix;
-
-  // Déterminer si on doit utiliser le mockup loader (génération) ou LoadingStateComponent (build/start)
-  // Le mockup loader s'affiche UNIQUEMENT pendant le stream actif
-  const shouldUseMockupLoader =
-    (isFirstGeneration && isLoading && !isStreamingComplete) ||
-    isScrapingFirstVersion ||
-    (!isFirstGeneration &&
+  const shouldShowLoaderSubsequentGen = React.useMemo(
+    () =>
+      !isScrapingWebsite &&
+      !isFirstGeneration &&
       isGenerating &&
       !previousVersionIsBuilt &&
-      (previousVersionHasError || displayVersion === undefined) &&
-      isLoading &&
-      !isStreamingComplete) ||
-    (isCorrectionInProgress &&
+      (previousVersionHasError || displayVersion === undefined),
+    [
+      isScrapingWebsite,
+      isFirstGeneration,
+      isGenerating,
+      previousVersionIsBuilt,
+      previousVersionHasError,
+      displayVersion,
+    ],
+  );
+
+  const shouldShowLoaderFix = React.useMemo(
+    () =>
+      isCorrectionInProgress &&
       !previousVersionIsBuilt &&
-      isLoading &&
-      !isStreamingComplete) ||
-    (isLengthError && isGenerating && isLoading && !isStreamingComplete) ||
-    (isContinuingFromLengthError && isLoading && !isStreamingComplete);
+      displayVersion === undefined,
+    [isCorrectionInProgress, previousVersionIsBuilt, displayVersion],
+  );
+
+  const shouldShowLoader = React.useMemo(
+    () =>
+      shouldShowLoaderFirstGen ||
+      shouldShowLoaderSubsequentGen ||
+      shouldShowLoaderFix,
+    [
+      shouldShowLoaderFirstGen,
+      shouldShowLoaderSubsequentGen,
+      shouldShowLoaderFix,
+    ],
+  );
+
+  const shouldUseMockupLoader = React.useMemo(
+    () =>
+      (isFirstGeneration && isLoading && !isStreamingComplete) ||
+      isScrapingFirstVersion ||
+      (!isFirstGeneration &&
+        isGenerating &&
+        !previousVersionIsBuilt &&
+        (previousVersionHasError || displayVersion === undefined) &&
+        isLoading &&
+        !isStreamingComplete) ||
+      (isCorrectionInProgress &&
+        !previousVersionIsBuilt &&
+        isLoading &&
+        !isStreamingComplete) ||
+      (isLengthError && isGenerating && isLoading && !isStreamingComplete) ||
+      (isContinuingFromLengthError && isLoading && !isStreamingComplete),
+    [
+      isFirstGeneration,
+      isLoading,
+      isStreamingComplete,
+      isScrapingFirstVersion,
+      isGenerating,
+      previousVersionIsBuilt,
+      previousVersionHasError,
+      displayVersion,
+      isCorrectionInProgress,
+      isLengthError,
+      isContinuingFromLengthError,
+    ],
+  );
 
   // Forcer displayVersion à undefined pendant le scraping de la première version
   React.useEffect(() => {
@@ -436,22 +487,31 @@ export default function ComponentPreview() {
       setPreviousVersionIsBuilt(false);
     }
   }, [isScrapingWebsite, selectedVersion, displayVersion]);
-  // Unified badge logic - show only one badge at a time
-  // Cas 2.2 - Générations suivantes avec version précédente buildée uniquement
   const hasActiveGeneration = completion.length > 0;
 
-  // Badge uniquement si version précédente est buildée (iframe disponible)
-  // Exclure "starting" car on utilise le loader fullscreen à la place
-  const shouldShowBadge =
-    !isFirstGeneration &&
-    !isLengthError &&
-    !buildError &&
-    previousVersionIsBuilt &&
-    !currentVersionIsBuilt &&
-    displayVersion !== undefined &&
-    displayVersion !== selectedVersion &&
-    ((isLoading && hasActiveGeneration) || // Pendant le stream
-      loadingState === "processing"); // Pendant le build
+  const shouldShowBadge = React.useMemo(
+    () =>
+      !isFirstGeneration &&
+      !isLengthError &&
+      !buildError &&
+      previousVersionIsBuilt &&
+      !currentVersionIsBuilt &&
+      displayVersion !== undefined &&
+      displayVersion !== selectedVersion &&
+      ((isLoading && hasActiveGeneration) || loadingState === "processing"),
+    [
+      isFirstGeneration,
+      isLengthError,
+      buildError,
+      previousVersionIsBuilt,
+      currentVersionIsBuilt,
+      displayVersion,
+      selectedVersion,
+      isLoading,
+      hasActiveGeneration,
+      loadingState,
+    ],
+  );
   const previewPathSuffix = previewPath === "/" ? "" : previewPath;
 
   // Déterminer le message personnalisé pour le loader fullscreen

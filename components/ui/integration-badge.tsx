@@ -17,7 +17,7 @@ const integrationConfig: Record<
   { label: string; icon: ReactNode; color: string }
 > = {
   [IntegrationType.SUPABASE]: {
-    label: "Supabase",
+    label: "Cloud",
     icon: <Database className="size-3" />,
     color: "text-green-600",
   },

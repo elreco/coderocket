@@ -173,9 +173,10 @@ export default function IntegrationsContent() {
     return (
       <div className="space-y-4 p-4">
         <div>
-          <h3 className="text-base font-semibold">Active Integrations</h3>
+          <h3 className="text-base font-semibold">App Features</h3>
           <p className="text-muted-foreground mt-1 text-sm">
-            Connect backend services to generate full-stack applications.{" "}
+            Add powerful features to your app like saving data and uploading
+            files.{" "}
             <a
               href="https://docs.coderocket.app/integrations/migrations"
               target="_blank"
@@ -186,7 +187,7 @@ export default function IntegrationsContent() {
             </a>
           </p>
         </div>
-        <PremiumFeatureAlert description="Backend integrations are available for premium users only. Upgrade your plan to connect Supabase, Stripe, and other services." />
+        <PremiumFeatureAlert description="App Data features are available for premium users only. Upgrade your plan to save data, upload files, and add user accounts." />
       </div>
     );
   }
@@ -236,7 +237,7 @@ export default function IntegrationsContent() {
     <div className="space-y-4 p-4">
       <div>
         <div className="flex items-center justify-between">
-          <h3 className="text-base font-semibold">Active Integrations</h3>
+          <h3 className="text-base font-semibold">App Features</h3>
           <Button asChild size="sm" variant="outline">
             <Link
               href="/account/integrations"
@@ -248,7 +249,8 @@ export default function IntegrationsContent() {
           </Button>
         </div>
         <p className="text-muted-foreground mt-1 text-sm">
-          Connect backend services to generate full-stack applications.{" "}
+          Add powerful features to your app like saving data and uploading
+          files.{" "}
           <a
             href="https://docs.coderocket.app/integrations/migrations"
             target="_blank"
@@ -318,9 +320,9 @@ export default function IntegrationsContent() {
       <Alert>
         <Plug2 className="size-4" />
         <AlertDescription className="text-xs">
-          Enabled integrations will be used to generate backend code for this
-          project. The AI will automatically include database operations, API
-          routes, and type definitions.
+          When enabled, your app will be able to save data, upload files, and
+          manage user accounts. The AI will automatically add these features to
+          your code.
         </AlertDescription>
       </Alert>
     </div>

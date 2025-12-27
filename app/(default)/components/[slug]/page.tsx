@@ -33,8 +33,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     };
   }
 
-  const lastUserMessage = await fetchLastUserMessageByChatId(chat.id);
-  const lastAssistantMessage = await fetchLastAssistantMessageByChatId(chat.id);
+  const [lastUserMessage, lastAssistantMessage] = await Promise.all([
+    fetchLastUserMessageByChatId(chat.id),
+    fetchLastAssistantMessageByChatId(chat.id),
+  ]);
 
   if (!lastAssistantMessage) {
     return {
@@ -155,9 +157,11 @@ export default async function Components({ params }: Props) {
     return notFound();
   }
 
-  const lastUserMessage = await fetchLastUserMessageByChatId(chat.id);
-  const messages = await fetchMessagesByChatId(chat.id);
-  const lastAssistantMessage = await fetchLastAssistantMessageByChatId(chat.id);
+  const [lastUserMessage, messages, lastAssistantMessage] = await Promise.all([
+    fetchLastUserMessageByChatId(chat.id),
+    fetchMessagesByChatId(chat.id),
+    fetchLastAssistantMessageByChatId(chat.id),
+  ]);
 
   if (!lastUserMessage || !messages) {
     return notFound();

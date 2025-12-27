@@ -78,6 +78,11 @@ export function IntegrationCard({
                 type={integration.integration_type}
                 showIcon={false}
               />
+              {integration.integration_type === IntegrationType.SUPABASE && (
+                <span className="text-muted-foreground mt-1 block text-xs">
+                  Powered by Supabase
+                </span>
+              )}
             </CardDescription>
           </div>
         </div>
