@@ -18,6 +18,7 @@ import {
 
 import { getSubscription } from "@/app/supabase-server";
 import { CloneAnotherPageButton } from "@/components/clone-another-page-button";
+import { CloneStatusCard } from "@/components/clone-status-card";
 import { FigmaImportButton } from "@/components/figma-import-button";
 import { FileBadge } from "@/components/file-badge";
 import { ImageUploadArea } from "@/components/image-upload-area";
@@ -42,7 +43,7 @@ import { UserWidget } from "@/components/user-widget";
 import { useBuilder } from "@/context/builder-context";
 import { useComponentContext } from "@/context/component-context";
 import { toast } from "@/hooks/use-toast";
-import { cn, truncateMiddle } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { Tables } from "@/types_db";
 import {
   ChatFile,
@@ -108,6 +109,8 @@ export default function ComponentSidebar({
     connectedUser,
     selectedElement,
     clearSelectedElement,
+    pendingClonePage,
+    setPendingClonePage,
   } = useComponentContext();
   const { buildError, loadingState } = useBuilder();
 
@@ -218,40 +221,6 @@ export default function ComponentSidebar({
   }, [connectedUser?.id]);
 
   const submitPrompt = (promptText: string) => {
-    const lower = promptText.toLowerCase();
-    const isClonePrompt =
-      lower.includes("clone this website") ||
-      lower.includes("clone another page") ||
-      lower.includes("clone another page:");
-
-    let normalizedUrl: string | null = null;
-    const urlMatch = promptText.match(/https?:\/\/[^\s]+/);
-    if (urlMatch) {
-      normalizedUrl = urlMatch[0];
-    }
-
-    const isIteration = (selectedVersion ?? 0) > 0;
-    const isCloneAnotherPage =
-      lower.includes("clone another page") ||
-      lower.includes("clone another page:");
-
-    if (isClonePrompt && fetchedChat?.clone_url && normalizedUrl) {
-      if (!isSameDomain(fetchedChat.clone_url, normalizedUrl)) {
-        toast({
-          variant: "destructive",
-          title: "Different domain",
-          description:
-            "You can only clone pages from the same domain as the original website.",
-          duration: 4000,
-        });
-        return;
-      }
-      if (!isIteration || isCloneAnotherPage) {
-        setIsScrapingWebsite(true);
-        setCurrentCloneUrl(normalizedUrl);
-      }
-    }
-
     setInput(promptText);
     handleSubmitToAI(promptText);
     setActiveTab("chat");
@@ -282,11 +251,7 @@ export default function ComponentSidebar({
 
     setIsContinuingFromLengthError(false);
 
-    if (
-      fetchedChat?.clone_url &&
-      containsUrl(localInput) &&
-      !localInput.toLowerCase().includes("clone another page:")
-    ) {
+    if (fetchedChat?.clone_url && containsUrl(localInput)) {
       setPendingPromptWithUrl(localInput);
       setShowUrlInPromptModal(true);
       return;
@@ -542,6 +507,14 @@ export default function ComponentSidebar({
                     const messageVersion = Number(m.version);
                     const currentSelectedVersion = Number(selectedVersion);
                     if (messageVersion !== currentSelectedVersion) return false;
+                    // Ne pas afficher le message clone another page si on affiche déjà le loader temporaire
+                    if (
+                      isCloneAnotherPageActive &&
+                      isScrapingWebsite &&
+                      m.role === "user"
+                    ) {
+                      return false;
+                    }
                     // Ne plus filtrer les messages assistant pendant le chargement
                     // On va créer un message temporaire pour le streaming
                     return true;
@@ -600,61 +573,85 @@ export default function ComponentSidebar({
                       <ComponentChatFiles message={m} key={m.id} />
                     );
 
-                    const isClonePrompt =
-                      m.content?.toLowerCase().includes("clone this website") ||
-                      m.content?.toLowerCase().includes("clone another page");
+                    const isInitialCloneMessage =
+                      fetchedChat?.clone_url &&
+                      (m.version === -1 || m.version === 0) &&
+                      m.role === "user";
 
-                    // Loader pour le clonage - s'affiche après le message utilisateur
+                    const isCloneAnotherPageMessage =
+                      m.role === "user" && !!m.clone_another_page;
+                    const cloneAnotherPageUrl = m.clone_another_page || null;
+                    const cloneAnotherPageContext = isCloneAnotherPageMessage
+                      ? m.content?.trim() || null
+                      : null;
+
+                    const isCloneMessage =
+                      isInitialCloneMessage || isCloneAnotherPageMessage;
+
                     if (
-                      m.role === "user" &&
-                      isClonePrompt &&
+                      isCloneMessage &&
                       isScrapingWebsite &&
                       (!completion || completion.length === 0)
                     ) {
+                      const cloneUrl = isCloneAnotherPageMessage
+                        ? cloneAnotherPageUrl
+                        : currentCloneUrl || fetchedChat?.clone_url;
+                      const userContext = isCloneAnotherPageMessage
+                        ? cloneAnotherPageContext
+                        : m.content;
                       return (
                         <Fragment key={`clone-loader-${m.id}`}>
-                          {result}
-                          <div className="flex items-center justify-center py-8 px-3">
-                            <div className="flex flex-col items-center gap-3 text-center">
-                              <Loader className="text-primary size-6 animate-spin" />
-                              <p className="text-primary text-sm font-medium">
-                                Analyzing website...
-                              </p>
-                              <p className="text-amber-600 text-xs font-medium">
-                                This process can take up to 1 minute. Please
-                                stay on this page and do not close your browser.
-                              </p>
-                              {(currentCloneUrl ||
-                                fetchedChat?.clone_url ||
-                                (m.content &&
-                                  (m.content.match(/https?:\/\/[^\s]+/) ||
-                                    [])[0])) && (
-                                <p className="text-muted-foreground text-xs">
-                                  {truncateMiddle(
-                                    (
-                                      currentCloneUrl ||
-                                      fetchedChat?.clone_url ||
-                                      (m.content &&
-                                        (m.content.match(/https?:\/\/[^\s]+/) ||
-                                          [])[0]) ||
-                                      ""
-                                    )
-                                      .replace(/^https?:\/\/(www\.)?/i, "")
-                                      .replace(/\/$/, ""),
-                                    40,
-                                  )}
-                                </p>
-                              )}
-                            </div>
+                          <ComponentChatFiles
+                            message={{
+                              ...m,
+                              content: "",
+                            }}
+                            customContent={
+                              <CloneStatusCard
+                                url={cloneUrl || ""}
+                                isScraping={true}
+                                userContext={userContext}
+                              />
+                            }
+                          />
+                          <div className="flex items-center justify-center py-4 px-3">
+                            <p className="text-amber-600 text-xs font-medium text-center">
+                              This process can take up to 1 minute. Please stay
+                              on this page and do not close your browser.
+                            </p>
                           </div>
                         </Fragment>
                       );
                     }
 
-                    // Loader pour les cas normaux (non-cloning)
+                    if (isCloneMessage && !isScrapingWebsite) {
+                      const cloneUrl = isCloneAnotherPageMessage
+                        ? cloneAnotherPageUrl
+                        : fetchedChat?.clone_url;
+                      const userContext = isCloneAnotherPageMessage
+                        ? cloneAnotherPageContext
+                        : m.content;
+                      return (
+                        <ComponentChatFiles
+                          key={m.id}
+                          message={{
+                            ...m,
+                            content: "",
+                          }}
+                          customContent={
+                            <CloneStatusCard
+                              url={cloneUrl || ""}
+                              isScraping={false}
+                              userContext={userContext}
+                            />
+                          }
+                        />
+                      );
+                    }
+
                     if (
                       m.role === "user" &&
-                      !isClonePrompt &&
+                      !isCloneMessage &&
                       isLoading &&
                       (!completion || completion.length === 0)
                     ) {
@@ -725,6 +722,66 @@ export default function ComponentSidebar({
                       }
                       key="streaming-temp"
                     />
+                  )}
+                {isCloneAnotherPageActive &&
+                  isScrapingWebsite &&
+                  (!completion || completion.length === 0) &&
+                  currentCloneUrl && (
+                    <Fragment key="clone-another-page-loader">
+                      <ComponentChatFiles
+                        message={
+                          {
+                            id: -999,
+                            chat_id: chatId,
+                            version: selectedVersion || -1,
+                            role: "user",
+                            content: "",
+                            created_at: new Date().toISOString(),
+                            input_tokens: null,
+                            output_tokens: null,
+                            screenshot: null,
+                            theme: null,
+                            artifact_code: null,
+                            build_error: null,
+                            selected_element: null,
+                            prompt_image: null,
+                            files: null,
+                            subscription_type: null,
+                            cache_creation_input_tokens: null,
+                            cache_read_input_tokens: null,
+                            cost_usd: null,
+                            model_used: null,
+                            migrations_executed: null,
+                            clone_another_page: currentCloneUrl,
+                            is_built: false,
+                            is_github_pull: false,
+                            migration_executed_at: null,
+                            chats: {
+                              user: user as Tables<"users">,
+                              prompt_image: null,
+                            },
+                          } as Tables<"messages"> & {
+                            chats: {
+                              user: Tables<"users">;
+                              prompt_image: string | null;
+                            };
+                          }
+                        }
+                        customContent={
+                          <CloneStatusCard
+                            url={currentCloneUrl}
+                            isScraping={true}
+                            userContext={pendingClonePage?.context || null}
+                          />
+                        }
+                      />
+                      <div className="flex items-center justify-center py-4 px-3">
+                        <p className="text-amber-600 text-xs font-medium text-center">
+                          This process can take up to 1 minute. Please stay on
+                          this page and do not close your browser.
+                        </p>
+                      </div>
+                    </Fragment>
                   )}
               </>
             )}
@@ -930,8 +987,7 @@ export default function ComponentSidebar({
                                 isLengthError ||
                                 !!buildError ||
                                 files.length >= maxImagesUpload ||
-                                (loadingState !== null &&
-                                  loadingState !== "error")
+                                loadingState === "processing"
                               }
                               handleButtonClick={handleButtonClick}
                               handleImageChange={handleFileChange}
@@ -1078,8 +1134,7 @@ export default function ComponentSidebar({
                                 isLoading ||
                                 isLengthError ||
                                 !!buildError ||
-                                (loadingState !== null &&
-                                  loadingState !== "error")
+                                loadingState === "processing"
                               }
                               framework={selectedFramework}
                               subscription={subscription}
@@ -1095,17 +1150,16 @@ export default function ComponentSidebar({
                                   isLoading ||
                                   isLengthError ||
                                   !!buildError ||
-                                  (loadingState !== null &&
-                                    loadingState !== "error")
+                                  loadingState === "processing"
                                 }
-                                onSubmit={(url) => {
-                                  const clonePrompt = `Clone another page: ${url}`;
-                                  setInput(clonePrompt);
+                                onSubmit={(url, context) => {
+                                  setPendingClonePage({ url, context });
                                   setIsCloneAnotherPageActive(true);
                                   setCurrentCloneUrl(url);
-                                  // Activer immédiatement le scraping
                                   setIsScrapingWebsite(true);
-                                  submitPrompt(clonePrompt);
+                                  const displayPrompt = context || "";
+                                  setInput(displayPrompt);
+                                  submitPrompt(displayPrompt);
                                 }}
                               />
                             )}
@@ -1309,14 +1363,15 @@ export default function ComponentSidebar({
                   setPendingPromptWithUrl(null);
                   return;
                 }
-                const clonePrompt = `Clone another page: ${url}`;
-                setInput(clonePrompt);
+                setPendingClonePage({ url });
                 setIsCloneAnotherPageActive(true);
                 setCurrentCloneUrl(url);
                 setIsScrapingWebsite(true);
                 setShowUrlInPromptModal(false);
                 setPendingPromptWithUrl(null);
-                submitPrompt(clonePrompt);
+                setInput("");
+                setLocalInput("");
+                submitPrompt("");
               }}
               disabled={isLoading}
             >

@@ -16,6 +16,8 @@ import {
   DialogTitle,
 } from "./ui/dialog";
 import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+import { Textarea } from "./ui/textarea";
 import {
   Tooltip,
   TooltipContent,
@@ -26,7 +28,7 @@ import {
 interface CloneAnotherPageButtonProps {
   originalUrl: string;
   disabled?: boolean;
-  onSubmit: (url: string) => void;
+  onSubmit: (url: string, context?: string) => void;
 }
 
 export function CloneAnotherPageButton({
@@ -36,6 +38,7 @@ export function CloneAnotherPageButton({
 }: CloneAnotherPageButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [newPageUrl, setNewPageUrl] = useState("");
+  const [userContext, setUserContext] = useState("");
   const [isValidating, setIsValidating] = useState(false);
 
   const handleSubmit = () => {
@@ -85,8 +88,9 @@ export function CloneAnotherPageButton({
 
     setIsOpen(false);
     setNewPageUrl("");
+    setUserContext("");
     setIsValidating(false);
-    onSubmit(urlToUse);
+    onSubmit(urlToUse, userContext.trim() || undefined);
   };
 
   const handleOpenDialog = () => {
@@ -125,7 +129,9 @@ export function CloneAnotherPageButton({
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
+              <Label htmlFor="clone-url">Page URL</Label>
               <Input
+                id="clone-url"
                 placeholder="https://example.com/about"
                 value={newPageUrl}
                 onChange={(e) => setNewPageUrl(e.target.value)}
@@ -138,6 +144,22 @@ export function CloneAnotherPageButton({
                 disabled={isValidating}
               />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="clone-context">
+                Context{" "}
+                <span className="text-muted-foreground font-normal">
+                  (optional)
+                </span>
+              </Label>
+              <Textarea
+                id="clone-context"
+                placeholder="Add instructions for this page clone (e.g., focus on the pricing section, use a dark theme...)"
+                value={userContext}
+                onChange={(e) => setUserContext(e.target.value)}
+                disabled={isValidating}
+                className="min-h-[80px] resize-none"
+              />
+            </div>
           </div>
           <DialogFooter>
             <Button
@@ -145,6 +167,7 @@ export function CloneAnotherPageButton({
               onClick={() => {
                 setIsOpen(false);
                 setNewPageUrl("");
+                setUserContext("");
               }}
               disabled={isValidating}
             >

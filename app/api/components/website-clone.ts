@@ -297,42 +297,52 @@ export function formatAdvancedMetadata(
 export interface CloneUrlInfo {
   urlToClone: string | null;
   isAdditionalPageClone: boolean;
+  userContext: string | null;
 }
 
 export function detectCloneUrl(
   cloneUrl: string | null,
+  clonePageUrl: string | null,
+  clonePageContext: string | null,
   prompt: string | null,
   selectedVersion: number | undefined,
 ): CloneUrlInfo {
   if (!cloneUrl) {
-    return { urlToClone: null, isAdditionalPageClone: false };
+    return {
+      urlToClone: null,
+      isAdditionalPageClone: false,
+      userContext: null,
+    };
   }
 
-  const promptToCheck = prompt || "";
-
-  if (promptToCheck.includes("Clone another page:")) {
-    const anotherPageMatch = promptToCheck.match(
-      /Clone another page:\s*(https?:\/\/[^\s]+)/,
-    );
-    if (anotherPageMatch && anotherPageMatch[1]) {
-      const requestedUrl = anotherPageMatch[1];
-      if (isSameDomain(cloneUrl, requestedUrl)) {
-        return { urlToClone: requestedUrl, isAdditionalPageClone: true };
-      } else {
-        throw new Error(
-          "Cannot clone a page from a different domain. Please use a URL from the same website.",
-        );
-      }
+  if (clonePageUrl) {
+    if (isSameDomain(cloneUrl, clonePageUrl)) {
+      return {
+        urlToClone: clonePageUrl,
+        isAdditionalPageClone: true,
+        userContext: clonePageContext || null,
+      };
+    } else {
+      throw new Error(
+        "Cannot clone a page from a different domain. Please use a URL from the same website.",
+      );
     }
   } else if (
     selectedVersion === undefined ||
     selectedVersion === 0 ||
     selectedVersion === -1
   ) {
-    return { urlToClone: cloneUrl, isAdditionalPageClone: false };
+    const promptToCheck = prompt || "";
+    const userContext =
+      promptToCheck.trim().length > 10 ? promptToCheck.trim() : null;
+    return {
+      urlToClone: cloneUrl,
+      isAdditionalPageClone: false,
+      userContext,
+    };
   }
 
-  return { urlToClone: null, isAdditionalPageClone: false };
+  return { urlToClone: null, isAdditionalPageClone: false, userContext: null };
 }
 
 export type { CloneResult } from "@/types/api";
@@ -342,12 +352,11 @@ export async function processWebsiteClone(
   isAdditionalPageClone: boolean,
   framework: Framework,
   userId: string,
+  userContext?: string | null,
 ): Promise<CloneResult> {
   const supabase = await createClient();
   let enhancedPrompt = "";
-  const userDisplayPrompt = isAdditionalPageClone
-    ? `Clone another page: ${urlToClone}`
-    : "";
+  const userDisplayPrompt = userContext || "";
   let cloneScreenshot: string | null = null;
 
   try {
@@ -473,7 +482,24 @@ export async function processWebsiteClone(
       const completenessInstruction = `CRITICAL: Recreate the ENTIRE page, not just what is visible in the screenshot. Use the markdown, HTML structure, section map and all extracted content to rebuild every section: header, navigation, hero, all main content sections, sidebars, long-scrolling content, footer, modals, popups, and any repeated blocks. If the screenshot stops before the end of the page, still generate the full page layout and content based on the provided text and structure. Every visible element in the screenshot must be recreated, and no logical section from the content is allowed to be omitted. Preserve the order and relative visual importance of sections as described in the metadata.`;
 
       if (isAdditionalPageClone) {
+        const userContextSection = userContext
+          ? `\n# USER CONTEXT\n${userContext}\n`
+          : "";
         enhancedPrompt = `Clone another page from the same website: ${urlToClone}
+${userContextSection}
+# VISUAL REFERENCE
+A screenshot is attached. Use it as a visual reference for layout, colors, fonts, spacing, and design, but do not limit the implementation to only what is visible in the screenshot. Always combine it with the full content and structure provided below to recreate the complete page.${advancedMetadataSection}${structureHTMLSection}${jsLibrariesSection}
+
+# CONTENT
+Use this content in your implementation:
+
+${optimizedMarkdown}${imagesList}${videosList}
+${userContextSection ? "" : `**Instructions:**\n${frameworkInstruction}\n\n${completenessInstruction}\n\n`}This is an additional page from the same website. Maintain consistency with the existing design system while incorporating the new content and layout from this page. The screenshot shows the design. The content above provides the text, images, and videos. Combine both to create an accurate clone.`;
+      } else if (userContext) {
+        enhancedPrompt = `Clone this website: ${urlToClone}
+
+# USER CONTEXT
+${userContext}
 
 # VISUAL REFERENCE
 A screenshot is attached. Use it as a visual reference for layout, colors, fonts, spacing, and design, but do not limit the implementation to only what is visible in the screenshot. Always combine it with the full content and structure provided below to recreate the complete page.${advancedMetadataSection}${structureHTMLSection}${jsLibrariesSection}
@@ -483,12 +509,7 @@ Use this content in your implementation:
 
 ${optimizedMarkdown}${imagesList}${videosList}
 
-**Instructions:**
-${frameworkInstruction}
-
-${completenessInstruction}
-
-This is an additional page from the same website. Maintain consistency with the existing design system while incorporating the new content and layout from this page. The screenshot shows the design. The content above provides the text, images, and videos. Combine both to create an accurate clone.`;
+The screenshot shows the design. The content above provides the text, images, and videos. Combine both to create an accurate clone.`;
       } else {
         enhancedPrompt = `Clone this website: ${urlToClone}
 
@@ -543,7 +564,10 @@ The screenshot shows the design. The content above provides the text, images, an
     } else {
       console.log("⚠️ Clone failed, continuing with URL only");
       const action = isAdditionalPageClone ? "another page" : "this website";
-      enhancedPrompt = `Clone ${action}: ${urlToClone}
+      const contextSection = userContext
+        ? `\n\n# USER CONTEXT\n${userContext}`
+        : "";
+      enhancedPrompt = `Clone ${action}: ${urlToClone}${contextSection}
 
 Unable to extract complete website data. Please recreate the visual layout and functionality based on the URL provided.
 Use standard Tailwind CSS classes and shadcn/ui components.`;
@@ -554,7 +578,10 @@ Use standard Tailwind CSS classes and shadcn/ui components.`;
       throw error;
     }
     const action = isAdditionalPageClone ? "another page" : "this website";
-    enhancedPrompt = `Clone ${action}: ${urlToClone}
+    const contextSection = userContext
+      ? `\n\n# USER CONTEXT\n${userContext}`
+      : "";
+    enhancedPrompt = `Clone ${action}: ${urlToClone}${contextSection}
 
 Unable to extract complete website data. Please recreate the visual layout and functionality based on the URL provided.
 Use standard Tailwind CSS classes and shadcn/ui components.`;

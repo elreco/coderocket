@@ -91,6 +91,21 @@ export default function ComponentCompletion({
     useState<WebcontainerLoadingState>(null);
   const [iframeKey, setIframeKey] = useState(0);
   const [isScrapingWebsite, setIsScrapingWebsite] = useState(false);
+  const [pendingClonePage, setPendingClonePageState] = useState<{
+    url: string;
+    context?: string;
+  } | null>(null);
+  const pendingClonePageRef = useRef<{
+    url: string;
+    context?: string;
+  } | null>(null);
+
+  const setPendingClonePage = (
+    data: { url: string; context?: string } | null,
+  ) => {
+    pendingClonePageRef.current = data;
+    setPendingClonePageState(data);
+  };
 
   const [chatFiles, setChatFiles] = useState<ChatFile[]>([]);
   const [artifactFiles, setArtifactFiles] = useState<ChatFile[]>([]);
@@ -196,6 +211,7 @@ export default function ComponentCompletion({
     isLoading,
     isLengthError,
     artifactFilesCount: artifactFiles.length,
+    onNavigate: () => setIframeKey((prev) => prev + 1),
   });
 
   useEffect(() => {
@@ -775,6 +791,17 @@ export default function ComponentCompletion({
         if (selectedElement) {
           formData.append("selectedElement", JSON.stringify(selectedElement));
         }
+        if (pendingClonePageRef.current) {
+          formData.append("clonePageUrl", pendingClonePageRef.current.url);
+          if (pendingClonePageRef.current.context) {
+            formData.append(
+              "clonePageContext",
+              pendingClonePageRef.current.context,
+            );
+          }
+          pendingClonePageRef.current = null;
+          setPendingClonePageState(null);
+        }
 
         const response = await fetch(url, {
           method: "POST",
@@ -1166,10 +1193,7 @@ export default function ComponentCompletion({
     setCurrentGeneratingFile(null);
 
     const isIteration = (selectedVersion ?? 0) > 0;
-    const lower = inputData.toLowerCase();
-    const isCloneAnotherPage =
-      lower.includes("clone another page") ||
-      lower.includes("clone another page:");
+    const isCloneAnotherPage = !!pendingClonePageRef.current;
 
     if (isIteration && !isCloneAnotherPage) {
       setIsScrapingWebsite(false);
@@ -1751,6 +1775,8 @@ export default function ComponentCompletion({
     setIsScrapingWebsite,
     isContinuingFromLengthError,
     setIsContinuingFromLengthError,
+    pendingClonePage,
+    setPendingClonePage,
     isStreamingComplete,
     isResuming,
     connectedUser,

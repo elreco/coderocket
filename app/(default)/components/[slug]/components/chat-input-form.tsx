@@ -84,6 +84,7 @@ interface ChatInputFormProps {
   setCurrentCloneUrl: (url: string | null) => void;
   setIsScrapingWebsite: (value: boolean) => void;
   clearSelectedElement: () => void;
+  setPendingClonePage: (data: { url: string; context?: string } | null) => void;
 }
 
 export function ChatInputForm({
@@ -123,6 +124,7 @@ export function ChatInputForm({
   setCurrentCloneUrl,
   setIsScrapingWebsite,
   clearSelectedElement,
+  setPendingClonePage,
 }: ChatInputFormProps) {
   const handleFileDrop = (droppedFiles: File[]) => {
     const validFiles: File[] = [];
@@ -248,13 +250,14 @@ export function ChatInputForm({
     }
   };
 
-  const handleCloneAnotherPage = (url: string) => {
-    const clonePrompt = `Clone another page: ${url}`;
-    setInput(clonePrompt);
+  const handleCloneAnotherPage = (url: string, context?: string) => {
+    setPendingClonePage({ url, context });
     setIsCloneAnotherPageActive(true);
     setCurrentCloneUrl(url);
     setIsScrapingWebsite(true);
-    submitPrompt(clonePrompt);
+    const displayPrompt = context || "";
+    setInput(displayPrompt);
+    submitPrompt(displayPrompt);
   };
 
   if (!authorized) return null;
@@ -382,7 +385,7 @@ export function ChatInputForm({
                       isLengthError ||
                       !!buildError ||
                       files.length >= maxImagesUpload ||
-                      (loadingState !== null && loadingState !== "error")
+                      loadingState === "processing"
                     }
                     handleButtonClick={handleButtonClick}
                     handleImageChange={handleFileChange}
@@ -399,7 +402,7 @@ export function ChatInputForm({
                       isLoading ||
                       isLengthError ||
                       !!buildError ||
-                      (loadingState !== null && loadingState !== "error")
+                      loadingState === "processing"
                     }
                     framework={selectedFramework}
                     subscription={subscription}
@@ -415,7 +418,7 @@ export function ChatInputForm({
                         isLoading ||
                         isLengthError ||
                         !!buildError ||
-                        (loadingState !== null && loadingState !== "error")
+                        loadingState === "processing"
                       }
                       onSubmit={handleCloneAnotherPage}
                     />

@@ -21,8 +21,9 @@ export const promptEnhancer = async (
   conversationContext?: ConversationContext[],
   userId?: string,
   chatId?: string,
+  isCloneRequest?: boolean,
 ): Promise<string> => {
-  if (prompt.startsWith("Clone this website:")) {
+  if (isCloneRequest) {
     return prompt;
   }
 

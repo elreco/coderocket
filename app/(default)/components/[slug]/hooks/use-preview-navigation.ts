@@ -11,6 +11,7 @@ interface UsePreviewNavigationOptions {
   isLoading: boolean;
   isLengthError: boolean;
   artifactFilesCount: number;
+  onNavigate?: () => void;
 }
 
 export function usePreviewNavigation({
@@ -21,6 +22,7 @@ export function usePreviewNavigation({
   isLoading,
   isLengthError,
   artifactFilesCount,
+  onNavigate,
 }: UsePreviewNavigationOptions) {
   const [previewPath, setPreviewPath] = useState("/");
   const [addressBarValue, setAddressBarValue] = useState("/");
@@ -83,8 +85,11 @@ export function usePreviewNavigation({
     if (!nextPath.startsWith("/")) {
       nextPath = `/${nextPath}`;
     }
+    let queryString = "";
     if (nextPath.includes("?")) {
-      nextPath = nextPath.split("?")[0];
+      const parts = nextPath.split("?");
+      nextPath = parts[0];
+      queryString = "?" + parts.slice(1).join("?");
     }
     const hashIndex = nextPath.indexOf("#");
     const hash = hashIndex !== -1 ? nextPath.substring(hashIndex) : "";
@@ -95,7 +100,7 @@ export function usePreviewNavigation({
     if (nextPath.length > 1 && nextPath.endsWith("/")) {
       nextPath = nextPath.slice(0, -1);
     }
-    return (nextPath || "/") + hash;
+    return (nextPath || "/") + queryString + hash;
   }, []);
 
   const pushPathToHistory = useCallback(
@@ -171,9 +176,10 @@ export function usePreviewNavigation({
         return;
       }
       navigatePreview(addressBarValue);
+      onNavigate?.();
       addressInputRef.current?.blur();
     },
-    [isNavigationEnabled, navigatePreview, addressBarValue],
+    [isNavigationEnabled, navigatePreview, addressBarValue, onNavigate],
   );
 
   return {

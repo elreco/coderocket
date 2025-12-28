@@ -295,23 +295,16 @@ export const createChat = async (prompt: string, formData: FormData) => {
 
   const uniqueSlug = await generateUniqueNanoid();
 
-  let cloneUrl: string | null = null;
-  const cloneWebsiteMatch = prompt.match(
-    /Clone this website: (https?:\/\/[^\s]+)/,
-  );
-  if (cloneWebsiteMatch && cloneWebsiteMatch[1]) {
-    cloneUrl = cloneWebsiteMatch[1];
+  const cloneUrl = formData.get("cloneUrl") as string | null;
 
-    // Validation: HTML framework cannot be used for cloning
-    if (framework === Framework.HTML) {
-      return {
-        error: {
-          title: "Invalid framework for cloning",
-          description:
-            "Website cloning is not available with the HTML framework. Please select React, Vue, Angular, or Svelte.",
-        },
-      };
-    }
+  if (cloneUrl && framework === Framework.HTML) {
+    return {
+      error: {
+        title: "Invalid framework for cloning",
+        description:
+          "Website cloning is not available with the HTML framework. Please select React, Vue, Angular, or Svelte.",
+      },
+    };
   }
 
   const { data } = await supabase
@@ -338,6 +331,9 @@ export const createChat = async (prompt: string, formData: FormData) => {
     };
   }
 
+  const messageContent =
+    prompt.trim() || (cloneUrl ? "Clone this website" : prompt);
+
   const messageData: {
     chat_id: string;
     role: string;
@@ -357,7 +353,7 @@ export const createChat = async (prompt: string, formData: FormData) => {
     chat_id: data.id,
     role: "user",
     theme,
-    content: prompt,
+    content: messageContent,
     version: -1,
     subscription_type: subscriptionType,
   };

@@ -7,6 +7,10 @@ export function extractDomain(url: string): string | null {
   }
 }
 
+function normalizeHostname(hostname: string): string {
+  return hostname.toLowerCase().replace(/^www\./, "");
+}
+
 export function isSameDomain(url1: string, url2: string): boolean {
   const domain1 = extractDomain(url1);
   const domain2 = extractDomain(url2);
@@ -15,5 +19,5 @@ export function isSameDomain(url1: string, url2: string): boolean {
     return false;
   }
 
-  return domain1 === domain2;
+  return normalizeHostname(domain1) === normalizeHostname(domain2);
 }

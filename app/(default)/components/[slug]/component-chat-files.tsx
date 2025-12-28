@@ -47,6 +47,7 @@ import { PromptFiles } from "./prompt-file";
 
 export default function ComponentChatFiles({
   message,
+  customContent,
 }: {
   message: Tables<"messages"> & {
     chats: {
@@ -54,6 +55,7 @@ export default function ComponentChatFiles({
       prompt_image: string | null;
     };
   };
+  customContent?: React.ReactNode;
 }) {
   const { toast } = useToast();
   const { loadingState } = useBuilder();
@@ -504,6 +506,9 @@ ${artifactFiles
               userFullName={message.chats?.user?.full_name ?? null}
             />
             {(() => {
+              if (customContent) {
+                return customContent;
+              }
               if (message.selected_element) {
                 const elementData =
                   message.selected_element as SelectedElementData;

@@ -69,6 +69,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spotlight } from "@/components/ui/spotlight";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Tooltip,
   TooltipContent,
@@ -323,6 +324,7 @@ export default function Hero({
   >(null);
   const [images, setImages] = useState<File[]>([]);
   const [websiteUrl, setWebsiteUrl] = useState("");
+  const [cloneContext, setCloneContext] = useState("");
   const [generationMode, setGenerationMode] = useState<"scratch" | "clone">(
     "scratch",
   );
@@ -543,13 +545,8 @@ export default function Hero({
       return;
     }
 
-    // Create a proper prompt for clone mode by including the URL
-    let finalPrompt = prompt;
-    if (generationMode === "clone" && websiteUrl) {
-      // Format the prompt to match the expected pattern for extracting clone URL
-      finalPrompt = `Clone this website: ${websiteUrl}`;
-    }
-
+    const finalPrompt =
+      generationMode === "clone" ? cloneContext.trim() : prompt;
     const aiPrompt = finalPrompt;
 
     if (generationMode === "scratch" && !prompt.trim()) {
@@ -631,9 +628,6 @@ export default function Hero({
         });
         return;
       }
-
-      // Make sure finalPrompt has the correct URL format
-      finalPrompt = `Clone this website: ${urlToUse}`;
     }
 
     // Vérification de la validité de la longueur du prompt
@@ -673,7 +667,14 @@ export default function Hero({
       formData.append("integrationId", selectedIntegration);
     }
 
-    // Stocker le prompt simple pour l'affichage et le prompt détaillé pour l'IA
+    if (generationMode === "clone" && websiteUrl) {
+      let urlToUse = websiteUrl.trim();
+      if (!/^https?:\/\//i.test(urlToUse)) {
+        urlToUse = "https://" + urlToUse;
+      }
+      formData.append("cloneUrl", urlToUse);
+    }
+
     formData.append("prompt", finalPrompt);
     formData.append("aiPrompt", aiPrompt);
 
@@ -1004,20 +1005,30 @@ export default function Hero({
                 value="clone"
                 className="max-h-[350px] min-h-32 w-full overflow-y-auto"
               >
-                <div className="flex w-full flex-col items-end">
+                <div className="flex w-full flex-col gap-3">
                   <div className="flex w-full items-start">
                     <Link2 className="mx-2 my-3 size-4" />
                     <div className="relative w-full">
-                      <div className="flex gap-2">
-                        <Input
-                          type="url"
-                          placeholder="Enter website URL to clone (e.g., https://example.com)"
-                          value={websiteUrl}
-                          onChange={(e) => setWebsiteUrl(e.target.value)}
-                          disabled={loading}
-                          className="bg-secondary border-none pl-1 focus-visible:ring-0 focus-visible:ring-offset-0"
-                        />
-                      </div>
+                      <Input
+                        type="url"
+                        placeholder="Enter website URL to clone (e.g., https://example.com)"
+                        value={websiteUrl}
+                        onChange={(e) => setWebsiteUrl(e.target.value)}
+                        disabled={loading}
+                        className="bg-secondary shadow-none border-none pl-1 focus-visible:ring-0 focus-visible:ring-offset-0"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex w-full items-start">
+                    <Terminal className="mx-2 my-3 size-4 text-muted-foreground" />
+                    <div className="relative w-full">
+                      <Textarea
+                        placeholder="Add context for the clone (optional) - e.g., focus on the hero section, use a dark theme..."
+                        value={cloneContext}
+                        onChange={(e) => setCloneContext(e.target.value)}
+                        disabled={loading}
+                        className="bg-secondary min-h-[60px] max-h-[120px] resize-none border-none pl-1 focus-visible:ring-0 focus-visible:ring-offset-0"
+                      />
                     </div>
                   </div>
                 </div>
@@ -1484,7 +1495,7 @@ export default function Hero({
                                     ? userIntegrations.find(
                                         (i) => i.id === selectedIntegration,
                                       )?.name || "Database"
-                                    : "No Database"}
+                                    : "No App Data"}
                                 </span>
                               </div>
                             </SelectTrigger>
@@ -1496,7 +1507,7 @@ export default function Hero({
                                 <div className="mr-2 flex w-full flex-row items-center justify-between">
                                   <div className="flex items-center gap-2">
                                     <SiSupabase className="size-4 opacity-30" />
-                                    <span>No Database</span>
+                                    <span>No App Data</span>
                                   </div>
                                 </div>
                               </SelectItem>

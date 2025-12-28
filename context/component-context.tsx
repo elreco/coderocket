@@ -99,6 +99,8 @@ interface ComponentContextType {
   setIsScrapingWebsite: (value: boolean) => void;
   isContinuingFromLengthError: boolean;
   setIsContinuingFromLengthError: (value: boolean) => void;
+  pendingClonePage: { url: string; context?: string } | null;
+  setPendingClonePage: (data: { url: string; context?: string } | null) => void;
   isStreamingComplete: boolean;
   isResuming: boolean;
   connectedUser?: { id: string } | null;
