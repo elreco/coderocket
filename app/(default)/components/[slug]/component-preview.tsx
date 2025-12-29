@@ -180,14 +180,40 @@ export default function ComponentPreview() {
   }, [isScrapingWebsite, selectedVersion]);
 
   React.useEffect(() => {
-    if (selectedVersion === undefined || selectedVersion <= 0) {
+    if (selectedVersion === undefined) {
       setPreviousVersionIsBuilt(false);
       return;
     }
 
     let isMounted = true;
-    const prevVersion = selectedVersion - 1;
     const supabase = createClient();
+
+    if (selectedVersion === 0) {
+      setPreviousVersionIsBuilt(false);
+      void (async () => {
+        try {
+          const { data } = await supabase
+            .from("messages")
+            .select("is_built")
+            .eq("chat_id", chatId)
+            .eq("role", "assistant")
+            .eq("version", 0)
+            .single();
+          if (isMounted && data?.is_built === true) {
+            setCurrentVersionIsBuilt(true);
+          }
+        } catch {
+          if (isMounted) {
+            setCurrentVersionIsBuilt(false);
+          }
+        }
+      })();
+      return () => {
+        isMounted = false;
+      };
+    }
+
+    const prevVersion = selectedVersion - 1;
 
     void (async () => {
       try {
@@ -229,6 +255,17 @@ export default function ComponentPreview() {
       if (displayVersion !== undefined) {
         setDisplayVersion(undefined);
       }
+      return;
+    }
+
+    if (
+      selectedVersion === 0 &&
+      !isLoading &&
+      !isScrapingWebsite &&
+      displayVersion !== undefined &&
+      displayVersion !== 0
+    ) {
+      setDisplayVersion(undefined);
       return;
     }
 

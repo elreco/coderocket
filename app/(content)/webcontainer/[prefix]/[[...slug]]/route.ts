@@ -740,9 +740,6 @@ export async function GET(
         "Access-Control-Allow-Headers": "*",
         "X-Frame-Options": "ALLOWALL",
         "Content-Security-Policy": "frame-ancestors *",
-        "Cross-Origin-Isolation": "require-corp",
-        "Cross-Origin-Opener-Policy": "same-origin",
-        "Cross-Origin-Embedder-Policy": "credentialless",
         "Cross-Origin-Resource-Policy": "cross-origin",
       },
     });
@@ -764,12 +761,7 @@ export async function GET(
       // Iframe autorisé
       "X-Frame-Options": "ALLOWALL",
       "Content-Security-Policy": "frame-ancestors *",
-      "Cross-Origin-Isolation": "require-corp",
-      // Cross-Origin Isolation (vous aviez déjà COEP: credentialless + COOP: same-origin)
-      "Cross-Origin-Opener-Policy": "same-origin",
-      "Cross-Origin-Embedder-Policy": "credentialless",
-
-      // Manquant auparavant : indique qu’on accepte d’être chargé cross-origin
+      // Indique qu'on accepte d'être chargé cross-origin
       "Cross-Origin-Resource-Policy": "cross-origin",
     },
   });
