@@ -730,17 +730,7 @@ export async function GET(
     return new NextResponse(htmlWithWatermark, {
       headers: {
         "Content-Type": "text/html",
-        "Cache-Control":
-          "no-store, no-cache, must-revalidate, proxy-revalidate",
-        Pragma: "no-cache",
-        Expires: "0",
-        "Surrogate-Control": "no-store",
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "*",
-        "Access-Control-Allow-Headers": "*",
-        "X-Frame-Options": "ALLOWALL",
-        "Content-Security-Policy": "frame-ancestors *",
-        "Cross-Origin-Resource-Policy": "cross-origin",
+        "Cache-Control": "no-cache",
       },
     });
   }
@@ -748,21 +738,7 @@ export async function GET(
   return new NextResponse(data, {
     headers: {
       "Content-Type": mimeType,
-      "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
-      Pragma: "no-cache",
-      Expires: "0",
-      "Surrogate-Control": "no-store",
-
-      // CORS (sans credentials + wildcard)
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "*",
-      "Access-Control-Allow-Headers": "*",
-
-      // Iframe autorisé
-      "X-Frame-Options": "ALLOWALL",
-      "Content-Security-Policy": "frame-ancestors *",
-      // Indique qu'on accepte d'être chargé cross-origin
-      "Cross-Origin-Resource-Policy": "cross-origin",
+      "Cache-Control": "no-cache",
     },
   });
 }
