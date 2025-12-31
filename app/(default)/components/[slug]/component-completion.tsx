@@ -1199,8 +1199,11 @@ export default function ComponentCompletion({
       setIsScrapingWebsite(false);
     }
 
-    const previousVersion = selectedVersion ?? 0;
-    const newVersion = previousVersion + 1;
+    const latestVersion = messages.reduce((max, message) => {
+      if (typeof message.version !== "number") return max;
+      return Math.max(max, message.version);
+    }, -1);
+    const newVersion = latestVersion + 1;
     setPreviousArtifactFiles(artifactFiles);
     setSelectedVersion(newVersion);
     selectedVersionRef.current = newVersion;

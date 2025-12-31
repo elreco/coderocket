@@ -69,7 +69,6 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spotlight } from "@/components/ui/spotlight";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Tooltip,
   TooltipContent,
@@ -334,6 +333,7 @@ export default function Hero({
   const [sheetOpen, setSheetOpen] = useState(false);
   const [hasImproved, setHasImproved] = useState(false);
   const [promptIsValid, setPromptIsValid] = useState(true);
+  const [cloneContextIsValid, setCloneContextIsValid] = useState(true);
   const [subscription, setSubscription] = useState<
     | (Tables<"subscriptions"> & {
         prices: Partial<Tables<"prices">> | null;
@@ -631,11 +631,22 @@ export default function Hero({
     }
 
     // Vérification de la validité de la longueur du prompt
-    if (!promptIsValid) {
+    if (generationMode === "scratch" && !promptIsValid) {
       toast({
         variant: "destructive",
         title: "Prompt is too long",
         description: `Your prompt exceeds the character limit. Please shorten it to continue.`,
+        duration: 4000,
+      });
+      return;
+    }
+
+    // Vérification de la validité de la longueur du contexte de clone
+    if (generationMode === "clone" && !cloneContextIsValid) {
+      toast({
+        variant: "destructive",
+        title: "Clone context is too long",
+        description: `Your clone context exceeds the character limit. Please shorten it to continue.`,
         duration: 4000,
       });
       return;
@@ -1022,11 +1033,19 @@ export default function Hero({
                   <div className="flex w-full items-start">
                     <Terminal className="mx-2 my-3 size-4 text-muted-foreground" />
                     <div className="relative w-full">
-                      <Textarea
+                      <TextareaWithLimit
                         placeholder="Add context for the clone (optional) - e.g., focus on the hero section, use a dark theme..."
                         value={cloneContext}
-                        onChange={(e) => setCloneContext(e.target.value)}
+                        onChange={(value, isValid) => {
+                          setCloneContext(value);
+                          setCloneContextIsValid(isValid);
+                        }}
                         disabled={loading}
+                        showCounter={true}
+                        isLoggedIn={isLoggedIn}
+                        isLoading={loading}
+                        subscription={subscription}
+                        isLoadingSubscription={isLoadingSubscription}
                         className="bg-secondary min-h-[60px] max-h-[120px] resize-none border-none pl-1 focus-visible:ring-0 focus-visible:ring-offset-0"
                       />
                     </div>

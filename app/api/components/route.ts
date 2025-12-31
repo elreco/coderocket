@@ -633,6 +633,15 @@ const validateRequest = async (
     }
   }
 
+  // Validation de la longueur du contexte de clone
+  if (clonePageContext) {
+    if (clonePageContext.length > PREMIUM_CHAR_LIMIT) {
+      throw new Error(
+        `Votre contexte de clone dépasse la limite de ${PREMIUM_CHAR_LIMIT} caractères (environ ${MAX_TOKENS_PER_REQUEST} tokens). Veuillez le raccourcir pour continuer.`,
+      );
+    }
+  }
+
   // Fetch chat data
   const chat = await fetchChatById(id);
   if (!chat) throw new Error("Could not get chat data");

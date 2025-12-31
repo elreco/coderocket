@@ -314,7 +314,7 @@ export default function ComponentPreview() {
                   const isBuilt = data?.is_built === true;
                   setPreviousVersionIsBuilt(isBuilt);
 
-                  if (isBuilt) {
+                  if (isBuilt && !hasError) {
                     setDisplayVersion(prevVersion);
                   } else if (currentIsBuilt) {
                     setDisplayVersion(selectedVersion);
@@ -447,8 +447,8 @@ export default function ComponentPreview() {
       !isScrapingWebsite &&
       !isFirstGeneration &&
       isGenerating &&
-      !previousVersionIsBuilt &&
-      (previousVersionHasError || displayVersion === undefined),
+      (!previousVersionIsBuilt || previousVersionHasError) &&
+      displayVersion === undefined,
     [
       isScrapingWebsite,
       isFirstGeneration,
@@ -462,9 +462,14 @@ export default function ComponentPreview() {
   const shouldShowLoaderFix = React.useMemo(
     () =>
       isCorrectionInProgress &&
-      !previousVersionIsBuilt &&
+      (!previousVersionIsBuilt || previousVersionHasError) &&
       displayVersion === undefined,
-    [isCorrectionInProgress, previousVersionIsBuilt, displayVersion],
+    [
+      isCorrectionInProgress,
+      previousVersionIsBuilt,
+      previousVersionHasError,
+      displayVersion,
+    ],
   );
 
   const shouldShowLoader = React.useMemo(
@@ -485,12 +490,12 @@ export default function ComponentPreview() {
       isScrapingFirstVersion ||
       (!isFirstGeneration &&
         isGenerating &&
-        !previousVersionIsBuilt &&
-        (previousVersionHasError || displayVersion === undefined) &&
+        (!previousVersionIsBuilt || previousVersionHasError) &&
+        displayVersion === undefined &&
         isLoading &&
         !isStreamingComplete) ||
       (isCorrectionInProgress &&
-        !previousVersionIsBuilt &&
+        (!previousVersionIsBuilt || previousVersionHasError) &&
         isLoading &&
         !isStreamingComplete) ||
       (isLengthError && isGenerating && isLoading && !isStreamingComplete) ||
@@ -524,6 +529,15 @@ export default function ComponentPreview() {
       setPreviousVersionIsBuilt(false);
     }
   }, [isScrapingWebsite, selectedVersion, displayVersion]);
+
+  // Forcer displayVersion à undefined quand on entre en mode fix (correction d'erreur)
+  // Cela force l'affichage du loader mockup pendant le fix
+  React.useEffect(() => {
+    if (isCorrectionInProgress && isLoading && displayVersion !== undefined) {
+      setDisplayVersion(undefined);
+    }
+  }, [isCorrectionInProgress, isLoading, displayVersion]);
+
   const hasActiveGeneration = completion.length > 0;
 
   const shouldShowBadge = React.useMemo(
@@ -598,7 +612,7 @@ export default function ComponentPreview() {
   return (
     <>
       {shouldShowLoader &&
-        !isCorrectionInProgress &&
+        (!isCorrectionInProgress || shouldShowLoaderFix) &&
         !(
           isFirstGeneration &&
           (loadingState === "starting" ||

@@ -4,8 +4,10 @@ import { Link2, Loader2 } from "lucide-react";
 import { useState } from "react";
 
 import { toast } from "@/hooks/use-toast";
+import { Tables } from "@/types_db";
 import { isSameDomain } from "@/utils/domain-helper";
 
+import { TextareaWithLimit } from "./textarea-with-limit";
 import { Button } from "./ui/button";
 import {
   Dialog,
@@ -29,17 +31,28 @@ interface CloneAnotherPageButtonProps {
   originalUrl: string;
   disabled?: boolean;
   onSubmit: (url: string, context?: string) => void;
+  subscription?:
+    | (Tables<"subscriptions"> & {
+        prices: Partial<Tables<"prices">> | null;
+      })
+    | null;
+  isLoggedIn?: boolean;
+  isLoadingSubscription?: boolean;
 }
 
 export function CloneAnotherPageButton({
   originalUrl,
   disabled = false,
   onSubmit,
+  subscription,
+  isLoggedIn = false,
+  isLoadingSubscription = false,
 }: CloneAnotherPageButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [newPageUrl, setNewPageUrl] = useState("");
   const [userContext, setUserContext] = useState("");
   const [isValidating, setIsValidating] = useState(false);
+  const [contextIsValid, setContextIsValid] = useState(true);
 
   const handleSubmit = () => {
     setIsValidating(true);
@@ -80,6 +93,17 @@ export function CloneAnotherPageButton({
         title: "Different domain",
         description:
           "You can only clone pages from the same domain as the original website.",
+        duration: 4000,
+      });
+      setIsValidating(false);
+      return;
+    }
+
+    if (!contextIsValid) {
+      toast({
+        variant: "destructive",
+        title: "Context is too long",
+        description: `Your context exceeds the character limit. Please shorten it to continue.`,
         duration: 4000,
       });
       setIsValidating(false);
@@ -151,14 +175,33 @@ export function CloneAnotherPageButton({
                   (optional)
                 </span>
               </Label>
-              <Textarea
-                id="clone-context"
-                placeholder="Add instructions for this page clone (e.g., focus on the pricing section, use a dark theme...)"
-                value={userContext}
-                onChange={(e) => setUserContext(e.target.value)}
-                disabled={isValidating}
-                className="min-h-[80px] resize-none"
-              />
+              {subscription !== undefined && isLoggedIn !== undefined ? (
+                <TextareaWithLimit
+                  id="clone-context"
+                  placeholder="Add instructions for this page clone (e.g., focus on the pricing section, use a dark theme...)"
+                  value={userContext}
+                  onChange={(value, isValid) => {
+                    setUserContext(value);
+                    setContextIsValid(isValid);
+                  }}
+                  disabled={isValidating}
+                  showCounter={true}
+                  isLoggedIn={isLoggedIn}
+                  isLoading={isValidating}
+                  subscription={subscription}
+                  isLoadingSubscription={isLoadingSubscription}
+                  className="min-h-[80px] resize-none"
+                />
+              ) : (
+                <Textarea
+                  id="clone-context"
+                  placeholder="Add instructions for this page clone (e.g., focus on the pricing section, use a dark theme...)"
+                  value={userContext}
+                  onChange={(e) => setUserContext(e.target.value)}
+                  disabled={isValidating}
+                  className="min-h-[80px] resize-none"
+                />
+              )}
             </div>
           </div>
           <DialogFooter>

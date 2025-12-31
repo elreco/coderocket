@@ -1152,6 +1152,9 @@ export default function ComponentSidebar({
                                   !!buildError ||
                                   loadingState === "processing"
                                 }
+                                subscription={subscription}
+                                isLoggedIn={isLoggedIn}
+                                isLoadingSubscription={isLoadingSubscription}
                                 onSubmit={(url, context) => {
                                   setPendingClonePage({ url, context });
                                   setIsCloneAnotherPageActive(true);

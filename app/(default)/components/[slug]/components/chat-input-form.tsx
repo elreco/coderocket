@@ -420,6 +420,9 @@ export function ChatInputForm({
                         !!buildError ||
                         loadingState === "processing"
                       }
+                      subscription={subscription}
+                      isLoggedIn={isLoggedIn}
+                      isLoadingSubscription={isLoadingSubscription}
                       onSubmit={handleCloneAnotherPage}
                     />
                   )}
