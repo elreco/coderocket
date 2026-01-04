@@ -1,3 +1,5 @@
+import { format } from "date-fns";
+
 import { createClient } from "@/utils/supabase/server";
 
 import { decryptIntegrationConfig } from "./encryption";
@@ -90,6 +92,8 @@ async function buildSupabaseContext(
   if (hasSchema && config.databaseSchema) {
     schemaInfo = formatDatabaseSchema(config.databaseSchema);
   }
+
+  const currentDateShort = format(new Date(), "yyyyMMdd");
 
   return `
 <backend_integration type="supabase" status="active">
@@ -215,7 +219,7 @@ async function buildSupabaseContext(
        - Return typed data
 
     6. **File Organization**:
-       - Migrations: /supabase/migrations/YYYYMMDD_description.sql
+       - Migrations: /supabase/migrations/${currentDateShort}_description.sql (use current date: ${currentDateShort} for today)
        - Supabase Client: /src/lib/supabase.ts (without Database type parameter by default)
        - Services: /src/services/[resource].ts (use 'any' for quick development)
 
@@ -542,7 +546,7 @@ async function buildSupabaseContext(
 
   <coderocket_artifact_backend>
     When generating backend code with Supabase:
-    - Use <coderocketFile name="supabase/migrations/YYYYMMDD_description.sql"> for migrations
+    - Use <coderocketFile name="supabase/migrations/${currentDateShort}_description.sql"> for migrations (IMPORTANT: Use the current date ${currentDateShort} in YYYYMMDD format, NOT a placeholder or example date)
     - Use <coderocketFile name="src/types/database.ts"> for database types
 
     **React/Vue/Svelte**:
