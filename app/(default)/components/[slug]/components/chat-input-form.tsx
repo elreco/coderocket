@@ -320,7 +320,7 @@ export function ChatInputForm({
                 </Tooltip>
               </TooltipProvider>
             )}
-            {!isLoading && hasUnexecutedMigration && (
+            {!isLoading && hasUnexecutedMigration && authorized && (
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>

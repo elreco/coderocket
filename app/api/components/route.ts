@@ -1,4 +1,4 @@
-export const maxDuration = 300;
+export const maxDuration = 800;
 import { LanguageModelUsage, streamText, generateId } from "ai";
 import { after } from "next/server";
 import { createResumableStreamContext } from "resumable-stream/ioredis";

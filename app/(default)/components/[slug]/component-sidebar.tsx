@@ -920,7 +920,7 @@ export default function ComponentSidebar({
                           </Tooltip>
                         </TooltipProvider>
                       )}
-                      {!isLoading && hasUnexecutedMigration && (
+                      {!isLoading && hasUnexecutedMigration && authorized && (
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>

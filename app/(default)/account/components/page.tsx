@@ -1,6 +1,6 @@
 export const fetchCache = "force-no-store";
 export const revalidate = 0;
-export const maxDuration = 300;
+export const maxDuration = 800;
 
 import { Terminal, Globe } from "lucide-react";
 import Link from "next/link";

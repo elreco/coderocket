@@ -4,7 +4,7 @@ import { createResumableStreamContext } from "resumable-stream/ioredis";
 import { getPublisher, getSubscriber, isRedisConfigured } from "@/utils/redis";
 import { createClient } from "@/utils/supabase/server";
 
-export const maxDuration = 300;
+export const maxDuration = 800;
 
 const STALE_STREAM_THRESHOLD_MS = 10 * 60 * 1000;
 

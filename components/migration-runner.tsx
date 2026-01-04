@@ -226,33 +226,35 @@ export function MigrationRunner({
           )}
 
           <div className="flex flex-col gap-2">
-            <Button
-              size="sm"
-              onClick={handleRunMigration}
-              disabled={isRunning || isMigrationExecuted || isGenerating}
-            >
-              {isGenerating ? (
-                <>
-                  <Loader2 className="mr-2 size-4 animate-spin" />
-                  Wait for completion...
-                </>
-              ) : isRunning ? (
-                <>
-                  <Loader2 className="mr-2 size-4 animate-spin" />
-                  Running...
-                </>
-              ) : isMigrationExecuted ? (
-                <>
-                  <CheckCircle2 className="mr-2 size-4" />
-                  Already Applied
-                </>
-              ) : (
-                <>
-                  <Play className="mr-2 size-4" />
-                  Run Migration
-                </>
-              )}
-            </Button>
+            {authorized && (
+              <Button
+                size="sm"
+                onClick={handleRunMigration}
+                disabled={isRunning || isMigrationExecuted || isGenerating}
+              >
+                {isGenerating ? (
+                  <>
+                    <Loader2 className="mr-2 size-4 animate-spin" />
+                    Wait for completion...
+                  </>
+                ) : isRunning ? (
+                  <>
+                    <Loader2 className="mr-2 size-4 animate-spin" />
+                    Running...
+                  </>
+                ) : isMigrationExecuted ? (
+                  <>
+                    <CheckCircle2 className="mr-2 size-4" />
+                    Already Applied
+                  </>
+                ) : (
+                  <>
+                    <Play className="mr-2 size-4" />
+                    Run Migration
+                  </>
+                )}
+              </Button>
+            )}
             <Button
               size="sm"
               variant="outline"
