@@ -18,6 +18,7 @@ import { Label } from "@/components/ui/label";
 import { useComponentContext } from "@/context/component-context";
 import { useToast } from "@/hooks/use-toast";
 
+import { buildComponent } from "../actions";
 import {
   createGithubRepo,
   syncComponentToGithub,
@@ -198,6 +199,7 @@ export default function GitHubSync({ closeSheet }: { closeSheet: () => void }) {
       shouldRefresh?: boolean;
       shouldCloseSheet?: boolean;
       shouldHandleVersion?: boolean;
+      shouldBuildAfter?: boolean;
     } = {},
   ) => {
     const {
@@ -206,6 +208,7 @@ export default function GitHubSync({ closeSheet }: { closeSheet: () => void }) {
       shouldRefresh = true,
       shouldCloseSheet = false,
       shouldHandleVersion = false,
+      shouldBuildAfter = false,
     } = options;
 
     setLoading(true);
@@ -236,6 +239,25 @@ export default function GitHubSync({ closeSheet }: { closeSheet: () => void }) {
             );
             if (lastMessage) {
               handleVersionSelect(lastMessage.version);
+            }
+
+            if (shouldBuildAfter && lastMessage.version !== undefined) {
+              try {
+                await buildComponent(chatId, lastMessage.version, true);
+              } catch (error) {
+                console.error(
+                  "Error building component after GitHub pull:",
+                  error,
+                );
+                toast({
+                  title: "Build failed",
+                  description:
+                    error instanceof Error
+                      ? error.message
+                      : "An unexpected error occurred during the build.",
+                  variant: "destructive",
+                });
+              }
             }
           }
         }
@@ -315,6 +337,7 @@ export default function GitHubSync({ closeSheet }: { closeSheet: () => void }) {
       successTitle: "Pull Complete",
       shouldCloseSheet: true,
       shouldHandleVersion: true,
+      shouldBuildAfter: true,
     });
 
   if (isLoading) {
@@ -448,11 +471,11 @@ export default function GitHubSync({ closeSheet }: { closeSheet: () => void }) {
                 <div>
                   <p className="text-sm font-medium">Sync Current Version</p>
                   <p className="text-muted-foreground text-sm">
-                    Push{" "}
+                    Pull or push{" "}
                     <span className="font-semibold">
                       version {selectedVersion}
                     </span>{" "}
-                    to GitHub repository.
+                    with the GitHub repository.
                   </p>
                 </div>
               </div>
@@ -463,8 +486,9 @@ export default function GitHubSync({ closeSheet }: { closeSheet: () => void }) {
                 </h4>
                 <div className="space-y-1 text-xs text-blue-700">
                   <p>
-                    <strong>Pull from GitHub:</strong> Fetch changes from GitHub
-                    and create a new version
+                    <strong>Pull from GitHub:</strong> Fetch changes from
+                    GitHub, create a new version in CodeRocket and rebuild the
+                    preview
                   </p>
                   <p>
                     <strong>Push to GitHub:</strong> Only if web version is
