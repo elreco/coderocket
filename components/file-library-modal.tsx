@@ -36,6 +36,7 @@ interface FileLibraryItem {
   mimeType: string;
   uploadDate: string;
   size: number;
+  name: string;
 }
 
 interface FileLibraryModalProps {
@@ -830,9 +831,9 @@ export function FileLibraryModal({
                         <div className="space-y-1.5">
                           <p
                             className="text-sm font-semibold truncate text-foreground"
-                            title={file.path}
+                            title={file.name}
                           >
-                            {file.path.split("/").pop() || file.path}
+                            {file.name}
                           </p>
                           <div className="flex flex-col gap-1 text-xs text-muted-foreground">
                             <span>{formatDate(file.uploadDate)}</span>

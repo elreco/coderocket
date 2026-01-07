@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
     }
 
     after(async () => {
-      await buildComponent(chatId, version, true);
+      await buildComponent(chatId, version);
     });
 
     return NextResponse.json({ success: true });

@@ -293,7 +293,7 @@ export const tryAcquireBuildLock = async (
 
     const { data: message, error: fetchError } = await supabase
       .from("messages")
-      .select("is_built, build_error")
+      .select("is_built, is_building, build_error")
       .eq("chat_id", chatId)
       .eq("version", version)
       .eq("role", "assistant")
@@ -305,67 +305,127 @@ export const tryAcquireBuildLock = async (
     }
 
     if (message.is_built === true) {
+      console.log(
+        `[tryAcquireBuildLock] Cannot acquire lock: already built (is_built=${message.is_built})`,
+      );
       return false;
     }
 
-    const buildError = message.build_error as {
-      building?: boolean;
-      lock_id?: string;
-      lock_started_at?: string;
-    } | null;
+    if (message.is_building === true) {
+      const buildError = message.build_error as {
+        lock_id?: string;
+        lock_started_at?: string;
+      } | null;
 
-    if (buildError?.building && buildError?.lock_started_at) {
-      const lockAge =
-        Date.now() - new Date(buildError.lock_started_at).getTime();
-      if (lockAge < BUILD_LOCK_TIMEOUT_MS) {
+      if (buildError?.lock_started_at) {
+        const lockAge =
+          Date.now() - new Date(buildError.lock_started_at).getTime();
+        if (lockAge < BUILD_LOCK_TIMEOUT_MS) {
+          console.log(
+            `Build lock held by ${buildError.lock_id}, age: ${lockAge}ms`,
+          );
+          return false;
+        }
         console.log(
-          `Build lock held by ${buildError.lock_id}, age: ${lockAge}ms`,
+          `Stale build lock detected (age: ${lockAge}ms), acquiring...`,
         );
-        return false;
+      } else {
+        console.log("Build in progress but no lock timestamp, acquiring...");
       }
-      console.log(
-        `Stale build lock detected (age: ${lockAge}ms), acquiring...`,
-      );
     }
 
-    const { data, error } = await supabase
+    console.log(
+      `[tryAcquireBuildLock] Attempting to update is_building for chat ${chatId}, version ${version}`,
+      {
+        current_is_built: message.is_built,
+        current_is_building: message.is_building,
+      },
+    );
+
+    const { data: verifyData } = await supabase
       .from("messages")
-      .update({
-        build_error: {
-          building: true,
-          lock_id: lockId,
-          lock_started_at: new Date().toISOString(),
-        },
-      })
+      .select("id, is_built, is_building")
       .eq("chat_id", chatId)
       .eq("version", version)
       .eq("role", "assistant")
-      .is("is_built", null)
-      .select("id, build_error");
+      .single();
+
+    console.log(
+      `[tryAcquireBuildLock] Message found before update:`,
+      verifyData,
+    );
+
+    if (!verifyData || !verifyData.id) {
+      console.warn(
+        `[tryAcquireBuildLock] Message not found for chat ${chatId}, version ${version}`,
+      );
+      return false;
+    }
+
+    const updatePayload: {
+      is_building: boolean;
+      build_error: {
+        lock_id: string;
+        lock_started_at: string;
+      };
+    } = {
+      is_building: true,
+      build_error: {
+        lock_id: lockId,
+        lock_started_at: new Date().toISOString(),
+      },
+    };
+
+    console.log(
+      `[tryAcquireBuildLock] Update payload:`,
+      JSON.stringify(updatePayload),
+    );
+
+    const { data, error } = await supabase
+      .from("messages")
+      .update(updatePayload)
+      .eq("id", verifyData.id)
+      .select("id, build_error, is_building");
 
     if (error) {
-      console.warn("Build lock error:", error.code, error.message);
+      console.warn(
+        `[tryAcquireBuildLock] Build lock error:`,
+        error.code,
+        error.message,
+      );
       return false;
+    }
+
+    if (data && data.length > 0) {
+      console.log(
+        `[tryAcquireBuildLock] Lock acquired and is_building set to true for chat ${chatId}, version ${version}`,
+        { updated_rows: data.length, is_building: data[0]?.is_building },
+      );
+      return true;
+    } else {
+      console.log(
+        `[tryAcquireBuildLock] No rows updated for chat ${chatId}, version ${version}`,
+      );
     }
 
     if (!data || data.length === 0) {
       const { data: checkData } = await supabase
         .from("messages")
-        .select("is_built")
+        .select("is_built, is_building")
         .eq("chat_id", chatId)
         .eq("version", version)
         .eq("role", "assistant")
         .single();
 
-      if (checkData?.is_built === true) {
+      if (checkData?.is_built === true || checkData?.is_building === true) {
         return false;
       }
 
       const retryResult = await supabase
         .from("messages")
         .update({
+          is_building: true,
           build_error: {
-            building: true,
             lock_id: lockId,
             lock_started_at: new Date().toISOString(),
           },
@@ -373,7 +433,8 @@ export const tryAcquireBuildLock = async (
         .eq("chat_id", chatId)
         .eq("version", version)
         .eq("role", "assistant")
-        .eq("is_built", false)
+        .or("is_built.is.null,is_built.eq.false")
+        .or("is_building.is.null,is_building.eq.false")
         .select("id");
 
       if (!retryResult.data || retryResult.data.length === 0) {
@@ -402,15 +463,27 @@ export const releaseBuildLock = async (
   try {
     const supabase = await createClient();
 
-    await supabase
+    const { error: updateError } = await supabase
       .from("messages")
       .update({
         is_built: success,
+        is_building: false,
         build_error: buildError || null,
       })
       .eq("chat_id", chatId)
       .eq("version", version)
       .eq("role", "assistant");
+
+    if (updateError) {
+      console.error(
+        `[releaseBuildLock] Failed to update build status for chat ${chatId}, version ${version}:`,
+        updateError,
+      );
+    } else {
+      console.log(
+        `[releaseBuildLock] Build status updated: is_built=${success}, is_building=false for chat ${chatId}, version ${version}`,
+      );
+    }
   } catch (error) {
     console.error("Failed to release build lock:", error);
   }

@@ -2,13 +2,14 @@
 
 import { SiFigma } from "@icons-pack/react-simple-icons";
 import { FileText } from "lucide-react";
-import { useMemo, useEffect } from "react";
+import { useMemo, useEffect, useState } from "react";
 
 import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
+import { createClient } from "@/utils/supabase/client";
 
 interface FileInfo {
   url: string;
@@ -27,6 +28,7 @@ interface PromptFilesProps {
     type?: string;
     mimeType?: string;
     source?: string;
+    name?: string;
   }>;
   storageUrl?: string;
 }
@@ -37,6 +39,46 @@ export function PromptFiles({
   fileItems = [],
   storageUrl,
 }: PromptFilesProps) {
+  const [enrichedNames, setEnrichedNames] = useState<Record<string, string>>(
+    {},
+  );
+
+  useEffect(() => {
+    const fetchNames = async () => {
+      const filesWithoutName = fileItems.filter(
+        (item) => !item.name && !item.url.startsWith("http"),
+      );
+
+      if (filesWithoutName.length === 0) return;
+
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) return;
+
+      const storagePaths = filesWithoutName.map((item) => item.url);
+      const { data: dbFiles } = await supabase
+        .from("user_files")
+        .select("storage_path, original_name")
+        .eq("user_id", user.id)
+        .in("storage_path", storagePaths);
+
+      if (dbFiles) {
+        const namesMap: Record<string, string> = {};
+        dbFiles.forEach((file) => {
+          if (file.original_name) {
+            namesMap[file.storage_path] = file.original_name;
+          }
+        });
+        setEnrichedNames(namesMap);
+      }
+    };
+
+    fetchNames();
+  }, [fileItems]);
+
   const fileInfos = useMemo(() => {
     const infos: FileInfo[] = [];
 
@@ -66,7 +108,11 @@ export function PromptFiles({
     if (fileItems.length > 0) {
       fileItems.forEach((item) => {
         const fullUrl = storageUrl ? `${storageUrl}/${item.url}` : item.url;
-        const fileName = item.url.split("/").pop() || item.url;
+        const fileName =
+          (item as { name?: string }).name ||
+          enrichedNames[item.url] ||
+          item.url.split("/").pop() ||
+          item.url;
         let type: "image" | "pdf" | "text" = "image";
         if (item.type) {
           type = item.type as "image" | "pdf" | "text";
@@ -98,7 +144,7 @@ export function PromptFiles({
     }
 
     return infos;
-  }, [files, fileUrls, fileItems, storageUrl]);
+  }, [files, fileUrls, fileItems, storageUrl, enrichedNames]);
 
   useEffect(() => {
     return () => {

@@ -1035,9 +1035,7 @@ export default function ComponentSidebar({
                                     libraryFile.publicUrl,
                                   );
                                   const blob = await response.blob();
-                                  const fileName =
-                                    libraryFile.path.split("/").pop() ||
-                                    libraryFile.path;
+                                  const fileName = libraryFile.name;
                                   const file = new File([blob], fileName, {
                                     type: libraryFile.mimeType,
                                   });

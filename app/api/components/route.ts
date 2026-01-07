@@ -14,7 +14,7 @@ import {
   getExtraMessagesCount,
 } from "@/app/(default)/components/actions";
 import { getSubscription } from "@/app/supabase-server";
-import { Tables } from "@/types_db";
+import { Tables, Json } from "@/types_db";
 import { cloneWebsite } from "@/utils/agents/website-scraper-simple";
 import { takeScreenshot } from "@/utils/capture-screenshot";
 import {
@@ -29,7 +29,7 @@ import {
   PREMIUM_CHAR_LIMIT,
 } from "@/utils/config";
 import { isSameDomain } from "@/utils/domain-helper";
-import { uploadFiles } from "@/utils/file-uploader";
+import { uploadFiles, UploadedFileInfo } from "@/utils/file-uploader";
 import {
   buildIntegrationContext,
   getActiveChatIntegrations,
@@ -214,7 +214,9 @@ export async function POST(req: Request) {
 
     let filesData;
     if (uploadedFilesInfo.length > 0 || updatedImages.length > 0) {
-      filesData = updatedImages.map((url, index) => {
+      filesData = [];
+      for (let index = 0; index < updatedImages.length; index++) {
+        const url = updatedImages[index];
         const fileInfo = uploadedFilesInfo.find((f) => f.path === url);
         const existingFile = Array.isArray(lastUserMessage.files)
           ? (
@@ -224,6 +226,7 @@ export async function POST(req: Request) {
                 type?: string;
                 mimeType?: string;
                 source?: string;
+                name?: string;
               }>
             ).find((f) => f.url === url)
           : null;
@@ -235,11 +238,13 @@ export async function POST(req: Request) {
             type: string;
             mimeType: string;
             source?: string;
+            name?: string;
           } = {
             url,
             order: index,
             type: fileInfo.type,
             mimeType: fileInfo.mimeType,
+            name: fileInfo.name,
           };
 
           if (fileInfo.source) {
@@ -248,21 +253,61 @@ export async function POST(req: Request) {
             result.source = existingFile.source;
           }
 
-          return result;
+          filesData.push(result);
+          continue;
         }
 
         if (existingFile) {
-          return {
+          const result = {
             url,
             order: index,
             type: existingFile.type || "image",
             mimeType: existingFile.mimeType || "application/octet-stream",
             ...(existingFile.source && { source: existingFile.source }),
+            ...(existingFile.name && { name: existingFile.name }),
           };
+
+          if (!existingFile.name && user?.id) {
+            const { data: dbFile } = await supabase
+              .from("user_files")
+              .select("original_name")
+              .eq("user_id", user.id)
+              .eq("storage_path", url)
+              .maybeSingle();
+
+            if (dbFile?.original_name) {
+              result.name = dbFile.original_name;
+            }
+          }
+
+          filesData.push(result);
+          continue;
         }
 
-        return { url, order: index };
-      });
+        const result: {
+          url: string;
+          order: number;
+          type?: string;
+          mimeType?: string;
+          source?: string;
+          name?: string;
+        } = { url, order: index };
+
+        if (user?.id) {
+          const { data: dbFile } = await supabase
+            .from("user_files")
+            .select("original_name")
+            .eq("user_id", user.id)
+            .eq("storage_path", url)
+            .maybeSingle();
+
+          if (dbFile?.original_name) {
+            result.name = dbFile.original_name;
+          }
+        }
+
+        filesData.push(result);
+      }
     } else {
       const isFirstGeneration = lastUserMessage.version === -1;
       if (
@@ -306,7 +351,7 @@ export async function POST(req: Request) {
         content: userPromptForDisplay,
         role: "user",
         prompt_image: updatedImages.length > 0 ? updatedImages[0] : null,
-        files: filesData,
+        files: filesData as Json,
         input_tokens: 0,
         subscription_type: subscriptionType,
         cache_creation_input_tokens: 0,
@@ -335,6 +380,7 @@ export async function POST(req: Request) {
           type?: string;
           mimeType?: string;
           source?: string;
+          name?: string;
         }[];
         subscription_type: string;
         selected_element?: {
@@ -361,6 +407,7 @@ export async function POST(req: Request) {
                 type?: string;
                 mimeType?: string;
                 source?: string;
+                name?: string;
               }[]) || [],
         subscription_type: subscriptionType,
         selected_element: selectedElement,
@@ -606,12 +653,7 @@ const validateRequest = async (
   updatedPrompt: string;
   userPromptForDisplay: string;
   updatedImages: string[];
-  uploadedFilesInfo: {
-    path: string;
-    type: "image" | "pdf" | "text";
-    mimeType: string;
-    source?: string;
-  }[];
+  uploadedFilesInfo: UploadedFileInfo[];
   currentFilesContext: string;
   lastUserMessage: Tables<"messages">;
 }> => {
@@ -651,13 +693,13 @@ const validateRequest = async (
     throw new Error("User is not authorized to modify chat");
   }
 
-  const previousVersion =
-    selectedVersion !== undefined && selectedVersion > 0
-      ? selectedVersion - 1
-      : selectedVersion;
+  const baseVersion =
+    selectedVersion !== undefined && selectedVersion >= 0
+      ? selectedVersion
+      : undefined;
   const currentArtifactCode =
-    previousVersion !== undefined
-      ? await getArtifactCodeByVersion(id, previousVersion)
+    baseVersion !== undefined
+      ? await getArtifactCodeByVersion(id, baseVersion)
       : chat.artifact_code || "";
 
   let currentFilesContext = "";
@@ -1111,13 +1153,7 @@ Use standard Tailwind CSS classes and shadcn/ui components.`;
   }
 
   const updatedImages: string[] = [];
-  const uploadedFilesInfo: {
-    path: string;
-    publicUrl?: string;
-    type: "image" | "pdf" | "text";
-    mimeType: string;
-    source?: string;
-  }[] = [];
+  const uploadedFilesInfo: UploadedFileInfo[] = [];
 
   // Add clone screenshot if available
   if (cloneScreenshot) {
@@ -1130,6 +1166,7 @@ Use standard Tailwind CSS classes and shadcn/ui components.`;
       publicUrl: publicUrlData.publicUrl,
       type: "image",
       mimeType: "image/jpeg",
+      name: cloneScreenshot.split("/").pop() || cloneScreenshot,
       source: "clone",
     });
   }
@@ -1140,6 +1177,13 @@ Use standard Tailwind CSS classes and shadcn/ui components.`;
       const { data: publicUrlData } = supabase.storage
         .from("images")
         .getPublicUrl(libraryPath);
+
+      const { data: dbFile } = await supabase
+        .from("user_files")
+        .select("original_name")
+        .eq("user_id", user?.id)
+        .eq("storage_path", libraryPath)
+        .maybeSingle();
 
       // Determine file type from path
       const ext = libraryPath.split(".").pop()?.toLowerCase() || "";
@@ -1160,12 +1204,15 @@ Use standard Tailwind CSS classes and shadcn/ui components.`;
       }
 
       const isFigmaFile = libraryPath.toLowerCase().includes("figma");
+      const originalName =
+        dbFile?.original_name || libraryPath.split("/").pop() || libraryPath;
 
       uploadedFilesInfo.push({
         path: libraryPath,
         publicUrl: publicUrlData.publicUrl,
         type: fileType,
         mimeType,
+        name: originalName,
         source: isFigmaFile ? "figma" : undefined,
       });
       updatedImages.push(libraryPath);
@@ -1208,21 +1255,37 @@ Use standard Tailwind CSS classes and shadcn/ui components.`;
   if (isFirstIterationTarget && initialUserMessage) {
     if (initialUserMessage.files && Array.isArray(initialUserMessage.files)) {
       const parsedFiles = parseFileItems(initialUserMessage.files);
-      parsedFiles.forEach((file) => {
+      for (const file of parsedFiles) {
         if (!updatedImages.includes(file.url)) {
           updatedImages.push(file.url);
           const { data: publicUrlData } = supabase.storage
             .from("images")
             .getPublicUrl(file.url);
+
+          let fileName = file.name || file.url.split("/").pop() || file.url;
+          if (!file.name && user?.id) {
+            const { data: dbFile } = await supabase
+              .from("user_files")
+              .select("original_name")
+              .eq("user_id", user.id)
+              .eq("storage_path", file.url)
+              .maybeSingle();
+
+            if (dbFile?.original_name) {
+              fileName = dbFile.original_name;
+            }
+          }
+
           uploadedFilesInfo.push({
             path: file.url,
             publicUrl: publicUrlData.publicUrl,
             type: (file.type as "image" | "pdf" | "text") || "image",
             mimeType: file.mimeType || "application/octet-stream",
+            name: fileName,
             source: file.source,
           });
         }
-      });
+      }
     } else if (
       initialUserMessage.prompt_image &&
       !updatedImages.includes(initialUserMessage.prompt_image)
@@ -1231,31 +1294,65 @@ Use standard Tailwind CSS classes and shadcn/ui components.`;
       const { data: publicUrlData } = supabase.storage
         .from("images")
         .getPublicUrl(initialUserMessage.prompt_image);
+
+      let fileName =
+        initialUserMessage.prompt_image.split("/").pop() ||
+        initialUserMessage.prompt_image;
+      if (user?.id) {
+        const { data: dbFile } = await supabase
+          .from("user_files")
+          .select("original_name")
+          .eq("user_id", user.id)
+          .eq("storage_path", initialUserMessage.prompt_image)
+          .maybeSingle();
+
+        if (dbFile?.original_name) {
+          fileName = dbFile.original_name;
+        }
+      }
+
       uploadedFilesInfo.push({
         path: initialUserMessage.prompt_image,
         publicUrl: publicUrlData.publicUrl,
         type: "image",
         mimeType: "image/jpeg",
+        name: fileName,
       });
     }
   } else if (updatedImages.length === 0 && lastUserMessage.version === -1) {
     if (lastUserMessage.files && Array.isArray(lastUserMessage.files)) {
       const parsedFiles = parseFileItems(lastUserMessage.files);
-      parsedFiles.forEach((file) => {
+      for (const file of parsedFiles) {
         if (!updatedImages.includes(file.url)) {
           updatedImages.push(file.url);
           const { data: publicUrlData } = supabase.storage
             .from("images")
             .getPublicUrl(file.url);
+
+          let fileName = file.name || file.url.split("/").pop() || file.url;
+          if (!file.name && user?.id) {
+            const { data: dbFile } = await supabase
+              .from("user_files")
+              .select("original_name")
+              .eq("user_id", user.id)
+              .eq("storage_path", file.url)
+              .maybeSingle();
+
+            if (dbFile?.original_name) {
+              fileName = dbFile.original_name;
+            }
+          }
+
           uploadedFilesInfo.push({
             path: file.url,
             publicUrl: publicUrlData.publicUrl,
             type: (file.type as "image" | "pdf" | "text") || "image",
             mimeType: file.mimeType || "application/octet-stream",
+            name: fileName,
             source: file.source,
           });
         }
-      });
+      }
     } else if (
       lastUserMessage.prompt_image &&
       !updatedImages.includes(lastUserMessage.prompt_image)
@@ -1264,11 +1361,29 @@ Use standard Tailwind CSS classes and shadcn/ui components.`;
       const { data: publicUrlData } = supabase.storage
         .from("images")
         .getPublicUrl(lastUserMessage.prompt_image);
+
+      let fileName =
+        lastUserMessage.prompt_image.split("/").pop() ||
+        lastUserMessage.prompt_image;
+      if (user?.id) {
+        const { data: dbFile } = await supabase
+          .from("user_files")
+          .select("original_name")
+          .eq("user_id", user.id)
+          .eq("storage_path", lastUserMessage.prompt_image)
+          .maybeSingle();
+
+        if (dbFile?.original_name) {
+          fileName = dbFile.original_name;
+        }
+      }
+
       uploadedFilesInfo.push({
         path: lastUserMessage.prompt_image,
         publicUrl: publicUrlData.publicUrl,
         type: "image",
         mimeType: "image/jpeg",
+        name: fileName,
       });
     }
   }

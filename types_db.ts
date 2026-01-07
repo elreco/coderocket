@@ -603,6 +603,7 @@ export type Database = {
           files: Json | null;
           id: number;
           input_tokens: number | null;
+          is_building: boolean | null;
           is_built: boolean | null;
           is_github_pull: boolean | null;
           is_streaming: boolean | null;
@@ -631,6 +632,7 @@ export type Database = {
           files?: Json | null;
           id?: number;
           input_tokens?: number | null;
+          is_building?: boolean | null;
           is_built?: boolean | null;
           is_github_pull?: boolean | null;
           is_streaming?: boolean | null;
@@ -659,6 +661,7 @@ export type Database = {
           files?: Json | null;
           id?: number;
           input_tokens?: number | null;
+          is_building?: boolean | null;
           is_built?: boolean | null;
           is_github_pull?: boolean | null;
           is_streaming?: boolean | null;

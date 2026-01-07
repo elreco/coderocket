@@ -314,6 +314,7 @@ export function useRealtimeSync({
             if (onBuildStatusChangeRef.current) {
               onBuildStatusChangeRef.current({
                 isBuilt: payload.new.is_built,
+                isBuilding: payload.new.is_building || false,
                 buildError: payload.new.build_error,
                 version: payload.new.version,
               });

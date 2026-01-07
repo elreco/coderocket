@@ -66,7 +66,6 @@ export default function ComponentChatFiles({
     selectedVersion,
     handleVersionSelect,
     refreshChatData,
-    setForceBuild,
     setWebcontainerReady,
     setSelectedVersion,
     files: uploadedFiles,
@@ -416,7 +415,6 @@ ${artifactFiles
       setIsDeleting(true);
 
       setWebcontainerReady(false);
-      setForceBuild(true);
 
       await deleteVersionByMessageId(messageId);
 
@@ -464,7 +462,6 @@ ${artifactFiles
           duration: 4000,
         });
       }
-      setForceBuild(false);
     } finally {
       setIsDeleting(false);
       setIsAlertOpen(false);
@@ -533,6 +530,7 @@ ${artifactFiles
                       type?: string;
                       mimeType?: string;
                       source?: string;
+                      name?: string;
                     } =>
                       typeof item === "object" &&
                       item !== null &&

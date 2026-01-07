@@ -60,6 +60,7 @@ export async function GET(request: NextRequest) {
       .from("user_files")
       .select("*")
       .eq("user_id", user.id)
+      .not("original_name", "ilike", "figma-design-%")
       .order("created_at", { ascending: false })
       .range(offset, offset + limit - 1);
 
@@ -90,6 +91,10 @@ export async function GET(request: NextRequest) {
         mimeType: file.mime_type,
         uploadDate: file.created_at,
         size: file.file_size,
+        name:
+          file.original_name ||
+          file.storage_path.split("/").pop() ||
+          file.storage_path,
       })) || [];
 
     console.log(`Found ${total} files for user ${user.id}`);

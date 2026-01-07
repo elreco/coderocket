@@ -25,6 +25,7 @@ export type BuildError = {
 
 export type BuildStatusPayload = {
   isBuilt: boolean;
+  isBuilding?: boolean;
   buildError: unknown;
   version: number;
 };
@@ -63,21 +64,18 @@ export const BuilderProvider = ({
 
   // Process build status from realtime updates (via props from parent)
   const processBuildStatus = useCallback(
-    (isBuilt: boolean, buildErrorData: unknown) => {
+    (isBuilt: boolean, isBuilding: boolean, buildErrorData: unknown) => {
       const errorData = buildErrorData as {
-        building?: boolean;
         title?: string;
       } | null;
 
-      const isBuildLock = errorData?.building === true;
-
-      // If there's a build error with a title (not just a lock), show error
-      if (buildErrorData && !isBuildLock && errorData?.title) {
+      // If there's a build error with a title, show error
+      if (buildErrorData && errorData?.title) {
         setBuildError(buildErrorData as BuildError);
         setLoadingState("error");
         setWebcontainerReady(false);
-      } else if (isBuildLock || !isBuilt) {
-        // Build is in progress (either locked or not built yet)
+      } else if (isBuilding || !isBuilt) {
+        // Build is in progress (either building or not built yet)
         setBuildError(null);
         setLoadingState("processing");
         setWebcontainerReady(false);
@@ -97,6 +95,7 @@ export const BuilderProvider = ({
     if (buildStatusPayload && buildStatusPayload.version === selectedVersion) {
       processBuildStatus(
         buildStatusPayload.isBuilt,
+        buildStatusPayload.isBuilding || false,
         buildStatusPayload.buildError,
       );
     }
@@ -110,14 +109,18 @@ export const BuilderProvider = ({
 
     const { data: message } = await supabase
       .from("messages")
-      .select("build_error, is_built")
+      .select("build_error, is_built, is_building")
       .eq("chat_id", chatId)
       .eq("role", "assistant")
       .eq("version", selectedVersion)
       .maybeSingle();
 
     if (message) {
-      processBuildStatus(message.is_built, message.build_error);
+      processBuildStatus(
+        message.is_built || false,
+        message.is_building || false,
+        message.build_error,
+      );
     }
   }, [chatId, selectedVersion, supabase, processBuildStatus]);
 

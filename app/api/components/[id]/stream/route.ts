@@ -39,8 +39,6 @@ const clearActiveStream = async (
     .eq("id", chatId);
 };
 
-const BUILD_LOCK_TIMEOUT_MS = 3 * 60 * 1000;
-
 const checkIfBuildNeeded = async (
   supabase: Awaited<ReturnType<typeof createClient>>,
   chatId: string,
@@ -51,7 +49,7 @@ const checkIfBuildNeeded = async (
 }> => {
   const { data: lastAssistantMessage } = await supabase
     .from("messages")
-    .select("version, is_built, content, build_error")
+    .select("version, is_built, is_building, content, build_error")
     .eq("chat_id", chatId)
     .eq("role", "assistant")
     .order("version", { ascending: false })
@@ -67,20 +65,33 @@ const checkIfBuildNeeded = async (
   const notBuilt =
     lastAssistantMessage.is_built === false ||
     lastAssistantMessage.is_built === null;
+  const notBuilding =
+    lastAssistantMessage.is_building === false ||
+    lastAssistantMessage.is_building === null;
 
-  const buildError = lastAssistantMessage.build_error as {
-    building?: boolean;
-    lock_started_at?: string;
-  } | null;
+  const hasNoBuildError = !lastAssistantMessage.build_error;
 
-  let buildInProgress = false;
-  if (buildError?.building && buildError?.lock_started_at) {
-    const lockAge = Date.now() - new Date(buildError.lock_started_at).getTime();
-    buildInProgress = lockAge < BUILD_LOCK_TIMEOUT_MS;
+  const buildInProgress = lastAssistantMessage.is_building === true;
+
+  const needsBuild = hasContent && notBuilt && notBuilding && hasNoBuildError;
+
+  if (needsBuild) {
+    console.log(
+      `[checkIfBuildNeeded] Build needed for chat ${chatId}, version ${lastAssistantMessage.version}`,
+      {
+        hasContent,
+        notBuilt,
+        notBuilding,
+        hasNoBuildError,
+        is_built: lastAssistantMessage.is_built,
+        is_building: lastAssistantMessage.is_building,
+        build_error: lastAssistantMessage.build_error,
+      },
+    );
   }
 
   return {
-    needsBuild: hasContent && notBuilt && !buildInProgress,
+    needsBuild,
     version: lastAssistantMessage.version,
     buildInProgress,
   };
@@ -132,6 +143,26 @@ export async function GET(
 
   if (!chatData.active_stream_id) {
     const buildStatus = await checkIfBuildNeeded(supabase, chatId);
+
+    if (buildStatus.needsBuild && buildStatus.version !== null) {
+      after(async () => {
+        const { buildComponent } = await import(
+          "@/app/(default)/components/[slug]/actions"
+        );
+        try {
+          await buildComponent(chatId, buildStatus.version!);
+          console.log(
+            `[stream/route] Build triggered for chat ${chatId}, version ${buildStatus.version}`,
+          );
+        } catch (error) {
+          console.error(
+            `[stream/route] Build error for chat ${chatId}, version ${buildStatus.version}:`,
+            error,
+          );
+        }
+      });
+    }
+
     return new Response(
       JSON.stringify({
         status: "no_active_stream",
@@ -149,6 +180,26 @@ export async function GET(
   if (isStreamStale(chatData.active_stream_started_at as string | null)) {
     await clearActiveStream(supabase, chatId);
     const buildStatus = await checkIfBuildNeeded(supabase, chatId);
+
+    if (buildStatus.needsBuild && buildStatus.version !== null) {
+      after(async () => {
+        const { buildComponent } = await import(
+          "@/app/(default)/components/[slug]/actions"
+        );
+        try {
+          await buildComponent(chatId, buildStatus.version!);
+          console.log(
+            `[stream/route] Build triggered for chat ${chatId}, version ${buildStatus.version}`,
+          );
+        } catch (error) {
+          console.error(
+            `[stream/route] Build error for chat ${chatId}, version ${buildStatus.version}:`,
+            error,
+          );
+        }
+      });
+    }
+
     return new Response(
       JSON.stringify({
         status: "stream_stale",

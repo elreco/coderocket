@@ -57,7 +57,7 @@ export const fetchLastAssistantMessageByChatId = async (
     .single();
   if (data && checkBuilt) {
     after(async () => {
-      await buildComponent(chatId, data.version, true);
+      await buildComponent(chatId, data.version);
     });
   }
   return data;

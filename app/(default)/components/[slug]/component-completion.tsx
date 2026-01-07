@@ -697,6 +697,74 @@ export default function ComponentCompletion({
   }, [fetchedChat?.active_stream_id, isLoading, currentStreamId]);
 
   useEffect(() => {
+    if (!fetchedChat || !messages.length || isLoading) {
+      console.log(`[component-completion] Skipping build check:`, {
+        hasFetchedChat: !!fetchedChat,
+        messagesLength: messages.length,
+        isLoading,
+      });
+      return;
+    }
+
+    const lastAssistantMsg = messages.find(
+      (m) => m.role === "assistant" && m.version === selectedVersion,
+    );
+
+    console.log(
+      `[component-completion] Checking build for version ${selectedVersion}:`,
+      {
+        hasLastAssistantMsg: !!lastAssistantMsg,
+        hasContent: !!lastAssistantMsg?.content,
+        is_built: lastAssistantMsg?.is_built,
+        is_building: lastAssistantMsg?.is_building,
+        build_error: lastAssistantMsg?.build_error,
+      },
+    );
+
+    const hasMsg = !!lastAssistantMsg;
+    const hasContent = !!lastAssistantMsg?.content;
+    const notBuilt =
+      lastAssistantMsg?.is_built === false ||
+      lastAssistantMsg?.is_built === null;
+    const notBuilding =
+      lastAssistantMsg?.is_building === false ||
+      lastAssistantMsg?.is_building === null ||
+      lastAssistantMsg?.is_building === undefined;
+    const hasNoError = !lastAssistantMsg?.build_error;
+
+    const needsBuild =
+      hasMsg && hasContent && notBuilt && notBuilding && hasNoError;
+
+    console.log(`[component-completion] Build conditions:`, {
+      hasMsg,
+      hasContent,
+      notBuilt,
+      notBuilding,
+      hasNoError,
+      needsBuild,
+      is_building_value: lastAssistantMsg?.is_building,
+      is_building_type: typeof lastAssistantMsg?.is_building,
+    });
+
+    if (needsBuild && lastAssistantMsg) {
+      console.log(
+        `[component-completion] Build needed for version ${lastAssistantMsg.version}, triggering...`,
+      );
+      buildComponent(chatId, lastAssistantMsg.version).catch((error) => {
+        console.error(
+          `[component-completion] Build error for version ${lastAssistantMsg.version}:`,
+          error,
+        );
+      });
+    } else {
+      console.log(`[component-completion] Build not needed:`, {
+        needsBuild,
+        hasLastAssistantMsg: !!lastAssistantMsg,
+      });
+    }
+  }, [messages, selectedVersion, fetchedChat, isLoading, chatId]);
+
+  useEffect(() => {
     if (!fetchedChat || !messages.length) return;
 
     const lastUserMsg = messages.find(
@@ -1229,6 +1297,7 @@ export default function ComponentCompletion({
         selected_element: selectedElement || null,
         cost_usd: null,
         is_built: null,
+        is_building: null,
         is_github_pull: null,
         migration_executed_at: null,
         migrations_executed: null,

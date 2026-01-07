@@ -11,6 +11,7 @@ interface PromptFileItem {
   type?: string;
   mimeType?: string;
   source?: string;
+  name?: string;
 }
 
 export type { UploadedFileInfo } from "@/types/api";
@@ -271,13 +272,13 @@ export const buildMessagesToOpenAi = async (
     const filesWithPublicUrls = uploadedFilesInfo.filter((f) => f.publicUrl);
     if (filesWithPublicUrls.length > 0) {
       uploadedFilesContext =
-        "\n\n<uploaded_files>\nThe following files have been uploaded and are available at these public URLs. You can reference these URLs in your generated code:\n\n";
+        "\n\n<uploaded_files>\nThe following files have been uploaded and are available at these public URLs. You can reference these filenames and URLs in your generated code:\n\n";
       filesWithPublicUrls.forEach((file, index) => {
         const fileNumber = index + 1;
-        uploadedFilesContext += `${fileNumber}. ${file.type.toUpperCase()} file: ${file.publicUrl}\n`;
+        uploadedFilesContext += `${fileNumber}. ${file.type.toUpperCase()} file "${file.name}" at: ${file.publicUrl}\n`;
       });
       uploadedFilesContext +=
-        "\nIMPORTANT: When referencing these files in your code (e.g., in <img> src attributes or other file references), use these exact public URLs.\n</uploaded_files>\n\n";
+        "\nIMPORTANT: When referencing these files in your code (e.g., in <img> src attributes or other file references), use these exact public URLs and keep the original filenames when relevant.\n</uploaded_files>\n\n";
     }
   }
 
@@ -335,9 +336,10 @@ export const buildMessagesToOpenAi = async (
         const textContent = await response.text();
 
         const isFigmaFile = fileInfo.source === "figma";
+        const fileName = fileInfo.name || filePath.split("/").pop() || filePath;
         const filePrefix = isFigmaFile
-          ? `\n\n<attached_file filename="${filePath.split("/").pop()}" type="figma-design">\n⚠️ IMPORTANT: This is a Figma design specification. You MUST preserve all existing code and components in the project. Only ADD new pages/components based on this design. DO NOT replace or remove existing functionality.\n\n`
-          : `\n\n<attached_file filename="${filePath.split("/").pop()}">\n`;
+          ? `\n\n<attached_file filename="${fileName}" type="figma-design">\n⚠️ IMPORTANT: This is a Figma design specification. You MUST preserve all existing code and components in the project. Only ADD new pages/components based on this design. DO NOT replace or remove existing functionality.\n\n`
+          : `\n\n<attached_file filename="${fileName}">\n`;
 
         finalMessageContent.push({
           type: "text",

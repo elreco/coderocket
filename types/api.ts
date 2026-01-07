@@ -3,6 +3,7 @@ export interface UploadedFileInfo {
   publicUrl?: string;
   type: "image" | "pdf" | "text";
   mimeType: string;
+  name: string;
   source?: string;
 }
 

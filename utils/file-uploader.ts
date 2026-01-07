@@ -67,7 +67,13 @@ export async function uploadFiles(
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       const fileType = getFileType(file);
-      const timestamp = Date.now();
+
+      const sanitizeFileName = (name: string): string => {
+        return name
+          .replace(/[^a-zA-Z0-9._-]/g, "_")
+          .replace(/_{2,}/g, "_")
+          .replace(/^_+|_+$/g, "");
+      };
 
       const getFileExtension = (
         type: typeof fileType,
@@ -86,7 +92,29 @@ export async function uploadFiles(
       };
 
       const extension = getFileExtension(fileType, file.name);
-      const fileName = `${timestamp}-${userId}-${i}${extension}`;
+      const baseName = file.name.replace(/\.[^/.]+$/, "");
+      const sanitizedBaseName = sanitizeFileName(baseName);
+      let fileName = `${sanitizedBaseName}${extension}`;
+
+      const checkFileNameExists = async (name: string): Promise<boolean> => {
+        const { data, error } = await supabase
+          .from("user_files")
+          .select("storage_path")
+          .eq("user_id", userId);
+        if (error || !data) return false;
+        return data.some(
+          (file) =>
+            file.storage_path === name ||
+            file.storage_path.endsWith(`/${name}`),
+        );
+      };
+
+      let counter = 1;
+      while (await checkFileNameExists(fileName)) {
+        const nameWithoutExt = sanitizedBaseName;
+        fileName = `${nameWithoutExt} (${counter})${extension}`;
+        counter++;
+      }
 
       let storageData;
       let storageError;
@@ -135,6 +163,7 @@ export async function uploadFiles(
           publicUrl: publicUrlData.publicUrl,
           type: fileType as "image" | "pdf" | "text",
           mimeType: file.type,
+          name: file.name,
         };
 
         const { error: dbError } = await supabase.from("user_files").insert({

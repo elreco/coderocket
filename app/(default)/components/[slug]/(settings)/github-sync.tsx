@@ -243,7 +243,7 @@ export default function GitHubSync({ closeSheet }: { closeSheet: () => void }) {
 
             if (shouldBuildAfter && lastMessage.version !== undefined) {
               try {
-                await buildComponent(chatId, lastMessage.version, true);
+                await buildComponent(chatId, lastMessage.version);
               } catch (error) {
                 console.error(
                   "Error building component after GitHub pull:",

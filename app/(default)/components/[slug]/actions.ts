@@ -249,6 +249,35 @@ export const deleteVersionByMessageId = async (messageId: number) => {
     throw new Error(`Failed to delete messages: ${deleteError.message}`);
   }
 
+  try {
+    const response = await fetch(
+      `${builderApiUrl}/build/${message.chat_id}/${message.version}`,
+      {
+        method: "DELETE",
+      },
+    );
+
+    if (!response.ok) {
+      console.error(
+        `Failed to delete build from Vercel Blob for version ${message.version}: ${response.status}`,
+      );
+      throw new Error(
+        `Failed to delete build from Vercel Blob: ${response.status}`,
+      );
+    }
+
+    await response.json();
+    console.log(
+      `Successfully deleted build for chat ${message.chat_id}, version ${message.version}`,
+    );
+  } catch (error) {
+    console.error(
+      `Error deleting build from Vercel Blob for version ${message.version}:`,
+      error,
+    );
+    throw error;
+  }
+
   const latestArtifactCode = await getLatestArtifactCode(message.chat_id);
 
   await supabase
@@ -297,7 +326,6 @@ export const updateTheme = async (
 export const buildComponent = async (
   chatId: string,
   version: number,
-  forceBuild?: boolean,
 ): Promise<{
   success: boolean;
   alreadyBuilt?: boolean;
@@ -382,7 +410,7 @@ export const buildComponent = async (
         chatId,
         version,
         files: newArtifactFiles,
-        forceBuild,
+        forceBuild: true,
         envVars,
       }),
     });

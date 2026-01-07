@@ -71,7 +71,7 @@ export function useStreamResume({
 
         if (data.needsBuild && data.version !== null) {
           try {
-            await buildComponent(chatId, data.version, true);
+            await buildComponent(chatId, data.version);
             if (refreshChatDataRef.current) {
               await refreshChatDataRef.current();
             }
@@ -128,7 +128,7 @@ export function useStreamResume({
 
           if (lastAssistant && !lastAssistant.is_built) {
             try {
-              await buildComponent(chatId, lastAssistant.version, true);
+              await buildComponent(chatId, lastAssistant.version);
             } catch {
               // Build failed silently
             }
@@ -164,13 +164,64 @@ export function useStreamResume({
       lastAssistantMsg?.content &&
       !lastAssistantMsg.content.includes("<!-- FINISH_REASON:");
 
-    if (!needsGeneration && !isIncomplete) return;
-    if (hasInitiatedRef.current[chatId]) return;
+    const needsBuild =
+      lastAssistantMsg &&
+      lastAssistantMsg.content &&
+      (lastAssistantMsg.is_built === false ||
+        lastAssistantMsg.is_built === null) &&
+      (lastAssistantMsg.is_building === false ||
+        lastAssistantMsg.is_building === null) &&
+      !lastAssistantMsg.build_error;
+
+    if (needsBuild) {
+      console.log(
+        `[useStreamResume] Build needed detected for version ${lastAssistantMsg.version}`,
+        {
+          hasContent: !!lastAssistantMsg.content,
+          is_built: lastAssistantMsg.is_built,
+          is_building: lastAssistantMsg.is_building,
+          build_error: lastAssistantMsg.build_error,
+        },
+      );
+    }
+
+    if (!needsGeneration && !isIncomplete && !needsBuild) {
+      console.log(`[useStreamResume] No action needed`, {
+        needsGeneration,
+        isIncomplete,
+        needsBuild,
+      });
+      return;
+    }
+    if (hasInitiatedRef.current[chatId]) {
+      console.log(`[useStreamResume] Already initiated for chat ${chatId}`);
+      return;
+    }
 
     hasInitiatedRef.current[chatId] = true;
 
     const attemptResumeOrStart = async () => {
       const resumed = await tryResumeStream();
+
+      if (!resumed && needsBuild && lastAssistantMsg) {
+        console.log(
+          `[useStreamResume] Build needed for version ${lastAssistantMsg.version}, triggering...`,
+        );
+        try {
+          await buildComponent(chatId, lastAssistantMsg.version);
+          console.log(
+            `[useStreamResume] Build triggered successfully for version ${lastAssistantMsg.version}`,
+          );
+          if (refreshChatDataRef.current) {
+            await refreshChatDataRef.current();
+          }
+        } catch (error) {
+          console.error(
+            `[useStreamResume] Build error for version ${lastAssistantMsg.version}:`,
+            error,
+          );
+        }
+      }
 
       if (!resumed && needsGeneration && startInitialGenerationRef.current) {
         onSetIsLoading(true);

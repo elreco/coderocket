@@ -39,6 +39,7 @@ interface ImageUploadAreaProps {
     mimeType: string;
     uploadDate: string;
     size: number;
+    name: string;
   }) => void;
   currentFilesCount?: number;
   onFileUpload?: (files: File[]) => void;
