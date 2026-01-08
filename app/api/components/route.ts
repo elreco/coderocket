@@ -704,14 +704,7 @@ const validateRequest = async (
 
   let currentFilesContext = "";
   if (currentArtifactCode) {
-    const CONTEXT_MODE = process.env.CONTEXT_MODE || "balanced";
-    const codeLimits = {
-      minimal: 4000,
-      balanced: 8000,
-      full: 12000,
-    };
-    const codeLimit =
-      codeLimits[CONTEXT_MODE as keyof typeof codeLimits] || 12000;
+    const codeLimit = 12000;
 
     const fileRegex = /<coderocketFile[^>]*name=["']([^"']+)["'][^>]*>/g;
     const lockedFilesRegex =

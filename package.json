@@ -17,8 +17,8 @@
     "postinstall": "simple-git-hooks"
   },
   "dependencies": {
-    "@ai-sdk/anthropic": "^2.0.35",
-    "@ai-sdk/react": "^2.0.76",
+    "@ai-sdk/anthropic": "^3.0.9",
+    "@ai-sdk/react": "^3.0.21",
     "@codemirror/lang-angular": "^0.1.4",
     "@codemirror/lang-css": "^6.3.1",
     "@codemirror/lang-html": "^6.4.9",
@@ -58,7 +58,7 @@
     "@uiw/react-codemirror": "^4.23.6",
     "@vercel/analytics": "^1.3.1",
     "@vercel/blob": "^0.27.1",
-    "ai": "^5.0.76",
+    "ai": "^6.0.21",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "crisp-sdk-web": "^1.0.25",
@@ -119,7 +119,7 @@
     "simple-git-hooks": "^2.11.1",
     "supabase": "^2.15.8",
     "tailwindcss-animate": "^1.0.7",
-    "typescript": "^5.7.2"
+    "typescript": "^5.9.3"
   },
   "simple-git-hooks": {
     "pre-commit": "node scripts/check-templates.js"
