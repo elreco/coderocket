@@ -132,15 +132,7 @@ export default function ComponentPreview() {
   }, [loadingState, hasEverLoaded, setLoadingState, selectedVersion]);
 
   const getInitialDisplayVersion = () => {
-    if (selectedVersion === undefined) return undefined;
-    // Pour la première version, ne pas définir displayVersion initialement
-    // Il sera défini plus tard quand la version sera prête
-    if (selectedVersion === 0) {
-      return undefined;
-    }
-    // On initialise toujours à selectedVersion au chargement pour éviter le flickering
-    // L'effet se chargera de le changer si nécessaire
-    return selectedVersion;
+    return undefined;
   };
 
   const [displayVersion, setDisplayVersion] = React.useState<

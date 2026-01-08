@@ -342,6 +342,7 @@ export default function ComponentCompletion({
       setVisible(!chat.is_private);
       setArtifactCode(chat.artifact_code || "");
       setWebcontainerReady(assistantMsg?.is_built || false);
+
       if (
         assistantMsg?.content?.includes("<!-- FINISH_REASON: length -->") ||
         assistantMsg?.content?.includes("<!-- FINISH_REASON: error -->")

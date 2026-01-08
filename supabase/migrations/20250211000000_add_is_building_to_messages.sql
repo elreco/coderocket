@@ -5,3 +5,4 @@ COMMENT ON COLUMN public.messages.is_building IS 'Indicates if a build is curren
 
 CREATE INDEX IF NOT EXISTS idx_messages_is_building ON public.messages(is_building) WHERE is_building = true;
 
+

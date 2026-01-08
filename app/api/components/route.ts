@@ -28,6 +28,15 @@ import {
   MAX_TOKENS_PER_REQUEST,
   PREMIUM_CHAR_LIMIT,
 } from "@/utils/config";
+import {
+  createProjectSummary,
+  selectRelevantFiles,
+  shouldUseContextOptimization,
+  createFilesContext,
+  buildProjectManifest,
+  CONTEXT_CONFIG,
+  type FileMap,
+} from "@/utils/context";
 import { isSameDomain } from "@/utils/domain-helper";
 import { uploadFiles, UploadedFileInfo } from "@/utils/file-uploader";
 import {
@@ -152,6 +161,8 @@ export async function POST(req: Request) {
       uploadedFilesInfo,
       currentFilesContext,
       lastUserMessage,
+      contextOptimizationTokens,
+      baseArtifactCode,
     } = await validateRequest(
       id,
       image,
@@ -203,14 +214,14 @@ export async function POST(req: Request) {
       }
     }
 
-    const latestVersion = messagesFromDatabase.reduce((max, message) => {
+    const latestVersionInDb = messagesFromDatabase.reduce((max, message) => {
       if (typeof message.version !== "number") {
         return max;
       }
       return Math.max(max, message.version);
     }, -1);
 
-    const version = latestVersion + 1;
+    const version = latestVersionInDb + 1;
 
     let filesData;
     if (uploadedFilesInfo.length > 0 || updatedImages.length > 0) {
@@ -582,6 +593,8 @@ export async function POST(req: Request) {
           usage,
           finalFinishReason,
           version,
+          contextOptimizationTokens,
+          baseArtifactCode,
         );
       },
       onError: async (error) => {
@@ -656,6 +669,11 @@ const validateRequest = async (
   uploadedFilesInfo: UploadedFileInfo[];
   currentFilesContext: string;
   lastUserMessage: Tables<"messages">;
+  projectSummary?: string;
+  contextFiles?: FileMap;
+  allFilePaths?: string[];
+  contextOptimizationTokens: { input: number; output: number };
+  baseArtifactCode: string;
 }> => {
   const supabase = await createClient();
   const {
@@ -693,19 +711,21 @@ const validateRequest = async (
     throw new Error("User is not authorized to modify chat");
   }
 
-  const baseVersion =
-    selectedVersion !== undefined && selectedVersion >= 0
-      ? selectedVersion
-      : undefined;
-  const currentArtifactCode =
-    baseVersion !== undefined
-      ? await getArtifactCodeByVersion(id, baseVersion)
-      : chat.artifact_code || "";
+  const isFirstGeneration = selectedVersion === -1;
+
+  let currentArtifactCode = "";
+
+  if (!isFirstGeneration) {
+    currentArtifactCode = (await getArtifactCodeByVersion(id)) || "";
+  }
 
   let currentFilesContext = "";
-  if (currentArtifactCode) {
-    const codeLimit = 12000;
+  let projectSummary: string | undefined;
+  let contextFiles: FileMap | undefined;
+  let allFilePaths: string[] = [];
+  let contextOptimizationTokens = { input: 0, output: 0 };
 
+  if (currentArtifactCode) {
     const fileRegex = /<coderocketFile[^>]*name=["']([^"']+)["'][^>]*>/g;
     const lockedFilesRegex =
       /<coderocketFile[^>]*locked=["']true["'][^>]*name=["']([^"']+)["'][^>]*>|<coderocketFile[^>]*name=["']([^"']+)["'][^>]*locked=["']true["'][^>]*>/g;
@@ -722,13 +742,114 @@ const validateRequest = async (
       lockedFiles.push(match[1] || match[2]);
     }
 
-    const codePreview =
-      currentArtifactCode.length > codeLimit
-        ? currentArtifactCode.substring(0, codeLimit) +
-          `\n\n...(${Math.round((currentArtifactCode.length - codeLimit) / 1000)}k more chars - showing ${codeLimit / 1000}k/${Math.round(currentArtifactCode.length / 1000)}k total)`
-        : currentArtifactCode;
+    allFilePaths = allFiles;
+    const useContextOptimization =
+      shouldUseContextOptimization(currentArtifactCode);
 
-    currentFilesContext = `\n\n<current_project_state>\nProject has ${allFiles.length} files: ${allFiles.join(", ")}\n\nCurrent code:\n${codePreview}\n</current_project_state>\n\n`;
+    if (
+      useContextOptimization &&
+      allFiles.length >= CONTEXT_CONFIG.MIN_FILES_FOR_OPTIMIZATION
+    ) {
+      console.log("=== Context Optimization Enabled ===");
+      console.log(
+        `Project has ${allFiles.length} files, using intelligent context selection`,
+      );
+
+      try {
+        const messagesForSummary = await fetchMessagesByChatId(id);
+
+        const summaryResult = await createProjectSummary({
+          messages: messagesForSummary || [],
+          artifactCode: currentArtifactCode,
+        });
+        projectSummary = summaryResult.summary;
+        console.log(
+          `Summary generated (${summaryResult.tokensUsed.input} input, ${summaryResult.tokensUsed.output} output tokens)`,
+        );
+
+        const selectionResult = await selectRelevantFiles({
+          messages: messagesForSummary || [],
+          artifactCode: currentArtifactCode,
+          projectSummary,
+        });
+        contextFiles = selectionResult.selectedFiles;
+        console.log(
+          `Selected ${selectionResult.includedPaths.length} files for context:`,
+          selectionResult.includedPaths,
+        );
+
+        const contextOptTokens = {
+          summaryInput: summaryResult.tokensUsed.input,
+          summaryOutput: summaryResult.tokensUsed.output,
+          selectionInput: selectionResult.tokensUsed.input,
+          selectionOutput: selectionResult.tokensUsed.output,
+        };
+        const totalContextOptTokens =
+          contextOptTokens.summaryInput +
+          contextOptTokens.summaryOutput +
+          contextOptTokens.selectionInput +
+          contextOptTokens.selectionOutput;
+
+        contextOptimizationTokens = {
+          input:
+            contextOptTokens.summaryInput + contextOptTokens.selectionInput,
+          output:
+            contextOptTokens.summaryOutput + contextOptTokens.selectionOutput,
+        };
+
+        if (totalContextOptTokens > 0) {
+          const contextOptCost = calculateTokenCost(
+            {
+              input_tokens:
+                contextOptTokens.summaryInput + contextOptTokens.selectionInput,
+              output_tokens:
+                contextOptTokens.summaryOutput +
+                contextOptTokens.selectionOutput,
+              cache_creation_input_tokens: 0,
+              cache_read_input_tokens: 0,
+            },
+            "claude-haiku-4-5",
+          );
+
+          await supabase.from("token_usage_tracking").insert({
+            user_id: user.id,
+            chat_id: id,
+            usage_type: "context_optimization",
+            model_used: CONTEXT_CONFIG.SUMMARY_MODEL,
+            input_tokens:
+              contextOptTokens.summaryInput + contextOptTokens.selectionInput,
+            output_tokens:
+              contextOptTokens.summaryOutput + contextOptTokens.selectionOutput,
+            cache_creation_input_tokens: 0,
+            cache_read_input_tokens: 0,
+            cost_usd: contextOptCost,
+          });
+
+          console.log(
+            `Context optimization tokens tracked: ${totalContextOptTokens} total, cost: $${contextOptCost.toFixed(6)}`,
+          );
+        }
+
+        const selectedFilesContent = createFilesContext(contextFiles);
+        const projectManifest = buildProjectManifest(
+          await import("@/utils/context").then((m) =>
+            m.extractFilesFromArtifactCode(currentArtifactCode),
+          ),
+        );
+
+        currentFilesContext = `\n\n<project_manifest>\n${projectManifest}\n</project_manifest>\n\n`;
+        currentFilesContext += `<project_summary>\n${projectSummary}\n</project_summary>\n\n`;
+        currentFilesContext += `<context_buffer>\nThe following ${Object.keys(contextFiles).length} files are loaded in full (most relevant to current request):\n\n${selectedFilesContent}\n</context_buffer>\n\n`;
+      } catch (contextError) {
+        console.error(
+          "Context optimization failed, falling back to full code:",
+          contextError,
+        );
+        currentFilesContext = `\n\n<current_project_state>\nProject has ${allFiles.length} files: ${allFiles.join(", ")}\n\nCurrent code:\n${currentArtifactCode}\n</current_project_state>\n\n`;
+      }
+    } else {
+      currentFilesContext = `\n\n<current_project_state>\nProject has ${allFiles.length} files: ${allFiles.join(", ")}\n\nCurrent code:\n${currentArtifactCode}\n</current_project_state>\n\n`;
+    }
 
     if (lockedFiles.length > 0) {
       currentFilesContext += `<locked_files>\nLocked files (DO NOT modify): ${lockedFiles.join(", ")}\n</locked_files>\n\n`;
@@ -1391,6 +1512,11 @@ Use standard Tailwind CSS classes and shadcn/ui components.`;
     uploadedFilesInfo,
     currentFilesContext,
     lastUserMessage,
+    projectSummary,
+    contextFiles,
+    allFilePaths,
+    contextOptimizationTokens,
+    baseArtifactCode: currentArtifactCode,
   };
 };
 
@@ -1400,6 +1526,8 @@ const updateDataAfterCompletion = async (
   usage: LanguageModelUsage,
   finishReason: string | null,
   version: number,
+  contextOptTokens: { input: number; output: number } = { input: 0, output: 0 },
+  baseArtifactCode?: string,
 ) => {
   try {
     const supabase = await createClient();
@@ -1423,36 +1551,35 @@ const updateDataAfterCompletion = async (
       return;
     }
 
-    // FIXED: Use previous artifact code from messages instead of chats table
-    const previousArtifactCode =
-      (await getPreviousArtifactCode(chatId, version)) || "";
+    const codeToMergeWith =
+      baseArtifactCode ||
+      (await getPreviousArtifactCode(chatId, version)) ||
+      "";
 
     let artifactCode: string;
     try {
-      artifactCode = getUpdatedArtifactCode(text, previousArtifactCode);
+      artifactCode = getUpdatedArtifactCode(text, codeToMergeWith);
 
       if (!artifactCode || artifactCode.trim() === "") {
         console.error(
-          `[Patch] Generated artifact code is empty. Using previous artifact code to prevent corruption.`,
+          `[Patch] Generated artifact code is empty. Using base artifact code to prevent corruption.`,
         );
-        artifactCode = previousArtifactCode || chat.artifact_code || "";
+        artifactCode = codeToMergeWith || chat.artifact_code || "";
       }
 
       if (!artifactCode.includes("<coderocketArtifact")) {
         console.error(
-          `[Patch] Generated artifact code is malformed. Using previous artifact code to prevent corruption.`,
+          `[Patch] Generated artifact code is malformed. Using base artifact code to prevent corruption.`,
         );
-        artifactCode = previousArtifactCode || chat.artifact_code || "";
+        artifactCode = codeToMergeWith || chat.artifact_code || "";
       }
     } catch (error) {
       console.error(
         `[Patch] Error generating artifact code:`,
         error instanceof Error ? error.message : String(error),
       );
-      console.error(
-        `[Patch] Using previous artifact code to prevent corruption.`,
-      );
-      artifactCode = previousArtifactCode || chat.artifact_code || "";
+      console.error(`[Patch] Using base artifact code to prevent corruption.`);
+      artifactCode = codeToMergeWith || chat.artifact_code || "";
     }
 
     // Fetch current tokens
@@ -1469,14 +1596,16 @@ const updateDataAfterCompletion = async (
 
     const currentInputTokens = currentChatData?.input_tokens || 0;
     const currentOutputTokens = currentChatData?.output_tokens || 0;
-    // Update with the sum of previous and new tokens
+    const newInputTokens = (usage.inputTokens ?? 0) + contextOptTokens.input;
+    const newOutputTokens = (usage.outputTokens ?? 0) + contextOptTokens.output;
+    // Update with the sum of previous and new tokens (including context optimization)
     if (currentChatData.title) {
       await supabase
         .from("chats")
         .update({
           artifact_code: artifactCode,
-          input_tokens: currentInputTokens + (usage.inputTokens ?? 0),
-          output_tokens: currentOutputTokens + (usage.outputTokens ?? 0),
+          input_tokens: currentInputTokens + newInputTokens,
+          output_tokens: currentOutputTokens + newOutputTokens,
         })
         .eq("id", chatId);
     } else {
@@ -1485,8 +1614,8 @@ const updateDataAfterCompletion = async (
         .update({
           artifact_code: artifactCode,
           title: extractTitle(text),
-          input_tokens: currentInputTokens + (usage.inputTokens ?? 0),
-          output_tokens: currentOutputTokens + (usage.outputTokens ?? 0),
+          input_tokens: currentInputTokens + newInputTokens,
+          output_tokens: currentOutputTokens + newOutputTokens,
         })
         .eq("id", chatId);
     }
@@ -1535,6 +1664,10 @@ const updateDataAfterCompletion = async (
         subscription.prices?.products?.name?.toLowerCase() || "trial";
     }
 
+    const totalInputTokens = (usage.inputTokens ?? 0) + contextOptTokens.input;
+    const totalOutputTokens =
+      (usage.outputTokens ?? 0) + contextOptTokens.output;
+
     const { error: insertAssistantError, data: insertedMessage } =
       await supabase
         .from("messages")
@@ -1545,8 +1678,8 @@ const updateDataAfterCompletion = async (
           content: content,
           theme,
           role: "assistant",
-          input_tokens: usage.inputTokens ?? 0,
-          output_tokens: usage.outputTokens ?? 0,
+          input_tokens: totalInputTokens,
+          output_tokens: totalOutputTokens,
           subscription_type: subscriptionType,
           artifact_code: artifactCode,
           cache_creation_input_tokens: cacheCreationInputTokens,
