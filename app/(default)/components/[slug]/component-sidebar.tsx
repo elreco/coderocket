@@ -519,7 +519,15 @@ export default function ComponentSidebar({
                     // On va créer un message temporaire pour le streaming
                     return true;
                   })
-                  .map((m) => {
+                  .map((m, index, filteredMessages) => {
+                    const filteredUserMessages = filteredMessages.filter(
+                      (msg) => msg.role === "user",
+                    );
+                    const isLastUserMessage =
+                      filteredUserMessages.length > 0 &&
+                      m.id ===
+                        filteredUserMessages[filteredUserMessages.length - 1]
+                          .id;
                     // Utiliser le streaming seulement si on est en cours de chargement ET qu'on n'a pas terminé
                     const shouldUseStreaming =
                       m.role === "assistant" &&
@@ -580,25 +588,46 @@ export default function ComponentSidebar({
 
                     const isCloneAnotherPageMessage =
                       m.role === "user" && !!m.clone_another_page;
-                    const cloneAnotherPageUrl = m.clone_another_page || null;
+
+                    const isPendingCloneMessage =
+                      m.role === "user" &&
+                      pendingClonePage !== null &&
+                      isLoading &&
+                      !m.clone_another_page &&
+                      (isLastUserMessage ||
+                        (pendingClonePage.context !== undefined &&
+                          m.content?.trim() ===
+                            pendingClonePage.context.trim()));
+
+                    const cloneAnotherPageUrl = isCloneAnotherPageMessage
+                      ? m.clone_another_page || null
+                      : isPendingCloneMessage
+                        ? pendingClonePage?.url || null
+                        : null;
                     const cloneAnotherPageContext = isCloneAnotherPageMessage
                       ? m.content?.trim() || null
-                      : null;
+                      : isPendingCloneMessage
+                        ? pendingClonePage?.context || null
+                        : null;
 
                     const isCloneMessage =
-                      isInitialCloneMessage || isCloneAnotherPageMessage;
+                      isInitialCloneMessage ||
+                      isCloneAnotherPageMessage ||
+                      isPendingCloneMessage;
 
                     if (
                       isCloneMessage &&
                       isScrapingWebsite &&
                       (!completion || completion.length === 0)
                     ) {
-                      const cloneUrl = isCloneAnotherPageMessage
-                        ? cloneAnotherPageUrl
-                        : currentCloneUrl || fetchedChat?.clone_url;
-                      const userContext = isCloneAnotherPageMessage
-                        ? cloneAnotherPageContext
-                        : m.content;
+                      const cloneUrl =
+                        isCloneAnotherPageMessage || isPendingCloneMessage
+                          ? cloneAnotherPageUrl
+                          : currentCloneUrl || fetchedChat?.clone_url;
+                      const userContext =
+                        isCloneAnotherPageMessage || isPendingCloneMessage
+                          ? cloneAnotherPageContext
+                          : m.content;
                       return (
                         <Fragment key={`clone-loader-${m.id}`}>
                           <ComponentChatFiles
@@ -625,12 +654,14 @@ export default function ComponentSidebar({
                     }
 
                     if (isCloneMessage && !isScrapingWebsite) {
-                      const cloneUrl = isCloneAnotherPageMessage
-                        ? cloneAnotherPageUrl
-                        : fetchedChat?.clone_url;
-                      const userContext = isCloneAnotherPageMessage
-                        ? cloneAnotherPageContext
-                        : m.content;
+                      const cloneUrl =
+                        isCloneAnotherPageMessage || isPendingCloneMessage
+                          ? cloneAnotherPageUrl
+                          : fetchedChat?.clone_url;
+                      const userContext =
+                        isCloneAnotherPageMessage || isPendingCloneMessage
+                          ? cloneAnotherPageContext
+                          : m.content;
                       return (
                         <ComponentChatFiles
                           key={m.id}
