@@ -961,7 +961,10 @@ export default function Hero({
                 )}
               </TabsList>
 
-              <TabsContent value="scratch" className="h-32 w-full">
+              <TabsContent
+                value="scratch"
+                className="min-h-38 w-full overflow-y-auto"
+              >
                 <div className="flex size-full flex-col items-end">
                   <div className="flex w-full items-start">
                     <Terminal className="mx-2 my-3 size-4" />
@@ -1014,7 +1017,7 @@ export default function Hero({
 
               <TabsContent
                 value="clone"
-                className="max-h-[350px] min-h-32 w-full overflow-y-auto"
+                className="min-h-38 w-full overflow-y-auto"
               >
                 <div className="flex w-full flex-col gap-3">
                   <div className="flex w-full items-start">

@@ -27,25 +27,25 @@ export function CloneStatusCard({
         className,
       )}
     >
+      {isScraping && (
+        <div className="mb-3 flex justify-center">
+          <Badge
+            variant="secondary"
+            className="w-fit gap-1 bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300"
+          >
+            <Loader2 className="size-3 animate-spin" />
+            Analyzing...
+          </Badge>
+        </div>
+      )}
       <div className="flex items-start gap-2">
         <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900">
           <Globe className="size-4 text-blue-600 dark:text-blue-400" />
         </div>
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
-              Cloning website
-            </span>
-            {isScraping && (
-              <Badge
-                variant="secondary"
-                className="gap-1 bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300"
-              >
-                <Loader2 className="size-3 animate-spin" />
-                Analyzing...
-              </Badge>
-            )}
-          </div>
+          <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
+            Cloning website
+          </span>
           <a
             href={url}
             target="_blank"
