@@ -490,42 +490,138 @@ export async function POST(req: Request) {
       ? `${baseSystemPrompt}\n\n${integrationContext}`
       : baseSystemPrompt;
 
-    // Rough token estimation (4 chars ≈ 1 token)
-    const systemTokens = Math.ceil(systemPromptContent.length / 4);
-    const messagesTokens = Math.ceil(JSON.stringify(messages).length / 4);
-    const totalInputTokens = systemTokens + messagesTokens;
+    const truncateContextBuffer = (
+      text: string,
+      targetTokens: number,
+    ): string => {
+      const contextBufferMatch = text.match(
+        /(<context_buffer>[\s\S]*?<\/context_buffer>)/,
+      );
+      if (!contextBufferMatch) {
+        return text;
+      }
+
+      const contextBuffer = contextBufferMatch[1];
+      const beforeBuffer = text.substring(0, contextBufferMatch.index);
+      const afterBuffer = text.substring(
+        contextBufferMatch.index! + contextBuffer.length,
+      );
+
+      const fileRegex =
+        /<coderocketFile[^>]*name=["']([^"']+)["'][^>]*>([\s\S]*?)<\/coderocketFile>/g;
+      const files: Array<{ path: string; content: string; fullMatch: string }> =
+        [];
+      let match;
+
+      while ((match = fileRegex.exec(contextBuffer)) !== null) {
+        files.push({
+          path: match[1],
+          content: match[2],
+          fullMatch: match[0],
+        });
+      }
+
+      if (files.length === 0) {
+        return text;
+      }
+
+      const targetLength = targetTokens * 3.5;
+      const currentLength = text.length;
+      const reductionNeeded = currentLength - targetLength;
+
+      if (reductionNeeded <= 0) {
+        return text;
+      }
+
+      const filesToKeep = Math.max(1, Math.floor(files.length * 0.6));
+      const keptFiles = files.slice(0, filesToKeep);
+      const truncatedFiles = files.slice(filesToKeep);
+
+      let newContextBuffer = `<context_buffer>\nThe following ${keptFiles.length} files are loaded in full (most relevant to current request):\n\n`;
+
+      for (const file of keptFiles) {
+        const maxFileTokens = Math.floor(
+          (targetTokens * 0.4) / keptFiles.length,
+        );
+        const maxFileLength = maxFileTokens * 3.5;
+
+        if (file.content.length > maxFileLength) {
+          const keepStart = Math.floor(maxFileLength * 0.6);
+          const keepEnd = Math.floor(maxFileLength * 0.4);
+          const truncatedContent =
+            file.content.substring(0, keepStart) +
+            `\n\n... [${Math.floor((file.content.length - maxFileLength) / 3.5)} tokens truncated] ...\n\n` +
+            file.content.substring(file.content.length - keepEnd);
+          newContextBuffer += `<coderocketFile name="${file.path}">\n${truncatedContent}\n</coderocketFile>\n\n`;
+        } else {
+          newContextBuffer += file.fullMatch + "\n\n";
+        }
+      }
+
+      if (truncatedFiles.length > 0) {
+        newContextBuffer += `\n[${truncatedFiles.length} additional files omitted - see project_manifest for full file list]\n`;
+      }
+
+      newContextBuffer += `</context_buffer>`;
+
+      return beforeBuffer + newContextBuffer + afterBuffer;
+    };
+
+    const estimateTokens = (text: string): number => {
+      return Math.ceil(text.length / 3.5);
+    };
+
+    const systemTokens = estimateTokens(systemPromptContent);
+    const messagesTokens = estimateTokens(JSON.stringify(messages));
+    let totalInputTokens = systemTokens + messagesTokens;
 
     console.log("=== Token Management ===");
     console.log("System prompt tokens (est):", systemTokens);
     console.log("Messages tokens (est):", messagesTokens);
     console.log("Total input tokens (est):", totalInputTokens);
 
-    // Anthropic context limit is 200,000 tokens
     const contextLimit = 200000;
-    const safetyMargin = 10000; // Safety margin for estimation errors
+    const safetyMargin = 20000;
     const maxAllowedInput = contextLimit - safetyMargin;
 
-    // Dynamically adjust max_tokens based on input size
     let dynamicMaxTokens = MAX_TOKENS_PER_REQUEST;
+
     if (totalInputTokens > maxAllowedInput) {
       console.warn(
         `⚠️ Input too large (${totalInputTokens} tokens), reducing context...`,
       );
 
-      // Emergency context reduction - keep only most recent messages
-      const reducedMessages = messages.slice(-5); // Keep only last 5 messages
-      const reducedTokens = Math.ceil(
-        JSON.stringify(reducedMessages).length / 4,
-      );
-      const newTotalInput = systemTokens + reducedTokens;
+      const reducedMessages = messages.slice(-5);
+      const reducedTokens = estimateTokens(JSON.stringify(reducedMessages));
+      let newTotalInput = systemTokens + reducedTokens;
 
       console.log("Reduced to:", reducedMessages.length, "messages");
       console.log("New input tokens (est):", newTotalInput);
 
-      // Update messages and recalculate
       messages.splice(0, messages.length, ...reducedMessages);
 
-      // Still too big? Reduce max_tokens
+      const lastMessage = messages[messages.length - 1];
+      if (
+        lastMessage &&
+        typeof lastMessage.content === "string" &&
+        lastMessage.content.includes("<context_buffer>")
+      ) {
+        const remainingTokens =
+          maxAllowedInput - systemTokens - reducedTokens - 5000;
+        if (remainingTokens > 0) {
+          const truncatedContent = truncateContextBuffer(
+            lastMessage.content,
+            remainingTokens,
+          );
+          lastMessage.content = truncatedContent;
+          console.log("Truncated context_buffer");
+        }
+      }
+
+      const finalMessagesTokens = estimateTokens(JSON.stringify(messages));
+      totalInputTokens = systemTokens + finalMessagesTokens;
+      newTotalInput = totalInputTokens;
+
       if (newTotalInput + dynamicMaxTokens > contextLimit) {
         dynamicMaxTokens = Math.max(
           8000,
@@ -534,13 +630,48 @@ export async function POST(req: Request) {
         console.log("Adjusted max_tokens to:", dynamicMaxTokens);
       }
     } else if (totalInputTokens + dynamicMaxTokens > contextLimit) {
-      // Input OK but total would exceed limit
       dynamicMaxTokens = contextLimit - totalInputTokens - safetyMargin;
       console.log(
         "Adjusted max_tokens to:",
         dynamicMaxTokens,
         "to fit context limit",
       );
+    }
+
+    const finalMessagesTokens = estimateTokens(JSON.stringify(messages));
+    const finalTotalInput = systemTokens + finalMessagesTokens;
+    if (finalTotalInput > maxAllowedInput) {
+      console.warn(
+        `⚠️ Final check: Still too large (${finalTotalInput} tokens), truncating context_buffer...`,
+      );
+      const lastMessage = messages[messages.length - 1];
+      if (lastMessage) {
+        if (typeof lastMessage.content === "string") {
+          if (lastMessage.content.includes("<context_buffer>")) {
+            const targetTokens = maxAllowedInput - systemTokens - 10000;
+            lastMessage.content = truncateContextBuffer(
+              lastMessage.content,
+              targetTokens,
+            );
+            console.log("Final truncation applied to string content");
+          }
+        } else if (Array.isArray(lastMessage.content)) {
+          const textParts = lastMessage.content.filter(
+            (part) => part.type === "text" && typeof part.text === "string",
+          ) as Array<{ type: "text"; text: string }>;
+          for (const textPart of textParts) {
+            if (textPart.text.includes("<context_buffer>")) {
+              const targetTokens = maxAllowedInput - systemTokens - 10000;
+              textPart.text = truncateContextBuffer(
+                textPart.text,
+                targetTokens,
+              );
+              console.log("Final truncation applied to array content");
+              break;
+            }
+          }
+        }
+      }
     }
 
     console.log("Final max_tokens:", dynamicMaxTokens);
