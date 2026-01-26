@@ -35,6 +35,7 @@ import { Tables } from "@/types_db";
 import { discordLink } from "@/utils/config";
 import { createClient } from "@/utils/supabase/client";
 
+import { CoderocketAILogo } from "./icons/coderocket-ai-logo";
 import Logo from "./icons/logo";
 import { NavAuth } from "./nav-auth";
 import { SidebarNotification } from "./sidebar-notification";
@@ -54,6 +55,12 @@ const data = {
     },
   ],
   community: [
+    {
+      title: "AI Tools Directory",
+      url: "https://ai.coderocket.app",
+      icon: CoderocketAILogo,
+      external: true,
+    },
     {
       title: "Discord",
       url: discordLink,

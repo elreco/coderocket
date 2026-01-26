@@ -4,6 +4,7 @@ import { Plus_Jakarta_Sans } from "next/font/google";
 import { cookies } from "next/headers";
 import { PropsWithChildren } from "react";
 
+import { AIDirectoryWidget } from "@/components/ai-directory-widget";
 import { AppSidebar } from "@/components/app-sidebar";
 import { AuthModal } from "@/components/auth-modal";
 import { AuthSyncProvider } from "@/components/auth-sync-provider";
@@ -239,6 +240,7 @@ export default async function RootLayout({ children }: PropsWithChildren) {
               </main>
             </SidebarProvider>
             <PluginWidget />
+            <AIDirectoryWidget />
             <AuthModal />
             <Toaster />
             <Analytics />
