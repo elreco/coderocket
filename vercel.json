@@ -4,36 +4,6 @@
       "maxDuration": 30
     }
   },
-  "crons": [
-    {
-      "path": "/api/cron/update-earnings",
-      "schedule": "0 */6 * * *"
-    },
-    {
-      "path": "/api/email/jobs/process?limit=200",
-      "schedule": "*/5 * * * *"
-    },
-    {
-      "path": "/api/email/segments?segment=onboarding-day2",
-      "schedule": "0 10 * * *"
-    },
-    {
-      "path": "/api/email/segments?segment=onboarding-day5",
-      "schedule": "0 10 * * *"
-    },
-    {
-      "path": "/api/email/segments?segment=reactivation-14d",
-      "schedule": "0 9 * * 1"
-    },
-    {
-      "path": "/api/email/segments?segment=reactivation-30d",
-      "schedule": "0 9 * * 1"
-    },
-    {
-      "path": "/api/email/segments?segment=weekly-pulse",
-      "schedule": "0 8 * * 1"
-    }
-  ],
   "build": {
     "env": {
       "PLAYWRIGHT_BROWSERS_PATH": "0"
