@@ -25,7 +25,7 @@ export function BuyExtraMessages() {
       title: "Purchase successful!",
       description: `You have successfully purchased ${parseInt(purchasedRockets || "0")} Rocket${
         parseInt(purchasedRockets || "0") > 1 ? "s" : ""
-      }! 🚀`,
+      } (extra, 1 generation each). 🚀`,
       duration: 5000,
     });
     router.replace("/account");
@@ -94,8 +94,8 @@ export function BuyExtraMessages() {
         🚀 Buy Rockets
       </h3>
       <p className="mb-4">
-        Need more generations? Purchase Rockets for $1 each. Use them anytime
-        you reach your monthly limit to keep creating without interruption.
+        Need more generations? Purchase Extra Rockets for $1 each. These are
+        consumed after you reach your monthly Rocket quota.
       </p>
 
       <div className="mb-6 flex flex-col space-y-4">
@@ -122,23 +122,24 @@ export function BuyExtraMessages() {
           </Button>
 
           <div className="ml-4 text-lg font-medium">
-            ${totalPrice.toFixed(2)} for {quantity} 🚀 Rocket
+            ${totalPrice.toFixed(2)} for {quantity} 🚀 Extra Rocket
             {quantity > 1 ? "s" : ""}
           </div>
         </div>
 
         <Button onClick={handlePurchase} className="w-1/2" loading={isLoading}>
           <ShoppingCart className="mr-2 size-4" />
-          Purchase {quantity} Rocket{quantity > 1 ? "s" : ""}
+          Purchase {quantity} Extra Rocket{quantity > 1 ? "s" : ""}
         </Button>
       </div>
 
       <div className="bg-muted rounded-lg p-3 text-sm">
-        <p className="font-medium">What&apos;s a Rocket? 🚀</p>
+        <p className="font-medium">How Rockets work</p>
         <p className="text-muted-foreground mt-1">
-          Each Rocket = 10,000 AI tokens. Use Rockets when you reach your
-          monthly limit to keep creating. Rockets never expire and stack with
-          your plan.
+          Monthly plan Rockets are token-based (1 Rocket = 10,000 AI tokens).
+          Extra Rockets are booster credits: 1 Extra Rocket = 1 additional
+          generation after your monthly limit. Extra Rockets never expire and
+          stack with your plan.
         </p>
       </div>
     </Card>

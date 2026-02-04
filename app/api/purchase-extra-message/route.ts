@@ -42,7 +42,7 @@ export async function POST(req: Request) {
               currency: "usd",
               product_data: {
                 name: "Additional Rockets",
-                description: `Purchase of ${quantity} Rocket${quantity > 1 ? "s" : ""}`,
+                description: `Purchase of ${quantity} Extra Rocket${quantity > 1 ? "s" : ""} (1 generation each)`,
               },
               unit_amount: unit_amount,
             },

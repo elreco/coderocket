@@ -364,14 +364,14 @@ export default async function Account() {
                 <div className="mt-4 rounded-lg border border-emerald-500/20 bg-emerald-500/10 p-3">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium text-emerald-600 dark:text-emerald-400">
-                      🚀 Extra Rockets
+                      🚀 Extra Rockets (Booster)
                     </span>
                     <span className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
                       {extraRockets}
                     </span>
                   </div>
                   <p className="text-muted-foreground mt-1 text-xs">
-                    Use these when you reach your monthly limit
+                    Used after your monthly limit: 1 Extra Rocket = 1 generation
                   </p>
                 </div>
               )}

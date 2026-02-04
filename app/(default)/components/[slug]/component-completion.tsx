@@ -1011,7 +1011,7 @@ export default function ComponentCompletion({
                       variant="outline"
                       className="w-full"
                     >
-                      Buy Rockets ($1 each)
+                      Buy Extra Rockets ($1 each)
                     </Button>
                   </div>
                 </div>
@@ -1062,7 +1062,7 @@ export default function ComponentCompletion({
                     variant="outline"
                     className="w-full"
                   >
-                    Buy Rockets ($1 each)
+                    Buy Extra Rockets ($1 each)
                   </Button>
                 </div>
               </div>

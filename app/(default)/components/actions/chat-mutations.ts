@@ -120,7 +120,7 @@ export const createChat = async (prompt: string, formData: FormData) => {
               description: `You have reached your limit of ${limits.monthly_rockets} 🚀 Rockets for this month. Your limit will reset next month (${format(
                 resetDate,
                 "d MMMM yyyy",
-              )}). Upgrade to a paid plan or purchase Rockets to continue.`,
+              )}). Upgrade to a paid plan or purchase Extra Rockets to continue.`,
             },
           };
         }
@@ -136,7 +136,7 @@ export const createChat = async (prompt: string, formData: FormData) => {
             description: `You have reached your limit of ${limits.monthly_rockets} 🚀 Rockets for this month. Your limit will reset next month (${format(
               resetDate,
               "d MMMM yyyy",
-            )}). Upgrade to a paid plan or purchase Rockets to continue.`,
+            )}). Upgrade to a paid plan or purchase Extra Rockets to continue.`,
           },
         };
       }
@@ -177,7 +177,7 @@ export const createChat = async (prompt: string, formData: FormData) => {
           return {
             error: {
               title: "You have reached the limit of your plan",
-              description: `You have reached your limit of ${limits.monthly_rockets} 🚀 Rockets for this ${subscription.prices?.interval}. This limit will reset on ${resetDate}. Go to My Account to see your usage or purchase Rockets.`,
+              description: `You have reached your limit of ${limits.monthly_rockets} 🚀 Rockets for this ${subscription.prices?.interval}. This limit will reset on ${resetDate}. Go to My Account to see your usage or purchase Extra Rockets.`,
             },
           };
         }
@@ -194,7 +194,7 @@ export const createChat = async (prompt: string, formData: FormData) => {
         return {
           error: {
             title: "You have reached the limit of your plan",
-            description: `You have reached your limit of ${limits.monthly_rockets} 🚀 Rockets for this ${subscription.prices?.interval}. This limit will reset on ${resetDate}. Go to My Account to see your usage or purchase Rockets.`,
+            description: `You have reached your limit of ${limits.monthly_rockets} 🚀 Rockets for this ${subscription.prices?.interval}. This limit will reset on ${resetDate}. Go to My Account to see your usage or purchase Extra Rockets.`,
           },
         };
       }

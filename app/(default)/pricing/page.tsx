@@ -50,8 +50,8 @@ export default async function PricingPage({
           <Alert className="border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950">
             <AlertDescription className="text-red-800 dark:text-red-200">
               <strong>Rocket limit reached</strong> - You have reached your
-              monthly limit of Rockets. Upgrade to a paid plan or purchase
-              additional Rockets to continue creating components.
+              monthly limit of Rockets. Upgrade to a paid plan or purchase Extra
+              Rockets to continue creating components.
             </AlertDescription>
           </Alert>
         </div>

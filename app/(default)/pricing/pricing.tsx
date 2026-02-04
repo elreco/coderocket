@@ -331,12 +331,13 @@ export default function Pricing({ user, products, subscription }: Props) {
         <div className="mt-12 w-full max-w-2xl">
           <div className="bg-card rounded-lg border p-6">
             <h3 className="mb-2 flex items-center gap-2 text-xl font-bold">
-              🚀 Need More? Buy Rockets!
+              🚀 Need More? Buy Extra Rockets!
             </h3>
             <p className="mb-4">
-              Reached your monthly limit? Purchase Rockets for just $1 each.
-              Each Rocket = 10,000 AI tokens. They never expire and can be used
-              anytime you need them.
+              Reached your monthly Rocket limit? Purchase Extra Rockets for just
+              $1 each. Monthly Rockets are token-based, while each Extra Rocket
+              gives 1 additional generation after you reach your limit. Extra
+              Rockets never expire.
             </p>
             <p className="text-muted-foreground mb-4 text-sm">
               💡 Your usage is based on actual AI costs with transparent
@@ -354,7 +355,7 @@ export default function Pricing({ user, products, subscription }: Props) {
               variant="default"
               className="w-full"
             >
-              Buy Rockets 🚀
+              Buy Extra Rockets 🚀
             </Button>
           </div>
         </div>
