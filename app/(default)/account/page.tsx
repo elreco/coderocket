@@ -63,7 +63,11 @@ export default async function Account() {
   let planDescription = "";
   let currentPeriodStart: Date | null = null;
   let currentPeriodEnd: Date | null = null;
-  let usageRows: UsageRow[] = [];
+  let previousPeriodStart: Date | null = null;
+  let previousPeriodEnd: Date | null = null;
+  let usageRowsCurrent: UsageRow[] = [];
+  let usageRowsPrevious: UsageRow[] = [];
+  let previousTokenUsage = { input_tokens: 0, output_tokens: 0, total_cost: 0 };
 
   if (user) {
     const supabase = await createClient();
@@ -72,6 +76,9 @@ export default async function Account() {
     if (subscription) {
       currentPeriodStart = new Date(subscription.current_period_start);
       currentPeriodEnd = new Date(subscription.current_period_end);
+      previousPeriodEnd = new Date(currentPeriodStart);
+      previousPeriodStart = new Date(currentPeriodStart);
+      previousPeriodStart.setMonth(previousPeriodStart.getMonth() - 1);
 
       tokenUsage = await getUserTokenUsage(
         user.id,
@@ -88,6 +95,12 @@ export default async function Account() {
       const today = new Date();
       currentPeriodStart = new Date(today.getFullYear(), today.getMonth(), 1);
       currentPeriodEnd = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+      previousPeriodEnd = new Date(currentPeriodStart);
+      previousPeriodStart = new Date(
+        today.getFullYear(),
+        today.getMonth() - 1,
+        1,
+      );
 
       tokenUsage = await getUserTokenUsage(
         user.id,
@@ -106,21 +119,54 @@ export default async function Account() {
     );
 
     if (currentPeriodStart && currentPeriodEnd) {
-      const { data: usageData, error: usageError } = await supabase
-        .from("token_usage_tracking")
-        .select(
-          "created_at, usage_type, input_tokens, output_tokens, cost_usd, model_used, chat_id, message_id",
-        )
-        .eq("user_id", user.id)
-        .gte("created_at", currentPeriodStart.toISOString())
-        .lte("created_at", currentPeriodEnd.toISOString())
-        .order("created_at", { ascending: false })
-        .limit(50);
+      const { data: usageDataCurrent, error: usageErrorCurrent } =
+        await supabase
+          .from("token_usage_tracking")
+          .select(
+            "created_at, usage_type, input_tokens, output_tokens, cost_usd, model_used, chat_id, message_id",
+          )
+          .eq("user_id", user.id)
+          .gte("created_at", currentPeriodStart.toISOString())
+          .lte("created_at", currentPeriodEnd.toISOString())
+          .order("created_at", { ascending: false })
+          .limit(50);
 
-      if (usageError) {
-        console.error("Error fetching usage report rows:", usageError);
+      if (usageErrorCurrent) {
+        console.error(
+          "Error fetching current usage report rows:",
+          usageErrorCurrent,
+        );
       } else {
-        usageRows = usageData ?? [];
+        usageRowsCurrent = usageDataCurrent ?? [];
+      }
+    }
+
+    if (previousPeriodStart && previousPeriodEnd) {
+      previousTokenUsage = await getUserTokenUsage(
+        user.id,
+        previousPeriodStart,
+        previousPeriodEnd,
+      );
+
+      const { data: usageDataPrevious, error: usageErrorPrevious } =
+        await supabase
+          .from("token_usage_tracking")
+          .select(
+            "created_at, usage_type, input_tokens, output_tokens, cost_usd, model_used, chat_id, message_id",
+          )
+          .eq("user_id", user.id)
+          .gte("created_at", previousPeriodStart.toISOString())
+          .lte("created_at", previousPeriodEnd.toISOString())
+          .order("created_at", { ascending: false })
+          .limit(50);
+
+      if (usageErrorPrevious) {
+        console.error(
+          "Error fetching previous usage report rows:",
+          usageErrorPrevious,
+        );
+      } else {
+        usageRowsPrevious = usageDataPrevious ?? [];
       }
     }
   }
@@ -135,6 +181,9 @@ export default async function Account() {
 
   const totalTokens = tokenUsage.input_tokens + tokenUsage.output_tokens;
   const totalRockets = tokensToRockets(totalTokens);
+  const previousTotalTokens =
+    previousTokenUsage.input_tokens + previousTokenUsage.output_tokens;
+  const previousTotalRockets = tokensToRockets(previousTotalTokens);
   const usageTypeLabels: Record<string, string> = {
     generation: "Generation",
     context_optimization: "Context optimization",
@@ -411,120 +460,27 @@ export default async function Account() {
         </Suspense>
       </div>
 
-      <div className="pb-10">
-        <Card
-          title="Usage Report"
-          description="Token-to-Rocket breakdown for the current billing period."
-        >
-          <div className="mt-6 space-y-4">
-            <div className="grid gap-2 text-sm">
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Period</span>
-                <span className="font-medium">
-                  {currentPeriodStart
-                    ? format(currentPeriodStart, "d MMMM yyyy")
-                    : "N/A"}{" "}
-                  –{" "}
-                  {currentPeriodEnd
-                    ? format(currentPeriodEnd, "d MMMM yyyy")
-                    : "N/A"}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">
-                  Total tokens (input + output)
-                </span>
-                <span className="font-medium">
-                  {totalTokens.toLocaleString()}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Total Rockets</span>
-                <span className="font-medium">{totalRockets.toFixed(2)}</span>
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-muted-foreground text-xs">
-                Rockets are calculated from total tokens: (input + output) /
-                10,000. Extra Rockets are booster credits: 1 Extra Rocket = 1
-                generation after your monthly limit.
-              </p>
-              <Button asChild variant="outline">
-                <a href="/api/usage-report">Download CSV</a>
-              </Button>
-            </div>
-
-            <div className="overflow-x-auto rounded-md border">
-              <table className="w-full text-sm">
-                <thead className="bg-muted/50 text-muted-foreground">
-                  <tr>
-                    <th className="px-3 py-2 text-left font-medium">Date</th>
-                    <th className="px-3 py-2 text-left font-medium">Type</th>
-                    <th className="px-3 py-2 text-right font-medium">Input</th>
-                    <th className="px-3 py-2 text-right font-medium">Output</th>
-                    <th className="px-3 py-2 text-right font-medium">Total</th>
-                    <th className="px-3 py-2 text-right font-medium">
-                      Rockets
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {usageRows.length === 0 ? (
-                    <tr>
-                      <td
-                        colSpan={6}
-                        className="text-muted-foreground px-3 py-6 text-center"
-                      >
-                        No usage recorded for this period yet.
-                      </td>
-                    </tr>
-                  ) : (
-                    usageRows.map((row, index) => {
-                      const inputTokens = Number(row.input_tokens || 0);
-                      const outputTokens = Number(row.output_tokens || 0);
-                      const rowTotalTokens = inputTokens + outputTokens;
-                      const rowRockets = tokensToRockets(rowTotalTokens);
-                      const usageLabel =
-                        usageTypeLabels[row.usage_type || ""] || "Other";
-
-                      return (
-                        <tr
-                          key={`${row.created_at ?? "row"}-${row.message_id ?? index}`}
-                        >
-                          <td className="px-3 py-2">
-                            {row.created_at
-                              ? format(
-                                  new Date(row.created_at),
-                                  "d MMM yyyy HH:mm",
-                                )
-                              : "N/A"}
-                          </td>
-                          <td className="px-3 py-2">{usageLabel}</td>
-                          <td className="px-3 py-2 text-right">
-                            {inputTokens.toLocaleString()}
-                          </td>
-                          <td className="px-3 py-2 text-right">
-                            {outputTokens.toLocaleString()}
-                          </td>
-                          <td className="px-3 py-2 text-right">
-                            {rowTotalTokens.toLocaleString()}
-                          </td>
-                          <td className="px-3 py-2 text-right">
-                            {rowRockets.toFixed(2)}
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
-            </div>
-            <p className="text-muted-foreground text-xs">
-              Showing the latest {usageRows.length} events in this period.
-            </p>
-          </div>
-        </Card>
+      <div className="grid grid-cols-1 gap-4 pb-10 xl:grid-cols-2">
+        <UsageReportCard
+          title="Usage Report (Current Period)"
+          periodStart={currentPeriodStart}
+          periodEnd={currentPeriodEnd}
+          totalTokens={totalTokens}
+          totalRockets={totalRockets}
+          usageRows={usageRowsCurrent}
+          usageTypeLabels={usageTypeLabels}
+          downloadHref="/api/usage-report?period=current"
+        />
+        <UsageReportCard
+          title="Usage Report (Previous Period)"
+          periodStart={previousPeriodStart}
+          periodEnd={previousPeriodEnd}
+          totalTokens={previousTotalTokens}
+          totalRockets={previousTotalRockets}
+          usageRows={usageRowsPrevious}
+          usageTypeLabels={usageTypeLabels}
+          downloadHref="/api/usage-report?period=previous"
+        />
       </div>
     </Container>
   );
@@ -548,6 +504,17 @@ interface UsageRow {
   message_id: number | null;
 }
 
+interface UsageReportProps {
+  title: string;
+  periodStart: Date | null;
+  periodEnd: Date | null;
+  totalTokens: number;
+  totalRockets: number;
+  usageRows: UsageRow[];
+  usageTypeLabels: Record<string, string>;
+  downloadHref: string;
+}
+
 function Card({ title, description, footer, children }: Props) {
   return (
     <div className="bg-card flex size-full flex-col rounded-md border">
@@ -562,5 +529,117 @@ function Card({ title, description, footer, children }: Props) {
         </div>
       )}
     </div>
+  );
+}
+
+function UsageReportCard({
+  title,
+  periodStart,
+  periodEnd,
+  totalTokens,
+  totalRockets,
+  usageRows,
+  usageTypeLabels,
+  downloadHref,
+}: UsageReportProps) {
+  return (
+    <Card title={title} description="Token-to-Rocket breakdown.">
+      <div className="mt-6 space-y-4">
+        <div className="grid gap-2 text-sm">
+          <div className="flex items-center justify-between">
+            <span className="text-muted-foreground">Period</span>
+            <span className="font-medium">
+              {periodStart ? format(periodStart, "d MMMM yyyy") : "N/A"} –{" "}
+              {periodEnd ? format(periodEnd, "d MMMM yyyy") : "N/A"}
+            </span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-muted-foreground">
+              Total tokens (input + output)
+            </span>
+            <span className="font-medium">{totalTokens.toLocaleString()}</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-muted-foreground">Total Rockets</span>
+            <span className="font-medium">{totalRockets.toFixed(2)}</span>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-muted-foreground text-xs">
+            Rockets are calculated from total tokens: (input + output) / 10,000.
+            Extra Rockets are booster credits: 1 Extra Rocket = 1 generation
+            after your monthly limit.
+          </p>
+          <Button asChild variant="outline">
+            <a href={downloadHref}>Download CSV</a>
+          </Button>
+        </div>
+
+        <div className="overflow-x-auto rounded-md border">
+          <table className="w-full text-sm">
+            <thead className="bg-muted/50 text-muted-foreground">
+              <tr>
+                <th className="px-3 py-2 text-left font-medium">Date</th>
+                <th className="px-3 py-2 text-left font-medium">Type</th>
+                <th className="px-3 py-2 text-right font-medium">Input</th>
+                <th className="px-3 py-2 text-right font-medium">Output</th>
+                <th className="px-3 py-2 text-right font-medium">Total</th>
+                <th className="px-3 py-2 text-right font-medium">Rockets</th>
+              </tr>
+            </thead>
+            <tbody>
+              {usageRows.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={6}
+                    className="text-muted-foreground px-3 py-6 text-center"
+                  >
+                    No usage recorded for this period yet.
+                  </td>
+                </tr>
+              ) : (
+                usageRows.map((row, index) => {
+                  const inputTokens = Number(row.input_tokens || 0);
+                  const outputTokens = Number(row.output_tokens || 0);
+                  const rowTotalTokens = inputTokens + outputTokens;
+                  const rowRockets = tokensToRockets(rowTotalTokens);
+                  const usageLabel =
+                    usageTypeLabels[row.usage_type || ""] || "Other";
+
+                  return (
+                    <tr
+                      key={`${row.created_at ?? "row"}-${row.message_id ?? index}`}
+                    >
+                      <td className="px-3 py-2">
+                        {row.created_at
+                          ? format(new Date(row.created_at), "d MMM yyyy HH:mm")
+                          : "N/A"}
+                      </td>
+                      <td className="px-3 py-2">{usageLabel}</td>
+                      <td className="px-3 py-2 text-right">
+                        {inputTokens.toLocaleString()}
+                      </td>
+                      <td className="px-3 py-2 text-right">
+                        {outputTokens.toLocaleString()}
+                      </td>
+                      <td className="px-3 py-2 text-right">
+                        {rowTotalTokens.toLocaleString()}
+                      </td>
+                      <td className="px-3 py-2 text-right">
+                        {rowRockets.toFixed(2)}
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+        <p className="text-muted-foreground text-xs">
+          Showing the latest {usageRows.length} events in this period.
+        </p>
+      </div>
+    </Card>
   );
 }

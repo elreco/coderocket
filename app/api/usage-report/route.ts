@@ -9,7 +9,7 @@ const escapeCsv = (value: string | number | null | undefined): string => {
   return `"${escaped}"`;
 };
 
-export async function GET() {
+export async function GET(req: Request) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -20,16 +20,43 @@ export async function GET() {
   }
 
   const subscription = await getSubscription(user.id);
+  const url = new URL(req.url);
+  const period = url.searchParams.get("period") || "current";
   let periodStart: Date;
   let periodEnd: Date;
 
   if (subscription) {
-    periodStart = new Date(subscription.current_period_start);
-    periodEnd = new Date(subscription.current_period_end);
+    const currentStart = new Date(subscription.current_period_start);
+    const currentEnd = new Date(subscription.current_period_end);
+    const previousEnd = new Date(currentStart);
+    const previousStart = new Date(currentStart);
+    previousStart.setMonth(previousStart.getMonth() - 1);
+
+    if (period === "previous") {
+      periodStart = previousStart;
+      periodEnd = previousEnd;
+    } else {
+      periodStart = currentStart;
+      periodEnd = currentEnd;
+    }
   } else {
     const today = new Date();
-    periodStart = new Date(today.getFullYear(), today.getMonth(), 1);
-    periodEnd = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+    const currentStart = new Date(today.getFullYear(), today.getMonth(), 1);
+    const currentEnd = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+    const previousEnd = new Date(currentStart);
+    const previousStart = new Date(
+      today.getFullYear(),
+      today.getMonth() - 1,
+      1,
+    );
+
+    if (period === "previous") {
+      periodStart = previousStart;
+      periodEnd = previousEnd;
+    } else {
+      periodStart = currentStart;
+      periodEnd = currentEnd;
+    }
   }
 
   const { data, error } = await supabase
