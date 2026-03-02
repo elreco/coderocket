@@ -120,7 +120,7 @@ export default function Pricing({ user, products, subscription }: Props) {
   if (products.length >= 1) {
     return (
       <div className="flex flex-col items-center">
-        <div className="my-4 size-full items-center space-y-4 sm:my-4 sm:grid sm:grid-cols-2 sm:gap-6 sm:space-y-0 lg:mx-auto lg:max-w-4xl xl:mx-0 xl:max-w-none xl:grid-cols-4 xl:space-y-0">
+        <div className="my-4 size-full items-center space-y-4 sm:my-4 sm:grid sm:grid-cols-2 sm:gap-6 sm:space-y-0 lg:mx-auto lg:max-w-4xl xl:mx-0 xl:max-w-none xl:grid-cols-3 xl:space-y-0">
           {/* Plans payants */}
           {products
             .flatMap((product) =>

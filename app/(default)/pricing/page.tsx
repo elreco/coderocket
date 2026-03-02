@@ -43,7 +43,7 @@ export default async function PricingPage({
 
   return (
     <Container className="pr-2 sm:pr-11">
-      <PageTitle title="Pricing Plans" subtitle="Start building for free" />
+      <PageTitle title="Pricing Plans" subtitle="Start building with AI" />
 
       {reason === "limit-exceeded" && (
         <div className="mb-8">
