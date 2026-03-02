@@ -36,7 +36,7 @@ export default function Pricing({ user, products, subscription }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
-  const { openLogin, openSignup } = useAuthModal();
+  const { openLogin } = useAuthModal();
   const error = searchParams.get("error");
 
   useEffect(() => {
@@ -121,63 +121,6 @@ export default function Pricing({ user, products, subscription }: Props) {
     return (
       <div className="flex flex-col items-center">
         <div className="my-4 size-full items-center space-y-4 sm:my-4 sm:grid sm:grid-cols-2 sm:gap-6 sm:space-y-0 lg:mx-auto lg:max-w-4xl xl:mx-0 xl:max-w-none xl:grid-cols-4 xl:space-y-0">
-          {/* Plan Trial (sign up only, no free usage) */}
-          <div className="bg-card flex h-full flex-col rounded-lg border p-3">
-            <h3 className="mb-4 pl-3 text-lg font-bold text-white">Trial</h3>
-            <div className="grow p-3">
-              <p>
-                <span className="text-primary text-5xl font-bold">$0</span>
-                <span className="text-base font-medium text-white">/month</span>
-              </p>
-              <p className="mt-4 ">
-                <span className="font-bold">Create your account.</span> No
-                payment required to sign up. A paid subscription is required to
-                generate components with CodeRocket.
-              </p>
-              <p className="mt-4 flex items-center text-sm font-medium ">
-                <XIcon className="text-destructive mr-2 size-4" /> No Rockets
-                included for generation
-              </p>
-              <p className="mt-4 flex items-center text-sm font-medium ">
-                <XIcon className="text-destructive mr-2 size-4" /> No prompt
-                characters included
-              </p>
-              <p className="mt-4 flex items-center text-sm font-medium ">
-                <XIcon className="text-destructive mr-2 size-4" /> Improve
-                prompt
-              </p>
-
-              <p className="mt-4 flex items-center text-sm font-medium ">
-                <XIcon className="text-destructive mr-2 size-4" /> Generate with
-                files
-              </p>
-              <p className="mt-4 flex items-center text-sm font-medium ">
-                <XIcon className="text-destructive mr-2 size-4" /> File library
-              </p>
-              <p className="mt-4 flex items-center text-sm font-medium ">
-                <XIcon className="text-destructive mr-2 size-4" /> AI Full Power
-              </p>
-              <p className="mt-4 flex items-center text-sm font-medium ">
-                <XIcon className="text-destructive mr-2 size-4" /> GitHub Sync
-              </p>
-              <p className="mt-4 flex items-center text-sm font-medium ">
-                <XIcon className="text-destructive mr-2 size-4" /> Download code
-              </p>
-              <p className="mt-4 flex items-center text-sm font-medium ">
-                <XIcon className="text-destructive mr-2 size-4" /> Support
-              </p>
-            </div>
-            <Button
-              variant="default"
-              type="button"
-              disabled={false}
-              onClick={() => (user ? router.push("/account") : openSignup())}
-              className="mt-12 block w-full rounded-full text-white"
-            >
-              {user ? "Manage" : "Sign up"}
-            </Button>
-          </div>
-
           {/* Plans payants */}
           {products
             .flatMap((product) =>
