@@ -921,6 +921,19 @@ export default function ComponentCompletion({
           });
           return Array.from(fileMap.values());
         });
+        if (error.message === "subscription-required") {
+          setIsLoading(false);
+          setIsSubmitting(false);
+          router.push("/pricing");
+          toast({
+            variant: "destructive",
+            title: "Subscription required",
+            description:
+              "You must have an active paid subscription to generate or iterate on components. Please choose a plan to continue.",
+            duration: 4000,
+          });
+          return;
+        }
         if (error.message === "payment-required-for-image") {
           router.push("/pricing");
           toast({

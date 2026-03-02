@@ -9,11 +9,7 @@ import { Button } from "@/components/ui/button";
 import { useAuthModal } from "@/hooks/use-auth-modal";
 import { useToast } from "@/hooks/use-toast";
 import { Database } from "@/types_db";
-import {
-  FREE_CHAR_LIMIT,
-  PREMIUM_CHAR_LIMIT,
-  FILE_LIMITS_PER_PLAN,
-} from "@/utils/config";
+import { PREMIUM_CHAR_LIMIT, FILE_LIMITS_PER_PLAN } from "@/utils/config";
 import { postData } from "@/utils/helpers";
 import { ROCKET_LIMITS_PER_PLAN } from "@/utils/rocket-conversion";
 
@@ -125,7 +121,7 @@ export default function Pricing({ user, products, subscription }: Props) {
     return (
       <div className="flex flex-col items-center">
         <div className="my-4 size-full items-center space-y-4 sm:my-4 sm:grid sm:grid-cols-2 sm:gap-6 sm:space-y-0 lg:mx-auto lg:max-w-4xl xl:mx-0 xl:max-w-none xl:grid-cols-4 xl:space-y-0">
-          {/* Plan Trial */}
+          {/* Plan Trial (sign up only, no free usage) */}
           <div className="bg-card flex h-full flex-col rounded-lg border p-3">
             <h3 className="mb-4 pl-3 text-lg font-bold text-white">Trial</h3>
             <div className="grow p-3">
@@ -134,18 +130,17 @@ export default function Pricing({ user, products, subscription }: Props) {
                 <span className="text-base font-medium text-white">/month</span>
               </p>
               <p className="mt-4 ">
-                <span className="font-bold">Start for free!</span> No payment
-                required. Explore CodeRocket and see how it can boost your
-                workflow.
+                <span className="font-bold">Create your account.</span> No
+                payment required to sign up. A paid subscription is required to
+                generate components with CodeRocket.
               </p>
               <p className="mt-4 flex items-center text-sm font-medium ">
-                <Check className="mr-2 size-4 text-emerald-500" />{" "}
-                {ROCKET_LIMITS_PER_PLAN.free.monthly_rockets} 🚀 Rockets per
-                month ({ROCKET_LIMITS_PER_PLAN.free.description})
+                <XIcon className="text-destructive mr-2 size-4" /> No Rockets
+                included for generation
               </p>
               <p className="mt-4 flex items-center text-sm font-medium ">
-                <Check className="mr-2 size-4 text-emerald-500" />{" "}
-                {FREE_CHAR_LIMIT} characters limit per prompt
+                <XIcon className="text-destructive mr-2 size-4" /> No prompt
+                characters included
               </p>
               <p className="mt-4 flex items-center text-sm font-medium ">
                 <XIcon className="text-destructive mr-2 size-4" /> Improve

@@ -6,12 +6,10 @@ import { createResumableStreamContext } from "resumable-stream/ioredis";
 import { buildComponent } from "@/app/(default)/components/[slug]/actions";
 import { autoSyncToGithubAfterGeneration } from "@/app/(default)/components/[slug]/github-sync-actions";
 import {
-  decrementExtraMessagesCount,
   fetchChatById,
   fetchLastUserMessageByChatId,
   fetchMessagesByChatId,
   fetchUserMessageByChatIdAndVersion,
-  getExtraMessagesCount,
 } from "@/app/(default)/components/actions";
 import { getSubscription } from "@/app/supabase-server";
 import { Tables, Json } from "@/types_db";
@@ -45,17 +43,13 @@ import {
 } from "@/utils/integrations/chat-integrations-helpers";
 import { getPublisher, getSubscriber, isRedisConfigured } from "@/utils/redis";
 import {
-  tokensToRockets,
-  getPlanRocketLimits,
-} from "@/utils/rocket-conversion";
-import {
   getPreviousArtifactCode,
   getArtifactCodeByVersion,
 } from "@/utils/supabase/artifact-helpers";
 import { createClient } from "@/utils/supabase/server";
 import { systemPrompt } from "@/utils/system-prompts";
 import { htmlSystemPrompt } from "@/utils/system-prompts/html";
-import { getUserTokenUsage, calculateTokenCost } from "@/utils/token-pricing";
+import { calculateTokenCost } from "@/utils/token-pricing";
 
 import {
   buildMessagesToOpenAi,
@@ -1288,75 +1282,8 @@ Use standard Tailwind CSS classes and shadcn/ui components.`;
   // Check subscription
   const subscription = await getSubscription();
 
-  // Vérifier les messages supplémentaires achetés
-  const extraMessages = await getExtraMessagesCount(user.id);
-
-  if (subscription) {
-    const currentPeriodStart = new Date(subscription.current_period_start);
-    const currentPeriodEnd = new Date(subscription.current_period_end);
-
-    const tokenUsage = await getUserTokenUsage(
-      user.id,
-      currentPeriodStart,
-      currentPeriodEnd,
-    );
-
-    const planName = subscription.prices?.products?.name || "free";
-    const limits = getPlanRocketLimits(planName);
-
-    const rocketsUsed = tokensToRockets(
-      tokenUsage.input_tokens + tokenUsage.output_tokens,
-    );
-
-    if (rocketsUsed >= limits.monthly_rockets) {
-      if (extraMessages > 0) {
-        const decremented = await decrementExtraMessagesCount(user.id);
-        if (!decremented) {
-          throw new Error("limit-exceeded");
-        }
-      } else {
-        throw new Error("limit-exceeded");
-      }
-    }
-  } else {
-    const today = new Date();
-    const currentPeriodStart = new Date(
-      today.getFullYear(),
-      today.getMonth(),
-      1,
-    );
-    const currentPeriodEnd = new Date(
-      today.getFullYear(),
-      today.getMonth() + 1,
-      1,
-    );
-
-    const tokenUsage = await getUserTokenUsage(
-      user.id,
-      currentPeriodStart,
-      currentPeriodEnd,
-    );
-
-    const limits = getPlanRocketLimits("free");
-
-    const rocketsUsed = tokensToRockets(
-      tokenUsage.input_tokens + tokenUsage.output_tokens,
-    );
-
-    if (rocketsUsed >= limits.monthly_rockets) {
-      if (extraMessages > 0) {
-        const decremented = await decrementExtraMessagesCount(user.id);
-        if (!decremented) {
-          throw new Error("limit-exceeded");
-        }
-      } else {
-        throw new Error("limit-exceeded");
-      }
-    }
-  }
-
-  if (!subscription && (image || files.length > 0)) {
-    throw new Error("payment-required-for-image");
+  if (!subscription) {
+    throw new Error("subscription-required");
   }
 
   const fetchedLastUserMessage =

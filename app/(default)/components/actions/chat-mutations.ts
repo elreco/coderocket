@@ -54,11 +54,19 @@ export const createChat = async (prompt: string, formData: FormData) => {
   }
 
   const subscription = await getSubscription();
-  let subscriptionType = "trial";
-  if (subscription) {
-    subscriptionType =
-      subscription.prices?.products?.name?.toLowerCase() || "trial";
+
+  if (!subscription) {
+    return {
+      error: {
+        title: "Subscription required",
+        description:
+          "You must have an active paid subscription to generate components. Please visit the pricing page to choose a plan.",
+      },
+    };
   }
+
+  const subscriptionType =
+    subscription.prices?.products?.name?.toLowerCase() || "trial";
   const isVisible = formData.get("isVisible");
   const theme = formData.get("theme")?.toString() || defaultTheme;
   const frameworkInput = formData.get("framework")?.toString() || "react";
@@ -69,119 +77,29 @@ export const createChat = async (prompt: string, formData: FormData) => {
     : Framework.HTML;
   const is_private = isVisible === "false";
 
-  if (!subscription && is_private) {
-    return {
-      error: {
-        title: "You have reached the limit of your free plan.",
-        description:
-          "Please upgrade to continue. Go to My Account to see your usage.",
-      },
-    };
-  }
-
   const extraMessages = await getExtraMessagesCount(user.id);
+  const currentPeriodStart = new Date(subscription.current_period_start);
+  const currentPeriodEnd = new Date(subscription.current_period_end);
 
-  if (!subscription) {
-    const today = new Date();
-    const currentPeriodStart = new Date(
-      today.getFullYear(),
-      today.getMonth(),
-      1,
-    );
-    const currentPeriodEnd = new Date(
-      today.getFullYear(),
-      today.getMonth() + 1,
-      1,
-    );
+  const tokenUsage = await getUserTokenUsage(
+    user.id,
+    currentPeriodStart,
+    currentPeriodEnd,
+  );
 
-    const tokenUsage = await getUserTokenUsage(
-      user.id,
-      currentPeriodStart,
-      currentPeriodEnd,
-    );
+  const planName = subscription.prices?.products?.name?.toLowerCase() || "free";
+  const limits =
+    ROCKET_LIMITS_PER_PLAN[planName as keyof typeof ROCKET_LIMITS_PER_PLAN] ||
+    ROCKET_LIMITS_PER_PLAN.free;
 
-    const limits = ROCKET_LIMITS_PER_PLAN.free;
-    const rocketsUsed = tokensToRockets(
-      tokenUsage.input_tokens + tokenUsage.output_tokens,
-    );
+  const rocketsUsed = tokensToRockets(
+    tokenUsage.input_tokens + tokenUsage.output_tokens,
+  );
 
-    if (rocketsUsed >= limits.monthly_rockets) {
-      if (extraMessages > 0) {
-        const decremented = await decrementExtraMessagesCount(user.id);
-        if (!decremented) {
-          const resetDate = new Date(
-            today.getFullYear(),
-            today.getMonth() + 1,
-            1,
-          );
-          return {
-            error: {
-              title: "Rocket limit reached",
-              description: `You have reached your limit of ${limits.monthly_rockets} 🚀 Rockets for this month. Your limit will reset next month (${format(
-                resetDate,
-                "d MMMM yyyy",
-              )}). Upgrade to a paid plan or purchase Extra Rockets to continue.`,
-            },
-          };
-        }
-      } else {
-        const resetDate = new Date(
-          today.getFullYear(),
-          today.getMonth() + 1,
-          1,
-        );
-        return {
-          error: {
-            title: "Rocket limit reached",
-            description: `You have reached your limit of ${limits.monthly_rockets} 🚀 Rockets for this month. Your limit will reset next month (${format(
-              resetDate,
-              "d MMMM yyyy",
-            )}). Upgrade to a paid plan or purchase Extra Rockets to continue.`,
-          },
-        };
-      }
-    }
-  } else {
-    const currentPeriodStart = new Date(subscription.current_period_start);
-    const currentPeriodEnd = new Date(subscription.current_period_end);
-
-    const tokenUsage = await getUserTokenUsage(
-      user.id,
-      currentPeriodStart,
-      currentPeriodEnd,
-    );
-
-    const planName =
-      subscription.prices?.products?.name?.toLowerCase() || "free";
-    const limits =
-      ROCKET_LIMITS_PER_PLAN[planName as keyof typeof ROCKET_LIMITS_PER_PLAN] ||
-      ROCKET_LIMITS_PER_PLAN.free;
-
-    const rocketsUsed = tokensToRockets(
-      tokenUsage.input_tokens + tokenUsage.output_tokens,
-    );
-
-    if (rocketsUsed >= limits.monthly_rockets) {
-      if (extraMessages > 0) {
-        const decremented = await decrementExtraMessagesCount(user.id);
-        if (!decremented) {
-          const resetDate = format(
-            new Date(
-              currentPeriodStart.getFullYear(),
-              currentPeriodStart.getMonth() + 1,
-              1,
-            ),
-            "d MMMM yyyy",
-          );
-
-          return {
-            error: {
-              title: "You have reached the limit of your plan",
-              description: `You have reached your limit of ${limits.monthly_rockets} 🚀 Rockets for this ${subscription.prices?.interval}. This limit will reset on ${resetDate}. Go to My Account to see your usage or purchase Extra Rockets.`,
-            },
-          };
-        }
-      } else {
+  if (rocketsUsed >= limits.monthly_rockets) {
+    if (extraMessages > 0) {
+      const decremented = await decrementExtraMessagesCount(user.id);
+      if (!decremented) {
         const resetDate = format(
           new Date(
             currentPeriodStart.getFullYear(),
@@ -198,6 +116,22 @@ export const createChat = async (prompt: string, formData: FormData) => {
           },
         };
       }
+    } else {
+      const resetDate = format(
+        new Date(
+          currentPeriodStart.getFullYear(),
+          currentPeriodStart.getMonth() + 1,
+          1,
+        ),
+        "d MMMM yyyy",
+      );
+
+      return {
+        error: {
+          title: "You have reached the limit of your plan",
+          description: `You have reached your limit of ${limits.monthly_rockets} 🚀 Rockets for this ${subscription.prices?.interval}. This limit will reset on ${resetDate}. Go to My Account to see your usage or purchase Extra Rockets.`,
+        },
+      };
     }
   }
 
@@ -214,15 +148,6 @@ export const createChat = async (prompt: string, formData: FormData) => {
   const libraryPaths: string[] = libraryPathsStr
     ? JSON.parse(libraryPathsStr)
     : [];
-
-  if (!subscription && (files.length > 0 || libraryPaths.length > 0)) {
-    return {
-      error: {
-        title: "You can't upload files with a free plan",
-        description: "Please upgrade to continue.",
-      },
-    };
-  }
 
   if (libraryPaths.length > 0) {
     libraryPaths.forEach((libraryPath, i) => {
