@@ -19,9 +19,9 @@ const faqData = [
       "It uses AI models to generate code based on simple text prompts. After you submit your prompt, we give an AI-generated user interface. You can copy paste its code, or refine it further. To refine, you can fine tune your creation. When you are ready, you can copy, paste, and ship.",
   },
   {
-    question: "What are the limitations of a free account?",
+    question: "What are the limitations without a paid plan?",
     answer:
-      "With a free account, you are limited to generating one component with four versions, and image use is not permitted. Upgrade to our premium plan for unlimited access to all features.",
+      "Without a paid plan, generation limits apply and image upload is not available. Upgrade to a paid plan for broader limits and advanced features.",
   },
 ];
 

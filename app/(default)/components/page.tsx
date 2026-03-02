@@ -23,7 +23,7 @@ export async function generateMetadata({
       : "Public Components - CodeRocket | Tailwind AI Components",
     description: searchQuery
       ? `Discover the latest Tailwind AI components for "${searchQuery}". Browse AI-generated React, Vue, Svelte, Angular, and HTML components created with CodeRocket (formerly Tailwind AI).`
-      : "Browse public Tailwind AI components generated with CodeRocket (formerly Tailwind AI). Discover React, Vue, Svelte, Angular, and HTML components created by our community. Free to explore and remix.",
+      : "Browse public Tailwind AI components generated with CodeRocket (formerly Tailwind AI). Discover React, Vue, Svelte, Angular, and HTML components created by our community. Open to explore and remix.",
     keywords: [
       "tailwind ai",
       "Tailwind AI",

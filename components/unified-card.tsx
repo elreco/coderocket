@@ -128,7 +128,7 @@ export function UnifiedCard({
   const priceFormatted =
     data.price !== undefined
       ? data.price === 0
-        ? "FREE"
+        ? "INCLUDED"
         : new Intl.NumberFormat("en-US", {
             style: "currency",
             currency: data.currency || "USD",

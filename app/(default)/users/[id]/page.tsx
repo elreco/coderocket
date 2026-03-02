@@ -96,7 +96,7 @@ export default async function UserPage({
             <CardContent className="relative">
               {!subscription ? (
                 <Badge className="hover:bg-primary absolute top-2 right-2">
-                  Free user
+                  Member
                 </Badge>
               ) : (
                 <Badge className="absolute top-2 right-2 bg-amber-500 hover:bg-amber-500">

@@ -54,19 +54,8 @@ export const createChat = async (prompt: string, formData: FormData) => {
   }
 
   const subscription = await getSubscription();
-
-  if (!subscription) {
-    return {
-      error: {
-        title: "Subscription required",
-        description:
-          "You must have an active paid subscription to generate components. Please visit the pricing page to choose a plan.",
-      },
-    };
-  }
-
   const subscriptionType =
-    subscription.prices?.products?.name?.toLowerCase() || "trial";
+    subscription?.prices?.products?.name?.toLowerCase() || "included";
   const isVisible = formData.get("isVisible");
   const theme = formData.get("theme")?.toString() || defaultTheme;
   const frameworkInput = formData.get("framework")?.toString() || "react";
@@ -78,8 +67,16 @@ export const createChat = async (prompt: string, formData: FormData) => {
   const is_private = isVisible === "false";
 
   const extraMessages = await getExtraMessagesCount(user.id);
-  const currentPeriodStart = new Date(subscription.current_period_start);
-  const currentPeriodEnd = new Date(subscription.current_period_end);
+  let currentPeriodStart: Date;
+  let currentPeriodEnd: Date;
+  if (subscription) {
+    currentPeriodStart = new Date(subscription.current_period_start);
+    currentPeriodEnd = new Date(subscription.current_period_end);
+  } else {
+    const today = new Date();
+    currentPeriodStart = new Date(today.getFullYear(), today.getMonth(), 1);
+    currentPeriodEnd = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+  }
 
   const tokenUsage = await getUserTokenUsage(
     user.id,
@@ -87,7 +84,8 @@ export const createChat = async (prompt: string, formData: FormData) => {
     currentPeriodEnd,
   );
 
-  const planName = subscription.prices?.products?.name?.toLowerCase() || "free";
+  const planName =
+    subscription?.prices?.products?.name?.toLowerCase() || "free";
   const limits =
     ROCKET_LIMITS_PER_PLAN[planName as keyof typeof ROCKET_LIMITS_PER_PLAN] ||
     ROCKET_LIMITS_PER_PLAN.free;
@@ -100,36 +98,28 @@ export const createChat = async (prompt: string, formData: FormData) => {
     if (extraMessages > 0) {
       const decremented = await decrementExtraMessagesCount(user.id);
       if (!decremented) {
-        const resetDate = format(
-          new Date(
-            currentPeriodStart.getFullYear(),
-            currentPeriodStart.getMonth() + 1,
-            1,
-          ),
-          "d MMMM yyyy",
-        );
+        const resetDate = format(currentPeriodEnd, "d MMMM yyyy");
+        const billingWindow = subscription
+          ? `for this ${subscription.prices?.interval}`
+          : "for this month";
 
         return {
           error: {
             title: "You have reached the limit of your plan",
-            description: `You have reached your limit of ${limits.monthly_rockets} 🚀 Rockets for this ${subscription.prices?.interval}. This limit will reset on ${resetDate}. Go to My Account to see your usage or purchase Extra Rockets.`,
+            description: `You have reached your limit of ${limits.monthly_rockets} 🚀 Rockets ${billingWindow}. This limit will reset on ${resetDate}. Go to My Account to see your usage or purchase Extra Rockets.`,
           },
         };
       }
     } else {
-      const resetDate = format(
-        new Date(
-          currentPeriodStart.getFullYear(),
-          currentPeriodStart.getMonth() + 1,
-          1,
-        ),
-        "d MMMM yyyy",
-      );
+      const resetDate = format(currentPeriodEnd, "d MMMM yyyy");
+      const billingWindow = subscription
+        ? `for this ${subscription.prices?.interval}`
+        : "for this month";
 
       return {
         error: {
           title: "You have reached the limit of your plan",
-          description: `You have reached your limit of ${limits.monthly_rockets} 🚀 Rockets for this ${subscription.prices?.interval}. This limit will reset on ${resetDate}. Go to My Account to see your usage or purchase Extra Rockets.`,
+          description: `You have reached your limit of ${limits.monthly_rockets} 🚀 Rockets ${billingWindow}. This limit will reset on ${resetDate}. Go to My Account to see your usage or purchase Extra Rockets.`,
         },
       };
     }

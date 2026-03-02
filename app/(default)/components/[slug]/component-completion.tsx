@@ -927,9 +927,9 @@ export default function ComponentCompletion({
           router.push("/pricing");
           toast({
             variant: "destructive",
-            title: "Subscription required",
+            title: "Paid plan required",
             description:
-              "You must have an active paid subscription to generate or iterate on components. Please choose a plan to continue.",
+              "This feature requires a paid plan. Please choose a plan to continue.",
             duration: 4000,
           });
           return;
@@ -938,7 +938,7 @@ export default function ComponentCompletion({
           router.push("/pricing");
           toast({
             variant: "destructive",
-            title: "You can't upload images with a free plan",
+            title: "Image upload requires a paid plan",
             description: "Please upgrade to continue.",
             duration: 4000,
           });

@@ -225,7 +225,7 @@ export default async function Account() {
               <p className="text-2xl text-amber-500">
                 {subscription
                   ? `${subscriptionPrice}/${subscription?.prices?.interval}`
-                  : "Free plan"}
+                  : "Included access"}
               </p>
               {!subscription && <Link href="/pricing">Choose your plan</Link>}
             </div>

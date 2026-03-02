@@ -30,7 +30,7 @@ const meta = {
     "CodeRocket - Tailwind AI Website Builder | Generate Tailwind Components with AI",
   metadataBase: new URL("https://www.coderocket.app"),
   description:
-    "CodeRocket (formerly Tailwind AI) - Build production-ready Tailwind v4 websites and components with AI in seconds. Clone a website from any URL or create experiences from scratch. Generate React, Vue, Svelte, Angular components. Free to start.",
+    "CodeRocket (formerly Tailwind AI) - Build production-ready Tailwind v4 websites and components with AI in seconds. Clone a website from any URL or create experiences from scratch. Generate React, Vue, Svelte, Angular components. Start at no cost.",
   cardImage: "https://www.coderocket.app/og.png",
   robots: "index, follow",
   favicon: "/favicon.ico",
@@ -176,8 +176,8 @@ export default async function RootLayout({ children }: PropsWithChildren) {
                       "@type": "Offer",
                       price: "0",
                       priceCurrency: "USD",
-                      name: "Free Plan",
-                      description: "Create one component with four versions",
+                      name: "Included Access",
+                      description: "Create components with baseline limits",
                     },
                     {
                       "@type": "Offer",

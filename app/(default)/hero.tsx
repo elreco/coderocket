@@ -117,7 +117,7 @@ const promptCategories = [
       {
         text: "Pricing table",
         input:
-          "A modern pricing comparison table with Free, Premium and Enterprise plans highlighting key features and annual/monthly toggle.",
+          "A modern pricing comparison table with Starter, Pro and Enterprise plans highlighting key features and annual/monthly toggle.",
       },
       {
         text: "Testimonials",

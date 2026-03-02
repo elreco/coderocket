@@ -63,6 +63,10 @@ import {
   formatAdvancedMetadata,
   AdvancedMetadata,
 } from "./website-clone";
+import {
+  checkUsageLimits,
+  validateFileUploadPermission,
+} from "./validation";
 
 const getResumableStreamContext = () => {
   if (!isRedisConfigured()) {
@@ -342,10 +346,10 @@ export async function POST(req: Request) {
     }
 
     const subscription = await getSubscription();
-    let subscriptionType = "trial";
+    let subscriptionType = "included";
     if (subscription) {
       subscriptionType =
-        subscription.prices?.products?.name?.toLowerCase() || "trial";
+        subscription.prices?.products?.name?.toLowerCase() || "included";
     }
 
     if (version > 0) {
@@ -1279,12 +1283,11 @@ Use standard Tailwind CSS classes and shadcn/ui components.`;
     (m) => m.role === "user" && m.version === -1,
   ) as Tables<"messages"> | undefined;
 
-  // Check subscription
   const subscription = await getSubscription();
-
-  if (!subscription) {
-    throw new Error("subscription-required");
-  }
+  await checkUsageLimits(user.id, subscription);
+  const hasAttachedFiles =
+    image !== null || files.length > 0 || libraryPaths.length > 0;
+  validateFileUploadPermission(subscription, hasAttachedFiles);
 
   const fetchedLastUserMessage =
     selectedVersion !== undefined
@@ -1716,10 +1719,10 @@ const updateDataAfterCompletion = async (
     }
 
     const subscription = await getSubscription();
-    let subscriptionType = "trial";
+    let subscriptionType = "included";
     if (subscription) {
       subscriptionType =
-        subscription.prices?.products?.name?.toLowerCase() || "trial";
+        subscription.prices?.products?.name?.toLowerCase() || "included";
     }
 
     const totalInputTokens = (usage.inputTokens ?? 0) + contextOptTokens.input;

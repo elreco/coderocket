@@ -14,13 +14,13 @@ import Pricing from "./pricing";
 export const metadata = {
   title: "Pricing - CodeRocket Tailwind AI Website Builder",
   description:
-    "Start building AI-powered Tailwind websites for free with CodeRocket (formerly Tailwind AI). Premium plans unlock unlimited components, website cloning, GitHub integration, custom domains, and more. Try free, upgrade anytime.",
+    "Start building AI-powered Tailwind websites at no cost with CodeRocket (formerly Tailwind AI). Paid plans unlock unlimited components, website cloning, GitHub integration, custom domains, and more.",
   keywords:
     "tailwind ai pricing, Tailwind AI pricing, CodeRocket pricing, AI website builder pricing, Tailwind generator cost, web development pricing, AI tool subscription, tailwind ai cost",
   openGraph: {
     title: "Pricing - CodeRocket Tailwind AI Website Builder",
     description:
-      "Start free, upgrade to premium for unlimited AI-powered Tailwind components and website generation. Created with CodeRocket (formerly Tailwind AI).",
+      "Use CodeRocket at no cost and upgrade to a paid plan for expanded AI-powered Tailwind component and website generation limits.",
     url: "https://www.coderocket.app/pricing",
   },
   alternates: {
