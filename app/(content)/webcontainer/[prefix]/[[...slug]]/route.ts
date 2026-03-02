@@ -1,4 +1,4 @@
-import { list } from "@vercel/blob";
+import { list, type ListBlobResultBlob } from "@vercel/blob";
 import mime from "mime-types";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -6,6 +6,41 @@ import { getSubscription } from "@/app/supabase-server";
 import { createClient } from "@/utils/supabase/server";
 
 export const revalidate = 0;
+
+const STATIC_ASSET_CACHE_CONTROL = "public, max-age=31536000, immutable";
+const HTML_CACHE_CONTROL = "no-cache";
+
+const findBlobByPathname = async (
+  targetPathname: string,
+): Promise<ListBlobResultBlob | null> => {
+  let cursor: string | undefined;
+
+  do {
+    const {
+      blobs,
+      hasMore,
+      cursor: nextCursor,
+    } = await list({
+      prefix: targetPathname,
+      limit: 100,
+      cursor,
+    });
+
+    const exactMatch = blobs.find((blob) => blob.pathname === targetPathname);
+    if (exactMatch) {
+      return exactMatch;
+    }
+
+    if (!hasMore) {
+      return null;
+    }
+
+    cursor = nextCursor;
+  } while (cursor);
+
+  return null;
+};
+
 /**
  * Cette route sert les fichiers d’un dossier (prefix) stocké dans Vercel Blob.
  *   - /blob/:prefix/             => renvoie index.html (si existe)
@@ -311,11 +346,8 @@ export async function GET(
 
   console.log("API Route: Recherche fichier", filePath);
 
-  // 3. Liste les blobs commençant par le prefix
-  const { blobs } = await list({ prefix: `${prefix}/` });
-
-  // 4. Recherche du fichier exact
-  let matchedBlob = blobs.find((b) => b.pathname === filePath);
+  // 3. Recherche ciblée du fichier exact (évite de lister tout le prefix du projet)
+  let matchedBlob = await findBlobByPathname(filePath);
 
   // 5. Déterminer si c'est une route SPA (pas d'extension)
   const lastSegment = slug[slug.length - 1];
@@ -328,7 +360,7 @@ export async function GET(
         "API Route: Slug sans extension et fichier non trouvé, fallback vers index.html",
       );
       const fallbackPath = `${prefix}/index.html`;
-      matchedBlob = blobs.find((b) => b.pathname === fallbackPath);
+      matchedBlob = await findBlobByPathname(fallbackPath);
 
       if (!matchedBlob) {
         console.log("API Route: index.html non trouvé, retour 404");
@@ -362,7 +394,7 @@ export async function GET(
   } else if (matchedBlob.pathname.endsWith(".js")) {
     mimeType = "application/javascript";
   } else {
-    const extension = "." + (filePath.split(".").pop() ?? "");
+    const extension = "." + (matchedBlob.pathname.split(".").pop() ?? "");
     mimeType = mime.lookup(extension) || "application/octet-stream";
   }
 
@@ -730,15 +762,20 @@ export async function GET(
     return new NextResponse(htmlWithWatermark, {
       headers: {
         "Content-Type": "text/html",
-        "Cache-Control": "no-cache",
+        "Cache-Control": HTML_CACHE_CONTROL,
       },
     });
   }
 
+  const cacheControl =
+    isIndexHtml || mimeType === "text/html"
+      ? HTML_CACHE_CONTROL
+      : STATIC_ASSET_CACHE_CONTROL;
+
   return new NextResponse(data, {
     headers: {
       "Content-Type": mimeType,
-      "Cache-Control": "no-cache",
+      "Cache-Control": cacheControl,
     },
   });
 }

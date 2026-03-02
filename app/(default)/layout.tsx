@@ -25,6 +25,8 @@ const rubik = Plus_Jakarta_Sans({
   variable: "--font-rubik",
 });
 
+const googleSiteVerification = process.env.GOOGLE_SITE_VERIFICATION;
+
 const meta = {
   title:
     "CodeRocket - Tailwind AI Website Builder | Generate Tailwind Components with AI",
@@ -118,9 +120,13 @@ export const metadata = {
     creator: meta.twitter.creator,
     site: meta.twitter.site,
   },
-  verification: {
-    google: "google-site-verification-code",
-  },
+  ...(googleSiteVerification
+    ? {
+        verification: {
+          google: googleSiteVerification,
+        },
+      }
+    : {}),
 };
 
 export default async function RootLayout({ children }: PropsWithChildren) {
@@ -136,7 +142,6 @@ export default async function RootLayout({ children }: PropsWithChildren) {
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://www.google-analytics.com" />
-        <link rel="canonical" href="https://www.coderocket.app" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -178,19 +183,6 @@ export default async function RootLayout({ children }: PropsWithChildren) {
                       priceCurrency: "USD",
                       name: "Included Access",
                       description: "Create components with baseline limits",
-                    },
-                    {
-                      "@type": "Offer",
-                      price: "19",
-                      priceCurrency: "USD",
-                      name: "Premium Plan",
-                      description: "Unlimited components and features",
-                      priceSpecification: {
-                        "@type": "UnitPriceSpecification",
-                        price: "19",
-                        priceCurrency: "USD",
-                        unitText: "MONTH",
-                      },
                     },
                   ],
                   featureList: [
