@@ -840,6 +840,9 @@ const validateRequest = async (
     throw new Error("User is not authorized to modify chat");
   }
 
+  const subscription = await getSubscription();
+  await checkUsageLimits(user.id, subscription);
+
   const isFirstGeneration = selectedVersion === -1;
 
   let currentArtifactCode = "";
@@ -1283,10 +1286,38 @@ Use standard Tailwind CSS classes and shadcn/ui components.`;
     (m) => m.role === "user" && m.version === -1,
   ) as Tables<"messages"> | undefined;
 
-  const subscription = await getSubscription();
-  await checkUsageLimits(user.id, subscription);
+  const hasExistingPaidOnlyFiles = messagesFromDatabase.some((message) => {
+    if (message.role !== "user") {
+      return false;
+    }
+
+    const messageFiles = parseFileItems(message.files);
+    if (messageFiles.length > 0) {
+      const hasNonCloneSourceFile = messageFiles.some(
+        (file) => file.source !== "clone",
+      );
+      if (hasNonCloneSourceFile) {
+        return true;
+      }
+
+      if (!message.prompt_image) {
+        return false;
+      }
+
+      const promptImageIsCloneFile = messageFiles.some(
+        (file) => file.url === message.prompt_image && file.source === "clone",
+      );
+      return !promptImageIsCloneFile;
+    }
+
+    return Boolean(message.prompt_image);
+  });
+
   const hasAttachedFiles =
-    image !== null || files.length > 0 || libraryPaths.length > 0;
+    image !== null ||
+    files.length > 0 ||
+    libraryPaths.length > 0 ||
+    hasExistingPaidOnlyFiles;
   validateFileUploadPermission(subscription, hasAttachedFiles);
 
   const fetchedLastUserMessage =

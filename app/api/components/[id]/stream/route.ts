@@ -144,7 +144,7 @@ export async function GET(
   if (!chatData.active_stream_id) {
     const buildStatus = await checkIfBuildNeeded(supabase, chatId);
 
-    if (buildStatus.needsBuild && buildStatus.version !== null) {
+    if (isOwner && buildStatus.needsBuild && buildStatus.version !== null) {
       after(async () => {
         const { buildComponent } = await import(
           "@/app/(default)/components/[slug]/actions"
@@ -181,7 +181,7 @@ export async function GET(
     await clearActiveStream(supabase, chatId);
     const buildStatus = await checkIfBuildNeeded(supabase, chatId);
 
-    if (buildStatus.needsBuild && buildStatus.version !== null) {
+    if (isOwner && buildStatus.needsBuild && buildStatus.version !== null) {
       after(async () => {
         const { buildComponent } = await import(
           "@/app/(default)/components/[slug]/actions"

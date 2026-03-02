@@ -139,6 +139,17 @@ export const createChat = async (prompt: string, formData: FormData) => {
     ? JSON.parse(libraryPathsStr)
     : [];
 
+  const hasAttachedFiles = files.length > 0 || libraryPaths.length > 0;
+  if (!subscription && hasAttachedFiles) {
+    return {
+      error: {
+        title: "Premium required for files",
+        description:
+          "Generating with uploaded files is available on paid plans. Upgrade to continue.",
+      },
+    };
+  }
+
   if (libraryPaths.length > 0) {
     libraryPaths.forEach((libraryPath, i) => {
       const ext = libraryPath.split(".").pop()?.toLowerCase() || "";
