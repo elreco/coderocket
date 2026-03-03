@@ -697,6 +697,9 @@ export default function Hero({
         error.title?.toLowerCase().includes("rocket limit") ||
         error.title?.toLowerCase().includes("limit") ||
         error.title?.toLowerCase().includes("reached");
+      const isPaywallError =
+        error.title?.toLowerCase().includes("paid plan required") ||
+        error.title?.toLowerCase().includes("subscription required");
 
       if (isLimitError) {
         toast({
@@ -707,6 +710,21 @@ export default function Hero({
         });
         setTimeout(() => {
           router.push("/pricing?reason=limit-exceeded");
+        }, 500);
+        setLoading(false);
+        setLoadingAction(null);
+        return;
+      }
+
+      if (isPaywallError) {
+        toast({
+          variant: "destructive",
+          title: error.title,
+          description: error.description,
+          duration: 5000,
+        });
+        setTimeout(() => {
+          router.push("/pricing");
         }, 500);
         setLoading(false);
         setLoadingAction(null);

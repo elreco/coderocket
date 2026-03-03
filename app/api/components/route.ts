@@ -762,6 +762,12 @@ export async function POST(req: Request) {
     if (error instanceof Error) {
       console.error("Error message:", error.message);
       console.error("Error stack:", error.stack);
+      if (error.message === "subscription-required") {
+        return new Response(JSON.stringify({ error: error.message }), {
+          status: 403,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
       return new Response(JSON.stringify({ error: error.message }), {
         status: 500,
         headers: { "Content-Type": "application/json" },
@@ -838,6 +844,9 @@ const validateRequest = async (
   }
 
   const subscription = await getSubscription();
+  if (!subscription) {
+    throw new Error("subscription-required");
+  }
   await checkUsageLimits(user.id, subscription);
 
   const isFirstGeneration = selectedVersion === -1;

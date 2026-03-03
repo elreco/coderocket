@@ -54,8 +54,18 @@ export const createChat = async (prompt: string, formData: FormData) => {
   }
 
   const subscription = await getSubscription();
+  if (!subscription) {
+    return {
+      error: {
+        title: "Paid plan required",
+        description:
+          "A paid plan is required to create components. Please choose a plan to continue.",
+      },
+    };
+  }
+
   const subscriptionType =
-    subscription?.prices?.products?.name?.toLowerCase() || "included";
+    subscription.prices?.products?.name?.toLowerCase() || "included";
   const isVisible = formData.get("isVisible");
   const theme = formData.get("theme")?.toString() || defaultTheme;
   const frameworkInput = formData.get("framework")?.toString() || "react";
@@ -67,16 +77,8 @@ export const createChat = async (prompt: string, formData: FormData) => {
   const is_private = isVisible === "false";
 
   const extraMessages = await getExtraMessagesCount(user.id);
-  let currentPeriodStart: Date;
-  let currentPeriodEnd: Date;
-  if (subscription) {
-    currentPeriodStart = new Date(subscription.current_period_start);
-    currentPeriodEnd = new Date(subscription.current_period_end);
-  } else {
-    const today = new Date();
-    currentPeriodStart = new Date(today.getFullYear(), today.getMonth(), 1);
-    currentPeriodEnd = new Date(today.getFullYear(), today.getMonth() + 1, 1);
-  }
+  const currentPeriodStart = new Date(subscription.current_period_start);
+  const currentPeriodEnd = new Date(subscription.current_period_end);
 
   const tokenUsage = await getUserTokenUsage(
     user.id,
@@ -84,8 +86,7 @@ export const createChat = async (prompt: string, formData: FormData) => {
     currentPeriodEnd,
   );
 
-  const planName =
-    subscription?.prices?.products?.name?.toLowerCase() || "free";
+  const planName = subscription.prices?.products?.name?.toLowerCase() || "free";
   const limits =
     ROCKET_LIMITS_PER_PLAN[planName as keyof typeof ROCKET_LIMITS_PER_PLAN] ||
     ROCKET_LIMITS_PER_PLAN.free;
@@ -138,17 +139,6 @@ export const createChat = async (prompt: string, formData: FormData) => {
   const libraryPaths: string[] = libraryPathsStr
     ? JSON.parse(libraryPathsStr)
     : [];
-
-  const hasAttachedFiles = files.length > 0 || libraryPaths.length > 0;
-  if (!subscription && hasAttachedFiles) {
-    return {
-      error: {
-        title: "Premium required for files",
-        description:
-          "Generating with uploaded files is available on paid plans. Upgrade to continue.",
-      },
-    };
-  }
 
   if (libraryPaths.length > 0) {
     libraryPaths.forEach((libraryPath, i) => {
