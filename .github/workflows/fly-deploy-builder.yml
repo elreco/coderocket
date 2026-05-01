@@ -9,6 +9,11 @@ on:
     paths:
       - "builder/**"
       - ".github/workflows/fly-deploy-builder.yml"
+      - "!builder/README.md"
+      - "!builder/.env"
+      - "!builder/.env.example"
+      - "!builder/.env.local"
+      - "!builder/.gitignore"
   workflow_dispatch:
 
 jobs:
