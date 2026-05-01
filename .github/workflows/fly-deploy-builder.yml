@@ -1,0 +1,27 @@
+# Deploy the integrated CodeRocket builder to Fly.io.
+
+name: Deploy Builder to Fly
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "builder/**"
+      - ".github/workflows/fly-deploy-builder.yml"
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy builder
+    runs-on: ubuntu-latest
+    concurrency: fly-builder-deploy
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Deploy builder app
+        run: flyctl deploy --config builder/fly.toml --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}

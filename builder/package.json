@@ -1,0 +1,26 @@
+{
+  "name": "coderocket-builder",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch server.js",
+    "start": "node server.js"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@fastify/websocket": "^11.0.2",
+    "@vercel/blob": "^0.27.1",
+    "cheerio": "^1.1.2",
+    "fastify": "^5.2.1",
+    "mime-types": "^2.1.35",
+    "patch-package": "^8.0.1",
+    "puppeteer": "^24.30.0",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2",
+    "sharp": "^0.34.5",
+    "turndown": "^7.2.2"
+  }
+}
