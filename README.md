@@ -8,8 +8,8 @@
 
 <p align="center">
   <a href="https://github.com/elreco/coderocket/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/elreco/coderocket/ci.yml?branch=main&label=CI" alt="CI" /></a>
-  <a href="https://github.com/elreco/coderocket/blob/main/LICENSE"><img src="https://img.shields.io/github/license/elreco/coderocket" alt="License" /></a>
-  <a href="https://github.com/elreco/coderocket/discussions"><img src="https://img.shields.io/github/discussions/elreco/coderocket" alt="Discussions" /></a>
+  <a href="https://github.com/elreco/coderocket/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-22c55e" alt="License" /></a>
+  <a href="https://github.com/elreco/coderocket/discussions"><img src="https://img.shields.io/badge/community-discussions-2563eb" alt="Discussions" /></a>
   <a href="https://www.coderocket.app/open-source"><img src="https://img.shields.io/badge/self--host-ready-6C63FF" alt="Self-host ready" /></a>
   <a href="https://nextjs.org/"><img src="https://img.shields.io/badge/Next.js-15-black" alt="Next.js 15" /></a>
   <a href="https://supabase.com/"><img src="https://img.shields.io/badge/Supabase-Postgres%20%2B%20Auth-3ECF8E" alt="Supabase" /></a>
