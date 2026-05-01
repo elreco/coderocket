@@ -7,6 +7,8 @@ import { AppFooter } from "@/components/app-footer";
 import { Container } from "@/components/container";
 import { PageTitle } from "@/components/page-title";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { buildAppUrl } from "@/utils/runtime-config";
+import { billingEnabled } from "@/utils/server-config";
 import { createClient } from "@/utils/supabase/server";
 
 import Pricing from "./pricing";
@@ -21,10 +23,10 @@ export const metadata = {
     title: "Pricing - CodeRocket Tailwind AI Website Builder",
     description:
       "Use CodeRocket at no cost and upgrade to a paid plan for expanded AI-powered Tailwind component and website generation limits.",
-    url: "https://www.coderocket.app/pricing",
+    url: buildAppUrl("/pricing"),
   },
   alternates: {
-    canonical: "https://www.coderocket.app/pricing",
+    canonical: buildAppUrl("/pricing"),
   },
 };
 
@@ -52,6 +54,18 @@ export default async function PricingPage({
               <strong>Rocket limit reached</strong> - You have reached your
               monthly limit of Rockets. Upgrade to a paid plan or purchase Extra
               Rockets to continue creating components.
+            </AlertDescription>
+          </Alert>
+        </div>
+      )}
+
+      {!billingEnabled && (
+        <div className="mb-8">
+          <Alert>
+            <AlertDescription>
+              Billing is disabled for this self-hosted instance. Configure
+              `BILLING_PROVIDER=stripe` if you want to enable subscriptions on
+              your own deployment.
             </AlertDescription>
           </Alert>
         </div>

@@ -8,7 +8,7 @@ import { renderEmailTemplate } from "./template";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const fromAddress =
-  process.env.RESEND_FROM_ADDRESS ?? "CodeRocket <hello@mail.coderocket.app>";
+  process.env.RESEND_FROM_ADDRESS ?? "CodeRocket <noreply@example.com>";
 
 type DispatchOptions = {
   to: string;

@@ -1,3 +1,10 @@
+import {
+  domainApiEnabled,
+  vercelProjectId,
+  vercelTeamId,
+  vercelToken,
+} from "./server-config";
+
 interface VercelDomainResponse {
   name: string;
   verified: boolean;
@@ -15,29 +22,35 @@ interface VercelConfigResponse {
   misconfigured: boolean;
 }
 
+const assertVercelDomainApiConfigured = () => {
+  if (!domainApiEnabled) {
+    throw new Error(
+      "Custom domains are configured for self-host mode. Configure DNS and SSL in your hosting environment or set DOMAIN_PROVIDER=vercel.",
+    );
+  }
+
+  if (!vercelToken || !vercelProjectId) {
+    throw new Error("Vercel credentials not configured");
+  }
+};
+
 export async function addDomainToVercel(
   domain: string,
 ): Promise<VercelDomainResponse> {
-  const VERCEL_TOKEN = process.env.VERCEL_TOKEN;
-  const VERCEL_PROJECT_ID = process.env.VERCEL_PROJECT_ID;
-  const VERCEL_TEAM_ID = process.env.VERCEL_TEAM_ID;
-
-  if (!VERCEL_TOKEN || !VERCEL_PROJECT_ID) {
-    throw new Error("Vercel credentials not configured");
-  }
+  assertVercelDomainApiConfigured();
 
   const url = new URL(
-    `https://api.vercel.com/v10/projects/${VERCEL_PROJECT_ID}/domains`,
+    `https://api.vercel.com/v10/projects/${vercelProjectId}/domains`,
   );
 
-  if (VERCEL_TEAM_ID) {
-    url.searchParams.set("teamId", VERCEL_TEAM_ID);
+  if (vercelTeamId) {
+    url.searchParams.set("teamId", vercelTeamId);
   }
 
   const response = await fetch(url.toString(), {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${VERCEL_TOKEN}`,
+      Authorization: `Bearer ${vercelToken}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
@@ -55,26 +68,20 @@ export async function addDomainToVercel(
 }
 
 export async function removeDomainFromVercel(domain: string): Promise<void> {
-  const VERCEL_TOKEN = process.env.VERCEL_TOKEN;
-  const VERCEL_PROJECT_ID = process.env.VERCEL_PROJECT_ID;
-  const VERCEL_TEAM_ID = process.env.VERCEL_TEAM_ID;
-
-  if (!VERCEL_TOKEN || !VERCEL_PROJECT_ID) {
-    throw new Error("Vercel credentials not configured");
-  }
+  assertVercelDomainApiConfigured();
 
   const url = new URL(
-    `https://api.vercel.com/v9/projects/${VERCEL_PROJECT_ID}/domains/${domain}`,
+    `https://api.vercel.com/v9/projects/${vercelProjectId}/domains/${domain}`,
   );
 
-  if (VERCEL_TEAM_ID) {
-    url.searchParams.set("teamId", VERCEL_TEAM_ID);
+  if (vercelTeamId) {
+    url.searchParams.set("teamId", vercelTeamId);
   }
 
   const response = await fetch(url.toString(), {
     method: "DELETE",
     headers: {
-      Authorization: `Bearer ${VERCEL_TOKEN}`,
+      Authorization: `Bearer ${vercelToken}`,
     },
   });
 
@@ -89,23 +96,26 @@ export async function removeDomainFromVercel(domain: string): Promise<void> {
 export async function verifyDomainOnVercel(
   domain: string,
 ): Promise<VercelConfigResponse> {
-  const VERCEL_TOKEN = process.env.VERCEL_TOKEN;
-  const VERCEL_TEAM_ID = process.env.VERCEL_TEAM_ID;
+  if (!domainApiEnabled) {
+    throw new Error(
+      "Domain verification is managed by your hosting environment in self-host mode.",
+    );
+  }
 
-  if (!VERCEL_TOKEN) {
+  if (!vercelToken) {
     throw new Error("Vercel credentials not configured");
   }
 
   const url = new URL(`https://api.vercel.com/v6/domains/${domain}/config`);
 
-  if (VERCEL_TEAM_ID) {
-    url.searchParams.set("teamId", VERCEL_TEAM_ID);
+  if (vercelTeamId) {
+    url.searchParams.set("teamId", vercelTeamId);
   }
 
   const response = await fetch(url.toString(), {
     method: "GET",
     headers: {
-      Authorization: `Bearer ${VERCEL_TOKEN}`,
+      Authorization: `Bearer ${vercelToken}`,
     },
   });
 
@@ -123,26 +133,20 @@ export async function verifyDomainOnVercel(
 export async function checkVercelDomainStatus(
   domain: string,
 ): Promise<VercelDomainResponse> {
-  const VERCEL_TOKEN = process.env.VERCEL_TOKEN;
-  const VERCEL_PROJECT_ID = process.env.VERCEL_PROJECT_ID;
-  const VERCEL_TEAM_ID = process.env.VERCEL_TEAM_ID;
-
-  if (!VERCEL_TOKEN || !VERCEL_PROJECT_ID) {
-    throw new Error("Vercel credentials not configured");
-  }
+  assertVercelDomainApiConfigured();
 
   const url = new URL(
-    `https://api.vercel.com/v9/projects/${VERCEL_PROJECT_ID}/domains/${domain}`,
+    `https://api.vercel.com/v9/projects/${vercelProjectId}/domains/${domain}`,
   );
 
-  if (VERCEL_TEAM_ID) {
-    url.searchParams.set("teamId", VERCEL_TEAM_ID);
+  if (vercelTeamId) {
+    url.searchParams.set("teamId", vercelTeamId);
   }
 
   const response = await fetch(url.toString(), {
     method: "GET",
     headers: {
-      Authorization: `Bearer ${VERCEL_TOKEN}`,
+      Authorization: `Bearer ${vercelToken}`,
     },
   });
 

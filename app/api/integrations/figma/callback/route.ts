@@ -5,13 +5,12 @@ import {
   IntegrationType,
   FigmaIntegrationConfig,
 } from "@/utils/integrations/types";
+import { buildAppUrl } from "@/utils/runtime-config";
 import { createClient } from "@/utils/supabase/server";
 
 const FIGMA_CLIENT_ID = process.env.FIGMA_CLIENT_ID;
 const FIGMA_CLIENT_SECRET = process.env.FIGMA_CLIENT_SECRET;
-const FIGMA_REDIRECT_URI = process.env.NEXT_PUBLIC_APP_URL
-  ? `${process.env.NEXT_PUBLIC_APP_URL}/api/integrations/figma/callback`
-  : "https://www.coderocket.app/api/integrations/figma/callback";
+const FIGMA_REDIRECT_URI = buildAppUrl("/api/integrations/figma/callback");
 
 export async function GET(request: NextRequest) {
   try {

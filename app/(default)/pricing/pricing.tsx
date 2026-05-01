@@ -12,6 +12,7 @@ import { Database } from "@/types_db";
 import { PREMIUM_CHAR_LIMIT, FILE_LIMITS_PER_PLAN } from "@/utils/config";
 import { postData } from "@/utils/helpers";
 import { ROCKET_LIMITS_PER_PLAN } from "@/utils/rocket-conversion";
+import { publicBillingProvider } from "@/utils/runtime-config";
 
 type Subscription = Database["public"]["Tables"]["subscriptions"]["Row"];
 type Product = Database["public"]["Tables"]["products"]["Row"];
@@ -33,6 +34,7 @@ interface Props {
 }
 
 export default function Pricing({ user, products, subscription }: Props) {
+  const billingEnabled = publicBillingProvider === "stripe";
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
@@ -116,6 +118,19 @@ export default function Pricing({ user, products, subscription }: Props) {
       minimumFractionDigits: 0,
     }).format(price / 100);
   };
+
+  if (!billingEnabled) {
+    return (
+      <div className="bg-card rounded-lg border p-6">
+        <h3 className="text-xl font-semibold">Self-hosted instance</h3>
+        <p className="text-muted-foreground mt-2 text-sm">
+          Stripe checkout is disabled here. Configure
+          ` NEXT_PUBLIC_BILLING_PROVIDER=stripe ` and `BILLING_PROVIDER=stripe`
+          if you want to expose paid plans on your own deployment.
+        </p>
+      </div>
+    );
+  }
 
   if (products.length >= 1) {
     return (
@@ -300,4 +315,14 @@ export default function Pricing({ user, products, subscription }: Props) {
       </div>
     );
   }
+
+  return (
+    <div className="bg-card rounded-lg border p-6">
+      <h3 className="text-xl font-semibold">No billing plans configured</h3>
+      <p className="text-muted-foreground mt-2 text-sm">
+        Add Stripe products and sync them into Supabase to display
+        subscriptions on this instance.
+      </p>
+    </div>
+  );
 }

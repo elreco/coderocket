@@ -1,3 +1,5 @@
+import { buildAppUrl } from "@/utils/runtime-config";
+
 export enum EmailScenario {
   OnboardingWelcome = "onboarding-welcome",
   OnboardingTips = "onboarding-tips",
@@ -25,7 +27,7 @@ type ScenarioConfig = {
   previewText?: string;
 };
 
-const dashboardFallback = "https://www.coderocket.app/components";
+const dashboardFallback = buildAppUrl("/components");
 
 export function buildScenarioConfig(
   scenario: EmailScenario,

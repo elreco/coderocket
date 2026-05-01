@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useComponentContext } from "@/context/component-context";
 import { useToast } from "@/hooks/use-toast";
+import { buildDocsUrl } from "@/utils/runtime-config";
 
 import { buildComponent } from "../actions";
 import {
@@ -83,7 +84,7 @@ function PageHeader() {
       <p className="text-muted-foreground text-sm">
         Synchronize your component code with GitHub for local development.{" "}
         <a
-          href="https://docs.coderocket.app/github/overview"
+          href={buildDocsUrl("/github/overview")}
           target="_blank"
           rel="noopener noreferrer"
           className="text-foreground underline decoration-dotted underline-offset-4 hover:decoration-solid"

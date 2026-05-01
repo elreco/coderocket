@@ -1,23 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { createClient } from "@/utils/supabase/server";
+import { buildAccountUrl } from "@/utils/runtime-config";
 
 export async function GET(request: NextRequest) {
+  const accountUrl = new URL(buildAccountUrl());
   const { searchParams } = new URL(request.url);
   const code = searchParams.get("code");
   const state = searchParams.get("state");
   const error = searchParams.get("error");
 
   if (error) {
-    return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_SITE_URL}/account?github_error=${error}`,
-    );
+    accountUrl.search = "";
+    accountUrl.searchParams.set("github_error", error);
+    return NextResponse.redirect(accountUrl.toString());
   }
 
   if (!code || !state) {
-    return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_SITE_URL}/account?github_error=missing_params`,
-    );
+    accountUrl.search = "";
+    accountUrl.searchParams.set("github_error", "missing_params");
+    return NextResponse.redirect(accountUrl.toString());
   }
 
   const supabase = await createClient();
@@ -28,9 +30,9 @@ export async function GET(request: NextRequest) {
     error: userError,
   } = await supabase.auth.getUser();
   if (userError || !user || user.id !== state) {
-    return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_SITE_URL}/account?github_error=invalid_state`,
-    );
+    accountUrl.search = "";
+    accountUrl.searchParams.set("github_error", "invalid_state");
+    return NextResponse.redirect(accountUrl.toString());
   }
 
   try {
@@ -90,13 +92,13 @@ export async function GET(request: NextRequest) {
       throw new Error(`Database error: ${dbError.message}`);
     }
 
-    return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_SITE_URL}/account?github_success=true`,
-    );
+    accountUrl.search = "";
+    accountUrl.searchParams.set("github_success", "true");
+    return NextResponse.redirect(accountUrl.toString());
   } catch (error) {
     console.error("GitHub OAuth error:", error);
-    return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_SITE_URL}/account?github_error=oauth_failed`,
-    );
+    accountUrl.search = "";
+    accountUrl.searchParams.set("github_error", "oauth_failed");
+    return NextResponse.redirect(accountUrl.toString());
   }
 }

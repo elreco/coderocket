@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  verify:
+    name: Type check and validate templates
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install app dependencies
+        run: npm ci
+
+      - name: Install builder dependencies
+        run: npm --prefix builder ci
+
+      - name: Check generated templates
+        run: npm run check:templates
+
+      - name: Type check
+        run: npm run type-check
+
+      - name: Validate builder server files
+        run: |
+          node --check builder/server.js
+          node --check builder/storage.js
+          node --check builder/config.js
+          node --check builder/routes/scraper.js

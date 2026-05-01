@@ -22,12 +22,14 @@ The builder reads:
 
 - `BUILDER_HOST`
 - `BUILDER_PORT`
+- `BUILDER_AUTH_TOKEN`
 - `BUILDER_STORAGE_DRIVER`
 - `BUILDER_STORAGE_FS_ROOT`
 - `BUILDER_TEMP_DIR`
 - `BLOB_READ_WRITE_TOKEN`
 
 Use `fs` storage for local/self-host installs. Use `vercel-blob` only if you intentionally want the cloud storage adapter.
+Set `BUILDER_AUTH_TOKEN` in production so the app can authenticate requests to the builder API.
 
 ## Storage
 

@@ -21,6 +21,7 @@ import {
 import { useComponentContext } from "@/context/component-context";
 import { cn } from "@/lib/utils";
 import type { CustomDomainData } from "@/types/custom-domain";
+import { buildDeploymentUrl } from "@/utils/runtime-config";
 
 import ComponentSidebar from "../component-sidebar";
 import { getDisplayTitle } from "../utils/title-utils";
@@ -89,11 +90,15 @@ export function ComponentHeader({
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <a
-                      href={`https://${
-                        customDomain?.is_verified && customDomain?.domain
-                          ? customDomain.domain
-                          : `${fetchedChat.deploy_subdomain}.coderocket.app`
-                      }`}
+                      href={buildDeploymentUrl({
+                        customDomain:
+                          customDomain?.is_verified && customDomain?.domain
+                            ? customDomain.domain
+                            : null,
+                        subdomain: fetchedChat.deploy_subdomain,
+                        chatId: fetchedChat.id,
+                        version: fetchedChat.deployed_version,
+                      })}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center gap-1.5 rounded-full border border-green-500/30 bg-green-500/10 px-2 py-1 text-xs font-medium text-green-700 transition-colors hover:bg-green-500/20 dark:text-green-400"
@@ -112,7 +117,7 @@ export function ComponentHeader({
                       Live at{" "}
                       {customDomain?.is_verified && customDomain?.domain
                         ? customDomain.domain
-                        : `${fetchedChat.deploy_subdomain}.coderocket.app`}
+                        : fetchedChat.deploy_subdomain}
                     </p>
                     <p className="text-xs">
                       Version #{fetchedChat.deployed_version}

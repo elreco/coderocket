@@ -8,7 +8,13 @@ import {
   extractFilesFromArtifact,
   hasArtifacts,
 } from "@/utils/completion-parser";
-import { builderApiUrl, Framework } from "@/utils/config";
+import { Framework } from "@/utils/config";
+import {
+  billingEnabled,
+  buildBuilderHeaders,
+  builderApiUrl,
+  domainApiEnabled,
+} from "@/utils/server-config";
 import {
   verifyDomainOwnership,
   checkDomainAvailability,
@@ -31,6 +37,19 @@ import {
   fetchAssistantMessageByChatIdAndVersion,
   fetchChatById,
 } from "../actions";
+
+const requireSubscriptionIfBillingEnabled = async () => {
+  if (!billingEnabled) {
+    return null;
+  }
+
+  const subscription = await getSubscription();
+  if (!subscription) {
+    throw new Error("payment-required");
+  }
+
+  return subscription;
+};
 
 export const updateArtifactCode = async (
   chatId: string,
@@ -126,10 +145,7 @@ export const changeVisibilityByChatId = async (
   const user = userData?.user;
 
   if (!user) throw new Error("Could not get user");
-  const subscription = await getSubscription();
-  if (!subscription) {
-    throw new Error("payment-required");
-  }
+  await requireSubscriptionIfBillingEnabled();
 
   const { error } = await supabase
     .from("chats")
@@ -174,10 +190,7 @@ export const improvePromptByChatId = async (chatId: string, prompt: string) => {
   const user = userData?.user;
 
   if (!user) throw new Error("Could not get user");
-  const subscription = await getSubscription();
-  if (!subscription) {
-    throw new Error("payment-required");
-  }
+  await requireSubscriptionIfBillingEnabled();
   const { data: chat, error: chatError } = await supabase
     .from("chats")
     .select("id, framework")
@@ -202,10 +215,7 @@ export const deleteVersionByMessageId = async (messageId: number) => {
   const user = userData?.user;
 
   if (!user) throw new Error("Could not get user");
-  const subscription = await getSubscription();
-  if (!subscription) {
-    throw new Error("payment-required");
-  }
+  await requireSubscriptionIfBillingEnabled();
   const { data: message, error: fetchError } = await supabase
     .from("messages")
     .select("id, chat_id, version, chats(id)")
@@ -254,15 +264,16 @@ export const deleteVersionByMessageId = async (messageId: number) => {
       `${builderApiUrl}/build/${message.chat_id}/${message.version}`,
       {
         method: "DELETE",
+        headers: buildBuilderHeaders(),
       },
     );
 
     if (!response.ok) {
       console.error(
-        `Failed to delete build from Vercel Blob for version ${message.version}: ${response.status}`,
+        `Failed to delete build from storage for version ${message.version}: ${response.status}`,
       );
       throw new Error(
-        `Failed to delete build from Vercel Blob: ${response.status}`,
+        `Failed to delete build from storage: ${response.status}`,
       );
     }
 
@@ -272,7 +283,7 @@ export const deleteVersionByMessageId = async (messageId: number) => {
     );
   } catch (error) {
     console.error(
-      `Error deleting build from Vercel Blob for version ${message.version}:`,
+      `Error deleting build from storage for version ${message.version}:`,
       error,
     );
     throw error;
@@ -403,9 +414,9 @@ export const buildComponent = async (
 
     const builderResponse = await fetch(`${builderApiUrl}/build`, {
       method: "POST",
-      headers: {
+      headers: buildBuilderHeaders({
         "Content-Type": "application/json",
-      },
+      }),
       body: JSON.stringify({
         chatId,
         version,
@@ -499,7 +510,7 @@ export const buildComponent = async (
         );
       } else {
         console.warn(
-          `buildComponent: Build ${chatId}-${version} not available on Vercel Blob after 3 attempts, skipping screenshot`,
+        `buildComponent: Build ${chatId}-${version} not available in storage after 3 attempts, skipping screenshot`,
         );
       }
     } catch (screenshotError) {
@@ -555,9 +566,9 @@ export const checkExistingComponent = async (
     `${builderApiUrl}/check-build/${chatId}/${version}`,
     {
       method: "GET",
-      headers: {
+      headers: buildBuilderHeaders({
         "Content-Type": "application/json",
-      },
+      }),
     },
   );
 
@@ -621,10 +632,7 @@ export const deployComponent = async (
 
   if (!user) throw new Error("User not authenticated");
 
-  const subscription = await getSubscription();
-  if (!subscription) {
-    throw new Error("payment-required");
-  }
+  await requireSubscriptionIfBillingEnabled();
 
   const { data: chat } = await supabase
     .from("chats")
@@ -668,10 +676,7 @@ export const undeployComponent = async (chatId: string) => {
 
   if (!user) throw new Error("User not authenticated");
 
-  const subscription = await getSubscription();
-  if (!subscription) {
-    throw new Error("payment-required");
-  }
+  await requireSubscriptionIfBillingEnabled();
 
   const { data: chat } = await supabase
     .from("chats")
@@ -721,10 +726,7 @@ export const updateDeploymentSubdomain = async (
 
   if (!user) throw new Error("User not authenticated");
 
-  const subscription = await getSubscription();
-  if (!subscription) {
-    throw new Error("payment-required");
-  }
+  await requireSubscriptionIfBillingEnabled();
 
   const { data: chat } = await supabase
     .from("chats")
@@ -781,10 +783,7 @@ export const updateAutoDeploySettings = async (
 
   if (!user) throw new Error("User not authenticated");
 
-  const subscription = await getSubscription();
-  if (!subscription) {
-    throw new Error("payment-required");
-  }
+  await requireSubscriptionIfBillingEnabled();
 
   const { data: chat } = await supabase
     .from("chats")
@@ -887,10 +886,7 @@ export const addCustomDomain = async (chatId: string, domain: string) => {
 
   if (!user) throw new Error("User not authenticated");
 
-  const subscription = await getSubscription();
-  if (!subscription) {
-    throw new Error("payment-required");
-  }
+  await requireSubscriptionIfBillingEnabled();
 
   const { data: chat } = await supabase
     .from("chats")
@@ -996,17 +992,19 @@ export const verifyCustomDomain = async (domainId: string) => {
       };
     }
 
-    let sslStatus = "pending";
+    let sslStatus = domainApiEnabled ? "pending" : "active";
     let sslError = null;
 
-    try {
-      await addDomainToVercel(domain.domain);
-      sslStatus = "active";
-    } catch (error) {
-      console.error("Error adding domain to Vercel:", error);
-      sslStatus = "failed";
-      sslError =
-        error instanceof Error ? error.message : "Failed to configure SSL";
+    if (domainApiEnabled) {
+      try {
+        await addDomainToVercel(domain.domain);
+        sslStatus = "active";
+      } catch (error) {
+        console.error("Error adding domain to Vercel:", error);
+        sslStatus = "failed";
+        sslError =
+          error instanceof Error ? error.message : "Failed to configure SSL";
+      }
     }
 
     const { error } = await supabase
@@ -1032,6 +1030,15 @@ export const verifyCustomDomain = async (domainId: string) => {
         success: true,
         verified: true,
         warning: `Domain verified but SSL setup failed: ${sslError}`,
+      };
+    }
+
+    if (!domainApiEnabled) {
+      return {
+        success: true,
+        verified: true,
+        warning:
+          "Domain verified. DNS routing and HTTPS are managed by your self-hosted environment.",
       };
     }
 
@@ -1063,7 +1070,7 @@ export const deleteCustomDomain = async (domainId: string) => {
     throw new Error("Unauthorized");
   }
 
-  if (domain.is_verified) {
+  if (domain.is_verified && domainApiEnabled) {
     try {
       await removeDomainFromVercel(domain.domain);
     } catch (error) {
@@ -1156,6 +1163,28 @@ export const refreshSSLStatus = async (domainId: string) => {
     return { ssl_status: "pending", message: "Domain must be verified first" };
   }
 
+  if (!domainApiEnabled) {
+    if (domain.ssl_status !== "active") {
+      const { error } = await supabase
+        .from("custom_domains")
+        .update({
+          ssl_status: "active",
+          ssl_issued_at: domain.ssl_issued_at ?? new Date().toISOString(),
+        })
+        .eq("id", domainId);
+
+      if (error) {
+        throw new Error("Failed to update SSL status");
+      }
+    }
+
+    return {
+      ssl_status: "active",
+      verified: true,
+      message: "SSL is managed by your self-hosted reverse proxy.",
+    };
+  }
+
   try {
     const vercelStatus = await checkVercelDomainStatus(domain.domain);
 
@@ -1237,7 +1266,7 @@ export const deleteChatByChatId = async (chatId: string) => {
     .eq("chat_id", chatId)
     .maybeSingle();
 
-  if (customDomain?.is_verified) {
+  if (customDomain?.is_verified && domainApiEnabled) {
     try {
       await removeDomainFromVercel(customDomain.domain);
     } catch (error) {
@@ -1296,23 +1325,24 @@ export const deleteChatByChatId = async (chatId: string) => {
     throw new Error("Failed to delete chat");
   }
 
-  // 3. Delete builds from Vercel Blob in background (after responding)
+  // 3. Delete stored builds in background (after responding)
   // Using after() to run this in the background
   after(async () => {
     try {
       const response = await fetch(`${builderApiUrl}/builds/${chatId}`, {
         method: "DELETE",
+        headers: buildBuilderHeaders(),
       });
 
       if (!response.ok) {
         console.error(
-          `Failed to delete builds from Vercel Blob: ${response.status}`,
+          `Failed to delete builds from storage: ${response.status}`,
         );
       } else {
         console.log(`Successfully deleted builds for chat ${chatId}`);
       }
     } catch (error) {
-      console.error("Error deleting builds from Vercel Blob:", error);
+      console.error("Error deleting builds from storage:", error);
     }
   });
 

@@ -1,6 +1,7 @@
 import { AppFooter } from "@/components/app-footer";
 import { Container } from "@/components/container";
 import { DeployedSiteCard } from "@/components/deployed-site-card";
+import { buildAppUrl } from "@/utils/runtime-config";
 
 import { getDeployedSites } from "../components/actions";
 
@@ -22,10 +23,10 @@ export async function generateMetadata() {
       title: "Deployed Sites - CodeRocket | Tailwind AI",
       description:
         "Browse the latest deployed sites created with CodeRocket. Discover live applications built by our community.",
-      url: "https://www.coderocket.app/deployed-sites",
+      url: buildAppUrl("/deployed-sites"),
     },
     alternates: {
-      canonical: "https://www.coderocket.app/deployed-sites",
+      canonical: buildAppUrl("/deployed-sites"),
     },
   };
 }

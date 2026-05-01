@@ -1,45 +1,31 @@
-import { list, type ListBlobResultBlob } from "@vercel/blob";
 import mime from "mime-types";
 import { NextRequest, NextResponse } from "next/server";
 
+import {
+  findBuildAsset,
+  readBuildAsset,
+} from "@/builder/storage.js";
 import { getSubscription } from "@/app/supabase-server";
+import {
+  appHostname,
+  buildAppUrl,
+  buildCloudComponentUrl,
+  buildPricingUrl,
+  buildVersionedWebcontainerUrl,
+  deploymentRootDomain,
+  isLocalHostname,
+  matchesHostnameOrSubdomain,
+  normalizeHostname,
+  previewRootDomain,
+  webcontainerRootDomain,
+} from "@/utils/runtime-config";
+import { billingEnabled } from "@/utils/server-config";
 import { createClient } from "@/utils/supabase/server";
 
 export const revalidate = 0;
 
 const STATIC_ASSET_CACHE_CONTROL = "public, max-age=31536000, immutable";
 const HTML_CACHE_CONTROL = "no-cache";
-
-const findBlobByPathname = async (
-  targetPathname: string,
-): Promise<ListBlobResultBlob | null> => {
-  let cursor: string | undefined;
-
-  do {
-    const {
-      blobs,
-      hasMore,
-      cursor: nextCursor,
-    } = await list({
-      prefix: targetPathname,
-      limit: 100,
-      cursor,
-    });
-
-    const exactMatch = blobs.find((blob) => blob.pathname === targetPathname);
-    if (exactMatch) {
-      return exactMatch;
-    }
-
-    if (!hasMore) {
-      return null;
-    }
-
-    cursor = nextCursor;
-  } while (cursor);
-
-  return null;
-};
 
 /**
  * Cette route sert les fichiers d’un dossier (prefix) stocké dans Vercel Blob.
@@ -57,8 +43,20 @@ export async function GET(
   const url = new URL(request.url);
   const { prefix: routePrefix, slug: routeSlug = [] } = await context.params;
   const originalHostname = request.headers.get("host") || "";
-  const hostname = url.hostname || originalHostname || "";
+  const hostname = normalizeHostname(url.hostname || originalHostname || "");
   const pathname = url.pathname;
+  const isLocalRequest = isLocalHostname(hostname);
+  const isPreviewHost = matchesHostnameOrSubdomain(hostname, previewRootDomain);
+  const isWebcontainerHost = matchesHostnameOrSubdomain(
+    hostname,
+    webcontainerRootDomain,
+  );
+  const isDeploymentHost = matchesHostnameOrSubdomain(
+    hostname,
+    deploymentRootDomain,
+  );
+  const isPreviewRequest =
+    isPreviewHost || url.searchParams.get("preview") === "1";
   const notFoundHtml = `
         <!DOCTYPE html>
         <html lang="en">
@@ -131,10 +129,10 @@ export async function GET(
           </head>
           <body>
             <div class="container">
-              <img src="https://www.coderocket.app/logo.png" alt="CodeRocket" class="logo" />
+              <img src="${buildAppUrl("/logo.png")}" alt="CodeRocket" class="logo" />
               <h1>Application Not Found</h1>
               <p>This application is not deployed or doesn't exist.</p>
-              <a href="https://www.coderocket.app" class="button">Go to CodeRocket</a>
+              <a href="${buildAppUrl("/")}" class="button">Go to CodeRocket</a>
             </div>
           </body>
         </html>
@@ -212,10 +210,10 @@ export async function GET(
           </head>
           <body>
             <div class="container">
-              <img src="https://www.coderocket.app/logo.png" alt="CodeRocket" class="logo" />
+              <img src="${buildAppUrl("/logo.png")}" alt="CodeRocket" class="logo" />
               <h1>Premium Required</h1>
               <p>This deployment requires an active premium subscription. The site owner needs to upgrade to keep this site online.</p>
-              <a href="https://www.coderocket.app/pricing" class="button">Upgrade to Premium</a>
+              <a href="${buildPricingUrl()}" class="button">Upgrade to Premium</a>
             </div>
           </body>
         </html>
@@ -262,9 +260,11 @@ export async function GET(
 
   const isCustomDomainHost =
     hostname &&
-    !hostname.includes("coderocket.app") &&
-    !hostname.includes("localhost") &&
-    !hostname.includes("127.0.0.1");
+    hostname !== normalizeHostname(appHostname) &&
+    !isLocalRequest &&
+    !isDeploymentHost &&
+    !isPreviewHost &&
+    !isWebcontainerHost;
 
   let prefix = routePrefix;
   let slug: string[] = routeSlug;
@@ -294,16 +294,23 @@ export async function GET(
       return createNotFoundResponse();
     }
 
-    const subscription = await getSubscription(chat.user_id);
-    if (!subscription) {
-      return createPremiumRequiredResponse();
+    if (billingEnabled) {
+      const subscription = await getSubscription(chat.user_id);
+      if (!subscription) {
+        return createPremiumRequiredResponse();
+      }
     }
 
     prefix = `${chat.id}-${chat.deployed_version}`;
     console.log("API Route: Custom domain resolved to prefix =", prefix);
-  } else if (hostname.includes("coderocket.app")) {
+  } else if (
+    isDeploymentHost ||
+    isPreviewHost ||
+    isWebcontainerHost ||
+    isLocalRequest
+  ) {
     slug = deriveSlugFromPath();
-    prefix = hostname.split(".")[0];
+    prefix = isLocalRequest ? routePrefix : hostname.split(".")[0];
 
     const isUuidPattern =
       /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}-\d+$/i.test(
@@ -323,9 +330,11 @@ export async function GET(
         return createNotFoundResponse();
       }
 
-      const subscription = await getSubscription(chat.user_id);
-      if (!subscription) {
-        return createPremiumRequiredResponse();
+      if (billingEnabled) {
+        const subscription = await getSubscription(chat.user_id);
+        if (!subscription) {
+          return createPremiumRequiredResponse();
+        }
       }
 
       prefix = `${chat.id}-${chat.deployed_version}`;
@@ -347,22 +356,22 @@ export async function GET(
   console.log("API Route: Recherche fichier", filePath);
 
   // 3. Recherche ciblée du fichier exact (évite de lister tout le prefix du projet)
-  let matchedBlob = await findBlobByPathname(filePath);
+  let matchedAsset = await findBuildAsset(filePath);
 
   // 5. Déterminer si c'est une route SPA (pas d'extension)
   const lastSegment = slug[slug.length - 1];
   const hasExtension = lastSegment?.includes(".");
 
   // 6. Fallback SPA : uniquement pour les routes sans extension
-  if (!matchedBlob) {
+  if (!matchedAsset) {
     if (!hasExtension && slug.length > 0) {
       console.log(
         "API Route: Slug sans extension et fichier non trouvé, fallback vers index.html",
       );
       const fallbackPath = `${prefix}/index.html`;
-      matchedBlob = await findBlobByPathname(fallbackPath);
+      matchedAsset = await findBuildAsset(fallbackPath);
 
-      if (!matchedBlob) {
+      if (!matchedAsset) {
         console.log("API Route: index.html non trouvé, retour 404");
         return new NextResponse("Not found", { status: 404 });
       }
@@ -372,29 +381,30 @@ export async function GET(
     }
   }
 
-  console.log("API Route: Fichier trouvé", matchedBlob.pathname);
+  console.log("API Route: Fichier trouvé", matchedAsset.pathname);
 
   // 7. Récupère le contenu du Blob et le renvoie
-  const blobResp = await fetch(matchedBlob.url);
-  if (!blobResp.ok) {
-    console.log(
-      "API Route: Erreur lors de la récupération du blob",
-      blobResp.status,
+  let data: ArrayBuffer;
+  try {
+    const assetBuffer = await readBuildAsset(matchedAsset);
+    data = assetBuffer.buffer.slice(
+      assetBuffer.byteOffset,
+      assetBuffer.byteOffset + assetBuffer.byteLength,
     );
+  } catch (error) {
+    console.log("API Route: Erreur lors de la récupération du build", error);
     return new NextResponse("Try to refresh the page", { status: 500 });
   }
 
-  let data = await blobResp.arrayBuffer();
-
   // 8. Détermine le type MIME
   let mimeType: string;
-  const isIndexHtml = matchedBlob.pathname.endsWith("index.html");
+  const isIndexHtml = matchedAsset.pathname.endsWith("index.html");
   if (isIndexHtml) {
     mimeType = "text/html";
-  } else if (matchedBlob.pathname.endsWith(".js")) {
+  } else if (matchedAsset.pathname.endsWith(".js")) {
     mimeType = "application/javascript";
   } else {
-    const extension = "." + (matchedBlob.pathname.split(".").pop() ?? "");
+    const extension = "." + (matchedAsset.pathname.split(".").pop() ?? "");
     mimeType = mime.lookup(extension) || "application/octet-stream";
   }
 
@@ -614,9 +624,9 @@ export async function GET(
     url.hostname,
   );
 
-  if (isIndexHtml && originalHostname?.includes("preview.coderocket.app")) {
+  if (isIndexHtml && isPreviewRequest) {
     const parts = prefix.split("-");
-    parts.pop();
+    const version = Number(parts.pop() || "0");
     const chatId = parts.join("-");
     const supabase = await createClient();
     const { data: chat } = await supabase
@@ -626,10 +636,19 @@ export async function GET(
       .maybeSingle();
 
     const chatSlug = chat?.slug || null;
-    const iframeSrc = `https://${prefix}.webcontainer.coderocket.app${slug.length > 0 ? "/" + slug.join("/") : ""}`;
-    const watermarkUrl = chatSlug
-      ? `https://www.coderocket.app/components/${chatSlug}`
-      : "https://www.coderocket.app";
+    const wrapperBasePath = isLocalRequest ? `/webcontainer/${prefix}` : "";
+    const iframeSrc = buildVersionedWebcontainerUrl(
+      chatId,
+      version,
+      slug.length > 0 ? `/${slug.join("/")}` : "",
+    );
+    const watermarkUrl = buildCloudComponentUrl(chatSlug ?? undefined);
+    const allowedHosts = [
+      previewRootDomain,
+      webcontainerRootDomain,
+      hostname,
+      normalizeHostname(appHostname),
+    ].filter(Boolean);
 
     const htmlWithWatermark = `
 <!DOCTYPE html>
@@ -688,7 +707,7 @@ export async function GET(
 <body>
   <div id="watermark">
     <a href="${watermarkUrl}" target="_blank" rel="noopener noreferrer">
-      <img src="https://www.coderocket.app/logo-white.png" alt="CodeRocket" />
+      <img src="${buildAppUrl("/logo-white.png")}" alt="CodeRocket" />
       <span>Built with CodeRocket 🚀</span>
     </a>
   </div>
@@ -697,16 +716,38 @@ export async function GET(
     (function() {
       const iframe = document.getElementById('preview-iframe');
       const baseUrl = window.location.origin;
+      const wrapperBasePath = ${JSON.stringify(wrapperBasePath)};
+      const wrapperQuery = wrapperBasePath ? '?preview=1' : '';
+
+      function normalizePreviewPath(path) {
+        if (!path || path === wrapperBasePath) {
+          return '/';
+        }
+        if (wrapperBasePath && path.startsWith(wrapperBasePath)) {
+          const nextPath = path.slice(wrapperBasePath.length);
+          return nextPath || '/';
+        }
+        return path;
+      }
 
       function updateUrl(path) {
-        const newUrl = baseUrl + (path === '/' ? '' : path);
+        const normalizedPath = path === '/' ? '' : path;
+        const newUrl = wrapperBasePath
+          ? baseUrl + wrapperBasePath + normalizedPath + wrapperQuery
+          : baseUrl + normalizedPath;
         window.history.pushState({ path: path }, '', newUrl);
       }
 
       function updateIframeSrc(path) {
+        const normalizedPath = path === '/' ? '' : path;
+        if (wrapperBasePath) {
+          iframe.src = baseUrl + wrapperBasePath + normalizedPath;
+          return;
+        }
+
         const currentSrc = iframe.src;
         const url = new URL(currentSrc);
-        url.pathname = path === '/' ? '' : path;
+        url.pathname = normalizedPath;
         iframe.src = url.toString();
       }
 
@@ -727,10 +768,7 @@ export async function GET(
         if (event.origin && event.origin !== 'null') {
           try {
             const originHost = new URL(event.origin).hostname;
-            const allowedHosts = [
-              'preview.coderocket.app',
-              'webcontainer.coderocket.app',
-            ];
+            const allowedHosts = ${JSON.stringify(allowedHosts)};
             const isAllowed = allowedHosts.some(
               (host) => originHost === host || originHost.endsWith('.' + host),
             );
@@ -746,11 +784,11 @@ export async function GET(
       });
 
       window.addEventListener('popstate', function(event) {
-        const path = window.location.pathname;
+        const path = normalizePreviewPath(window.location.pathname);
         updateIframeSrc(path);
       });
 
-      const initialPath = window.location.pathname;
+      const initialPath = normalizePreviewPath(window.location.pathname);
       if (initialPath !== '/' && initialPath !== '') {
         updateIframeSrc(initialPath);
       }

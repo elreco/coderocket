@@ -1,6 +1,9 @@
 "use server";
 
-import { builderApiUrl } from "@/utils/config";
+import {
+  buildBuilderHeaders,
+  builderApiUrl,
+} from "@/utils/server-config";
 
 interface WebsiteContent {
   html: string;
@@ -65,9 +68,9 @@ export async function cloneWebsite(url: string): Promise<CloneWebsiteResult> {
 
     const response = await fetch(SCRAPER_ENDPOINT, {
       method: "POST",
-      headers: {
+      headers: buildBuilderHeaders({
         "Content-Type": "application/json",
-      },
+      }),
       cache: "no-store",
       body: JSON.stringify({ url }),
     });

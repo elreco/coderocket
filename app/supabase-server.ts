@@ -1,5 +1,6 @@
 "use server";
 
+import { billingEnabled } from "@/utils/server-config";
 import { createClient } from "@/utils/supabase/server";
 
 export async function getUserDetails() {
@@ -22,6 +23,10 @@ export async function getUserDetails() {
 }
 
 export async function getSubscription(userId?: string) {
+  if (!billingEnabled) {
+    return null;
+  }
+
   const supabase = await createClient();
   try {
     let targetUserId: string | undefined = userId;
@@ -60,6 +65,10 @@ export async function getSubscription(userId?: string) {
 }
 
 export const getActiveProductsWithPrices = async () => {
+  if (!billingEnabled) {
+    return [];
+  }
+
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("products")

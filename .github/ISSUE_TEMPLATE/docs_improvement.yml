@@ -1,0 +1,58 @@
+name: Documentation improvement
+description: Report confusing docs, missing setup steps, or propose documentation improvements.
+title: "[Docs] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve the docs and onboarding experience.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Documentation area
+      options:
+        - README
+        - Self-hosting setup
+        - Builder
+        - Supabase / database
+        - Deployments / domains
+        - Integrations
+        - API / code examples
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: location
+    attributes:
+      label: Page or file
+      description: Paste a URL, path, or section name if you have one.
+      placeholder: README.md or https://docs.coderocket.app/...
+    validations:
+      required: false
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What is unclear or missing?
+      description: Describe the current issue in the docs.
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: What should be changed?
+      description: Tell us how the docs could be improved.
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Extra context
+      description: Screenshots, commands, or notes from your setup attempt.
+      render: markdown
+    validations:
+      required: false

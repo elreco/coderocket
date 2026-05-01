@@ -1,0 +1,60 @@
+title: "[Show and tell] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Share something you built with CodeRocket. Demos, experiments, starter kits, and self-hosted setups are all welcome.
+
+  - type: input
+    id: project-name
+    attributes:
+      label: Project name
+      placeholder: My awesome project
+    validations:
+      required: true
+
+  - type: dropdown
+    id: project-type
+    attributes:
+      label: What are you sharing?
+      options:
+        - A full website
+        - A component or UI library
+        - A self-hosted setup
+        - A builder workflow
+        - A tutorial or guide
+        - Something else
+    validations:
+      required: true
+
+  - type: input
+    id: demo-url
+    attributes:
+      label: Demo URL
+      placeholder: https://...
+    validations:
+      required: false
+
+  - type: input
+    id: repo-url
+    attributes:
+      label: Repo URL
+      placeholder: https://github.com/...
+    validations:
+      required: false
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What did you build?
+      description: Tell the community what it does and how you used CodeRocket.
+    validations:
+      required: true
+
+  - type: textarea
+    id: feedback
+    attributes:
+      label: What feedback are you looking for?
+      description: Optional, but useful if you want focused community input.
+    validations:
+      required: false

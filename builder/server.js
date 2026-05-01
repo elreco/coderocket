@@ -1,10 +1,17 @@
 import Fastify from "fastify";
-import { exec } from "child_process";
+import { exec, execFile } from "child_process";
+import { timingSafeEqual } from "crypto";
 import fs from "fs/promises";
 import { existsSync } from "fs";
 import path from "path";
 
-import { builderHost, builderPort, npmCacheDir, tempDir } from "./config.js";
+import {
+  builderAuthToken,
+  builderHost,
+  builderPort,
+  npmCacheDir,
+  tempDir,
+} from "./config.js";
 import { registerScraperRoutes } from "./routes/scraper.js";
 import {
   buildExists,
@@ -94,6 +101,48 @@ const AUTO_CLEANUP_INTERVAL = 86400000; // 24 heures en millisecondes
 const app = Fastify({
   requestTimeout: 300000,
   logger: false,
+});
+
+const AUTH_EXEMPT_PATHS = new Set(["/health"]);
+
+function isAuthorizedRequest(request) {
+  if (!builderAuthToken) {
+    return true;
+  }
+
+  const authorizationHeader = request.headers.authorization;
+  if (
+    !authorizationHeader ||
+    !authorizationHeader.startsWith("Bearer ")
+  ) {
+    return false;
+  }
+
+  const providedToken = authorizationHeader.slice("Bearer ".length);
+  const expectedBuffer = Buffer.from(builderAuthToken);
+  const providedBuffer = Buffer.from(providedToken);
+
+  if (expectedBuffer.length !== providedBuffer.length) {
+    return false;
+  }
+
+  return timingSafeEqual(expectedBuffer, providedBuffer);
+}
+
+app.addHook("onRequest", async (request, reply) => {
+  const pathname = request.url.split("?")[0];
+  if (AUTH_EXEMPT_PATHS.has(pathname)) {
+    return;
+  }
+
+  if (isAuthorizedRequest(request)) {
+    return;
+  }
+
+  return reply.status(401).send({
+    event: "error",
+    details: "Unauthorized",
+  });
 });
 
 app.setErrorHandler(async (error, request, reply) => {
@@ -392,18 +441,9 @@ async function cleanupDirectory(dirPath) {
   if (!existsSync(dirPath)) return;
 
   safeLog(`🧹 Cleaning up directory: ${dirPath}`);
-
-  return new Promise((resolve, reject) => {
-    exec(`rm -rf "${dirPath}"`, (error) => {
-      if (error) {
-        safeLog(`⚠️ rm -rf failed for ${dirPath}: ${error.message}`, true);
-        reject(error);
-      } else {
-        safeLog(`✅ Directory deleted: ${dirPath}`);
-        resolve(true);
-      }
-    });
-  });
+  await fs.rm(dirPath, { recursive: true, force: true });
+  safeLog(`✅ Directory deleted: ${dirPath}`);
+  return true;
 }
 
 // ================== FONCTION POUR SUPPRIMER TOUS LES FICHIERS TEMP ==================
@@ -726,51 +766,56 @@ async function checkDiskSpace() {
       reject(new Error("Timeout lors de la vérification de l'espace disque"));
     }, 10000); // 10 secondes de timeout
 
-    exec(`df -h ${BASE_TEMP_DIR}`, { timeout: 8000 }, (error, stdout, stderr) => {
-      clearTimeout(timeout); // Annuler le timeout
+    execFile(
+      "df",
+      ["-h", BASE_TEMP_DIR],
+      { timeout: 8000 },
+      (error, stdout, stderr) => {
+        clearTimeout(timeout); // Annuler le timeout
 
-      if (error) {
-        reject(new Error(`Erreur lors de la vérification de l'espace disque: ${error.message}`));
-        return;
-      }
-      if (stderr) {
-        reject(new Error(`Erreur lors de la vérification de l'espace disque: ${stderr}`));
-        return;
-      }
-
-      // Analyser la sortie de df
-      try {
-        const lines = stdout.trim().split('\n');
-        if (lines.length < 2) {
-          reject(new Error('Format de sortie de df inattendu'));
+        if (error) {
+          reject(new Error(`Erreur lors de la vérification de l'espace disque: ${error.message}`));
+          return;
+        }
+        if (stderr) {
+          reject(new Error(`Erreur lors de la vérification de l'espace disque: ${stderr}`));
           return;
         }
 
-        const headers = lines[0].split(/\s+/).filter(Boolean);
-        const values = lines[1].split(/\s+/).filter(Boolean);
-
-        const result = {};
-        headers.forEach((header, index) => {
-          if (index < values.length) {
-            result[header] = values[index];
+        // Analyser la sortie de df
+        try {
+          const lines = stdout.trim().split('\n');
+          if (lines.length < 2) {
+            reject(new Error('Format de sortie de df inattendu'));
+            return;
           }
-        });
 
-        // Formater les données pour une meilleure lisibilité
-        const formattedResult = {
-          filesystem: result['Filesystem'] || result['Mounted'] || 'Unknown',
-          size: result['Size'] || '?',
-          used: result['Used'] || '?',
-          available: result['Avail'] || result['Available'] || '?',
-          usePercentage: result['Use%'] || result['Capacity'] || '?',
-          mountedOn: result['Mounted'] || result['on'] || BASE_TEMP_DIR
-        };
+          const headers = lines[0].split(/\s+/).filter(Boolean);
+          const values = lines[1].split(/\s+/).filter(Boolean);
 
-        resolve(formattedResult);
-      } catch (parseError) {
-        reject(new Error(`Erreur lors de l'analyse de la sortie df: ${parseError.message}`));
-      }
-    });
+          const result = {};
+          headers.forEach((header, index) => {
+            if (index < values.length) {
+              result[header] = values[index];
+            }
+          });
+
+          // Formater les données pour une meilleure lisibilité
+          const formattedResult = {
+            filesystem: result['Filesystem'] || result['Mounted'] || 'Unknown',
+            size: result['Size'] || '?',
+            used: result['Used'] || '?',
+            available: result['Avail'] || result['Available'] || '?',
+            usePercentage: result['Use%'] || result['Capacity'] || '?',
+            mountedOn: result['Mounted'] || result['on'] || BASE_TEMP_DIR
+          };
+
+          resolve(formattedResult);
+        } catch (parseError) {
+          reject(new Error(`Erreur lors de l'analyse de la sortie df: ${parseError.message}`));
+        }
+      },
+    );
   });
 }
 

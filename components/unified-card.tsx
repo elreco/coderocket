@@ -16,6 +16,7 @@ import { toggleChatLike } from "@/app/(default)/components/actions";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { buildAppUrl } from "@/utils/runtime-config";
 import { avatarApi, Framework } from "@/utils/config";
 import { getRelativeDate } from "@/utils/date";
 
@@ -157,7 +158,7 @@ export function UnifiedCard({
           className="group relative aspect-video w-full bg-cover bg-center bg-no-repeat"
           style={{
             backgroundImage: `url(${
-              data.imageUrl || "https://www.coderocket.app/placeholder.svg"
+              data.imageUrl || buildAppUrl("/placeholder.svg")
             })`,
           }}
         >

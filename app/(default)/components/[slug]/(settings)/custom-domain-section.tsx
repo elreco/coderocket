@@ -20,6 +20,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { CustomDomainData } from "@/types/custom-domain";
+import {
+  deploymentRootDomain,
+  publicDomainProvider,
+} from "@/utils/runtime-config";
 
 import {
   addCustomDomain,
@@ -47,6 +51,10 @@ export default function CustomDomainSection({
   onDomainChange,
 }: CustomDomainSectionProps) {
   const { toast } = useToast();
+  const sslProviderLabel =
+    publicDomainProvider === "vercel"
+      ? "Vercel"
+      : "your self-hosted reverse proxy";
   const [domain, setDomain] = useState("");
   const [customDomain, setCustomDomain] = useState<CustomDomainData | null>(
     initialCustomDomain || null,
@@ -492,14 +500,16 @@ export default function CustomDomainSection({
                               variant="ghost"
                               size="sm"
                               className="h-6 px-2"
-                              onClick={() => copyToClipboard("coderocket.app")}
+                              onClick={() =>
+                                copyToClipboard(deploymentRootDomain)
+                              }
                             >
                               <Copy className="mr-1 size-3" />
                               Copy
                             </Button>
                           </div>
                           <code className="bg-background block rounded px-2 py-1.5 text-xs break-all">
-                            coderocket.app
+                            {deploymentRootDomain}
                           </code>
                         </div>
                       </div>
@@ -593,9 +603,9 @@ export default function CustomDomainSection({
                   Automatic HTTPS / SSL
                 </p>
                 <p className="text-white text-sm">
-                  SSL certificates are automatically provisioned and managed by
-                  Vercel. Once your domain is verified, HTTPS will be enabled
-                  within minutes. No action required!
+                  {publicDomainProvider === "vercel"
+                    ? "SSL certificates are automatically provisioned and managed by Vercel. Once your domain is verified, HTTPS will be enabled within minutes. No action required!"
+                    : `Once your domain is verified, point DNS to ${deploymentRootDomain} and terminate HTTPS in ${sslProviderLabel}.`}
                 </p>
               </div>
             </div>

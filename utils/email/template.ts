@@ -1,3 +1,5 @@
+import { buildAppUrl, buildPricingUrl } from "@/utils/runtime-config";
+
 export type Highlight = {
   title: string;
   description: string;
@@ -36,6 +38,8 @@ export function renderEmailTemplate({
   highlights,
   featuredComponent,
 }: TemplateOptions) {
+  const defaultOgImage = buildAppUrl("/og.png");
+  const logoWhiteUrl = buildAppUrl("/logo-white.png");
   const preview = previewText ?? body.slice(0, 140);
   const fallbackHighlights: Highlight[] = [
     {
@@ -44,8 +48,8 @@ export function renderEmailTemplate({
         "Spin up hero, pricing and testimonial sections with a single prompt.",
       metric: "12 new variants",
       actionLabel: "Open blocks",
-      actionUrl: "https://www.coderocket.app/components",
-      imageUrl: "https://www.coderocket.app/og.png",
+      actionUrl: buildAppUrl("/components"),
+      imageUrl: defaultOgImage,
     },
     {
       title: "Figma to React",
@@ -53,8 +57,8 @@ export function renderEmailTemplate({
         "Import a frame and export responsive React + Tailwind code instantly.",
       metric: "Beta refreshed",
       actionLabel: "Browse templates",
-      actionUrl: "https://www.coderocket.app/templates",
-      imageUrl: "https://www.coderocket.app/og.png",
+      actionUrl: buildAppUrl("/templates"),
+      imageUrl: defaultOgImage,
     },
     {
       title: "Ship-ready exports",
@@ -62,8 +66,8 @@ export function renderEmailTemplate({
         "One-click deploy preview plus direct GitHub sync for every component.",
       metric: "4m avg build",
       actionLabel: "See how it works",
-      actionUrl: "https://www.coderocket.app/pricing",
-      imageUrl: "https://www.coderocket.app/og.png",
+      actionUrl: buildPricingUrl(),
+      imageUrl: defaultOgImage,
     },
   ];
   const highlightItems = (
@@ -99,8 +103,8 @@ export function renderEmailTemplate({
     previewHtml:
       '<table role="presentation" width="100%" style="border-collapse:collapse"><tr><td style="background:#191b2d;border-radius:16px;padding:20px;"><p style="margin:0 0 8px;font-size:13px;color:#8e92c3;letter-spacing:0.08em;text-transform:uppercase;">Insight</p><p style="margin:0;font-size:26px;color:#f5f5ff;">$42.8K</p><p style="margin:8px 0 0;font-size:12px;color:#7b80b2;">+18% vs last week</p></td><td style="width:16px;"></td><td style="background:#191b2d;border-radius:16px;padding:20px;"><p style="margin:0;font-size:14px;color:#c4c8ff;">Sessions</p><p style="margin:10px 0 0;font-size:30px;color:#f5f5ff;">12,481</p></td></tr></table>',
     actionLabel: "Duplicate component",
-    actionUrl: "https://www.coderocket.app/templates",
-    imageUrl: "https://www.coderocket.app/og.png",
+    actionUrl: buildAppUrl("/templates"),
+    imageUrl: defaultOgImage,
   };
   const component = featuredComponent ?? fallbackFeatured;
   return `<!DOCTYPE html>
@@ -161,7 +165,7 @@ export function renderEmailTemplate({
           <table role="presentation" width="560" cellspacing="0" cellpadding="0" style="margin:40px 0;background-color:#0e1020;border-radius:20px;padding:40px;" class="container">
             <tr>
               <td style="text-align:center;">
-                <img src="https://www.coderocket.app/logo-white.png" alt="CodeRocket" width="120" style="margin-bottom:32px;">
+                <img src="${logoWhiteUrl}" alt="CodeRocket" width="120" style="margin-bottom:32px;">
                 <h1 style="font-size:30px;margin:0 0 12px;color:#f4f5ff;">CodeRocket</h1>
                 <p style="margin:0;font-size:16px;color:#b7bbff;">CodeRocket (formerly Tailwind AI) workflows without friction.</p>
               </td>

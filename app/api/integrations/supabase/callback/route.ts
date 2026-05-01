@@ -5,13 +5,14 @@ import {
   IntegrationType,
   SupabaseIntegrationConfig,
 } from "@/utils/integrations/types";
+import { buildAppUrl } from "@/utils/runtime-config";
 import { createClient } from "@/utils/supabase/server";
 
 const SUPABASE_OAUTH_CLIENT_ID = process.env.SUPABASE_OAUTH_CLIENT_ID;
 const SUPABASE_OAUTH_CLIENT_SECRET = process.env.SUPABASE_OAUTH_CLIENT_SECRET;
-const SUPABASE_REDIRECT_URI = process.env.NEXT_PUBLIC_APP_URL
-  ? `${process.env.NEXT_PUBLIC_APP_URL}/api/integrations/supabase/callback`
-  : "https://www.coderocket.app/api/integrations/supabase/callback";
+const SUPABASE_REDIRECT_URI = buildAppUrl(
+  "/api/integrations/supabase/callback",
+);
 
 export async function GET(request: NextRequest) {
   try {

@@ -31,6 +31,7 @@ import {
   UserIntegration,
   ChatIntegrationWithDetails,
 } from "@/utils/integrations";
+import { buildDocsUrl } from "@/utils/runtime-config";
 
 export default function IntegrationsContent() {
   const {
@@ -178,7 +179,7 @@ export default function IntegrationsContent() {
             Add powerful features to your app like saving data and uploading
             files.{" "}
             <a
-              href="https://docs.coderocket.app/integrations/migrations"
+              href={buildDocsUrl("/integrations/migrations")}
               target="_blank"
               rel="noopener noreferrer"
               className="text-foreground underline decoration-dotted underline-offset-4 hover:decoration-solid"
@@ -252,7 +253,7 @@ export default function IntegrationsContent() {
           Add powerful features to your app like saving data and uploading
           files.{" "}
           <a
-            href="https://docs.coderocket.app/integrations/migrations"
+            href={buildDocsUrl("/integrations/migrations")}
             target="_blank"
             rel="noopener noreferrer"
             className="text-foreground underline decoration-dotted underline-offset-4 hover:decoration-solid"

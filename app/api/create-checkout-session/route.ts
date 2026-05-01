@@ -1,8 +1,22 @@
 import { stripe } from "@/utils/stripe";
+import { buildAccountUrl, buildAppUrl } from "@/utils/runtime-config";
+import { billingEnabled } from "@/utils/server-config";
 import { createClient } from "@/utils/supabase/server";
 import { createOrRetrieveCustomer } from "@/utils/supabase-admin";
 
 export async function POST(req: Request) {
+  if (!billingEnabled) {
+    return new Response(
+      JSON.stringify({
+        error: {
+          statusCode: 404,
+          message: "Billing is disabled for this self-hosted instance.",
+        },
+      }),
+      { status: 404 },
+    );
+  }
+
   if (req.method === "POST") {
     // 1. Destructure the price and quantity from the POST body
     const { price, quantity = 1, metadata = {} } = await req.json();
@@ -47,8 +61,8 @@ export async function POST(req: Request) {
             },
             metadata,
           },
-          success_url: `https://www.coderocket.app/account`,
-          cancel_url: `https://www.coderocket.app/`,
+          success_url: buildAccountUrl(),
+          cancel_url: buildAppUrl("/"),
         });
       } else if (price.type === "one_time") {
         session = await stripe.checkout.sessions.create({
@@ -67,8 +81,8 @@ export async function POST(req: Request) {
           ],
           mode: "payment",
           allow_promotion_codes: true,
-          success_url: `https://www.coderocket.app/account?payment-success`,
-          cancel_url: `https://www.coderocket.app/`,
+          success_url: `${buildAccountUrl()}?payment-success`,
+          cancel_url: buildAppUrl("/"),
         });
       }
       if (session) {

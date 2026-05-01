@@ -1,17 +1,16 @@
-import { createAnthropic } from "@ai-sdk/anthropic";
-
 import { Tables } from "@/types_db";
+import {
+  avatarApi,
+  crispWebsiteId,
+  discordLink,
+  gaId,
+  storageUrl,
+} from "@/utils/runtime-config";
 
-export const storageUrl =
-  "https://jojdwiugelqhcajbccxn.supabase.co/storage/v1/object/public/images";
+export { avatarApi, crispWebsiteId, discordLink, gaId, storageUrl };
 
-export const screenshotApiUrl =
-  "https://screenshot-api-elreco.vercel.app/api?url=";
-
-export const discordLink = "https://discord.gg/t7dQgcYJ5t";
-
-export const maxImageSize = 10 * 1024 * 1024; // 10 Mo
-export const maxPdfSize = 32 * 1024 * 1024; // 32 Mo (Anthropic limit)
+export const maxImageSize = 10 * 1024 * 1024;
+export const maxPdfSize = 32 * 1024 * 1024;
 export const maxImagesUpload = 20;
 
 export const supportedImageTypes = [
@@ -23,7 +22,6 @@ export const supportedImageTypes = [
 ];
 
 export const supportedDocumentTypes = ["application/pdf"];
-
 export const supportedTextTypes = ["text/plain"];
 
 export const supportedFileTypes = [
@@ -50,19 +48,7 @@ export const fileTypeConfig = {
   },
 };
 
-export const MAX_ITERATIONS = 4;
-
-export const MAX_GENERATIONS = 5;
-
 export const defaultTheme = "light";
-
-export const gaId = "G-0HBMKNN8MQ";
-
-export const anthropicModel = createAnthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY || "",
-});
-
-export const crispWebsiteId = "2f740c23-7cfa-40ff-ba55-581ff73c5a67";
 
 export const themes = [
   "light",
@@ -103,19 +89,12 @@ export enum Framework {
   HTML = "html",
 }
 
-export const builderApiUrl = "https://react-builder.fly.dev";
-
-export const avatarApi = "https://api.dicebear.com/9.x/initials/svg?seed=";
-
 export const MAX_SEARCH_LENGTH = 50;
-
-export const MAX_TOKENS_PER_REQUEST = 32000; // Reduced from 64000 to prevent context overflow
-export const CHAR_PER_TOKEN = 2;
+export const MAX_TOKENS_PER_REQUEST = 32000;
 export const MAX_ACCOUNTS_PER_IP = 5;
-
+export const CHAR_PER_TOKEN = 2;
 export const FREE_CHAR_LIMIT = 1500;
-export const PREMIUM_CHAR_LIMIT = 8000 * CHAR_PER_TOKEN; // 12000 caractères
-
+export const PREMIUM_CHAR_LIMIT = 8000 * CHAR_PER_TOKEN;
 export const MAX_VERSIONS_PER_COMPONENT = 70;
 
 export const getCharacterLimit = (

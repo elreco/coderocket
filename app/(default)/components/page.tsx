@@ -2,6 +2,7 @@ import { AppFooter } from "@/components/app-footer";
 import { ComponentsInfiniteScroll } from "@/components/components-infinite-scroll";
 import { Container } from "@/components/container";
 import { Framework } from "@/utils/config";
+import { buildAppUrl } from "@/utils/runtime-config";
 import { createClient } from "@/utils/supabase/server";
 
 import {
@@ -46,10 +47,10 @@ export async function generateMetadata({
       description: searchQuery
         ? `Discover the latest Tailwind AI components for "${searchQuery}".`
         : "Browse public Tailwind AI components generated with CodeRocket. Discover React, Vue, Svelte, Angular, and HTML components.",
-      url: "https://www.coderocket.app/components",
+      url: buildAppUrl("/components"),
     },
     alternates: {
-      canonical: "https://www.coderocket.app/components",
+      canonical: buildAppUrl("/components"),
     },
   };
 }

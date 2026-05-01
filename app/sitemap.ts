@@ -2,89 +2,65 @@ import { createClient } from "@supabase/supabase-js";
 import { MetadataRoute } from "next";
 
 import { Database } from "@/types_db";
+import { appUrl, buildAppUrl } from "@/utils/runtime-config";
 
 export const dynamic = "force-static";
 export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = "https://www.coderocket.app";
   const currentDate = new Date().toISOString();
 
   const staticRoutes: MetadataRoute.Sitemap = [
     {
-      url: baseUrl,
+      url: appUrl,
       lastModified: currentDate,
       changeFrequency: "daily",
       priority: 1.0,
     },
     {
-      url: `${baseUrl}/components`,
+      url: buildAppUrl("/components"),
       lastModified: currentDate,
       changeFrequency: "daily",
       priority: 0.9,
     },
     {
-      url: `${baseUrl}/deployed-sites`,
+      url: buildAppUrl("/deployed-sites"),
       lastModified: currentDate,
       changeFrequency: "daily",
       priority: 0.8,
     },
     {
-      url: `${baseUrl}/templates`,
-      lastModified: currentDate,
-      changeFrequency: "daily",
-      priority: 0.9,
-    },
-    {
-      url: `${baseUrl}/templates/create`,
-      lastModified: currentDate,
-      changeFrequency: "weekly",
-      priority: 0.7,
-    },
-    {
-      url: `${baseUrl}/pricing`,
+      url: buildAppUrl("/pricing"),
       lastModified: currentDate,
       changeFrequency: "monthly",
       priority: 0.8,
     },
     {
-      url: `${baseUrl}/changelog`,
+      url: buildAppUrl("/changelog"),
       lastModified: currentDate,
       changeFrequency: "weekly",
       priority: 0.6,
     },
     {
-      url: `${baseUrl}/faq`,
+      url: buildAppUrl("/faq"),
       lastModified: currentDate,
       changeFrequency: "monthly",
       priority: 0.7,
     },
     {
-      url: `${baseUrl}/login`,
-      lastModified: currentDate,
-      changeFrequency: "monthly",
-      priority: 0.5,
-    },
-    {
-      url: `${baseUrl}/register`,
-      lastModified: currentDate,
-      changeFrequency: "monthly",
-      priority: 0.5,
-    },
-    {
-      url: `${baseUrl}/terms`,
+      url: buildAppUrl("/terms"),
       lastModified: currentDate,
       changeFrequency: "yearly",
       priority: 0.3,
     },
     {
-      url: `${baseUrl}/privacy`,
+      url: buildAppUrl("/privacy"),
       lastModified: currentDate,
       changeFrequency: "yearly",
       priority: 0.3,
     },
     {
-      url: `${baseUrl}/cookies`,
+      url: buildAppUrl("/cookies"),
       lastModified: currentDate,
       changeFrequency: "yearly",
       priority: 0.3,
@@ -106,7 +82,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     const componentRoutes: MetadataRoute.Sitemap =
       publicComponents?.map((component) => ({
-        url: `${baseUrl}/components/${component.slug}`,
+        url: buildAppUrl(`/components/${component.slug}`),
         lastModified: component.created_at || currentDate,
         changeFrequency: "weekly" as const,
         priority: 0.7,

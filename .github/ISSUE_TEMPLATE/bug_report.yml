@@ -1,0 +1,109 @@
+name: Bug report
+description: Report a reproducible bug in the app, builder, self-hosted setup, or cloud flows.
+title: "[Bug] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug.
+
+        Please use Discussions for general setup help or "how do I..." questions:
+        https://github.com/elreco/coderocket/discussions
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Pre-flight checklist
+      options:
+        - label: I searched existing issues and discussions first.
+          required: true
+        - label: I read the README and relevant docs before opening this issue.
+          required: true
+
+  - type: dropdown
+    id: install-mode
+    attributes:
+      label: Where does the bug happen?
+      description: Pick the environment that is closest to your setup.
+      options:
+        - Local development
+        - Self-hosted deployment
+        - Managed cloud
+        - Builder only
+        - Not sure
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - App UI
+        - AI generation
+        - Builder
+        - Deployments
+        - Custom domains
+        - Auth
+        - Supabase / database
+        - Docs
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: What happened?
+      description: Tell us what broke and what you expected instead.
+      placeholder: A concise description of the bug and the expected behavior.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Go to ...
+        2. Click ...
+        3. Run ...
+        4. See error ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment details
+      description: Include as much as you can. This makes self-hosted bugs much faster to triage.
+      value: |
+        - OS:
+        - Browser:
+        - Node.js:
+        - Package manager:
+        - CodeRocket commit / version:
+        - NEXT_PUBLIC_APP_URL:
+        - BUILDER_STORAGE_DRIVER:
+        - DOMAIN_PROVIDER:
+        - BILLING_PROVIDER:
+      render: markdown
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs or stack traces
+      description: Paste terminal output, server errors, or browser console output if relevant.
+      render: shell
+    validations:
+      required: false
+
+  - type: textarea
+    id: extra-context
+    attributes:
+      label: Additional context
+      description: Screenshots, links, regressions, or anything else that helps.
+    validations:
+      required: false

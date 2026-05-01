@@ -1,4 +1,8 @@
 import { Framework } from "./config";
+import {
+  buildContentUrl,
+  buildVersionedWebcontainerUrl,
+} from "./runtime-config";
 
 export function generateDemoUrl(
   chatId: string,
@@ -6,9 +10,9 @@ export function generateDemoUrl(
   framework: string,
 ): string {
   if (framework === Framework.HTML) {
-    return `https://www.coderocket.app/content/${chatId}/${version}?noWatermark=true`;
+    return buildContentUrl(chatId, version, { noWatermark: true });
   } else {
-    return `https://${chatId}-${version}.webcontainer.coderocket.app`;
+    return buildVersionedWebcontainerUrl(chatId, version);
   }
 }
 

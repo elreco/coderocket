@@ -1,6 +1,11 @@
 "use server";
 
-import { builderApiUrl, defaultTheme, Framework } from "./config";
+import { defaultTheme, Framework } from "./config";
+import {
+  buildContentUrl,
+  buildVersionedWebcontainerUrl,
+} from "./runtime-config";
+import { buildBuilderHeaders, builderApiUrl } from "./server-config";
 import { createClient } from "./supabase/server";
 /**
  * Endpoint distant pour récupérer les captures d'écran.
@@ -18,9 +23,9 @@ export async function captureScreenshot(url: string) {
   try {
     const response = await fetch(SCREENSHOT_ENDPOINT, {
       method: "POST",
-      headers: {
+      headers: buildBuilderHeaders({
         "Content-Type": "application/json",
-      },
+      }),
       cache: "no-store",
       body: JSON.stringify({ url }),
     });
@@ -83,8 +88,8 @@ export const takeScreenshot = async (
   // Si `url` n'est pas fourni, on utilise un fallback (ex: votre site)
   const finalUrl =
     framework === Framework.HTML
-      ? `https://www.coderocket.app/content/${chatId}/${version}?noWatermark=true`
-      : `https://${chatId}-${version}.webcontainer.coderocket.app`;
+      ? buildContentUrl(chatId, version, { noWatermark: true })
+      : buildVersionedWebcontainerUrl(chatId, version);
 
   const screenshot = await captureScreenshot(finalUrl);
   if (!screenshot) {

@@ -3,6 +3,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
+import { buildAppUrl, buildComponentUrl } from "@/utils/runtime-config";
 import { createClient } from "@/utils/supabase/server";
 
 import "@/styles/crisp.css";
@@ -50,7 +51,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const componentTitle = chat.title || "Tailwind Component";
   const fullTitle = `${componentTitle} - CodeRocket | Tailwind AI Component`;
-  const componentUrl = `https://www.coderocket.app/components/${chat.slug}`;
+  const componentUrl = chat.slug
+    ? buildComponentUrl(chat.slug)
+    : buildAppUrl("/components");
 
   const description = lastUserMessage?.content
     ? `${lastUserMessage.content.slice(0, 155)}...`
@@ -76,7 +79,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const ogImage = lastAssistantMessage?.screenshot
     ? lastAssistantMessage.screenshot
-    : "https://www.coderocket.app/og.png";
+    : buildAppUrl("/og.png");
 
   return {
     title: fullTitle,
@@ -85,7 +88,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     authors: [
       {
         name: chat.user?.full_name || "CodeRocket User",
-        url: `https://www.coderocket.app/users/${chat.user_id}`,
+        url: buildAppUrl(`/users/${chat.user_id}`),
       },
     ],
     creator: chat.user?.full_name || "CodeRocket",
@@ -171,7 +174,9 @@ export default async function Components({ params }: Props) {
   const user = chat?.user || { id: chat?.user_id };
 
   const likesCount = chat.likes || 0;
-  const componentUrl = `https://www.coderocket.app/components/${chat.slug}`;
+  const componentUrl = chat.slug
+    ? buildComponentUrl(chat.slug)
+    : buildAppUrl("/components");
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -207,7 +212,7 @@ export default async function Components({ params }: Props) {
       },
     },
     image:
-      lastAssistantMessage?.screenshot || "https://www.coderocket.app/og.png",
+      lastAssistantMessage?.screenshot || buildAppUrl("/og.png"),
     license: "https://creativecommons.org/licenses/by/4.0/",
   };
 

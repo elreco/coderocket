@@ -1,6 +1,6 @@
 "use client";
 
-import { SiDiscord } from "@icons-pack/react-simple-icons";
+import { SiDiscord, SiGithub } from "@icons-pack/react-simple-icons";
 import {
   BookOpen,
   CreditCard,
@@ -33,13 +33,19 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tables } from "@/types_db";
 import { discordLink } from "@/utils/config";
+import {
+  buildDocsUrl,
+  githubRepoUrl,
+  publicBillingProvider,
+} from "@/utils/runtime-config";
 import { createClient } from "@/utils/supabase/client";
 
 import Logo from "./icons/logo";
 import { NavAuth } from "./nav-auth";
 import { SidebarNotification } from "./sidebar-notification";
 
-// This is sample data.
+const billingEnabled = publicBillingProvider === "stripe";
+
 const data = {
   navComponents: [
     {
@@ -58,6 +64,11 @@ const data = {
       title: "Discord",
       url: discordLink,
       icon: SiDiscord,
+    },
+    {
+      title: "Open Source",
+      url: githubRepoUrl,
+      icon: SiGithub,
     },
     {
       title: "Support Chat",
@@ -93,13 +104,8 @@ const data = {
       icon: Star,
     }, */
     {
-      title: "Pricing",
-      url: "/pricing",
-      icon: CreditCard,
-    },
-    {
       title: "Documentation",
-      url: "https://docs.coderocket.app",
+      url: buildDocsUrl("/"),
       icon: BookOpen,
     },
   ],
@@ -162,10 +168,22 @@ export function AppSidebar({
     };
   }, [user]);
 
-  const navMainItems = data.navMain.map((item) => ({
-    ...item,
-    isActive: pathname === item.url,
-  }));
+  const navMainItems = data.navMain
+    .concat(
+      billingEnabled
+        ? [
+            {
+              title: "Pricing",
+              url: "/pricing",
+              icon: CreditCard,
+            },
+          ]
+        : [],
+    )
+    .map((item) => ({
+      ...item,
+      isActive: pathname === item.url,
+    }));
 
   const allComponentsItems = [
     ...data.navComponents.map((item) => ({

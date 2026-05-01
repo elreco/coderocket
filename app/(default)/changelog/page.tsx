@@ -3,6 +3,7 @@ import React from "react";
 import { AppFooter } from "@/components/app-footer";
 import { Container } from "@/components/container";
 import { PageTitle } from "@/components/page-title";
+import { buildAppUrl } from "@/utils/runtime-config";
 
 import Changelog from "./changelog";
 
@@ -16,10 +17,10 @@ export const metadata = {
     title: "CodeRocket Changelog - Latest Updates & Features",
     description:
       "Stay updated with the latest features, improvements, and fixes to CodeRocket AI website builder.",
-    url: "https://www.coderocket.app/changelog",
+    url: buildAppUrl("/changelog"),
   },
   alternates: {
-    canonical: "https://www.coderocket.app/changelog",
+    canonical: buildAppUrl("/changelog"),
   },
 };
 

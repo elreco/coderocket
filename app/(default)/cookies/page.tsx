@@ -1,6 +1,7 @@
 import { AppFooter } from "@/components/app-footer";
 import { Container } from "@/components/container";
 import { PageTitle } from "@/components/page-title";
+import { buildAppUrl } from "@/utils/runtime-config";
 
 export const metadata = {
   title: "Cookie Policy - CodeRocket",
@@ -11,10 +12,10 @@ export const metadata = {
     title: "Cookie Policy - CodeRocket",
     description:
       "Learn about how CodeRocket uses cookies and similar technologies.",
-    url: "https://www.coderocket.app/cookies",
+    url: buildAppUrl("/cookies"),
   },
   alternates: {
-    canonical: "https://www.coderocket.app/cookies",
+    canonical: buildAppUrl("/cookies"),
   },
 };
 

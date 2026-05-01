@@ -31,6 +31,11 @@ import {
   WebcontainerLoadingState,
 } from "@/context/component-context";
 import { cn } from "@/lib/utils";
+import {
+  buildContentUrl,
+  buildVersionedPreviewUrl,
+  buildVersionedWebcontainerUrl,
+} from "@/utils/runtime-config";
 
 interface PreviewToolbarProps {
   isHtmlFrameworkSelected: boolean;
@@ -134,9 +139,14 @@ export function PreviewToolbar({
                 if (isLengthError) {
                   return;
                 }
+                const targetVersion = selectedVersion ?? 0;
                 const url = isHtmlFrameworkSelected
-                  ? `https://www.coderocket.app/content/${chatId}/${selectedVersion}`
-                  : `https://${chatId}-${selectedVersion}.preview.coderocket.app${sharePathSuffix}`;
+                  ? buildContentUrl(chatId, targetVersion)
+                  : buildVersionedPreviewUrl(
+                      chatId,
+                      targetVersion,
+                      sharePathSuffix,
+                    );
                 window.open(url, "_blank");
               }}
               className="flex items-center"
@@ -330,7 +340,11 @@ export function PreviewToolbar({
                 <iframe
                   key={iframeKey}
                   className="size-full rounded-md border-none"
-                  src={`https://${chatId}-${selectedVersion}.webcontainer.coderocket.app${previewPathSuffix}`}
+                  src={buildVersionedWebcontainerUrl(
+                    chatId,
+                    selectedVersion ?? 0,
+                    previewPathSuffix,
+                  )}
                   loading="eager"
                 />
               ) : (

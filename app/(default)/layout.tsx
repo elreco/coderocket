@@ -16,6 +16,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthModalProvider } from "@/hooks/use-auth-modal";
 import { cn } from "@/lib/utils";
 import { gaId } from "@/utils/config";
+import { appUrl, buildAppUrl } from "@/utils/runtime-config";
 
 import { getUserDetails } from "../supabase-server";
 
@@ -26,23 +27,31 @@ const rubik = Plus_Jakarta_Sans({
 });
 
 const googleSiteVerification = process.env.GOOGLE_SITE_VERIFICATION;
+const baseAppUrl = buildAppUrl("/");
+const organizationId = `${baseAppUrl}#organization`;
+const webAppId = `${baseAppUrl}#webapp`;
+const websiteId = `${baseAppUrl}#website`;
+const searchUrlTemplate = buildAppUrl("/components?search={search_term_string}");
 
 const meta = {
   title:
-    "CodeRocket - Tailwind AI Website Builder | Generate Tailwind Components with AI",
-  metadataBase: new URL("https://www.coderocket.app"),
+    "CodeRocket - Open Source AI Website Builder | Generate Tailwind Components with AI",
+  metadataBase: new URL(appUrl),
   description:
-    "CodeRocket (formerly Tailwind AI) - Build production-ready Tailwind v4 websites and components with AI in seconds. Clone a website from any URL or create experiences from scratch. Generate React, Vue, Svelte, Angular components. Start at no cost.",
-  cardImage: "https://www.coderocket.app/og.png",
+    "CodeRocket is an open source AI website and component builder. Build production-ready Tailwind v4 websites and UI components with AI, self-host the stack, or use the managed cloud. Generate React, Vue, Svelte, Angular, and HTML experiences in minutes.",
+  cardImage: buildAppUrl("/og.png"),
   robots: "index, follow",
   favicon: "/favicon.ico",
-  url: "https://www.coderocket.app",
+  url: baseAppUrl,
   type: "website",
   keywords: [
     "tailwind ai",
     "Tailwind AI",
     "tailwind ai generator",
     "AI website builder",
+    "open source ai website builder",
+    "open source website builder",
+    "self-hosted ai builder",
     "Tailwind CSS generator",
     "AI web development",
     "website builder",
@@ -59,27 +68,29 @@ const meta = {
     "rapid prototyping",
     "tailwind css ai",
     "tailwind component generator",
+    "supabase",
+    "next.js",
   ],
   twitter: {
     card: "summary_large_image",
-    title: "CodeRocket - Tailwind AI Website Builder",
+    title: "CodeRocket - Open Source AI Website Builder",
     description:
-      "Build production-ready Tailwind v4 websites and components with AI. Clone a website from any URL or create from scratch. Support for React, Vue, Svelte, Angular. Deploy instantly.",
-    images: ["https://www.coderocket.app/og.png"],
+      "Build and self-host production-ready websites and components with AI. Generate React, Vue, Svelte, Angular, and HTML with CodeRocket.",
+    images: [buildAppUrl("/og.png")],
     creator: "@coderocketapp",
     site: "@coderocketapp",
   },
 };
 
 export const metadata = {
-  metadataBase: new URL("https://www.coderocket.app"),
+  metadataBase: new URL(appUrl),
   title: {
     default: meta.title,
     template: "%s | CodeRocket",
   },
   description: meta.description,
   keywords: meta.keywords,
-  authors: [{ name: "CodeRocket", url: "https://www.coderocket.app" }],
+  authors: [{ name: "CodeRocket", url: baseAppUrl }],
   creator: "CodeRocket",
   publisher: "CodeRocket",
   robots: {
@@ -150,26 +161,26 @@ export default async function RootLayout({ children }: PropsWithChildren) {
               "@graph": [
                 {
                   "@type": "Organization",
-                  "@id": "https://www.coderocket.app/#organization",
+                  "@id": organizationId,
                   name: "CodeRocket",
-                  url: "https://www.coderocket.app",
+                  url: baseAppUrl,
                   logo: {
                     "@type": "ImageObject",
-                    url: "https://www.coderocket.app/logo.png",
+                    url: buildAppUrl("/logo.png"),
                     width: 512,
                     height: 512,
                   },
                   contactPoint: {
                     "@type": "ContactPoint",
                     contactType: "Customer Support",
-                    url: "https://www.coderocket.app",
+                    url: baseAppUrl,
                   },
                 },
                 {
                   "@type": "WebApplication",
-                  "@id": "https://www.coderocket.app/#webapp",
+                  "@id": webAppId,
                   name: "CodeRocket",
-                  url: "https://www.coderocket.app",
+                  url: baseAppUrl,
                   description:
                     "CodeRocket (formerly Tailwind AI) - AI-powered website builder that creates production-ready Tailwind v4 websites and components. Build complete web applications from scratch or clone a website from any URL. Deploy instantly.",
                   applicationCategory: "DeveloperApplication",
@@ -200,18 +211,17 @@ export default async function RootLayout({ children }: PropsWithChildren) {
                 },
                 {
                   "@type": "WebSite",
-                  "@id": "https://www.coderocket.app/#website",
-                  url: "https://www.coderocket.app",
+                  "@id": websiteId,
+                  url: baseAppUrl,
                   name: "CodeRocket",
                   publisher: {
-                    "@id": "https://www.coderocket.app/#organization",
+                    "@id": organizationId,
                   },
                   potentialAction: {
                     "@type": "SearchAction",
                     target: {
                       "@type": "EntryPoint",
-                      urlTemplate:
-                        "https://www.coderocket.app/components?search={search_term_string}",
+                      urlTemplate: searchUrlTemplate,
                     },
                     "query-input": "required name=search_term_string",
                   },

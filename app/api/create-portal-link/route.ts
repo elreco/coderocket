@@ -1,8 +1,22 @@
 import { stripe } from "@/utils/stripe";
+import { buildAccountUrl } from "@/utils/runtime-config";
+import { billingEnabled } from "@/utils/server-config";
 import { createClient } from "@/utils/supabase/server";
 import { createOrRetrieveCustomer } from "@/utils/supabase-admin";
 
 export async function POST(req: Request) {
+  if (!billingEnabled) {
+    return new Response(
+      JSON.stringify({
+        error: {
+          statusCode: 404,
+          message: "Billing is disabled for this self-hosted instance.",
+        },
+      }),
+      { status: 404 },
+    );
+  }
+
   if (req.method === "POST") {
     try {
       const supabase = await createClient();
@@ -19,7 +33,7 @@ export async function POST(req: Request) {
       if (!customer) throw Error("Could not get customer");
       const { url } = await stripe.billingPortal.sessions.create({
         customer,
-        return_url: `https://www.coderocket.app/account`,
+        return_url: buildAccountUrl(),
       });
       return new Response(JSON.stringify({ url }), {
         status: 200,

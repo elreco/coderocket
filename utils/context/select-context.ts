@@ -1,7 +1,7 @@
 import { generateText } from "ai";
 
 import { Tables } from "@/types_db";
-import { anthropicModel } from "@/utils/config";
+import { anthropicModel } from "@/utils/ai-provider";
 
 import { CONTEXT_CONFIG, FileMap, FileSelectionResult } from "./context-types";
 import { extractFilesFromArtifactCode } from "./utils";

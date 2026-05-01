@@ -44,6 +44,11 @@ export async function generateMetadata(
     title: chat.title
       ? `${chat.title} - CodeRocket`
       : `Component ${chat.slug} - CodeRocket`,
+    robots: {
+      index: false,
+      follow: false,
+      nocache: true,
+    },
     openGraph: {
       images: lastAssistantMessage?.screenshot
         ? [lastAssistantMessage.screenshot]

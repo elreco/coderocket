@@ -3,6 +3,7 @@ import { ModelMessage, ImagePart, TextPart } from "ai";
 import { UploadedFileInfo } from "@/types/api";
 import { Tables } from "@/types_db";
 import { storageUrl } from "@/utils/config";
+import { buildDeploymentSubdomainUrl } from "@/utils/runtime-config";
 import { createClient } from "@/utils/supabase/server";
 
 interface PromptFileItem {
@@ -291,7 +292,7 @@ export const buildMessagesToOpenAi = async (
   if (domainInfo && (domainInfo.subdomain || domainInfo.customDomain)) {
     domainContext = `\n\n<deployment_domain>\nThis project is configured with the following deployment domains:\n`;
     if (domainInfo.subdomain) {
-      domainContext += `- Subdomain: ${domainInfo.subdomain}.coderocket.app\n`;
+      domainContext += `- Subdomain: ${buildDeploymentSubdomainUrl(domainInfo.subdomain)}\n`;
     }
     if (domainInfo.customDomain) {
       domainContext += `- Custom domain: ${domainInfo.customDomain}\n`;

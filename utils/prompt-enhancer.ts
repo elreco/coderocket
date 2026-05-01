@@ -2,7 +2,7 @@
 
 import { generateText } from "ai";
 
-import { anthropicModel } from "./config";
+import { anthropicModel } from "./ai-provider";
 import { Framework } from "./config";
 import { stripIndents } from "./strip-indents";
 import { createClient } from "./supabase/server";

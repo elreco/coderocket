@@ -1,0 +1,30 @@
+title: "Welcome to CodeRocket Discussions"
+body:
+  - type: textarea
+    id: announcement
+    attributes:
+      label: Announcement body
+      value: |
+        ## Welcome to CodeRocket Discussions
+
+        This space is for community conversations around the open-source CodeRocket project.
+
+        You can use Discussions to:
+        - ask setup and self-hosting questions,
+        - share ideas and product feedback,
+        - show what you built,
+        - and talk through architecture or roadmap topics.
+
+        A few quick pointers:
+        - Use **Issues** for confirmed bugs, focused feature requests, and docs fixes.
+        - Use **Discussions** for support, brainstorming, feedback, and community sharing.
+        - Please include context about your setup when asking for help, especially if you are self-hosting.
+
+        Useful links:
+        - Repo: https://github.com/elreco/coderocket
+        - Docs: https://docs.coderocket.app
+        - Cloud: https://www.coderocket.app
+
+        Feel free to introduce yourself in the comments and tell us what you want to build with CodeRocket.
+    validations:
+      required: true

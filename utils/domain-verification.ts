@@ -1,6 +1,8 @@
 import { randomBytes } from "crypto";
 import dns from "dns/promises";
 
+import { appHostname, deploymentRootDomain } from "./runtime-config";
+
 dns.setServers(["8.8.8.8", "8.8.4.4", "1.1.1.1", "1.0.0.1"]);
 
 export interface DomainVerificationResult {
@@ -64,9 +66,10 @@ export async function checkDomainAvailability(domain: string): Promise<{
     }
 
     const reservedDomains = [
-      "coderocket.app",
-      "www.coderocket.app",
-      "api.coderocket.app",
+      deploymentRootDomain,
+      `www.${deploymentRootDomain}`,
+      `api.${deploymentRootDomain}`,
+      appHostname,
     ];
 
     if (reservedDomains.includes(normalizedDomain)) {

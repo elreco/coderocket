@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions and setup help
+    url: https://github.com/elreco/coderocket/discussions
+    about: Use GitHub Discussions for self-hosting help, usage questions, and architecture conversations.
+  - name: Security policy
+    url: https://github.com/elreco/coderocket/blob/main/SECURITY.md
+    about: Please review the security policy before reporting a vulnerability.
+  - name: Documentation
+    url: https://docs.coderocket.app
+    about: Check the docs before opening an issue for setup or usage questions.

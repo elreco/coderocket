@@ -1,0 +1,81 @@
+name: Feature request
+description: Suggest an improvement for CodeRocket, the builder, docs, or the self-hosting experience.
+title: "[Feature] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for sharing an idea.
+
+        Use this form for actionable product or DX improvements.
+        For open-ended conversation, feedback, or brainstorming, Discussions is often a better fit:
+        https://github.com/elreco/coderocket/discussions
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before you submit
+      options:
+        - label: I searched existing issues and discussions first.
+          required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - App UI
+        - AI generation
+        - Builder
+        - Deployments
+        - Custom domains
+        - Self-hosting
+        - Docs
+        - Integrations
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem are you trying to solve?
+      description: Describe the pain point or missed use case.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would you like to happen?
+      description: Describe the change you want as concretely as possible.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you considered
+      description: Workarounds, related tools, or other ideas you evaluated.
+    validations:
+      required: false
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Extra context
+      description: Mockups, links, examples, or implementation notes.
+    validations:
+      required: false
+
+  - type: dropdown
+    id: contribution
+    attributes:
+      label: Would you be open to contributing?
+      options:
+        - Yes, I can open a PR
+        - Yes, with guidance
+        - Maybe
+        - No
+    validations:
+      required: true

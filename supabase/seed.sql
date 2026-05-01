@@ -1,0 +1,3 @@
+-- Keep this file intentionally minimal.
+-- Add only deterministic bootstrap records required for local development.
+-- Do not copy production data into this file.

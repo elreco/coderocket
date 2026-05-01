@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { fetchChatById } from "@/app/(default)/components/actions";
 import { extractFilesFromArtifact } from "@/utils/completion-parser";
+import { buildDocsUrl } from "@/utils/runtime-config";
 import { createClient } from "@/utils/supabase/server";
 
 export async function POST(request: NextRequest) {
@@ -99,7 +100,7 @@ export async function POST(request: NextRequest) {
 ${files.map((file) => `- ${file.name}`).join("\n")}
 
 ## Support
-For support and documentation, visit: https://www.coderocket.app
+For support and documentation, visit: ${buildDocsUrl("/")}
 
 ---
 Downloaded from CodeRocket - AI-Powered Component Generation

@@ -6,6 +6,7 @@ import "styles/main.css";
 
 import { cn } from "@/lib/utils";
 import { gaId } from "@/utils/config";
+import { buildAppUrl } from "@/utils/runtime-config";
 
 const rubik = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -16,8 +17,8 @@ const rubik = Plus_Jakarta_Sans({
 const meta = {
   title: "CodeRocket - Preview",
   description: "Component preview",
-  cardImage: "https://www.coderocket.app/og.png",
-  robots: "index, follow",
+  cardImage: buildAppUrl("/og.png"),
+  robots: "noindex, nofollow",
   favicon: "/favicon.ico",
 };
 

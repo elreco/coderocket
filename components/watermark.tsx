@@ -2,19 +2,19 @@ import { Rocket } from "lucide-react";
 import Link from "next/link";
 import React from "react";
 
+import {
+  buildAppUrl,
+  buildCloudComponentUrl,
+  buildCloudUrl,
+} from "@/utils/runtime-config";
+
 export const Watermark = ({ slug }: { slug?: string | null }) => {
   return (
     <div className="absolute right-0 bottom-0 z-9999 m-6">
-      <Link
-        href={
-          slug
-            ? `https://www.coderocket.app/components/${slug}`
-            : "https://www.coderocket.app"
-        }
-      >
+      <Link href={slug ? buildCloudComponentUrl(slug) : buildCloudUrl("/")}>
         <div className="bg-primary hover:bg-primary/90 flex cursor-pointer items-center gap-2 rounded-lg p-2 shadow-lg">
           <img
-            src="https://www.coderocket.app/logo-white.png"
+            src={buildAppUrl("/logo-white.png")}
             alt="CodeRocket"
             className="w-6"
           />

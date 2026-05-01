@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { createClient } from "@/utils/supabase/server";
+import { buildAppUrl } from "@/utils/runtime-config";
 
 export async function GET() {
   const supabase = await createClient();
@@ -25,7 +26,7 @@ export async function GET() {
 
   const scopes = ["repo", "user:email"];
   const state = user.id; // Utiliser l'ID utilisateur comme state pour la sécurité
-  const redirectUri = `${process.env.NEXT_PUBLIC_SITE_URL}/api/github/callback`;
+  const redirectUri = buildAppUrl("/api/github/callback");
 
   const githubAuthUrl = new URL("https://github.com/login/oauth/authorize");
   githubAuthUrl.searchParams.set("client_id", clientId);

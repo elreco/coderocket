@@ -31,6 +31,7 @@ import {
 import { Framework } from "@/utils/config";
 import { defaultArtifactCode } from "@/utils/default-artifact-code";
 import { ROCKET_LIMITS_PER_PLAN } from "@/utils/rocket-conversion";
+import { buildComponentUrl } from "@/utils/runtime-config";
 import { getArtifactCodeByVersion } from "@/utils/supabase/artifact-helpers";
 import { createClient } from "@/utils/supabase/client";
 
@@ -1474,7 +1475,7 @@ export default function ComponentCompletion({
 
   const share = () => {
     const link = fetchedChat?.slug
-      ? `https://www.coderocket.app/components/${fetchedChat.slug}`
+      ? buildComponentUrl(fetchedChat.slug)
       : window.location.href;
     setShareLink(link);
     setIsShareModalOpen(true);

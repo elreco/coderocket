@@ -11,6 +11,7 @@ import {
   CarouselItem,
 } from "@/components/ui/carousel";
 import { useCarousel } from "@/components/ui/carousel-hook";
+import { buildDeploymentUrl, buildDocsUrl } from "@/utils/runtime-config";
 
 interface DeployedSitesSliderProps {
   sites: GetDeployedSitesReturnType[];
@@ -27,7 +28,7 @@ export function DeployedSitesSlider({ sites }: DeployedSitesSliderProps) {
         <h2 className="text-sm font-semibold">Latest Deployed Sites</h2>
         <Button asChild variant="outline" size="sm">
           <Link
-            href="https://docs.coderocket.app/deployment/overview"
+            href={buildDocsUrl("/deployment/overview")}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-2"
@@ -61,9 +62,17 @@ export function DeployedSitesSlider({ sites }: DeployedSitesSliderProps) {
 
 function DeployedSiteBanner({ site }: { site: GetDeployedSitesReturnType }) {
   const deployedUrl = site.custom_domain
-    ? `https://${site.custom_domain}`
+    ? buildDeploymentUrl({
+        customDomain: site.custom_domain,
+        chatId: site.chat_id,
+        version: site.deployed_version,
+      })
     : site.deploy_subdomain
-      ? `https://${site.deploy_subdomain}.coderocket.app`
+      ? buildDeploymentUrl({
+          subdomain: site.deploy_subdomain,
+          chatId: site.chat_id,
+          version: site.deployed_version,
+        })
       : null;
 
   return (
@@ -99,7 +108,7 @@ function DeployedSiteBanner({ site }: { site: GetDeployedSitesReturnType }) {
           >
             <ExternalLink className="size-4" />
             <span className="truncate">
-              {site.custom_domain || `${site.deploy_subdomain}.coderocket.app`}
+              {site.custom_domain || site.deploy_subdomain}
             </span>
           </a>
         )}

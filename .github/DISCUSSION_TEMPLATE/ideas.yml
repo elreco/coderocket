@@ -1,0 +1,55 @@
+title: "[Idea] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Share a product idea, DX improvement, or open-ended proposal for CodeRocket.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - App UI
+        - AI generation
+        - Builder
+        - Deployments
+        - Custom domains
+        - Self-hosting
+        - Docs
+        - Integrations
+        - Community
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem or opportunity do you see?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What is your idea?
+      description: Explain the concept, not necessarily the full implementation.
+    validations:
+      required: true
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: Why would this matter?
+      description: Explain who benefits and what it unlocks.
+    validations:
+      required: false
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Examples or references
+      description: Link competing tools, screenshots, prior art, or mockups.
+    validations:
+      required: false

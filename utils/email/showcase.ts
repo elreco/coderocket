@@ -1,4 +1,5 @@
 import { createClient } from "@/utils/supabase/server";
+import { buildComponentUrl } from "@/utils/runtime-config";
 
 import type { Highlight, FeaturedComponent } from "./template";
 
@@ -28,7 +29,7 @@ const formatDescription = (record: RpcComponent) => {
 };
 
 const componentUrl = (slug: string | null) =>
-  slug ? `https://www.coderocket.app/components/${slug}` : undefined;
+  slug ? buildComponentUrl(slug) : undefined;
 
 const previewHtmlFromRecord = (record: RpcComponent) => {
   const likes = record.likes ?? 0;

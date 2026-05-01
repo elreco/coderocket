@@ -6,6 +6,8 @@ import { redirect } from "next/navigation";
 
 import { getClientIp } from "@/utils/client-ip";
 import { isTemporaryEmailDomain, normalizeEmail } from "@/utils/helpers";
+import { buildAppUrl } from "@/utils/runtime-config";
+import { billingEnabled } from "@/utils/server-config";
 import { createClient } from "@/utils/supabase/server";
 import { createOrRetrieveCustomer } from "@/utils/supabase-admin";
 
@@ -108,7 +110,7 @@ export async function register(formData: FormData) {
     console.error(e);
   }
 
-  if (returnedData.user?.id && returnedData.user?.email) {
+  if (billingEnabled && returnedData.user?.id && returnedData.user?.email) {
     await createOrRetrieveCustomer({
       uuid: returnedData.user.id,
       email: returnedData.user.email,
@@ -143,7 +145,7 @@ export async function signInWithOAuth(provider: Provider) {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider,
     options: {
-      redirectTo: `https://www.coderocket.app/auth/callback`,
+      redirectTo: buildAppUrl("/auth/callback"),
     },
   });
   if (error) {

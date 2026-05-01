@@ -25,10 +25,22 @@ yarn-debug.log*
 yarn-error.log*
 
 # local env files
+.env
+.env.*
+!.env.example
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
+builder/.env
+builder/.env.*
+!builder/.env.example
 
 # vercel
 .vercel
+
+# local builder/runtime state
+.builder-git-history/
+.coderocket/
+builder/node_modules/
+builder/mnt/

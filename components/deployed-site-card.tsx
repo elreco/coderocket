@@ -5,6 +5,7 @@ import Link from "next/link";
 
 import { type GetDeployedSitesReturnType } from "@/app/(default)/components/actions";
 import { cn } from "@/lib/utils";
+import { buildDeploymentUrl } from "@/utils/runtime-config";
 
 interface DeployedSiteCardProps {
   site: GetDeployedSitesReturnType;
@@ -45,7 +46,11 @@ export function DeployedSiteCard({ site, className }: DeployedSiteCardProps) {
           <div className="flex flex-col gap-1">
             {site.deploy_subdomain && (
               <a
-                href={`https://${site.deploy_subdomain}.coderocket.app`}
+                href={buildDeploymentUrl({
+                  subdomain: site.deploy_subdomain,
+                  chatId: site.chat_id,
+                  version: site.deployed_version,
+                })}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={(e) => e.stopPropagation()}
@@ -53,14 +58,16 @@ export function DeployedSiteCard({ site, className }: DeployedSiteCardProps) {
                 style={{ textShadow: "0 1px 1px rgba(0, 0, 0, 0.45)" }}
               >
                 <ExternalLink className="size-3" />
-                <span className="truncate">
-                  {site.deploy_subdomain}.coderocket.app
-                </span>
+                <span className="truncate">{site.deploy_subdomain}</span>
               </a>
             )}
             {site.custom_domain && (
               <a
-                href={`https://${site.custom_domain}`}
+                href={buildDeploymentUrl({
+                  customDomain: site.custom_domain,
+                  chatId: site.chat_id,
+                  version: site.deployed_version,
+                })}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={(e) => e.stopPropagation()}

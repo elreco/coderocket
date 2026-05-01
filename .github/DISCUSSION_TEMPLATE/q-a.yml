@@ -1,0 +1,62 @@
+title: "[Q&A] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Ask a question about setup, self-hosting, the builder, integrations, or using CodeRocket.
+
+        Please include enough context for someone else to reproduce your setup.
+
+  - type: dropdown
+    id: install-mode
+    attributes:
+      label: Setup type
+      options:
+        - Local development
+        - Self-hosted deployment
+        - Managed cloud
+        - Builder only
+        - Not sure
+    validations:
+      required: true
+
+  - type: textarea
+    id: goal
+    attributes:
+      label: What are you trying to do?
+      description: Describe the outcome you want, not just the immediate error.
+    validations:
+      required: true
+
+  - type: textarea
+    id: tried
+    attributes:
+      label: What have you already tried?
+      description: Mention docs, commands, env changes, or debugging steps you already went through.
+    validations:
+      required: true
+
+  - type: textarea
+    id: details
+    attributes:
+      label: Relevant details
+      description: Share the relevant env, logs, config, or screenshots.
+      value: |
+        - OS:
+        - Node.js:
+        - Package manager:
+        - Deployment target:
+        - Relevant env vars:
+        - Logs / error message:
+      render: markdown
+    validations:
+      required: false
+
+  - type: checkboxes
+    attributes:
+      label: Before posting
+      options:
+        - label: I checked the README and docs first.
+          required: true
+        - label: I searched existing issues and discussions first.
+          required: true

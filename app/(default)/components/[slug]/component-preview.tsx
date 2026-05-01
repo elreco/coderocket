@@ -14,6 +14,12 @@ import {
 import { cn } from "@/lib/utils";
 import { createContinuePrompt } from "@/utils/completion-parser";
 import { FREE_CHAR_LIMIT } from "@/utils/config";
+import {
+  appHostname,
+  buildVersionedWebcontainerUrl,
+  previewRootDomain,
+  webcontainerRootDomain,
+} from "@/utils/runtime-config";
 import { createClient } from "@/utils/supabase/client";
 
 import { ComponentLoadingMockup } from "./component-loading-mockup";
@@ -361,8 +367,9 @@ export default function ComponentPreview() {
         try {
           const originHost = new URL(event.origin).hostname;
           const allowedHosts = [
-            "preview.coderocket.app",
-            "webcontainer.coderocket.app",
+            previewRootDomain,
+            webcontainerRootDomain,
+            appHostname,
           ];
           const isAllowed = allowedHosts.some(
             (host) => originHost === host || originHost.endsWith(`.${host}`),
@@ -772,7 +779,11 @@ export default function ComponentPreview() {
                   <iframe
                     ref={iframeRef}
                     key={`iframe-${displayVersion ?? selectedVersion}-${iframeKey}`}
-                    src={`https://${chatId}-${displayVersion ?? selectedVersion}.webcontainer.coderocket.app${previewPathSuffix}`}
+                    src={buildVersionedWebcontainerUrl(
+                      chatId,
+                      displayVersion ?? selectedVersion ?? 0,
+                      previewPathSuffix,
+                    )}
                     className="size-full border-none"
                     loading="eager"
                     onLoad={() => {

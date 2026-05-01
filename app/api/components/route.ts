@@ -22,10 +22,10 @@ import {
 } from "@/utils/completion-parser";
 import {
   Framework,
-  anthropicModel,
   MAX_TOKENS_PER_REQUEST,
   PREMIUM_CHAR_LIMIT,
 } from "@/utils/config";
+import { anthropicModel } from "@/utils/ai-provider";
 import {
   createProjectSummary,
   selectRelevantFiles,

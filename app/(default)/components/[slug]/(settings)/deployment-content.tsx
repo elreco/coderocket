@@ -29,6 +29,14 @@ import { Switch } from "@/components/ui/switch";
 import { useComponentContext } from "@/context/component-context";
 import { toast } from "@/hooks/use-toast";
 import { CustomDomainData } from "@/types/custom-domain";
+import {
+  buildDeploymentSubdomainUrl,
+  buildDeploymentUrl,
+  buildDocsUrl,
+  deploymentRootDomain,
+  isLocalAppUrl,
+  publicBillingProvider,
+} from "@/utils/runtime-config";
 
 import {
   deployComponent,
@@ -66,18 +74,12 @@ export default function DeploymentContent() {
   const [isUpdatingAutoDeploy, setIsUpdatingAutoDeploy] = useState(false);
 
   const subscription = contextSubscription;
+  const billingEnabled = publicBillingProvider === "stripe";
 
   const isOwner = user?.id === fetchedChat?.user_id;
   const isDeployed = fetchedChat?.is_deployed;
   const currentSubdomain = fetchedChat?.deploy_subdomain;
   const currentDeployedVersion = fetchedChat?.deployed_version;
-
-  const deployedUrl =
-    customDomain?.is_verified === true && customDomain?.domain
-      ? customDomain.domain
-      : currentSubdomain
-        ? `${currentSubdomain}.coderocket.app`
-        : null;
 
   const availableVersions = messages
     .filter((m) => m.role === "user")
@@ -86,6 +88,24 @@ export default function DeploymentContent() {
 
   const latestVersion =
     availableVersions.length > 0 ? availableVersions[0] : null;
+  const fallbackVersion = currentDeployedVersion ?? latestVersion ?? 0;
+
+  const deployedUrl =
+    currentSubdomain && fallbackVersion !== null
+      ? buildDeploymentUrl({
+          customDomain:
+            customDomain?.is_verified === true ? customDomain.domain : null,
+          subdomain: currentSubdomain,
+          chatId,
+          version: fallbackVersion,
+        })
+      : null;
+  const subdomainAccessUrl = currentSubdomain
+    ? buildDeploymentSubdomainUrl(currentSubdomain)
+    : null;
+  const deployedUrlLabel = deployedUrl?.replace(/^https?:\/\//, "") ?? null;
+  const subdomainAccessLabel =
+    subdomainAccessUrl?.replace(/^https?:\/\//, "") ?? null;
 
   useEffect(() => {
     const fetchCustomDomainDetails = async () => {
@@ -178,7 +198,11 @@ export default function DeploymentContent() {
         toast({
           variant: "default",
           title: "Subdomain available",
-          description: `${subdomain}.coderocket.app is available!`,
+          description: `${
+            isLocalAppUrl
+              ? buildDeploymentSubdomainUrl(subdomain)
+              : `${subdomain}.${deploymentRootDomain}`
+          } is available!`,
           duration: 4000,
         });
       }
@@ -208,7 +232,7 @@ export default function DeploymentContent() {
       return;
     }
 
-    if (!subscription) {
+    if (billingEnabled && !subscription) {
       toast({
         variant: "destructive",
         title: "Premium required",
@@ -253,11 +277,15 @@ export default function DeploymentContent() {
       toast({
         variant: "default",
         title: "Deployment successful",
-        description: `Your app is now live at ${subdomain}.coderocket.app`,
+        description: `Your app is now live at ${buildDeploymentSubdomainUrl(subdomain)}`,
         duration: 4000,
       });
     } catch (error) {
-      if (error instanceof Error && error.message === "payment-required") {
+      if (
+        billingEnabled &&
+        error instanceof Error &&
+        error.message === "payment-required"
+      ) {
         toast({
           variant: "destructive",
           title: "Premium required",
@@ -422,7 +450,11 @@ export default function DeploymentContent() {
       // Revert on error
       setAutoDeploy(!enabled);
 
-      if (error instanceof Error && error.message === "payment-required") {
+      if (
+        billingEnabled &&
+        error instanceof Error &&
+        error.message === "payment-required"
+      ) {
         toast({
           variant: "destructive",
           title: "Premium required",
@@ -477,19 +509,19 @@ export default function DeploymentContent() {
               <Globe className="size-4 shrink-0 text-green-600 dark:text-green-400" />
               <div className="min-w-0 flex-1 overflow-x-auto">
                 <a
-                  href={`https://${deployedUrl}`}
+                  href={deployedUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="block whitespace-nowrap font-medium text-foreground"
                 >
-                  {deployedUrl}
+                  {deployedUrlLabel}
                 </a>
               </div>
               <div className="flex shrink-0 items-center gap-1">
                 <button
                   onClick={async () => {
                     await navigator.clipboard.writeText(
-                      `https://${deployedUrl}`,
+                      deployedUrl,
                     );
                     toast({
                       variant: "default",
@@ -504,7 +536,7 @@ export default function DeploymentContent() {
                   <Copy className="size-4" />
                 </button>
                 <a
-                  href={`https://${deployedUrl}`}
+                  href={deployedUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-muted-foreground hover:text-foreground transition-colors"
@@ -523,13 +555,13 @@ export default function DeploymentContent() {
             )}
             {customDomain?.is_verified && currentSubdomain && (
               <a
-                href={`https://${currentSubdomain}.coderocket.app`}
+                href={subdomainAccessUrl ?? undefined}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-muted-foreground hover:text-primary inline-flex items-center gap-1.5 text-xs break-all hover:underline"
               >
                 <span className="break-all">
-                  Also available at: {currentSubdomain}.coderocket.app
+                  Also available at: {subdomainAccessLabel}
                 </span>
                 <ExternalLink className="size-3 shrink-0" />
               </a>
@@ -562,11 +594,11 @@ export default function DeploymentContent() {
         </>
       )}
 
-      {!subscription && (
+      {billingEnabled && !subscription && (
         <PremiumFeatureAlert description="Deployment is available exclusively for premium users. Upgrade your account to deploy your applications to custom subdomains." />
       )}
 
-      {!isOwner && subscription && (
+      {!isOwner && (
         <div className="flex items-start gap-3 rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-4">
           <XCircle className="size-5 text-yellow-500" />
           <div className="flex-1">
@@ -591,7 +623,7 @@ export default function DeploymentContent() {
           <Select
             value={selectedVersion?.toString() ?? ""}
             onValueChange={(value) => setSelectedVersion(parseInt(value))}
-            disabled={!isOwner || !subscription}
+            disabled={!isOwner || (billingEnabled && !subscription)}
           >
             <SelectTrigger>
               <SelectValue placeholder="Select a version" />
@@ -648,7 +680,9 @@ export default function DeploymentContent() {
                   className="pr-32"
                 />
                 <span className="text-muted-foreground absolute top-1/2 right-3 -translate-y-1/2 text-sm">
-                  .coderocket.app
+                  {isLocalAppUrl
+                    ? "local preview"
+                    : `.${deploymentRootDomain}`}
                 </span>
               </div>
               {!isDeployed && (
@@ -697,6 +731,12 @@ export default function DeploymentContent() {
             Subdomain must be 3-63 characters, contain only lowercase letters,
             numbers, and hyphens, and start/end with a letter or number.
           </p>
+          {isLocalAppUrl && (
+            <p className="text-muted-foreground text-xs">
+              Local builds are served through the path fallback under
+              ` /webcontainer/&lt;subdomain&gt; `.
+            </p>
+          )}
         </div>
 
         {!isDeployed && (
@@ -732,7 +772,7 @@ export default function DeploymentContent() {
               type="submit"
               disabled={
                 !isOwner ||
-                !subscription ||
+                (billingEnabled && !subscription) ||
                 isDeploying ||
                 !subdomain ||
                 !validateSubdomain(subdomain) ||
@@ -746,7 +786,7 @@ export default function DeploymentContent() {
                   <Loader2 className="mr-2 size-4 animate-spin" />
                   Deploying...
                 </>
-              ) : !subscription ? (
+              ) : billingEnabled && !subscription ? (
                 <>
                   <Zap className="mr-2 size-4" />
                   Premium Required
@@ -771,7 +811,7 @@ export default function DeploymentContent() {
                   onClick={handleUpdateSubdomain}
                   disabled={
                     !isOwner ||
-                    !subscription ||
+                    (billingEnabled && !subscription) ||
                     isUpdatingSubdomain ||
                     !subdomain ||
                     !validateSubdomain(subdomain)
@@ -817,7 +857,7 @@ export default function DeploymentContent() {
       <p className="text-muted-foreground text-sm">
         Learn more about deployment features and best practices.{" "}
         <a
-          href="https://docs.coderocket.app/deployment/overview"
+          href={buildDocsUrl("/deployment/overview")}
           target="_blank"
           rel="noopener noreferrer"
           className="text-foreground underline decoration-dotted underline-offset-4 hover:decoration-solid"
@@ -826,7 +866,7 @@ export default function DeploymentContent() {
         </a>
       </p>
 
-      {isDeployed && subscription && (
+      {isDeployed && (
         <CustomDomainSection
           chatId={chatId}
           isOwner={isOwner}
