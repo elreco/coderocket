@@ -36,6 +36,10 @@ const organizationId = `${baseAppUrl}#organization`;
 const webAppId = `${baseAppUrl}#webapp`;
 const websiteId = `${baseAppUrl}#website`;
 const sourceCodeId = `${baseAppUrl}#source`;
+const demoVideoId = "vkfCdoFQnAk";
+const demoVideoUrl = `https://www.youtube.com/watch?v=${demoVideoId}`;
+const demoVideoEmbedUrl = `https://www.youtube.com/embed/${demoVideoId}`;
+const demoVideoIdUrl = `${baseAppUrl}#demo-video`;
 const searchUrlTemplate = buildAppUrl(
   "/components?search={search_term_string}",
 );
@@ -43,17 +47,20 @@ const docsHomeUrl = buildDocsUrl("/");
 const sameAsLinks = [githubRepoUrl, docsHomeUrl, discordLink];
 
 const meta = {
-  title:
-    "CodeRocket - Open Source AI Website Builder | Generate Tailwind Components with AI",
+  title: "CodeRocket - Open Source Vibe Coding Tool & AI Website Builder",
   metadataBase: new URL(appUrl),
   description:
-    "CodeRocket is an open source AI website and component builder. Build production-ready Tailwind v4 websites and UI components with AI, self-host the stack, or use the managed cloud. Generate React, Vue, Svelte, Angular, and HTML experiences in minutes.",
+    "CodeRocket is an open source vibe coding tool and AI website builder. Build production-ready Tailwind v4 websites and UI components with AI, self-host the stack, or use the managed cloud. Generate React, Vue, Svelte, Angular, and HTML experiences in minutes.",
   cardImage: buildAppUrl("/og.png"),
   robots: "index, follow",
   favicon: "/favicon.ico",
   url: baseAppUrl,
   type: "website",
   keywords: [
+    "vibe coding tool",
+    "open source vibe coding tool",
+    "ai vibe coding tool",
+    "self-hosted vibe coding tool",
     "tailwind ai",
     "Tailwind AI",
     "tailwind ai generator",
@@ -85,9 +92,9 @@ const meta = {
   ],
   twitter: {
     card: "summary_large_image",
-    title: "CodeRocket - Open Source AI Website Builder",
+    title: "CodeRocket - Open Source Vibe Coding Tool",
     description:
-      "Build and self-host production-ready websites and components with AI. Generate React, Vue, Svelte, Angular, and HTML with CodeRocket.",
+      "Build and self-host production-ready websites and components with AI. CodeRocket is an open source vibe coding tool for Tailwind, Next.js and Supabase workflows.",
     images: [buildAppUrl("/og.png")],
     creator: "@coderocketapp",
     site: "@coderocketapp",
@@ -131,7 +138,7 @@ export const metadata = {
         url: meta.cardImage,
         width: 1200,
         height: 630,
-        alt: "CodeRocket - AI-Powered Tailwind Website Builder",
+        alt: "CodeRocket - Open Source Vibe Coding Tool",
       },
     ],
   },
@@ -190,9 +197,9 @@ export default async function RootLayout({ children }: PropsWithChildren) {
                   name: "CodeRocket",
                   url: baseAppUrl,
                   description:
-                    "CodeRocket (formerly Tailwind AI) is an open source AI website builder that creates production-ready Tailwind v4 websites and components. Build complete web applications from scratch, clone a website from any URL, self-host the stack, or use the managed cloud.",
+                    "CodeRocket (formerly Tailwind AI) is an open source vibe coding tool and AI website builder that creates production-ready Tailwind v4 websites and components. Build complete web applications from scratch, clone a website from any URL, self-host the stack, or use the managed cloud.",
                   applicationCategory: "DeveloperApplication",
-                  applicationSubCategory: "Open Source AI Website Builder",
+                  applicationSubCategory: "Open Source Vibe Coding Tool",
                   operatingSystem: "Any",
                   browserRequirements:
                     "Requires JavaScript. Chrome, Firefox, Safari, or Edge browser recommended.",
@@ -221,6 +228,7 @@ export default async function RootLayout({ children }: PropsWithChildren) {
                     "Instant deployment",
                     "Image-to-code conversion",
                     "Supabase integration",
+                    "Open source vibe coding workflow",
                   ],
                 },
                 {
@@ -228,7 +236,7 @@ export default async function RootLayout({ children }: PropsWithChildren) {
                   "@id": sourceCodeId,
                   name: "CodeRocket Open Source Repository",
                   description:
-                    "Open source CodeRocket repository with the Next.js app, integrated builder, self-hosting setup and product code.",
+                    "Open source CodeRocket repository with the Next.js app, integrated builder, self-hosting setup, vibe coding workflow and product code.",
                   codeRepository: githubRepoUrl,
                   license: "https://opensource.org/license/mit/",
                   programmingLanguage: ["TypeScript", "JavaScript"],
@@ -255,6 +263,20 @@ export default async function RootLayout({ children }: PropsWithChildren) {
                     },
                     "query-input": "required name=search_term_string",
                   },
+                },
+                {
+                  "@type": "VideoObject",
+                  "@id": demoVideoIdUrl,
+                  name: "CodeRocket demo",
+                  description:
+                    "Watch CodeRocket, the open source vibe coding tool and AI website builder, generate production-ready websites and UI components.",
+                  thumbnailUrl: [meta.cardImage],
+                  embedUrl: demoVideoEmbedUrl,
+                  contentUrl: demoVideoUrl,
+                  publisher: {
+                    "@id": organizationId,
+                  },
+                  isFamilyFriendly: true,
                 },
               ],
             }),

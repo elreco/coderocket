@@ -15,11 +15,13 @@ import {
 } from "@/utils/runtime-config";
 
 export const metadata: Metadata = {
-  title: "Open Source - CodeRocket AI Website Builder",
+  title: "Open Source - CodeRocket Vibe Coding Tool",
   description:
-    "Learn how CodeRocket works as an open source AI website builder. Explore the self-hosted stack, GitHub repository, integrated builder, Supabase setup, and the managed cloud option.",
+    "Learn how CodeRocket works as an open source vibe coding tool and AI website builder. Explore the self-hosted stack, GitHub repository, integrated builder, Supabase setup, and the managed cloud option.",
   keywords: [
     "coderocket open source",
+    "vibe coding tool",
+    "open source vibe coding tool",
     "open source ai website builder",
     "self-hosted ai builder",
     "github website builder",
@@ -27,9 +29,9 @@ export const metadata: Metadata = {
     "tailwind ai open source",
   ],
   openGraph: {
-    title: "CodeRocket Open Source AI Website Builder",
+    title: "CodeRocket Open Source Vibe Coding Tool",
     description:
-      "Explore the open source CodeRocket stack, self-hosting workflow, GitHub repository, and integrated AI builder.",
+      "Explore the open source CodeRocket stack, self-hosting workflow, GitHub repository, integrated AI builder and demo video.",
     url: buildAppUrl("/open-source"),
   },
   alternates: {
@@ -61,15 +63,17 @@ export default function OpenSourcePage() {
 
       <PageTitle
         title="CodeRocket Open Source"
-        subtitle="An open source AI website builder you can self-host, fork, and extend."
+        subtitle="An open source vibe coding tool and AI website builder you can self-host, fork, and extend."
       />
 
       <div className="max-w-4xl space-y-5">
         <p className="text-muted-foreground text-base leading-7">
           CodeRocket is an open source AI website builder and component
-          generator focused on production-ready Tailwind workflows. You can run
-          the full stack locally, deploy your own self-hosted instance, or use
-          the managed cloud at{" "}
+          generator focused on production-ready Tailwind workflows. It is built
+          to work both as a managed product and as a self-hosted vibe coding
+          tool for teams who want full control over the stack. You can run the
+          full stack locally, deploy your own self-hosted instance, or use the
+          managed cloud at{" "}
           <a
             href={cloudUrl}
             target="_blank"
@@ -85,6 +89,15 @@ export default function OpenSourcePage() {
           <Button asChild>
             <a href={githubRepoUrl} target="_blank" rel="noopener noreferrer">
               View GitHub Repository
+            </a>
+          </Button>
+          <Button asChild variant="outline">
+            <a
+              href="https://www.youtube.com/watch?v=vkfCdoFQnAk"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Watch Demo Video
             </a>
           </Button>
           <Button asChild variant="outline">
@@ -130,7 +143,8 @@ export default function OpenSourcePage() {
             If you are evaluating AI website builders, this page is the clearest
             path to understand that CodeRocket is both a managed product and a
             self-hosted codebase built around Next.js, Supabase and an
-            integrated builder service.
+            integrated builder service, with a stronger vibe coding workflow for
+            teams that want speed without losing control.
           </p>
         </div>
 

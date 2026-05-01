@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  Open source AI website and component builder with a self-hosted default setup.
+  Open source vibe coding tool and AI website builder with a self-hosted default setup.
 </p>
 
 <p align="center">
@@ -11,13 +11,14 @@
   <a href="https://github.com/elreco/coderocket/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-22c55e" alt="License" /></a>
   <a href="https://github.com/elreco/coderocket/discussions"><img src="https://img.shields.io/badge/community-discussions-2563eb" alt="Discussions" /></a>
   <a href="https://www.coderocket.app/open-source"><img src="https://img.shields.io/badge/self--host-ready-6C63FF" alt="Self-host ready" /></a>
+  <a href="https://www.youtube.com/watch?v=vkfCdoFQnAk"><img src="https://img.shields.io/badge/demo-watch%20video-ef4444" alt="Watch demo" /></a>
   <a href="https://nextjs.org/"><img src="https://img.shields.io/badge/Next.js-15-black" alt="Next.js 15" /></a>
   <a href="https://supabase.com/"><img src="https://img.shields.io/badge/Supabase-Postgres%20%2B%20Auth-3ECF8E" alt="Supabase" /></a>
 </p>
 
 # CodeRocket
 
-CodeRocket is an AI website and component builder that can run as:
+CodeRocket is an open source vibe coding tool and AI website builder that can run as:
 
 - a self-hosted open source app,
 - a local development stack with the integrated `builder`,
@@ -25,10 +26,21 @@ CodeRocket is an AI website and component builder that can run as:
 
 This repository is now structured so the default path is self-hosting first. Cloud-only integrations such as Stripe billing, Vercel domain management, and Vercel Blob storage are optional adapters, not hard requirements.
 
+## Watch the demo
+
+<p>
+  <a href="https://www.youtube.com/watch?v=vkfCdoFQnAk">
+    <img src="public/og.png" alt="Watch the CodeRocket demo video" />
+  </a>
+</p>
+
+Prefer a quick overview first? Watch the product demo on YouTube: [CodeRocket demo video](https://www.youtube.com/watch?v=vkfCdoFQnAk).
+
 ## Community
 
 - Website: [coderocket.app](https://www.coderocket.app)
 - Open source overview: [coderocket.app/open-source](https://www.coderocket.app/open-source)
+- Demo video: [youtube.com/watch?v=vkfCdoFQnAk](https://www.youtube.com/watch?v=vkfCdoFQnAk)
 - Documentation: [docs.coderocket.app](https://docs.coderocket.app)
 - Issues: [github.com/elreco/coderocket/issues](https://github.com/elreco/coderocket/issues)
 - Discussions: [github.com/elreco/coderocket/discussions](https://github.com/elreco/coderocket/discussions)
