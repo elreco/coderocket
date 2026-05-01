@@ -6,7 +6,6 @@ import { buildScenarioConfig, EmailScenario, ScenarioInput } from "./scenarios";
 import { fetchEmailShowcase } from "./showcase";
 import { renderEmailTemplate } from "./template";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
 const fromAddress =
   process.env.RESEND_FROM_ADDRESS ?? "CodeRocket <noreply@example.com>";
 
@@ -23,9 +22,7 @@ export async function dispatchEmail({
   data,
   userId,
 }: DispatchOptions) {
-  if (!process.env.RESEND_API_KEY) {
-    throw new Error("RESEND_API_KEY is not configured");
-  }
+  const resend = getResendClient();
   const config = buildScenarioConfig(scenario, data);
   const showcase = await fetchEmailShowcase();
   const html = renderEmailTemplate({
@@ -52,6 +49,16 @@ export async function dispatchEmail({
     await updateUserEmailMetadata(userId, scenario);
   }
   return response;
+}
+
+function getResendClient() {
+  const apiKey = process.env.RESEND_API_KEY;
+
+  if (!apiKey) {
+    throw new Error("RESEND_API_KEY is not configured");
+  }
+
+  return new Resend(apiKey);
 }
 
 async function updateUserEmailMetadata(

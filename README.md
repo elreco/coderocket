@@ -147,10 +147,11 @@ When exposing the builder on a public network, set `BUILDER_AUTH_TOKEN` on both 
 The current Supabase history was not maintained exclusively through CLI migrations during development. Because of that:
 
 - keep treating `supabase/current_state.sql` as informational only,
-- verify any local reset against the real app behavior,
-- and use the documented baseline export flow before declaring the schema authoritative for long-term maintenance.
+- use `supabase/migrations/20260501000000_baseline_from_authoritative_schema.sql` as the active baseline candidate,
+- keep `supabase/baseline.schema.sql` as the authoritative schema snapshot,
+- and verify a real local `supabase db reset` once Docker is available before treating the baseline as fully validated.
 
-You do not need to preserve the entire legacy migration timeline forever. Once the authoritative schema has been exported and validated, you can replace the old history with a single baseline migration plus new forward migrations.
+The old migration chain is archived under `supabase/migrations-legacy/`. Going forward, the intended model is one verified baseline migration plus new forward migrations.
 
 Details and commands live in [supabase/README.md](/Users/alecorre/Documents/REPOS/tailwindai/coderocket/tailwind-ai/supabase/README.md).
 

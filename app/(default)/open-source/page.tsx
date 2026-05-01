@@ -88,7 +88,11 @@ export default function OpenSourcePage() {
             </a>
           </Button>
           <Button asChild variant="outline">
-            <a href={buildDocsUrl("/")} target="_blank" rel="noopener noreferrer">
+            <a
+              href={buildDocsUrl("/")}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               Read Self-Hosting Docs
             </a>
           </Button>
@@ -113,7 +117,9 @@ export default function OpenSourcePage() {
 
       <section className="mt-12 grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
         <div className="bg-card rounded-lg border p-6">
-          <h2 className="text-2xl font-semibold">Why the open source version matters</h2>
+          <h2 className="text-2xl font-semibold">
+            Why the open source version matters
+          </h2>
           <p className="text-muted-foreground mt-4 leading-7">
             The open source edition makes it easier for developers to inspect
             the full generation pipeline, customize the builder, adapt the

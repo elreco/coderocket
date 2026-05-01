@@ -1,6 +1,6 @@
-import { stripe } from "@/utils/stripe";
 import { buildAccountUrl, buildAppUrl } from "@/utils/runtime-config";
 import { billingEnabled } from "@/utils/server-config";
+import { stripe } from "@/utils/stripe";
 import { createClient } from "@/utils/supabase/server";
 import { createOrRetrieveCustomer } from "@/utils/supabase-admin";
 

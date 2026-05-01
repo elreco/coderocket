@@ -10,12 +10,6 @@ import {
 } from "@/utils/completion-parser";
 import { Framework } from "@/utils/config";
 import {
-  billingEnabled,
-  buildBuilderHeaders,
-  builderApiUrl,
-  domainApiEnabled,
-} from "@/utils/server-config";
-import {
   verifyDomainOwnership,
   checkDomainAvailability,
 } from "@/utils/domain-verification";
@@ -25,6 +19,12 @@ import {
   SupabaseIntegrationConfig,
 } from "@/utils/integrations";
 import { promptEnhancer } from "@/utils/prompt-enhancer";
+import {
+  billingEnabled,
+  buildBuilderHeaders,
+  builderApiUrl,
+  domainApiEnabled,
+} from "@/utils/server-config";
 import { getLatestArtifactCode } from "@/utils/supabase/artifact-helpers";
 import { createClient } from "@/utils/supabase/server";
 import {
@@ -510,7 +510,7 @@ export const buildComponent = async (
         );
       } else {
         console.warn(
-        `buildComponent: Build ${chatId}-${version} not available in storage after 3 attempts, skipping screenshot`,
+          `buildComponent: Build ${chatId}-${version} not available in storage after 3 attempts, skipping screenshot`,
         );
       }
     } catch (screenshotError) {

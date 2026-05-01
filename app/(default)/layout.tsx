@@ -4,7 +4,6 @@ import { Plus_Jakarta_Sans } from "next/font/google";
 import { cookies } from "next/headers";
 import { PropsWithChildren } from "react";
 
-import { AIDirectoryWidget } from "@/components/ai-directory-widget";
 import { AppSidebar } from "@/components/app-sidebar";
 import { AuthModal } from "@/components/auth-modal";
 import { AuthSyncProvider } from "@/components/auth-sync-provider";
@@ -37,7 +36,9 @@ const organizationId = `${baseAppUrl}#organization`;
 const webAppId = `${baseAppUrl}#webapp`;
 const websiteId = `${baseAppUrl}#website`;
 const sourceCodeId = `${baseAppUrl}#source`;
-const searchUrlTemplate = buildAppUrl("/components?search={search_term_string}");
+const searchUrlTemplate = buildAppUrl(
+  "/components?search={search_term_string}",
+);
 const docsHomeUrl = buildDocsUrl("/");
 const sameAsLinks = [githubRepoUrl, docsHomeUrl, discordLink];
 
@@ -270,7 +271,6 @@ export default async function RootLayout({ children }: PropsWithChildren) {
                 <TooltipProvider>{children}</TooltipProvider>
               </main>
             </SidebarProvider>
-            <AIDirectoryWidget />
             <AuthModal />
             <Toaster />
             <Analytics />

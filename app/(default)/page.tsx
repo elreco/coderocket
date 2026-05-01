@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
-import { buildAppUrl } from "@/utils/runtime-config";
 import { UserIntegration } from "@/utils/integrations";
+import { buildAppUrl } from "@/utils/runtime-config";
 import { createClient } from "@/utils/supabase/server";
 
 import { getSubscription } from "../supabase-server";

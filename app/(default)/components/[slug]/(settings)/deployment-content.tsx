@@ -520,9 +520,7 @@ export default function DeploymentContent() {
               <div className="flex shrink-0 items-center gap-1">
                 <button
                   onClick={async () => {
-                    await navigator.clipboard.writeText(
-                      deployedUrl,
-                    );
+                    await navigator.clipboard.writeText(deployedUrl);
                     toast({
                       variant: "default",
                       title: "URL copied",
@@ -680,9 +678,7 @@ export default function DeploymentContent() {
                   className="pr-32"
                 />
                 <span className="text-muted-foreground absolute top-1/2 right-3 -translate-y-1/2 text-sm">
-                  {isLocalAppUrl
-                    ? "local preview"
-                    : `.${deploymentRootDomain}`}
+                  {isLocalAppUrl ? "local preview" : `.${deploymentRootDomain}`}
                 </span>
               </div>
               {!isDeployed && (
@@ -733,8 +729,8 @@ export default function DeploymentContent() {
           </p>
           {isLocalAppUrl && (
             <p className="text-muted-foreground text-xs">
-              Local builds are served through the path fallback under
-              ` /webcontainer/&lt;subdomain&gt; `.
+              Local builds are served through the path fallback under `
+              /webcontainer/&lt;subdomain&gt; `.
             </p>
           )}
         </div>

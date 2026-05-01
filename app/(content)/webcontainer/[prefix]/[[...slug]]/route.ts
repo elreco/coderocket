@@ -1,11 +1,8 @@
 import mime from "mime-types";
 import { NextRequest, NextResponse } from "next/server";
 
-import {
-  findBuildAsset,
-  readBuildAsset,
-} from "@/builder/storage.js";
 import { getSubscription } from "@/app/supabase-server";
+import { findBuildAsset, readBuildAsset } from "@/builder/storage.js";
 import {
   appHostname,
   buildAppUrl,
@@ -26,6 +23,7 @@ export const revalidate = 0;
 
 const STATIC_ASSET_CACHE_CONTROL = "public, max-age=31536000, immutable";
 const HTML_CACHE_CONTROL = "no-cache";
+const LOCAL_PREVIEW_PREFIX_COOKIE = "coderocket_local_preview_prefix";
 
 /**
  * Cette route sert les fichiers d’un dossier (prefix) stocké dans Vercel Blob.
@@ -235,6 +233,23 @@ export async function GET(
       },
     });
 
+  const applyLocalPreviewCookie = (
+    response: NextResponse,
+    cookiePrefix: string,
+  ) => {
+    if (!isLocalRequest || !cookiePrefix) {
+      return response;
+    }
+
+    response.cookies.set(LOCAL_PREVIEW_PREFIX_COOKIE, cookiePrefix, {
+      httpOnly: false,
+      sameSite: "lax",
+      path: "/",
+    });
+
+    return response;
+  };
+
   const deriveSlugFromPath = () => {
     if (pathname.startsWith("/webcontainer/")) {
       const parts = pathname.split("/").filter(Boolean);
@@ -411,6 +426,23 @@ export async function GET(
   // Inject element selection script into HTML files
   if (isIndexHtml || mimeType === "text/html") {
     const htmlContent = new TextDecoder().decode(data);
+    const localBasePath = isLocalRequest ? `/webcontainer/${prefix}` : "";
+    const localPathNormalizationScript = localBasePath
+      ? `
+<script>
+(function() {
+  const basePath = ${JSON.stringify(localBasePath)};
+  const currentPath = window.location.pathname || '/';
+  if (!currentPath.startsWith(basePath)) {
+    return;
+  }
+
+  const nextPath = currentPath.slice(basePath.length) || '/';
+  const nextUrl = nextPath + window.location.search + window.location.hash;
+  window.history.replaceState(window.history.state, '', nextUrl);
+})();
+</script>`
+      : "";
     const selectionScript = `
 <script>
 (function() {
@@ -599,18 +631,34 @@ export async function GET(
         "g",
       );
       modifiedHtml = htmlContent.replace(regex, coderocketBlock);
+      if (localPathNormalizationScript && modifiedHtml.includes("</head>")) {
+        modifiedHtml = modifiedHtml.replace(
+          "</head>",
+          localPathNormalizationScript + "\n</head>",
+        );
+      }
     } else if (htmlContent.includes("</body>")) {
       modifiedHtml = htmlContent.replace(
         "</body>",
         coderocketBlock + "\n</body>",
       );
+      if (localPathNormalizationScript && modifiedHtml.includes("</head>")) {
+        modifiedHtml = modifiedHtml.replace(
+          "</head>",
+          localPathNormalizationScript + "\n</head>",
+        );
+      }
     } else if (htmlContent.includes("</html>")) {
       modifiedHtml = htmlContent.replace(
         "</html>",
         coderocketBlock + "\n</html>",
       );
+      if (localPathNormalizationScript) {
+        modifiedHtml = localPathNormalizationScript + "\n" + modifiedHtml;
+      }
     } else {
-      modifiedHtml = htmlContent + coderocketBlock;
+      modifiedHtml =
+        localPathNormalizationScript + htmlContent + coderocketBlock;
     }
     const encoded = new TextEncoder().encode(modifiedHtml);
     data = new Uint8Array(encoded).buffer;
@@ -810,10 +858,13 @@ export async function GET(
       ? HTML_CACHE_CONTROL
       : STATIC_ASSET_CACHE_CONTROL;
 
-  return new NextResponse(data, {
-    headers: {
-      "Content-Type": mimeType,
-      "Cache-Control": cacheControl,
-    },
-  });
+  return applyLocalPreviewCookie(
+    new NextResponse(data, {
+      headers: {
+        "Content-Type": mimeType,
+        "Cache-Control": cacheControl,
+      },
+    }),
+    prefix,
+  );
 }

@@ -921,9 +921,9 @@ export default function Hero({
           <p className="text-foreground max-w-3xl text-center text-lg">
             {generationMode === "scratch" ? (
               <>
-                Generate production-ready Tailwind v4 websites and UI
-                components from text or images. Self-host the stack, connect
-                GitHub, and deploy faster.{" "}
+                Generate production-ready Tailwind v4 websites and UI components
+                from text or images. Self-host the stack, connect GitHub, and
+                deploy faster.{" "}
                 <span className="text-muted-foreground">
                   Formerly Tailwind AI.
                 </span>

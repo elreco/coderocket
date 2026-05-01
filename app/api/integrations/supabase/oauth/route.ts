@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
-import { createClient } from "@/utils/supabase/server";
 import { buildAppUrl } from "@/utils/runtime-config";
+import { createClient } from "@/utils/supabase/server";
 
 const SUPABASE_OAUTH_CLIENT_ID = process.env.SUPABASE_OAUTH_CLIENT_ID;
 const SUPABASE_REDIRECT_URI = buildAppUrl(

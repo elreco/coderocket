@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
-import { createClient } from "@/utils/supabase/server";
 import { buildAppUrl } from "@/utils/runtime-config";
+import { createClient } from "@/utils/supabase/server";
 
 const FIGMA_CLIENT_ID = process.env.FIGMA_CLIENT_ID;
 const FIGMA_REDIRECT_URI = buildAppUrl("/api/integrations/figma/callback");

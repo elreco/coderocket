@@ -124,9 +124,9 @@ export default function Pricing({ user, products, subscription }: Props) {
       <div className="bg-card rounded-lg border p-6">
         <h3 className="text-xl font-semibold">Self-hosted instance</h3>
         <p className="text-muted-foreground mt-2 text-sm">
-          Stripe checkout is disabled here. Configure
-          ` NEXT_PUBLIC_BILLING_PROVIDER=stripe ` and `BILLING_PROVIDER=stripe`
-          if you want to expose paid plans on your own deployment.
+          Stripe checkout is disabled here. Configure `
+          NEXT_PUBLIC_BILLING_PROVIDER=stripe ` and `BILLING_PROVIDER=stripe` if
+          you want to expose paid plans on your own deployment.
         </p>
       </div>
     );
@@ -320,8 +320,8 @@ export default function Pricing({ user, products, subscription }: Props) {
     <div className="bg-card rounded-lg border p-6">
       <h3 className="text-xl font-semibold">No billing plans configured</h3>
       <p className="text-muted-foreground mt-2 text-sm">
-        Add Stripe products and sync them into Supabase to display
-        subscriptions on this instance.
+        Add Stripe products and sync them into Supabase to display subscriptions
+        on this instance.
       </p>
     </div>
   );

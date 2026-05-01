@@ -10,7 +10,8 @@ As of 2026-05-01:
 - `types_db.ts` has been regenerated from that same remote database,
 - `supabase/seed.sql` contains the deterministic storage bucket bootstrap required by the app,
 - `supabase/current_state.sql` should be treated as historical reference only,
-- and `supabase/migrations/` should still be treated as legacy history until a fully squashed baseline migration is verified locally.
+- `supabase/migrations/20260501000000_baseline_from_authoritative_schema.sql` is now the single baseline candidate used for fresh local installs,
+- and the previous migration chain has been archived under `supabase/migrations-legacy/`.
 
 During the export, two real drifts surfaced between code and production schema:
 
@@ -21,7 +22,7 @@ The codebase has been adjusted to match that authoritative schema.
 
 ## Local development today
 
-Use the current migrations plus `supabase/seed.sql` for local resets until you have produced and validated a fully squashed baseline migration:
+Use the new baseline candidate plus `supabase/seed.sql` for local resets:
 
 ```bash
 npx supabase start
@@ -30,6 +31,7 @@ npm run generate-types
 ```
 
 Then verify the app against the schema by running the local stack and exercising the main flows.
+At the moment, Docker was unavailable when this baseline was generated, so the candidate has not yet been revalidated end-to-end through an actual local `db reset`.
 
 ## What is already exported
 
@@ -57,21 +59,31 @@ and contains structure only:
 
 It does not contain application rows.
 
-## Recommended squash flow
+## Baseline status
 
-The remaining step is to convert the exported schema into a verified baseline migration that works with `supabase db reset`.
+The repo now uses a squashed baseline candidate generated from the authoritative production schema.
 
-Because the remote dump includes Supabase-managed schemas such as `storage`, you should not blindly copy the entire dump into `supabase/migrations/`.
+Because the remote dump includes Supabase-managed schemas such as `storage`, the migration was intentionally reduced to:
 
-Instead:
+1. app-owned `public` tables, types, functions, indexes, constraints, triggers, and policies,
+2. the app-specific `storage.objects` policies needed for `images`, `featured`, and `chat-images`,
+3. and an explicit `auth.users -> public.handle_new_user()` trigger so local auth bootstrap keeps working.
 
-1. Keep `supabase/baseline.schema.sql` as the canonical reference snapshot.
+The canonical reference snapshot remains:
 
-2. Build a squashed baseline migration from the app-owned objects you actually want to recreate in local development.
+```bash
+supabase/baseline.schema.sql
+```
 
-3. Preserve storage bucket bootstrap in `supabase/seed.sql`.
+The archived historical chain lives in:
 
-4. Validate the result locally with Docker + Supabase CLI:
+```bash
+supabase/migrations-legacy/
+```
+
+## Remaining validation step
+
+What still remains is one final local verification pass with Docker + Supabase CLI:
 
 ```bash
 npx supabase start
@@ -80,10 +92,8 @@ npm run generate-types
 npm run type-check
 ```
 
-5. Only after that local reset is verified should you archive or squash the legacy migration history.
-
-You are not required to keep the full legacy migration chain forever.
-For open source maintenance, a verified baseline migration plus future forward migrations is enough.
+Once that passes against a fresh local stack, this candidate becomes the verified baseline going forward.
+You do not need to keep the full legacy migration chain forever. For open source maintenance, a verified baseline migration plus future forward migrations is enough.
 
 ## Seed data
 

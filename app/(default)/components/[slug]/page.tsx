@@ -210,8 +210,7 @@ export default async function Components({ params }: Props) {
         "@id": componentUrl,
       },
     },
-    image:
-      lastAssistantMessage?.screenshot || buildAppUrl("/og.png"),
+    image: lastAssistantMessage?.screenshot || buildAppUrl("/og.png"),
     license: "https://creativecommons.org/licenses/by/4.0/",
   };
 

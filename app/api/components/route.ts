@@ -14,6 +14,7 @@ import {
 import { getSubscription } from "@/app/supabase-server";
 import { Tables, Json } from "@/types_db";
 import { cloneWebsite } from "@/utils/agents/website-scraper-simple";
+import { anthropicModel } from "@/utils/ai-provider";
 import { takeScreenshot } from "@/utils/capture-screenshot";
 import {
   extractDataTheme,
@@ -25,7 +26,6 @@ import {
   MAX_TOKENS_PER_REQUEST,
   PREMIUM_CHAR_LIMIT,
 } from "@/utils/config";
-import { anthropicModel } from "@/utils/ai-provider";
 import {
   createProjectSummary,
   selectRelevantFiles,

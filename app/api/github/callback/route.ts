@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { createClient } from "@/utils/supabase/server";
 import { buildAccountUrl } from "@/utils/runtime-config";
+import { createClient } from "@/utils/supabase/server";
 
 export async function GET(request: NextRequest) {
   const accountUrl = new URL(buildAccountUrl());

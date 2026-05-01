@@ -16,9 +16,9 @@ import { toggleChatLike } from "@/app/(default)/components/actions";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { buildAppUrl } from "@/utils/runtime-config";
 import { avatarApi, Framework } from "@/utils/config";
 import { getRelativeDate } from "@/utils/date";
+import { buildAppUrl } from "@/utils/runtime-config";
 
 import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
 import { Button } from "./ui/button";

@@ -194,7 +194,7 @@ export const ImageUploadArea = memo(
           fileInputRef.current.dispatchEvent(event);
         }
       },
-      [disabled, onDrop, fileInputRef, isLoggedIn, isPremium],
+      [disabled, onDrop, fileInputRef, isLoggedIn, isPremium, openLogin],
     );
 
     const handleLibraryClick = () => {
