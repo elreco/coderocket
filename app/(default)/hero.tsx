@@ -29,7 +29,6 @@ import {
   Image,
   Zap,
   Crown,
-  ExternalLink,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -39,7 +38,6 @@ import { AppFooter } from "@/components/app-footer";
 import { Container } from "@/components/container";
 import { FigmaImportButton } from "@/components/figma-import-button";
 import { FileBadge } from "@/components/file-badge";
-import { CoderocketAILogo } from "@/components/icons/coderocket-ai-logo";
 import { ImageUploadArea } from "@/components/image-upload-area";
 import { TextareaWithLimit } from "@/components/textarea-with-limit";
 import { AnimatedGridPattern } from "@/components/ui/animated-grid-pattern";
@@ -907,18 +905,6 @@ export default function Hero({
       />
       <div className="flex min-h-[calc(100vh-20%)] w-full flex-col items-center justify-center space-y-6">
         <div className="flex w-full flex-col items-center justify-center space-y-6">
-          <a
-            href="https://ai.coderocket.app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group mb-2 inline-flex items-center gap-1.5 rounded-full border border-primary/40 bg-primary/20 px-3 py-1 text-xs transition-all hover:border-primary/60 hover:bg-primary/30"
-          >
-            <CoderocketAILogo className="size-3 text-primary" />
-            <span className="font-medium text-foreground">
-              AI Tools Directory
-            </span>
-            <ExternalLink className="size-2.5 text-foreground/70 transition-transform group-hover:translate-x-0.5" />
-          </a>
           <h1
             className="text-center text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl"
             data-testid="home-h1"

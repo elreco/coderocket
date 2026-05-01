@@ -1,10 +1,7 @@
 "use client";
 
-import { X, ExternalLink } from "lucide-react";
-import Link from "next/link";
+import { X } from "lucide-react";
 import { useState, useEffect } from "react";
-
-import { CoderocketAILogo } from "./icons/coderocket-ai-logo";
 
 const STORAGE_KEY = "ai-directory-widget-closed";
 
@@ -47,36 +44,6 @@ export function AIDirectoryWidget() {
         >
           <X className="size-4" />
         </button>
-
-        <Link
-          href="https://ai.coderocket.app"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="group block"
-        >
-          <div className="mb-3 flex items-center gap-3">
-            <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10">
-              <CoderocketAILogo className="size-5 text-primary" />
-            </div>
-            <div className="flex-1">
-              <h3 className="font-semibold text-foreground">CodeRocket AI</h3>
-              <p className="text-xs text-muted-foreground">Directory</p>
-            </div>
-          </div>
-
-          <p className="mb-3 text-sm text-muted-foreground">
-            Discover the best{" "}
-            <span className="font-medium text-foreground">
-              Open Source AI Tools
-            </span>{" "}
-            curated for developers and creators.
-          </p>
-
-          <div className="flex items-center gap-1.5 text-xs font-medium text-primary transition-colors group-hover:text-primary/80">
-            <span>Explore now</span>
-            <ExternalLink className="size-3 transition-transform group-hover:translate-x-0.5" />
-          </div>
-        </Link>
       </div>
 
       <div className="h-1 w-full bg-gradient-to-r from-primary/50 via-primary to-primary/50" />
