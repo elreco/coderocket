@@ -42,11 +42,12 @@ npm --prefix docs install
 ### 2. Create your environment files
 
 ```bash
-cp .env.example .env
+cp .env.example .env.local
 cp builder/.env.example builder/.env
 ```
 
-The root `.env` is enough for the app and the builder in most cases. The builder-specific file is only there for people who want to run `builder/` independently.
+Use `.env.local` for your machine-specific app secrets. The builder-specific file is only there for people who want to run `builder/` independently.
+If you already have a local `.env`, prefer consolidating into `.env.local` to avoid confusion.
 
 ### 3. Start Supabase locally
 

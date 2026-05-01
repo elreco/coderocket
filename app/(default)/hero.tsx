@@ -85,6 +85,7 @@ import { defaultTheme, maxImagesUpload, themes } from "@/utils/config";
 import { validateFile } from "@/utils/file-helper";
 import { IntegrationType, UserIntegration } from "@/utils/integrations";
 import { promptEnhancer } from "@/utils/prompt-enhancer";
+import { buildDocsUrl, githubRepoUrl } from "@/utils/runtime-config";
 import { createClient } from "@/utils/supabase/client";
 
 import { createChat, type GetComponentsReturnType } from "./components/actions";
@@ -905,31 +906,57 @@ export default function Hero({
       />
       <div className="flex min-h-[calc(100vh-20%)] w-full flex-col items-center justify-center space-y-6">
         <div className="flex w-full flex-col items-center justify-center space-y-6">
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <Badge variant="secondary">Open source</Badge>
+            <Badge variant="secondary">Self-hostable</Badge>
+            <Badge variant="secondary">GitHub + Supabase</Badge>
+          </div>
           <h1
             className="text-center text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl"
             data-testid="home-h1"
           >
-            Build Stunning Web Apps
+            Build Open Source Web Apps
             <span className="text-primary"> with AI</span>
           </h1>
-          <p className="text-foreground text-center text-lg">
+          <p className="text-foreground max-w-3xl text-center text-lg">
             {generationMode === "scratch" ? (
               <>
-                Generate production-ready Tailwind v4 components from text or
-                images. Deploy in seconds.{" "}
+                Generate production-ready Tailwind v4 websites and UI
+                components from text or images. Self-host the stack, connect
+                GitHub, and deploy faster.{" "}
                 <span className="text-muted-foreground">
                   Formerly Tailwind AI.
                 </span>
               </>
             ) : (
               <>
-                Clone any website by URL and get Tailwind-ready code instantly.{" "}
+                Clone any website by URL and turn it into Tailwind-ready code
+                you can self-host, extend, and ship from your own workflow.{" "}
                 <span className="text-muted-foreground">
                   Formerly Tailwind AI.
                 </span>
               </>
             )}
           </p>
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <Button asChild size="sm" variant="outline">
+              <Link href="/open-source">Explore Open Source</Link>
+            </Button>
+            <Button asChild size="sm" variant="ghost">
+              <a href={githubRepoUrl} target="_blank" rel="noopener noreferrer">
+                View GitHub Repo
+              </a>
+            </Button>
+            <Button asChild size="sm" variant="ghost">
+              <a
+                href={buildDocsUrl("/")}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Self-Hosting Docs
+              </a>
+            </Button>
+          </div>
           <form
             id="generate-form"
             className="group bg-secondary relative z-10 flex w-full flex-col items-center justify-center space-y-3 gap-x-0 rounded-lg border p-3 text-center xl:w-3/4"

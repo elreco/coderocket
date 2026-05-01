@@ -1670,12 +1670,6 @@ export default function ComponentCompletion({
     };
   }, [supabase]);
 
-  useEffect(() => {
-    if (isModalOpen && typeof window !== "undefined" && window.closeCrispChat) {
-      window.closeCrispChat();
-    }
-  }, [isModalOpen]);
-
   const handleFullscreenToggle = (isOpen: boolean) => {
     setIsModalOpen(isOpen);
   };

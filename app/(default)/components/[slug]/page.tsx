@@ -6,7 +6,6 @@ import { notFound } from "next/navigation";
 import { buildAppUrl, buildComponentUrl } from "@/utils/runtime-config";
 import { createClient } from "@/utils/supabase/server";
 
-import "@/styles/crisp.css";
 import {
   fetchChatById,
   fetchMessagesByChatId,

@@ -3,7 +3,11 @@
 import { AppFooter } from "@/components/app-footer";
 import { Container } from "@/components/container";
 import { PageTitle } from "@/components/page-title";
-import { buildDocsUrl } from "@/utils/runtime-config";
+import {
+  buildDocsUrl,
+  discordLink,
+  githubRepoUrl,
+} from "@/utils/runtime-config";
 
 import Faq from "./faq";
 
@@ -18,17 +22,25 @@ export default function FaqPageClient() {
       <div className="mb-8">
         <p className="text-muted-foreground text-lg">
           Find answers to common questions about our AI-powered Tailwind website
-          builder. Can&apos;t find what you&apos;re looking for?{" "}
-          <button
+          builder. Can&apos;t find what you&apos;re looking for? Join the
+          community on{" "}
+          <a
+            href={discordLink}
+            target="_blank"
+            rel="noopener noreferrer"
             className="text-primary hover:underline"
-            onClick={() => {
-              if (typeof window !== "undefined" && window.openCrispChat) {
-                window.openCrispChat();
-              }
-            }}
           >
-            Contact our support team
-          </button>
+            Discord
+          </a>{" "}
+          or open a discussion on{" "}
+          <a
+            href={`${githubRepoUrl}/discussions`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary hover:underline"
+          >
+            GitHub
+          </a>
           .
         </p>
       </div>
@@ -95,19 +107,18 @@ export default function FaqPageClient() {
           Still have questions?
         </h3>
         <p className="text-muted-foreground mb-4">
-          Our team is here to help you get the most out of CodeRocket.
+          The community and docs are the best places to get help with
+          CodeRocket.
         </p>
         <div className="flex flex-col gap-3 sm:flex-row">
-          <button
+          <a
+            href={discordLink}
+            target="_blank"
+            rel="noopener noreferrer"
             className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium"
-            onClick={() => {
-              if (typeof window !== "undefined" && window.openCrispChat) {
-                window.openCrispChat();
-              }
-            }}
           >
-            Chat with Support
-          </button>
+            Join Discord
+          </a>
           <a
             href={buildDocsUrl("/")}
             target="_blank"
@@ -115,6 +126,14 @@ export default function FaqPageClient() {
             className="border-input bg-background hover:bg-accent hover:text-accent-foreground inline-flex items-center justify-center rounded-md border px-4 py-2 text-sm font-medium"
           >
             View Documentation
+          </a>
+          <a
+            href={`${githubRepoUrl}/discussions`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="border-input bg-background hover:bg-accent hover:text-accent-foreground inline-flex items-center justify-center rounded-md border px-4 py-2 text-sm font-medium"
+          >
+            Open Discussion
           </a>
         </div>
       </div>

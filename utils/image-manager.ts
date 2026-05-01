@@ -108,24 +108,7 @@ export async function saveImagesToMessage(
   messageId: number,
   images: UploadedImage[],
 ): Promise<void> {
-  const imageRecords = images.map((img, index) => ({
-    message_id: messageId,
-    image_url: img.path,
-    image_order: index,
-    file_size_bytes: img.fileSize,
-    mime_type: img.mimeType,
-    width: img.width,
-    height: img.height,
-  }));
-
-  const { error } = await supabaseAdmin
-    .from("message_images")
-    .insert(imageRecords);
-
-  if (error) {
-    console.error("Failed to save images to database:", error);
-    throw new Error("Failed to save images metadata");
-  }
+  await saveImagesToMessageJsonb(messageId, images);
 }
 
 export async function saveImagesToMessageJsonb(
@@ -155,27 +138,7 @@ export async function saveImagesToMessageJsonb(
 export async function getMessageImages(
   messageId: number,
 ): Promise<ImageMetadata[]> {
-  const { data, error } = await supabaseAdmin
-    .from("message_images")
-    .select("*")
-    .eq("message_id", messageId)
-    .order("image_order", { ascending: true });
-
-  if (error) {
-    console.error("Failed to fetch message images:", error);
-    return [];
-  }
-
-  return (
-    data?.map((img) => ({
-      url: img.image_url,
-      order: img.image_order,
-      width: img.width || undefined,
-      height: img.height || undefined,
-      fileSize: img.file_size_bytes || undefined,
-      mimeType: img.mime_type || undefined,
-    })) || []
-  );
+  return getMessageImagesFromJsonb(messageId);
 }
 
 export async function getMessageImagesFromJsonb(
@@ -196,16 +159,16 @@ export async function getMessageImagesFromJsonb(
 }
 
 export async function deleteMessageImages(messageId: number): Promise<void> {
-  const images = await getMessageImages(messageId);
+  const images = await getMessageImagesFromJsonb(messageId);
 
   for (const img of images) {
     await supabaseAdmin.storage.from("images").remove([img.url]);
   }
 
   const { error } = await supabaseAdmin
-    .from("message_images")
-    .delete()
-    .eq("message_id", messageId);
+    .from("messages")
+    .update({ prompt_images: [] })
+    .eq("id", messageId);
 
   if (error) {
     console.error("Failed to delete message images:", error);

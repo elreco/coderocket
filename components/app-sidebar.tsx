@@ -5,7 +5,6 @@ import {
   BookOpen,
   CreditCard,
   Globe,
-  MessageCircle,
   Rocket,
   SquareTerminal,
   HelpCircle,
@@ -64,22 +63,18 @@ const data = {
       title: "Discord",
       url: discordLink,
       icon: SiDiscord,
+      external: true,
     },
     {
       title: "Open Source",
-      url: githubRepoUrl,
-      icon: SiGithub,
+      url: "/open-source",
+      icon: BookOpen,
     },
     {
-      title: "Support Chat",
-      url: "#",
-      icon: MessageCircle,
-      external: false,
-      onClick: () => {
-        if (typeof window !== "undefined" && window.openCrispChat) {
-          window.openCrispChat();
-        }
-      },
+      title: "GitHub Repo",
+      url: githubRepoUrl,
+      icon: SiGithub,
+      external: true,
     },
     {
       title: "FAQ",

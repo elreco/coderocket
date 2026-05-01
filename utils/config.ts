@@ -1,13 +1,12 @@
 import { Tables } from "@/types_db";
 import {
   avatarApi,
-  crispWebsiteId,
   discordLink,
   gaId,
   storageUrl,
 } from "@/utils/runtime-config";
 
-export { avatarApi, crispWebsiteId, discordLink, gaId, storageUrl };
+export { avatarApi, discordLink, gaId, storageUrl };
 
 export const maxImageSize = 10 * 1024 * 1024;
 export const maxPdfSize = 32 * 1024 * 1024;

@@ -70,6 +70,12 @@ export function AppFooter() {
               Docs
               <ExternalLink className="size-3" />
             </a>
+            <Link
+              href="/open-source"
+              className="text-foreground hover:text-primary shrink-0 whitespace-nowrap text-xs font-normal transition-colors"
+            >
+              Open Source
+            </Link>
             <a
               href={githubRepoUrl}
               target="_blank"

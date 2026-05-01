@@ -67,7 +67,6 @@
     "ai": "^6.0.21",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "crisp-sdk-web": "^1.0.25",
     "date-fns": "^3.6.0",
     "embla-carousel-react": "^8.6.0",
     "file-saver": "^2.0.5",

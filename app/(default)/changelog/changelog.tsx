@@ -7,6 +7,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
+import { githubRepoUrl } from "@/utils/runtime-config";
 
 const formatDate = (dateString: string) => {
   const [day, month, year] = dateString.split("/");
@@ -32,9 +33,8 @@ export default function Changelog({
           What We&apos;re Working On
         </h2>
         <p className="text-muted-foreground mb-4 text-sm">
-          We&apos;d love to hear your feedback! Share your thoughts and{" "}
-          <span className="text-foreground font-semibold">get free time</span>{" "}
-          added to your subscription as a thank you! 🎉
+          We&apos;d love to hear your feedback. Share ideas, report friction,
+          and help shape what ships next.
         </p>
 
         <div className="bg-muted/50 mb-4 space-y-3 rounded-md p-4">
@@ -46,15 +46,14 @@ export default function Changelog({
           ))}
         </div>
 
-        <Button
-          id="openChat"
-          onClick={() => {
-            if (typeof window !== "undefined" && window.openCrispChat) {
-              window.openCrispChat();
-            }
-          }}
-        >
-          Share your thoughts
+        <Button asChild id="openDiscussion">
+          <a
+            href={`${githubRepoUrl}/discussions`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Share your thoughts
+          </a>
         </Button>
       </section>
 

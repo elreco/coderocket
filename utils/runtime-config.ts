@@ -75,7 +75,6 @@ export const publicDomainProvider =
   "none";
 
 export const gaId = process.env.NEXT_PUBLIC_GA_ID ?? "";
-export const crispWebsiteId = process.env.NEXT_PUBLIC_CRISP_WEBSITE_ID ?? "";
 export const avatarApi =
   process.env.NEXT_PUBLIC_AVATAR_API ?? DEFAULT_AVATAR_API;
 export const discordLink =

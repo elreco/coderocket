@@ -8,7 +8,6 @@ import { AIDirectoryWidget } from "@/components/ai-directory-widget";
 import { AppSidebar } from "@/components/app-sidebar";
 import { AuthModal } from "@/components/auth-modal";
 import { AuthSyncProvider } from "@/components/auth-sync-provider";
-import { PluginWidget } from "@/components/plugin-widget";
 import "styles/main.css";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Toaster } from "@/components/ui/toaster";
@@ -16,7 +15,13 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthModalProvider } from "@/hooks/use-auth-modal";
 import { cn } from "@/lib/utils";
 import { gaId } from "@/utils/config";
-import { appUrl, buildAppUrl } from "@/utils/runtime-config";
+import {
+  appUrl,
+  buildAppUrl,
+  buildDocsUrl,
+  discordLink,
+  githubRepoUrl,
+} from "@/utils/runtime-config";
 
 import { getUserDetails } from "../supabase-server";
 
@@ -31,7 +36,10 @@ const baseAppUrl = buildAppUrl("/");
 const organizationId = `${baseAppUrl}#organization`;
 const webAppId = `${baseAppUrl}#webapp`;
 const websiteId = `${baseAppUrl}#website`;
+const sourceCodeId = `${baseAppUrl}#source`;
 const searchUrlTemplate = buildAppUrl("/components?search={search_term_string}");
+const docsHomeUrl = buildDocsUrl("/");
+const sameAsLinks = [githubRepoUrl, docsHomeUrl, discordLink];
 
 const meta = {
   title:
@@ -51,7 +59,10 @@ const meta = {
     "AI website builder",
     "open source ai website builder",
     "open source website builder",
+    "open source app builder",
     "self-hosted ai builder",
+    "self-hosted website builder",
+    "github ai website builder",
     "Tailwind CSS generator",
     "AI web development",
     "website builder",
@@ -170,11 +181,7 @@ export default async function RootLayout({ children }: PropsWithChildren) {
                     width: 512,
                     height: 512,
                   },
-                  contactPoint: {
-                    "@type": "ContactPoint",
-                    contactType: "Customer Support",
-                    url: baseAppUrl,
-                  },
+                  sameAs: sameAsLinks,
                 },
                 {
                   "@type": "WebApplication",
@@ -182,11 +189,16 @@ export default async function RootLayout({ children }: PropsWithChildren) {
                   name: "CodeRocket",
                   url: baseAppUrl,
                   description:
-                    "CodeRocket (formerly Tailwind AI) - AI-powered website builder that creates production-ready Tailwind v4 websites and components. Build complete web applications from scratch or clone a website from any URL. Deploy instantly.",
+                    "CodeRocket (formerly Tailwind AI) is an open source AI website builder that creates production-ready Tailwind v4 websites and components. Build complete web applications from scratch, clone a website from any URL, self-host the stack, or use the managed cloud.",
                   applicationCategory: "DeveloperApplication",
+                  applicationSubCategory: "Open Source AI Website Builder",
                   operatingSystem: "Any",
                   browserRequirements:
                     "Requires JavaScript. Chrome, Firefox, Safari, or Edge browser recommended.",
+                  isAccessibleForFree: true,
+                  downloadUrl: githubRepoUrl,
+                  softwareHelp: docsHomeUrl,
+                  releaseNotes: buildAppUrl("/changelog"),
                   offers: [
                     {
                       "@type": "Offer",
@@ -197,6 +209,7 @@ export default async function RootLayout({ children }: PropsWithChildren) {
                     },
                   ],
                   featureList: [
+                    "Open source self-hosted deployment option",
                     "AI-powered Tailwind v4 component generation",
                     "Clone a website from any URL",
                     "Multiple framework support (React, Vue, Svelte, Angular, HTML)",
@@ -210,6 +223,21 @@ export default async function RootLayout({ children }: PropsWithChildren) {
                   ],
                 },
                 {
+                  "@type": "SoftwareSourceCode",
+                  "@id": sourceCodeId,
+                  name: "CodeRocket Open Source Repository",
+                  description:
+                    "Open source CodeRocket repository with the Next.js app, integrated builder, self-hosting setup and product code.",
+                  codeRepository: githubRepoUrl,
+                  license: "https://opensource.org/license/mit/",
+                  programmingLanguage: ["TypeScript", "JavaScript"],
+                  runtimePlatform: "Node.js",
+                  targetProduct: {
+                    "@id": webAppId,
+                  },
+                  url: githubRepoUrl,
+                },
+                {
                   "@type": "WebSite",
                   "@id": websiteId,
                   url: baseAppUrl,
@@ -217,6 +245,7 @@ export default async function RootLayout({ children }: PropsWithChildren) {
                   publisher: {
                     "@id": organizationId,
                   },
+                  sameAs: sameAsLinks,
                   potentialAction: {
                     "@type": "SearchAction",
                     target: {
@@ -241,7 +270,6 @@ export default async function RootLayout({ children }: PropsWithChildren) {
                 <TooltipProvider>{children}</TooltipProvider>
               </main>
             </SidebarProvider>
-            <PluginWidget />
             <AIDirectoryWidget />
             <AuthModal />
             <Toaster />

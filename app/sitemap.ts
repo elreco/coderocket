@@ -48,6 +48,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.7,
     },
     {
+      url: buildAppUrl("/open-source"),
+      lastModified: currentDate,
+      changeFrequency: "weekly",
+      priority: 0.8,
+    },
+    {
       url: buildAppUrl("/terms"),
       lastModified: currentDate,
       changeFrequency: "yearly",

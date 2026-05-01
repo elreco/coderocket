@@ -1293,16 +1293,6 @@ export const deleteChatByChatId = async (chatId: string) => {
     console.error("Error deleting generation_locks:", locksError);
   }
 
-  // Delete integration_schemas
-  const { error: schemasError } = await supabase
-    .from("integration_schemas")
-    .delete()
-    .eq("chat_id", chatId);
-
-  if (schemasError) {
-    console.error("Error deleting integration_schemas:", schemasError);
-  }
-
   // Delete messages
   const { error: messagesError } = await supabase
     .from("messages")
