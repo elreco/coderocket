@@ -1,3 +1,20 @@
+<p align="center">
+  <img src="public/coderocket-full.png" alt="CodeRocket" width="320" />
+</p>
+
+<p align="center">
+  Open source AI website and component builder with a self-hosted default setup.
+</p>
+
+<p align="center">
+  <a href="https://github.com/elreco/coderocket/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/elreco/coderocket/ci.yml?branch=main&label=CI" alt="CI" /></a>
+  <a href="https://github.com/elreco/coderocket/blob/main/LICENSE"><img src="https://img.shields.io/github/license/elreco/coderocket" alt="License" /></a>
+  <a href="https://github.com/elreco/coderocket/discussions"><img src="https://img.shields.io/github/discussions/elreco/coderocket" alt="Discussions" /></a>
+  <a href="https://www.coderocket.app/open-source"><img src="https://img.shields.io/badge/self--host-ready-6C63FF" alt="Self-host ready" /></a>
+  <a href="https://nextjs.org/"><img src="https://img.shields.io/badge/Next.js-15-black" alt="Next.js 15" /></a>
+  <a href="https://supabase.com/"><img src="https://img.shields.io/badge/Supabase-Postgres%20%2B%20Auth-3ECF8E" alt="Supabase" /></a>
+</p>
+
 # CodeRocket
 
 CodeRocket is an AI website and component builder that can run as:
@@ -8,12 +25,29 @@ CodeRocket is an AI website and component builder that can run as:
 
 This repository is now structured so the default path is self-hosting first. Cloud-only integrations such as Stripe billing, Vercel domain management, and Vercel Blob storage are optional adapters, not hard requirements.
 
+## Community
+
+- Website: [coderocket.app](https://www.coderocket.app)
+- Open source overview: [coderocket.app/open-source](https://www.coderocket.app/open-source)
+- Documentation: [docs.coderocket.app](https://docs.coderocket.app)
+- Issues: [github.com/elreco/coderocket/issues](https://github.com/elreco/coderocket/issues)
+- Discussions: [github.com/elreco/coderocket/discussions](https://github.com/elreco/coderocket/discussions)
+- Contributing guide: [CONTRIBUTING.md](./CONTRIBUTING.md)
+- Security policy: [SECURITY.md](./SECURITY.md)
+
 ## What is in the repo
 
 - `app/`: the Next.js application.
 - `builder/`: the build service used to compile and store user apps.
 - `docs/`: Mintlify documentation.
 - `supabase/`: local Supabase config, migrations, and database notes.
+
+## Why self-host CodeRocket
+
+- Keep the full app and builder in one repository.
+- Run locally without Stripe, Vercel Domains, or Vercel Blob.
+- Swap optional cloud adapters back in only when you need them.
+- Use the hosted [coderocket.app](https://www.coderocket.app) experience as an upsell path if you want a managed version too.
 
 ## Self-hosting modes
 
@@ -58,7 +92,7 @@ npm run generate-types
 ```
 
 Important:
-`supabase/current_state.sql` is reference material only. See [supabase/README.md](/Users/alecorre/Documents/REPOS/tailwindai/coderocket/tailwind-ai/supabase/README.md) for the baseline/export workflow.
+`supabase/current_state.sql` is reference material only. See [supabase/README.md](./supabase/README.md) for the baseline/export workflow.
 
 ### 4. Run the stack
 
@@ -87,6 +121,8 @@ npm run docs:dev
 ```
 
 The default app URL is `http://localhost:4002`.
+
+If you want the builder to run fully independently from the app, you can still use `builder/.env`, but the default developer path is now the monorepo with `.env.local` at the root.
 
 ## Environment model
 
@@ -153,7 +189,7 @@ The current Supabase history was not maintained exclusively through CLI migratio
 
 The old migration chain is archived under `supabase/migrations-legacy/`. Going forward, the intended model is one verified baseline migration plus new forward migrations.
 
-Details and commands live in [supabase/README.md](/Users/alecorre/Documents/REPOS/tailwindai/coderocket/tailwind-ai/supabase/README.md).
+Details and commands live in [supabase/README.md](./supabase/README.md).
 
 ## Open source checklist
 
@@ -165,6 +201,8 @@ Details and commands live in [supabase/README.md](/Users/alecorre/Documents/REPO
 - run `npm run type-check`,
 - run `node --check builder/server.js`,
 - verify a local build/deploy flow before releasing.
+
+If you are opening the repo publicly for the first time, do the secret rotation and history rewrite before flipping visibility.
 
 ## Scripts
 

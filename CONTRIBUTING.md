@@ -31,7 +31,7 @@ From now on:
 - document any required seed data,
 - and keep `types_db.ts` in sync.
 
-See [supabase/README.md](/Users/alecorre/Documents/REPOS/tailwindai/coderocket/tailwind-ai/supabase/README.md).
+See [supabase/README.md](./supabase/README.md).
 
 ## Scope
 
