@@ -85,7 +85,7 @@ import { defaultTheme, maxImagesUpload, themes } from "@/utils/config";
 import { validateFile } from "@/utils/file-helper";
 import { IntegrationType, UserIntegration } from "@/utils/integrations";
 import { promptEnhancer } from "@/utils/prompt-enhancer";
-import { buildDocsUrl, githubRepoUrl } from "@/utils/runtime-config";
+import { githubRepoUrl } from "@/utils/runtime-config";
 import { createClient } from "@/utils/supabase/client";
 
 import { createChat, type GetComponentsReturnType } from "./components/actions";
@@ -906,11 +906,6 @@ export default function Hero({
       />
       <div className="flex min-h-[calc(100vh-20%)] w-full flex-col items-center justify-center space-y-6">
         <div className="flex w-full flex-col items-center justify-center space-y-6">
-          <div className="flex flex-wrap items-center justify-center gap-2">
-            <Badge variant="secondary">Open source</Badge>
-            <Badge variant="secondary">Self-hostable</Badge>
-            <Badge variant="secondary">GitHub + Supabase</Badge>
-          </div>
           <h1
             className="text-center text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl"
             data-testid="home-h1"
@@ -949,11 +944,11 @@ export default function Hero({
             </Button>
             <Button asChild size="sm" variant="ghost">
               <a
-                href={buildDocsUrl("/")}
+                href="https://www.youtube.com/watch?v=vkfCdoFQnAk"
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                Self-Hosting Docs
+                Watch Demo
               </a>
             </Button>
           </div>
